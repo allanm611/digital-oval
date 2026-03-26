@@ -69,6 +69,7 @@ export default function ProductsPage() {
     name: string;
   } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [loadingProductId, setLoadingProductId] = useState<string | null>(null);
 
   const loadCategories = async () => {
     try {
@@ -198,6 +199,7 @@ export default function ProductsPage() {
   };
 
   const handleToggleStatus = async (product: Product) => {
+    setLoadingProductId(product.id);
     try {
       // Optimistic update - update UI immediately
       const updatedProduct = { ...product, is_active: !product.is_active };
@@ -218,13 +220,17 @@ export default function ProductsPage() {
           `"${product.name}" has been activated successfully.`,
         );
       }
-      // Reload in background to sync with backend
-      loadProducts(true);
     } catch (err) {
       console.error("Failed to update product status:", err);
       showError("Failed to update product status", "Please try again later.");
-      // Reload to revert the optimistic update if API fails
-      loadProducts(true);
+      // Revert optimistic update on error
+      setProducts(
+        products.map((p) =>
+          p.id === product.id ? { ...p, is_active: !product.is_active } : p
+        )
+      );
+    } finally {
+      setLoadingProductId(null);
     }
   };
 
@@ -241,14 +247,15 @@ export default function ProductsPage() {
     setIsDeleting(true);
     try {
       await productService.deleteProduct(Number(productToDelete.id));
+      // Remove from list (optimistic UI)
+      setProducts((prev) => prev.filter((p) => p.id !== productToDelete.id));
       showToast(
         "Product Deleted",
         `"${productToDelete.name}" has been deleted successfully.`,
       );
       setShowDeleteModal(false);
       setProductToDelete(null);
-      loadProducts(true); // Skip cache when refetching after delete
-      loadStats(); // Refresh stats cards
+      loadStats(); // Refresh stats cards only
     } catch (err) {
       console.error("Failed to delete product:", err);
       // Extract error message from backend response
@@ -670,12 +677,15 @@ export default function ProductsPage() {
                           </PermissionGate>
                           <button
                             onClick={() => handleToggleStatus(product)}
-                            className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
+                            disabled={loadingProductId === product.id}
+                            className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
                             title={
                               product.is_active ? "Deactivate" : "Activate"
                             }
                           >
-                            {product.is_active ? (
+                            {loadingProductId === product.id ? (
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+                            ) : product.is_active ? (
                               <Pause className="w-4 h-4" />
                             ) : (
                               <Play className="w-4 h-4" />

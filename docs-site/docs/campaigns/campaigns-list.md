@@ -44,7 +44,7 @@ Click the **Filters** button to filter by:
 ## Page-Level Actions
 
 At the top of the Campaign List page, you'll find:
-- **Create Campaign** button - [Create a new campaign](./create-campaign)
+- **Create Campaign** button - [Create a new campaign](./create-campaign) (requires "create" permission)
 - **Analytics** button - [View campaign analytics](./campaign-reports)
 
 ## Quick Actions
@@ -94,7 +94,7 @@ These actions are always available regardless of campaign status:
 | Approval Status | Meaning |
 |---|---|
 | **Pending** | Campaign is awaiting reviewer approval |
-| **Approved** | Campaign has been approved and can be executed |
+| **Approved** | Campaign has been approved and can be rund |
 | **Rejected** | Campaign was rejected and returned to draft for edits |
 
 ### Key Notes

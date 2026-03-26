@@ -1005,7 +1005,7 @@ export default function ConnectionProfilesPage() {
               <Pagination
                 currentPage={currentPage}
                 pageSize={pageSize}
-                totalItems={totalProfiles}
+                totalItems={filteredProfiles.length}
                 onPageChange={setCurrentPage}
               />
             )}

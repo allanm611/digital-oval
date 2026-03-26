@@ -247,16 +247,20 @@ export default function AssignPermissionsModal({
         }
       }
 
-      // Reload assigned permissions to show the actual state from backend
-      await loadAssignedPermissions();
-
-      onPermissionsChanged();
     } catch (err) {
       console.error("Error toggling permission:", err);
       showError(
         "Error",
         err instanceof Error ? err.message : "Failed to toggle permission",
       );
+      // Revert optimistic update on error
+      if (isAssigned) {
+        setAssignedPermissions([...assignedPermissions, permission]);
+      } else {
+        setAssignedPermissions(
+          assignedPermissions.filter((p) => p.id !== permission.id),
+        );
+      }
     } finally {
       setIsTogglingPermission(null);
     }
@@ -460,16 +464,16 @@ export default function AssignPermissionsModal({
       // Clear selection and exit selection mode
       setSelectedPermissionIds(new Set());
       handleSetSelectionMode(false);
-
-      // Reload assigned permissions to show accurate count
-      await loadAssignedPermissions();
-
-      // Notify parent to refresh if needed
-      onPermissionsChanged();
     } catch (err) {
       showError(
         "Assignment Failed",
         err instanceof Error ? err.message : "Failed to assign permissions",
+      );
+      // Revert optimistic update on error
+      setAssignedPermissions(
+        assignedPermissions.filter(
+          (p) => !newlyAssigned.some((np) => np.id === p.id),
+        ),
       );
     } finally {
       setIsAssigning(false);
@@ -511,17 +515,17 @@ export default function AssignPermissionsModal({
       // Clear selection and exit selection mode
       setSelectedPermissionIds(new Set());
       handleSetSelectionMode(false);
-
-      // Reload assigned permissions to show accurate count
-      await loadAssignedPermissions();
-
-      // Notify parent to refresh if needed
-      onPermissionsChanged();
     } catch (err) {
       showError(
         "Removal Failed",
         err instanceof Error ? err.message : "Failed to remove permissions",
       );
+      // Revert optimistic update on error
+      const removedIds = new Set(assignedToRemove);
+      setAssignedPermissions((prev) => [
+        ...prev,
+        ...allPermissions.filter((p) => removedIds.has(p.id)),
+      ]);
     } finally {
       setIsRemoving(false);
     }

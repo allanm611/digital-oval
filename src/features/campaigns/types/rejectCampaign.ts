@@ -1,5 +1,5 @@
 export interface RejectCampaignRequest {
-  comments: string; // required, max 500 chars
+  comments: string;
 }
 
 export interface RejectCampaignResponse {

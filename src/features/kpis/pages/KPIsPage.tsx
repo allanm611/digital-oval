@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { Search, Filter, MoreHorizontal, Eye, Edit, Trash2, ListChecks, Activity, DollarSign, Smartphone, ChevronLeft, ChevronRight } from "lucide-react";
 import { generateAllKPIs } from "../utils/kpiGenerator";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 
@@ -70,12 +71,7 @@ export default function KPIsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-2">
-        <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>KPIs</h1>
-        <p className={`text-sm ${tw.textSecondary}`}>
-          Manage and view all available KPIs for segment building
-        </p>
-      </div>
+      <BackButton fallbackTo="/dashboard" showBreadcrumb={true} currentLabel="KPIs" />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

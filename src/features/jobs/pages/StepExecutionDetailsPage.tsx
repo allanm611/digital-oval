@@ -19,6 +19,7 @@ import { StepExecution } from "../types/stepExecution";
 import { ExecutionProgress, ResourceUsage } from "../types/jobExecution";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw } from "../../../shared/utils/utils";
 import { ENABLE_JOB_EXECUTION_WRITES_FOR_ALL } from "../../../shared/utils/featureFlags";
 
@@ -160,22 +161,7 @@ export default function StepExecutionDetailsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate("/dashboard/step-executions")}
-            className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div>
-            <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-              Step Execution Details
-            </h1>
-            <p className={`${tw.textSecondary} mt-1 text-sm`}>
-              Step Execution ID: {execution.id.substring(0, 8)}...
-            </p>
-          </div>
-        </div>
+        <BackButton fallbackTo="/dashboard/step-executions" showBreadcrumb={true} currentLabel="Step Execution Details" />
         <div className="flex gap-2">
           {canWrite && execution.execution_status === "running" && (
             <button

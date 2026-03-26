@@ -119,23 +119,44 @@ class JobExecutionService {
       | JobExecutionListResponse
       | {
           success?: boolean;
-          data?: JobExecution[];
+          data?: JobExecution[] | { data?: JobExecution[]; count?: number };
           pagination?: JobExecutionListResponse["pagination"];
           source?: string;
         },
   ): JobExecutionListResponse {
-    if (
-      response &&
-      typeof response === "object" &&
-      "data" in response &&
-      Array.isArray((response as { data?: JobExecution[] }).data)
-    ) {
+    if (response && typeof response === "object" && "data" in response) {
+      const responseData = (response as { data?: unknown }).data;
+      let executions: JobExecution[] = [];
+      let count: number | undefined;
+      let pagination = (response as { pagination?: JobExecutionListResponse["pagination"] }).pagination;
+
+      // Handle nested data structure: { data: { data: [...], count: N } }
+      if (
+        responseData &&
+        typeof responseData === "object" &&
+        "data" in responseData &&
+        Array.isArray((responseData as { data?: JobExecution[] }).data)
+      ) {
+        executions = (responseData as { data: JobExecution[] }).data;
+        count = (responseData as { count?: number }).count;
+        // Create pagination object if count is available but pagination is not
+        if (count && !pagination) {
+          pagination = {
+            total: count,
+            limit: 50,
+            offset: 0,
+            hasMore: false,
+          };
+        }
+      } else if (Array.isArray(responseData)) {
+        // Handle flat data structure: { data: [...] }
+        executions = responseData as JobExecution[];
+      }
+
       return {
         success: (response as { success?: boolean }).success ?? true,
-        data: (response as { data: JobExecution[] }).data,
-        pagination: (
-          response as { pagination?: JobExecutionListResponse["pagination"] }
-        ).pagination,
+        data: executions,
+        pagination,
         source: (response as { source?: string }).source,
       };
     }

@@ -126,12 +126,16 @@ export default function NotificationDropdown({
       if (!notification.isRead) {
         markAsRead([notification.id]);
       }
+      // Don't navigate to campaign, segment, or offer detail pages
       if (notification.actionUrl) {
-        navigate(notification.actionUrl, {
-          state: { fromNotification: true },
-        });
-        setIsOpen(false);
-        onClose?.();
+        const isDetailPage = /\/(campaigns|segments|offers)\/\d+/.test(notification.actionUrl);
+        if (!isDetailPage) {
+          navigate(notification.actionUrl, {
+            state: { fromNotification: true },
+          });
+          setIsOpen(false);
+          onClose?.();
+        }
       }
     },
     [navigate, markAsRead, onClose],

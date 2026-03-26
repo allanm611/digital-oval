@@ -150,6 +150,40 @@ const dndDays = [
   { value: "custom", label: "Custom Days" },
 ];
 
+// Notification Types
+const notificationTypes = [
+  { id: "campaigns", label: "Campaigns", description: "Campaign updates and status" },
+  { id: "offers", label: "Offers", description: "Offer changes and approvals" },
+  { id: "segments", label: "Segments", description: "Segment creation and updates" },
+  { id: "products", label: "Products", description: "Product changes" },
+  { id: "jobs", label: "Jobs", description: "Job execution and workflows" },
+  { id: "users", label: "Users", description: "User management" },
+  { id: "system", label: "System", description: "System alerts and maintenance" },
+];
+
+// Notification Channels
+const notificationChannels = [
+  { id: "sms", label: "SMS" },
+  { id: "email", label: "Email" },
+  { id: "ussd", label: "USSD" },
+  { id: "push", label: "Push" },
+  { id: "ivr", label: "IVR" },
+  { id: "voice", label: "Voice" },
+  { id: "whatsapp", label: "WhatsApp" },
+];
+
+// Notification Sounds
+const notificationSounds = [
+  { value: "none", label: "None (Silent)" },
+  { value: "bell", label: "Bell" },
+  { value: "chime", label: "Chime" },
+  { value: "ding", label: "Ding" },
+  { value: "notification", label: "Notification" },
+  { value: "alert", label: "Alert" },
+  { value: "pop", label: "Pop" },
+  { value: "ping", label: "Ping" },
+];
+
 // Time options for DND hours
 const timeOptions = Array.from({ length: 24 }, (_, i) => ({
   value: `${String(i).padStart(2, "0")}:00`,
@@ -177,6 +211,7 @@ interface SettingsType {
   dnd_start_time: string;
   dnd_end_time: string;
   dnd_days: string;
+  notificationSound?: string;
   theme: "light" | "dark";
 }
 
@@ -213,6 +248,7 @@ export default function SettingsPage() {
           dnd_start_time: parsed.dnd_start_time || "21:00",
           dnd_end_time: parsed.dnd_end_time || "08:00",
           dnd_days: parsed.dnd_days || "daily",
+          notificationSound: parsed.notificationSound || "notification",
           theme: parsed.theme || "light",
         };
       }
@@ -236,6 +272,7 @@ export default function SettingsPage() {
       dnd_start_time: "21:00",
       dnd_end_time: "08:00",
       dnd_days: "daily",
+      notificationSound: "notification",
       theme: "light",
     };
   };
@@ -244,19 +281,28 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [originalSettings] = useState<SettingsType>(loadSettings());
 
-  // Notification preferences
-  const [emailNotifications, setEmailNotifications] = useState(() => {
-    const stored = localStorage.getItem("emailNotifications");
-    return stored !== null ? JSON.parse(stored) : true;
+  // Notification types enabled/disabled
+  const [enabledNotificationTypes, setEnabledNotificationTypes] = useState<
+    Set<string>
+  >(() => {
+    const stored = localStorage.getItem("enabledNotificationTypes");
+    if (stored) {
+      return new Set(JSON.parse(stored));
+    }
+    // Default: all types enabled
+    return new Set(notificationTypes.map((type) => type.id));
   });
-  const [inAppNotifications, setInAppNotifications] = useState(() => {
-    const stored = localStorage.getItem("inAppNotifications");
-    return stored !== null ? JSON.parse(stored) : true;
-  });
-  const [browserNotifications, setBrowserNotifications] = useState(() => {
-    const stored = localStorage.getItem("browserNotifications");
-    return stored !== null ? JSON.parse(stored) : true;
-  });
+
+  // Preferred channels for notifications
+  const [preferredNotificationChannels, setPreferredNotificationChannels] =
+    useState<string[]>(() => {
+      const stored = localStorage.getItem("preferredNotificationChannels");
+      if (stored) {
+        return JSON.parse(stored);
+      }
+      // Default: SMS and Email
+      return ["sms", "email"];
+    });
 
   // Cross-tab synchronization: Listen for localStorage changes from other tabs
   useEffect(() => {
@@ -358,9 +404,14 @@ export default function SettingsPage() {
       await new Promise((resolve) => setTimeout(resolve, 500));
       // Save to localStorage
       localStorage.setItem("appSettings", JSON.stringify(settings));
-      localStorage.setItem("emailNotifications", JSON.stringify(emailNotifications));
-      localStorage.setItem("inAppNotifications", JSON.stringify(inAppNotifications));
-      localStorage.setItem("browserNotifications", JSON.stringify(browserNotifications));
+      localStorage.setItem(
+        "enabledNotificationTypes",
+        JSON.stringify(Array.from(enabledNotificationTypes))
+      );
+      localStorage.setItem(
+        "preferredNotificationChannels",
+        JSON.stringify(preferredNotificationChannels)
+      );
       // Update language if it changed
       setLanguageSettings(settings.language);
       setLanguage(settings.language);
@@ -473,7 +524,7 @@ export default function SettingsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
         >
-          <div className="mb-6 pb-4 border-b border-gray-100">
+          <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               {t.settings.location}
             </h2>
@@ -524,7 +575,7 @@ export default function SettingsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
         >
-          <div className="mb-6 pb-4 border-b border-gray-100">
+          <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               Localization
             </h2>
@@ -571,7 +622,7 @@ export default function SettingsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
         >
-          <div className="mb-6 pb-4 border-b border-gray-100">
+          <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               {t.settings.dateFormat}
             </h2>
@@ -608,7 +659,7 @@ export default function SettingsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
         >
-          <div className="mb-6 pb-4 border-b border-gray-100">
+          <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               {t.settings.currency} & Formatting
             </h2>
@@ -690,7 +741,7 @@ export default function SettingsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
         >
-          <div className="mb-6 pb-4 border-b border-gray-100">
+          <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               Character Sets
             </h2>
@@ -729,7 +780,7 @@ export default function SettingsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
         >
-          <div className="mb-6 pb-4 border-b border-gray-100">
+          <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               Default Communication Channel
             </h2>
@@ -764,7 +815,7 @@ export default function SettingsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
         >
-          <div className="mb-6 pb-4 border-b border-gray-100">
+          <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               Default Sender ID
             </h2>
@@ -796,7 +847,7 @@ export default function SettingsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
         >
-          <div className="mb-6 pb-4 border-b border-gray-100">
+          <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               Default Route
             </h2>
@@ -828,7 +879,7 @@ export default function SettingsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8 lg:col-span-2`}
         >
-          <div className="mb-6 pb-4 border-b border-gray-100">
+          <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               Do Not Disturb (DND) Settings
             </h2>
@@ -935,7 +986,7 @@ export default function SettingsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8 lg:col-span-2`}
         >
-          <div className="mb-6 pb-4 border-b border-gray-100">
+          <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               Notifications
             </h2>
@@ -944,68 +995,120 @@ export default function SettingsPage() {
             </p>
           </div>
 
-          <div className="space-y-4">
-            {/* Email Notifications */}
-            <div className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors rounded-lg">
-              <div className="flex items-center flex-1">
-                <input
-                  type="checkbox"
-                  id="emailNotifications"
-                  checked={emailNotifications}
-                  onChange={(e) => setEmailNotifications(e.target.checked)}
-                  className="w-5 h-5 rounded border-gray-300 text-gray-900 focus:ring-2 focus:ring-offset-0"
-                />
-                <label htmlFor="emailNotifications" className="ml-3 cursor-pointer flex-1">
-                  <p className="text-sm font-semibold text-gray-900">
-                    Email Notifications
-                  </p>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    Receive notifications via email
-                  </p>
-                </label>
-              </div>
+          {/* Notification Sound and Preferred Channels */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                Notification Sound
+              </label>
+              <p className="text-xs text-gray-500 mb-3">
+                Select the sound to play
+              </p>
+              <HeadlessSelect
+                options={notificationSounds}
+                value={settings.notificationSound || "notification"}
+                onChange={(value) =>
+                  setSettings({
+                    ...settings,
+                    notificationSound: value,
+                  })
+                }
+                placeholder="Select a sound"
+                className="w-full"
+              />
             </div>
 
-            {/* In-App Notifications */}
-            <div className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors rounded-lg">
-              <div className="flex items-center flex-1">
-                <input
-                  type="checkbox"
-                  id="inAppNotifications"
-                  checked={inAppNotifications}
-                  onChange={(e) => setInAppNotifications(e.target.checked)}
-                  className="w-5 h-5 rounded border-gray-300 text-gray-900 focus:ring-2 focus:ring-offset-0"
-                />
-                <label htmlFor="inAppNotifications" className="ml-3 cursor-pointer flex-1">
-                  <p className="text-sm font-semibold text-gray-900">
-                    In-App Notifications
-                  </p>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    Receive notifications within the application
-                  </p>
-                </label>
-              </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                Preferred Channels
+              </label>
+              <p className="text-xs text-gray-500 mb-3">
+                Select channels for all notifications
+              </p>
+              <HeadlessSelect
+                options={notificationChannels.map((ch) => ({
+                  value: ch.id,
+                  label: ch.label,
+                }))}
+                value={preferredNotificationChannels[0] || ""}
+                onChange={(value) => {
+                  if (!preferredNotificationChannels.includes(value)) {
+                    setPreferredNotificationChannels([
+                      ...preferredNotificationChannels,
+                      value,
+                    ]);
+                  } else {
+                    setPreferredNotificationChannels(
+                      preferredNotificationChannels.filter((c) => c !== value)
+                    );
+                  }
+                }}
+                placeholder="Select channels..."
+                className="w-full"
+              />
+              {preferredNotificationChannels.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {preferredNotificationChannels.map((ch) => (
+                    <span
+                      key={ch}
+                      className="inline-flex items-center gap-1 px-2 py-1 text-white text-xs rounded-full"
+                      style={{ backgroundColor: "#00BBCC" }}
+                    >
+                      {notificationChannels.find((c) => c.id === ch)?.label}
+                      <button
+                        onClick={() => {
+                          setPreferredNotificationChannels(
+                            preferredNotificationChannels.filter(
+                              (c) => c !== ch
+                            )
+                          );
+                        }}
+                        className="font-bold hover:opacity-80"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
+          </div>
 
-            {/* Browser Notifications */}
-            <div className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors rounded-lg">
-              <div className="flex items-center flex-1">
-                <input
-                  type="checkbox"
-                  id="browserNotifications"
-                  checked={browserNotifications}
-                  onChange={(e) => setBrowserNotifications(e.target.checked)}
-                  className="w-5 h-5 rounded border-gray-300 text-gray-900 focus:ring-2 focus:ring-offset-0"
-                />
-                <label htmlFor="browserNotifications" className="ml-3 cursor-pointer flex-1">
-                  <p className="text-sm font-semibold text-gray-900">
-                    Browser Notifications
-                  </p>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    Receive desktop notifications from your browser
-                  </p>
+          {/* Notification Types */}
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900 mb-4">
+              Notification Types
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {notificationTypes.map((type) => (
+                <label
+                  key={type.id}
+                  className="flex items-start gap-3 cursor-pointer p-3 hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  <input
+                    type="checkbox"
+                    checked={enabledNotificationTypes.has(type.id)}
+                    onChange={(e) => {
+                      const updated = new Set(enabledNotificationTypes);
+                      if (e.target.checked) {
+                        updated.add(type.id);
+                      } else {
+                        updated.delete(type.id);
+                      }
+                      setEnabledNotificationTypes(updated);
+                    }}
+                    className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-2 mt-1"
+                  />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">
+                      {type.label}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {type.description}
+                    </p>
+                  </div>
                 </label>
-              </div>
+              ))}
             </div>
           </div>
         </div>
@@ -1014,7 +1117,7 @@ export default function SettingsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8 lg:col-span-2`}
         >
-          <div className="mb-6 pb-4 border-b border-gray-100">
+          <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               Display Theme
             </h2>

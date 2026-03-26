@@ -23,6 +23,7 @@ import { colors } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
 import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
+import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { formatCurrency } from "../../../shared/services/currencyService";
 import type {
   RangeOption,
@@ -31,6 +32,12 @@ import type {
 } from "../types/ReportsAPI";
 
 import { tw } from "../../../shared/utils/utils";
+import { campaignService } from "../../campaigns/services/campaignService";
+import { useToast } from "../../../contexts/ToastContext";
+import type { CampaignDisplay } from "../../campaigns/types/campaign";
+import CampaignOffersModal from "../../campaigns/components/CampaignOffersModal";
+import CampaignSegmentsModal from "../../campaigns/components/CampaignSegmentsModal";
+
 // Extract types from API response type
 type CampaignSummary = CampaignReportsResponse["summary"];
 type ChannelReachPoint = CampaignReportsResponse["channelReach"][number];
@@ -339,8 +346,9 @@ const generateCampaignRows = (): CampaignRow[] => {
       rows.push({
         id: `camp-${String(1000 + baseIdx)}`,
         name: campaignNames[baseIdx % campaignNames.length],
-        segment,
-        offer: offers[baseIdx % offers.length],
+        segmentCount: 2,
+        offerCount: 2,
+        campaign: undefined as any, // Dummy data doesn't have campaign object
         targetGroup,
         controlGroup,
         sent,
@@ -407,17 +415,59 @@ const statIcons = {
 
 export default function CampaignReportsPage() {
   const { t } = useLanguage();
+  const { error: showError } = useToast();
   const [tableQuery, setTableQuery] = useState("");
-  const [segmentFilter, setSegmentFilter] = useState("All");
   const [selectedRange, setSelectedRange] = useState<RangeOption>("7d");
   const [customRange, setCustomRange] = useState({ start: "", end: "" });
   const [appliedCustomRange, setAppliedCustomRange] = useState({
     start: "",
     end: "",
   });
-  const [useDummyData, setUseDummyData] = useState(true);
+  const [useDummyData, setUseDummyData] = useState(false);
   const [tablePage, setTablePage] = useState(1);
   const tablePageSize = 20;
+
+  // State for real campaign data
+  const [campaigns, setCampaigns] = useState<CampaignDisplay[]>([]);
+  const [isLoadingCampaigns, setIsLoadingCampaigns] = useState(true);
+  const [campaignFetchError, setCampaignFetchError] = useState<string | null>(null);
+  const [showOffersModal, setShowOffersModal] = useState(false);
+  const [showSegmentsModal, setShowSegmentsModal] = useState(false);
+  const [selectedCampaignForModal, setSelectedCampaignForModal] = useState<CampaignDisplay | null>(null);
+
+  // Fetch real campaigns on mount
+  const fetchCampaigns = async () => {
+    try {
+      setIsLoadingCampaigns(true);
+      setCampaignFetchError(null);
+      const response = await campaignService.getCampaigns({
+        limit: 100,
+        offset: 0,
+        skipCache: true,
+      });
+
+      if (response.success && response.data) {
+        const campaignList = response.data.map((campaign) => ({
+          ...campaign,
+          offer_count: campaign.offers?.length ?? 0,
+          segment_count: campaign.segments?.length ?? 0,
+        }));
+        setCampaigns(campaignList);
+      } else {
+        setCampaignFetchError("No campaigns found");
+        setCampaigns([]);
+      }
+    } catch (err) {
+      setCampaignFetchError("Failed to load campaigns");
+      setCampaigns([]);
+    } finally {
+      setIsLoadingCampaigns(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCampaigns();
+  }, []);
 
   const handleRun = () => {
     setAppliedCustomRange(customRange);
@@ -580,10 +630,27 @@ export default function CampaignReportsPage() {
         },
       ];
 
+  // Convert real campaigns to table row format with mixed real and dummy data
+  const campaignTableRows = useMemo(() => {
+    return campaigns.map((campaign) => ({
+      id: `campaign-${campaign.id}`,
+      name: campaign.name,
+      segmentCount: campaign.segments?.length ?? 0,
+      offerCount: campaign.offers?.length ?? 0,
+      campaign: campaign, // Store full campaign object for modal
+      // Dummy data for columns without backend data
+      targetGroup: Math.floor(Math.random() * 50000) + 10000,
+      controlGroup: Math.floor(Math.random() * 10000) + 1000,
+      messagesGenerated: Math.floor(Math.random() * 100000) + 50000,
+      sent: Math.floor(Math.random() * 95000) + 45000,
+      delivered: Math.floor(Math.random() * 90000) + 40000,
+      conversions: Math.floor(Math.random() * 15000) + 5000,
+      lastRunDate: campaign.created_at ? new Date(campaign.created_at).toLocaleDateString() : "—",
+      lastRunDateMS: campaign.created_at ? new Date(campaign.created_at).getTime() : Date.now(),
+    }));
+  }, [campaigns]);
+
   const filteredRows = useMemo(() => {
-    if (!useDummyData) {
-      return [];
-    }
     const query = tableQuery.trim().toLowerCase();
     const maxDays =
       appliedCustomRange.start && appliedCustomRange.end
@@ -596,29 +663,28 @@ export default function CampaignReportsPage() {
       ? new Date(appliedCustomRange.end).getTime()
       : null;
 
-    return campaignRows.filter((row) => {
-      const matchesSegment =
-        segmentFilter === "All" ? true : row.segment === segmentFilter;
+    // Only use real campaign data
+    const rowsToFilter = campaignTableRows;
+
+    return rowsToFilter.filter((row) => {
       const matchesQuery = query
-        ? row.name.toLowerCase().includes(query) ||
-          row.segment.toLowerCase().includes(query)
+        ? row.name.toLowerCase().includes(query)
         : true;
-      const rowDate = new Date(row.lastRunDate).getTime();
+      const rowDate = (row as any).lastRunDateMS || Date.now();
       const now = Date.now();
       const matchesRange =
         appliedCustomRange.start && appliedCustomRange.end && startMs && endMs
           ? rowDate >= startMs && rowDate <= endMs
           : now - rowDate <= maxDays * 24 * 60 * 60 * 1000;
 
-      return matchesSegment && matchesQuery && matchesRange;
+      return matchesQuery && matchesRange;
     });
   }, [
-    segmentFilter,
     tableQuery,
     customRange,
     customDays,
     selectedRange,
-    useDummyData,
+    campaignTableRows,
     appliedCustomRange.start,
     appliedCustomRange.end,
   ]);
@@ -628,7 +694,6 @@ export default function CampaignReportsPage() {
     setTablePage(1);
   }, [
     tableQuery,
-    segmentFilter,
     appliedCustomRange.start,
     appliedCustomRange.end,
   ]);
@@ -638,11 +703,6 @@ export default function CampaignReportsPage() {
     const startIdx = (tablePage - 1) * tablePageSize;
     return filteredRows.slice(startIdx, startIdx + tablePageSize);
   }, [filteredRows, tablePage]);
-
-  const segmentOptions = [
-    "All",
-    ...new Set(campaignRows.map((row) => row.segment)),
-  ];
 
   // Chart colors now use standardized colors from tokens.reportCharts
 
@@ -718,8 +778,8 @@ export default function CampaignReportsPage() {
 
   const csvHeaders = [
     "Campaign Name",
-    "Segment",
-    "Offer",
+    "Segment Count",
+    "Offer Count",
     "Target Group",
     "Control Group",
     "Messages Generated",
@@ -731,8 +791,8 @@ export default function CampaignReportsPage() {
 
   const csvRows = filteredRows.map((row) => [
     row.name,
-    row.segment,
-    row.offer,
+    row.segmentCount,
+    row.offerCount,
     row.targetGroup,
     row.controlGroup,
     row.messagesGenerated,
@@ -1120,16 +1180,6 @@ export default function CampaignReportsPage() {
               placeholder="Search campaign"
               className={`w-full ${tw.rounded} border border-gray-200 px-3 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:border-gray-400 focus:outline-none md:w-80`}
             />
-            <HeadlessSelect
-              value={segmentFilter}
-              onChange={(value) => setSegmentFilter(value as string)}
-              options={segmentOptions.map((segment) => ({
-                label: segment,
-                value: segment,
-              }))}
-              placeholder="All Segments"
-              className="w-full md:w-48"
-            />
             <CsvDownloadButton
               headers={csvHeaders}
               rows={csvRows}
@@ -1138,6 +1188,32 @@ export default function CampaignReportsPage() {
             />
           </div>
         </div>
+
+        {isLoadingCampaigns && (
+          <div className="flex justify-center py-16">
+            <LoadingSpinner />
+          </div>
+        )}
+
+        {!isLoadingCampaigns && campaignFetchError && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-8 text-center">
+            <p className="text-sm text-red-700 font-medium mb-4">{campaignFetchError}</p>
+            <button
+              onClick={fetchCampaigns}
+              className={`${tw.rounded} ${tw.btnSmall} bg-red-600 text-white hover:bg-red-700`}
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {!isLoadingCampaigns && !campaignFetchError && campaigns.length === 0 && (
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
+            <p className="text-sm text-gray-600">No campaigns found</p>
+          </div>
+        )}
+
+        {!isLoadingCampaigns && !campaignFetchError && campaigns.length > 0 && (
         <div className="hidden lg:block">
           <div className="overflow-x-auto">
             <table
@@ -1148,8 +1224,8 @@ export default function CampaignReportsPage() {
                 <tr className="text-left text-sm font-medium uppercase tracking-wide">
                   {[
                     "Campaign Name",
-                    "Segment",
-                    "Offer",
+                    "Segment Count",
+                    "Offer Count",
                     "Target Group",
                     "Control Group",
                     "Messages Generated",
@@ -1187,16 +1263,28 @@ export default function CampaignReportsPage() {
                       <div className="text-gray-900">{entry.name}</div>
                     </td>
                     <td
-                      className="px-6 py-4"
+                      className="px-6 py-4 cursor-pointer"
                       style={{ backgroundColor: colors.surface.tablebodybg }}
+                      onClick={() => {
+                        if ((entry.segmentCount ?? 0) > 0 && entry.campaign) {
+                          setSelectedCampaignForModal(entry.campaign);
+                          setShowSegmentsModal(true);
+                        }
+                      }}
                     >
-                      {entry.segment}
+                      <span className="text-sm font-medium">{entry.segmentCount ?? 0}</span>
                     </td>
                     <td
-                      className="px-6 py-4"
+                      className="px-6 py-4 cursor-pointer"
                       style={{ backgroundColor: colors.surface.tablebodybg }}
+                      onClick={() => {
+                        if ((entry.offerCount ?? 0) > 0 && entry.campaign) {
+                          setSelectedCampaignForModal(entry.campaign);
+                          setShowOffersModal(true);
+                        }
+                      }}
                     >
-                      {entry.offer}
+                      <span className="text-sm font-medium">{entry.offerCount ?? 0}</span>
                     </td>
                     <td
                       className="px-6 py-4"
@@ -1256,14 +1344,43 @@ export default function CampaignReportsPage() {
               </div>
             )}
           </div>
-          <Pagination
-            currentPage={tablePage}
-            pageSize={tablePageSize}
-            totalItems={filteredRows.length}
-            onPageChange={setTablePage}
-          />
+          {filteredRows.length > 0 && (
+            <Pagination
+              currentPage={tablePage}
+              pageSize={tablePageSize}
+              totalItems={filteredRows.length}
+              onPageChange={setTablePage}
+            />
+          )}
         </div>
+        )}
       </section>
+
+      {/* Campaign Offers Modal */}
+      {selectedCampaignForModal && (
+        <CampaignOffersModal
+          isOpen={showOffersModal}
+          onClose={() => {
+            setShowOffersModal(false);
+            setSelectedCampaignForModal(null);
+          }}
+          offers={selectedCampaignForModal.offers || []}
+          campaignName={selectedCampaignForModal.name}
+        />
+      )}
+
+      {/* Campaign Segments Modal */}
+      {selectedCampaignForModal && (
+        <CampaignSegmentsModal
+          isOpen={showSegmentsModal}
+          onClose={() => {
+            setShowSegmentsModal(false);
+            setSelectedCampaignForModal(null);
+          }}
+          segments={selectedCampaignForModal.segments || []}
+          campaignName={selectedCampaignForModal.name}
+        />
+      )}
     </div>
   );
 }

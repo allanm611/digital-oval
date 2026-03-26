@@ -212,19 +212,9 @@ export default function CreateProductPage({
 
   return (
     <div className="space-y-6">
-      {/* Header with Back Button, Title, and Close Button */}
+      {/* Header with Back Button and Close Button */}
       <div className="flex items-center justify-between gap-4 mb-4">
-        <div className="flex items-center gap-4">
-          <BackButton fallbackTo={getBackButtonFallback()} />
-          <div>
-            <h1 className={`text-xl font-bold ${tw.textPrimary}`}>
-              {t.products.createNewProduct}
-            </h1>
-            <p className={`${tw.textSecondary} text-sm`}>
-              {t.products.addNewProduct}
-            </p>
-          </div>
-        </div>
+        <BackButton fallbackTo={getBackButtonFallback()} showBreadcrumb={true} currentLabel="Create Product" />
         {onClose && (
           <button
             onClick={onClose}

@@ -232,7 +232,7 @@ export default function CampaignFlowDetailsPage() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <BackButton onClick={() => navigate(-1)} />
+        <BackButton onClick={() => navigate(-1)} showBreadcrumb={true} currentLabel="Campaign Flow Details" />
         <div className="flex flex-col items-center justify-center py-16">
           <LoadingSpinner variant="modern" size="xl" color="primary" className="mb-4" />
           <p className={`${tw.textMuted} font-medium text-sm`}>
@@ -246,7 +246,7 @@ export default function CampaignFlowDetailsPage() {
   if (!flow) {
     return (
       <div className="space-y-6">
-        <BackButton onClick={() => navigate(-1)} />
+        <BackButton onClick={() => navigate(-1)} showBreadcrumb={true} currentLabel="Campaign Flow Details" />
         <div className="text-center py-12">
           <AlertCircle className="w-16 h-16 mx-auto mb-4 text-gray-400" />
           <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-2`}>
@@ -265,7 +265,7 @@ export default function CampaignFlowDetailsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <BackButton onClick={() => navigate(-1)} />
+          <BackButton onClick={() => navigate(-1)} showBreadcrumb={true} currentLabel="Campaign Flow Details" />
           <div>
             <h1 className={`text-3xl font-bold ${tw.textPrimary}`}>
               Campaign Flow {flow.id || flow.campaign_id}

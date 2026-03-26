@@ -1,0 +1,293 @@
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { ArrowLeft, Save } from "lucide-react";
+import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
+import { characterSetService, CharacterSet } from "../../configurations/services/characterSetService";
+import { MESSAGE_TYPE_OPTIONS, MessageTypeEnum } from "../../configurations/configs/ts/messageTypeEnum";
+import { CHARACTER_SET_TYPE_OPTIONS, CharacterSetTypeEnum } from "../../configurations/configs/ts/characterSetTypeEnum";
+import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import BackButton from "../../../shared/components/ui/BackButton";
+import { tw, color } from "../../../shared/utils/utils";
+
+export default function CharacterSetFormPage() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { success: showSuccess, error: showError } = useToast();
+  const { t } = useLanguage();
+
+  const [loading, setLoading] = useState(!!id);
+  const [saving, setSaving] = useState(false);
+
+  // Form fields
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [isActive, setIsActive] = useState(true);
+  const [messageType, setMessageType] = useState("SMS");
+  const [characterSetType, setCharacterSetType] = useState("");
+  const [characterSetSize, setCharacterSetSize] = useState("");
+  const [standardChars, setStandardChars] = useState("");
+  const [doubleChars, setDoubleChars] = useState("");
+  const [tripleChars, setTripleChars] = useState("");
+  const [quadChars, setQuadChars] = useState("");
+
+  // Load existing character set if editing
+  useEffect(() => {
+    if (id) {
+      const loadCharacterSet = async () => {
+        try {
+          const data = await characterSetService.getCharacterSetById(parseInt(id));
+          setName(data.name);
+          setDescription(data.description || "");
+          setIsActive(data.is_active ?? true);
+          setMessageType(data.message_type || "SMS");
+          setCharacterSetType(data.character_set_type || "");
+          setCharacterSetSize(String(data.character_set_size || ""));
+          setStandardChars(data.standard_chars || "");
+          setDoubleChars(data.double_chars || "");
+          setTripleChars(data.triple_chars || "");
+          setQuadChars(data.quad_chars || "");
+        } catch (err) {
+          showError("Error", "Failed to load character set");
+          navigate("/dashboard/character-sets");
+        } finally {
+          setLoading(false);
+        }
+      };
+      loadCharacterSet();
+    }
+  }, [id, navigate, showError]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) {
+      showError("Error", "Name is required");
+      return;
+    }
+    if (!standardChars.trim()) {
+      showError("Error", "Standard characters are required");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const payload = {
+        name,
+        description,
+        is_active: isActive,
+        message_type: messageType,
+        character_set_type: characterSetType,
+        character_set_size: parseInt(characterSetSize) || 160,
+        standard_chars: standardChars,
+        double_chars: doubleChars,
+        triple_chars: tripleChars,
+        quad_chars: quadChars,
+      };
+
+      if (id) {
+        await characterSetService.updateCharacterSet(parseInt(id), payload);
+        showSuccess("Character Set", "Updated successfully");
+      } else {
+        await characterSetService.createCharacterSet(payload);
+        showSuccess("Character Set", "Created successfully");
+      }
+      navigate("/dashboard/character-sets");
+    } catch (err) {
+      showError("Error", err instanceof Error ? err.message : "Failed to save");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="p-6">Loading...</div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      <BackButton fallbackTo="/dashboard/character-sets" showBreadcrumb={true} currentLabel={id ? "Edit Character Set" : "Create Character Set"} />
+
+      <form onSubmit={handleSubmit} className="space-y-6 bg-white rounded-lg p-6 border border-gray-200">
+        <h2 className="text-2xl font-bold text-gray-900">
+          {id ? "Edit Character Set" : "Create Character Set"}
+        </h2>
+
+        {/* Basic Info */}
+        <div className="space-y-4 border-b pb-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Name *
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              placeholder="e.g., GSM Default"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Description
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={2}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-vertical"
+              placeholder="Describe this character set"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="isActive"
+              checked={isActive}
+              onChange={(e) => setIsActive(e.target.checked)}
+              className="w-4 h-4"
+            />
+            <label htmlFor="isActive" className="text-sm font-medium text-gray-700">
+              Active
+            </label>
+          </div>
+        </div>
+
+        {/* Configuration */}
+        <div className="space-y-4 border-b pb-6">
+          <h3 className="text-lg font-semibold text-gray-900">Configuration</h3>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Message Type *
+              </label>
+              <select
+                value={messageType}
+                onChange={(e) => setMessageType(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              >
+                <option value="">Select message type</option>
+                {MESSAGE_TYPE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Character Set Type *
+              </label>
+              <select
+                value={characterSetType}
+                onChange={(e) => setCharacterSetType(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              >
+                <option value="">Select character set type</option>
+                {CHARACTER_SET_TYPE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Character Set Size
+            </label>
+            <input
+              type="number"
+              value={characterSetSize}
+              onChange={(e) => setCharacterSetSize(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              placeholder="e.g., 160"
+            />
+          </div>
+        </div>
+
+        {/* Characters */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-gray-900">Character Strings</h3>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Standard Characters *
+            </label>
+            <textarea
+              value={standardChars}
+              onChange={(e) => setStandardChars(e.target.value)}
+              rows={4}
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-vertical font-mono text-sm"
+              placeholder="e.g., ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Double Characters (optional)
+            </label>
+            <textarea
+              value={doubleChars}
+              onChange={(e) => setDoubleChars(e.target.value)}
+              rows={2}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-vertical font-mono text-sm"
+              placeholder="Characters that take 2 positions"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Triple Characters (optional)
+            </label>
+            <textarea
+              value={tripleChars}
+              onChange={(e) => setTripleChars(e.target.value)}
+              rows={2}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-vertical font-mono text-sm"
+              placeholder="Characters that take 3 positions"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Quad Characters (optional)
+            </label>
+            <textarea
+              value={quadChars}
+              onChange={(e) => setQuadChars(e.target.value)}
+              rows={2}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-vertical font-mono text-sm"
+              placeholder="Characters that take 4 positions"
+            />
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-3 pt-6 border-t">
+          <button
+            type="submit"
+            disabled={saving}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          >
+            <Save className="w-4 h-4" />
+            {saving ? "Saving..." : "Save"}
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate("/dashboard/character-sets")}
+            className="flex items-center gap-2 px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}

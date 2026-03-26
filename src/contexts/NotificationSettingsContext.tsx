@@ -67,21 +67,7 @@ export function NotificationSettingsProvider({
 }: {
   children: ReactNode;
 }) {
-  const [settings, setSettings] = useState<NotificationSettings>(() => {
-    try {
-      const stored = localStorage.getItem("notificationSettings");
-      if (stored) {
-        return JSON.parse(stored);
-      }
-    } catch (error) {
-      console.error("Error loading notification settings:", error);
-    }
-    return defaultSettings;
-  });
-
-  useEffect(() => {
-    localStorage.setItem("notificationSettings", JSON.stringify(settings));
-  }, [settings]);
+  const [settings, setSettings] = useState<NotificationSettings>(defaultSettings);
 
   const updateSettings = (updates: Partial<NotificationSettings>) => {
     setSettings((prev) => ({
@@ -92,10 +78,6 @@ export function NotificationSettingsProvider({
 
   const resetSettings = () => {
     setSettings(defaultSettings);
-    localStorage.setItem(
-      "notificationSettings",
-      JSON.stringify(defaultSettings),
-    );
   };
 
   return (

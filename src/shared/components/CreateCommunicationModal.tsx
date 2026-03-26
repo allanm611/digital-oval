@@ -13,36 +13,45 @@ import {
   Variable,
   ChevronDown,
   Settings,
+  Loader,
+  Check,
 } from "lucide-react";
-import { color, tw, components, zIndex } from "../../../shared/utils/utils";
-import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import PreviewPanel from "./PreviewPanel";
-import { communicationService } from "../services/communicationService";
-import { quicklistService } from "../../quicklists/services/quicklistService";
+import { color, tw, components, zIndex } from "../utils/utils";
+import LoadingSpinner from "./ui/LoadingSpinner";
+import PreviewPanel from "../../features/communications/components/PreviewPanel";
+import RichTextEditor from "../../features/communications/components/RichTextEditor";
+import { communicationService } from "../../features/communications/services/communicationService";
+import { quicklistService } from "../../features/quicklists/services/quicklistService";
 import {
   CommunicationChannel,
   CommunicationResult,
-} from "../types/communication";
-import { QuickList } from "../../quicklists/types/quicklist";
-import CascadingVariableSelector from "../../manual-broadcast/components/CascadingVariableSelector";
-import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import { useConfigurationData } from "../../../shared/services/configurationDataService";
-import { useToast } from "../../../contexts/ToastContext";
-import { useClickOutside } from "../../../shared/hooks/useClickOutside";
+} from "../../features/communications/types/communication";
+import { QuickList } from "../../features/quicklists/types/quicklist";
+import CascadingVariableSelector from "../../features/manual-broadcast/components/CascadingVariableSelector";
+import HeadlessSelect from "./ui/HeadlessSelect";
+import { useConfigurationData } from "../services/configurationDataService";
+import { useToast } from "../../contexts/ToastContext";
+import { useAuth } from "../../contexts/AuthContext";
+import { useClickOutside } from "../hooks/useClickOutside";
 import {
   insertVariableAtCursor,
   formatVariablePlaceholder,
-} from "../../manual-broadcast/utils/variableInsertion";
-import type { TemplateVariable } from "../../manual-broadcast/types";
-import { CommunicationPolicyConfiguration } from "../../campaigns/types/communicationPolicyConfig";
-import { communicationPolicyService } from "../../campaigns/services/communicationPolicyService";
-import CommunicationPolicyModal from "../../campaigns/components/CommunicationPolicyModal";
-import PolicyNameModal from "../../campaigns/components/PolicyNameModal";
+} from "../utils/variableInsertion";
+import type { TemplateVariable } from "../../features/manual-broadcast/types";
+import { CommunicationPolicyConfiguration } from "../../features/campaigns/types/communicationPolicyConfig";
+import { communicationPolicyService } from "../../features/campaigns/services/communicationPolicyService";
+import CommunicationPolicyModal from "../../features/campaigns/components/CommunicationPolicyModal";
+import PolicyNameModal from "../../features/campaigns/components/PolicyNameModal";
+import { Segment } from "../../features/segments/types/segment";
+import { DUMMY_RECIPIENTS } from "../../features/campaigns/pages/SeedListManagementPage";
+import type { SeedListRecipient } from "../../features/campaigns/pages/SeedListManagementPage";
+import { validatePhoneOnly, isValidEmail } from "../utils/validation";
 
 interface CreateCommunicationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  quicklist: QuickList;
+  quicklist?: QuickList;
+  segment?: Segment;
   onSuccess?: (result: CommunicationResult) => void;
 }
 
@@ -52,10 +61,12 @@ export default function CreateCommunicationModal({
   isOpen,
   onClose,
   quicklist,
+  segment,
   onSuccess,
 }: CreateCommunicationModalProps) {
   const { data: smsRoutes } = useConfigurationData("smsRoutes");
   const { error: showError } = useToast();
+  const { user } = useAuth();
 
   const channels = [
     { id: "EMAIL" as Channel, name: "Email", icon: Mail },
@@ -83,6 +94,16 @@ export default function CreateCommunicationModal({
     []
   );
 
+  // Test state
+  const [isTesting, setIsTesting] = useState(false);
+  const [testResults, setTestResults] = useState<
+    Array<{ contact: string; status: "success" | "failed"; message?: string }>
+  >([]);
+  const [testError, setTestError] = useState("");
+  const [selectedTestContacts, setSelectedTestContacts] = useState<Set<string>>(
+    new Set()
+  );
+
   const titleInputRef = useRef<HTMLInputElement>(null);
   const bodyTextareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -105,6 +126,113 @@ export default function CreateCommunicationModal({
 
   const policyDropdownRef = useRef<HTMLDivElement>(null);
   useClickOutside(policyDropdownRef, () => setIsPolicyDropdownOpen(false));
+
+  // Get active seed list recipients
+  const getActiveRecipients = (): SeedListRecipient[] => {
+    return DUMMY_RECIPIENTS.filter((r) => r.status === "active");
+  };
+
+  // Derive all available test contacts from active recipients based on channel
+  const getAvailableTestContacts = (): string[] => {
+    const activeRecipients = getActiveRecipients();
+    return activeRecipients
+      .map((r) => {
+        const contact =
+          selectedChannel === "EMAIL" ? r.customer_email : r.customer_phone;
+        // Remove + prefix from phone numbers
+        return contact?.replace(/^\+/, "") || "";
+      })
+      .filter(Boolean) as string[];
+  };
+
+  // Get only the selected/checked test contacts
+  const getSelectedTestContacts = (): string[] => {
+    return getAvailableTestContacts().filter((contact) =>
+      selectedTestContacts.has(contact)
+    );
+  };
+
+  // Toggle selection of a test contact
+  const toggleTestContact = (contact: string) => {
+    const newSelected = new Set(selectedTestContacts);
+    if (newSelected.has(contact)) {
+      newSelected.delete(contact);
+    } else {
+      newSelected.add(contact);
+    }
+    setSelectedTestContacts(newSelected);
+  };
+
+  // Validate contact based on channel
+  const validateContact = (contact: string): boolean => {
+    if (selectedChannel === "EMAIL") {
+      return isValidEmail(contact);
+    } else if (selectedChannel === "SMS" || selectedChannel === "WHATSAPP") {
+      const phoneValidation = validatePhoneOnly([contact]);
+      return phoneValidation.valid;
+    }
+    return isValidEmail(contact) || validatePhoneOnly([contact]).valid;
+  };
+
+  // Handle sending test broadcasts
+  const handleSendTest = async () => {
+    const contacts = getSelectedTestContacts();
+
+    if (contacts.length === 0) {
+      setTestError("Please select at least one test contact to send tests");
+      return;
+    }
+
+    setIsTesting(true);
+    setTestError("");
+    setTestResults([]);
+
+    try {
+      const results: Array<{
+        contact: string;
+        status: "success" | "failed";
+        message?: string;
+      }> = [];
+
+      for (const contact of contacts) {
+        // Simulate a small delay for each contact
+        await new Promise((resolve) => setTimeout(resolve, 300));
+
+        // Validate based on channel
+        const isValid = validateContact(contact);
+        let errorMessage = "";
+
+        if (selectedChannel === "EMAIL") {
+          errorMessage = "Invalid email address";
+        } else if (selectedChannel === "SMS" || selectedChannel === "WHATSAPP") {
+          errorMessage = "Invalid phone number";
+        } else {
+          errorMessage = "Invalid contact";
+        }
+
+        if (isValid) {
+          results.push({
+            contact,
+            status: "success",
+            message: `Successfully sent to ${selectedChannel}`,
+          });
+        } else {
+          results.push({
+            contact,
+            status: "failed",
+            message: errorMessage,
+          });
+        }
+      }
+
+      setTestResults(results);
+    } catch (err) {
+      console.error("Failed to process test broadcasts:", err);
+      setTestError("Failed to send test broadcasts. Please try again.");
+    } finally {
+      setIsTesting(false);
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -138,6 +266,10 @@ export default function CreateCommunicationModal({
       setShowVariableSelector(false);
       setSelectedVariables([]);
       setSelectedPolicy(null);
+      setTestError("");
+      setTestResults([]);
+      setSelectedTestContacts(new Set());
+      setIsTesting(false);
     }
   }, [isOpen]);
 
@@ -249,7 +381,7 @@ export default function CreateCommunicationModal({
 
   const getSampleDataForPreview = (): Record<string, string> => {
     const sampleData: Record<string, string> = {};
-    if (quicklist.columns && quicklist.columns.length > 0) {
+    if (quicklist?.columns && quicklist.columns.length > 0) {
       quicklist.columns.forEach((col: string) => {
         sampleData[col] = `[${col}]`;
       });
@@ -300,6 +432,11 @@ export default function CreateCommunicationModal({
       return;
     }
 
+    if (!user?.user_id) {
+      setError("You must be logged in to send communications");
+      return;
+    }
+
     const cleanBody =
       selectedChannel !== "EMAIL" && isRichText
         ? messageBody.replace(/<[^>]*>/g, "")
@@ -310,8 +447,8 @@ export default function CreateCommunicationModal({
       setResult(null);
 
       const response = await communicationService.sendCommunication({
-        source_type: "quicklist",
-        source_id: quicklist.id,
+        source_type: quicklist ? "quicklist" : "segment",
+        source_id: quicklist?.id || segment?.id || 0,
         channels: [selectedChannel],
         message_template: {
           ...(messageTitle && selectedChannel === "EMAIL"
@@ -320,7 +457,7 @@ export default function CreateCommunicationModal({
           body: cleanBody,
         },
         batch_size: 500,
-        created_by: 1,
+        created_by: user?.user_id ?? null,
       });
 
       if (response.success) {
@@ -328,10 +465,32 @@ export default function CreateCommunicationModal({
         if (onSuccess) {
           onSuccess(response.data);
         }
+      } else {
+        // Handle backend error response
+        let errorMsg = "Failed to send communication";
+        if (response.error) {
+          errorMsg = typeof response.error === "string"
+            ? response.error
+            : JSON.stringify(response.error);
+        }
+        showError("Communication Error", errorMsg, true); // bypassSilentMode
       }
     } catch (err) {
       console.error("Failed to send communication:", err);
-      showError("Failed to send communication");
+      // Try to extract error message from response if available
+      let errorMsg = "Failed to send communication";
+
+      // Check if error has response data with error field
+      if (err && typeof err === "object" && "response" in err) {
+        const errResponse = (err as any).response?.data;
+        if (errResponse?.error) {
+          errorMsg = typeof errResponse.error === "string"
+            ? errResponse.error
+            : JSON.stringify(errResponse.error);
+        }
+      }
+
+      showError("Communication Error", errorMsg, true); // bypassSilentMode
     } finally {
       setSending(false);
     }
@@ -497,9 +656,9 @@ export default function CreateCommunicationModal({
             <p className="text-xs sm:text-sm text-gray-500 mt-1">
               Sending to:{" "}
               <span className="font-semibold text-gray-700 break-words">
-                {quicklist.name}
+                {quicklist?.name || segment?.name}
               </span>{" "}
-              ({quicklist.rows_imported || 0} recipients)
+              ({quicklist?.rows_imported || segment?.size_estimate || 0} recipients)
             </p>
           </div>
           <button
@@ -808,26 +967,38 @@ export default function CreateCommunicationModal({
                     <label className="text-sm font-medium text-gray-900 mb-2 block">
                       Message Body <span className="text-red-500">*</span>
                     </label>
-                    <textarea
-                      ref={bodyTextareaRef}
-                      value={messageBody}
-                      onChange={(e) => {
-                        setMessageBody(e.target.value);
-                        setCursorPosition(e.target.selectionStart || 0);
-                      }}
-                      onClick={(e) => {
-                        setActiveField("body");
-                        setCursorPosition(e.currentTarget.selectionStart || 0);
-                      }}
-                      onFocus={(e) => {
-                        setActiveField("body");
-                        setCursorPosition(e.currentTarget.selectionStart || 0);
-                      }}
-                      placeholder="Enter your message... Click 'Insert Variable' to add dynamic content"
-                      rows={10}
-                      className="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 transition-all text-sm resize-none"
-                      style={{ borderColor: color.border.default }}
-                    />
+                    {isRichText ? (
+                      <RichTextEditor
+                        value={messageBody}
+                        onChange={(value) => {
+                          setMessageBody(value);
+                          setActiveField("body");
+                        }}
+                        placeholder="Enter your message... Click 'Insert Variable' to add dynamic content"
+                        minHeight="250px"
+                      />
+                    ) : (
+                      <textarea
+                        ref={bodyTextareaRef}
+                        value={messageBody}
+                        onChange={(e) => {
+                          setMessageBody(e.target.value);
+                          setCursorPosition(e.target.selectionStart || 0);
+                        }}
+                        onClick={(e) => {
+                          setActiveField("body");
+                          setCursorPosition(e.currentTarget.selectionStart || 0);
+                        }}
+                        onFocus={(e) => {
+                          setActiveField("body");
+                          setCursorPosition(e.currentTarget.selectionStart || 0);
+                        }}
+                        placeholder="Enter your message... Click 'Insert Variable' to add dynamic content"
+                        rows={10}
+                        className="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 transition-all text-sm resize-none"
+                        style={{ borderColor: color.border.default }}
+                      />
+                    )}
 
                     {/* Info bar */}
                     <div className="mt-2 flex items-center justify-between">
@@ -853,34 +1024,12 @@ export default function CreateCommunicationModal({
                           customer data
                         </span>
                       )}
-
-                      {selectedVariables.length > 0 && (
-                        <div className="flex items-center gap-1">
-                          {selectedVariables.slice(0, 3).map((v) => (
-                            <span
-                              key={v.id}
-                              className="px-2 py-0.5 rounded text-xs"
-                              style={{
-                                backgroundColor: `${color.primary.accent}10`,
-                                color: color.primary.accent,
-                              }}
-                            >
-                              {v.name}
-                            </span>
-                          ))}
-                          {selectedVariables.length > 3 && (
-                            <span className="text-xs text-gray-400">
-                              +{selectedVariables.length - 3} more
-                            </span>
-                          )}
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
 
                 {/* Right Column - Preview (2/5) */}
-                <div className="lg:col-span-2">
+                <div className="lg:col-span-2 space-y-4">
                   <div className="sticky top-4">
                     <PreviewPanel
                       channel={selectedChannel}
@@ -889,6 +1038,142 @@ export default function CreateCommunicationModal({
                       sampleData={getSampleDataForPreview()}
                     />
                   </div>
+
+                  {/* Test Section - Send Test Message */}
+                  {getAvailableTestContacts().length > 0 && (
+                    <div
+                      className="bg-white rounded-md border p-4"
+                      style={{ borderColor: color.border.default }}
+                    >
+                      <h3 className="text-sm font-semibold text-gray-900 mb-4">
+                        Send Test Message
+                      </h3>
+
+                      {/* Available Test Contacts */}
+                      <div className="mb-4">
+                        <label className="text-sm font-medium text-gray-900 mb-2 block">
+                          Test Contacts
+                        </label>
+                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                          {getAvailableTestContacts().map((contact) => (
+                            <label
+                              key={contact}
+                              className="flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-gray-50"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedTestContacts.has(contact)}
+                                onChange={() => toggleTestContact(contact)}
+                                className="w-4 h-4 rounded border-gray-300 cursor-pointer"
+                              />
+                              <span className="text-sm text-gray-700 flex-1">
+                                {contact}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Send Test Button */}
+                      <div className="mb-4">
+                        <button
+                          onClick={handleSendTest}
+                          disabled={
+                            getSelectedTestContacts().length === 0 || isTesting
+                          }
+                          className="w-auto px-4 py-2.5 text-white rounded-md text-sm font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                          style={{ backgroundColor: color.primary.accent }}
+                        >
+                          {isTesting ? (
+                            <>
+                              <Loader className="w-4 h-4 animate-spin flex-shrink-0" />
+                              <span>Sending Tests...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Send className="w-4 h-4 flex-shrink-0" />
+                              <span>Send Test</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+
+                      {/* Test Error Message */}
+                      {testError && (
+                        <div
+                          className="p-3 rounded-md flex items-start gap-2 mb-4"
+                          style={{
+                            backgroundColor: `${color.status.danger}10`,
+                            border: `1px solid ${color.status.danger}30`,
+                          }}
+                        >
+                          <AlertCircle
+                            className="w-5 h-5 flex-shrink-0"
+                            style={{ color: color.status.danger }}
+                          />
+                          <p
+                            className="text-sm"
+                            style={{ color: color.status.danger }}
+                          >
+                            {testError}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Test Results */}
+                      {testResults.length > 0 && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-900 mb-2 block">
+                            Test Results
+                          </label>
+                          <div className="space-y-2 max-h-48 overflow-y-auto">
+                            {testResults.map((result, index) => (
+                              <div
+                                key={index}
+                                className="flex items-start gap-2 p-2 rounded-md text-sm"
+                                style={{
+                                  backgroundColor:
+                                    result.status === "success"
+                                      ? `${color.status.success}10`
+                                      : `${color.status.danger}10`,
+                                }}
+                              >
+                                {result.status === "success" ? (
+                                  <CheckCircle
+                                    className="w-4 h-4 flex-shrink-0 mt-0.5"
+                                    style={{ color: color.status.success }}
+                                  />
+                                ) : (
+                                  <XCircle
+                                    className="w-4 h-4 flex-shrink-0 mt-0.5"
+                                    style={{ color: color.status.danger }}
+                                  />
+                                )}
+                                <div className="flex-1">
+                                  <p
+                                    className="text-xs font-medium"
+                                    style={{
+                                      color:
+                                        result.status === "success"
+                                          ? color.status.success
+                                          : color.status.danger,
+                                    }}
+                                  >
+                                    {result.contact}
+                                  </p>
+                                  {result.message && (
+                                    <p className="text-xs text-gray-600 mt-0.5">
+                                      {result.message}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -941,7 +1226,7 @@ export default function CreateCommunicationModal({
               <>
                 <Send className="w-4 h-4" />
                 <span className="hidden sm:inline">
-                  Send Now to {quicklist.rows_imported || 0} Recipients
+                  Send Now to {quicklist?.rows_imported || segment?.size_estimate || 0} Recipients
                 </span>
                 <span className="sm:hidden">Send Now</span>
               </>

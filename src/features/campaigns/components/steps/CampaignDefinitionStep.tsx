@@ -8,7 +8,7 @@ import { useClickOutside } from "../../../../shared/hooks/useClickOutside";
 import {
   lineOfBusinessConfig,
   departmentsConfig,
-} from "../../../../shared/configs/configurationPageConfigs";
+} from "../../../configurations/configs/configurationPageConfigs";
 import { configurationDataService } from "../../../../shared/services/configurationDataService";
 import { CommunicationPolicyConfiguration } from "../../types/communicationPolicyConfig";
 import { tw, components, color } from "../../../../shared/utils/utils";
@@ -630,25 +630,29 @@ export default function CampaignDefinitionStep({
               </div>
               {formData.tags && formData.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2">
-                  {formData.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="inline-flex items-center px-3 py-1 border text-sm font-medium rounded-full"
-                      style={{
-                        borderColor: color.primary.accent,
-                        color: color.primary.accent,
-                      }}
-                    >
-                      {tag}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveTag(tag)}
-                        className="ml-2 hover:opacity-70 transition-opacity"
+                  {formData.tags.map((tag, index) => {
+                    const tagName = typeof tag === "object" && tag !== null ? (tag as any).name || String(tag) : String(tag);
+                    const tagKey = typeof tag === "object" && tag !== null ? (tag as any).id || index : `${tag}-${index}`;
+                    return (
+                      <span
+                        key={tagKey}
+                        className="inline-flex items-center px-3 py-1 border text-sm font-medium rounded-full"
+                        style={{
+                          borderColor: color.primary.accent,
+                          color: color.primary.accent,
+                        }}
                       >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  ))}
+                        {tagName}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveTag(tag)}
+                          className="ml-2 hover:opacity-70 transition-opacity"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    );
+                  })}
                 </div>
               )}
             </div>

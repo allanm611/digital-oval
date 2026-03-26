@@ -1185,8 +1185,8 @@ export default function JobDependenciesPage() {
       );
       setShowDeleteModal(false);
       setDeletingDependency(null);
-      await fetchDependencies();
-      await fetchStats();
+      // Optimistically remove deleted dependency
+      setDependencies((prev) => prev.filter((d) => d.id !== deletingDependency.id));
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to delete job dependency";
@@ -1225,8 +1225,16 @@ export default function JobDependenciesPage() {
       }
       setIsModalOpen(false);
       setEditingDependency(null);
-      await fetchDependencies();
-      await fetchStats();
+      // Optimistically update dependencies list
+      if (editingDependency) {
+        // Update existing dependency
+        setDependencies((prev) =>
+          prev.map((d) => (d.id === editingDependency.id ? { ...d, ...values } : d)),
+        );
+      } else {
+        // For new dependency, we don't have the ID yet, so skip optimistic update
+        // fetchDependencies would be called instead
+      }
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to save job dependency";
@@ -1252,8 +1260,12 @@ export default function JobDependenciesPage() {
           `Dependency ${dependency.id} has been activated`,
         );
       }
-      await fetchDependencies();
-      await fetchStats();
+      // Optimistically update dependency status
+      setDependencies((prev) =>
+        prev.map((d) =>
+          d.id === dependency.id ? { ...d, is_active: !d.is_active } : d,
+        ),
+      );
     } catch (err) {
       const message =
         err instanceof Error
@@ -1570,8 +1582,12 @@ export default function JobDependenciesPage() {
       );
       setSelectedDependencyIds(new Set());
       setIsSelectionMode(false);
-      await fetchDependencies();
-      await fetchStats();
+      // Optimistically update selected dependencies to active
+      setDependencies((prev) =>
+        prev.map((d) =>
+          selectedDependencyIds.has(d.id) ? { ...d, is_active: true } : d,
+        ),
+      );
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to activate dependencies";
@@ -1592,8 +1608,12 @@ export default function JobDependenciesPage() {
       );
       setSelectedDependencyIds(new Set());
       setIsSelectionMode(false);
-      await fetchDependencies();
-      await fetchStats();
+      // Optimistically update selected dependencies to inactive
+      setDependencies((prev) =>
+        prev.map((d) =>
+          selectedDependencyIds.has(d.id) ? { ...d, is_active: false } : d,
+        ),
+      );
     } catch (err) {
       const message =
         err instanceof Error
@@ -1705,8 +1725,10 @@ export default function JobDependenciesPage() {
       );
       setShowDeleteAllModal(false);
       setDeletingAllJobId(null);
-      await fetchDependencies();
-      await fetchStats();
+      // Optimistically remove all dependencies for this job
+      setDependencies((prev) =>
+        prev.filter((d) => d.job_id !== deletingAllJobId),
+      );
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to delete dependencies";

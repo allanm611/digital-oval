@@ -234,19 +234,7 @@ export default function RevenueMetricFormPage({ mode }: RevenueMetricFormPagePro
   return (
     <div className="space-y-6">
       {/* Header with Back Button */}
-      <div className="flex items-center gap-4">
-        <BackButton fallbackTo="/dashboard/kpis/revenue-metrics" />
-        <div>
-          <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
-            {mode === "create" ? "Create Revenue Metric" : "Edit Revenue Metric"}
-          </h1>
-          {/* <p className={`${tw.textSecondary} mt-1 text-sm`}>
-            {mode === "create"
-              ? "Create a new revenue performance metric"
-              : `Editing: ${metric?.name || ""}`}
-          </p> */}
-        </div>
-      </div>
+      <BackButton fallbackTo="/dashboard/kpis/revenue-metrics" showBreadcrumb={true} currentLabel={mode === "create" ? "Create Revenue Metric" : "Edit Revenue Metric"} />
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">

@@ -1,15 +1,15 @@
 export interface CreateCampaignCategoryRequest {
-  name: string; // required, 1-64 chars
-  description: string; // required
-  parent_category_id?: number | null; // optional, can be null
-  display_order?: number; // optional
-  is_active?: boolean; // optional
-  created_by: number; // required, must be a number
+  name: string; 
+  description: string; 
+  parent_category_id?: number | null; 
+  display_order?: number;
+  is_active?: boolean;
+  created_by: number; 
 }
 
 export interface UpdateCampaignCategoryRequest {
-  name?: string; // optional, 1-64 chars
-  description?: string | null; // optional, max 500 chars, can be null
+  name?: string; 
+  description?: string | null; 
 }
 
 export interface CampaignCategory {

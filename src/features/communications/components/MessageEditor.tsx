@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { ChevronDown, Type, Sparkles, AlignLeft } from "lucide-react";
 import { tw, color } from "../../../shared/utils/utils";
 import { CommunicationChannel } from "../types/communication";
 import RichTextEditor from "./RichTextEditor";
+import { validateInsertPosition, validateMessageSyntax } from "../../../shared/utils/variableInsertion";
 
 interface MessageEditorProps {
   title: string;
@@ -28,16 +29,38 @@ export default function MessageEditor({
   const [showVariables, setShowVariables] = useState(false);
   const [activeField, setActiveField] = useState<"title" | "body">("body");
   const [cursorPosition, setCursorPosition] = useState<number>(0);
+  const [variableError, setVariableError] = useState<string>("");
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  const bodyTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const insertVariable = (variable: string) => {
     const formattedVariable = `{{${variable}}}`;
 
+    // Get actual cursor position from DOM element
+    let actualCursorPosition = cursorPosition;
+    if (activeField === "title" && titleInputRef.current) {
+      actualCursorPosition = titleInputRef.current.selectionStart || 0;
+    } else if (activeField === "body" && bodyTextareaRef.current) {
+      actualCursorPosition = bodyTextareaRef.current.selectionStart || 0;
+    }
+
+    const currentText = activeField === "title" ? title : body;
+
+    // Validate cursor position
+    const positionError = validateInsertPosition(currentText, actualCursorPosition);
+    if (positionError) {
+      setVariableError(positionError);
+      return;
+    }
+
+    setVariableError(""); // Clear any previous errors
+
     if (activeField === "title") {
       // Insert at cursor position in title
       const newTitle =
-        title.slice(0, cursorPosition) +
+        title.slice(0, actualCursorPosition) +
         formattedVariable +
-        title.slice(cursorPosition);
+        title.slice(actualCursorPosition);
       onTitleChange(newTitle);
     } else {
       // Insert at cursor position in body or at the end
@@ -46,9 +69,9 @@ export default function MessageEditor({
         onBodyChange(body + " " + formattedVariable + " ");
       } else {
         const newBody =
-          body.slice(0, cursorPosition) +
+          body.slice(0, actualCursorPosition) +
           formattedVariable +
-          body.slice(cursorPosition);
+          body.slice(actualCursorPosition);
         onBodyChange(newBody);
       }
     }
@@ -58,11 +81,18 @@ export default function MessageEditor({
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCursorPosition(e.target.selectionStart || 0);
     onTitleChange(e.target.value);
+    // Validate title syntax
+    const error = validateMessageSyntax(e.target.value);
+    if (error) setVariableError(error);
   };
 
   const handleBodyChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setCursorPosition(e.target.selectionStart || 0);
     onBodyChange(e.target.value);
+    // Validate body syntax
+    const error = validateMessageSyntax(e.target.value);
+    if (error) setVariableError(error);
+    else setVariableError("");
   };
 
   const hasTitle = channel === "EMAIL";
@@ -158,6 +188,7 @@ export default function MessageEditor({
             Subject Line <span className="text-red-500">*</span>
           </label>
           <input
+            ref={titleInputRef}
             type="text"
             value={title}
             onChange={handleTitleChange}
@@ -189,6 +220,11 @@ export default function MessageEditor({
         <label className={`${tw.label} mb-2 block`}>
           Message Body <span className="text-red-500">*</span>
         </label>
+        {variableError && (
+          <div className="mb-3 text-sm text-red-700">
+            {variableError}
+          </div>
+        )}
         {isRichText ? (
           <div
             onClick={() => setActiveField("body")}
@@ -203,6 +239,7 @@ export default function MessageEditor({
           </div>
         ) : (
           <textarea
+            ref={bodyTextareaRef}
             value={body}
             onChange={handleBodyChange}
             onClick={(e) => {

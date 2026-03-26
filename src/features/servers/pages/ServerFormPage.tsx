@@ -226,19 +226,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <BackButton fallbackTo="/dashboard/servers" />
-        <div>
-          <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
-            {mode === "create" ? "Add Server" : "Edit Server"}
-          </h1>
-          <p className={`${tw.textSecondary} mt-2 text-sm`}>
-            {mode === "create"
-              ? "Define the destination endpoint CVM jobs will target."
-              : "Update server configuration and monitoring settings."}
-          </p>
-        </div>
-      </div>
+      <BackButton fallbackTo="/dashboard/servers" showBreadcrumb={true} currentLabel={mode === "create" ? "Add Server" : "Edit Server"} />
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div

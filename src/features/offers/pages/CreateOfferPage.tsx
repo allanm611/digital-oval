@@ -26,6 +26,7 @@ import {
   useFormDataPersistence,
   clearPersistedFormData,
 } from "../../../shared/hooks/useFormDataPersistence";
+import { useFormCleanupOnExit } from "../../../shared/hooks/useFormCleanupOnExit";
 import {
   CreateOfferRequest,
   UpdateOfferRequest,
@@ -707,6 +708,7 @@ function ReviewStep({
   rewards,
   offerCategories,
   validationErrors,
+  selectedProducts = [],
 }: Omit<
   StepProps,
   | "currentStep"
@@ -722,7 +724,9 @@ function ReviewStep({
   | "categoriesLoading"
   | "onSaveDraft"
   | "onCancel"
->) {
+> & {
+  selectedProducts?: LinkedProduct[];
+}) {
   const [editingCreativeId, setEditingCreativeId] = useState<string | null>(
     null,
   );
@@ -898,19 +902,19 @@ function ReviewStep({
         ].map(({ icon: Icon, label, value }) => (
           <div
             key={label}
-            className={`${tw.rounded} bg-white shadow-sm border border-gray-100 p-5 flex items-center gap-4`}
+            className={`${tw.rounded} bg-white shadow-sm border border-gray-100 p-4 flex items-center gap-3`}
           >
-            <div className="w-12 h-12 flex items-center justify-center">
+            <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
               <Icon
-                className="w-6 h-6"
+                className="w-5 h-5"
                 style={{ color: color.primary.accent }}
               />
             </div>
             <div>
-              <p className="text-xs uppercase tracking-wide text-gray-500">
+              <p className="text-sm font-medium text-gray-500">
                 {label}
               </p>
-              <p className="text-2xl font-semibold text-gray-900">{value}</p>
+              <p className="text-sm font-semibold text-gray-900">{value}</p>
             </div>
           </div>
         ))}
@@ -920,31 +924,31 @@ function ReviewStep({
         <div className="space-y-6 lg:col-span-2">
           {/* Offer Details */}
           <div className={components.card.surface}>
-            <h3 className={`${tw.cardTitle} ${tw.textPrimary} mb-4`}>
+            <h3 className={`text-sm font-bold ${tw.textPrimary} mb-4`}>
               Offer Details
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-sm">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
               <div>
-                <div className={`${tw.caption} ${tw.textSecondary} mb-1`}>
+                <div className={`text-sm font-medium ${tw.textSecondary} mb-1`}>
                   Name
                 </div>
-                <div className={`font-medium ${tw.textPrimary}`}>
+                <div className="text-sm font-medium text-gray-600">
                   {formData.name || "Untitled offer"}
                 </div>
               </div>
               <div>
-                <div className={`${tw.caption} ${tw.textSecondary} mb-1`}>
+                <div className={`text-sm font-medium ${tw.textSecondary} mb-1`}>
                   Offer Type
                 </div>
-                <div className={`font-medium ${tw.textPrimary}`}>
+                <div className="text-sm font-medium text-gray-600">
                   {formData.offer_type || "Not selected"}
                 </div>
               </div>
               <div>
-                <div className={`${tw.caption} ${tw.textSecondary} mb-1`}>
+                <div className={`text-sm font-medium ${tw.textSecondary} mb-1`}>
                   Catalog
                 </div>
-                <div className={`font-medium ${tw.textPrimary}`}>
+                <div className="text-sm font-medium text-gray-600">
                   {formData.category_id
                     ? offerCategories?.find(
                         (cat: OfferCategoryType) =>
@@ -954,19 +958,19 @@ function ReviewStep({
                 </div>
               </div>
               <div>
-                <div className={`${tw.caption} ${tw.textSecondary} mb-1`}>
+                <div className={`text-sm font-medium ${tw.textSecondary} mb-1`}>
                   Max Usage Per Customer
                 </div>
-                <div className={`font-medium ${tw.textPrimary}`}>
+                <div className="text-sm font-medium text-gray-600">
                   {formData.max_usage_per_customer || "Unlimited"}
                 </div>
               </div>
               {formData.description && (
                 <div className="md:col-span-2">
-                  <div className={`${tw.caption} ${tw.textSecondary} mb-1`}>
+                  <div className={`text-sm font-medium ${tw.textSecondary} mb-1`}>
                     Description
                   </div>
-                  <div className={`${tw.textPrimary} whitespace-pre-wrap`}>
+                  <div className="text-sm font-medium text-gray-600 whitespace-pre-wrap">
                     {formData.description}
                   </div>
                 </div>
@@ -976,7 +980,7 @@ function ReviewStep({
 
           {/* Offer Creatives */}
           <div className={components.card.surface}>
-            <h3 className={`${tw.cardTitle} ${tw.textPrimary} mb-3`}>
+            <h3 className={`text-sm font-bold ${tw.textPrimary} mb-3`}>
               Offer Creatives
             </h3>
             {creatives.length === 0 ? (
@@ -1025,7 +1029,7 @@ function ReviewStep({
                             {displayCreative.channel} ({displayCreative.locale})
                           </div>
                           {renderedTitle && (
-                            <div className={`text-xs ${tw.textSecondary} mt-1`}>
+                            <div className={`text-sm ${tw.textSecondary} mt-1`}>
                               {renderedTitle}
                             </div>
                           )}
@@ -1056,10 +1060,10 @@ function ReviewStep({
 
           {/* Products */}
           <div className={components.card.surface}>
-            <h3 className={`${tw.cardTitle} ${tw.textPrimary} mb-3`}>
+            <h3 className={`text-sm font-bold ${tw.textPrimary} mb-3`}>
               Products
             </h3>
-            {formData.primary_product_id ? (
+            {formData.primary_product_id && selectedProducts.length > 0 ? (
               <div
                 className={`flex items-center justify-between p-3 ${tw.rounded} border border-gray-100 bg-white`}
               >
@@ -1068,8 +1072,10 @@ function ReviewStep({
                     className="w-5 h-5"
                     style={{ color: color.primary.accent }}
                   />
-                  <div className={`text-sm font-medium ${tw.textPrimary}`}>
-                    Product ID: {formData.primary_product_id}
+                  <div className="text-sm font-medium text-gray-900">
+                    {selectedProducts.find((p) => Number(p.id) === formData.primary_product_id)?.name ||
+                     selectedProducts[0]?.name ||
+                     `Product ${formData.primary_product_id}`}
                   </div>
                 </div>
               </div>
@@ -1082,7 +1088,7 @@ function ReviewStep({
 
           {/* Tracking Configuration */}
           <div className={components.card.surface}>
-            <h3 className={`${tw.cardTitle} ${tw.textPrimary} mb-3`}>
+            <h3 className={`text-sm font-bold ${tw.textPrimary} mb-3`}>
               Tracking Configuration
             </h3>
             {trackingSources.length === 0 ? (
@@ -1107,14 +1113,14 @@ function ReviewStep({
                         >
                           {source.name}
                         </div>
-                        <div className={`text-xs ${tw.textSecondary}`}>
+                        <div className={`text-sm ${tw.textSecondary}`}>
                           {source.type} • {source.rules.length} rules
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
                       <div
-                        className="text-xs font-medium"
+                        className="text-sm font-medium"
                         style={{
                           color: source.enabled
                             ? color.primary.accent
@@ -1132,7 +1138,7 @@ function ReviewStep({
 
           {/* Rewards */}
           <div className={components.card.surface}>
-            <h3 className={`${tw.cardTitle} ${tw.textPrimary} mb-3`}>
+            <h3 className={`text-sm font-bold ${tw.textPrimary} mb-3`}>
               Offer Rewards
             </h3>
             {rewards.length === 0 ? (
@@ -1157,7 +1163,7 @@ function ReviewStep({
                         >
                           {reward.name}
                         </div>
-                        <div className={`text-xs ${tw.textSecondary}`}>
+                        <div className={`text-sm ${tw.textSecondary}`}>
                           {reward.type} • {reward.rules.length} rules
                         </div>
                       </div>
@@ -1172,30 +1178,30 @@ function ReviewStep({
         {/* Sidebar */}
         <aside className="space-y-4">
           <div
-            className={`${tw.rounded} border border-gray-200 bg-white shadow-sm p-5 space-y-3 text-sm`}
+            className={`${tw.rounded} border border-gray-200 bg-white shadow-sm p-5 space-y-3`}
           >
             <h3 className="text-sm font-semibold text-gray-900">
               Offer Settings
             </h3>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between text-sm">
               <span className="text-gray-500">Status</span>
-              <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
+              <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
                 Draft
               </span>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between text-sm">
               <span className="text-gray-500">Reusable</span>
               <span className="font-medium text-gray-900">
                 {formData.is_reusable ? "Yes" : "No"}
               </span>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between text-sm">
               <span className="text-gray-500">Multi-language</span>
               <span className="font-medium text-gray-900">
                 {formData.supports_multi_language ? "Yes" : "No"}
               </span>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between text-sm">
               <span className="text-gray-500">Max Usage</span>
               <span className="font-medium text-gray-900">
                 {formData.max_usage_per_customer || "Unlimited"}
@@ -1343,6 +1349,13 @@ export default function CreateOfferPage({
     setSelectedProducts,
     isEditMode,
   );
+
+  // Clear persisted form data when user exits the creation flow
+  useFormCleanupOnExit("offer_form_data");
+  useFormCleanupOnExit("offer_creatives");
+  useFormCleanupOnExit("offer_tracking_sources");
+  useFormCleanupOnExit("offer_rewards");
+  useFormCleanupOnExit("offer_products");
 
   // Restore offer data when returning from product creation
   useEffect(() => {
@@ -2252,6 +2265,8 @@ export default function CreateOfferPage({
       setTrackingSources,
       rewards,
       setRewards,
+      selectedProducts,
+      setSelectedProducts,
       isLoading,
       validationErrors,
       clearValidationErrors,
@@ -2271,6 +2286,8 @@ export default function CreateOfferPage({
       creatives,
       trackingSources,
       rewards,
+      selectedProducts,
+      setSelectedProducts,
       isLoading,
       validationErrors,
       clearValidationErrors,
@@ -2305,11 +2322,9 @@ export default function CreateOfferPage({
             <div className="flex items-center space-x-3">
               <BackButton
                 fallbackTo={getBackButtonFallback()}
-                className="text-gray-400 hover:text-gray-600"
+                showBreadcrumb={true}
+                currentLabel={isEditMode ? "Edit Offer" : "Create Offer"}
               />
-              <h1 className={`text-lg font-semibold ${tw.textPrimary}`}>
-                {isEditMode ? "Edit Offer" : "Create Offer"}
-              </h1>
             </div>
             {currentStep !== 6 && (
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center md:justify-end">

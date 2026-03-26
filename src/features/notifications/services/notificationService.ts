@@ -11,7 +11,7 @@ import {
   hardcodedCampaigns,
   hardcodedSegments,
   hardcodedOffers,
-} from "../../../shared/configs/configurationPageConfigs";
+} from "../../configurations/configs/configurationPageConfigs";
 
 const MOCK_NOTIFICATIONS: Notification[] = [
   {

@@ -85,6 +85,59 @@ class ProductService {
     return errorMessage;
   }
 
+  private normalizeProduct(data: any): Product {
+    if (!data) {
+      return {
+        id: 0,
+        product_uuid: "unknown",
+        product_code: "Not specified",
+        name: "Not specified",
+        description: "Not specified",
+        price: 0,
+        currency: "USD",
+        requires_inventory: false,
+        is_active: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+    }
+
+    return {
+      id: data.id || 0,
+      product_uuid: data.product_uuid || "unknown",
+      product_code: data.product_code || "Not specified",
+      da_id: data.da_id || undefined,
+      name: data.name || "Not specified",
+      description: data.description || "Not specified",
+      category_id: data.category_id || undefined,
+      product_type_id: data.product_type_id || undefined,
+      price: data.price ?? 0,
+      currency: data.currency || "USD",
+      scope: data.scope || undefined,
+      unit: data.unit || undefined,
+      unit_value: data.unit_value ?? undefined,
+      cost: data.cost ?? undefined,
+      validity_days: data.validity_days ?? undefined,
+      validity_hours: data.validity_hours ?? undefined,
+      offer_category: data.offer_category || undefined,
+      requires_inventory: data.requires_inventory ?? false,
+      available_quantity: data.available_quantity ?? undefined,
+      is_active: data.is_active ?? false,
+      effective_from: data.effective_from || undefined,
+      effective_to: data.effective_to || undefined,
+      created_at: data.created_at || new Date().toISOString(),
+      updated_at: data.updated_at || new Date().toISOString(),
+      created_by: data.created_by || undefined,
+      updated_by: data.updated_by || undefined,
+      metadata: data.metadata || undefined,
+      tags: Array.isArray(data.tags) ? data.tags : [],
+    };
+  }
+
+  private normalizeProductArray(products: any[]): Product[] {
+    return Array.isArray(products) ? products.map((prod) => this.normalizeProduct(prod)) : [];
+  }
+
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
@@ -243,7 +296,16 @@ class ProductService {
     if (params.offset) queryParams.append("offset", params.offset.toString());
     if (params.skipCache) queryParams.append("skipCache", "true");
 
-    return this.request<PaginatedResponse<Product>>(`/search?${queryParams}`);
+    const response = await this.request<PaginatedResponse<Product>>(`/search?${queryParams}`);
+
+    // Normalize all products in paginated response
+    if (response?.data && Array.isArray(response.data)) {
+      return {
+        ...response,
+        data: this.normalizeProductArray(response.data),
+      };
+    }
+    return response;
   }
 
   async superSearch(
@@ -297,9 +359,18 @@ class ProductService {
     if (params.offset) queryParams.append("offset", params.offset.toString());
     if (params.skipCache) queryParams.append("skipCache", "true");
 
-    return this.request<PaginatedResponse<Product>>(
+    const response = await this.request<PaginatedResponse<Product>>(
       `/super-search?${queryParams}`
     );
+
+    // Normalize all products in paginated response
+    if (response?.data && Array.isArray(response.data)) {
+      return {
+        ...response,
+        data: this.normalizeProductArray(response.data),
+      };
+    }
+    return response;
   }
 
   // 3. Filtered List Endpoints
@@ -319,9 +390,18 @@ class ProductService {
     if (params.skipCache) queryParams.append("skipCache", "true");
 
     const query = queryParams.toString();
-    return this.request<PaginatedResponse<Product>>(
+    const response = await this.request<PaginatedResponse<Product>>(
       `/active${query ? "?" + query : ""}`
     );
+
+    // Normalize all products in paginated response
+    if (response?.data && Array.isArray(response.data)) {
+      return {
+        ...response,
+        data: this.normalizeProductArray(response.data),
+      };
+    }
+    return response;
   }
 
   async getEffectiveProducts(
@@ -556,7 +636,16 @@ class ProductService {
     skipCache: boolean = false
   ): Promise<ApiResponse<Product>> {
     const params = skipCache ? "?skipCache=true" : "";
-    return this.request<ApiResponse<Product>>(`/${id}${params}`);
+    const response = await this.request<ApiResponse<Product>>(`/${id}${params}`);
+
+    // Normalize the product
+    if (response?.data) {
+      return {
+        ...response,
+        data: this.normalizeProduct(response.data),
+      };
+    }
+    return response;
   }
 
   async getAllProducts(
@@ -574,28 +663,55 @@ class ProductService {
     if (params.skipCache) queryParams.append("skipCache", "true");
 
     const query = queryParams.toString();
-    return this.request<PaginatedResponse<Product>>(
+    const response = await this.request<PaginatedResponse<Product>>(
       `/${query ? "?" + query : ""}`
     );
+
+    // Normalize all products in paginated response
+    if (response?.data && Array.isArray(response.data)) {
+      return {
+        ...response,
+        data: this.normalizeProductArray(response.data),
+      };
+    }
+    return response;
   }
 
   async createProduct(
     data: CreateProductRequest
   ): Promise<ApiResponse<Product>> {
-    return this.request<ApiResponse<Product>>("/", {
+    const response = await this.request<ApiResponse<Product>>("/", {
       method: "POST",
       body: JSON.stringify(data),
     });
+
+    // Normalize the created product
+    if (response?.data) {
+      return {
+        ...response,
+        data: this.normalizeProduct(response.data),
+      };
+    }
+    return response;
   }
 
   async updateProduct(
     id: number,
     data: UpdateProductRequest
   ): Promise<ApiResponse<Product>> {
-    return this.request<ApiResponse<Product>>(`/${id}`, {
+    const response = await this.request<ApiResponse<Product>>(`/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
     });
+
+    // Normalize the updated product
+    if (response?.data) {
+      return {
+        ...response,
+        data: this.normalizeProduct(response.data),
+      };
+    }
+    return response;
   }
 
   async deleteProduct(

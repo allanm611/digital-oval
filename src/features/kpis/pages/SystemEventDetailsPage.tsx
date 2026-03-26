@@ -62,13 +62,7 @@ export default function SystemEventDetailsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center space-x-2 sm:space-x-4">
-        <BackButton fallbackTo="/dashboard/kpis/system-events" />
-        <div>
-          <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>System Event Details</h1>
-          <p className={`${tw.textSecondary} mt-2 text-sm`}>View system event configuration and details</p>
-        </div>
-      </div>
+      <BackButton fallbackTo="/dashboard/kpis/system-events" showBreadcrumb={true} currentLabel="System Event Details" />
 
       {/* Event Information */}
       <div className="space-y-6">

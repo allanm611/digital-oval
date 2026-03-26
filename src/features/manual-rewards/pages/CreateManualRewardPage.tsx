@@ -9,6 +9,7 @@ import {
   useFormDataPersistence,
   clearPersistedFormData,
 } from "../../../shared/hooks/useFormDataPersistence";
+import { useFormCleanupOnExit } from "../../../shared/hooks/useFormCleanupOnExit";
 import ProgressStepper, {
   Step,
 } from "../../../shared/components/ui/ProgressStepper";
@@ -80,6 +81,9 @@ export default function CreateManualRewardPage() {
 
   // Persist form data to localStorage
   useFormDataPersistence("reward_form_data", rewardData, setRewardData, false);
+
+  // Clear persisted form data when user exits the creation flow
+  useFormCleanupOnExit("reward_form_data");
 
   const updateRewardData = (data: Partial<ManualRewardData>) => {
     setRewardData((prev) => ({ ...prev, ...data }));
@@ -174,15 +178,11 @@ export default function CreateManualRewardPage() {
         <div className="px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="flex items-center justify-between pb-3">
-            <div className="flex items-center space-x-3">
-              <BackButton
-                fallbackTo="/dashboard/manual-rewards"
-                className="text-gray-400 hover:text-gray-600"
-              />
-              <h1 className={`text-lg font-semibold ${tw.textPrimary}`}>
-                {t.manualRewards.title}
-              </h1>
-            </div>
+            <BackButton
+              fallbackTo="/dashboard/manual-rewards"
+              showBreadcrumb={true}
+              currentLabel="Create Manual Reward"
+            />
           </div>
 
           {/* Sticky Progress Navigation */}

@@ -1,13 +1,12 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Plus, Search, Trash2, Mail } from "lucide-react";
+import { Plus, Search, Trash2, Mail } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
-import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import DateFormatter from "../../../shared/components/DateFormatter";
+import { getDepartmentsConfig, getLineOfBusinessConfig } from "../../configurations/configs/configurationPageConfigs";
 
 // Types
 export interface SeedListRecipient {
@@ -29,18 +28,8 @@ export interface SeedListRecipient {
   removed_by_name?: string;
 }
 
-export interface Department {
-  id: number;
-  name: string;
-}
-
-export interface LineOfBusiness {
-  id: number;
-  name: string;
-}
-
 // Dummy data
-const DUMMY_RECIPIENTS: SeedListRecipient[] = [
+export const DUMMY_RECIPIENTS: SeedListRecipient[] = [
   {
     id: 1,
     customer_id: 301,
@@ -106,32 +95,42 @@ const DUMMY_RECIPIENTS: SeedListRecipient[] = [
   },
 ];
 
-const DUMMY_DEPARTMENTS: Department[] = [
-  { id: 1, name: "Marketing" },
-  { id: 2, name: "Sales" },
-  { id: 3, name: "Customer Support" },
-  { id: 4, name: "Product" },
-];
+interface AddRecipientForm {
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string;
+  department_id: string;
+  line_of_business_id: string;
+}
 
-const DUMMY_LINES_OF_BUSINESS: LineOfBusiness[] = [
-  { id: 1, name: "Retail Banking" },
-  { id: 2, name: "Corporate Banking" },
-  { id: 3, name: "Investment Banking" },
-  { id: 4, name: "Wealth Management" },
-];
+interface FormErrors {
+  customer_name?: string;
+  customer_email?: string;
+  customer_phone?: string;
+  department_id?: string;
+  line_of_business_id?: string;
+}
 
 export default function SeedListManagementPage() {
-  const navigate = useNavigate();
   const { success: showToast } = useToast();
   const { t } = useLanguage();
-  const [recipients] = useState<SeedListRecipient[]>(DUMMY_RECIPIENTS);
-  const [departments] = useState<Department[]>(DUMMY_DEPARTMENTS);
-  const [linesOfBusiness] = useState<LineOfBusiness[]>(DUMMY_LINES_OF_BUSINESS);
+  const [recipients, setRecipients] = useState<SeedListRecipient[]>(DUMMY_RECIPIENTS);
+  const departments = getDepartmentsConfig(t).initialData;
+  const linesOfBusiness = getLineOfBusinessConfig(t).initialData;
   const [loading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterDepartment, setFilterDepartment] = useState<string>("all");
   const [filterLoB, setFilterLoB] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState<AddRecipientForm>({
+    customer_name: "",
+    customer_email: "",
+    customer_phone: "",
+    department_id: "",
+    line_of_business_id: "",
+  });
+  const [errors, setErrors] = useState<FormErrors>({});
 
   const filteredRecipients = recipients.filter((recipient) => {
     const matchesSearch =
@@ -163,33 +162,90 @@ export default function SeedListManagementPage() {
     showToast("Remove recipient functionality will be implemented");
   };
 
+  const handleOpenModal = () => {
+    setFormData({
+      customer_name: "",
+      customer_email: "",
+      customer_phone: "",
+      department_id: "",
+      line_of_business_id: "",
+    });
+    setErrors({});
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setFormData({
+      customer_name: "",
+      customer_email: "",
+      customer_phone: "",
+      department_id: "",
+      line_of_business_id: "",
+    });
+    setErrors({});
+  };
+
+  const handleAddRecipient = () => {
+    const newErrors: FormErrors = {};
+
+    if (!formData.customer_name) {
+      newErrors.customer_name = "Name is required";
+    }
+    if (!formData.customer_email) {
+      newErrors.customer_email = "Email is required";
+    }
+    if (!formData.customer_phone) {
+      newErrors.customer_phone = "Phone number is required";
+    }
+    if (!formData.department_id) {
+      newErrors.department_id = "Department is required";
+    }
+    if (!formData.line_of_business_id) {
+      newErrors.line_of_business_id = "Line of Business is required";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    const newRecipient: SeedListRecipient = {
+      id: Math.max(...recipients.map(r => r.id), 0) + 1,
+      customer_id: Math.max(...recipients.map(r => r.customer_id), 300) + 1,
+      customer_name: formData.customer_name,
+      customer_email: formData.customer_email,
+      customer_phone: formData.customer_phone,
+      department_id: parseInt(formData.department_id),
+      department_name: departments.find(d => d.id.toString() === formData.department_id)?.name,
+      line_of_business_id: parseInt(formData.line_of_business_id),
+      line_of_business_name: linesOfBusiness.find(l => l.id.toString() === formData.line_of_business_id)?.name,
+      status: "active",
+      added_at: new Date().toISOString(),
+      added_by: 1,
+      added_by_name: "Current User",
+    };
+
+    setRecipients([...recipients, newRecipient]);
+    showToast("Recipient added successfully");
+    handleCloseModal();
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center space-x-2 sm:space-x-4">
-          <button
-            onClick={() =>
-              navigateBackOrFallback(navigate, "/dashboard/configuration")
-            }
-            className={`p-2 text-gray-600 hover:text-gray-800 ${tw.rounded} transition-colors`}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div>
-            <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
-              {t.seedListManagement.title}
-            </h1>
-            <p className={`${tw.textSecondary} mt-2 text-sm`}>
-              {t.seedListManagement.subtitle}
-            </p>
-          </div>
+        <div>
+          <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
+            {t.seedListManagement.title}
+          </h1>
+          <p className={`${tw.textSecondary} mt-2 text-sm`}>
+            {t.seedListManagement.subtitle}
+          </p>
         </div>
         <div className="flex items-center gap-3 w-auto">
           <button
-            onClick={() =>
-              showToast("Add test recipient functionality will be implemented")
-            }
+            onClick={handleOpenModal}
             className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white w-auto`}
             style={{ backgroundColor: color.primary.action }}
           >
@@ -357,7 +413,25 @@ export default function SeedListManagementPage() {
                       borderTopLeftRadius: "0.375rem",
                     }}
                   >
-                    Recipient
+                    Name
+                  </th>
+                  <th
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{
+                      color: color.surface.tableHeaderText,
+                      backgroundColor: color.surface.tableHeader,
+                    }}
+                  >
+                    Email
+                  </th>
+                  <th
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{
+                      color: color.surface.tableHeaderText,
+                      backgroundColor: color.surface.tableHeader,
+                    }}
+                  >
+                    Participants
                   </th>
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
@@ -427,18 +501,25 @@ export default function SeedListManagementPage() {
                         borderBottomLeftRadius: "0.375rem",
                       }}
                     >
-                      <div>
-                        <div
-                          className={`${tw.tableFirstColumn} ${tw.textPrimary}`}
-                        >
-                          {recipient.customer_name || "Unknown"}
-                        </div>
-                        <div className={`text-sm ${tw.textMuted}`}>
-                          {recipient.customer_email ||
-                            recipient.customer_phone ||
-                            "No contact info"}
-                        </div>
+                      <div className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
+                        {recipient.customer_name || "Unknown"}
                       </div>
+                    </td>
+                    <td
+                      className="px-6 py-4"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      <span className={`text-sm ${tw.textSecondary}`}>
+                        {recipient.customer_email || "-"}
+                      </span>
+                    </td>
+                    <td
+                      className="px-6 py-4"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      <span className={`text-sm ${tw.textSecondary}`}>
+                        {recipient.customer_phone?.replace(/^\+/, "") || "-"}
+                      </span>
                     </td>
                     <td
                       className="px-6 py-4"
@@ -507,6 +588,166 @@ export default function SeedListManagementPage() {
           </div>
         )}
       </div>
+
+      {/* Add Recipient Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className={`${tw.rounded} bg-white shadow-xl max-w-md w-full mx-4`}>
+            <div className="p-6">
+              <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
+                Add Test Recipient
+              </h2>
+
+              {/* Form Fields */}
+              <div className="space-y-4">
+                {/* Name */}
+                <div>
+                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
+                    Name
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.customer_name}
+                    onChange={(e) => {
+                      setFormData({ ...formData, customer_name: e.target.value });
+                      if (errors.customer_name) {
+                        setErrors({ ...errors, customer_name: undefined });
+                      }
+                    }}
+                    placeholder="Enter recipient name"
+                    className={`w-full px-3 py-2 border text-sm ${errors.customer_name ? "border-red-500" : "border-gray-300"} ${tw.rounded} focus:outline-none focus:ring-2`}
+                    style={{ focusRingColor: color.primary.accent }}
+                  />
+                  {errors.customer_name && (
+                    <p className="text-xs text-red-500 mt-1">{errors.customer_name}</p>
+                  )}
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.customer_email}
+                    onChange={(e) => {
+                      setFormData({ ...formData, customer_email: e.target.value });
+                      if (errors.customer_email) {
+                        setErrors({ ...errors, customer_email: undefined });
+                      }
+                    }}
+                    placeholder="Enter email address"
+                    className={`w-full px-3 py-2 border text-sm ${errors.customer_email ? "border-red-500" : "border-gray-300"} ${tw.rounded} focus:outline-none focus:ring-2`}
+                    style={{ focusRingColor: color.primary.accent }}
+                  />
+                  {errors.customer_email && (
+                    <p className="text-xs text-red-500 mt-1">{errors.customer_email}</p>
+                  )}
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    value={formData.customer_phone}
+                    onChange={(e) => {
+                      setFormData({ ...formData, customer_phone: e.target.value });
+                      if (errors.customer_phone) {
+                        setErrors({ ...errors, customer_phone: undefined });
+                      }
+                    }}
+                    placeholder="Enter phone number"
+                    className={`w-full px-3 py-2 border text-sm ${errors.customer_phone ? "border-red-500" : "border-gray-300"} ${tw.rounded} focus:outline-none focus:ring-2`}
+                    style={{ focusRingColor: color.primary.accent }}
+                  />
+                  {errors.customer_phone && (
+                    <p className="text-xs text-red-500 mt-1">{errors.customer_phone}</p>
+                  )}
+                </div>
+
+                {/* Department */}
+                <div>
+                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
+                    Department
+                  </label>
+                  <div className={errors.department_id ? "border border-red-500 rounded" : ""}>
+                    <HeadlessSelect
+                      value={formData.department_id}
+                      onChange={(value) => {
+                        setFormData({ ...formData, department_id: value });
+                        if (errors.department_id) {
+                          setErrors({ ...errors, department_id: undefined });
+                        }
+                      }}
+                      options={[
+                        { value: "", label: "Select Department" },
+                        ...departments.map((dept) => ({
+                          value: dept.id.toString(),
+                          label: dept.name,
+                        })),
+                      ]}
+                      placeholder="Select Department"
+                    />
+                  </div>
+                  {errors.department_id && (
+                    <p className="text-xs text-red-500 mt-1">{errors.department_id}</p>
+                  )}
+                </div>
+
+                {/* Line of Business */}
+                <div>
+                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
+                    Line of Business
+                  </label>
+                  <div className={errors.line_of_business_id ? "border border-red-500 rounded" : ""}>
+                    <HeadlessSelect
+                      value={formData.line_of_business_id}
+                      onChange={(value) => {
+                        setFormData({ ...formData, line_of_business_id: value });
+                        if (errors.line_of_business_id) {
+                          setErrors({ ...errors, line_of_business_id: undefined });
+                        }
+                      }}
+                      options={[
+                        { value: "", label: "Select Line of Business" },
+                        ...linesOfBusiness.map((lob) => ({
+                          value: lob.id.toString(),
+                          label: lob.name,
+                        })),
+                      ]}
+                      placeholder="Select Line of Business"
+                    />
+                  </div>
+                  {errors.line_of_business_id && (
+                    <p className="text-xs text-red-500 mt-1">{errors.line_of_business_id}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 justify-end mt-6">
+                <button
+                  onClick={handleCloseModal}
+                  className={`px-4 py-2 border border-gray-300 text-gray-700 font-medium ${tw.rounded} transition-colors`}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddRecipient}
+                  className={`px-4 py-2 text-white font-medium ${tw.rounded}`}
+                  style={{ backgroundColor: color.primary.action }}
+                >
+                  Add Recipient
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

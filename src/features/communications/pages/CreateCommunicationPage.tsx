@@ -11,18 +11,25 @@ import PreviewPanel from "../components/PreviewPanel";
 import { communicationService } from "../services/communicationService";
 import { quicklistService } from "../../quicklists/services/quicklistService";
 import { useToast } from "../../../contexts/ToastContext";
+import { useAuth } from "../../../contexts/AuthContext";
 import {
   CommunicationChannel,
   CommunicationResult,
 } from "../types/communication";
 import { QuickList } from "../../quicklists/types/quicklist";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import {
+  useFormDataPersistence,
+  clearPersistedFormData,
+} from "../../../shared/hooks/useFormDataPersistence";
+import { useFormCleanupOnExit } from "../../../shared/hooks/useFormCleanupOnExit";
 
 export default function CreateCommunicationPage() {
   const { quicklistId } = useParams<{ quicklistId: string }>();
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { success: showToast, error: showError } = useToast();
+  const { user } = useAuth();
 
   // State
   const [quicklist, setQuickList] = useState<QuickList | null>(null);
@@ -36,6 +43,17 @@ export default function CreateCommunicationPage() {
   const [messageTitle, setMessageTitle] = useState("");
   const [messageBody, setMessageBody] = useState("");
   const [sampleData, setSampleData] = useState<Record<string, unknown>>({});
+  const [isRichText, setIsRichText] = useState(false);
+
+  // Persist form data to localStorage
+  useFormDataPersistence("communication_channel", selectedChannel, setSelectedChannel, false);
+  useFormDataPersistence("communication_title", messageTitle, setMessageTitle, false);
+  useFormDataPersistence("communication_body", messageBody, setMessageBody, false);
+
+  // Clear persisted form data when user exits the creation flow
+  useFormCleanupOnExit("communication_channel");
+  useFormCleanupOnExit("communication_title");
+  useFormCleanupOnExit("communication_body");
 
   useEffect(() => {
     if (quicklistId) {
@@ -101,7 +119,7 @@ export default function CreateCommunicationPage() {
           limit: 1000,
         },
         batch_size: 500,
-        created_by: 1, // TODO: Get from auth context
+        created_by: user?.user_id ?? null,
       });
 
       if (response.success) {
@@ -109,7 +127,7 @@ export default function CreateCommunicationPage() {
       }
     } catch (_error) {
       // Backend not fixed yet - show error
-      showError("Error", "Failed to create communication");
+      showError("Error", "Failed to create communication", true); // bypassSilentMode
     } finally {
       setSending(false);
     }
@@ -323,6 +341,8 @@ export default function CreateCommunicationPage() {
                 }
                 onTitleChange={setMessageTitle}
                 onBodyChange={setMessageBody}
+                isRichText={isRichText}
+                onToggleRichText={() => setIsRichText(!isRichText)}
               />
             </div>
 

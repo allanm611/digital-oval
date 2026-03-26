@@ -26,7 +26,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import BackButton from "../../../shared/components/ui/BackButton";
-import CreateCommunicationModal from "../../communications/components/CreateCommunicationModal";
+import CreateCommunicationModal from "../../../shared/components/CreateCommunicationModal";
 import EditQuickListModal from "../components/EditQuickListModal";
 
 export default function QuickListDetailsPage() {
@@ -450,26 +450,14 @@ export default function QuickListDetailsPage() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="flex items-start gap-4 flex-wrap">
-          <BackButton
-            fallbackTo="/dashboard/quick-lists"
-            onClick={navigateBack}
-          />
-          <div className="min-w-0">
-            <h1
-              className={`${tw.mainHeading} ${tw.textPrimary} break-words text-base sm:text-2xl`}
-            >
-              {quicklist.name}
-            </h1>
-            {quicklist.description && (
-              <p className={`${tw.textSecondary} text-sm mt-1 break-words`}>
-                {quicklist.description}
-              </p>
-            )}
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-3 w-full lg:w-auto">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+        <BackButton
+          fallbackTo="/dashboard/quick-lists"
+          onClick={navigateBack}
+          showBreadcrumb={true}
+          currentLabel="QuickList Details"
+        />
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={handleEdit}
             className={`px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 whitespace-nowrap`}

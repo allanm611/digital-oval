@@ -526,17 +526,7 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-        <BackButton fallbackTo="/dashboard/campaigns" className="self-start" />
-        <div className="sm:ml-2">
-          <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
-            {t.analytics.campaignsAnalytics}
-          </h1>
-          <p className={`${tw.textSecondary} mt-2 text-sm`}>
-            {t.analytics.performanceMetrics}
-          </p>
-        </div>
-      </div>
+      <BackButton fallbackTo="/dashboard/campaigns" showBreadcrumb={true} currentLabel="Campaigns Analytics" />
 
       {isLoading ? (
         <div className="flex justify-center py-16">

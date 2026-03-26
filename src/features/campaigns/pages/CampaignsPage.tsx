@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useToast } from "../../../contexts/ToastContext";
+import { useAuth } from "../../../contexts/AuthContext";
 import {
   Filter,
   Search,
@@ -15,8 +16,6 @@ import {
   Trash2,
   CheckCircle,
   Send,
-  ChevronLeft,
-  ChevronRight,
   Target,
   Clock,
   AlertCircle,
@@ -25,58 +24,40 @@ import {
 import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import CreateButton from "../../../shared/components/ui/CreateButton";
+import Pagination from "../../../shared/components/ui/Pagination";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { campaignService } from "../services/campaignService";
-import { campaignFlowService } from "../services/campaignFlowService";
 import { useClickOutside } from "../../../shared/hooks/useClickOutside";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import {
+  canShowCampaignButton,
+  handleCampaignAction,
+  type CampaignActionParams,
+} from "../utils/campaignActions";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import ExecuteCampaignModal from "../components/ExecuteCampaignModal";
+import RunCampaignModal from "../components/RunCampaignModal";
 import ApproveCampaignModal from "../components/ApproveCampaignModal";
 import RejectCampaignModal from "../components/RejectCampaignModal";
+import CampaignOffersModal from "../components/CampaignOffersModal";
+import CampaignSegmentsModal from "../components/CampaignSegmentsModal";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import {
   CampaignApprovalStatus,
   CampaignCollection,
+  CampaignDisplay,
   CampaignStatsSummary,
   CampaignStatus,
   CampaignSuperSearchQuery,
   GetCampaignsResponse,
 } from "../types/campaign";
+import { CampaignCategory } from "../types/campaignCategory";
 type CampaignListResponse = CampaignCollection | GetCampaignsResponse;
-
-interface CampaignDisplay {
-  is_active: boolean;
-  id: number;
-  name: string;
-  description?: string;
-  status: string;
-  type?: string;
-  category?: string;
-  category_id?: number;
-  segment?: string;
-  offer?: string;
-  objective?: string;
-  startDate?: string;
-  endDate?: string;
-  approval_status?: string;
-  code?: string;
-  created_at?: string;
-  offer_count?: number;
-  segment_count?: number;
-  performance?: {
-    sent: number;
-    delivered: number;
-    opened?: number;
-    converted: number;
-    revenue: number;
-  };
-}
 
 export default function CampaignsPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { showToast } = useToast();
+  const { user } = useAuth();
   const { t } = useLanguage();
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
@@ -96,8 +77,8 @@ export default function CampaignsPage() {
     name: string;
   } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [showExecuteModal, setShowExecuteModal] = useState(false);
-  const [campaignToExecute, setCampaignToExecute] = useState<{
+  const [showRunModal, setShowRunModal] = useState(false);
+  const [campaignToRun, setCampaignToRun] = useState<{
     id: number;
     name: string;
     status?: string;
@@ -128,10 +109,8 @@ export default function CampaignsPage() {
   >([]);
   const [totalCampaigns, setTotalCampaigns] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(10);
-  const [categories, setCategories] = useState<
-    Array<{ id: number; name: string; description?: string }>
-  >([]);
+  const [pageSize] = useState(15);
+  const [categories, setCategories] = useState<CampaignCategory[]>([]);
   const categoryMap = useMemo(() => {
     const map: Record<number, string> = {};
     categories.forEach((category) => {
@@ -146,6 +125,35 @@ export default function CampaignsPage() {
     pendingApproval: number;
   } | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
+  const [loadingActionIds, setLoadingActionIds] = useState<Set<number>>(
+    new Set(),
+  );
+  const [showOffersModal, setShowOffersModal] = useState(false);
+  const [showSegmentsModal, setShowSegmentsModal] = useState(false);
+  const [selectedCampaignForModal, setSelectedCampaignForModal] =
+    useState<CampaignDisplay | null>(null);
+
+  // Helper function to update a single campaign in the list
+  const updateCampaignInList = (
+    campaignId: number,
+    updates: Partial<CampaignDisplay>,
+  ) => {
+    setCampaigns((prev) =>
+      prev.map((c) => (c.id === campaignId ? { ...c, ...updates } : c)),
+    );
+    setAllCampaignsUnfiltered((prev) =>
+      prev.map((c) => (c.id === campaignId ? { ...c, ...updates } : c)),
+    );
+  };
+
+  const handleAction = (params: CampaignActionParams) =>
+    handleCampaignAction(params, {
+      onSetLoading: setLoadingActionIds,
+      onCloseMenu: () => setShowActionMenu(null),
+      onUpdateCampaign: updateCampaignInList,
+      onSuccess: (message) => showToast("success", message),
+      onError: (title, message) => showToast("error", title, message),
+    });
 
   // Use click outside hook for filter modal
   useClickOutside(filterRef, () => setShowAdvancedFilters(false), {
@@ -306,21 +314,9 @@ export default function CampaignsPage() {
   const fetchCategories = useCallback(async () => {
     try {
       const response = await campaignService.getCampaignCategories();
-      type CategoryRecord = {
-        id: number;
-        name: string;
-        description?: string;
-      };
-      const categoriesData = Array.isArray(response)
-        ? response
-        : ((response as { data?: CategoryRecord[] })?.data ?? []);
-      setCategories(
-        categoriesData as Array<{
-          id: number;
-          name: string;
-          description?: string;
-        }>,
-      );
+      // Service now normalizes all categories, so we can use them directly
+      const categoriesData = response?.data ?? [];
+      setCategories(categoriesData as CampaignCategory[]);
     } catch (error) {
       console.error("Failed to load campaign catalogs:", error);
       showToast(
@@ -331,104 +327,35 @@ export default function CampaignsPage() {
     }
   }, [showToast]);
 
-  // Fetch offer and segment counts for campaigns using campaign flows
-  const fetchCampaignCounts = useCallback(
-    async (
-      campaignIds: number[],
-    ): Promise<Map<number, { offers: number; segments: number }>> => {
-      const countsMap = new Map<number, { offers: number; segments: number }>();
-
-      // Fetch counts in parallel for all campaigns
-      const countPromises = campaignIds.map(async (campaignId) => {
-        try {
-          // Fetch segments from campaign flows
-          const segmentsResponse =
-            await campaignFlowService.getCampaignSegments(campaignId, true);
-
-          let segmentCount = 0;
-          if (
-            segmentsResponse &&
-            typeof segmentsResponse === "object" &&
-            segmentsResponse.success &&
-            "data" in segmentsResponse &&
-            Array.isArray(segmentsResponse.data)
-          ) {
-            segmentCount = segmentsResponse.data.length;
-          }
-
-          // Fetch offers from campaign flows
-          const offersResponse =
-            await campaignFlowService.getCampaignOffers(campaignId, true);
-
-          let offerCount = 0;
-          if (
-            offersResponse &&
-            typeof offersResponse === "object" &&
-            offersResponse.success &&
-            "data" in offersResponse &&
-            Array.isArray(offersResponse.data)
-          ) {
-            offerCount = offersResponse.data.length;
-          }
-
-          return { campaignId, offers: offerCount, segments: segmentCount };
-        } catch (error) {
-          console.error(
-            `Failed to fetch counts for campaign ${campaignId}:`,
-            error,
-          );
-          return { campaignId, offers: 0, segments: 0 };
-        }
-      });
-
-      const results = await Promise.all(countPromises);
-      results.forEach(({ campaignId, offers, segments }) => {
-        countsMap.set(campaignId, { offers, segments });
-      });
-
-      return countsMap;
-    },
-    [],
-  );
-
   // Fetch campaigns from API
   const fetchCampaigns = useCallback(async () => {
     try {
       setIsLoading(true);
 
-      let response: CampaignListResponse;
-      const LIMIT = 100; // Fetch reasonable batch size
-      const currentIndex = (currentPage - 1) * pageSize;
-      const chunkOffset = Math.floor(currentIndex / LIMIT) * LIMIT;
-      const chunkStartIndex = currentIndex % LIMIT;
+      const API_LIMIT = 100; // Fetch all at once, client-side pagination for UI
+      const apiOffset = 0; // Always fetch from beginning
 
-      // Check if we have any filters applied
+      // Check if any filters are applied
       const hasFilters =
-        (filters.categoryId && filters.categoryId !== "all") ||
+        searchQuery.trim() ||
         (filters.approvalStatus && filters.approvalStatus !== "all") ||
+        (filters.categoryId && filters.categoryId !== "all") ||
         filters.startDateFrom ||
         filters.startDateTo ||
-        (selectedStatus && selectedStatus !== "all") ||
-        searchQuery.trim();
+        (selectedStatus && selectedStatus !== "all");
+
+      let response: CampaignListResponse;
 
       if (hasFilters) {
-        // Use superSearchCampaigns when filters are applied
+        // Use superSearch when filters are applied
         const searchParams: CampaignSuperSearchQuery = {
-          limit: LIMIT,
-          offset: chunkOffset,
+          limit: API_LIMIT,
+          offset: apiOffset,
           skipCache: true,
         };
 
         if (searchQuery.trim()) {
           searchParams.name = searchQuery.trim();
-        }
-
-        if (selectedStatus && selectedStatus !== "all") {
-          searchParams.status = selectedStatus as CampaignStatus;
-        } else if (selectedStatus === "all") {
-          // When "all" is selected, exclude archived campaigns from default view
-          // Users can still see archived campaigns by selecting "Archived" filter
-          // Note: Backend doesn't support excludeStatus, so we'll filter client-side
         }
 
         if (filters.approvalStatus && filters.approvalStatus !== "all") {
@@ -448,12 +375,16 @@ export default function CampaignsPage() {
           searchParams.startDateTo = filters.startDateTo;
         }
 
+        if (selectedStatus && selectedStatus !== "all") {
+          searchParams.status = selectedStatus as CampaignStatus;
+        }
+
         response = await campaignService.superSearchCampaigns(searchParams);
       } else {
-        // Use regular getCampaigns when no filters applied (more efficient)
+        // Use getCampaigns for basic list (no filters)
         response = await campaignService.getCampaigns({
-          limit: LIMIT,
-          offset: chunkOffset,
+          limit: API_LIMIT,
+          offset: apiOffset,
           skipCache: true,
         });
       }
@@ -466,28 +397,14 @@ export default function CampaignsPage() {
         throw new Error(errorMessage);
       }
 
-      // Transform response data to display format
-      const campaignsData: CampaignDisplay[] = response.data.map(
-        (campaign) => ({
-          id: campaign.id,
-          name: campaign.name,
-          description: campaign.description || undefined,
-          status: campaign.status,
-          is_active: campaign.is_active || false,
-          category_id: campaign.category_id || undefined,
-          objective: campaign.objective,
-          startDate: campaign.start_date || undefined,
-          endDate: campaign.end_date || undefined,
-          approval_status: campaign.approval_status,
-          code: campaign.code,
-          created_at: campaign.created_at,
-          offer_count: 0, // Will be updated below
-          segment_count: 0, // Will be updated below
-        }),
-      );
+      // Service now normalizes all campaigns, so we can use them directly
+      const campaignsData: CampaignDisplay[] = response.data.map((campaign) => ({
+        ...campaign,
+        offer_count: (campaign as any).offers_count ?? campaign.offers?.length ?? 0,
+        segment_count: (campaign as any).segments_count ?? campaign.segments?.length ?? 0,
+      }));
 
-      // When status is "all", exclude archived campaigns from default view
-      // Users can still see archived campaigns by selecting "Archived" filter
+      // Filter out archived campaigns when showing "all" status
       let campaignsToDisplay = campaignsData;
       if (selectedStatus === "all") {
         campaignsToDisplay = campaignsData.filter(
@@ -495,36 +412,14 @@ export default function CampaignsPage() {
         );
       }
 
-      // Apply client-side pagination for display (we fetch 100, display 10 per page)
-      const startIndex = chunkStartIndex;
-      const endIndex = startIndex + pageSize;
-      const paginatedCampaigns = campaignsToDisplay.slice(startIndex, endIndex);
+      // Client-side pagination: slice the fetched campaigns to show only current page
+      const currentIndex = (currentPage - 1) * pageSize;
+      const clientEndIndex = currentIndex + pageSize;
+      const paginatedCampaigns = campaignsToDisplay.slice(currentIndex, clientEndIndex);
 
-      // Fetch counts for the displayed campaigns
-      const campaignIds = paginatedCampaigns.map((c) => c.id);
-      const countsMap = await fetchCampaignCounts(campaignIds);
-
-      // Update campaigns with counts
-      const campaignsWithCounts = paginatedCampaigns.map((campaign) => {
-        const counts = countsMap.get(campaign.id);
-        return {
-          ...campaign,
-          offer_count: counts?.offers ?? 0,
-          segment_count: counts?.segments ?? 0,
-        };
-      });
-
-      setCampaigns(campaignsWithCounts);
+      setCampaigns(paginatedCampaigns);
       setAllCampaignsUnfiltered(campaignsData);
-
-      // Get total from pagination response
-      // When filtering client-side, use the filtered count to match displayed items
-      // When a specific status is selected, backend should return correct total
-      const total =
-        selectedStatus === "all"
-          ? campaignsToDisplay.length // Use filtered count when excluding archived
-          : response.pagination.total || campaignsToDisplay.length; // Use backend total if available, otherwise filtered count
-      setTotalCampaigns(total);
+      setTotalCampaigns(campaignsToDisplay.length);
     } catch (error) {
       console.error("Failed to load campaigns list:", error);
       showToast(
@@ -536,15 +431,7 @@ export default function CampaignsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [
-    selectedStatus,
-    searchQuery,
-    currentPage,
-    pageSize,
-    filters,
-    showToast,
-    fetchCampaignCounts,
-  ]);
+  }, [selectedStatus, searchQuery, currentPage, pageSize, filters, showToast]);
 
   // Fetch campaign stats
   const fetchCampaignStats = useCallback(async () => {
@@ -569,9 +456,6 @@ export default function CampaignsPage() {
 
         const draft = Number(statusBreakdown.draft) || 0;
 
-        // Only use status_breakdown.pending_approval (campaigns with status="pending_approval")
-        // Don't use approval_status_breakdown.pending as it counts approval_status="pending"
-        // which may not match the actual campaign status displayed
         const pendingApproval = Number(statusBreakdown.pending_approval) || 0;
 
         setCampaignStats({
@@ -601,7 +485,7 @@ export default function CampaignsPage() {
     }
   }, []);
 
-  // Fetch categories on component mount (non-blocking)
+  // Fetch categories on component mount
   useEffect(() => {
     fetchCategories();
   }, [fetchCategories]);
@@ -834,7 +718,11 @@ export default function CampaignsPage() {
   // Category options from API
   const categoryOptions = [
     { value: "all", label: "All Catalogs" },
-    ...categories.map((cat) => ({ value: cat.id.toString(), label: cat.name })),
+    ...categories
+      .filter(
+        (cat): cat is (typeof categories)[number] => cat && cat.id && cat.name,
+      )
+      .map((cat) => ({ value: cat.id.toString(), label: cat.name })),
   ];
 
   const approvalStatusOptions = [
@@ -852,8 +740,10 @@ export default function CampaignsPage() {
 
   const handleArchiveCampaign = async (campaignId: number) => {
     try {
-      // TODO: Get actual user ID from auth context
-      const userId = 1;
+      const userId = user?.user_id;
+      if (!userId) {
+        throw new Error("User ID not available");
+      }
       await campaignService.archiveCampaign(campaignId, userId);
       showToast("success", "Campaign archived successfully!");
       setShowActionMenu(null);
@@ -893,17 +783,25 @@ export default function CampaignsPage() {
 
     setIsDeleting(true);
     try {
-      // TODO: Get actual user ID from auth context
-      const userId = 1;
+      const userId = user?.user_id;
+      if (!userId) {
+        throw new Error("User ID not available");
+      }
       await campaignService.deleteCampaign(campaignToDelete.id, userId);
+      // Remove campaign from list instead of refetching
+      setCampaigns((prev) => prev.filter((c) => c.id !== campaignToDelete.id));
+      setAllCampaignsUnfiltered((prev) =>
+        prev.filter((c) => c.id !== campaignToDelete.id),
+      );
+      setTotalCampaigns((prev) => Math.max(0, prev - 1));
       showToast(
         "success",
         `Campaign "${campaignToDelete.name}" deleted successfully!`,
       );
       setShowDeleteModal(false);
       setCampaignToDelete(null);
-      fetchCampaigns(); // Refresh campaigns list
-      fetchCampaignStats(); // Refresh stats cards
+      // Only refetch stats since total count changed
+      fetchCampaignStats();
     } catch (error) {
       console.error("Failed to delete campaign:", error);
       // Extract error message from backend response
@@ -932,32 +830,6 @@ export default function CampaignsPage() {
   const handleCancelDelete = () => {
     setShowDeleteModal(false);
     setCampaignToDelete(null);
-  };
-
-  const handlePauseCampaign = async (campaignId: number) => {
-    try {
-      await campaignService.pauseCampaign(campaignId);
-      showToast("success", "Campaign paused successfully");
-      // Refetch campaigns to get updated state
-      await fetchCampaigns();
-      fetchCampaignStats(); // Refresh stats cards
-    } catch (error) {
-      console.error("Failed to pause campaign:", error);
-      showToast("error", "Failed to pause campaign");
-    }
-  };
-
-  const handleResumeCampaign = async (campaignId: number) => {
-    try {
-      await campaignService.resumeCampaign(campaignId);
-      showToast("success", "Campaign resumed successfully");
-      // Refetch campaigns to get updated state
-      await fetchCampaigns();
-      fetchCampaignStats(); // Refresh stats cards
-    } catch (error) {
-      console.error("Failed to resume campaign:", error);
-      showToast("error", "Failed to resume campaign");
-    }
   };
 
   const filteredCampaigns = campaigns;
@@ -1190,11 +1062,19 @@ export default function CampaignsPage() {
                       className="px-6 py-4"
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
-                      <div
-                        className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`}
-                        title={campaign.name}
-                      >
-                        {campaign.name}
+                      <div className="flex flex-col gap-2">
+                        <div
+                          className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`}
+                          title={campaign.name}
+                        >
+                          {campaign.name}
+                        </div>
+                        {/* Status icons - to be enabled when backend provides data fields */}
+                        {/* <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4" style={{ color: color.primary.accent }} title="Scheduled" />
+                          <Send className="w-4 h-4" style={{ color: color.primary.accent }} title="Broadcasts" />
+                          <AlertCircle className="w-4 h-4" style={{ color: color.primary.accent }} title="Failed" />
+                        </div> */}
                       </div>
                     </td>
                     {/* <td
@@ -1203,9 +1083,9 @@ export default function CampaignsPage() {
                     >
                       <span
                         className={`text-sm ${tw.textPrimary} block truncate max-w-[200px] sm:max-w-none`}
-                        title={campaign.objective || "Not specified"}
+                        title={campaign.objective}
                       >
-                        {campaign.objective || "Not specified"}
+                        {campaign.objective}
                       </span>
                     </td>
                     <td
@@ -1244,20 +1124,32 @@ export default function CampaignsPage() {
                           campaign.status,
                         )}`}
                       >
-                        {campaign.status.replace(/_/g, " ")}
+                        {campaign.status?.replace(/_/g, " ") || "Unknown"}
                       </span>
                     </td>
                     <td
-                      className="px-6 py-4"
+                      className="px-6 py-4 cursor-pointer"
                       style={{ backgroundColor: color.surface.tablebodybg }}
+                      onClick={() => {
+                        if ((campaign.offer_count ?? 0) > 0) {
+                          setSelectedCampaignForModal(campaign);
+                          setShowOffersModal(true);
+                        }
+                      }}
                     >
                       <span className={`text-sm ${tw.textPrimary} font-medium`}>
                         {campaign.offer_count ?? 0}
                       </span>
                     </td>
                     <td
-                      className="px-6 py-4"
+                      className="px-6 py-4 cursor-pointer"
                       style={{ backgroundColor: color.surface.tablebodybg }}
+                      onClick={() => {
+                        if ((campaign.segment_count ?? 0) > 0) {
+                          setSelectedCampaignForModal(campaign);
+                          setShowSegmentsModal(true);
+                        }
+                      }}
                     >
                       <span className={`text-sm ${tw.textPrimary} font-medium`}>
                         {campaign.segment_count ?? 0}
@@ -1290,17 +1182,44 @@ export default function CampaignsPage() {
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        {campaign.status === "paused" ? (
+                        {canShowCampaignButton(campaign, "resume") ? (
                           <button
-                            onClick={() => handleResumeCampaign(campaign.id)}
-                            className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-all duration-300`}
+                            onClick={() =>
+                              handleAction({
+                                campaignId: campaign.id,
+                                campaignName: campaign.name,
+                                action: "resume",
+                                successMessage: `Campaign "${campaign.name}" resumed successfully!`,
+                                errorMessage: "Failed to resume campaign",
+                                updateFields: { status: "active" },
+                              })
+                            }
+                            className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-all duration-300 relative`}
                             title="Resume Campaign"
+                            disabled={loadingActionIds.has(campaign.id)}
                           >
-                            <Play className="w-4 h-4" />
+                            {loadingActionIds.has(campaign.id) ? (
+                              <LoadingSpinner
+                                variant="modern"
+                                size="sm"
+                                color="primary"
+                              />
+                            ) : (
+                              <Play className="w-4 h-4" />
+                            )}
                           </button>
-                        ) : campaign.status !== "paused" ? (
+                        ) : canShowCampaignButton(campaign, "pause") ? (
                           <button
-                            onClick={() => handlePauseCampaign(campaign.id)}
+                            onClick={() =>
+                              handleAction({
+                                campaignId: campaign.id,
+                                campaignName: campaign.name,
+                                action: "pause",
+                                successMessage: `Campaign "${campaign.name}" paused successfully!`,
+                                errorMessage: "Failed to pause campaign",
+                                updateFields: { status: "paused" },
+                              })
+                            }
                             className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-orange-500 transition-all duration-300`}
                             style={{ backgroundColor: "transparent" }}
                             onMouseLeave={(e) => {
@@ -1309,8 +1228,17 @@ export default function CampaignsPage() {
                               ).style.backgroundColor = "transparent";
                             }}
                             title="Pause Campaign"
+                            disabled={loadingActionIds.has(campaign.id)}
                           >
-                            <Pause className="w-4 h-4" />
+                            {loadingActionIds.has(campaign.id) ? (
+                              <LoadingSpinner
+                                variant="modern"
+                                size="sm"
+                                color="primary"
+                              />
+                            ) : (
+                              <Pause className="w-4 h-4" />
+                            )}
                           </button>
                         ) : null}
                         <PermissionGate permission="campaigns.update">
@@ -1371,189 +1299,205 @@ export default function CampaignsPage() {
                         onClick={(e) => e.stopPropagation()}
                         onMouseDown={(e) => e.stopPropagation()}
                       >
-                        <PermissionGate permission="campaigns.execute">
+                        <PermissionGate permission="campaigns.run">
                           {campaign.approval_status === "approved" &&
                           campaign.is_active === true ? (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setCampaignToExecute({
+                                setCampaignToRun({
                                   id: campaign.id,
                                   name: campaign.name,
                                   status: campaign.status,
                                   approval_status: campaign.approval_status,
                                   is_active: campaign.is_active,
                                 });
-                                setShowExecuteModal(true);
+                                setShowRunModal(true);
                                 setShowActionMenu(null);
                               }}
                               className="w-full flex items-center px-4 py-3 text-sm text-black"
                             >
                               <Play className="w-4 h-4 mr-4 text-black" />
-                              Execute Campaign
+                              Run Campaign
                             </button>
                           ) : null}
                         </PermissionGate>
 
                         {/* Pause Campaign Button */}
-                        {campaign.approval_status === "approved" &&
-                        campaign.status !== "paused" ? (
-                          <PermissionGate permission="campaigns.execute">
+                        {canShowCampaignButton(campaign, "pause") ? (
+                          <PermissionGate permission="campaigns.run">
                             <button
-                              onClick={async (e) => {
+                              onClick={(e) => {
                                 e.stopPropagation();
-                                setShowActionMenu(null);
-                                try {
-                                  await campaignService.pauseCampaign(
-                                    campaign.id,
-                                  );
-                                  showToast(
-                                    "success",
-                                    `Campaign "${campaign.name}" paused successfully!`,
-                                  );
-                                  fetchCampaigns();
-                                } catch (error) {
-                                  let errorMessage = "Failed to pause campaign";
-                                  if (error instanceof Error) {
-                                    errorMessage = error.message;
-                                  }
-                                  showToast("error", errorMessage);
-                                }
+                                handleAction({
+                                  campaignId: campaign.id,
+                                  campaignName: campaign.name,
+                                  action: "pause",
+                                  successMessage: `Campaign "${campaign.name}" paused successfully!`,
+                                  errorMessage: "Failed to pause campaign",
+                                  updateFields: { status: "paused" },
+                                });
                               }}
                               className="w-full flex items-center px-4 py-3 text-sm text-black"
+                              disabled={loadingActionIds.has(campaign.id)}
                             >
-                              <Pause className="w-4 h-4 mr-4 text-black" />
+                              {loadingActionIds.has(campaign.id) ? (
+                                <LoadingSpinner
+                                  variant="modern"
+                                  size="sm"
+                                  color="primary"
+                                  className="mr-4"
+                                />
+                              ) : (
+                                <Pause className="w-4 h-4 mr-4 text-black" />
+                              )}
                               Pause Campaign
                             </button>
                           </PermissionGate>
                         ) : null}
 
                         {/* Resume Campaign Button */}
-                        {campaign.approval_status === "approved" &&
-                        campaign?.status === "paused" ? (
-                          <PermissionGate permission="campaigns.execute">
+                        {canShowCampaignButton(campaign, "resume") ? (
+                          <PermissionGate permission="campaigns.run">
                             <button
-                              onClick={async (e) => {
+                              onClick={(e) => {
                                 e.stopPropagation();
-                                setShowActionMenu(null);
-                                try {
-                                  await campaignService.resumeCampaign(
-                                    campaign.id,
-                                  );
-                                  showToast(
-                                    "success",
-                                    `Campaign "${campaign.name}" resumed successfully!`,
-                                  );
-                                  fetchCampaigns();
-                                } catch (error) {
-                                  let errorMessage = "Failed to resume campaign";
-                                  if (error instanceof Error) {
-                                    errorMessage = error.message;
-                                  }
-                                  showToast("error", errorMessage);
-                                }
+                                handleAction({
+                                  campaignId: campaign.id,
+                                  campaignName: campaign.name,
+                                  action: "resume",
+                                  successMessage: `Campaign "${campaign.name}" resumed successfully!`,
+                                  errorMessage: "Failed to resume campaign",
+                                  updateFields: { status: "active" },
+                                });
                               }}
                               className="w-full flex items-center px-4 py-3 text-sm text-black"
+                              disabled={loadingActionIds.has(campaign.id)}
                             >
-                              <Play className="w-4 h-4 mr-4 text-black" />
+                              {loadingActionIds.has(campaign.id) ? (
+                                <LoadingSpinner
+                                  variant="modern"
+                                  size="sm"
+                                  color="primary"
+                                  className="mr-4"
+                                />
+                              ) : (
+                                <Play className="w-4 h-4 mr-4 text-black" />
+                              )}
                               Resume Campaign
                             </button>
                           </PermissionGate>
                         ) : null}
 
-                        {campaign.approval_status === "approved" &&
-                        campaign.is_active === false ? (
+                        {canShowCampaignButton(campaign, "activate") ? (
                           <PermissionGate permission="campaigns.activate">
                             <button
-                              onClick={async (e) => {
+                              onClick={(e) => {
                                 e.stopPropagation();
-                                setShowActionMenu(null);
-                                try {
-                                  await campaignService.activateCampaign(
-                                    campaign.id,
-                                  );
-                                  showToast(
-                                    "success",
-                                    `Campaign "${campaign.name}" activated successfully!`,
-                                  );
-                                  fetchCampaigns();
-                                } catch (error) {
-                                  let errorMessage =
-                                    "Failed to activate campaign";
-                                  if (error instanceof Error) {
-                                    errorMessage = error.message;
-                                  }
-                                  showToast("error", errorMessage);
-                                }
+                                handleAction({
+                                  campaignId: campaign.id,
+                                  campaignName: campaign.name,
+                                  action: "activate",
+                                  successMessage: `Campaign "${campaign.name}" activated successfully!`,
+                                  errorMessage: "Failed to activate campaign",
+                                  updateFields: { is_active: true },
+                                });
                               }}
                               className="w-full flex items-center px-4 py-3 text-sm text-black"
+                              disabled={loadingActionIds.has(campaign.id)}
                             >
-                              <CheckCircle className="w-4 h-4 mr-4 text-black" />
+                              {loadingActionIds.has(campaign.id) ? (
+                                <LoadingSpinner
+                                  variant="modern"
+                                  size="sm"
+                                  color="primary"
+                                  className="mr-4"
+                                />
+                              ) : (
+                                <CheckCircle className="w-4 h-4 mr-4 text-black" />
+                              )}
                               Activate Campaign
                             </button>
                           </PermissionGate>
                         ) : null}
 
-                        {campaign.status === "draft" && (
+                        {canShowCampaignButton(campaign, "submit") && (
                           <PermissionGate permission="campaigns.update">
                             <button
-                              onClick={async (e) => {
+                              onClick={(e) => {
                                 e.stopPropagation();
-                                setShowActionMenu(null);
-                                try {
-                                  await campaignService.submitForApproval(
-                                    campaign.id,
-                                  );
-                                  showToast(
-                                    "success",
-                                    `Campaign "${campaign.name}" submitted for approval!`,
-                                  );
-                                  fetchCampaigns();
-                                } catch (error) {
-                                  let errorMessage =
-                                    "Failed to submit campaign for approval";
-                                  let errorTitle = "Submission Failed";
+                                handleAction({
+                                  campaignId: campaign.id,
+                                  campaignName: campaign.name,
+                                  action: "submit",
+                                  successMessage: `Campaign "${campaign.name}" submitted for approval!`,
+                                  errorMessage:
+                                    "Failed to submit campaign for approval",
+                                  updateFields: {
+                                    status: "pending_approval",
+                                    approval_status: "pending",
+                                  },
+                                  errorProcessor: (error) => {
+                                    let errorTitle = "Submission Failed";
+                                    let errorMessage =
+                                      "Failed to submit campaign for approval";
 
-                                  if (error instanceof Error) {
-                                    // Check for budget-related errors
-                                    if (
-                                      error.message
-                                        .toLowerCase()
-                                        .includes("budget") ||
-                                      error.message
-                                        .toLowerCase()
-                                        .includes("positive")
-                                    ) {
-                                      errorTitle = "Budget Required";
-                                      errorMessage =
-                                        "This campaign must have a positive budget allocated before it can be submitted for approval. Please set a budget in the campaign details.";
-                                    } else {
-                                      // Try to extract error from response
-                                      const match =
-                                        error.message.match(/details: ({.*})/);
-                                      if (match) {
-                                        try {
-                                          const errorData = JSON.parse(
-                                            match[1],
+                                    if (error instanceof Error) {
+                                      // Check for budget-related errors
+                                      if (
+                                        error.message
+                                          .toLowerCase()
+                                          .includes("budget") ||
+                                        error.message
+                                          .toLowerCase()
+                                          .includes("positive")
+                                      ) {
+                                        errorTitle = "Budget Required";
+                                        errorMessage =
+                                          "This campaign must have a positive budget allocated before it can be submitted for approval. Please set a budget in the campaign details.";
+                                      } else {
+                                        // Try to extract error from response
+                                        const match =
+                                          error.message.match(
+                                            /details: ({.*})/,
                                           );
-                                          errorMessage =
-                                            errorData.error ||
-                                            errorData.message ||
-                                            errorMessage;
-                                        } catch {
+                                        if (match) {
+                                          try {
+                                            const errorData = JSON.parse(
+                                              match[1],
+                                            );
+                                            errorMessage =
+                                              errorData.error ||
+                                              errorData.message ||
+                                              errorMessage;
+                                          } catch {
+                                            errorMessage = error.message;
+                                          }
+                                        } else {
                                           errorMessage = error.message;
                                         }
-                                      } else {
-                                        errorMessage = error.message;
                                       }
                                     }
-                                  }
-                                  showToast("error", errorTitle, errorMessage);
-                                }
+                                    return {
+                                      title: errorTitle,
+                                      message: errorMessage,
+                                    };
+                                  },
+                                });
                               }}
                               className="w-full flex items-center px-4 py-3 text-sm text-black"
+                              disabled={loadingActionIds.has(campaign.id)}
                             >
-                              <Send className="w-4 h-4 mr-4 text-black" />
+                              {loadingActionIds.has(campaign.id) ? (
+                                <LoadingSpinner
+                                  variant="modern"
+                                  size="sm"
+                                  color="primary"
+                                  className="mr-4"
+                                />
+                              ) : (
+                                <Send className="w-4 h-4 mr-4 text-black" />
+                              )}
                               Request Approval
                             </button>
                           </PermissionGate>
@@ -1722,38 +1666,12 @@ export default function CampaignsPage() {
 
       {/* Pagination */}
       {!isLoading && filteredCampaigns.length > 0 && totalCampaigns > 0 && (
-        <div
-          className={`bg-white ${tw.rounded} shadow-sm border ${tw.borderDefault} px-4 sm:px-6 py-4`}
-        >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-            <div
-              className={`text-sm ${tw.textSecondary} text-center sm:text-left`}
-            >
-              Showing {(currentPage - 1) * pageSize + 1} to{" "}
-              {Math.min(currentPage * pageSize, totalCampaigns)} of{" "}
-              {totalCampaigns} campaigns
-            </div>
-            <div className="flex items-center justify-center space-x-2">
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className={`p-2 border ${tw.borderDefault} ${tw.rounded} hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm whitespace-nowrap`}
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <span className={`text-sm ${tw.textSecondary} px-2`}>
-                Page {currentPage} of {totalPages || 1}
-              </span>
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage >= totalPages}
-                className={`p-2 border ${tw.borderDefault} ${tw.rounded} hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm whitespace-nowrap`}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
+        <Pagination
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalItems={totalCampaigns}
+          onPageChange={handlePageChange}
+        />
       )}
 
       {/* Filters Side Modal */}
@@ -1883,7 +1801,6 @@ export default function CampaignsPage() {
                         </div>
                       </div>
                     </div>
-
                   </div>
                 </div>
 
@@ -1931,20 +1848,36 @@ export default function CampaignsPage() {
         cancelText="Cancel"
       />
 
-      {/* Execute Campaign Modal */}
-      {campaignToExecute && (
-        <ExecuteCampaignModal
-          isOpen={showExecuteModal}
+      {/* Run Campaign Modal */}
+      {campaignToRun && (
+        <RunCampaignModal
+          isOpen={showRunModal}
           onClose={() => {
-            setShowExecuteModal(false);
-            setCampaignToExecute(null);
+            setShowRunModal(false);
+            setCampaignToRun(null);
           }}
-          campaignId={campaignToExecute.id}
-          campaignName={campaignToExecute.name}
-          isActive={campaignToExecute.is_active}
-          approvalStatus={campaignToExecute.approval_status}
-          onSuccess={() => {
-            fetchCampaigns();
+          campaignId={campaignToRun.id}
+          campaignName={campaignToRun.name}
+          isActive={campaignToRun.is_active}
+          approvalStatus={campaignToRun.approval_status}
+          onSuccess={async () => {
+            // Fetch fresh campaign data after running
+            try {
+              const response = await campaignService.getCampaignById(
+                campaignToRun.id,
+                true,
+              );
+              if (response && response.status && response.is_active !== undefined) {
+                updateCampaignInList(campaignToRun.id, {
+                  status: response.status,
+                  is_active: response.is_active,
+                });
+              }
+              // If response doesn't have status, don't set a fallback - let the user refresh
+            } catch {
+              // If execution fails, don't update status - user should refresh
+            }
+            fetchCampaignStats(); // Refresh stats
           }}
         />
       )}
@@ -1959,8 +1892,29 @@ export default function CampaignsPage() {
           }}
           campaignId={campaignToApprove.id}
           campaignName={campaignToApprove.name}
-          onSuccess={() => {
-            fetchCampaigns();
+          onSuccess={async () => {
+            // Fetch fresh campaign data after approval
+            try {
+              const response = await campaignService.getCampaignById(
+                campaignToApprove.id,
+                true,
+              );
+              if (response && response.approval_status && response.status) {
+                updateCampaignInList(campaignToApprove.id, {
+                  approval_status: response.approval_status,
+                  status: response.status,
+                });
+              } else {
+                updateCampaignInList(campaignToApprove.id, {
+                  approval_status: "approved",
+                });
+              }
+            } catch {
+              updateCampaignInList(campaignToApprove.id, {
+                approval_status: "approved",
+              });
+            }
+            fetchCampaignStats(); // Refresh stats
           }}
         />
       )}
@@ -1975,9 +1929,58 @@ export default function CampaignsPage() {
           }}
           campaignId={campaignToReject.id}
           campaignName={campaignToReject.name}
-          onSuccess={() => {
-            fetchCampaigns();
+          onSuccess={async () => {
+            // Fetch fresh campaign data after rejection to ensure correct state
+            try {
+              const response = await campaignService.getCampaignById(
+                campaignToReject.id,
+                true,
+              );
+              if (response && response.approval_status && response.status) {
+                updateCampaignInList(campaignToReject.id, {
+                  approval_status: response.approval_status,
+                  status: response.status,
+                });
+              } else {
+                // Fallback: just update with rejected status
+                updateCampaignInList(campaignToReject.id, {
+                  approval_status: "rejected",
+                });
+              }
+            } catch {
+              // Fallback: just update with rejected status
+              updateCampaignInList(campaignToReject.id, {
+                approval_status: "rejected",
+              });
+            }
+            fetchCampaignStats(); // Refresh stats
           }}
+        />
+      )}
+
+      {/* Campaign Offers Modal */}
+      {selectedCampaignForModal && (
+        <CampaignOffersModal
+          isOpen={showOffersModal}
+          onClose={() => {
+            setShowOffersModal(false);
+            setSelectedCampaignForModal(null);
+          }}
+          offers={selectedCampaignForModal.offers || []}
+          campaignName={selectedCampaignForModal.name}
+        />
+      )}
+
+      {/* Campaign Segments Modal */}
+      {selectedCampaignForModal && (
+        <CampaignSegmentsModal
+          isOpen={showSegmentsModal}
+          onClose={() => {
+            setShowSegmentsModal(false);
+            setSelectedCampaignForModal(null);
+          }}
+          segments={selectedCampaignForModal.segments || []}
+          campaignName={selectedCampaignForModal.name}
         />
       )}
     </div>

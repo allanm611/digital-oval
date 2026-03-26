@@ -1,11 +1,11 @@
 import { CampaignChannel } from './runCampaign';
 
 export interface ValidateCampaignRequest {
-  campaignId: number; // required, positive integer
-  segmentId?: number; // optional, positive integer
-  sampleSize?: number; // optional, 1-5000, default: 100
-  includeDetails?: boolean; // optional, default: false
-  channel?: CampaignChannel; // optional
+  campaignId: number;
+  segmentId?: number;
+  sampleSize?: number;
+  includeDetails?: boolean;
+  channel?: CampaignChannel;
 }
 
 export interface ValidateCampaignResponse {

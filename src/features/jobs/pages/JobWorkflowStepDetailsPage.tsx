@@ -187,7 +187,7 @@ export default function JobWorkflowStepDetailsPage() {
     if (!step) return;
     try {
       setIsToggling(true);
-      await jobWorkflowStepService.activateStep(step.id, user?.user_id || 0);
+      await jobWorkflowStepService.activateStep(step.id, user?.user_id ?? null);
       showToast("Step activated", `"${step.step_name}" has been activated.`);
       // Reload step
       const updated = await jobWorkflowStepService.getJobWorkflowStepById(
@@ -208,7 +208,7 @@ export default function JobWorkflowStepDetailsPage() {
     if (!step) return;
     try {
       setIsToggling(true);
-      await jobWorkflowStepService.deactivateStep(step.id, user?.user_id || 0);
+      await jobWorkflowStepService.deactivateStep(step.id, user?.user_id ?? null);
       showToast(
         "Step deactivated",
         `"${step.step_name}" has been deactivated.`,

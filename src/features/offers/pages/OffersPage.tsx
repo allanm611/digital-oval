@@ -21,6 +21,11 @@ import {
 import { Offer, SearchParams, OfferStatusEnum } from "../types/offer";
 import { offerService } from "../services/offerService";
 import { offerCategoryService } from "../services/offerCategoryService";
+import {
+  canShowOfferButton,
+  handleOfferAction,
+  type OfferActionParams,
+} from "../utils/offerActions";
 import { OfferCategoryType } from "../types/offerCategory";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -53,7 +58,7 @@ export default function OffersPage() {
   const [statsLoading, setStatsLoading] = useState(true);
   const [filters, setFilters] = useState<SearchParams>({
     page: 1,
-    limit: 10,
+    limit: 15,
     sortBy: "created_at",
     sortDirection: "DESC",
   });
@@ -119,13 +124,17 @@ export default function OffersPage() {
     try {
       setLoading(true);
 
+      // Calculate offset from page number
+      const pageSize = filters.limit || 15;
+      const offset = (filters.page - 1) * pageSize;
+
       // If category filter is applied, use the specific category endpoint
       if (filters.categoryId) {
         const response = await offerService.getOffersByCategory(
           filters.categoryId,
           {
-            limit: filters.limit || 10,
-            offset: filters.offset || 0,
+            limit: pageSize,
+            offset: offset,
             skipCache: skipCache,
           },
         );
@@ -183,7 +192,7 @@ export default function OffersPage() {
         if (needsClientSideFiltering) {
           // Fetch all offers in batches when we need to filter client-side
           let allOffers: Offer[] = [];
-          let offset = 0;
+          let batchOffset = 0;
           const batchSize = 100;
           let hasMore = true;
 
@@ -191,7 +200,7 @@ export default function OffersPage() {
           while (hasMore) {
             const batchResponse = await offerService.searchOffers({
               limit: batchSize,
-              offset: offset,
+              offset: batchOffset,
               search: debouncedSearchTerm || undefined,
               sortBy: filters.sortBy || "created_at",
               sortDirection: filters.sortDirection || "DESC",
@@ -206,7 +215,7 @@ export default function OffersPage() {
               hasMore =
                 allOffers.length < totalFromPagination &&
                 batchResponse.data.length === batchSize;
-              offset += batchSize;
+              batchOffset += batchSize;
             } else {
               hasMore = false;
             }
@@ -249,6 +258,8 @@ export default function OffersPage() {
           // No client-side filtering needed - use regular paginated search
           const searchParams: SearchParams = {
             ...filters,
+            limit: pageSize,
+            offset: offset,
             skipCache: skipCache,
           };
 
@@ -624,7 +635,8 @@ export default function OffersPage() {
         "Offer Deleted",
         `"${offerToDelete.name}" has been deleted successfully.`,
       );
-      await loadOffers(true); // Skip cache for immediate update
+      // Optimistic UI: Remove deleted offer from list
+      setOffers((prev) => prev.filter((o) => o.id !== offerToDelete.id));
       fetchOfferStats(); // Refresh stats cards
       setShowDeleteModal(false);
       setOfferToDelete(null);
@@ -635,39 +647,81 @@ export default function OffersPage() {
     }
   };
 
-  const handleActivateOffer = async (id: number) => {
-    try {
-      setLoadingAction({ offerId: id, action: "activate" });
-      const response = await offerService.activateOffer(id);
+  // Consolidated offer action handler
+  interface OfferActionParams {
+    offerId: number;
+    offerName: string;
+    action: "activate" | "pause" | "archive" | "approve" | "reject";
+    successMessage: string;
+    updateFields: Partial<Offer>;
+  }
 
-      // Optimistically update the offer in the list
-      const responseData = response as unknown as {
-        success: boolean;
-        data?: { lifecycle_status?: string };
-      };
-      if (responseData.success && responseData.data?.lifecycle_status) {
-        const newStatus = responseData.data.lifecycle_status;
-        setOffers((prevOffers) =>
-          prevOffers.map((offer) =>
-            Number(offer.id) === id
-              ? { ...offer, lifecycle_status: newStatus as string }
-              : offer,
-          ),
-        );
-      } else {
-        // Fallback: reload if response doesn't include status
-        await loadOffers(true);
+  const handleOfferAction = async (params: OfferActionParams) => {
+    const { offerId, offerName, action, successMessage, updateFields } = params;
+
+    try {
+      setLoadingAction({ offerId, action });
+
+      switch (action) {
+        case "activate":
+          await offerService.activateOffer(offerId);
+          break;
+        case "pause":
+          await offerService.pauseOffer(offerId);
+          break;
+        case "archive":
+          await offerService.archiveOffer(offerId);
+          break;
+        case "approve":
+          await offerService.approveOffer(offerId);
+          break;
+        case "reject":
+          await offerService.rejectOffer(offerId);
+          break;
       }
 
-      success("Offer Activated", "Offer has been activated successfully.");
+      // Update offer in list (optimistic UI)
+      setOffers((prevOffers) =>
+        prevOffers.map((offer) =>
+          Number(offer.id) === offerId ? { ...offer, ...updateFields } : offer,
+        ),
+      );
+
+      success(successMessage.split(":")[0], successMessage);
       setShowActionMenu(null);
       fetchOfferStats(); // Refresh stats cards
     } catch {
-      showError("Error", "Failed to activate offer");
-      // Activate offer error
+      showError("Error", `Failed to ${action} offer`);
     } finally {
       setLoadingAction(null);
     }
+  };
+
+  const handleActivateOffer = async (id: number) => {
+    const offer = offers.find((o) => Number(o.id) === id);
+    if (!offer) return;
+    await handleOfferAction(
+      {
+        offerId: id,
+        offerName: offer.name,
+        action: "activate",
+        successMessage: "Offer Activated: Offer has been activated successfully.",
+        updateFields: { status: OfferStatusEnum.ACTIVE },
+      },
+      {
+        onSetLoading: setLoadingAction,
+        onCloseMenu: () => setShowActionMenu(null),
+        onUpdateOffers: (offerId, updateFields) =>
+          setOffers((prev) =>
+            prev.map((o) =>
+              Number(o.id) === offerId ? { ...o, ...updateFields } : o
+            )
+          ),
+        onSuccess: success,
+        onError: showError,
+        onRefreshStats: fetchOfferStats,
+      }
+    );
   };
 
   // const handleDeactivateOffer = async (id: number) => {
@@ -705,86 +759,75 @@ export default function OffersPage() {
   // };
 
   const handlePauseOffer = async (id: number) => {
-    try {
-      setLoadingAction({ offerId: id, action: "pause" });
-      const response = await offerService.pauseOffer(id);
-
-      // Optimistically update the offer in the list
-      const responseData = response as unknown as {
-        success: boolean;
-        data?: { lifecycle_status?: string };
-      };
-      if (responseData.success && responseData.data?.lifecycle_status) {
-        const newStatus = responseData.data.lifecycle_status;
-        setOffers((prevOffers) =>
-          prevOffers.map((offer) =>
-            Number(offer.id) === id
-              ? { ...offer, lifecycle_status: newStatus as string }
-              : offer,
+    const offer = offers.find((o) => Number(o.id) === id);
+    if (!offer) return;
+    await handleOfferAction(
+      {
+        offerId: id,
+        offerName: offer.name,
+        action: "pause",
+        successMessage: "Offer Paused: Offer has been paused successfully.",
+        updateFields: { status: OfferStatusEnum.PAUSED },
+      },
+      {
+        onSetLoading: setLoadingAction,
+        onCloseMenu: () => setShowActionMenu(null),
+        onUpdateOffers: (offerId, updateFields) =>
+          setOffers((prev) =>
+            prev.map((o) =>
+              Number(o.id) === offerId ? { ...o, ...updateFields } : o
+            )
           ),
-        );
-      } else {
-        // Fallback: reload if response doesn't include status
-        await loadOffers(true);
+        onSuccess: success,
+        onError: showError,
+        onRefreshStats: fetchOfferStats,
       }
-
-      success("Offer Paused", "Offer has been paused successfully.");
-      setShowActionMenu(null);
-      fetchOfferStats(); // Refresh stats cards
-    } catch {
-      showError("Error", "Failed to pause offer");
-      // Pause offer error
-    } finally {
-      setLoadingAction(null);
-    }
+    );
   };
 
   const handleArchiveOffer = async (id: number) => {
-    try {
-      setLoadingAction({ offerId: id, action: "archive" });
-      await offerService.archiveOffer(id);
-      success("Offer Archived", "Offer has been archived successfully.");
-      await loadOffers(true); // Skip cache for immediate update
-      fetchOfferStats(); // Refresh stats cards
-      setShowActionMenu(null);
-    } catch {
-      showError("Error", "Failed to archive offer");
-      // Archive offer error
-    } finally {
-      setLoadingAction(null);
-    }
+    const offer = offers.find((o) => Number(o.id) === id);
+    if (!offer) return;
+    await handleOfferAction(
+      {
+        offerId: id,
+        offerName: offer.name,
+        action: "archive",
+        successMessage: "Offer Archived: Offer has been archived successfully.",
+        updateFields: { status: OfferStatusEnum.ARCHIVED },
+      },
+      {
+        onSetLoading: setLoadingAction,
+        onCloseMenu: () => setShowActionMenu(null),
+        onUpdateOffers: (offerId, updateFields) =>
+          setOffers((prev) =>
+            prev.map((o) =>
+              Number(o.id) === offerId ? { ...o, ...updateFields } : o
+            )
+          ),
+        onSuccess: success,
+        onError: showError,
+        onRefreshStats: fetchOfferStats,
+      }
+    );
   };
 
   const handleExpireOffer = async (id: number) => {
     try {
       setLoadingAction({ offerId: id, action: "expire" });
-      const response = await offerService.expireOffer(id);
-
-      // Optimistically update the offer in the list
-      const responseData = response as unknown as {
-        success: boolean;
-        data?: { lifecycle_status?: string };
-      };
-      if (responseData.success && responseData.data?.lifecycle_status) {
-        const newStatus = responseData.data.lifecycle_status;
-        setOffers((prevOffers) =>
-          prevOffers.map((offer) =>
-            Number(offer.id) === id
-              ? { ...offer, lifecycle_status: newStatus as string }
-              : offer,
-          ),
-        );
-      } else {
-        // Fallback: reload if response doesn't include status
-        await loadOffers(true);
-      }
-
+      await offerService.expireOffer(id);
+      setOffers((prevOffers) =>
+        prevOffers.map((offer) =>
+          Number(offer.id) === id
+            ? { ...offer, status: OfferStatusEnum.EXPIRED }
+            : offer,
+        ),
+      );
       success("Offer Expired", "Offer has been expired successfully.");
       setShowActionMenu(null);
-      fetchOfferStats(); // Refresh stats cards
+      fetchOfferStats();
     } catch {
       showError("Error", "Failed to expire offer");
-      // Expire offer error
     } finally {
       setLoadingAction(null);
     }
@@ -794,16 +837,25 @@ export default function OffersPage() {
     try {
       setLoadingAction({ offerId: id, action: "request_approval" });
       await offerService.requestApproval(id);
+      setOffers((prevOffers) =>
+        prevOffers.map((offer) =>
+          Number(offer.id) === id
+            ? {
+                ...offer,
+                status: OfferStatusEnum.PENDING_APPROVAL,
+                approval_status: "pending",
+              }
+            : offer,
+        ),
+      );
       success(
         "Approval Requested",
         "Approval request has been sent successfully.",
       );
-      await loadOffers(true); // Skip cache for immediate update
-      fetchOfferStats(); // Refresh stats cards
       setShowActionMenu(null);
+      fetchOfferStats();
     } catch {
       showError("Error", "Failed to request approval");
-      // Request approval error
     } finally {
       setLoadingAction(null);
     }
@@ -814,19 +866,34 @@ export default function OffersPage() {
       showError("Error", "User ID not available. Please log in again.");
       return;
     }
-    try {
-      setLoadingAction({ offerId: id, action: "approve" });
-      await offerService.approveOffer(id, { approved_by: user.user_id });
-      success("Offer Approved", "Offer has been approved successfully.");
-      await loadOffers(true); // Skip cache for immediate update
-      fetchOfferStats(); // Refresh stats cards
-      setShowActionMenu(null);
-    } catch {
-      showError("Error", "Failed to approve offer");
-      // Approve offer error
-    } finally {
-      setLoadingAction(null);
-    }
+    const offer = offers.find((o) => Number(o.id) === id);
+    if (!offer) return;
+    await handleOfferAction(
+      {
+        offerId: id,
+        offerName: offer.name,
+        action: "approve",
+        successMessage: "Offer Approved: Offer has been approved successfully.",
+        updateFields: {
+          status: OfferStatusEnum.APPROVED,
+          approval_status: "approved"
+        },
+        userId: user.user_id,
+      },
+      {
+        onSetLoading: setLoadingAction,
+        onCloseMenu: () => setShowActionMenu(null),
+        onUpdateOffers: (offerId, updateFields) =>
+          setOffers((prev) =>
+            prev.map((o) =>
+              Number(o.id) === offerId ? { ...o, ...updateFields } : o
+            )
+          ),
+        onSuccess: success,
+        onError: showError,
+        onRefreshStats: fetchOfferStats,
+      }
+    );
   };
 
   const handleRejectOffer = async (id: number) => {
@@ -834,18 +901,34 @@ export default function OffersPage() {
       showError("Error", "User ID not available. Please log in again.");
       return;
     }
-    try {
-      setLoadingAction({ offerId: id, action: "reject" });
-      await offerService.rejectOffer(id, { rejected_by: user.user_id });
-      success("Offer Rejected", "Offer has been rejected.");
-      await loadOffers(true); // Skip cache for immediate update
-      setShowActionMenu(null);
-    } catch {
-      showError("Error", "Failed to reject offer");
-      // Reject offer error
-    } finally {
-      setLoadingAction(null);
-    }
+    const offer = offers.find((o) => Number(o.id) === id);
+    if (!offer) return;
+    await handleOfferAction(
+      {
+        offerId: id,
+        offerName: offer.name,
+        action: "reject",
+        successMessage: "Offer Rejected: Offer has been rejected.",
+        updateFields: {
+          status: OfferStatusEnum.REJECTED,
+          approval_status: "rejected"
+        },
+        userId: user.user_id,
+      },
+      {
+        onSetLoading: setLoadingAction,
+        onCloseMenu: () => setShowActionMenu(null),
+        onUpdateOffers: (offerId, updateFields) =>
+          setOffers((prev) =>
+            prev.map((o) =>
+              Number(o.id) === offerId ? { ...o, ...updateFields } : o
+            )
+          ),
+        onSuccess: success,
+        onError: showError,
+        onRefreshStats: fetchOfferStats,
+      }
+    );
   };
 
   // TODO: Backend doesn't support these endpoints yet (404 Not Found)
@@ -1243,75 +1326,13 @@ export default function OffersPage() {
                       className={`px-6 py-4 hidden md:table-cell text-sm ${tw.textMuted}`}
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
-                      {offer.created_at ? (
-                        <DateFormatter date={offer.created_at} />
-                      ) : (
-                        "N/A"
-                      )}
+                      <DateFormatter date={offer.created_at} />
                     </td>
                     <td
                       className="px-6 py-4 text-sm font-medium"
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       <div className="flex items-center justify-center space-x-2">
-                        {/* Play/Pause buttons - Only show if approved (not draft, not expired/archived) */}
-                        {offer.status === OfferStatusEnum.APPROVED && (
-                          <>
-                            {offer.lifecycle_status === "paused" ? (
-                              <button
-                                onClick={() =>
-                                  offer.id &&
-                                  handleActivateOffer(Number(offer.id))
-                                }
-                                disabled={
-                                  loadingAction?.offerId === Number(offer.id) &&
-                                  loadingAction?.action === "activate"
-                                }
-                                className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-green-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed`}
-                                style={{ backgroundColor: "transparent" }}
-                                onMouseLeave={(e) => {
-                                  (
-                                    e.target as HTMLButtonElement
-                                  ).style.backgroundColor = "transparent";
-                                }}
-                                title="Resume Offer"
-                              >
-                                {loadingAction?.offerId === Number(offer.id) &&
-                                loadingAction?.action === "activate" ? (
-                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
-                                ) : (
-                                  <Play className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
-                                )}
-                              </button>
-                            ) : offer.lifecycle_status === "active" ? (
-                              <button
-                                onClick={() =>
-                                  offer.id && handlePauseOffer(Number(offer.id))
-                                }
-                                disabled={
-                                  loadingAction?.offerId === Number(offer.id) &&
-                                  loadingAction?.action === "pause"
-                                }
-                                className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-orange-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed`}
-                                style={{ backgroundColor: "transparent" }}
-                                onMouseLeave={(e) => {
-                                  (
-                                    e.target as HTMLButtonElement
-                                  ).style.backgroundColor = "transparent";
-                                }}
-                                title="Pause Offer"
-                              >
-                                {loadingAction?.offerId === Number(offer.id) &&
-                                loadingAction?.action === "pause" ? (
-                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
-                                ) : (
-                                  <Pause className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
-                                )}
-                              </button>
-                            ) : null}
-                          </>
-                        )}
-
                         <button
                           onClick={() => offer.id && handleViewOffer(offer.id)}
                           className={`text-[${color.status.info}] hover:text-[${color.status.info}] p-1 rounded`}
@@ -1655,7 +1676,7 @@ export default function OffersPage() {
       {!loading && filteredOffers.length > 0 && (
         <Pagination
           currentPage={filters.page || 1}
-          pageSize={filters.pageSize || 20}
+          pageSize={filters.limit || 15}
           totalItems={totalOffers}
           onPageChange={(page) =>
             setFilters((prev) => ({

@@ -56,7 +56,6 @@ export default function ProductDetailsPage() {
   const [error, setError] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [showStatusModal, setShowStatusModal] = useState(false);
   const [isTogglingStatus, setIsTogglingStatus] = useState(false);
 
   const loadProduct = useCallback(async () => {
@@ -99,16 +98,16 @@ export default function ProductDetailsPage() {
     }
   }, [id, loadProduct]);
 
-  const handleToggleStatus = () => {
-    if (!product) return;
-    setShowStatusModal(true);
-  };
-
-  const handleConfirmStatusChange = async () => {
+  const handleToggleStatus = async () => {
     if (!product) return;
 
     setIsTogglingStatus(true);
     try {
+      // Optimistic UI update - update state immediately
+      setProduct((prev) =>
+        prev ? { ...prev, is_active: !prev.is_active } : null
+      );
+
       if (product.is_active) {
         await productService.deactivateProduct(Number(id));
         success(
@@ -122,22 +121,16 @@ export default function ProductDetailsPage() {
           `"${product.name}" has been activated successfully.`,
         );
       }
-      // Update product state immediately to reflect the status change
-      setProduct((prev) =>
-        prev ? { ...prev, is_active: !prev.is_active } : null
-      );
-      loadProduct(); // Reload to get updated status
     } catch (err) {
       console.error("Failed to toggle product status:", err);
       showError("Failed to update product status", "Please try again later.");
+      // Revert optimistic update on error
+      setProduct((prev) =>
+        prev ? { ...prev, is_active: !prev.is_active } : null
+      );
     } finally {
       setIsTogglingStatus(false);
-      setShowStatusModal(false);
     }
-  };
-
-  const handleCancelStatusChange = () => {
-    setShowStatusModal(false);
   };
 
   const handleDelete = () => {
@@ -225,33 +218,31 @@ export default function ProductDetailsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-        <div className="flex items-center space-x-2 sm:space-x-4">
-          <BackButton fallbackTo="/dashboard/products" onClick={navigateBack} />
-          <div>
-            <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-              {t.pages.productDetails}
-            </h1>
-            <p className={`${tw.textSecondary} mt-2 text-sm`}>
-              View and manage product information
-            </p>
-          </div>
-        </div>
-        <div className="flex flex-col sm:flex-row xl:flex-row lg:flex-col gap-3">
+        <BackButton fallbackTo="/dashboard/products" onClick={navigateBack} showBreadcrumb={true} currentLabel="Product Details" />
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={handleToggleStatus}
-            className={`px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm w-fit`}
+            disabled={isTogglingStatus}
+            className={`px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm w-fit disabled:opacity-50 disabled:cursor-not-allowed`}
             style={{
               backgroundColor: button.secondaryAction.background,
               color: "black",
             }}
             onMouseEnter={(e) => {
-              (e.target as HTMLButtonElement).style.opacity = "0.9";
+              if (!isTogglingStatus) {
+                (e.target as HTMLButtonElement).style.opacity = "0.9";
+              }
             }}
             onMouseLeave={(e) => {
               (e.target as HTMLButtonElement).style.opacity = "1";
             }}
           >
-            {product.is_active ? (
+            {isTogglingStatus ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+                {product.is_active ? "Deactivating..." : "Activating..."}
+              </>
+            ) : product.is_active ? (
               <>
                 <PowerOff className="w-4 h-4" />
                 Deactivate
@@ -626,85 +617,6 @@ export default function ProductDetailsPage() {
           )}
         </div>
       </div>
-
-      {/* Deactivate Product Modal */}
-      {showStatusModal && product?.is_active && (
-        <DeleteConfirmModal
-          isOpen={showStatusModal}
-          onClose={handleCancelStatusChange}
-          onConfirm={handleConfirmStatusChange}
-          title="Deactivate Product"
-          description={`Are you sure you want to deactivate "${product?.name}"? This action can be reversed at any time.`}
-          itemName={product?.name || ""}
-          isLoading={isTogglingStatus}
-          confirmText="Deactivate"
-          cancelText="Cancel"
-        />
-      )}
-
-      {/* Activate Product Modal */}
-      {showStatusModal && !product?.is_active && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex min-h-screen items-center justify-center px-4">
-            <div
-              className="fixed inset-0 bg-black bg-opacity-50"
-              onClick={handleCancelStatusChange}
-            />
-            <div
-              className={`relative bg-white ${tw.rounded} shadow-xl max-w-md w-full p-6`}
-            >
-              <div className="flex items-center space-x-3 mb-4">
-                <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center"
-                  style={{
-                    backgroundColor: "#d1fae5",
-                  }}
-                >
-                  <AlertCircle
-                    className="w-6 h-6"
-                    style={{
-                      color: "#10b981",
-                    }}
-                  />
-                </div>
-                <div>
-                  <h3 className={`text-lg font-semibold ${tw.textPrimary}`}>
-                    Activate Product
-                  </h3>
-                  <p className={`text-sm ${tw.textMuted}`}>
-                    Please confirm this action
-                  </p>
-                </div>
-              </div>
-
-              <p className={`text-sm ${tw.textPrimary} mb-6`}>
-                Are you sure you want to <strong>activate</strong>{" "}
-                <strong>{product?.name}</strong>? This action can be reversed at any time.
-              </p>
-
-              <div className="flex space-x-3">
-                <button
-                  onClick={handleCancelStatusChange}
-                  disabled={isTogglingStatus}
-                  className={`flex-1 px-4 py-2 text-sm border border-gray-300 text-gray-700 ${tw.rounded} hover:bg-gray-50 font-medium transition-colors disabled:opacity-50`}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleConfirmStatusChange}
-                  disabled={isTogglingStatus}
-                  className={`flex-1 px-4 py-2 text-sm text-white ${tw.rounded} font-medium transition-colors disabled:opacity-50`}
-                  style={{
-                    backgroundColor: color.primary.action,
-                  }}
-                >
-                  {isTogglingStatus ? "Activating..." : "Activate"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal

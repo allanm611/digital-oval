@@ -27,6 +27,7 @@ import {
 import { tw, color, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import CreateButton from "../../../shared/components/ui/CreateButton";
+import BackButton from "../../../shared/components/ui/BackButton";
 import DataConnectorForm from "../components/DataConnectorForm";
 import {
   CreateDataConnectorRequest,
@@ -196,15 +197,7 @@ export default function DataConnectors() {
     <div className="">
       {/* Header */}
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
-            Data Connectors
-          </h1>
-          <p className={`${tw.textSecondary} mt-2 text-sm`}>
-            Manage and monitor your data connections across sources and
-            destinations
-          </p>
-        </div>
+        <BackButton fallbackTo="/dashboard" showBreadcrumb={true} currentLabel="Data Connectors" />
         <PermissionGate permission="servers.create">
           <CreateButton
             onClick={() => {

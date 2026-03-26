@@ -107,6 +107,18 @@ const CampaignPages = {
         /* webpackPrefetch: true */ "../../campaigns/pages/SeedListManagementPage"
       ),
   ),
+  CampaignBroadcastsPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../campaigns/pages/CampaignBroadcastsPage"
+      ),
+  ),
+  CampaignBroadcastDetailsPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../campaigns/pages/CampaignBroadcastDetailsPage"
+      ),
+  ),
 };
 
 // Offer Pages - All routes preloaded for instant access
@@ -165,6 +177,12 @@ const OfferPages = {
         /* webpackPrefetch: true */ "../../offers/pages/CharacterSetsPage"
       ),
   ),
+  CharacterSetFormPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../offers/pages/CharacterSetFormPage"
+      ),
+  ),
   OfferCreativeDetailsPage: lazy(
     () =>
       import(
@@ -204,7 +222,7 @@ const ProductPages = {
   ControlGroupsPage: lazy(
     () =>
       import(
-        /* webpackPrefetch: true */ "../../products/pages/ControlGroupsPage"
+        /* webpackPrefetch: true */ "../../control-groups/pages/ControlGroupsPage"
       ),
   ),
 };
@@ -596,6 +614,12 @@ const OtherPages = {
         /* webpackPrefetch: true */ "../../notifications/pages/NotificationsPage"
       ),
   ),
+  DynamicMessageVariablesPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../../shared/pages/DynamicMessageVariablesPage"
+      ),
+  ),
 };
 
 export default function Dashboard() {
@@ -673,6 +697,14 @@ export default function Dashboard() {
           <Route
             path="/programs/:id"
             element={<CampaignPages.ProgramDetailsPage />}
+          />
+          <Route
+            path="/campaign-broadcasts"
+            element={<CampaignPages.CampaignBroadcastsPage />}
+          />
+          <Route
+            path="/campaign-broadcasts/:broadcastId"
+            element={<CampaignPages.CampaignBroadcastDetailsPage />}
           />
           <Route
             path="/campaign-communication-policy"
@@ -863,6 +895,18 @@ export default function Dashboard() {
           <Route
             path="/character-sets"
             element={<OfferPages.CharacterSetsPage />}
+          />
+          <Route
+            path="/character-sets/create"
+            element={<OfferPages.CharacterSetFormPage />}
+          />
+          <Route
+            path="/character-sets/:id"
+            element={<OfferPages.CharacterSetFormPage />}
+          />
+          <Route
+            path="/dynamic-message-variables"
+            element={<OtherPages.DynamicMessageVariablesPage />}
           />
           <Route
             path="/communication-channels"

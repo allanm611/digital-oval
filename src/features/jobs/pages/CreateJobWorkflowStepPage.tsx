@@ -78,7 +78,7 @@ export default function CreateJobWorkflowStepPage() {
     parameters: null,
     is_active: true,
     is_critical: false,
-    userId: user?.user_id || 0,
+    userId: user?.user_id ?? null,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -148,7 +148,7 @@ export default function CreateJobWorkflowStepPage() {
           parameters: step.parameters,
           is_active: step.is_active,
           is_critical: step.is_critical,
-          userId: user?.user_id || 0,
+          userId: user?.user_id ?? null,
         });
       } catch (err) {
         showError(
@@ -303,7 +303,7 @@ export default function CreateJobWorkflowStepPage() {
         const updatePayload: UpdateJobWorkflowStepPayload = {
           ...rest,
           depends_on_step_codes: formData.depends_on_step_codes || [],
-          userId: user?.user_id || 0,
+          userId: user?.user_id ?? null,
         };
         await jobWorkflowStepService.updateJobWorkflowStep(
           Number(id),
@@ -336,7 +336,7 @@ export default function CreateJobWorkflowStepPage() {
         await jobWorkflowStepService.batchCreateSteps({
           job_id: formData.job_id,
           steps,
-          userId: user?.user_id || 0,
+          userId: user?.user_id ?? null,
         });
         showToast(
           "Steps created",

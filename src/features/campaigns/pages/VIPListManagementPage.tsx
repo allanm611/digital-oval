@@ -1,7 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
-  ArrowLeft,
   Plus,
   Search,
   Trash2,
@@ -13,7 +11,6 @@ import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
-import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import DateFormatter from "../../../shared/components/DateFormatter";
 
@@ -130,11 +127,24 @@ const DUMMY_VIP_LISTS: VIPList[] = [
   },
 ];
 
+interface AddVIPCustomerForm {
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string;
+  vip_list_id: string;
+}
+
+interface FormErrors {
+  customer_name?: string;
+  customer_email?: string;
+  customer_phone?: string;
+  vip_list_id?: string;
+}
+
 export default function VIPListManagementPage() {
-  const navigate = useNavigate();
   const { success: showToast } = useToast();
   const { t } = useLanguage();
-  const [vipCustomers] = useState<VIPCustomer[]>(DUMMY_VIP_CUSTOMERS);
+  const [vipCustomers, setVipCustomers] = useState<VIPCustomer[]>(DUMMY_VIP_CUSTOMERS);
   const [vipLists] = useState<VIPList[]>(DUMMY_VIP_LISTS);
   const [loading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -145,6 +155,14 @@ export default function VIPListManagementPage() {
   const [activeTab, setActiveTab] = useState<"customers" | "lists">(
     "customers"
   );
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState<AddVIPCustomerForm>({
+    customer_name: "",
+    customer_email: "",
+    customer_phone: "",
+    vip_list_id: "",
+  });
+  const [errors, setErrors] = useState<FormErrors>({});
 
   const filteredCustomers = vipCustomers.filter((customer) => {
     const matchesSearch =
@@ -180,33 +198,83 @@ export default function VIPListManagementPage() {
     showToast("Remove customer functionality will be implemented");
   };
 
+  const handleOpenModal = () => {
+    setFormData({
+      customer_name: "",
+      customer_email: "",
+      customer_phone: "",
+      vip_list_id: "",
+    });
+    setErrors({});
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setFormData({
+      customer_name: "",
+      customer_email: "",
+      customer_phone: "",
+      vip_list_id: "",
+    });
+    setErrors({});
+  };
+
+  const handleAddCustomer = () => {
+    const newErrors: FormErrors = {};
+
+    if (!formData.customer_name) {
+      newErrors.customer_name = "Name is required";
+    }
+    if (!formData.customer_email) {
+      newErrors.customer_email = "Email is required";
+    }
+    if (!formData.customer_phone) {
+      newErrors.customer_phone = "Phone number is required";
+    }
+    if (!formData.vip_list_id) {
+      newErrors.vip_list_id = "VIP List is required";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    const newCustomer: VIPCustomer = {
+      id: Math.max(...vipCustomers.map(c => c.id), 0) + 1,
+      customer_id: Math.max(...vipCustomers.map(c => c.customer_id), 200) + 1,
+      customer_name: formData.customer_name,
+      customer_email: formData.customer_email,
+      customer_phone: formData.customer_phone,
+      vip_list_id: parseInt(formData.vip_list_id),
+      vip_list_name: vipLists.find(l => l.id.toString() === formData.vip_list_id)?.name,
+      status: "active",
+      added_at: new Date().toISOString(),
+      added_by: 1,
+      added_by_name: "Current User",
+    };
+
+    setVipCustomers([...vipCustomers, newCustomer]);
+    showToast("VIP customer added successfully");
+    handleCloseModal();
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center space-x-2 sm:space-x-4">
-          <button
-            onClick={() =>
-              navigateBackOrFallback(navigate, "/dashboard/configuration")
-            }
-            className={`p-2 text-gray-600 hover:text-gray-800 ${tw.rounded} transition-colors`}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div>
-            <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
-              {t.vipListManagement.title}
-            </h1>
-            <p className={`${tw.textSecondary} mt-2 text-sm`}>
-              {t.vipListManagement.subtitle}
-            </p>
-          </div>
+        <div>
+          <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
+            {t.vipListManagement.title}
+          </h1>
+          <p className={`${tw.textSecondary} mt-2 text-sm`}>
+            {t.vipListManagement.subtitle}
+          </p>
         </div>
         <div className="flex items-center gap-3 w-auto">
           <button
-            onClick={() =>
-              showToast("Add VIP customer functionality will be implemented")
-            }
+            onClick={handleOpenModal}
             className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white w-auto`}
             style={{ backgroundColor: color.primary.action }}
           >
@@ -695,6 +763,137 @@ export default function VIPListManagementPage() {
           </div>
         )}
       </div>
+
+      {/* Add VIP Customer Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className={`${tw.rounded} bg-white shadow-xl max-w-md w-full mx-4`}>
+            <div className="p-6">
+              <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
+                Add VIP Customer
+              </h2>
+
+              {/* Form Fields */}
+              <div className="space-y-4">
+                {/* Name */}
+                <div>
+                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
+                    Name
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.customer_name}
+                    onChange={(e) => {
+                      setFormData({ ...formData, customer_name: e.target.value });
+                      if (errors.customer_name) {
+                        setErrors({ ...errors, customer_name: undefined });
+                      }
+                    }}
+                    placeholder="Enter customer name"
+                    className={`w-full px-3 py-2 border text-sm ${errors.customer_name ? "border-red-500" : "border-gray-300"} ${tw.rounded} focus:outline-none focus:ring-2`}
+                    style={{ focusRingColor: color.primary.accent }}
+                  />
+                  {errors.customer_name && (
+                    <p className="text-xs text-red-500 mt-1">{errors.customer_name}</p>
+                  )}
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.customer_email}
+                    onChange={(e) => {
+                      setFormData({ ...formData, customer_email: e.target.value });
+                      if (errors.customer_email) {
+                        setErrors({ ...errors, customer_email: undefined });
+                      }
+                    }}
+                    placeholder="Enter email address"
+                    className={`w-full px-3 py-2 border text-sm ${errors.customer_email ? "border-red-500" : "border-gray-300"} ${tw.rounded} focus:outline-none focus:ring-2`}
+                    style={{ focusRingColor: color.primary.accent }}
+                  />
+                  {errors.customer_email && (
+                    <p className="text-xs text-red-500 mt-1">{errors.customer_email}</p>
+                  )}
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    value={formData.customer_phone}
+                    onChange={(e) => {
+                      setFormData({ ...formData, customer_phone: e.target.value });
+                      if (errors.customer_phone) {
+                        setErrors({ ...errors, customer_phone: undefined });
+                      }
+                    }}
+                    placeholder="Enter phone number"
+                    className={`w-full px-3 py-2 border text-sm ${errors.customer_phone ? "border-red-500" : "border-gray-300"} ${tw.rounded} focus:outline-none focus:ring-2`}
+                    style={{ focusRingColor: color.primary.accent }}
+                  />
+                  {errors.customer_phone && (
+                    <p className="text-xs text-red-500 mt-1">{errors.customer_phone}</p>
+                  )}
+                </div>
+
+                {/* VIP List */}
+                <div>
+                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
+                    VIP List
+                  </label>
+                  <div className={errors.vip_list_id ? "border border-red-500 rounded" : ""}>
+                    <HeadlessSelect
+                      value={formData.vip_list_id}
+                      onChange={(value) => {
+                        setFormData({ ...formData, vip_list_id: value });
+                        if (errors.vip_list_id) {
+                          setErrors({ ...errors, vip_list_id: undefined });
+                        }
+                      }}
+                      options={[
+                        { value: "", label: "Select VIP List" },
+                        ...vipLists.map((list) => ({
+                          value: list.id.toString(),
+                          label: list.name,
+                        })),
+                      ]}
+                      placeholder="Select VIP List"
+                    />
+                  </div>
+                  {errors.vip_list_id && (
+                    <p className="text-xs text-red-500 mt-1">{errors.vip_list_id}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 justify-end mt-6">
+                <button
+                  onClick={handleCloseModal}
+                  className={`px-4 py-2 border border-gray-300 text-gray-700 font-medium ${tw.rounded} transition-colors`}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddCustomer}
+                  className={`px-4 py-2 text-white font-medium ${tw.rounded}`}
+                  style={{ backgroundColor: color.primary.action }}
+                >
+                  Add Customer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

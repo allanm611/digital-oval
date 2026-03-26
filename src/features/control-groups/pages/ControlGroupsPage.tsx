@@ -22,21 +22,13 @@ import ProgressStepper, {
 } from "../../../shared/components/ui/ProgressStepper";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw } from "../../../shared/utils/utils";
+import {
+  UniversalControlGroup,
+  UNIVERSAL_CONTROL_GROUPS,
+} from "../configs/universalControlGroupsConfig";
+import SegmentConditionsBuilder from "../../segments/components/SegmentConditionsBuilder";
+import type { SegmentConditionGroup } from "../../segments/types/segment";
 
-interface UniversalControlGroup {
-  id: string;
-  name: string;
-  status: "active" | "inactive" | "expired";
-  generationTime: string;
-  percentage: number;
-  memberCount: number;
-  customerBase: "active_subscribers" | "all_customers" | "saved_segments";
-  recurrence: "once" | "daily" | "weekly" | "monthly";
-  lastGenerated: string;
-  nextGeneration?: string;
-  createdBy: string;
-  description?: string;
-}
 
 export default function ControlGroupsPage() {
   const navigate = useNavigate();
@@ -49,6 +41,9 @@ export default function ControlGroupsPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [controlGroupName, setControlGroupName] = useState("");
   const [nameError, setNameError] = useState("");
+  const [controlGroupPercentage, setControlGroupPercentage] = useState(10);
+  const [selectedCustomerBase, setSelectedCustomerBase] = useState<string>("active_subscribers");
+  const [segmentConditions, setSegmentConditions] = useState<SegmentConditionGroup[]>([]);
 
   const STEPS: Step[] = [
     {
@@ -78,50 +73,8 @@ export default function ControlGroupsPage() {
     { value: "expired", label: "Expired" },
   ];
 
-  // Mock data
-  const controlGroups: UniversalControlGroup[] = [
-    {
-      id: "1",
-      name: "Premium Customer Control",
-      status: "active",
-      generationTime: "2025-01-20 09:00",
-      percentage: 15,
-      memberCount: 12500,
-      customerBase: "active_subscribers",
-      recurrence: "weekly",
-      lastGenerated: "2025-01-20",
-      nextGeneration: "2025-01-27",
-      createdBy: "Marketing Team",
-      description: "Control group for premium customer campaigns",
-    },
-    {
-      id: "2",
-      name: "General Population Control",
-      status: "active",
-      generationTime: "2025-01-19 14:30",
-      percentage: 10,
-      memberCount: 25000,
-      customerBase: "all_customers",
-      recurrence: "monthly",
-      lastGenerated: "2025-01-19",
-      nextGeneration: "2025-02-19",
-      createdBy: "Data Science Team",
-      description: "Standard control group for all customer campaigns",
-    },
-    {
-      id: "3",
-      name: "Segment-Based Control",
-      status: "inactive",
-      generationTime: "2025-01-15 11:00",
-      percentage: 20,
-      memberCount: 8750,
-      customerBase: "saved_segments",
-      recurrence: "once",
-      lastGenerated: "2025-01-15",
-      createdBy: "Campaign Manager",
-      description: "One-time control group for specific segment testing",
-    },
-  ];
+  // Control groups from config
+  const controlGroups: UniversalControlGroup[] = UNIVERSAL_CONTROL_GROUPS;
 
   const filteredGroups = controlGroups.filter((group) => {
     const matchesSearch =
@@ -151,8 +104,8 @@ export default function ControlGroupsPage() {
         return "Active Subscribers";
       case "all_customers":
         return "All Customers";
-      case "saved_segments":
-        return "Saved Segments";
+      case "custom_segments":
+        return "Custom Segments";
       default:
         return base;
     }
@@ -170,6 +123,32 @@ export default function ControlGroupsPage() {
         return "Monthly";
       default:
         return recurrence;
+    }
+  };
+
+  const canNavigateToStep = (stepId: number) => {
+    // Can always go to completed steps or current step
+    if (stepId <= currentStep) return true;
+    // To go to next step, current step must be valid
+    if (stepId === currentStep + 1) {
+      // Validate current step
+      if (currentStep === 1 && controlGroupName.trim() === "") {
+        return false;
+      }
+      return true;
+    }
+    return false;
+  };
+
+  const handleStepClick = (stepId: number) => {
+    // Validate before navigating
+    if (currentStep === 1 && controlGroupName.trim() === "") {
+      setNameError("Control group name is required");
+      return;
+    }
+    if (canNavigateToStep(stepId)) {
+      setNameError("");
+      setCurrentStep(stepId);
     }
   };
 
@@ -517,8 +496,8 @@ export default function ControlGroupsPage() {
               <ProgressStepper
                 steps={STEPS}
                 currentStep={currentStep}
-                onStepClick={() => {}}
-                canNavigateToStep={() => true}
+                onStepClick={handleStepClick}
+                canNavigateToStep={canNavigateToStep}
                 primaryColor={color.primary.action}
                 textPrimary={tw.textPrimary}
                 textMuted={tw.textMuted}
@@ -577,7 +556,8 @@ export default function ControlGroupsPage() {
                               type="radio"
                               name="customerBase"
                               value="active_subscribers"
-                              defaultChecked
+                              checked={selectedCustomerBase === "active_subscribers"}
+                              onChange={(e) => setSelectedCustomerBase(e.target.value)}
                               className="mt-1 w-4 h-4 border-gray-300"
                               style={
                                 {
@@ -602,6 +582,8 @@ export default function ControlGroupsPage() {
                               type="radio"
                               name="customerBase"
                               value="all_customers"
+                              checked={selectedCustomerBase === "all_customers"}
+                              onChange={(e) => setSelectedCustomerBase(e.target.value)}
                               className="mt-1 w-4 h-4 border-gray-300"
                               style={
                                 {
@@ -625,7 +607,9 @@ export default function ControlGroupsPage() {
                             <input
                               type="radio"
                               name="customerBase"
-                              value="saved_segments"
+                              value="custom_segments"
+                              checked={selectedCustomerBase === "custom_segments"}
+                              onChange={(e) => setSelectedCustomerBase(e.target.value)}
                               className="mt-1 w-4 h-4 border-gray-300"
                               style={
                                 {
@@ -636,14 +620,26 @@ export default function ControlGroupsPage() {
                             />
                             <div className="ml-3">
                               <div className="font-medium text-sm text-gray-900">
-                                Saved Segments
+                                Custom Segments
                               </div>
                               <div className="text-xs text-gray-500">
-                                Use predefined customer segments
+                                Define custom segment conditions
                               </div>
                             </div>
                           </label>
                         </div>
+
+                        {selectedCustomerBase === "custom_segments" && (
+                          <div className="mt-6">
+                            <label className="block text-sm font-medium text-gray-700 mb-3">
+                              Define Custom Segment Conditions
+                            </label>
+                            <SegmentConditionsBuilder
+                              conditions={segmentConditions}
+                              onChange={setSegmentConditions}
+                            />
+                          </div>
+                        )}
                       </div>
                     </>
                   )}
@@ -660,14 +656,15 @@ export default function ControlGroupsPage() {
                             type="range"
                             min="1"
                             max="50"
-                            defaultValue="10"
+                            value={controlGroupPercentage}
+                            onChange={(e) => setControlGroupPercentage(Number(e.target.value))}
                             className="flex-1"
                             style={{
                               accentColor: color.primary.action,
                             }}
                           />
                           <span className="text-sm font-semibold text-gray-700 w-12">
-                            10%
+                            {controlGroupPercentage}%
                           </span>
                         </div>
                         <p className="text-xs text-gray-500 mt-2">
@@ -793,39 +790,31 @@ export default function ControlGroupsPage() {
               {/* Footer */}
               <div className="flex items-center justify-between px-6 py-4 ">
                 <button
-                  onClick={handleCloseModal}
-                  className={`px-4 py-2 border text-sm border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-colors`}
+                  onClick={handlePrev}
+                  disabled={currentStep === 1}
+                  className={`px-4 py-2 border text-sm border-gray-300 text-gray-700 ${tw.rounded} cursor-pointer disabled:text-gray-400 disabled:cursor-not-allowed`}
                 >
-                  Cancel
+                  Previous
                 </button>
-                <div className="flex space-x-3">
+                {currentStep === 3 ? (
                   <button
-                    onClick={handlePrev}
-                    disabled={currentStep === 1}
-                    className={`px-4 py-2 border text-sm border-gray-300 text-gray-700 ${tw.rounded} cursor-pointer disabled:text-gray-400 disabled:cursor-not-allowed`}
+                    className={`px-4 py-2 ${tw.rounded} text-sm font-medium hover:opacity-90 transition-colors text-white`}
+                    style={{ backgroundColor: color.primary.action }}
+                    onClick={() => {
+                      handleCloseModal();
+                    }}
                   >
-                    Previous
+                    Create Control Group
                   </button>
-                  {currentStep === 3 ? (
-                    <button
-                      className={`px-4 py-2 ${tw.rounded} text-sm font-medium hover:opacity-90 transition-colors text-white`}
-                      style={{ backgroundColor: color.primary.action }}
-                      onClick={() => {
-                        handleCloseModal();
-                      }}
-                    >
-                      Create Control Group
-                    </button>
-                  ) : (
-                    <button
-                      onClick={handleNext}
-                      className={`px-4 py-2 ${tw.rounded} text-sm font-medium hover:opacity-90 transition-colors text-white`}
-                      style={{ backgroundColor: color.primary.action }}
-                    >
-                      Next
-                    </button>
-                  )}
-                </div>
+                ) : (
+                  <button
+                    onClick={handleNext}
+                    className={`px-4 py-2 ${tw.rounded} text-sm font-medium hover:opacity-90 transition-colors text-white`}
+                    style={{ backgroundColor: color.primary.action }}
+                  >
+                    Next
+                  </button>
+                )}
               </div>
             </div>
           </div>,

@@ -1,4 +1,44 @@
-import { Check, LucideIcon } from "lucide-react";
+import { LucideIcon } from "lucide-react";
+import Box from "@mui/material/Box";
+import Stepper from "@mui/material/Stepper";
+import Step from "@mui/material/Step";
+import StepLabel from "@mui/material/StepLabel";
+import StepIcon from "@mui/material/StepIcon";
+import { styled } from "@mui/material/styles";
+import { colors } from "../../../shared/utils/tokens";
+
+const ACCENT_COLOR = colors.primary.accent;
+const GRAY_COLOR = "#e5e7eb";
+const TEXT_GRAY = "#9ca3af";
+
+// Custom step icon
+const CustomStepIcon = styled(StepIcon)(({ theme }) => ({
+  "& .MuiStepIcon-root": {
+    width: 32,
+    height: 32,
+    color: GRAY_COLOR,
+    border: `2px solid ${GRAY_COLOR}`,
+    borderRadius: "50%",
+    backgroundColor: "white",
+    fontSize: 16,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  "& .MuiStepIcon-root.Mui-active": {
+    color: ACCENT_COLOR,
+    backgroundColor: ACCENT_COLOR,
+    borderColor: ACCENT_COLOR,
+  },
+  "& .MuiStepIcon-root.Mui-completed": {
+    color: ACCENT_COLOR,
+    backgroundColor: ACCENT_COLOR,
+    borderColor: ACCENT_COLOR,
+  },
+  "& .MuiStepIcon-text": {
+    display: "none",
+  },
+}));
 
 export interface Step {
   id: number;
@@ -41,143 +81,136 @@ export default function ProgressStepper({
       <div className="md:hidden flex items-center justify-center gap-2 flex-wrap">
         {steps.map((step) => {
           const status = getStepStatus(step.id);
+          const isDisabled = !canNavigateToStep(step.id);
           return (
             <button
               key={step.id}
               onClick={() => onStepClick(step.id)}
-              disabled={!canNavigateToStep(step.id)}
+              disabled={isDisabled}
               className={`w-2 h-2 rounded-full transition-all duration-200 ${
                 status === "completed" || status === "current" ? "w-8" : ""
               }`}
               style={{
                 backgroundColor:
                   status === "completed" || status === "current"
-                    ? primaryColor
-                    : "#d1d5db",
+                    ? ACCENT_COLOR
+                    : GRAY_COLOR,
+                cursor: isDisabled ? "not-allowed" : "pointer",
+                opacity: isDisabled ? 0.6 : 1,
               }}
             />
           );
         })}
       </div>
 
-      {/* Desktop - Full stepper */}
-      <div className="hidden md:flex items-center justify-between w-full relative">
-        {/* Background line - full width */}
-        <div
-          className="absolute top-4 left-0 right-0 h-0.5 bg-gray-200"
-          style={{ zIndex: 0 }}
-        />
-
-        {/* Progress line for completed steps */}
-        {/* The line should reach from the center of the first circle to the center of the current step's circle */}
-        {currentStep > 1 && (
-          <div
-            className="absolute top-4 h-0.5 transition-all duration-500"
-            style={{
-              left: "0",
-              // Calculate width to reach the center of the current step's circle
-              // When on the last step, the line should reach 100% (the right edge where the last circle center is)
-              // For intermediate steps, calculate proportionally
-              width:
-                currentStep === steps.length
-                  ? "100%"
-                  : `${((currentStep - 1) / (steps.length - 1)) * 100}%`,
-              backgroundColor: primaryColor,
-              zIndex: 1,
+      {/* Desktop - MUI Stepper with alternativeLabel */}
+      <div className="hidden md:block">
+        <Box sx={{ width: "100%" }}>
+          <Stepper
+            activeStep={currentStep - 1}
+            alternativeLabel
+            sx={{
+              "& .MuiStepLabel-root": {
+                cursor: "pointer",
+                ".MuiStepLabel-label": {
+                  fontSize: "14px",
+                  fontWeight: "normal",
+                  color: "#000000",
+                  marginTop: "12px",
+                  "&.Mui-active": {
+                    color: "#000000",
+                    fontWeight: "normal",
+                  },
+                  "&.Mui-completed": {
+                    color: "#000000",
+                    fontWeight: "normal",
+                  },
+                },
+              },
+              "& .MuiStep-root": {
+                cursor: "pointer",
+              },
+              "& .MuiStepConnector-root": {
+                "& .MuiStepConnector-line": {
+                  borderColor: GRAY_COLOR,
+                  borderTopWidth: 2,
+                },
+                "&.Mui-active .MuiStepConnector-line": {
+                  borderColor: ACCENT_COLOR,
+                },
+                "&.Mui-completed .MuiStepConnector-line": {
+                  borderColor: ACCENT_COLOR,
+                },
+              },
             }}
-          />
-        )}
+          >
+            {steps.map((step) => {
+              const isDisabled = !canNavigateToStep(step.id);
+              const status = getStepStatus(step.id);
+              const Icon = step.icon;
 
-        {/* Cover divs to hide line at edges */}
-        {/* Hide right cover when on last step to allow line to reach the circle */}
-        <div
-          className="absolute top-4 left-0 h-0.5 bg-white z-20"
-          style={{
-            width: "5rem",
-          }}
-        />
-        {currentStep < steps.length && (
-          <div
-            className="absolute top-4 right-0 h-0.5 bg-white z-20"
-            style={{
-              width: "5rem",
-            }}
-          />
-        )}
-
-        {steps.map((step, stepIdx) => {
-          const status = getStepStatus(step.id);
-          const Icon = step.icon;
-          const isFirst = stepIdx === 0;
-          const isLast = stepIdx === steps.length - 1;
-
-          return (
-            <div key={step.id} className="relative" style={{ zIndex: 30 }}>
-              <button
-                onClick={() => onStepClick(step.id)}
-                className="relative flex flex-col items-center group"
-                disabled={!canNavigateToStep(step.id)}
-              >
-                {/* Background circle to cover the line completely - matches circle background */}
-                <div
-                  className="absolute top-4 left-1/2 w-10 h-10 rounded-full -translate-x-1/2 -translate-y-1/2"
-                  style={{
-                    zIndex: 25,
-                    backgroundColor:
-                      status === "completed" ? primaryColor : "white",
+              return (
+                <Step
+                  key={step.id}
+                  completed={status === "completed"}
+                  onClick={() => !isDisabled && onStepClick(step.id)}
+                  sx={{
+                    opacity: isDisabled ? 0.6 : 1,
+                    cursor: isDisabled ? "not-allowed" : "pointer",
                   }}
-                />
-
-                {/* Circle with higher z-index to ensure it covers the line */}
-                <div
-                  className={`
-                    relative flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all duration-200
-                    ${
-                      status === "completed"
-                        ? `bg-[${primaryColor}] border-[${primaryColor}] text-white`
-                        : status === "current"
-                        ? `bg-white border-[${primaryColor}] text-[${primaryColor}]`
-                        : "bg-white border-gray-300 text-gray-400"
-                    }
-                    ${
-                      step.id <= currentStep + 2
-                        ? "cursor-pointer hover:scale-110"
-                        : "cursor-not-allowed"
-                    }
-                  `}
-                  style={{ zIndex: 30 }}
                 >
-                  {status === "completed" ? (
-                    <Check className="w-4 h-4" />
-                  ) : (
-                    <Icon className="w-4 h-4" />
-                  )}
-                </div>
-
-                <div className="mt-2 text-center">
-                  <div
-                    className={`text-sm font-medium ${
-                      status === "current"
-                        ? `text-[${primaryColor}]`
-                        : status === "completed"
-                        ? textPrimary
-                        : textMuted
-                    }`}
+                  <StepLabel
+                    icon={
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: 32,
+                          height: 32,
+                          borderRadius: "50%",
+                          border: `2px solid ${
+                            status === "completed" || status === "current"
+                              ? ACCENT_COLOR
+                              : GRAY_COLOR
+                          }`,
+                          backgroundColor:
+                            status === "completed" || status === "current"
+                              ? ACCENT_COLOR
+                              : "white",
+                          color:
+                            status === "completed" || status === "current"
+                              ? "white"
+                              : TEXT_GRAY,
+                          fontSize: 16,
+                        }}
+                      >
+                        <Icon size={16} />
+                      </div>
+                    }
                   >
-                    {step.name}
-                  </div>
-                  {step.description && (
-                    <div
-                      className={`text-xs mt-1 hidden lg:block ${textMuted}`}
-                    >
-                      {step.description}
+                    <div style={{ textAlign: "center" }}>
+                      <div
+                        style={{
+                          color: "#000000",
+                          fontSize: "14px",
+                          fontWeight: "normal",
+                        }}
+                      >
+                        {step.name}
+                      </div>
+                      {step.description && (
+                        <div className="text-xs text-gray-500 mt-1 hidden lg:block">
+                          {step.description}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              </button>
-            </div>
-          );
-        })}
+                  </StepLabel>
+                </Step>
+              );
+            })}
+          </Stepper>
+        </Box>
       </div>
     </nav>
   );

@@ -13,6 +13,7 @@ import {
 import LoadingSpinner from "./ui/LoadingSpinner";
 import BackButton from "./ui/BackButton";
 import CreateButton from "./ui/CreateButton";
+import HeadlessSelect from "./ui/HeadlessSelect";
 
 export interface ConfigurationItem {
   id: number;
@@ -22,6 +23,16 @@ export interface ConfigurationItem {
   updated_at?: string;
   isActive?: boolean;
   metadataValue?: number | string;
+}
+
+export interface MetadataField {
+  label: string;
+  key: string;
+  type: "text" | "select" | "toggle" | "textarea" | "date";
+  required?: boolean;
+  options?: { value: string | boolean; label: string }[];
+  placeholder?: string;
+  condition?: (values: any) => boolean;
 }
 
 export interface ConfigurationPageConfig {
@@ -56,6 +67,9 @@ export interface ConfigurationPageConfig {
   // Validation
   nameMaxLength: number;
   descriptionMaxLength: number;
+
+  // Metadata Fields (optional)
+  metadataFields?: MetadataField[];
 
   // Messages
   deleteConfirmTitle: string;
@@ -92,16 +106,21 @@ export function ConfigurationModal({
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (item) {
-      setFormData({
-        name: item.name,
-        description: item.description || "",
+    const initialData: any = {
+      name: item?.name || "",
+      description: item?.description || "",
+    };
+
+    // Initialize metadata fields
+    if (config.metadataFields) {
+      config.metadataFields.forEach((field) => {
+        initialData[field.key] = item?.[field.key] || "";
       });
-    } else {
-      setFormData({ name: "", description: "" });
     }
+
+    setFormData(initialData);
     setError("");
-  }, [item, isOpen]);
+  }, [item, isOpen, config.metadataFields]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,12 +158,33 @@ export function ConfigurationModal({
       return;
     }
 
+    // Validate metadata fields
+    if (config.metadataFields) {
+      for (const field of config.metadataFields) {
+        const shouldShow = field.condition ? field.condition(formData) : true;
+        if (shouldShow && field.required && !formData[field.key]) {
+          setError(t.genericConfig.isRequired.replace("{field}", field.label));
+          return;
+        }
+      }
+    }
+
     setError("");
 
     const itemData = {
       name: formData.name.trim(),
       description: formData.description.trim() || undefined,
     };
+
+    // Add metadata fields to itemData
+    if (config.metadataFields) {
+      for (const field of config.metadataFields) {
+        const shouldShow = field.condition ? field.condition(formData) : true;
+        if (shouldShow) {
+          itemData[field.key] = formData[field.key];
+        }
+      }
+    }
 
     await onSave(itemData);
   };
@@ -215,6 +255,99 @@ export function ConfigurationModal({
                 required={config.descriptionRequired}
               />
             </div>
+
+            {/* Metadata Fields */}
+            {config.metadataFields &&
+              config.metadataFields.map((field) => {
+                // Check if field should be shown based on condition
+                const shouldShow = field.condition ? field.condition(formData) : true;
+
+                if (!shouldShow) return null;
+
+                return (
+                  <div key={field.key}>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {field.label} {field.required && "*"}
+                    </label>
+
+                    {field.type === "text" && (
+                      <input
+                        type="text"
+                        value={formData[field.key] || ""}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            [field.key]: e.target.value,
+                          }))
+                        }
+                        placeholder={field.placeholder}
+                        className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                        required={field.required}
+                      />
+                    )}
+
+                    {field.type === "date" && (
+                      <input
+                        type="date"
+                        value={formData[field.key] || ""}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            [field.key]: e.target.value,
+                          }))
+                        }
+                        className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                        required={field.required}
+                      />
+                    )}
+
+                    {field.type === "textarea" && (
+                      <textarea
+                        value={formData[field.key] || ""}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            [field.key]: e.target.value,
+                          }))
+                        }
+                        placeholder={field.placeholder}
+                        className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                        rows={3}
+                        required={field.required}
+                      />
+                    )}
+
+                    {field.type === "select" && field.options && (
+                      <HeadlessSelect
+                        options={field.options}
+                        value={formData[field.key] || ""}
+                        onChange={(value) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            [field.key]: value,
+                          }))
+                        }
+                        placeholder={field.placeholder || "Select..."}
+                        className="w-full"
+                      />
+                    )}
+
+                    {field.type === "toggle" && (
+                      <input
+                        type="checkbox"
+                        checked={formData[field.key] ?? false}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            [field.key]: e.target.checked,
+                          }))
+                        }
+                        className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-2 focus:ring-purple-500"
+                      />
+                    )}
+                  </div>
+                );
+              })}
           </div>
 
           {error && (
@@ -414,8 +547,10 @@ export default function GenericConfigurationPage({
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center space-x-2 sm:space-x-4">
-          {showBackButton && <BackButton fallbackTo={config.backPath} />}
+        {showBackButton && (
+          <BackButton fallbackTo={config.backPath} showBreadcrumb={true} currentLabel={config.title} />
+        )}
+        {!showBackButton && (
           <div>
             <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
               {config.title}
@@ -424,8 +559,8 @@ export default function GenericConfigurationPage({
               {config.subtitle}
             </p>
           </div>
-        </div>
-        <div className="flex items-center gap-3 w-auto">
+        )}
+        <div className="flex items-center gap-3 w-auto ml-auto">
           <CreateButton onClick={handleCreateItem} />
         </div>
       </div>

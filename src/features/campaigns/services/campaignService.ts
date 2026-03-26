@@ -3,8 +3,10 @@ import {
   buildApiUrl,
   getAuthHeaders,
 } from "../../../shared/services/api";
+import { buildQueryString } from "../utils/buildQueryString";
 import {
-  Campaign,
+  BackendCampaignType,
+  CampaignResponse,
   GetCampaignsResponse,
   GetCampaignCategoriesResponse,
   CampaignCollection,
@@ -28,38 +30,113 @@ import {
   CreateCampaignResponse,
 } from "../types/createCampaign";
 
-export interface CampaignResponse {
-  success: boolean;
-  data: unknown[];
-  meta: {
-    total: number;
-    page: number;
-    pageSize: number;
-    totalPages: number;
-  };
-}
-
 const BASE_URL = buildApiUrl(API_CONFIG.ENDPOINTS.CAMPAIGNS);
 
+// Default values for missing/null fields in categories
+const CATEGORY_FIELD_DEFAULTS = {
+  name: "—",
+  description: "—",
+};
+
+// Default values for missing/null fields in campaigns
+const CAMPAIGN_FIELD_DEFAULTS = {
+  name: "—",
+  code: "—",
+  description: "—",
+  objective: "—",
+  category: "—",
+  program_id: "—",
+  timezone: "—",
+  budget_allocated: "—",
+  budget_spent: "—",
+  max_participants: "—",
+  current_participants: "—",
+  target_reach: "—",
+  target_conversion_rate: "—",
+  target_revenue: "—",
+  rejection_reason: "—",
+  owner_team: "—",
+  campaign_uuid: "—",
+};
+
 class CampaignService {
+  // Normalize category data from API with type safety 
+  private normalizeCategory(data: unknown) {
+    const item = data as Record<string, unknown>;
+    return {
+      id: (item?.id as number) || 0,
+      name: (item?.name as string) || CATEGORY_FIELD_DEFAULTS.name,
+      description: (item?.description as string) || CATEGORY_FIELD_DEFAULTS.description,
+      parent_category_id: (item?.parent_category_id as number | null) || null,
+      display_order: (item?.display_order as number) ?? 0,
+      is_active: (item?.is_active as boolean) ?? true,
+      created_at: (item?.created_at as string) || new Date().toISOString(),
+      updated_at: (item?.updated_at as string) || new Date().toISOString(),
+    };
+  }
+
+  // Normalize campaign data from API with type safety
+  private normalizeCampaign(data: unknown): BackendCampaignType {
+    const item = data as Record<string, unknown>;
+
+    return {
+      id: item?.id as number,
+      campaign_uuid: item?.campaign_uuid as string,
+      name: item?.name as string,
+      code: item?.code as string,
+      objective: item?.objective as string,
+      status: item?.status as "draft" | "active" | "paused" | "completed" | "cancelled" | "scheduled",
+      approval_status: item?.approval_status as "pending" | "approved" | "rejected",
+      control_group_enabled: (item?.control_group_enabled as boolean) ?? false,
+      is_active: (item?.is_active as boolean) ?? false,
+      created_at: item?.created_at as string,
+      updated_at: item?.updated_at as string,
+      tags: Array.isArray(item?.tags) ? (item.tags as string[]) : [],
+      description: (item?.description as string) || CAMPAIGN_FIELD_DEFAULTS.description,
+      timezone: (item?.timezone as string | null) || null,
+      budget_allocated: (item?.budget_allocated as string | null) || null,
+      budget_spent: (item?.budget_spent as string | null) || null,
+      target_conversion_rate: (item?.target_conversion_rate as string | null) || null,
+      target_revenue: (item?.target_revenue as string | null) || null,
+      owner_team: (item?.owner_team as string | null) || null,
+      rejection_reason: (item?.rejection_reason as string | null) || null,
+      control_group_percentage: (item?.control_group_percentage as string | null) || null,
+      start_date: (item?.start_date as string | null) || null,
+      end_date: (item?.end_date as string | null) || null,
+      approved_at: (item?.approved_at as string | null) || null,
+      deleted_at: (item?.deleted_at as string | null) || null,
+      category_id: (item?.category_id as number | null) || null,
+      program_id: (item?.program_id as number | null) || null,
+      max_participants: typeof item?.max_participants === "number" ? item.max_participants : null,
+      current_participants: typeof item?.current_participants === "number" ? item.current_participants : null,
+      target_reach: typeof item?.target_reach === "number" ? item.target_reach : null,
+      campaign_manager_id: (item?.campaign_manager_id as number | null) || null,
+      approved_by: (item?.approved_by as number | null) || null,
+      created_by: (item?.created_by as number | null) || null,
+      updated_by: (item?.updated_by as number | null) || null,
+      deleted_by: (item?.deleted_by as number | null) || null,
+      tenant_id: (item?.tenant_id as number | null) || null,
+      client_id: (item?.client_id as number | null) || null,
+      attribution_model_id: (item?.attribution_model_id as number | null) || null,
+      metadata: (item?.metadata as Record<string, unknown>) || {},
+      suppression_list_ids: Array.isArray(item?.suppression_list_ids) ? (item.suppression_list_ids as number[]) : null,
+    };
+  }
   private async request<T>(
     endpoint: string,
     options: RequestInit = {},
   ): Promise<T> {
     let url = `${BASE_URL}${endpoint}`;
 
-    // Ensure no 'id' parameter is accidentally included in the URL
+    // Prevent id conflicts: remove ?id= query param since id is already in URL path
     try {
       const urlObj = new URL(url);
       if (urlObj.searchParams.has("id")) {
         urlObj.searchParams.delete("id");
         url = urlObj.toString();
-        console.warn(
-          `Removed 'id' parameter from campaign service URL: ${endpoint}`,
-        );
       }
     } catch {
-      // If URL parsing fails (relative URL), manually check and clean query string
+      // Fallback for relative URLs that can't be parsed as URL objects
       const queryIndex = url.indexOf("?");
       if (queryIndex !== -1) {
         const baseUrl = url.substring(0, queryIndex);
@@ -69,9 +146,7 @@ class CampaignService {
           params.delete("id");
           const newQuery = params.toString();
           url = newQuery ? `${baseUrl}?${newQuery}` : baseUrl;
-          console.warn(
-            `Removed 'id' parameter from campaign service URL: ${endpoint}`,
-          );
+        
         }
       }
     }
@@ -86,28 +161,17 @@ class CampaignService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error("API Error Response:", {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorBody,
-        url,
-        params: options.body,
-      });
 
-      // Try to parse error message from JSON response
-      let errorMessage = `HTTP error! status: ${response.status}`;
+      let errorMessage = "An error has occurred";
       try {
         const errorData = JSON.parse(errorBody);
         if (errorData.error) {
           errorMessage = errorData.error;
         } else if (errorData.message) {
           errorMessage = errorData.message;
-        } else {
-          errorMessage = `HTTP error! status: ${response.status}, details: ${errorBody}`;
         }
       } catch {
-        // If not JSON, use the raw error body
-        errorMessage = errorBody || `HTTP error! status: ${response.status}`;
+        errorMessage = errorBody || "An error has occurred";
       }
 
       throw new Error(errorMessage);
@@ -116,39 +180,22 @@ class CampaignService {
     return response.json();
   }
 
-  private buildQueryString(params?: Record<string, unknown>): string {
-    if (!params) {
-      return "";
-    }
-
-    const searchParams = new URLSearchParams();
-
-    Object.entries(params).forEach(([key, value]) => {
-      if (value === undefined || value === null) {
-        return;
-      }
-
-      if (Array.isArray(value)) {
-        value.forEach((item) => {
-          searchParams.append(key, String(item));
-        });
-      } else if (typeof value === "boolean") {
-        searchParams.append(key, value ? "true" : "false");
-      } else {
-        searchParams.append(key, String(value));
-      }
-    });
-
-    const query = searchParams.toString();
-    return query ? `?${query}` : "";
-  }
-
-  private getCollection(
+  // Fetch campaign list from API path with optional filters, then normalize each campaign object 
+  private async getCollection(
     path: string,
     params?: Record<string, unknown>,
   ): Promise<CampaignCollection> {
-    const query = this.buildQueryString(params);
-    return this.request<CampaignCollection>(`${path}${query}`);
+    const query = buildQueryString(params);
+    const response = await this.request<CampaignCollection>(`${path}${query}`);
+
+    // Normalize all campaigns in the collection
+    if (response && "data" in response && Array.isArray(response.data)) {
+      return {
+        ...response,
+        data: response.data.map((campaign: unknown) => this.normalizeCampaign(campaign)),
+      };
+    }
+    return response;
   }
 
   async createCampaign(
@@ -165,14 +212,16 @@ class CampaignService {
   async updateCampaign(
     id: number,
     request: Partial<CreateCampaignRequest>,
-  ): Promise<Campaign> {
-    return this.request<Campaign>(`/${id}`, {
+  ): Promise<BackendCampaignType> {
+    const response = await this.request<any>(`/${id}`, {
       method: "PUT",
       body: JSON.stringify(request),
     });
+    // Normalize the response data
+    return this.normalizeCampaign(response.data || response);
   }
 
-  async deleteCampaign(id: number, deletedBy: number = 1): Promise<void> {
+  async deleteCampaign(id: number, deletedBy?: number): Promise<void> {
     return this.request<void>(`/${id}`, {
       method: "DELETE",
       body: JSON.stringify({
@@ -184,16 +233,16 @@ class CampaignService {
   async getCampaignById(
     id: string | number,
     skipCache?: boolean,
-  ): Promise<Campaign> {
+  ): Promise<BackendCampaignType> {
     const params = new URLSearchParams();
     if (skipCache) params.append("skipCache", "true");
     const query = params.toString() ? `?${params.toString()}` : "";
-    return this.request<Campaign>(`/${id}${query}`);
+    const response = await this.request<any>(`/${id}${query}`);
+    // Normalize the response data
+    return this.normalizeCampaign(response.data || response);
   }
 
-  /**
-   * Get campaigns list with pagination from new backend
-   */
+  /** Get campaigns list with pagination and normalize each campaign */
   async getCampaigns(params?: {
     limit?: number;
     offset?: number;
@@ -201,7 +250,6 @@ class CampaignService {
   }): Promise<GetCampaignsResponse> {
     const queryParams = new URLSearchParams();
 
-    // Set defaults
     const limit = params?.limit ?? 10;
     const offset = params?.offset ?? 0;
     const skipCache = params?.skipCache ?? true;
@@ -211,26 +259,34 @@ class CampaignService {
     queryParams.append("skipCache", String(skipCache));
 
     const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
-    return this.request<GetCampaignsResponse>(`/${query}`);
+    const response = await this.request<GetCampaignsResponse>(`/${query}`);
+
+    if (response && Array.isArray(response.data)) {
+      return {
+        ...response,
+        data: response.data.map(campaign => this.normalizeCampaign(campaign)),
+      };
+    }
+    return response;
   }
 
+  /** Fetch all campaigns with advanced filters and normalize each campaign */
   async getAllCampaigns(params?: {
     search?: string;
     status?: string;
-    approvalStatus?: string; // camelCase
-    categoryId?: number; // camelCase
-    programId?: number; // camelCase
-    startDateFrom?: string; // camelCase
-    startDateTo?: string; // camelCase
-    sortBy?: string; // camelCase
-    sortDirection?: "ASC" | "DESC"; // camelCase
+    approvalStatus?: string;
+    categoryId?: number;
+    programId?: number;
+    startDateFrom?: string;
+    startDateTo?: string;
+    sortBy?: string;
+    sortDirection?: "ASC" | "DESC";
     page?: number;
-    pageSize?: number; // camelCase
-    skipCache?: boolean; // camelCase
+    pageSize?: number;
+    skipCache?: boolean;
   }): Promise<CampaignResponse> {
     const queryParams = new URLSearchParams();
 
-    // Define allowed parameters to prevent sending invalid ones like 'id', 'limit', 'offset'
     const allowedParams = [
       "search",
       "status",
@@ -244,28 +300,22 @@ class CampaignService {
       "skipCache",
     ];
 
-    // Explicitly exclude these parameters that should never be sent
     const excludedParams = ["id", "limit", "offset"];
 
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
-        // Explicitly skip 'id' and other disallowed/excluded parameters
         if (excludedParams.includes(key) || !allowedParams.includes(key)) {
           return;
         }
 
         if (value !== undefined && value !== null) {
-          // Skip empty strings
           if (typeof value === "string" && value.trim() === "") {
             return;
           }
 
-          // Convert boolean to string "true"/"false"
           if (typeof value === "boolean") {
             queryParams.append(key, value ? "true" : "false");
-          }
-          // Ensure numeric parameters (categoryId, programId, page, pageSize) are valid numbers
-          else if (
+          } else if (
             (key === "categoryId" ||
               key === "programId" ||
               key === "page" ||
@@ -275,15 +325,11 @@ class CampaignService {
             isFinite(value)
           ) {
             queryParams.append(key, String(value));
-          }
-          // For other numeric values, ensure they're valid numbers
-          else if (typeof value === "number") {
+          } else if (typeof value === "number") {
             if (!isNaN(value) && isFinite(value)) {
               queryParams.append(key, String(value));
             }
-          }
-          // Keep strings as strings
-          else if (typeof value === "string") {
+          } else if (typeof value === "string") {
             queryParams.append(key, value);
           }
         }
@@ -291,13 +337,21 @@ class CampaignService {
     }
 
     const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
-    return this.request<CampaignResponse>(`/all${query}`);
+    const response = await this.request<CampaignResponse>(`/all${query}`);
+
+    if (response && Array.isArray(response.data)) {
+      return {
+        ...response,
+        data: response.data.map((campaign: unknown) => this.normalizeCampaign(campaign)),
+      };
+    }
+    return response;
   }
 
   async getCampaignStats(
     skipCache: boolean = true,
   ): Promise<CampaignStatsResponse> {
-    const query = this.buildQueryString({ skipCache });
+    const query = buildQueryString({ skipCache });
     return this.request<CampaignStatsResponse>(`/stats${query}`);
   }
 
@@ -368,28 +422,28 @@ class CampaignService {
   async searchCampaigns(
     params: CampaignSearchQuery,
   ): Promise<CampaignCollection> {
-    const query = this.buildQueryString(params);
+    const query = buildQueryString(params);
     return this.request<CampaignCollection>(`/search${query}`);
   }
 
   async superSearchCampaigns(
     params: CampaignSuperSearchQuery,
   ): Promise<CampaignCollection> {
-    const query = this.buildQueryString(params);
+    const query = buildQueryString(params);
     return this.request<CampaignCollection>(`/super-search${query}`);
   }
 
   async getCampaignsByDateRange(
     params: CampaignDateRangeQuery,
   ): Promise<CampaignCollection> {
-    const query = this.buildQueryString(params);
+    const query = buildQueryString(params);
     return this.request<CampaignCollection>(`/date-range${query}`);
   }
 
   async getCampaignsByBudgetRange(
     params: CampaignBudgetRangeQuery,
   ): Promise<CampaignCollection> {
-    const query = this.buildQueryString(params);
+    const query = buildQueryString(params);
     return this.request<CampaignCollection>(`/budget-range${query}`);
   }
 
@@ -397,7 +451,7 @@ class CampaignService {
     uuid: string,
     skipCache: boolean = true,
   ): Promise<CampaignDetail> {
-    const query = this.buildQueryString({ skipCache });
+    const query = buildQueryString({ skipCache });
     return this.request<CampaignDetail>(`/uuid/${uuid}${query}`);
   }
 
@@ -405,7 +459,7 @@ class CampaignService {
     name: string,
     skipCache: boolean = true,
   ): Promise<CampaignDetail> {
-    const query = this.buildQueryString({ skipCache });
+    const query = buildQueryString({ skipCache });
     return this.request<CampaignDetail>(
       `/name/${encodeURIComponent(name)}${query}`,
     );
@@ -415,7 +469,7 @@ class CampaignService {
     code: string,
     skipCache: boolean = true,
   ): Promise<CampaignDetail> {
-    const query = this.buildQueryString({ skipCache });
+    const query = buildQueryString({ skipCache });
     return this.request<CampaignDetail>(
       `/code/${encodeURIComponent(code)}${query}`,
     );
@@ -425,7 +479,7 @@ class CampaignService {
     id: number,
     skipCache: boolean = true,
   ): Promise<CampaignSegmentsResponse> {
-    const query = this.buildQueryString({ skipCache });
+    const query = buildQueryString({ skipCache });
     return this.request<CampaignSegmentsResponse>(`/${id}/segments${query}`);
   }
 
@@ -433,7 +487,7 @@ class CampaignService {
     id: number,
     skipCache: boolean = true,
   ): Promise<CampaignPerformanceResponse> {
-    const query = this.buildQueryString({ skipCache });
+    const query = buildQueryString({ skipCache });
     return this.request<CampaignPerformanceResponse>(
       `/${id}/performance${query}`,
     );
@@ -443,7 +497,7 @@ class CampaignService {
     id: number,
     skipCache: boolean = true,
   ): Promise<CampaignBudgetUtilResponse> {
-    const query = this.buildQueryString({ skipCache });
+    const query = buildQueryString({ skipCache });
     return this.request<CampaignBudgetUtilResponse>(
       `/${id}/budget-utilization${query}`,
     );
@@ -453,7 +507,7 @@ class CampaignService {
     id: number,
     skipCache: boolean = true,
   ): Promise<CampaignParticipantUtilResponse> {
-    const query = this.buildQueryString({ skipCache });
+    const query = buildQueryString({ skipCache });
     return this.request<CampaignParticipantUtilResponse>(
       `/${id}/participant-utilization${query}`,
     );
@@ -461,7 +515,7 @@ class CampaignService {
 
   async submitForApproval(
     id: number,
-    updatedBy: number = 1,
+    updatedBy?: number,
   ): Promise<CampaignDetail> {
     return this.request<CampaignDetail>(`/${id}/submit-approval`, {
       method: "PATCH",
@@ -471,13 +525,16 @@ class CampaignService {
     });
   }
 
+  /** Approve a campaign with approver user ID (required) */
   async approveCampaign(
     id: number,
-    payload: { approved_by?: number; comments?: string } | number = 1,
+    payload: { approved_by: number; comments?: string } | number,
   ): Promise<CampaignDetail> {
-    // Support both old signature (number) and new signature (object)
-    const approvedBy =
-      typeof payload === "number" ? payload : (payload.approved_by ?? 1);
+    const approvedBy = typeof payload === "number" ? payload : payload.approved_by;
+
+    if (!approvedBy) {
+      throw new Error("approved_by is required");
+    }
 
     return this.request<CampaignDetail>(`/${id}/approve`, {
       method: "PATCH",
@@ -488,27 +545,25 @@ class CampaignService {
     });
   }
 
+  /** Reject a campaign with rejector user ID (required) */
   async rejectCampaign(
     id: number,
-    payload:
-      | { rejected_by?: number; comments?: string; rejection_reason?: string }
-      | number,
+    payload: { rejected_by: number; comments?: string; rejection_reason?: string } | number,
     rejectionReason?: string,
   ): Promise<CampaignDetail> {
-    // Support multiple signatures:
-    // 1. rejectCampaign(id, { comments: "...", rejected_by: 1 })
-    // 2. rejectCampaign(id, rejectedBy, rejectionReason) - old signature
     let rejectedBy: number;
     let reason: string;
 
     if (typeof payload === "number") {
-      // Old signature: rejectCampaign(id, rejectedBy, rejectionReason)
       rejectedBy = payload;
       reason = rejectionReason || "";
     } else {
-      // New signature: rejectCampaign(id, { comments, rejected_by })
-      rejectedBy = payload.rejected_by ?? 1;
+      rejectedBy = payload.rejected_by;
       reason = payload.comments || payload.rejection_reason || "";
+    }
+
+    if (!rejectedBy) {
+      throw new Error("rejected_by is required");
     }
 
     if (!reason.trim()) {
@@ -527,7 +582,7 @@ class CampaignService {
 
   async activateCampaign(
     id: number,
-    updatedBy: number = 1,
+    updatedBy?: number,
   ): Promise<CampaignDetail> {
     return this.request<CampaignDetail>(`/${id}/activate`, {
       method: "PATCH",
@@ -539,12 +594,12 @@ class CampaignService {
 
   async pauseCampaign(
     id: number,
-    payloadOrUpdatedBy: number | Record<string, unknown> = 1,
+    payloadOrUpdatedBy?: number | Record<string, unknown>,
   ): Promise<CampaignDetail> {
     const payload =
       typeof payloadOrUpdatedBy === "number"
         ? { updated_by: payloadOrUpdatedBy }
-        : { updated_by: 1, ...payloadOrUpdatedBy };
+        : { ...payloadOrUpdatedBy };
 
     return this.request<CampaignDetail>(`/${id}/pause`, {
       method: "PATCH",
@@ -554,7 +609,7 @@ class CampaignService {
 
   async completeCampaign(
     id: number,
-    updatedBy: number = 1,
+    updatedBy?: number,
   ): Promise<CampaignDetail> {
     return this.request<CampaignDetail>(`/${id}/complete`, {
       method: "PATCH",
@@ -566,7 +621,7 @@ class CampaignService {
 
   async resumeCampaign(
     id: number,
-    updatedBy: number = 1,
+    updatedBy?: number,
   ): Promise<CampaignDetail> {
     // Resume by updating status to "active" or using activate endpoint
     return this.request<CampaignDetail>(`/${id}/activate`, {
@@ -579,7 +634,7 @@ class CampaignService {
 
   async archiveCampaign(
     id: number,
-    updatedBy: number = 1,
+    updatedBy?: number,
   ): Promise<CampaignDetail> {
     return this.request<CampaignDetail>(`/${id}/archive`, {
       method: "PATCH",
@@ -592,7 +647,7 @@ class CampaignService {
   async updateCampaignStatus(
     id: number,
     status: CampaignStatus,
-    updatedBy: number = 1,
+    updatedBy?: number,
   ): Promise<CampaignDetail> {
     return this.request<CampaignDetail>(`/${id}/status`, {
       method: "PATCH",
@@ -603,7 +658,7 @@ class CampaignService {
   async updateCampaignBudget(
     id: number,
     budget_allocated: number,
-    updatedBy: number = 1,
+    updatedBy?: number,
   ): Promise<CampaignDetail> {
     return this.request<CampaignDetail>(`/${id}/budget`, {
       method: "PATCH",
@@ -614,7 +669,7 @@ class CampaignService {
   async updateCampaignSpentBudget(
     id: number,
     budget_spent: number,
-    updatedBy: number = 1,
+    updatedBy?: number,
   ): Promise<CampaignDetail> {
     return this.request<CampaignDetail>(`/${id}/spent-budget`, {
       method: "PATCH",
@@ -625,7 +680,7 @@ class CampaignService {
   async updateCampaignParticipants(
     id: number,
     current_participants: number,
-    updatedBy: number = 1,
+    updatedBy?: number,
   ): Promise<CampaignDetail> {
     return this.request<CampaignDetail>(`/${id}/participants`, {
       method: "PATCH",
@@ -633,16 +688,17 @@ class CampaignService {
     });
   }
 
+  /** Update campaign control group settings with user ID (required) */
   async updateControlGroup(
     id: number,
     payload: {
       control_group_enabled: boolean;
       control_group_percentage?: number;
-      updated_by?: number;
+      updated_by: number;
     },
   ): Promise<CampaignDetail> {
     const body = {
-      updated_by: payload.updated_by ?? 1,
+      updated_by: payload.updated_by,
       control_group_enabled: payload.control_group_enabled,
       control_group_percentage: payload.control_group_percentage,
     };
@@ -667,9 +723,7 @@ class CampaignService {
     });
   }
 
-  /**
-   * Get Campaigns catalogs from new backend endpoint
-   */
+  /** Get campaign categories with pagination and normalize each category */
   async getCampaignCategories(params?: {
     limit?: number;
     offset?: number;
@@ -678,7 +732,6 @@ class CampaignService {
   }): Promise<GetCampaignCategoriesResponse> {
     const queryParams = new URLSearchParams();
 
-    // Set defaults
     const limit = params?.limit ?? 50;
     const offset = params?.offset ?? 0;
     const skipCache = params?.skipCache ?? false;
@@ -692,8 +745,6 @@ class CampaignService {
     }
 
     const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
-
-    // Use campaign-categories endpoint instead of /categories
     const categoriesUrl = `${API_CONFIG.BASE_URL}/campaign-categories${query}`;
 
     const response = await fetch(categoriesUrl, {
@@ -703,18 +754,21 @@ class CampaignService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error("API Error Response:", {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorBody,
-        url: categoriesUrl,
-      });
       throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`,
+        errorBody || "An error has occurred",
       );
     }
 
-    return response.json();
+    const result = await response.json();
+
+    if (result && Array.isArray(result.data)) {
+      return {
+        ...result,
+        data: result.data.map((category: unknown) => this.normalizeCategory(category)),
+      };
+    }
+
+    return result;
   }
 
   async createCampaignCategory(request: {
@@ -735,14 +789,8 @@ class CampaignService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error("API Error Response:", {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorBody,
-        url: categoriesUrl,
-      });
       throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`,
+        errorBody || "An error has occurred",
       );
     }
 
@@ -811,12 +859,6 @@ class CampaignService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error("API Error Response:", {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorBody,
-        url: categoriesUrl,
-      });
       throw new Error(
         `Failed to delete category: ${response.status} - ${errorBody}`,
       );
@@ -825,9 +867,7 @@ class CampaignService {
     // DELETE may not return a body, so we don't try to parse JSON
   }
 
-  /**
-   * Get campaign category by ID
-   */
+  /** Get campaign category by ID */
   async getCampaignCategoryById(
     id: number,
     skipCache: boolean = false,
@@ -843,23 +883,15 @@ class CampaignService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error("API Error Response:", {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorBody,
-        url: categoriesUrl,
-      });
       throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`,
+        errorBody || "An error has occurred",
       );
     }
 
     return response.json();
   }
 
-  /**
-   * Get campaign category tree
-   */
+  /** Get campaign category tree structure */
   async getCampaignCategoryTree(
     skipCache: boolean = false,
   ): Promise<Record<string, unknown>> {
@@ -874,23 +906,15 @@ class CampaignService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error("API Error Response:", {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorBody,
-        url: categoriesUrl,
-      });
       throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`,
+        errorBody || "An error has occurred",
       );
     }
 
     return response.json();
   }
 
-  /**
-   * Get category children
-   */
+  /** Get child categories for a given category ID */
   async getCampaignCategoryChildren(
     id: number,
     skipCache: boolean = false,
@@ -906,23 +930,15 @@ class CampaignService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error("API Error Response:", {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorBody,
-        url: categoriesUrl,
-      });
       throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`,
+        errorBody || "An error has occurred",
       );
     }
 
     return response.json();
   }
 
-  /**
-   * Get active Campaigns catalogs
-   */
+  /** Get active campaign categories */
   async getActiveCampaignCategories(params?: {
     limit?: number;
     offset?: number;
@@ -943,16 +959,14 @@ class CampaignService {
     if (!response.ok) {
       const errorBody = await response.text();
       throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`,
+        errorBody || "An error has occurred",
       );
     }
 
     return response.json();
   }
 
-  /**
-   * Get root Campaigns catalogs
-   */
+  /** Get root level campaign categories */
   async getRootCampaignCategories(params?: {
     limit?: number;
     offset?: number;
@@ -973,16 +987,14 @@ class CampaignService {
     if (!response.ok) {
       const errorBody = await response.text();
       throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`,
+        errorBody || "An error has occurred",
       );
     }
 
     return response.json();
   }
 
-  /**
-   * Search Campaigns catalogs
-   */
+  /** Search campaign categories by term */
   async searchCampaignCategories(
     searchTerm: string,
     params?: {
@@ -1007,16 +1019,14 @@ class CampaignService {
     if (!response.ok) {
       const errorBody = await response.text();
       throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`,
+        errorBody || "An error has occurred",
       );
     }
 
     return response.json();
   }
 
-  /**
-   * Get campaign category statistics
-   */
+  /** Get statistics for campaign categories */
   async getCampaignCategoryStats(
     skipCache: boolean = false,
   ): Promise<Record<string, unknown>> {
@@ -1032,16 +1042,14 @@ class CampaignService {
     if (!response.ok) {
       const errorBody = await response.text();
       throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`,
+        errorBody || "An error has occurred",
       );
     }
 
     return response.json();
   }
 
-  /**
-   * Get campaign category by name
-   */
+  /** Get campaign category by name */
   async getCampaignCategoryByName(
     name: string,
     skipCache: boolean = false,
@@ -1060,17 +1068,15 @@ class CampaignService {
     if (!response.ok) {
       const errorBody = await response.text();
       throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`,
+        errorBody || "An error has occurred",
       );
     }
 
     return response.json();
   }
 
-  /**
-   * Execute a campaign
-   */
-  async executeCampaign(
+  /** Run a campaign */
+  async runCampaign(
     request: CampaignExecutionRequestPayload,
   ): Promise<CampaignExecutionResponse> {
     return this.request<CampaignExecutionResponse>("/execute", {

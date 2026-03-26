@@ -240,7 +240,7 @@ export default function ScheduledJobDetailsPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : t("scheduledJob.loadFailed", "Failed to load scheduled job");
-      showError(t("scheduledJob.unableToLoad", "Unable to load scheduled job"), message);
+      showError(t("scheduledJob.unableToLoad", "Unable to load scheduled job"), message, true);
       console.error("Error loading job:", err); // Debug log
     } finally {
       setIsLoading(false);
@@ -329,19 +329,31 @@ export default function ScheduledJobDetailsPage() {
       switch (action) {
         case "activate":
           updatedJob = await scheduledJobService.activateScheduledJob(job.id);
-          showToast(t("scheduledJob.activated", "Job activated"), t("scheduledJob.activatedSuccess", `"${job.name}" has been activated`));
+          showToast(
+            t.scheduledJob?.["activated"] || "Job activated",
+            t.scheduledJob?.["activatedSuccess"] || `"${job.name}" has been activated`
+          );
           break;
         case "deactivate":
           updatedJob = await scheduledJobService.deactivateScheduledJob(job.id);
-          showToast(t("scheduledJob.deactivated", "Job deactivated"), t("scheduledJob.deactivatedSuccess", `"${job.name}" has been deactivated`));
+          showToast(
+            t.scheduledJob?.["deactivated"] || "Job deactivated",
+            t.scheduledJob?.["deactivatedSuccess"] || `"${job.name}" has been deactivated`
+          );
           break;
         case "pause":
           updatedJob = await scheduledJobService.pauseScheduledJob(job.id);
-          showToast(t("scheduledJob.paused", "Job paused"), t("scheduledJob.pausedSuccess", `"${job.name}" has been paused`));
+          showToast(
+            t.scheduledJob?.["paused"] || "Job paused",
+            t.scheduledJob?.["pausedSuccess"] || `"${job.name}" has been paused`
+          );
           break;
         case "archive":
           updatedJob = await scheduledJobService.archiveScheduledJob(job.id);
-          showToast(t("scheduledJob.archived", "Job archived"), t("scheduledJob.archivedSuccess", `"${job.name}" has been archived`));
+          showToast(
+            t.scheduledJob?.["archived"] || "Job archived",
+            t.scheduledJob?.["archivedSuccess"] || `"${job.name}" has been archived`
+          );
           break;
       }
       setJob(updatedJob);
@@ -349,8 +361,12 @@ export default function ScheduledJobDetailsPage() {
       const message =
         err instanceof Error
           ? err.message
-          : t("scheduledJob.actionFailed", `Failed to ${action} scheduled job`);
-      showError(t("scheduledJob.unableToAction", `Unable to ${action} scheduled job`), message);
+          : t.scheduledJob?.["actionFailed"] || `Failed to ${action} scheduled job`;
+      showError(
+        t.scheduledJob?.["unableToAction"] || `Unable to ${action} scheduled job`,
+        message,
+        true
+      );
     } finally {
       setIsActionLoading(false);
     }
@@ -370,7 +386,8 @@ export default function ScheduledJobDetailsPage() {
     } catch (err) {
       showError(
         t("scheduledJob.tagAddFailed", "Failed to add tag"),
-        err instanceof Error ? err.message : t("common.error", "Unknown error")
+        err instanceof Error ? err.message : t("common.error", "Unknown error"),
+        true
       );
     } finally {
       setIsAddingTag(false);
@@ -386,7 +403,8 @@ export default function ScheduledJobDetailsPage() {
     } catch (err) {
       showError(
         t("scheduledJob.tagRemoveFailed", "Failed to remove tag"),
-        err instanceof Error ? err.message : t("common.error", "Unknown error")
+        err instanceof Error ? err.message : t("common.error", "Unknown error"),
+        true
       );
     }
   };
@@ -411,7 +429,8 @@ export default function ScheduledJobDetailsPage() {
     } catch (err) {
       showError(
         t("scheduledJob.recipientAddFailed", "Failed to add recipient"),
-        err instanceof Error ? err.message : t("common.error", "Unknown error")
+        err instanceof Error ? err.message : t("common.error", "Unknown error"),
+        true
       );
     } finally {
       setIsAddingRecipient(false);
@@ -433,7 +452,8 @@ export default function ScheduledJobDetailsPage() {
     } catch (err) {
       showError(
         t("scheduledJob.recipientRemoveFailed", "Failed to remove recipient"),
-        err instanceof Error ? err.message : t("common.error", "Unknown error")
+        err instanceof Error ? err.message : t("common.error", "Unknown error"),
+        true
       );
     }
   };
@@ -448,7 +468,8 @@ export default function ScheduledJobDetailsPage() {
     } catch (err) {
       showError(
         t("scheduledJob.resetFailureFailed", "Failed to reset failure count"),
-        err instanceof Error ? err.message : t("common.error", "Unknown error")
+        err instanceof Error ? err.message : t("common.error", "Unknown error"),
+        true
       );
     } finally {
       setIsActionLoading(false);
@@ -460,7 +481,7 @@ export default function ScheduledJobDetailsPage() {
     setIsActionLoading(true);
     try {
       await scheduledJobService.createVersion(job.id, {
-        created_by: user.user_id || 1,
+        created_by: user?.user_id ?? null,
       });
       showToast(t("scheduledJob.versionCreated", "Version created"), t("scheduledJob.versionSnapshot", "Job version snapshot has been created"));
       loadVersions();
@@ -468,7 +489,8 @@ export default function ScheduledJobDetailsPage() {
     } catch (err) {
       showError(
         t("scheduledJob.versionCreateFailed", "Failed to create version"),
-        err instanceof Error ? err.message : t("common.error", "Unknown error")
+        err instanceof Error ? err.message : t("common.error", "Unknown error"),
+        true
       );
     } finally {
       setIsActionLoading(false);
@@ -490,7 +512,7 @@ export default function ScheduledJobDetailsPage() {
         job.id,
         versionId,
         {
-          created_by: user.user_id || 1,
+          created_by: user?.user_id ?? null,
           reason: t("scheduledJob.rollbackReason", `Rollback to version ${versionId} at ${new Date().toLocaleString()}`),
         }
       );
@@ -503,7 +525,8 @@ export default function ScheduledJobDetailsPage() {
     } catch (err) {
       showError(
         t("scheduledJob.rollbackFailed", "Failed to rollback version"),
-        err instanceof Error ? err.message : t("common.error", "Unknown error")
+        err instanceof Error ? err.message : t("common.error", "Unknown error"),
+        true
       );
     } finally {
       setIsActionLoading(false);
@@ -1190,21 +1213,24 @@ export default function ScheduledJobDetailsPage() {
           </h2>
           {job.tags && job.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-3">
-              {job.tags.map((tag, idx) => (
-                <span
-                  key={idx}
-                  className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800"
-                >
-                  {tag}
-                  <button
-                    onClick={() => handleRemoveTag(tag)}
-                    className="ml-1 hover:text-gray-900"
-                    aria-label={`Remove ${tag}`}
+              {job.tags.map((tag, idx) => {
+                const tagName = typeof tag === "object" && tag !== null ? (tag as any).name || String(tag) : String(tag);
+                return (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800"
                   >
-                    <XCircle className="h-3 w-3" />
-                  </button>
-                </span>
-              ))}
+                    {tagName}
+                    <button
+                      onClick={() => handleRemoveTag(tag)}
+                      className="ml-1 hover:text-gray-900"
+                      aria-label={`Remove ${tagName}`}
+                    >
+                      <XCircle className="h-3 w-3" />
+                    </button>
+                  </span>
+                );
+              })}
             </div>
           )}
           <div className="flex gap-2">

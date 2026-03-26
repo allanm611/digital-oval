@@ -1,4 +1,5 @@
 import { API_CONFIG, getAuthHeaders } from "../../../shared/services/api";
+import { buildQueryString } from "../utils/buildQueryString";
 import {
   CampaignFlowResponse,
   GetCampaignFlowsResponse,
@@ -18,64 +19,61 @@ import {
 
 const BASE_URL = `${API_CONFIG.BASE_URL}/campaign-flows`;
 
+/** Remove optional fields that are null/undefined before sending to API */
+function cleanFlowData(flow: any) {
+  const cleaned = { ...flow };
+  const optionalFields = ['offer_creative_id', 'template_id', 'bucket_allocation', 'condition_rule'];
+  optionalFields.forEach(field => {
+    if (cleaned[field] === null || cleaned[field] === undefined) {
+      delete cleaned[field];
+    }
+  });
+  return cleaned;
+}
+
 class CampaignFlowService {
-  /**
-   * Create a single campaign flow
-   */
+  /** Create a single campaign flow */
   async createCampaignFlow(
     data: CreateCampaignFlowRequest
   ): Promise<CampaignFlowResponse> {
+    const cleanedData = cleanFlowData(data);
     const response = await fetch(BASE_URL, {
       method: "POST",
       headers: getAuthHeaders(),
-      body: JSON.stringify(data),
+      body: JSON.stringify(cleanedData),
     });
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error("API Error Response:", {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorBody,
-        url: BASE_URL,
-        data,
-      });
-      throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`
-      );
+      throw new Error(errorBody || "An error has occurred");
     }
 
     return response.json();
   }
 
-  /**
-   * Create multiple campaign flows in batch
-   */
+  /** Create multiple campaign flows in batch */
   async createBatchCampaignFlows(
     flows: CreateCampaignFlowRequest[]
   ): Promise<CampaignFlowResponse[]> {
     const results: CampaignFlowResponse[] = [];
 
     for (const flow of flows) {
-      try {
-        const result = await this.createCampaignFlow(flow);
-        results.push(result);
-      } catch (error) {
-        console.error("Error creating campaign flow:", { flow, error });
-        throw error;
-      }
+      const result = await this.createCampaignFlow(flow);
+      results.push(result);
     }
 
     return results;
   }
 
-  /**
-   * Get all flows for a specific campaign
-   */
+  /** Get all flows for a specific campaign */
   async getCampaignFlows(
-    campaignId: number
+    campaignId: number,
+    skipCache: boolean = false
   ): Promise<GetCampaignFlowsResponse> {
-    const url = `${BASE_URL}/campaign/${campaignId}`;
+    let url = `${BASE_URL}/campaign/${campaignId}`;
+    if (skipCache) {
+      url += `?skipCache=true`;
+    }
 
     const response = await fetch(url, {
       method: "GET",
@@ -84,55 +82,35 @@ class CampaignFlowService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error("API Error Response:", {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorBody,
-        url,
-      });
-      throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`
-      );
+      throw new Error(errorBody || "An error has occurred");
     }
 
     return response.json();
   }
 
-  /**
-   * Update a campaign flow
-   */
+  /** Update a campaign flow */
   async updateCampaignFlow(
     id: number,
     data: UpdateCampaignFlowRequest
   ): Promise<CampaignFlowResponse> {
     const url = `${BASE_URL}/${id}`;
+    const cleanedData = cleanFlowData(data);
 
     const response = await fetch(url, {
       method: "PUT",
       headers: getAuthHeaders(),
-      body: JSON.stringify(data),
+      body: JSON.stringify(cleanedData),
     });
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error("API Error Response:", {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorBody,
-        url,
-        data,
-      });
-      throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`
-      );
+      throw new Error(errorBody || "An error has occurred");
     }
 
     return response.json();
   }
 
-  /**
-   * Delete a campaign flow
-   */
+  /** Delete a campaign flow */
   async deleteCampaignFlow(id: number): Promise<void> {
     const url = `${BASE_URL}/${id}`;
 
@@ -143,37 +121,16 @@ class CampaignFlowService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error("API Error Response:", {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorBody,
-        url,
-      });
-      throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`
-      );
+      throw new Error(errorBody || "An error has occurred");
     }
   }
 
-  /**
-   * Search all campaign flows with filters
-   */
+  /** Search all campaign flows with filters */
   async searchCampaignFlows(
     params?: SearchCampaignFlowsParams
   ): Promise<GetCampaignFlowsResponse> {
-    const queryParams = new URLSearchParams();
-    if (params) {
-      if (params.campaignId) queryParams.append("campaignId", String(params.campaignId));
-      if (params.segmentId) queryParams.append("segmentId", String(params.segmentId));
-      if (params.offerId) queryParams.append("offerId", String(params.offerId));
-      if (params.flowType) queryParams.append("flowType", params.flowType);
-      if (params.activeOnly !== undefined) queryParams.append("activeOnly", String(params.activeOnly));
-      if (params.limit) queryParams.append("limit", String(params.limit));
-      if (params.offset) queryParams.append("offset", String(params.offset));
-      if (params.skipCache) queryParams.append("skipCache", String(params.skipCache));
-    }
-
-    const url = `${BASE_URL}${queryParams.toString() ? "?" + queryParams.toString() : ""}`;
+    const query = buildQueryString(params);
+    const url = `${BASE_URL}${query}`;
 
     const response = await fetch(url, {
       method: "GET",
@@ -182,15 +139,7 @@ class CampaignFlowService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error("API Error Response:", {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorBody,
-        url,
-      });
-      throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`
-      );
+      throw new Error(errorBody || "An error has occurred");
     }
 
     return response.json();
@@ -212,35 +161,21 @@ class CampaignFlowService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error("API Error Response:", {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorBody,
-        url,
-      });
-      throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`
-      );
+      throw new Error(errorBody || "An error has occurred");
     }
 
     return response.json();
   }
 
-  /**
-   * Get all campaign flows by segment ID
-   */
+  /** Get all campaign flows by segment ID */
   async getCampaignFlowsBySegment(
     segmentId: number,
     activeOnly?: boolean,
     limit?: number,
     offset?: number
   ): Promise<GetCampaignFlowsResponse> {
-    const queryParams = new URLSearchParams();
-    if (activeOnly !== undefined) queryParams.append("activeOnly", String(activeOnly));
-    if (limit) queryParams.append("limit", String(limit));
-    if (offset !== undefined) queryParams.append("offset", String(offset));
-
-    const url = `${BASE_URL}/segment/${segmentId}${queryParams.toString() ? "?" + queryParams.toString() : ""}`;
+    const query = buildQueryString({ activeOnly, limit, offset });
+    const url = `${BASE_URL}/segment/${segmentId}${query}`;
 
     const response = await fetch(url, {
       method: "GET",
@@ -249,35 +184,21 @@ class CampaignFlowService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error("API Error Response:", {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorBody,
-        url,
-      });
-      throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`
-      );
+      throw new Error(errorBody || "An error has occurred");
     }
 
     return response.json();
   }
 
-  /**
-   * Get all campaign flows by offer ID
-   */
+  /** Get all campaign flows by offer ID */
   async getCampaignFlowsByOffer(
     offerId: number,
     activeOnly?: boolean,
     limit?: number,
     offset?: number
   ): Promise<GetCampaignFlowsResponse> {
-    const queryParams = new URLSearchParams();
-    if (activeOnly !== undefined) queryParams.append("activeOnly", String(activeOnly));
-    if (limit) queryParams.append("limit", String(limit));
-    if (offset !== undefined) queryParams.append("offset", String(offset));
-
-    const url = `${BASE_URL}/offer/${offerId}${queryParams.toString() ? "?" + queryParams.toString() : ""}`;
+    const query = buildQueryString({ activeOnly, limit, offset });
+    const url = `${BASE_URL}/offer/${offerId}${query}`;
 
     const response = await fetch(url, {
       method: "GET",
@@ -286,23 +207,13 @@ class CampaignFlowService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error("API Error Response:", {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorBody,
-        url,
-      });
-      throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`
-      );
+      throw new Error(errorBody || "An error has occurred");
     }
 
     return response.json();
   }
 
-  /**
-   * Get campaign flows by flow type
-   */
+  /** Get campaign flows by flow type */
   async getCampaignFlowsByType(
     campaignId: number,
     flowType: string,
@@ -310,12 +221,8 @@ class CampaignFlowService {
     limit?: number,
     offset?: number
   ): Promise<GetCampaignFlowsResponse> {
-    const queryParams = new URLSearchParams();
-    if (activeOnly !== undefined) queryParams.append("activeOnly", String(activeOnly));
-    if (limit) queryParams.append("limit", String(limit));
-    if (offset !== undefined) queryParams.append("offset", String(offset));
-
-    const url = `${BASE_URL}/campaign/${campaignId}/flow-type/${flowType}${queryParams.toString() ? "?" + queryParams.toString() : ""}`;
+    const query = buildQueryString({ activeOnly, limit, offset });
+    const url = `${BASE_URL}/campaign/${campaignId}/flow-type/${flowType}${query}`;
 
     const response = await fetch(url, {
       method: "GET",
@@ -324,23 +231,13 @@ class CampaignFlowService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error("API Error Response:", {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorBody,
-        url,
-      });
-      throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`
-      );
+      throw new Error(errorBody || "An error has occurred");
     }
 
     return response.json();
   }
 
-  /**
-   * Get campaign flows by campaign + segment combination
-   */
+  /** Get campaign flows by campaign + segment combination */
   async getCampaignFlowsByCampaignAndSegment(
     campaignId: number,
     segmentId: number,
@@ -348,12 +245,8 @@ class CampaignFlowService {
     limit?: number,
     offset?: number
   ): Promise<GetCampaignFlowsResponse> {
-    const queryParams = new URLSearchParams();
-    if (activeOnly !== undefined) queryParams.append("activeOnly", String(activeOnly));
-    if (limit) queryParams.append("limit", String(limit));
-    if (offset !== undefined) queryParams.append("offset", String(offset));
-
-    const url = `${BASE_URL}/campaign/${campaignId}/segment/${segmentId}${queryParams.toString() ? "?" + queryParams.toString() : ""}`;
+    const query = buildQueryString({ activeOnly, limit, offset });
+    const url = `${BASE_URL}/campaign/${campaignId}/segment/${segmentId}${query}`;
 
     const response = await fetch(url, {
       method: "GET",
@@ -362,15 +255,7 @@ class CampaignFlowService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error("API Error Response:", {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorBody,
-        url,
-      });
-      throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`
-      );
+      throw new Error(errorBody || "An error has occurred");
     }
 
     return response.json();
@@ -392,15 +277,7 @@ class CampaignFlowService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error("API Error Response:", {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorBody,
-        url,
-      });
-      throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`
-      );
+      throw new Error(errorBody || "An error has occurred");
     }
 
     return response.json();
@@ -422,34 +299,20 @@ class CampaignFlowService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error("API Error Response:", {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorBody,
-        url,
-      });
-      throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`
-      );
+      throw new Error(errorBody || "An error has occurred");
     }
 
     return response.json();
   }
 
-  /**
-   * Get unique campaign flow combinations
-   */
+  /** Get unique campaign flow combinations */
   async getUniqueCombinations(
     limit?: number,
     offset?: number,
     skipCache?: boolean
   ): Promise<UniqueCombinationsResponse> {
-    const queryParams = new URLSearchParams();
-    if (limit) queryParams.append("limit", String(limit));
-    if (offset !== undefined) queryParams.append("offset", String(offset));
-    if (skipCache) queryParams.append("skipCache", String(skipCache));
-
-    const url = `${BASE_URL}/unique-combinations${queryParams.toString() ? "?" + queryParams.toString() : ""}`;
+    const query = buildQueryString({ limit, offset, skipCache });
+    const url = `${BASE_URL}/unique-combinations${query}`;
 
     const response = await fetch(url, {
       method: "GET",
@@ -458,30 +321,18 @@ class CampaignFlowService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error("API Error Response:", {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorBody,
-        url,
-      });
-      throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`
-      );
+      throw new Error(errorBody || "An error has occurred");
     }
 
     return response.json();
   }
 
-  /**
-   * Get campaign flow statistics
-   */
+  /** Get campaign flow statistics */
   async getFlowStatistics(
     skipCache?: boolean
   ): Promise<FlowStatisticsResponse> {
-    const queryParams = new URLSearchParams();
-    if (skipCache) queryParams.append("skipCache", String(skipCache));
-
-    const url = `${BASE_URL}/statistics${queryParams.toString() ? "?" + queryParams.toString() : ""}`;
+    const query = buildQueryString({ skipCache });
+    const url = `${BASE_URL}/statistics${query}`;
 
     const response = await fetch(url, {
       method: "GET",
@@ -490,15 +341,7 @@ class CampaignFlowService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error("API Error Response:", {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorBody,
-        url,
-      });
-      throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`
-      );
+      throw new Error(errorBody || "An error has occurred");
     }
 
     return response.json();
@@ -519,30 +362,18 @@ class CampaignFlowService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error("API Error Response:", {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorBody,
-        url,
-      });
-      throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`
-      );
+      throw new Error(errorBody || "An error has occurred");
     }
 
     return response.json();
   }
 
-  /**
-   * Get campaign flow growth trends
-   */
+  /** Get campaign flow growth trends */
   async getGrowthTrends(
     skipCache?: boolean
   ): Promise<GrowthTrendsResponse> {
-    const queryParams = new URLSearchParams();
-    if (skipCache) queryParams.append("skipCache", String(skipCache));
-
-    const url = `${BASE_URL}/growth-trends${queryParams.toString() ? "?" + queryParams.toString() : ""}`;
+    const query = buildQueryString({ skipCache });
+    const url = `${BASE_URL}/growth-trends${query}`;
 
     const response = await fetch(url, {
       method: "GET",
@@ -551,15 +382,7 @@ class CampaignFlowService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error("API Error Response:", {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorBody,
-        url,
-      });
-      throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`
-      );
+      throw new Error(errorBody || "An error has occurred");
     }
 
     return response.json();
@@ -582,15 +405,7 @@ class CampaignFlowService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error("API Error Response:", {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorBody,
-        url,
-      });
-      throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`
-      );
+      throw new Error(errorBody || "An error has occurred");
     }
 
     return response.json();

@@ -13,6 +13,7 @@ interface UseSegmentationFieldsReturn {
   error: string | null;
   getFieldById: (id: number) => SegmentationField | undefined;
   getFieldByValue: (value: string) => SegmentationField | undefined;
+  getFieldByName: (fieldName: string) => SegmentationField | undefined;
   getOperatorsForField: (fieldId: number) => SegmentationOperator[];
   getFieldType: (fieldId: number) => string | null;
 }
@@ -31,16 +32,16 @@ export function useSegmentationFields(): UseSegmentationFieldsReturn {
       try {
         setIsLoading(true);
         setError(null);
-        
+
         const response = await segmentService.getSegmentationFields(true);
-        
-        if (response.success && response.data && response.data.length > 0) {
-          const fieldCategories = response.data[0].field_selector_config || [];
-          setCategories(fieldCategories);
-          
+
+        if (response && response.success && response.data && response.data.length > 0) {
+          const fieldCategories = response.data[0]?.field_selector_config || [];
+          setCategories(Array.isArray(fieldCategories) ? fieldCategories : []);
+
           // Flatten all fields from all categories
-          const fields = fieldCategories.flatMap(category => category.fields || []);
-          setAllFields(fields);
+          const fields = (Array.isArray(fieldCategories) ? fieldCategories : []).flatMap(category => category.fields || []);
+          setAllFields(Array.isArray(fields) ? fields : []);
         } else {
           setCategories([]);
           setAllFields([]);
@@ -48,6 +49,7 @@ export function useSegmentationFields(): UseSegmentationFieldsReturn {
       } catch (err) {
         console.error('Failed to fetch segmentation fields:', err);
         setError(err instanceof Error ? err.message : 'Failed to load segmentation fields');
+        // Ensure we always set empty arrays, never null
         setCategories([]);
         setAllFields([]);
       } finally {
@@ -64,6 +66,10 @@ export function useSegmentationFields(): UseSegmentationFieldsReturn {
 
   const getFieldByValue = useCallback((value: string): SegmentationField | undefined => {
     return allFields.find(field => field.field_value === value);
+  }, [allFields]);
+
+  const getFieldByName = useCallback((fieldName: string): SegmentationField | undefined => {
+    return allFields.find(field => field.field_name === fieldName);
   }, [allFields]);
 
   const getOperatorsForField = useCallback((fieldId: number): SegmentationOperator[] => {
@@ -83,6 +89,7 @@ export function useSegmentationFields(): UseSegmentationFieldsReturn {
     error,
     getFieldById,
     getFieldByValue,
+    getFieldByName,
     getOperatorsForField,
     getFieldType,
   };

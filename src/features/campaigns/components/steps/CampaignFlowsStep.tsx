@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Users, Gift, Plus, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import {
   CreateCampaignRequest,
   CampaignSegment,
@@ -233,12 +233,11 @@ export default function CampaignFlowsStep({
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className={`text-xl font-semibold ${tw.textPrimary} mb-2`}>
-          Add Delivery Flows
+        <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-1 `}>
+          Map Segments to Offers
         </h2>
-        <p className={`text-sm ${tw.textMuted}`}>
-          Define how and when your offers will be delivered to each segment. Select
-          offers for each segment to create delivery flows.
+        <p className={`text-xs ${tw.textMuted}`}>
+         Select offers for each segment to create the mappings.
         </p>
       </div>
 
@@ -291,19 +290,10 @@ export default function CampaignFlowsStep({
               <div key={segment.id} className={components.card.surface}>
                 {/* Segment Header */}
                 <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <Users
-                      className="w-5 h-5"
-                      style={{ color: color.primary.accent }}
-                    />
-                    <div>
-                      <h4 className={`text-base font-medium ${tw.textPrimary}`}>
-                        {segment.name}
-                      </h4>
-                      <p className={`text-sm ${tw.textSecondary}`}>
-                        {segment.customer_count?.toLocaleString() || "0"} customers
-                      </p>
-                    </div>
+                  <div>
+                    <h4 className={`text-sm font-medium ${tw.textPrimary}`}>
+                      {segment.name}
+                    </h4>
                   </div>
                   <button
                     onClick={() => handleSelectOffers(segment.id)}
@@ -340,21 +330,8 @@ export default function CampaignFlowsStep({
                           className={`flex items-center justify-between p-3 ${tw.rounded}`}
                           style={{ backgroundColor: color.surface.cards }}
                         >
-                          <div className="flex items-center gap-3">
-                            <Gift
-                              className="w-5 h-5"
-                              style={{ color: color.primary.accent }}
-                            />
-                            <div>
-                              <div
-                                className={`text-base font-medium ${tw.textPrimary}`}
-                              >
-                                {offer.name}
-                              </div>
-                              <div className={`text-sm ${tw.textSecondary}`}>
-                                {offer.offer_type}
-                              </div>
-                            </div>
+                          <div className={`text-sm font-medium ${tw.textPrimary}`}>
+                            {offer.name}
                           </div>
 
                           <button
@@ -434,6 +411,36 @@ export default function CampaignFlowsStep({
                         className={`w-full px-3 py-2 border ${tw.rounded} text-sm`}
                         style={{ borderColor: color.border.default }}
                       />
+                    </div>
+                  )}
+                </div>
+
+                {/* Conversion Tracking Section */}
+                <div className="mt-4 pt-4">
+                  <h5 className={`text-sm font-medium ${tw.textPrimary} mb-3`}>
+                    Conversion Tracking
+                  </h5>
+                  {offers.length === 0 ? (
+                    <p className={`text-xs ${tw.textSecondary}`}>
+                      Select offers to view tracking configuration
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {offers.map((offer) => (
+                        <div
+                          key={`tracking-${offer.id}`}
+                          className={`p-3 ${tw.rounded}`}
+                          style={{ backgroundColor: color.surface.cards }}
+                        >
+                          <div className={`text-xs font-medium ${tw.textPrimary} mb-2`}>
+                            {offer.name}
+                          </div>
+                          <div className={`text-xs ${tw.textSecondary} space-y-1`}>
+                            <p>• Tracking Type: <span className="font-medium">Not configured</span></p>
+                            <p>• Rules: <span className="font-medium">0</span></p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>

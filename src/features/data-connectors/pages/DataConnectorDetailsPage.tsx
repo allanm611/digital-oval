@@ -297,7 +297,8 @@ export default function DataConnectorDetailsPage() {
           <div className="flex items-center gap-3">
             <BackButton
               fallbackTo="/dashboard/data-connectors"
-              className="hover:bg-gray-100 rounded-lg p-2"
+              showBreadcrumb={true}
+              currentLabel="Data Connector Details"
             />
             {isEditMode ? (
               <div className="space-y-3 flex-1">

@@ -4,21 +4,28 @@ import {
   MessageSquare,
   Phone,
   Bell,
-  AlertCircle,
   Variable,
   ChevronDown,
   Settings,
+  Send,
+  CheckCircle,
+  XCircle,
+  Loader,
+  AlertCircle,
 } from "lucide-react";
 import { color, tw, components } from "../../../shared/utils/utils";
 import { ManualBroadcastData } from "../pages/CreateManualBroadcastPage";
 import PreviewPanel from "../../communications/components/PreviewPanel";
+import RichTextEditor from "../../communications/components/RichTextEditor";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import CascadingVariableSelector from "./CascadingVariableSelector";
 import type { TemplateVariable } from "../types";
 import {
   insertVariableAtCursor,
   formatVariablePlaceholder,
-} from "../utils/variableInsertion";
+  validateInsertPosition,
+  validateMessageSyntax,
+} from "../../../shared/utils/variableInsertion";
 import { useConfigurationData } from "../../../shared/services/configurationDataService";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { CommunicationPolicyConfiguration } from "../../campaigns/types/communicationPolicyConfig";
@@ -27,12 +34,21 @@ import CommunicationPolicyModal from "../../campaigns/components/CommunicationPo
 import PolicyNameModal from "../../campaigns/components/PolicyNameModal";
 import { useClickOutside } from "../../../shared/hooks/useClickOutside";
 import { useToast } from "../../../contexts/ToastContext";
+import { validatePhoneOnly, isValidEmail } from "../../../shared/utils/validation";
+import { DUMMY_RECIPIENTS } from "../../campaigns/pages/SeedListManagementPage";
+import type { SeedListRecipient } from "../../campaigns/pages/SeedListManagementPage";
 
 interface DefineCommunicationStepProps {
   data: ManualBroadcastData;
   onUpdate: (data: Partial<ManualBroadcastData>) => void;
   onNext: () => void;
   onPrevious: () => void;
+}
+
+interface TestResult {
+  contact: string;
+  status: "success" | "failed";
+  message?: string;
 }
 
 type Channel = "EMAIL" | "SMS" | "WHATSAPP" | "PUSH";
@@ -76,9 +92,18 @@ export default function DefineCommunicationStep({
   const [showVariableSelector, setShowVariableSelector] = useState(false);
   const [activeField, setActiveField] = useState<"title" | "body">("body");
   const [cursorPosition, setCursorPosition] = useState<number>(0);
+  const [variableError, setVariableError] = useState<string>("");
   const [selectedVariables, setSelectedVariables] = useState<
     TemplateVariable[]
   >(data.selectedVariables || []);
+
+  // Test state
+  const [isTesting, setIsTesting] = useState(false);
+  const [testResults, setTestResults] = useState<TestResult[]>([]);
+  const [testError, setTestError] = useState("");
+  const [selectedTestContacts, setSelectedTestContacts] = useState<Set<string>>(
+    new Set()
+  );
 
   const titleInputRef = useRef<HTMLInputElement>(null);
   const bodyTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -104,6 +129,109 @@ export default function DefineCommunicationStep({
   const { success: showToast, error: showError } = useToast();
 
   useClickOutside(policyDropdownRef, () => setIsPolicyDropdownOpen(false));
+
+  // Get active seed list recipients
+  const getActiveRecipients = (): SeedListRecipient[] => {
+    return DUMMY_RECIPIENTS.filter((r) => r.status === "active");
+  };
+
+  // Derive all available test contacts from active recipients based on channel
+  const getAvailableTestContacts = (): string[] => {
+    const activeRecipients = getActiveRecipients();
+    return activeRecipients
+      .map((r) => {
+        const contact =
+          selectedChannel === "EMAIL" ? r.customer_email : r.customer_phone;
+        // Remove + prefix from phone numbers
+        return contact?.replace(/^\+/, "") || "";
+      })
+      .filter(Boolean) as string[];
+  };
+
+  // Get only the selected/checked test contacts
+  const getSelectedTestContacts = (): string[] => {
+    return getAvailableTestContacts().filter((contact) =>
+      selectedTestContacts.has(contact)
+    );
+  };
+
+  // Toggle selection of a test contact
+  const toggleTestContact = (contact: string) => {
+    const newSelected = new Set(selectedTestContacts);
+    if (newSelected.has(contact)) {
+      newSelected.delete(contact);
+    } else {
+      newSelected.add(contact);
+    }
+    setSelectedTestContacts(newSelected);
+  };
+
+  // Validate contact based on channel
+  const validateContact = (contact: string): boolean => {
+    if (selectedChannel === "EMAIL") {
+      return isValidEmail(contact);
+    } else if (selectedChannel === "SMS" || selectedChannel === "WHATSAPP") {
+      const phoneValidation = validatePhoneOnly([contact]);
+      return phoneValidation.valid;
+    }
+    return isValidEmail(contact) || validatePhoneOnly([contact]).valid;
+  };
+
+  // Handle sending test broadcasts
+  const handleSendTest = async () => {
+    const contacts = getSelectedTestContacts();
+
+    if (contacts.length === 0) {
+      setTestError("Please select at least one test contact to send tests");
+      return;
+    }
+
+    setIsTesting(true);
+    setTestError("");
+    setTestResults([]);
+
+    try {
+      const results: TestResult[] = [];
+
+      for (const contact of contacts) {
+        // Simulate a small delay for each contact
+        await new Promise((resolve) => setTimeout(resolve, 300));
+
+        // Validate based on channel
+        const isValid = validateContact(contact);
+        let errorMessage = "";
+
+        if (selectedChannel === "EMAIL") {
+          errorMessage = t.manualBroadcast.errorInvalidEmail;
+        } else if (selectedChannel === "SMS" || selectedChannel === "WHATSAPP") {
+          errorMessage = t.manualBroadcast.errorInvalidPhone;
+        } else {
+          errorMessage = t.manualBroadcast.errorInvalidContact;
+        }
+
+        if (isValid) {
+          results.push({
+            contact,
+            status: "success",
+            message: `${t.manualBroadcast.testMessageSuccess} (${selectedChannel})`,
+          });
+        } else {
+          results.push({
+            contact,
+            status: "failed",
+            message: errorMessage,
+          });
+        }
+      }
+
+      setTestResults(results);
+    } catch (err) {
+      console.error("Failed to process test broadcasts:", err);
+      setTestError(t.manualBroadcast.errorSendTestFailed);
+    } finally {
+      setIsTesting(false);
+    }
+  };
 
   // Load Communication Policies from service
   useEffect(() => {
@@ -133,16 +261,62 @@ export default function DefineCommunicationStep({
   }, [data.selectedCommunicationPolicyId]);
 
   const handleVariableSelect = (variable: TemplateVariable) => {
-    if (!selectedVariables.find((v) => v.id === variable.id)) {
+    // Validate input data
+    if (!variable) {
+      setVariableError("No variable selected");
+      return;
+    }
+
+    if (!selectedVariables) {
+      setSelectedVariables([]);
+    }
+
+    if (!selectedVariables.find((v) => v?.id === variable.id)) {
       setSelectedVariables((prev) => [...prev, variable]);
     }
 
+    // Validate activeField before using
+    if (!activeField) {
+      setVariableError("No active field selected");
+      return;
+    }
+
+    // Get actual cursor position from DOM element
+    let actualCursorPosition = cursorPosition;
+    if (activeField === "title" && titleInputRef?.current) {
+      actualCursorPosition = titleInputRef.current.selectionStart || 0;
+    } else if (activeField === "body" && bodyTextareaRef?.current) {
+      actualCursorPosition = bodyTextareaRef.current.selectionStart || 0;
+    }
+
+    // Validate message content before inserting
     if (activeField === "title") {
+      if (typeof messageTitle !== "string") {
+        setVariableError("Message title is not available");
+        return;
+      }
+      const currentText = messageTitle;
+
+      // Validate cursor position
+      const positionError = validateInsertPosition(currentText, actualCursorPosition);
+
+      if (positionError) {
+        setVariableError(positionError);
+        return;
+      }
+
+      setVariableError("");
       const result = insertVariableAtCursor(
         messageTitle,
-        cursorPosition,
+        actualCursorPosition,
         variable,
       );
+
+      if (result.error) {
+        setVariableError(result.error);
+        return;
+      }
+
       setMessageTitle(result.newText);
       setTimeout(() => {
         if (titleInputRef.current) {
@@ -154,15 +328,51 @@ export default function DefineCommunicationStep({
         }
       }, 0);
     } else {
+      // Validate message body availability
+      if (typeof messageBody !== "string") {
+        setVariableError("Message body is not available");
+        return;
+      }
+
       if (isRichText) {
+        if (!variable) {
+          setVariableError("Variable not selected");
+          return;
+        }
         const placeholder = formatVariablePlaceholder(variable);
+        if (!placeholder) {
+          setVariableError("Could not format variable placeholder");
+          return;
+        }
         setMessageBody(messageBody + " " + placeholder + " ");
+        setVariableError("");
       } else {
+        const currentText = messageBody;
+        if (typeof currentText !== "string") {
+          setVariableError("Message body is not available");
+          return;
+        }
+
+        // Validate cursor position
+        const positionError = validateInsertPosition(currentText, actualCursorPosition);
+
+        if (positionError) {
+          setVariableError(positionError);
+          return;
+        }
+
+        setVariableError("");
         const result = insertVariableAtCursor(
           messageBody,
-          cursorPosition,
+          actualCursorPosition,
           variable,
         );
+
+        if (result.error) {
+          setVariableError(result.error);
+          return;
+        }
+
         setMessageBody(result.newText);
         setTimeout(() => {
           if (bodyTextareaRef.current) {
@@ -180,10 +390,21 @@ export default function DefineCommunicationStep({
 
   // Handle opening customization modal
   const handleCustomizePolicy = (policy: CommunicationPolicyConfiguration) => {
+    // Validate policy data
+    if (!policy) {
+      showError("No policy selected for customization");
+      return;
+    }
+
+    if (!policy.id || !policy.name) {
+      showError("Policy data is incomplete");
+      return;
+    }
+
     // Create a copy of the policy with a temporary name for the modal
     const policyWithTempName = {
       ...policy,
-      name: `${policy.name} - Customizing...`,
+      name: `${policy.name || "Unknown"} - Customizing...`,
     };
     setPolicyToCustomize(policyWithTempName);
     setIsCustomizationModalOpen(true);
@@ -193,6 +414,12 @@ export default function DefineCommunicationStep({
   const handleSaveCustomizedPolicy = async (
     policyData: Record<string, unknown>,
   ) => {
+    // Validate policyData
+    if (!policyData || typeof policyData !== "object") {
+      showError("Invalid policy data");
+      return;
+    }
+
     // Store the policy data and open name modal
     // First close the customization modal
     setIsCustomizationModalOpen(false);
@@ -204,26 +431,54 @@ export default function DefineCommunicationStep({
 
   // Handle confirming policy name
   const handleConfirmPolicyName = async (policyName: string) => {
-    if (!pendingPolicyData || !policyToCustomize) return;
+    // Validate inputs
+    if (!pendingPolicyData || typeof pendingPolicyData !== "object") {
+      showError("Policy data is not available");
+      return;
+    }
+
+    if (!policyToCustomize) {
+      showError("No policy selected for customization");
+      return;
+    }
+
+    if (!policyName || typeof policyName !== "string" || !policyName.trim()) {
+      showError("Please provide a valid policy name");
+      return;
+    }
 
     try {
       // Get the original policy name (remove the temporary suffix)
-      const originalPolicyName = policyToCustomize.name.replace(
+      const originalPolicyName = policyToCustomize.name?.replace(
         " - Customizing...",
         "",
-      );
+      ) || "Unknown";
+
+      // Validate required policy configuration
+      const channels = pendingPolicyData.channels as any[];
+      const config = pendingPolicyData.config;
+
+      if (!channels || !Array.isArray(channels) || channels.length === 0) {
+        showError("Please select at least one channel for the policy");
+        return;
+      }
 
       // Create new policy with customized configuration
       const newPolicy = communicationPolicyService.createPolicy({
-        name: policyName,
+        name: policyName.trim(),
         description:
-          pendingPolicyData.description ||
+          (pendingPolicyData.description as string) ||
           `Custom policy based on ${originalPolicyName}`,
-        channels: pendingPolicyData.channels || ["EMAIL"],
-        type: pendingPolicyData.type,
-        config: pendingPolicyData.config,
+        channels: channels,
+        type: pendingPolicyData.type as string,
+        config: config,
         isActive: pendingPolicyData.isActive ?? true,
       });
+
+      if (!newPolicy) {
+        showError("Failed to create policy");
+        return;
+      }
 
       // Apply the new policy to the broadcast
       setSelectedPolicy(newPolicy);
@@ -248,6 +503,15 @@ export default function DefineCommunicationStep({
   };
 
   const getCharacterInfo = () => {
+    // Validate messageBody availability
+    if (typeof messageBody !== "string") {
+      return { charCount: 0, segments: 0, isUnicode: false };
+    }
+
+    if (!messageBody) {
+      return { charCount: 0, segments: 1, isUnicode: false };
+    }
+
     const charCount = messageBody.length;
     const isUnicode = /[^\x00-\x7F]/.test(messageBody);
     const singleSegmentLimit = isUnicode ? 70 : 160;
@@ -261,63 +525,125 @@ export default function DefineCommunicationStep({
 
   const getSampleDataForPreview = (): Record<string, string> => {
     const sampleData: Record<string, string> = {};
-    if (data.fileColumns && data.fileColumns.length > 0) {
+
+    // Validate data object existence
+    if (!data) {
+      console.warn("Data object is not available for preview");
+      return sampleData;
+    }
+
+    // Validate fileColumns availability
+    if (data.fileColumns && Array.isArray(data.fileColumns) && data.fileColumns.length > 0) {
       data.fileColumns.forEach((col) => {
-        sampleData[col] = `[${col}]`;
+        if (col && typeof col === "string") {
+          sampleData[col] = `[${col}]`;
+        }
       });
     }
-    (selectedVariables || []).forEach((variable) => {
-      const key = `${(variable.sourceName || "source").toLowerCase().replace(/\s+/g, "_")}.${variable.value || "field"}`;
-      switch (variable.fieldType) {
-        case "text":
-          if ((variable.value || "").includes("name"))
-            sampleData[key] = "John Doe";
-          else if ((variable.value || "").includes("email"))
-            sampleData[key] = "john@example.com";
-          else if ((variable.value || "").includes("phone"))
-            sampleData[key] = "+1234567890";
-          else sampleData[key] = `Sample ${variable.name}`;
-          break;
-        case "numeric":
-          sampleData[key] = "12345";
-          break;
-        case "date":
-          sampleData[key] = new Date().toLocaleDateString();
-          break;
-        case "boolean":
-          sampleData[key] = "Yes";
-          break;
-        default:
-          sampleData[key] = `[${variable.name}]`;
-      }
-    });
+
+    // Validate selectedVariables availability
+    if (selectedVariables && Array.isArray(selectedVariables)) {
+      selectedVariables.forEach((variable) => {
+        if (!variable) {
+          return; // Skip undefined variables
+        }
+        const key = `${(variable.sourceName || "source").toLowerCase().replace(/\s+/g, "_")}.${variable.value || "field"}`;
+        switch (variable.fieldType) {
+          case "text":
+            if ((variable.value || "").includes("name"))
+              sampleData[key] = "John Doe";
+            else if ((variable.value || "").includes("email"))
+              sampleData[key] = "john@example.com";
+            else if ((variable.value || "").includes("phone"))
+              sampleData[key] = "+1234567890";
+            else sampleData[key] = `Sample ${variable.name || "value"}`;
+            break;
+          case "numeric":
+            sampleData[key] = "12345";
+            break;
+          case "date":
+            sampleData[key] = new Date().toLocaleDateString();
+            break;
+          case "boolean":
+            sampleData[key] = "Yes";
+            break;
+          default:
+            sampleData[key] = `[${variable.name || "value"}]`;
+        }
+      });
+    }
     return sampleData;
   };
 
   const handleNext = () => {
-    if (!messageBody.trim()) {
+    // Validate messageBody
+    if (!messageBody || typeof messageBody !== "string" || !messageBody.trim()) {
       setError(t.manualBroadcast.errorMessageBodyRequired);
       return;
     }
-    if (selectedChannel === "EMAIL" && !messageTitle.trim()) {
-      setError(t.manualBroadcast.errorSubjectRequired);
+
+    // Validate message syntax (check for properly formed variables)
+    const syntaxError = validateMessageSyntax(messageBody);
+    if (syntaxError) {
+      setError(syntaxError);
       return;
     }
-    if (selectedChannel === "SMS" && !smsRoute.trim()) {
-      setError("Please select an SMS route");
+
+    // Validate selectedChannel
+    if (!selectedChannel) {
+      setError("Please select a communication channel");
       return;
     }
+
+    // Validate email requirements
+    if (selectedChannel === "EMAIL") {
+      if (!messageTitle || typeof messageTitle !== "string" || !messageTitle.trim()) {
+        setError(t.manualBroadcast.errorSubjectRequired);
+        return;
+      }
+      // Validate title syntax (check for properly formed variables)
+      const titleSyntaxError = validateMessageSyntax(messageTitle);
+      if (titleSyntaxError) {
+        setError(titleSyntaxError);
+        return;
+      }
+    }
+
+    // Validate SMS requirements
+    if (selectedChannel === "SMS") {
+      if (!smsRoute || typeof smsRoute !== "string" || !smsRoute.trim()) {
+        setError("Please select an SMS route");
+        return;
+      }
+    }
+
+    // Clear any previous errors
     setError("");
+
+    // Validate selectedVariables is an array
+    const validatedVariables = Array.isArray(selectedVariables) ? selectedVariables : [];
+
+    // Prepare test results record
+    const resultsRecord: Record<string, unknown> = {
+      results: testResults,
+      successCount: testResults.filter(r => r.status === "success").length,
+      failedCount: testResults.filter(r => r.status === "failed").length,
+    };
+
+    // Update parent with validated data
     onUpdate({
       channel: selectedChannel,
-      messageTitle: messageTitle.trim(),
+      messageTitle: messageTitle?.trim() || "",
       messageBody: messageBody.trim(),
       isRichText,
       smsRoute: selectedChannel === "SMS" ? smsRoute : undefined,
-      selectedVariables,
+      selectedVariables: validatedVariables,
       // Add communication policy data
       selectedCommunicationPolicy: selectedPolicy || undefined,
       selectedCommunicationPolicyId: selectedPolicy?.id || undefined,
+      // Add test data
+      testContacts: getSelectedTestContacts(),
+      testResults: resultsRecord,
     });
     onNext();
   };
@@ -539,6 +865,9 @@ export default function DefineCommunicationStep({
                   placeholder="Select SMS Route"
                   zIndex={1050}
                 />
+                {error === "Please select an SMS route" && (
+                  <p className="text-red-600 text-sm mt-2">{error}</p>
+                )}
               </div>
             )}
 
@@ -551,26 +880,24 @@ export default function DefineCommunicationStep({
                 Message Content
               </span>
               <div className="flex items-center gap-2">
-                {selectedChannel === "EMAIL" && (
-                  <button
-                    type="button"
-                    onClick={() => setIsRichText(!isRichText)}
-                    className="px-3 py-1.5 text-sm rounded-md border transition-colors"
-                    style={{
-                      backgroundColor: isRichText
-                        ? `${color.primary.accent}10`
-                        : "white",
-                      borderColor: isRichText
-                        ? color.primary.accent
-                        : color.border.default,
-                      color: isRichText
-                        ? color.primary.accent
-                        : color.text.secondary,
-                    }}
-                  >
-                    {isRichText ? "Rich Text" : "Plain Text"}
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => setIsRichText(!isRichText)}
+                  className="px-3 py-1.5 text-sm rounded-md border transition-colors"
+                  style={{
+                    backgroundColor: isRichText
+                      ? `${color.primary.accent}10`
+                      : "white",
+                    borderColor: isRichText
+                      ? color.primary.accent
+                      : color.border.default,
+                    color: isRichText
+                      ? color.primary.accent
+                      : color.text.secondary,
+                  }}
+                >
+                  {isRichText ? "Rich Text" : "Plain Text"}
+                </button>
                 <div className="relative">
                   <button
                     type="button"
@@ -636,26 +963,46 @@ export default function DefineCommunicationStep({
               >
                 Message Body <span className="text-red-500">*</span>
               </label>
-              <textarea
-                ref={bodyTextareaRef}
-                value={messageBody}
-                onChange={(e) => {
-                  setMessageBody(e.target.value);
-                  setCursorPosition(e.target.selectionStart || 0);
-                }}
-                onClick={(e) => {
-                  setActiveField("body");
-                  setCursorPosition(e.currentTarget.selectionStart || 0);
-                }}
-                onFocus={(e) => {
-                  setActiveField("body");
-                  setCursorPosition(e.currentTarget.selectionStart || 0);
-                }}
-                placeholder="Enter your message... Click 'Insert Variable' to add dynamic content like {{customer_identity.first_name}}"
-                rows={10}
-                className="w-full px-4 py-3 border rounded-md  focus:outline-none focus:ring-2 transition-all text-sm resize-none"
-                style={{ borderColor: color.border.default }}
-              />
+              {isRichText ? (
+                <div
+                  onClick={() => setActiveField("body")}
+                  onFocus={() => setActiveField("body")}
+                >
+                  <RichTextEditor
+                    value={messageBody}
+                    onChange={setMessageBody}
+                    placeholder="Enter your message... Click 'Insert Variable' to add dynamic content like {{customer_identity.first_name}}"
+                    minHeight="250px"
+                  />
+                </div>
+              ) : (
+                <textarea
+                  ref={bodyTextareaRef}
+                  value={messageBody}
+                  onChange={(e) => {
+                    setMessageBody(e.target.value);
+                    setCursorPosition(e.target.selectionStart || 0);
+                  }}
+                  onClick={(e) => {
+                    setActiveField("body");
+                    setCursorPosition(e.currentTarget.selectionStart || 0);
+                  }}
+                  onFocus={(e) => {
+                    setActiveField("body");
+                    setCursorPosition(e.currentTarget.selectionStart || 0);
+                  }}
+                  placeholder="Enter your message... Click 'Insert Variable' to add dynamic content like {{customer_identity.first_name}}"
+                  rows={10}
+                  className="w-full px-4 py-3 border rounded-md  focus:outline-none focus:ring-2 transition-all text-sm resize-none"
+                  style={{ borderColor: color.border.default }}
+                />
+              )}
+
+              {variableError && (
+                <div className="mt-3 text-sm text-red-700">
+                  {variableError}
+                </div>
+              )}
 
               {/* Info bar */}
               <div className="mt-2 flex items-center justify-between">
@@ -679,34 +1026,13 @@ export default function DefineCommunicationStep({
                     data
                   </span>
                 )}
-
-                {selectedVariables.length > 0 && (
-                  <div className="flex items-center gap-1">
-                    {selectedVariables.slice(0, 3).map((v) => (
-                      <span
-                        key={v.id}
-                        className="px-2 py-0.5 rounded text-xs"
-                        style={{
-                          backgroundColor: `${color.primary.accent}10`,
-                          color: color.primary.accent,
-                        }}
-                      >
-                        {v.name}
-                      </span>
-                    ))}
-                    {selectedVariables.length > 3 && (
-                      <span className="text-xs text-gray-400">
-                        +{selectedVariables.length - 3} more
-                      </span>
-                    )}
-                  </div>
-                )}
               </div>
             </div>
+
           </div>
 
-          {/* Right Column - Preview (2/5) */}
-          <div className="lg:col-span-2">
+          {/* Right Column - Preview & Test Contacts (2/5) */}
+          <div className="lg:col-span-2 space-y-4">
             <div className="sticky top-4">
               <PreviewPanel
                 channel={selectedChannel}
@@ -715,27 +1041,140 @@ export default function DefineCommunicationStep({
                 sampleData={getSampleDataForPreview()}
               />
             </div>
+
+            {/* Test Contacts Selection */}
+            {getAvailableTestContacts().length > 0 && (
+              <div
+                className="bg-white rounded-md shadow-sm border p-4"
+                style={{ borderColor: color.border.default }}
+              >
+                <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-3`}>
+                  Select Test Contacts
+                </h3>
+                <p className={`text-xs ${tw.textSecondary} mb-3`}>
+                  Check the contacts you want to test ({getSelectedTestContacts().length} selected)
+                </p>
+                <div className="space-y-2 max-h-64 overflow-y-auto mb-4">
+                  {getAvailableTestContacts().map((contact, index) => (
+                    <label
+                      key={index}
+                      className="flex items-center gap-2 p-2 rounded-md cursor-pointer hover:bg-gray-50 transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedTestContacts.has(contact)}
+                        onChange={() => toggleTestContact(contact)}
+                        disabled={isTesting}
+                        className="w-4 h-4 rounded cursor-pointer"
+                      />
+                      <span className={`text-sm ${tw.textPrimary} flex-1 truncate`}>
+                        {contact}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+
+                {/* Send Test Button */}
+                <div className="mb-4">
+                  <button
+                    onClick={handleSendTest}
+                    disabled={getSelectedTestContacts().length === 0 || isTesting}
+                    className="w-auto px-4 py-2.5 text-white rounded-md text-sm font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    style={{ backgroundColor: color.primary.accent }}
+                  >
+                    {isTesting ? (
+                      <>
+                        <Loader className="w-4 h-4 animate-spin flex-shrink-0" />
+                        <span>Sending Tests...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4 flex-shrink-0" />
+                        <span>Send Test</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Test Error */}
+                {testError && (
+                  <div
+                    className="p-3 rounded-md flex items-start gap-2 mb-4"
+                    style={{
+                      backgroundColor: `${color.status.danger}10`,
+                      border: `1px solid ${color.status.danger}30`,
+                    }}
+                  >
+                    <AlertCircle
+                      className="w-5 h-5 flex-shrink-0"
+                      style={{ color: color.status.danger }}
+                    />
+                    <p
+                      className="text-sm"
+                      style={{ color: color.status.danger }}
+                    >
+                      {testError}
+                    </p>
+                  </div>
+                )}
+
+                {/* Test Results */}
+                {testResults.length > 0 && (
+                  <div>
+                    <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
+                      Test Results
+                    </label>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {testResults.map((result, index) => (
+                        <div
+                          key={index}
+                          className="flex items-start gap-2 p-2 rounded-md text-sm"
+                          style={{
+                            backgroundColor:
+                              result.status === "success"
+                                ? `${color.status.success}10`
+                                : `${color.status.danger}10`,
+                          }}
+                        >
+                          {result.status === "success" ? (
+                            <CheckCircle
+                              className="w-4 h-4 flex-shrink-0 mt-0.5"
+                              style={{ color: color.status.success }}
+                            />
+                          ) : (
+                            <XCircle
+                              className="w-4 h-4 flex-shrink-0 mt-0.5"
+                              style={{ color: color.status.danger }}
+                            />
+                          )}
+                          <div className="flex-1">
+                            <p
+                              className="text-xs font-medium"
+                              style={{
+                                color:
+                                  result.status === "success"
+                                    ? color.status.success
+                                    : color.status.danger,
+                              }}
+                            >
+                              {result.contact}
+                            </p>
+                            {result.message && (
+                              <p className={`text-xs ${tw.textMuted} mt-0.5`}>
+                                {result.message}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Error Message */}
-        {error && (
-          <div
-            className="mt-6 p-3 rounded-md flex items-start gap-2"
-            style={{
-              backgroundColor: `${color.status.danger}10`,
-              border: `1px solid ${color.status.danger}30`,
-            }}
-          >
-            <AlertCircle
-              className="w-5 h-5 flex-shrink-0"
-              style={{ color: color.status.danger }}
-            />
-            <p className="text-sm" style={{ color: color.status.danger }}>
-              {error}
-            </p>
-          </div>
-        )}
       </div>
 
       {/* Footer */}
@@ -762,7 +1201,7 @@ export default function DefineCommunicationStep({
           className="px-6 py-2.5 text-white rounded-md text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           style={{ backgroundColor: color.primary.action }}
         >
-          {t.manualBroadcast.nextTest}
+          {t.manualBroadcast.nextSchedule}
         </button>
       </div>
 

@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { colors } from "../../../shared/utils/tokens";
 import { formatCurrency as formatCurrencyAmount } from "../../../shared/services/currencyService";
+import BackButton from "../../../shared/components/ui/BackButton";
 import type {
   RangeOption,
   OverallDashboardPerformanceResponse,
@@ -991,14 +992,7 @@ export default function OverallDashboardPerformancePage() {
   return (
     <div className="space-y-6">
       <header className="space-y-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Overall Dashboard Performance
-          </h1>
-          <p className="mt-2 text-sm text-gray-600">
-            System-wide performance metrics and analytics
-          </p>
-        </div>
+        <BackButton fallbackTo="/dashboard" showBreadcrumb={true} currentLabel="Overall Dashboard Performance" />
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap gap-2">
             {timeRangeOptions.map((option) => (

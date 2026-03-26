@@ -17,6 +17,7 @@ import { color } from "./shared/utils/utils";
 import GlobalLoader from "./shared/components/GlobalLoader";
 import { AppErrorBoundary } from "./shared/components/AppErrorBoundary";
 import { SafeRoute } from "./shared/components/SafeRoute";
+import { ProtectedRoute } from "./shared/components/ProtectedRoute";
 
 // Lazy load all pages for better performance
 const LoginPage = lazy(() => import("./features/auth/pages/LoginPage"));
@@ -56,6 +57,7 @@ function AppRoutes() {
     <SafeRoute>
       <Suspense fallback={<PageLoader />}>
         <Routes>
+          {/* Public Routes */}
           <Route
             path="/login"
             element={
@@ -65,20 +67,14 @@ function AppRoutes() {
           <Route path="/request-account" element={<RequestAccountPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/landing" element={<LandingPage />} />
-          <Route
-            path="/landingpage"
-            element={
-              isAuthenticated ? (
-                <AuthenticatedLandingPage />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
-          <Route
-            path="/dashboard/*"
-            element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />}
-          />
+
+          {/* Protected Routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/landingpage" element={<AuthenticatedLandingPage />} />
+            <Route path="/dashboard/*" element={<Dashboard />} />
+          </Route>
+
+          {/* Default redirect */}
           <Route path="/" element={<Navigate to="/login" />} />
         </Routes>
       </Suspense>

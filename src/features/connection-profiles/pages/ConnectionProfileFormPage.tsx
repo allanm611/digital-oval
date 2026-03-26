@@ -278,23 +278,7 @@ export default function ConnectionProfileFormPage({
   return (
     <div className="space-y-6">
       {!onSuccess && (
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <BackButton fallbackTo="/dashboard/connection-profiles" />
-            <div className="ml-2 sm:ml-4">
-              <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
-                {mode === "create"
-                  ? "Create Connection Profile"
-                  : "Edit Connection Profile"}
-              </h1>
-              <p className={`${tw.textSecondary} mt-1 text-sm`}>
-                {mode === "create"
-                  ? "Configure a new connection profile"
-                  : `Editing: ${profile?.profile_name || ""}`}
-              </p>
-            </div>
-          </div>
-        </div>
+        <BackButton fallbackTo="/dashboard/connection-profiles" showBreadcrumb={true} currentLabel={mode === "create" ? "Create Connection Profile" : "Edit Connection Profile"} />
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">

@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import TypeConfigurationPage from "../../../shared/components/TypeConfigurationPage";
-import { communicationChannelsConfig } from "../../../shared/configs/configurationPageConfigs";
+import { communicationChannelsConfig } from "../../configurations/configs/configurationPageConfigs";
 
 export default function CommunicationChannelsPage() {
   const navigate = useNavigate();

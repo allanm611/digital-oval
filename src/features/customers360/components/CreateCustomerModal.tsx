@@ -35,7 +35,6 @@ function formatPhoneNumber(msisdn: string): string {
   // Remove non-digits and any + prefix
   const cleaned = msisdn.replace(/\D/g, "");
 
-  // Return cleaned digits (validation happens in form validation)
   return cleaned;
 }
 

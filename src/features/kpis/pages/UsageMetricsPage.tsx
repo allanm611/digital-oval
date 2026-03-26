@@ -123,15 +123,7 @@ export default function UsageMetricsPage() {
     <div className="space-y-6">
       {/* Header with Back Button and Create Button */}
       <div className="flex items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-4">
-          <BackButton fallbackTo="/dashboard/kpis" />
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900">Usage Metrics</h2>
-            <p className={`text-sm ${tw.textSecondary} mt-1`}>
-              Monitor customer usage and consumption patterns
-            </p>
-          </div>
-        </div>
+        <BackButton fallbackTo="/dashboard/kpis" showBreadcrumb={true} currentLabel="Usage Metrics" />
         <button
           onClick={() => navigate("/dashboard/kpis/usage-metrics/create")}
           disabled={loading}

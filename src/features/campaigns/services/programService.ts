@@ -342,7 +342,7 @@ class ProgramService {
   async updateProgramBudget(
     id: number,
     budget_total: number,
-    updatedBy: number = 1,
+    updatedBy?: number,
   ): Promise<SingleProgramResponse> {
     return this.request<SingleProgramResponse>(`/${id}/budget`, {
       method: "PATCH",
@@ -359,7 +359,7 @@ class ProgramService {
   async updateProgramSpentBudget(
     id: number,
     budget_spent: number,
-    updatedBy: number = 1,
+    updatedBy?: number,
   ): Promise<SingleProgramResponse> {
     return this.request<SingleProgramResponse>(`/${id}/budget/spent`, {
       method: "PATCH",
@@ -520,7 +520,7 @@ class ProgramService {
    */
   async recalculateProgramBudget(
     id: number,
-    updatedBy: number = 1,
+    updatedBy?: number,
   ): Promise<SingleProgramResponse> {
     return this.request<SingleProgramResponse>(`/${id}/budget/recalculate`, {
       method: "POST",

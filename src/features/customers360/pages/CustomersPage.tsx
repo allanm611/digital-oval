@@ -557,7 +557,7 @@ export default function CustomersPage() {
     try {
       await customerService.deleteCustomer(customerToDelete.customerId);
 
-      // Remove customer from local state
+      // Optimistic UI: Remove deleted customer from list
       setCustomers((prev) =>
         prev.filter((c) => c.customerId !== customerToDelete.customerId),
       );
@@ -699,7 +699,7 @@ export default function CustomersPage() {
 
       {/* Table card */}
       <div>
-        {isLoading || isDeleting ? (
+        {isLoading ? (
           <div className="flex flex-col items-center justify-center py-16">
             <LoadingSpinner
               variant="modern"
@@ -708,9 +708,7 @@ export default function CustomersPage() {
               className="mb-4"
             />
             <p className={`${tw.textMuted} font-medium text-sm`}>
-              {isDeleting
-                ? "Deleting customer..."
-                : t.customer360.preparingCustomerData}
+              {t.customer360.preparingCustomerData}
             </p>
           </div>
         ) : error || isTimeout ? (
@@ -889,8 +887,7 @@ export default function CustomersPage() {
                               <Edit className="h-4 w-4" />
                             </button>
                           </PermissionGate>
-                          {/* Delete button - commented out */}
-                          {/* <PermissionGate permission="customer.delete">
+                          <PermissionGate permission="customer.delete">
                             <button
                               type="button"
                               onClick={() => handleDeleteCustomer(row)}
@@ -899,7 +896,7 @@ export default function CustomersPage() {
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
-                          </PermissionGate> */}
+                          </PermissionGate>
                         </div>
                       </td>
                     </tr>
@@ -911,7 +908,7 @@ export default function CustomersPage() {
         )}
 
         {/* Pagination */}
-        {!isLoading && !error && filteredCustomers.length > pageSize && (
+        {!isLoading && !isDeleting && !error && filteredCustomers.length > pageSize && (
           <Pagination
             currentPage={filters.page}
             pageSize={filters.limit}

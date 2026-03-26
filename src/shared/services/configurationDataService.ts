@@ -18,7 +18,7 @@ import {
   routesConfig,
   languagesConfig,
   characterSetsConfig,
-} from "../configs/configurationPageConfigs";
+} from "../../features/configurations/configs/configurationPageConfigs";
 
 // Type pour identifier les différents types de configuration
 export type ConfigurationType =
@@ -68,170 +68,37 @@ class ConfigurationDataService {
     this.listeners.set("languages", new Set());
     this.listeners.set("characterSets", new Set());
 
-    // Charger les données depuis localStorage ou utiliser les données par défaut
-    this.loadFromStorage();
+    // Initialize with default data (no localStorage)
+    this.initializeDefaultData();
   }
 
-  // Charger les données depuis localStorage
-  private loadFromStorage(): void {
-    try {
-      const storedData = localStorage.getItem("configurationData");
-      if (storedData) {
-        const parsed = JSON.parse(storedData);
-        this.data.set(
-          "lineOfBusiness",
-          parsed.lineOfBusiness || [...lineOfBusinessConfig.initialData]
-        );
-        this.data.set(
-          "departments",
-          parsed.departments || [...departmentsConfig.initialData]
-        );
-        this.data.set(
-          "campaignObjectives",
-          parsed.campaignObjectives || [...campaignObjectivesConfig.initialData]
-        );
-        this.data.set(
-          "offerTypes",
-          parsed.offerTypes || [...offerTypesConfig.initialData]
-        );
-        this.data.set(
-          "campaignTypes",
-          parsed.campaignTypes || [...campaignTypesConfig.initialData]
-        );
-        this.data.set(
-          "segmentTypes",
-          parsed.segmentTypes || [...segmentTypesConfig.initialData]
-        );
-        this.data.set(
-          "productTypes",
-          parsed.productTypes || [...productTypesConfig.initialData]
-        );
-        this.data.set(
-          "comboTypes",
-          parsed.comboTypes || [...comboTypesConfig.initialData]
-        );
-        this.data.set(
-          "trackingSources",
-          parsed.trackingSources || [...trackingSourcesConfig.initialData]
-        );
-        this.data.set(
-          "creativeTemplates",
-          parsed.creativeTemplates || [...creativeTemplatesConfig.initialData]
-        );
-        this.data.set(
-          "rewardTypes",
-          parsed.rewardTypes || [...rewardTypesConfig.initialData]
-        );
-        this.data.set(
-          "communicationChannels",
-          parsed.communicationChannels || [
-            ...communicationChannelsConfig.initialData,
-          ]
-        );
-        this.data.set(
-          "senderIds",
-          parsed.senderIds || [...senderIdsConfig.initialData]
-        );
-        this.data.set(
-          "smsRoutes",
-          parsed.smsRoutes || [...smsRoutesConfig.initialData]
-        );
-        this.data.set(
-          "routes",
-          parsed.routes || [...routesConfig.initialData]
-        );
-        this.data.set(
-          "languages",
-          parsed.languages || [...languagesConfig.initialData]
-        );
-        this.data.set(
-          "characterSets",
-          parsed.characterSets || [...characterSetsConfig.initialData]
-        );
-      } else {
-        // Première fois, utiliser les données par défaut
-        this.data.set("lineOfBusiness", [...lineOfBusinessConfig.initialData]);
-        this.data.set("departments", [...departmentsConfig.initialData]);
-        this.data.set("campaignObjectives", [
-          ...campaignObjectivesConfig.initialData,
-        ]);
-        this.data.set("offerTypes", [...offerTypesConfig.initialData]);
-        this.data.set("campaignTypes", [...campaignTypesConfig.initialData]);
-        this.data.set("segmentTypes", [...segmentTypesConfig.initialData]);
-        this.data.set("productTypes", [...productTypesConfig.initialData]);
-        this.data.set("comboTypes", [...comboTypesConfig.initialData]);
-        this.data.set("trackingSources", [
-          ...trackingSourcesConfig.initialData,
-        ]);
-        this.data.set("creativeTemplates", [
-          ...creativeTemplatesConfig.initialData,
-        ]);
-        this.data.set("rewardTypes", [...rewardTypesConfig.initialData]);
-        this.data.set("communicationChannels", [
-          ...communicationChannelsConfig.initialData,
-        ]);
-        this.data.set("senderIds", [...senderIdsConfig.initialData]);
-        this.data.set("smsRoutes", [...smsRoutesConfig.initialData]);
-        this.data.set("routes", [...routesConfig.initialData]);
-        this.data.set("languages", [...languagesConfig.initialData]);
-        this.data.set("characterSets", [...characterSetsConfig.initialData]);
-        this.saveToStorage();
-      }
-    } catch (error) {
-      console.error("Error loading configuration data from storage:", error);
-      // En cas d'erreur, utiliser les données par défaut
-      this.data.set("lineOfBusiness", [...lineOfBusinessConfig.initialData]);
-      this.data.set("departments", [...departmentsConfig.initialData]);
-      this.data.set("campaignObjectives", [
-        ...campaignObjectivesConfig.initialData,
-      ]);
-      this.data.set("offerTypes", [...offerTypesConfig.initialData]);
-      this.data.set("campaignTypes", [...campaignTypesConfig.initialData]);
-      this.data.set("segmentTypes", [...segmentTypesConfig.initialData]);
-      this.data.set("productTypes", [...productTypesConfig.initialData]);
-      this.data.set("comboTypes", [...comboTypesConfig.initialData]);
-      this.data.set("trackingSources", [...trackingSourcesConfig.initialData]);
-      this.data.set("creativeTemplates", [
-        ...creativeTemplatesConfig.initialData,
-      ]);
-      this.data.set("rewardTypes", [...rewardTypesConfig.initialData]);
-      this.data.set("communicationChannels", [
-        ...communicationChannelsConfig.initialData,
-      ]);
-      this.data.set("senderIds", [...senderIdsConfig.initialData]);
-      this.data.set("smsRoutes", [...smsRoutesConfig.initialData]);
-      this.data.set("routes", [...routesConfig.initialData]);
-      this.data.set("languages", [...languagesConfig.initialData]);
-      this.data.set("characterSets", [...characterSetsConfig.initialData]);
-    }
-  }
-
-  // Sauvegarder les données dans localStorage
-  private saveToStorage(): void {
-    try {
-      const dataToSave = {
-        lineOfBusiness: this.data.get("lineOfBusiness") || [],
-        departments: this.data.get("departments") || [],
-        campaignObjectives: this.data.get("campaignObjectives") || [],
-        offerTypes: this.data.get("offerTypes") || [],
-        campaignTypes: this.data.get("campaignTypes") || [],
-        segmentTypes: this.data.get("segmentTypes") || [],
-        productTypes: this.data.get("productTypes") || [],
-        comboTypes: this.data.get("comboTypes") || [],
-        trackingSources: this.data.get("trackingSources") || [],
-        creativeTemplates: this.data.get("creativeTemplates") || [],
-        rewardTypes: this.data.get("rewardTypes") || [],
-        communicationChannels: this.data.get("communicationChannels") || [],
-        senderIds: this.data.get("senderIds") || [],
-        smsRoutes: this.data.get("smsRoutes") || [],
-        routes: this.data.get("routes") || [],
-        languages: this.data.get("languages") || [],
-        characterSets: this.data.get("characterSets") || [],
-      };
-      localStorage.setItem("configurationData", JSON.stringify(dataToSave));
-    } catch (error) {
-      console.error("Error saving configuration data to storage:", error);
-    }
+  // Initialize with default configuration data
+  private initializeDefaultData(): void {
+    this.data.set("lineOfBusiness", [...lineOfBusinessConfig.initialData]);
+    this.data.set("departments", [...departmentsConfig.initialData]);
+    this.data.set("campaignObjectives", [
+      ...campaignObjectivesConfig.initialData,
+    ]);
+    this.data.set("offerTypes", [...offerTypesConfig.initialData]);
+    this.data.set("campaignTypes", [...campaignTypesConfig.initialData]);
+    this.data.set("segmentTypes", [...segmentTypesConfig.initialData]);
+    this.data.set("productTypes", [...productTypesConfig.initialData]);
+    this.data.set("comboTypes", [...comboTypesConfig.initialData]);
+    this.data.set("trackingSources", [
+      ...trackingSourcesConfig.initialData,
+    ]);
+    this.data.set("creativeTemplates", [
+      ...creativeTemplatesConfig.initialData,
+    ]);
+    this.data.set("rewardTypes", [...rewardTypesConfig.initialData]);
+    this.data.set("communicationChannels", [
+      ...communicationChannelsConfig.initialData,
+    ]);
+    this.data.set("senderIds", [...senderIdsConfig.initialData]);
+    this.data.set("smsRoutes", [...smsRoutesConfig.initialData]);
+    this.data.set("routes", [...routesConfig.initialData]);
+    this.data.set("languages", [...languagesConfig.initialData]);
+    this.data.set("characterSets", [...characterSetsConfig.initialData]);
   }
 
   // Obtenir les données pour un type de configuration
@@ -242,7 +109,6 @@ class ConfigurationDataService {
   // Mettre à jour les données pour un type de configuration
   setData(type: ConfigurationType, newData: ConfigurationItem[]): void {
     this.data.set(type, [...newData]);
-    this.saveToStorage();
     this.notifyListeners(type, newData);
   }
 

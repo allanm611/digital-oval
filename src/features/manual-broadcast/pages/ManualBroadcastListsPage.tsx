@@ -5,6 +5,7 @@ import {
   FileText,
   Trash2,
   Eye,
+  Edit,
   CheckCircle,
   XCircle,
   Plus,
@@ -46,7 +47,7 @@ export default function ManualBroadcastListsPage() {
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
     page: 1,
-    limit: 100,
+    limit: 15,
     total: 0,
   });
 
@@ -58,10 +59,10 @@ export default function ManualBroadcastListsPage() {
 
   const loadInitialData = useCallback(async () => {
     try {
-      // Load all executions (broadcasts) from the communications API
+      // Load executions (broadcasts) from the communications API
       const response = await communicationService.getExecutions({
         page: 1,
-        limit: 100,
+        limit: 15,
       });
 
       if (response.success && response.data) {
@@ -199,7 +200,8 @@ export default function ManualBroadcastListsPage() {
   };
 
   const handleViewDetails = (broadcast: ManualBroadcast) => {
-    navigate(`/dashboard/manual-communications/${broadcast.execution_id}`);
+    // Navigate to edit/creation flow with execution ID to preload data
+    navigate(`/dashboard/manual-communications/${broadcast.execution_id}/edit`);
   };
 
   const handleDelete = (broadcast: ManualBroadcast) => {
@@ -267,7 +269,7 @@ export default function ManualBroadcastListsPage() {
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             title="Go back"
           >
-            <ArrowLeft className="h-5 w-5 text-gray-600" />
+            <ArrowLeft className="h-5 w-5 text-black" />
           </button>
           <div>
             <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
@@ -306,7 +308,7 @@ export default function ManualBroadcastListsPage() {
                   className="h-5 w-5"
                   style={{ color: color.primary.accent }}
                 />
-                <p className="text-sm font-medium text-gray-600">{stat.name}</p>
+                <p className="text-sm font-medium text-black">{stat.name}</p>
               </div>
               <p className="mt-2 text-3xl font-bold text-gray-900">
                 {stat.value}
@@ -449,32 +451,32 @@ export default function ManualBroadcastListsPage() {
                         </div>
                       </td>
                       <td
-                        className="px-6 py-4 text-sm text-gray-600 truncate max-w-xs"
+                        className="px-6 py-4 text-sm text-black truncate max-w-xs"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                         title={broadcast.description || ""}
                       >
                         {broadcast.description || "-"}
                       </td>
                       <td
-                        className="px-6 py-4 text-sm text-gray-600"
+                        className="px-6 py-4 text-sm text-black"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
                         {broadcast.channels?.join(", ") || "-"}
                       </td>
                       <td
-                        className="px-6 py-4 text-sm text-gray-600 capitalize"
+                        className="px-6 py-4 text-sm text-black capitalize"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
                         {broadcast.source_type || "-"}
                       </td>
                       <td
-                        className="px-6 py-4 text-sm text-gray-600 capitalize"
+                        className="px-6 py-4 text-sm text-black capitalize"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
                         {broadcast.schedule_type || "-"}
                       </td>
                       <td
-                        className="px-6 py-4 text-sm text-gray-600 hidden md:table-cell"
+                        className="px-6 py-4 text-sm text-black hidden md:table-cell"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
                         {new Date(broadcast.created_at).toLocaleDateString()}
@@ -486,11 +488,20 @@ export default function ManualBroadcastListsPage() {
                         <div className="flex items-center justify-center space-x-2">
                           {broadcast.execution_id && (
                             <button
-                              onClick={() => handleViewDetails(broadcast)}
-                              className={`p-1 ${tw.rounded} text-gray-600 hover:text-gray-800 transition-colors cursor-pointer`}
-                              title="View Details"
+                              onClick={() => navigate(`/dashboard/manual-communications/${broadcast.execution_id}`)}
+                              className={`p-1 ${tw.rounded} text-black hover:text-gray-800 transition-colors cursor-pointer`}
+                              title="View"
                             >
                               <Eye className="w-4 h-4" />
+                            </button>
+                          )}
+                          {broadcast.execution_id && (
+                            <button
+                              onClick={() => handleViewDetails(broadcast)}
+                              className={`p-1 ${tw.rounded} text-black hover:text-gray-800 transition-colors cursor-pointer`}
+                              title="Edit"
+                            >
+                              <Edit className="w-4 h-4" />
                             </button>
                           )}
                           <button

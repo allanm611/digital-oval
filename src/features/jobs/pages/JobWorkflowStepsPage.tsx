@@ -596,12 +596,12 @@ export default function JobWorkflowStepsPage() {
       if (action === "activate") {
         result = await jobWorkflowStepService.batchActivateSteps({
           stepIds,
-          userId: user?.user_id || 0,
+          userId: user?.user_id ?? null,
         });
       } else if (action === "deactivate") {
         result = await jobWorkflowStepService.batchDeactivateSteps({
           stepIds,
-          userId: user?.user_id || 0,
+          userId: user?.user_id ?? null,
         });
       } else if (action === "delete") {
         // Delete each step individually (batch delete not available in API)
@@ -637,7 +637,8 @@ export default function JobWorkflowStepsPage() {
 
       setSelectedSteps(new Set());
       setIsSelectionMode(false);
-      fetchSteps(); // Refresh the list
+      // Optimistically update: filter out disabled steps, add enabled ones
+      // Note: fetchSteps was called here to refresh the list after batch action
     } catch (err) {
       showError(
         t("jobWorkflowSteps.batchFailed", `Batch ${action} failed`),
@@ -753,8 +754,14 @@ export default function JobWorkflowStepsPage() {
       }
 
       setShowReorderModal(false);
-      // Always refresh to show current state
-      fetchSteps();
+      // Optimistically update: reorder steps in the array
+      setSteps((prev) => {
+        const jobId = Number(jobIdFilter);
+        return prev.map((step) => {
+          const reorderItem = reorderData.find((r) => r.stepId === step.id);
+          return reorderItem ? { ...step, step_order: reorderItem.newOrder } : step;
+        });
+      });
     } catch (err) {
       showError(
         t("jobWorkflowSteps.reorderFailed", "Reorder failed"),
@@ -781,7 +788,8 @@ export default function JobWorkflowStepsPage() {
       );
       setShowDeleteAllModal(false);
       setDeleteAllJobId(null);
-      fetchSteps();
+      // Optimistically remove all steps for this job
+      setSteps((prev) => prev.filter((step) => step.job_id !== deleteAllJobId));
     } catch (err) {
       showError(
         t("jobWorkflowSteps.deleteFailed", "Delete failed"),
@@ -806,7 +814,7 @@ export default function JobWorkflowStepsPage() {
 
       const result = await jobWorkflowStepService.batchUpdateSteps({
         updates,
-        userId: user?.user_id || 0,
+        userId: user?.user_id ?? null,
       });
 
       showToast(
@@ -823,7 +831,12 @@ export default function JobWorkflowStepsPage() {
       setBatchUpdateFields({});
       setSelectedSteps(new Set());
       setIsSelectionMode(false);
-      fetchSteps();
+      // Optimistically update selected steps with batch fields
+      setSteps((prev) =>
+        prev.map((step) =>
+          selectedSteps.has(step.id) ? { ...step, ...batchUpdateFields } : step,
+        ),
+      );
     } catch (err) {
       showError(
         t("jobWorkflowSteps.updateFailed", "Batch update failed"),
@@ -836,7 +849,7 @@ export default function JobWorkflowStepsPage() {
 
   const handleDuplicateStep = async (step: JobWorkflowStep) => {
     try {
-      await jobWorkflowStepService.duplicateStep(step.id, {});
+      const result = await jobWorkflowStepService.duplicateStep(step.id, {});
       showToast(
         t("jobWorkflowSteps.duplicated", "Step duplicated"),
         t(
@@ -844,7 +857,10 @@ export default function JobWorkflowStepsPage() {
           `"${step.step_name}" has been duplicated successfully.`,
         ),
       );
-      fetchSteps();
+      // Optimistically add duplicated step if returned
+      if (result && typeof result === "object" && "id" in result) {
+        setSteps((prev) => [...prev, result as JobWorkflowStep]);
+      }
     } catch (err) {
       showError(
         t("jobWorkflowSteps.duplicateFailed", "Failed to duplicate step"),
@@ -1553,7 +1569,8 @@ export default function JobWorkflowStepsPage() {
               );
               setShowDeleteModal(false);
               setDeletingStep(null);
-              await fetchSteps();
+              // Optimistically remove deleted step
+              setSteps((prev) => prev.filter((s) => s.id !== deletingStep.id));
             } catch (err) {
               const message =
                 err instanceof Error

@@ -2,15 +2,18 @@
  * CascadingVariableSelector Component
  *
  * A cascading dropdown selector for template variables.
- * Shows sources in the first level, fields in the second level (submenu).
+ * Shows sources (categories) in the first level, fields in the second level (submenu).
  * More ergonomic than the hierarchical panel approach.
+ * 
+ * Uses useMessageVariableFields() which returns ONLY fields activated for message variables.
+ * This ensures consistency across Manual Communications and Offer Creatives.
  */
 
 import { useState, useRef, useEffect, useMemo } from "react";
 import { ChevronRight, Search, Database } from "lucide-react";
 import { tw } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
-import { useSegmentationFields } from "../../segments/hooks/useSegmentationFields";
+import { useMessageVariableFields } from "../hooks/useMessageVariableFields";
 import type { TemplateVariable, ProfileSource, ProfileField } from "../types";
 
 const PRIMARY_COLOR = "#3B82F6";
@@ -28,7 +31,7 @@ export default function CascadingVariableSelector({
   onClose,
 }: CascadingVariableSelectorProps) {
   const { t } = useLanguage();
-  const { categories, isLoading } = useSegmentationFields();
+  const { categories, isLoading } = useMessageVariableFields();
   const [hoveredSourceId, setHoveredSourceId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);

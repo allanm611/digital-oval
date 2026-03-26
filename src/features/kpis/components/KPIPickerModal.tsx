@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { X, Search } from "lucide-react";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { type KPI } from "../types/kpi";
@@ -82,9 +81,9 @@ export default function KPIPickerModal({
           </div>
           <button
             onClick={onClose}
-            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
+            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors text-gray-500 font-medium`}
           >
-            <X className="w-5 h-5 text-gray-500" />
+            ✕
           </button>
         </div>
 
@@ -94,13 +93,12 @@ export default function KPIPickerModal({
           <div className={`flex gap-3 ${hasSubcategories ? "flex-row" : "flex-row"}`}>
             {/* Search */}
             <div className={`relative ${hasSubcategories ? "flex-1" : "w-full"}`}>
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
                 placeholder={searchPlaceholder || `Search ${title.toLowerCase()}...`}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className={`w-full pl-10 pr-4 py-3 border text-sm ${tw.rounded} focus:outline-none focus:ring-2`}
+                className={`w-full px-4 py-3 border text-sm ${tw.rounded} focus:outline-none focus:ring-2`}
                 style={{
                   borderColor: color.border.default,
                 }}
@@ -145,10 +143,10 @@ export default function KPIPickerModal({
                 >
                   <div className="flex items-start gap-3">
                     <div className="flex-1">
-                      <h3 className={`text-sm font-medium ${tw.textPrimary}`}>
+                      <h3 className="text-sm font-medium text-black">
                         {kpi.name}
                       </h3>
-                      <p className={`text-xs ${tw.textSecondary} mt-1.5`}>
+                      <p className="text-sm text-black mt-1.5">
                         {kpi.description}
                       </p>
                     </div>

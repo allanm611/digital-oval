@@ -1,6 +1,6 @@
 import { useLanguage } from "../../../contexts/LanguageContext";
 import TypeConfigurationPage from "../../../shared/components/TypeConfigurationPage";
-import { comboTypesConfig } from "../../../shared/configs/configurationPageConfigs";
+import { comboTypesConfig } from "../../configurations/configs/configurationPageConfigs";
 
 export default function ComboTypesPage() {
   const { t } = useLanguage();

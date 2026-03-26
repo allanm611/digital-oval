@@ -66,25 +66,111 @@ const CONDITIONS = [
   { value: "is_any_of", label: "Is any of" },
 ];
 
+// Pre-created Tracking Sources from Configuration
+const PRE_CREATED_TRACKING_SOURCES = [
+  {
+    id: "pre_1",
+    name: "Recharge Tracking",
+    type: "recharge",
+    rules: [
+      {
+        id: "rule_1",
+        name: "Amount > 1000",
+        priority: 1,
+        parameter: "Amount",
+        condition: "greater_than",
+        value: "1000",
+        enabled: true,
+      },
+    ],
+  },
+  {
+    id: "pre_2",
+    name: "Usage Metric Tracking",
+    type: "usage_metric",
+    rules: [
+      {
+        id: "rule_2",
+        name: "Data > 500MB",
+        priority: 1,
+        parameter: "Usage_Volume",
+        condition: "greater_than",
+        value: "500",
+        enabled: true,
+      },
+      {
+        id: "rule_3",
+        name: "Within 7 days",
+        priority: 2,
+        parameter: "Time_Period",
+        condition: "less_than",
+        value: "7",
+        enabled: true,
+      },
+    ],
+  },
+  {
+    id: "pre_3",
+    name: "Engagement Tracking",
+    type: "engagement",
+    rules: [
+      {
+        id: "rule_4",
+        name: "Click Rate",
+        priority: 1,
+        parameter: "Frequency",
+        condition: "greater_than",
+        value: "0",
+        enabled: true,
+      },
+    ],
+  },
+];
+
 export default function OfferTrackingStep({
-  trackingSources,
+  trackingSources = [],
   onTrackingSourcesChange,
 }: OfferTrackingStepProps) {
   const [selectedSource, setSelectedSource] = useState<string | null>(
-    trackingSources.length > 0 ? trackingSources[0].id : null
+    trackingSources && trackingSources.length > 0 ? trackingSources[0].id : null
   );
   const [showRuleModal, setShowRuleModal] = useState(false);
   const [editingRule, setEditingRule] = useState<TrackingRule | null>(null);
 
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
-  const addTrackingSource = () => {
+  const addTrackingSource = (sourceId: string) => {
+    // If "custom" is selected, create an empty source
+    if (sourceId === "custom") {
+      const newSource: TrackingSource = {
+        id: generateId(),
+        name: "",
+        type: "" as any,
+        enabled: true,
+        rules: [],
+      };
+      const updatedSources = [...trackingSources, newSource];
+      onTrackingSourcesChange(updatedSources);
+      setSelectedSource(newSource.id);
+      return;
+    }
+
+    // Otherwise, load pre-created source
+    const preCreated = PRE_CREATED_TRACKING_SOURCES.find(
+      (s) => s.id === sourceId
+    );
+    if (!preCreated) return;
+
+    // Create a copy with new ID
     const newSource: TrackingSource = {
       id: generateId(),
-      name: "New Tracking Source",
-      type: "recharge",
+      name: preCreated.name,
+      type: preCreated.type,
       enabled: true,
-      rules: [],
+      rules: preCreated.rules.map((rule) => ({
+        ...rule,
+        id: generateId(),
+      })),
     };
 
     const updatedSources = [...trackingSources, newSource];
@@ -179,9 +265,28 @@ export default function OfferTrackingStep({
             performance
           </p>
           <button
-            onClick={addTrackingSource}
-            className={`inline-flex items-center px-4 py-2 text-sm text-white ${tw.rounded} font-medium`}
+            onClick={() => {
+              const newSource: TrackingSource = {
+                id: generateId(),
+                name: "",
+                type: "recharge",
+                enabled: true,
+                rules: [],
+              };
+              const updatedSources = [...trackingSources, newSource];
+              onTrackingSourcesChange(updatedSources);
+              setSelectedSource(newSource.id);
+            }}
+            className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded} transition-colors`}
             style={{ backgroundColor: color.primary.action }}
+            onMouseEnter={(e) => {
+              (e.target as HTMLButtonElement).style.backgroundColor =
+                color.primary.hover;
+            }}
+            onMouseLeave={(e) => {
+              (e.target as HTMLButtonElement).style.backgroundColor =
+                color.primary.action;
+            }}
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Tracking Source
@@ -192,19 +297,33 @@ export default function OfferTrackingStep({
           {/* Tracking Sources List */}
           <div className="lg:col-span-1">
             <div className={`bg-white ${tw.rounded} border border-gray-200 p-4`}>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-900">
-                  Tracking Sources
-                </h3>
-                <button
-                  onClick={addTrackingSource}
-                  className={`inline-flex items-center px-4 py-2 text-sm text-white ${tw.rounded} font-medium`}
-                  style={{ backgroundColor: color.primary.action }}
-                >
-                  <Plus className="w-5 h-5 mr-1.5" />
-                  Add Source
-                </button>
-              </div>
+              <button
+                onClick={() => {
+                  const newSource: TrackingSource = {
+                    id: generateId(),
+                    name: "",
+                    type: "" as any,
+                    enabled: true,
+                    rules: [],
+                  };
+                  const updatedSources = [...trackingSources, newSource];
+                  onTrackingSourcesChange(updatedSources);
+                  setSelectedSource(newSource.id);
+                }}
+                className={`inline-flex items-center px-3 py-1 text-sm text-white ${tw.rounded} transition-colors whitespace-nowrap mb-4`}
+                style={{ backgroundColor: color.primary.action }}
+                onMouseEnter={(e) => {
+                  (e.target as HTMLButtonElement).style.backgroundColor =
+                    color.primary.hover;
+                }}
+                onMouseLeave={(e) => {
+                  (e.target as HTMLButtonElement).style.backgroundColor =
+                    color.primary.action;
+                }}
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                Add Source
+              </button>
 
               <div className="space-y-2">
                 {trackingSources.map((source) => (
@@ -234,7 +353,7 @@ export default function OfferTrackingStep({
                           <div className="font-medium text-sm text-gray-900">
                             {source.name}
                           </div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-sm text-gray-500">
                             {
                               TRACKING_TYPES.find(
                                 (t) => t.value === source.type
@@ -253,7 +372,7 @@ export default function OfferTrackingStep({
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
-                    <div className="mt-2 text-xs text-gray-600">
+                    <div className="mt-2 text-sm text-gray-600">
                       {source.rules.length} rule
                       {source.rules.length !== 1 ? "s" : ""}
                     </div>
@@ -268,6 +387,49 @@ export default function OfferTrackingStep({
             {selectedSourceData ? (
               <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 w-full`}>
                 <div className="space-y-6">
+                  {/* Source Selection Dropdown */}
+                  <div>
+                    <HeadlessSelect
+                      options={[
+                        { value: "", label: "Select a tracking source..." },
+                        { value: "custom", label: "Create Custom" },
+                        ...PRE_CREATED_TRACKING_SOURCES.map((source) => ({
+                          value: source.id,
+                          label: source.name,
+                        })),
+                      ]}
+                      value=""
+                      onChange={(value) => {
+                        if (value && selectedSourceData) {
+                          if (value === "custom") {
+                            // Clear current source for custom creation
+                            updateTrackingSource(selectedSourceData.id, {
+                              name: "",
+                              rules: [],
+                            });
+                          } else {
+                            // Load pre-created source into current card
+                            const preCreated = PRE_CREATED_TRACKING_SOURCES.find(
+                              (s) => s.id === value
+                            );
+                            if (preCreated) {
+                              updateTrackingSource(selectedSourceData.id, {
+                                name: preCreated.name,
+                                type: preCreated.type,
+                                rules: preCreated.rules.map((rule) => ({
+                                  ...rule,
+                                  id: generateId(),
+                                })),
+                              });
+                            }
+                          }
+                        }
+                      }}
+                      placeholder="Select a tracking source..."
+                      className="w-full text-sm"
+                    />
+                  </div>
+
                   {/* Source Settings */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -282,7 +444,7 @@ export default function OfferTrackingStep({
                             name: e.target.value,
                           })
                         }
-                        className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
+                        className={`w-full px-4 py-3 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
                       />
                     </div>
 
@@ -305,6 +467,7 @@ export default function OfferTrackingStep({
                           })
                         }
                         placeholder="Select tracking type"
+                        className="w-full text-sm"
                       />
                     </div>
                   </div>
@@ -332,7 +495,7 @@ export default function OfferTrackingStep({
                   {/* Rules Section */}
                   <div>
                     <div className="flex items-center justify-between mb-4">
-                      <h4 className="font-medium text-gray-900">
+                      <h4 className="font-medium text-sm text-gray-900">
                         Tracking Rules
                       </h4>
                       <button
@@ -482,7 +645,7 @@ export default function OfferTrackingStep({
                     onChange={(e) =>
                       setEditingRule({ ...editingRule, name: e.target.value })
                     }
-                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
+                    className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
                   />
                 </div>
 
@@ -500,7 +663,7 @@ export default function OfferTrackingStep({
                         priority: parseInt(e.target.value) || 1,
                       })
                     }
-                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
+                    className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
                   />
                 </div>
 
@@ -521,6 +684,7 @@ export default function OfferTrackingStep({
                       })
                     }
                     placeholder="Select parameter"
+                    className="w-full text-sm"
                     zIndex={zIndex.popover}
                   />
                 </div>
@@ -547,6 +711,7 @@ export default function OfferTrackingStep({
                       })
                     }
                     placeholder="Select condition"
+                    className="w-full text-sm"
                     zIndex={zIndex.popover}
                   />
                 </div>
@@ -562,7 +727,7 @@ export default function OfferTrackingStep({
                       setEditingRule({ ...editingRule, value: e.target.value })
                     }
                     placeholder="Enter value..."
-                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
+                    className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
                   />
                 </div>
 

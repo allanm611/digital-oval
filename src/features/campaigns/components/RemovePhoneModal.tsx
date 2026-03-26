@@ -1,18 +1,26 @@
-import { useState, useEffect, useCallback } from "react";
-import { Search, Eye, ArrowLeft, AlertCircle } from "lucide-react";
-import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import RegularModal from "../../../shared/components/ui/RegularModal";
+import { useState, useEffect, useMemo } from "react";
+import { Search, ArrowLeft, AlertCircle, Check, X } from "lucide-react";
+import { createPortal } from "react-dom";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import {
   customerSubscriptions,
-  searchCustomers as searchCustomersUtil,
 } from "../../customers360/utils/customerDataService";
 import type { CustomerSubscriptionRecord } from "../../customers360/types/customerSubscription";
 import {
   getSubscriptionDisplayName,
   formatMsisdn,
 } from "../../customers360/utils/customerSubscriptionHelpers";
+
+interface DNDSubscription {
+  id: number;
+  customer_id: number;
+  customer_name?: string;
+  customer_email?: string;
+  customer_phone?: string;
+  dnd_type: "promotional" | "transactional" | "marketing" | "service" | "other";
+  status: "active" | "removed";
+}
 
 interface RemovePhoneModalProps {
   isOpen: boolean;
@@ -24,6 +32,7 @@ interface RemovePhoneModalProps {
     phone?: string;
     dndType: string;
   }) => void;
+  dndSubscriptions: DNDSubscription[];
 }
 
 const DND_TYPES = [
@@ -38,13 +47,11 @@ export default function RemovePhoneModal({
   isOpen,
   onClose,
   onRemove,
+  dndSubscriptions,
 }: RemovePhoneModalProps) {
   const [step, setStep] = useState<"search" | "selectType">("search");
   const [searchTerm, setSearchTerm] = useState("");
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState<
-    CustomerSubscriptionRecord[]
-  >([]);
+  const [hoveredCustomerId, setHoveredCustomerId] = useState<number | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<{
     id: number;
     name?: string;
@@ -53,42 +60,45 @@ export default function RemovePhoneModal({
   } | null>(null);
   const [selectedDndType, setSelectedDndType] = useState("promotional");
 
-  const searchCustomers = useCallback(
-    (term: string, customers: CustomerSubscriptionRecord[]) => {
-      return searchCustomersUtil(term, customers);
-    },
-    [],
-  );
+  // Get active DND customers from subscription data
+  const activeDndCustomerIds = useMemo(() => {
+    return new Set(
+      dndSubscriptions
+        .filter((sub) => sub.status === "active")
+        .map((sub) => sub.customer_id)
+    );
+  }, [dndSubscriptions]);
 
-  // Debounced search
-  useEffect(() => {
-    if (!isOpen) {
-      setSearchTerm("");
-      setSearchResults([]);
-      setStep("search");
-      setSelectedCustomer(null);
-      setSelectedDndType("promotional");
-      return;
-    }
+  // Get active DND customers from subscription records
+  const activeDndCustomers = useMemo(() => {
+    return customerSubscriptions.filter((customer) =>
+      activeDndCustomerIds.has(customer.customerId)
+    );
+  }, [activeDndCustomerIds]);
 
+  // Filter customers based on search term
+  const filteredCustomers = useMemo(() => {
     if (!searchTerm.trim()) {
-      setSearchResults([]);
-      return;
+      return activeDndCustomers;
     }
 
-    setIsSearching(true);
-    const debounceTimer = setTimeout(() => {
-      const results = searchCustomers(searchTerm, customerSubscriptions);
-      // Limit to top 50 results for performance
-      setSearchResults(results.slice(0, 50));
-      setIsSearching(false);
-    }, 400); // 400ms debounce
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    return activeDndCustomers.filter((customer) => {
+      const name = getSubscriptionDisplayName(
+        customer,
+        `Customer ${customer.customerId}`
+      );
+      const phone = customer.msisdn ? formatMsisdn(customer.msisdn) : "";
+      const email = customer.email || "";
 
-    return () => {
-      clearTimeout(debounceTimer);
-      setIsSearching(false);
-    };
-  }, [searchTerm, isOpen, searchCustomers]);
+      return (
+        name.toLowerCase().includes(lowerSearchTerm) ||
+        phone.toLowerCase().includes(lowerSearchTerm) ||
+        email.toLowerCase().includes(lowerSearchTerm) ||
+        customer.customerId.toString().includes(lowerSearchTerm)
+      );
+    });
+  }, [searchTerm, activeDndCustomers]);
 
   const handleSelectCustomer = (customer: CustomerSubscriptionRecord) => {
     const name = getSubscriptionDisplayName(
@@ -114,7 +124,6 @@ export default function RemovePhoneModal({
       });
       // Reset state
       setSearchTerm("");
-      setSearchResults([]);
       setStep("search");
       setSelectedCustomer(null);
       setSelectedDndType("promotional");
@@ -129,221 +138,388 @@ export default function RemovePhoneModal({
 
   const handleClose = () => {
     setSearchTerm("");
-    setSearchResults([]);
     setStep("search");
     setSelectedCustomer(null);
     setSelectedDndType("promotional");
     onClose();
   };
 
-  return (
-    <RegularModal
-      isOpen={isOpen}
-      onClose={handleClose}
-      title={
-        step === "search"
-          ? "Remove Phone from DND"
-          : "Select DND Type to Remove"
-      }
-      size="xl"
-    >
-      <div className="space-y-4">
-        {/* STEP 1: SEARCH FOR CUSTOMER */}
-        {step === "search" && (
-          <>
-            {/* Search Input */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Enter phone number, MSISDN, customer name, ID, or email..."
-                className={`w-full ${tw.rounded} border border-gray-300 py-3 pl-10 pr-3 text-sm focus:border-gray-400 focus:outline-none focus:ring-2 focus:ring-[--accent-color]`}
-                style={
-                  {
-                    "--accent-color": `${color.primary.accent}33`,
-                  } as React.CSSProperties
-                }
-                autoFocus
-              />
-            </div>
+  if (!isOpen) return null;
 
-            {/* Helper Text */}
-            <p className="text-xs text-gray-500">
-              Search by phone number, MSISDN, customer name, ID, or email
-              address.
-            </p>
-
-            {/* Search Results */}
-            <div
-              className={`max-h-[400px] overflow-y-auto border border-gray-200 ${tw.rounded}`}
-            >
-              {isSearching ? (
-                <div className="flex flex-col items-center justify-center py-12">
-                  <LoadingSpinner variant="modern" size="md" />
-                  <p className={`${tw.textMuted} mt-3 text-sm`}>
-                    Searching customers...
+  return createPortal(
+    <>
+      <div
+        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+        style={{
+          zIndex: zIndex.modal,
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: "100vw",
+          height: "100vh",
+        }}
+        onClick={onClose}
+      >
+        <div
+          className={`bg-white ${tw.rounded} w-full max-w-4xl max-h-[90vh] flex flex-col`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* STEP 1: SELECT CUSTOMER FROM DND LIST */}
+          {step === "search" && (
+            <>
+              {/* Header */}
+              <div
+                className="flex items-center justify-between p-6 border-b flex-shrink-0"
+                style={{ borderColor: color.border.default }}
+              >
+                <div>
+                  <h2 className={`text-xl font-semibold ${tw.textPrimary}`}>
+                    Remove Phone from DND
+                  </h2>
+                  <p className={`text-sm ${tw.textSecondary} mt-1`}>
+                    Select a customer to remove from DND restrictions
                   </p>
                 </div>
-              ) : searchTerm.trim() && searchResults.length === 0 ? (
-                <div className="px-6 py-12 text-center">
-                  <p className="text-sm text-gray-500">
-                    No customers found matching "{searchTerm}"
-                  </p>
-                  <p className="text-xs text-gray-400 mt-2">
-                    Try a different search term or check your spelling
-                  </p>
+                <button
+                  onClick={handleClose}
+                  className="p-2 transition-colors"
+                  style={{ color: color.text.secondary }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor =
+                      color.interactive.hover;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "transparent";
+                  }}
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Search */}
+              <div className="px-6 pt-6 pb-4 flex-shrink-0">
+                <div className="relative">
+                  <Search
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5"
+                    style={{ color: color.text.muted }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Search by name, phone, email, or customer ID..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className={`w-full pl-10 pr-4 py-2 border ${tw.rounded} focus:outline-none focus:ring-2 text-sm`}
+                    style={{
+                      borderColor: color.border.default,
+                      color: color.text.primary,
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = color.primary.accent;
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = color.border.default;
+                    }}
+                    autoFocus
+                  />
                 </div>
-              ) : searchTerm.trim() && searchResults.length > 0 ? (
-                <div className="divide-y divide-gray-200">
-                  {searchResults.length > 50 && (
-                    <div className="px-4 py-2 bg-yellow-50 border-b border-yellow-200">
-                      <p className="text-xs text-yellow-800">
-                        Showing top 50 results. Use filters to narrow down your
-                        search.
-                      </p>
-                    </div>
-                  )}
-                  {searchResults.map((customer) => {
-                    const name = getSubscriptionDisplayName(
-                      customer,
-                      `Customer ${customer.customerId}`,
-                    );
-                    return (
-                      <button
-                        key={`${customer.customerId}-${customer.subscriptionId}`}
-                        onClick={() => handleSelectCustomer(customer)}
-                        className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors focus:outline-none focus:bg-gray-50"
+              </div>
+
+              {/* Customers Table */}
+              <div className="flex-1 overflow-y-auto px-6">
+                {filteredCustomers.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Search
+                      className="w-12 h-12 text-gray-300 mx-auto mb-4"
+                      style={{ color: color.text.muted }}
+                    />
+                    <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
+                      {searchTerm.trim()
+                        ? "No customers found"
+                        : "No DND customers"}
+                    </h3>
+                    <p className={tw.textSecondary}>
+                      {searchTerm.trim()
+                        ? "Try adjusting your search criteria"
+                        : "No customers are currently in DND"}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead
+                        className="sticky top-0 z-10"
+                        style={{ backgroundColor: color.surface.tableHeader }}
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-gray-900 truncate">
-                              {name}
-                            </p>
-                            <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
-                              <span>ID: {customer.customerId}</span>
-                              {customer.msisdn && (
-                                <span>
-                                  MSISDN: {formatMsisdn(customer.msisdn)}
-                                </span>
-                              )}
-                              {customer.email && <span>{customer.email}</span>}
-                            </div>
-                          </div>
-                          <Eye className="h-4 w-4 text-gray-400 ml-2 flex-shrink-0" />
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="px-6 py-12 text-center">
-                  <Search className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                  <p className="text-sm text-gray-500">
-                    Start typing to search for customers
-                  </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    You can search by phone number, MSISDN, name, ID, or email
-                  </p>
-                </div>
-              )}
-            </div>
-          </>
-        )}
+                        <tr>
+                          <th
+                            className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider w-20"
+                            style={{ color: color.text.secondary }}
+                          >
+                            Select
+                          </th>
+                          <th
+                            className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider"
+                            style={{ color: color.text.secondary }}
+                          >
+                            Customer Name
+                          </th>
+                          <th
+                            className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider w-40"
+                            style={{ color: color.text.secondary }}
+                          >
+                            Phone
+                          </th>
+                          <th
+                            className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider flex-1"
+                            style={{ color: color.text.secondary }}
+                          >
+                            Email
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody
+                        className="divide-y"
+                        style={{ borderColor: color.border.muted }}
+                      >
+                        {filteredCustomers.map((customer) => {
+                          const name = getSubscriptionDisplayName(
+                            customer,
+                            `Customer ${customer.customerId}`
+                          );
+                          const phone = customer.msisdn
+                            ? formatMsisdn(customer.msisdn)
+                            : "-";
+                          const email = customer.email || "-";
+                          const isHovered =
+                            hoveredCustomerId === customer.customerId;
 
-        {/* STEP 2: SELECT DND TYPE */}
-        {step === "selectType" && selectedCustomer && (
-          <>
-            {/* Customer Summary */}
-            <div
-              className={`p-4 ${tw.rounded} border-2`}
-              style={{
-                backgroundColor: `${color.primary.accent}15`,
-                borderColor: color.primary.accent,
-              }}
-            >
-              <p className="text-sm font-semibold text-gray-900">
-                {selectedCustomer.name || selectedCustomer.phone}
-              </p>
-              <div className="mt-2 space-y-1 text-xs text-gray-600">
-                {selectedCustomer.phone && (
-                  <p>Phone: {selectedCustomer.phone}</p>
-                )}
-                {selectedCustomer.email && (
-                  <p>Email: {selectedCustomer.email}</p>
+                          return (
+                            <tr
+                              key={`${customer.customerId}-${customer.subscriptionId}`}
+                              onClick={() => handleSelectCustomer(customer)}
+                              onMouseEnter={() =>
+                                setHoveredCustomerId(customer.customerId)
+                              }
+                              onMouseLeave={() => setHoveredCustomerId(null)}
+                              className="cursor-pointer transition-colors"
+                              style={{
+                                backgroundColor: isHovered
+                                  ? color.interactive.hover
+                                  : "white",
+                              }}
+                            >
+                              <td className="px-4 py-4">
+                                <div className="flex items-center justify-center">
+                                  <div
+                                    className="w-5 h-5 rounded border-2"
+                                    style={{
+                                      borderColor: color.border.default,
+                                    }}
+                                  />
+                                </div>
+                              </td>
+                              <td className="px-4 py-4">
+                                <div
+                                  className={`text-sm font-medium ${tw.textPrimary}`}
+                                >
+                                  {name}
+                                </div>
+                                <div
+                                  className={`text-xs ${tw.textSecondary} mt-0.5`}
+                                >
+                                  ID: {customer.customerId}
+                                </div>
+                              </td>
+                              <td className="px-4 py-4 whitespace-nowrap">
+                                <span className={`text-sm ${tw.textPrimary}`}>
+                                  {phone}
+                                </span>
+                              </td>
+                              <td className="px-4 py-4">
+                                <span className={`text-sm ${tw.textSecondary}`}>
+                                  {email}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </div>
-            </div>
 
-            {/* Warning Alert */}
-            <div
-              className={`p-3 ${tw.rounded} bg-orange-50 border border-orange-200 flex gap-2`}
-            >
-              <AlertCircle className="h-4 w-4 text-orange-600 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-orange-800">
-                After removal, this customer will be able to receive{" "}
-                {selectedDndType} messages again.
-              </p>
-            </div>
-
-            {/* DND Type Selector */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Select DND Type to Remove
-              </label>
-              <p className="text-xs text-gray-500 mb-3">
-                Choose which DND restriction to remove for this customer
-              </p>
-              <HeadlessSelect
-                value={selectedDndType}
-                onChange={setSelectedDndType}
-                options={DND_TYPES.map((type) => ({
-                  label: type.label,
-                  value: type.value,
-                }))}
-                placeholder="Select DND type"
-                className="w-full"
-                zIndex={zIndex.popover}
-              />
-            </div>
-
-            {/* Type Description */}
-            <div className={`p-3 ${tw.rounded} bg-gray-50`}>
-              <p className="text-xs text-gray-600">
-                {selectedDndType === "promotional" &&
-                  "Will allow: Marketing and promotional SMS"}
-                {selectedDndType === "transactional" &&
-                  "Will allow: Transaction confirmations and receipts"}
-                {selectedDndType === "marketing" &&
-                  "Will allow: Marketing campaigns"}
-                {selectedDndType === "service" &&
-                  "Will allow: Service-related messages"}
-                {selectedDndType === "other" &&
-                  "Will allow: Other types of messages"}
-              </p>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-3 pt-4">
-              <button
-                onClick={handleBackToSearch}
-                className={`flex-1 px-4 py-2 ${tw.rounded} border border-gray-300 text-gray-700 font-medium text-sm hover:bg-gray-50 transition-colors flex items-center justify-center gap-2`}
+              {/* Footer */}
+              <div
+                className="flex items-center justify-end p-6 border-t flex-shrink-0"
+                style={{ borderColor: color.border.default }}
               >
-                <ArrowLeft className="w-4 h-4" />
-                Back
-              </button>
-              <button
-                onClick={handleConfirmRemove}
-                className={`flex-1 px-4 py-2 ${tw.rounded} text-white font-medium text-sm transition-colors`}
-                style={{ backgroundColor: color.primary.action }}
+                <button
+                  onClick={handleClose}
+                  className={`px-4 py-2 border ${tw.rounded} text-sm font-medium transition-colors`}
+                  style={{
+                    borderColor: color.border.default,
+                    color: color.text.primary,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor =
+                      color.interactive.hover;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "transparent";
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* STEP 2: SELECT DND TYPE */}
+          {step === "selectType" && selectedCustomer && (
+            <>
+              {/* Header */}
+              <div
+                className="flex items-center justify-between p-6 border-b flex-shrink-0"
+                style={{ borderColor: color.border.default }}
               >
-                Remove from DND
-              </button>
-            </div>
-          </>
-        )}
+                <div>
+                  <h2 className={`text-xl font-semibold ${tw.textPrimary}`}>
+                    Select DND Type to Remove
+                  </h2>
+                  <p className={`text-sm ${tw.textSecondary} mt-1`}>
+                    Choose which DND restriction to remove for this customer
+                  </p>
+                </div>
+                <button
+                  onClick={handleClose}
+                  className="p-2 transition-colors"
+                  style={{ color: color.text.secondary }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor =
+                      color.interactive.hover;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "transparent";
+                  }}
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
+                {/* Customer Summary */}
+                <div
+                  className={`p-4 ${tw.rounded} border-2`}
+                  style={{
+                    backgroundColor: `${color.primary.accent}15`,
+                    borderColor: color.primary.accent,
+                  }}
+                >
+                  <p className="text-sm font-semibold" style={{ color: color.text.primary }}>
+                    {selectedCustomer.name || selectedCustomer.phone}
+                  </p>
+                  <div className="mt-2 space-y-1 text-xs" style={{ color: color.text.secondary }}>
+                    {selectedCustomer.phone && (
+                      <p>Phone: {selectedCustomer.phone}</p>
+                    )}
+                    {selectedCustomer.email && (
+                      <p>Email: {selectedCustomer.email}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Warning Alert */}
+                <div
+                  className={`p-3 ${tw.rounded} bg-orange-50 border border-orange-200 flex gap-2`}
+                >
+                  <AlertCircle className="h-4 w-4 text-orange-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-orange-800">
+                    After removal, this customer will be able to receive{" "}
+                    {selectedDndType} messages again.
+                  </p>
+                </div>
+
+                {/* DND Type Selector */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium" style={{ color: color.text.primary }}>
+                    Select DND Type to Remove
+                  </label>
+                  <HeadlessSelect
+                    value={selectedDndType}
+                    onChange={setSelectedDndType}
+                    options={DND_TYPES.map((type) => ({
+                      label: type.label,
+                      value: type.value,
+                    }))}
+                    placeholder="Select DND type"
+                    className="w-full"
+                    zIndex={zIndex.popover}
+                  />
+                </div>
+
+                {/* Type Description */}
+                <div className={`p-3 ${tw.rounded} bg-gray-50`}>
+                  <p className="text-xs" style={{ color: color.text.secondary }}>
+                    {selectedDndType === "promotional" &&
+                      "Will allow: Marketing and promotional SMS"}
+                    {selectedDndType === "transactional" &&
+                      "Will allow: Transaction confirmations and receipts"}
+                    {selectedDndType === "marketing" &&
+                      "Will allow: Marketing campaigns"}
+                    {selectedDndType === "service" &&
+                      "Will allow: Service-related messages"}
+                    {selectedDndType === "other" &&
+                      "Will allow: Other types of messages"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div
+                className="flex items-center justify-end gap-3 p-6 border-t flex-shrink-0"
+                style={{ borderColor: color.border.default }}
+              >
+                <button
+                  onClick={handleBackToSearch}
+                  className={`px-4 py-2 border ${tw.rounded} font-medium text-sm transition-colors flex items-center gap-2`}
+                  style={{
+                    borderColor: color.border.default,
+                    color: color.text.primary,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor =
+                      color.interactive.hover;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "transparent";
+                  }}
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back
+                </button>
+                <button
+                  onClick={handleConfirmRemove}
+                  className={`px-6 py-2 ${tw.rounded} text-white font-medium text-sm transition-colors`}
+                  style={{ backgroundColor: color.primary.action }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.opacity = "0.9";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.opacity = "1";
+                  }}
+                >
+                  Remove from DND
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
-    </RegularModal>
+    </>,
+    document.body,
   );
 }

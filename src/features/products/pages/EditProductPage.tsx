@@ -127,7 +127,9 @@ export default function EditProductPage() {
         unit_value: productData.unit_value ?? 0,
         validity_hours: productData.validity_hours || (productData.validity_days ? productData.validity_days * 24 : undefined),
         combo_data: comboDataFromMetadata,
-        tags: productData.tags,
+        tags: (productData.tags || []).map((tag: any) =>
+          typeof tag === "string" ? tag : (tag?.name || String(tag))
+        ),
       });
 
       // Set selected category IDs for MultiCategorySelector
@@ -267,23 +269,12 @@ export default function EditProductPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 sm:gap-4">
-          <BackButton
-            fallbackTo="/dashboard/products"
-            onClick={navigateBack}
-            style={{ color: color.text.secondary }}
-          />
-          <div>
-            <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-              Edit Product
-            </h1>
-            <p className={`${tw.textSecondary} mt-1 text-sm`}>
-              Update product information
-            </p>
-          </div>
-        </div>
-      </div>
+      <BackButton
+        fallbackTo="/dashboard/products"
+        onClick={navigateBack}
+        showBreadcrumb={true}
+        currentLabel="Edit Product"
+      />
 
       {/* Form */}
       <ProductForm

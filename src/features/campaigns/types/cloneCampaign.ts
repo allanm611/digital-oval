@@ -1,5 +1,5 @@
 export interface CloneCampaignRequest {
-  newName: string; // required, 1-128 chars
+  newName: string;
 }
 
 export interface CloneCampaignResponse {

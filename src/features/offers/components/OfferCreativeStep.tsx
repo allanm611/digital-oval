@@ -32,11 +32,13 @@ import {
   EmailLaptopPreview,
 } from "./CreativePreviewComponents";
 import PreviewPanel from "../../communications/components/PreviewPanel";
+import RichTextEditor from "../../communications/components/RichTextEditor";
 import CascadingVariableSelector from "../../manual-broadcast/components/CascadingVariableSelector";
 import {
   insertVariableAtCursor,
   formatVariablePlaceholder,
-} from "../../manual-broadcast/utils/variableInsertion";
+  validateInsertPosition,
+} from "../../../shared/utils/variableInsertion";
 import type { TemplateVariable } from "../../manual-broadcast/types";
 
 interface LocalOfferCreative extends Omit<OfferCreative, "id" | "offer_id"> {
@@ -515,6 +517,7 @@ export default function OfferCreativeStep({
   const [showVariableSelector, setShowVariableSelector] = useState(false);
   const [activeField, setActiveField] = useState<ActiveField>("body");
   const [cursorPosition, setCursorPosition] = useState<number>(0);
+  const [variableError, setVariableError] = useState<string>("");
   const [selectedVariables, setSelectedVariables] = useState<
     TemplateVariable[]
   >([]);
@@ -703,12 +706,37 @@ export default function OfferCreativeStep({
 
     const isRichText = isRichTextMap[selectedCreativeData.id] || false;
 
+    // Get actual cursor position from DOM element
+    let actualCursorPosition = cursorPosition;
+    if (activeField === "title" && titleInputRef.current) {
+      actualCursorPosition = titleInputRef.current.selectionStart || 0;
+    } else if (activeField === "body" && bodyTextareaRef.current) {
+      actualCursorPosition = bodyTextareaRef.current.selectionStart || 0;
+    }
+
     if (activeField === "title") {
+      // Validate cursor position before insertion
+      const positionError = validateInsertPosition(
+        selectedCreativeData.title || "",
+        actualCursorPosition,
+      );
+      if (positionError) {
+        setVariableError(positionError);
+        return;
+      }
+
+      setVariableError(""); // Clear any previous errors
       const result = insertVariableAtCursor(
         selectedCreativeData.title || "",
-        cursorPosition,
+        actualCursorPosition,
         variable,
       );
+
+      if (result.error) {
+        setVariableError(result.error);
+        return;
+      }
+
       updateCreative(selectedCreativeData.id, { title: result.newText });
       setTimeout(() => {
         if (titleInputRef.current) {
@@ -724,12 +752,30 @@ export default function OfferCreativeStep({
         const placeholder = formatVariablePlaceholder(variable);
         const newBody = `${selectedCreativeData.text_body || ""} ${placeholder} `;
         updateCreative(selectedCreativeData.id, { text_body: newBody });
+        setVariableError("");
       } else {
+        // Validate cursor position before insertion
+        const positionError = validateInsertPosition(
+          selectedCreativeData.text_body || "",
+          actualCursorPosition,
+        );
+        if (positionError) {
+          setVariableError(positionError);
+          return;
+        }
+
+        setVariableError(""); // Clear any previous errors
         const result = insertVariableAtCursor(
           selectedCreativeData.text_body || "",
-          cursorPosition,
+          actualCursorPosition,
           variable,
         );
+
+        if (result.error) {
+          setVariableError(result.error);
+          return;
+        }
+
         updateCreative(selectedCreativeData.id, { text_body: result.newText });
         setTimeout(() => {
           if (bodyTextareaRef.current) {
@@ -1294,35 +1340,59 @@ export default function OfferCreativeStep({
                           </span>
                         )}
                       </label>
-                      <textarea
-                        ref={bodyTextareaRef}
-                        value={selectedCreativeData.text_body || ""}
-                        onChange={(e) => {
-                          setActiveField("body");
-                          setCursorPosition(e.target.selectionStart || 0);
-                          updateCreative(selectedCreativeData.id, {
-                            text_body: e.target.value,
-                          });
-                        }}
-                        onClick={(e) => {
-                          setActiveField("body");
-                          setCursorPosition(
-                            e.currentTarget.selectionStart || 0,
-                          );
-                        }}
-                        onFocus={(e) => {
-                          setActiveField("body");
-                          setCursorPosition(
-                            e.currentTarget.selectionStart || 0,
-                          );
-                        }}
-                        placeholder={t.offers.messageBody.placeholder}
-                        rows={8}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
-                      />
+                      {isRichTextMap[selectedCreativeData.id] ? (
+                        <div
+                          onClick={() => setActiveField("body")}
+                          onFocus={() => setActiveField("body")}
+                        >
+                          <RichTextEditor
+                            value={selectedCreativeData.text_body || ""}
+                            onChange={(value) => {
+                              updateCreative(selectedCreativeData.id, {
+                                text_body: value,
+                              });
+                            }}
+                            placeholder={t.offers.messageBody.placeholder}
+                            minHeight="250px"
+                          />
+                        </div>
+                      ) : (
+                        <textarea
+                          ref={bodyTextareaRef}
+                          value={selectedCreativeData.text_body || ""}
+                          onChange={(e) => {
+                            setActiveField("body");
+                            setCursorPosition(e.target.selectionStart || 0);
+                            updateCreative(selectedCreativeData.id, {
+                              text_body: e.target.value,
+                            });
+                          }}
+                          onClick={(e) => {
+                            setActiveField("body");
+                            setCursorPosition(
+                              e.currentTarget.selectionStart || 0,
+                            );
+                          }}
+                          onFocus={(e) => {
+                            setActiveField("body");
+                            setCursorPosition(
+                              e.currentTarget.selectionStart || 0,
+                            );
+                          }}
+                          placeholder={t.offers.messageBody.placeholder}
+                          rows={8}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
+                        />
+                      )}
+
+                      {variableError && (
+                        <div className="mt-3 text-sm text-red-700">
+                          {variableError}
+                        </div>
+                      )}
 
                       {/* Preview Button and Info bar */}
-                      <div className="mt-4 flex items-center justify-between gap-4">
+                      <div className="mt-4">
                         <button
                           onClick={handlePreview}
                           disabled={!selectedCreativeData.title && !selectedCreativeData.text_body && !selectedCreativeData.html_body}
@@ -1331,27 +1401,6 @@ export default function OfferCreativeStep({
                           <Eye className="w-4 h-4" />
                           Preview
                         </button>
-                        {selectedVariables.length > 0 && (
-                          <div className="flex items-center gap-1">
-                            {selectedVariables.slice(0, 3).map((v) => (
-                              <span
-                                key={v.id}
-                                className="px-2 py-0.5 rounded text-xs"
-                                style={{
-                                  backgroundColor: `${color.primary.accent}10`,
-                                  color: color.primary.accent,
-                                }}
-                              >
-                                {v.name}
-                              </span>
-                            ))}
-                            {selectedVariables.length > 3 && (
-                              <span className="text-xs text-gray-400">
-                                +{selectedVariables.length - 3} {t.offers.characterCount.more}
-                              </span>
-                            )}
-                          </div>
-                        )}
                       </div>
                     </div>
                   </div>

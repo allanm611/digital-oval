@@ -1,6 +1,6 @@
 export interface LinkCampaignToOfferRequest {
-  offer_id: number; // required, positive integer
-  created_by: number; // required, positive integer
+  offer_id: number;
+  created_by: number;
 }
 
 export interface LinkCampaignToOfferResponse {

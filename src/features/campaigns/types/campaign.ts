@@ -1,3 +1,5 @@
+import type { CreateCampaignRequest } from "./createCampaign";
+
 export type CampaignType =
   | "multiple_target_group"
   | "champion_challenger"
@@ -5,7 +7,6 @@ export type CampaignType =
   | "round_robin"
   | "multiple_level";
 
-// Backend Campaign Response Types
 export interface BackendCampaignType {
   id: number;
   campaign_uuid: string;
@@ -67,7 +68,6 @@ export interface GetCampaignsResponse {
   source: string;
 }
 
-// Campaign Category Types
 export interface CampaignCategory {
   id: number;
   name: string;
@@ -91,7 +91,6 @@ export interface GetCampaignCategoriesResponse {
   source: string;
 }
 
-// Extended API type helpers
 export type CampaignStatus =
   | "draft"
   | "pending_approval"
@@ -144,7 +143,6 @@ export type ApiResponse<T> = CacheableResponse<T> | ErrorResponse;
 
 export type PaginatedApiResponse<T> = PaginatedResponse<T> | ErrorResponse;
 
-// Campaign Stats Types - Based on backend response structure
 export interface CampaignOverview {
   total_campaigns: number;
   non_deleted_campaigns: number;
@@ -274,7 +272,6 @@ export interface CampaignStatsSummary {
   top_performers?: TopPerformers;
   generated_at?: string;
   source?: string;
-  // Legacy fields for backward compatibility
   total_campaigns?: number | string;
   active_campaigns?: number | string;
   currently_active?: number | string;
@@ -446,7 +443,6 @@ export interface CampaignStatusQuery extends CampaignListQuery {
   status: CampaignStatus;
 }
 
-// Base Campaign Interface
 interface CampaignBase {
   id: string;
   name: string;
@@ -488,10 +484,9 @@ interface CampaignBase {
   budget_allocated?: string | number | null;
   budget_spent?: string | number | null;
   rejection_reason?: string | null;
-  is_active?: boolean; // Flag indicating if campaign is active
+  is_active?: boolean;
 }
 
-// Multiple Target Group Campaign
 export interface MultipleTargetGroupCampaign extends CampaignBase {
   campaign_type: "multiple_target_group";
   config: {
@@ -501,7 +496,6 @@ export interface MultipleTargetGroupCampaign extends CampaignBase {
   };
 }
 
-// Champion-Challenger Campaign
 export interface ChampionChallengerCampaign extends CampaignBase {
   campaign_type: "champion_challenger";
   config: {
@@ -511,7 +505,6 @@ export interface ChampionChallengerCampaign extends CampaignBase {
   };
 }
 
-// A/B Test Campaign
 export interface ABTestCampaign extends CampaignBase {
   campaign_type: "ab_test";
   config: {
@@ -521,7 +514,6 @@ export interface ABTestCampaign extends CampaignBase {
   };
 }
 
-// Round Robin Campaign
 export interface RoundRobinCampaign extends CampaignBase {
   campaign_type: "round_robin";
   config: {
@@ -530,7 +522,6 @@ export interface RoundRobinCampaign extends CampaignBase {
   };
 }
 
-// Multiple Level Campaign
 export interface MultipleLevelCampaign extends CampaignBase {
   campaign_type: "multiple_level";
   config: {
@@ -539,7 +530,6 @@ export interface MultipleLevelCampaign extends CampaignBase {
   };
 }
 
-// Discriminated Union Type
 export type Campaign =
   | MultipleTargetGroupCampaign
   | ChampionChallengerCampaign
@@ -642,19 +632,18 @@ export interface ControlGroup {
 
 export interface SegmentControlGroupConfig {
   type: "none" | "with_control_group" | "multiple_control_group";
-  // Sub-types for 'with_control_group'
   control_group_method?:
     | "fixed_percentage"
     | "fixed_number"
     | "advanced_parameters";
-  percentage?: number; // For 'fixed_percentage' method (0.1 - 50%)
-  set_limits?: boolean; // Enable limits for percentage type
-  lower_limit?: number; // Lower limit for control group
-  upper_limit?: number; // Upper limit for control group
-  fixed_number?: number; // For 'fixed_number' method
-  confidence_level?: number; // For 'advanced_parameters' method (90-99%)
-  margin_of_error?: number; // For 'advanced_parameters' method (1-10%)
-  selected_control_group_id?: string; // For 'multiple_control_group' type
+  percentage?: number;
+  set_limits?: boolean;
+  lower_limit?: number;
+  upper_limit?: number;
+  fixed_number?: number;
+  confidence_level?: number;
+  margin_of_error?: number;
+  selected_control_group_id?: string;
 }
 
 export interface AvailableControlGroup {
@@ -708,14 +697,95 @@ export interface CampaignPreview {
   delivery_schedule: { date: string; estimated_sends: number }[];
 }
 
-// Round Robin Configuration
+
+export interface CampaignDisplay {
+  is_active: boolean;
+  id: number;
+  name: string;
+  description?: string;
+  status: string;
+  type?: string;
+  category?: string;
+  category_id?: number;
+  segment?: string;
+  offer?: string;
+  objective?: string;
+  startDate?: string;
+  endDate?: string;
+  approval_status?: string;
+  code?: string;
+  created_at?: string;
+  offer_count?: number;
+  segment_count?: number;
+  offers?: Array<{
+    offer_id: number;
+    offer_name: string;
+    flow_count?: string | number;
+  }>;
+  segments?: Array<{
+    id: string | number;
+    segment_id: number;
+    segment_name: string;
+    include_exclude?: "include" | "exclude";
+    is_primary?: boolean;
+  }>;
+  performance?: {
+    sent: number;
+    delivered: number;
+    opened?: number;
+    converted: number;
+    revenue: number;
+  };
+}
+
+export interface CampaignFormData extends CreateCampaignRequest {
+  scheduling?: CampaignScheduling;
+  segments?: CampaignSegment[];
+  segmentOfferMappings?: SegmentOfferMapping[];
+}
+
+export interface SegmentOfferMapping {
+  segment_id: string;
+  offer_id: number | string;
+  priority?: number;
+}
+
+export interface StepProps {
+  currentStep: number;
+  totalSteps: number;
+  onNext: () => void;
+  onPrev: () => void;
+  onSubmit: () => void;
+  formData: CreateCampaignRequest;
+  setFormData: (data: CreateCampaignRequest) => void;
+  selectedSegments: CampaignSegment[];
+  setSelectedSegments: (segments: CampaignSegment[]) => void;
+  selectedOffers: CampaignOffer[];
+  setSelectedOffers: (offers: CampaignOffer[]) => void;
+  segmentOfferMappings?: SegmentOfferMapping[];
+  setSegmentOfferMappings?: (mappings: SegmentOfferMapping[]) => void;
+  campaignFlows?: Record<string, unknown>[];
+  setCampaignFlows?: (flows: Record<string, unknown>[]) => void;
+  controlGroup: ControlGroup;
+  setControlGroup: (group: ControlGroup) => void;
+  seedListMode?: "all" | "per-segment";
+  setSeedListMode?: (mode: "all" | "per-segment") => void;
+  segmentSeedLists?: Record<string, string[]>;
+  setSegmentSeedLists?: (seedLists: Record<string, string[]>) => void;
+  isLoading?: boolean;
+  onSaveDraft?: () => void;
+  onCancel?: () => void;
+  validationErrors?: { [key: string]: string };
+  clearValidationErrors?: () => void;
+  setValidationErrors?: (errors: { [key: string]: string }) => void;
+}
+
 export interface IntervalConfig {
   interval_type: "hours" | "days" | "weeks";
   interval_value: number;
   description?: string;
 }
 
-// Multiple Level Configuration
 export interface ConditionConfig {
   condition_type: "customer_attribute" | "behavior" | "transaction" | "custom";
   operator:
@@ -730,11 +800,21 @@ export interface ConditionConfig {
   description?: string;
 }
 
-// Offer Mapping for Round Robin and Multiple Level
 export interface SequentialOfferMapping {
   offer_id: string;
   segment_id: string;
   sequence_order: number;
-  interval_config?: IntervalConfig; // For Round Robin
-  condition_config?: ConditionConfig; // For Multiple Level
+  interval_config?: IntervalConfig;
+  condition_config?: ConditionConfig;
+}
+
+export interface CampaignResponse {
+  success: boolean;
+  data: unknown[];
+  meta: {
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  };
 }

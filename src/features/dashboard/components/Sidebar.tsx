@@ -115,6 +115,104 @@ interface NavigationItem {
     | "manual-actions";
 }
 
+const SIDEBAR_ROUTE_PRELOADERS: Record<string, () => Promise<unknown>> = {
+  "/dashboard": () => import("../components/DashboardHome"),
+  "/dashboard/campaigns": () =>
+    import("../../campaigns/pages/CampaignsPageWrapper"),
+  "/dashboard/campaign-objectives": () =>
+    import("../../campaigns/pages/CampaignObjectivesPage"),
+  "/dashboard/programs": () => import("../../campaigns/pages/ProgramsPage"),
+  "/dashboard/campaign-catalogs": () =>
+    import("../../campaigns/pages/CampaignCategoriesPage"),
+  "/dashboard/campaign-types": () =>
+    import("../../campaigns/pages/CampaignTypesPage"),
+  "/dashboard/campaign-broadcasts": () =>
+    import("../../campaigns/pages/CampaignBroadcastsPage"),
+  "/dashboard/offers": () => import("../../offers/pages/OffersPageWrapper"),
+  "/dashboard/offer-types": () => import("../../offers/pages/OfferTypesPage"),
+  "/dashboard/offer-catalogs": () =>
+    import("../../offers/pages/OfferCategoriesPageWrapper"),
+  "/dashboard/offer-tracking-sources": () =>
+    import("../../offers/pages/TrackingSourcesPage"),
+  "/dashboard/products": () =>
+    import("../../products/pages/ProductsPageWrapper"),
+  "/dashboard/product-types": () =>
+    import("../../products/pages/ProductTypesPage"),
+  "/dashboard/products/catalogs": () =>
+    import("../../products/pages/ProductCategoriesPageWrapper"),
+  "/dashboard/segments": () =>
+    import("../../segments/pages/SegmentManagementPageWrapper"),
+  "/dashboard/segment-types": () =>
+    import("../../segments/pages/SegmentTypesPage"),
+  "/dashboard/segment-catalogs": () =>
+    import("../../segments/pages/SegmentCategoriesPageWrapper"),
+  "/dashboard/quick-lists": () =>
+    import("../../quicklists/pages/QuickListsPageWrapper"),
+  "/dashboard/vip-list-management": () =>
+    import("../../campaigns/pages/VIPListManagementPage"),
+  "/dashboard/seed-list-management": () =>
+    import("../../campaigns/pages/SeedListManagementPage"),
+  "/dashboard/customers": () =>
+    import("../../customers360/pages/CustomersPageWrapper"),
+  "/dashboard/customer-identity": () =>
+    import("../../customerIdentity/pages/CustomerIdentityPage"),
+  "/dashboard/user-management": () =>
+    import("../../users/pages/UserManagementPageWrapper"),
+  "/dashboard/access-control": () =>
+    import("../../roles/pages/TeamRolesPermissionsPage"),
+  "/dashboard/reports/overview": () =>
+    import("../pages/OverallDashboardPerformancePage"),
+  "/dashboard/reports/customer-profiles": () =>
+    import("../../reports-analytics/pages/CustomerProfileReportsPage"),
+  "/dashboard/reports/campaigns": () =>
+    import("../../reports-analytics/pages/CampaignReportsPage"),
+  "/dashboard/reports/offers": () =>
+    import("../../reports-analytics/pages/OfferReportsPage"),
+  "/dashboard/reports/delivery": () =>
+    import("../../reports-analytics/pages/DeliverySMSReportsPage"),
+  "/dashboard/reports/email-delivery": () =>
+    import("../../reports-analytics/pages/DeliveryEmailReportsPage"),
+  "/dashboard/servers": () => import("../../servers/pages/ServersPageWrapper"),
+  "/dashboard/connection-profiles": () =>
+    import("../../connection-profiles/pages/ConnectionProfilesPage"),
+  "/dashboard/data-connectors": () =>
+    import("../../data-connectors/pages/DataConnectors"),
+  "/dashboard/etl": () => import("../../etl/pages/EtlFileRegistryPage"),
+  "/dashboard/kpis": () => import("../../kpis/pages/KPIsPage"),
+  "/dashboard/jobs": () =>
+    import("../../jobs/pages/ScheduledJobsPageWrapper"),
+  "/dashboard/job-executions": () =>
+    import("../../jobs/pages/JobExecutionsPage"),
+  "/dashboard/job-types": () => import("../../jobs/pages/JobTypesPage"),
+  "/dashboard/job-dependencies": () =>
+    import("../../jobs/pages/JobDependenciesPage"),
+  "/dashboard/job-workflow-steps": () =>
+    import("../../jobs/pages/JobWorkflowStepsPage"),
+  "/dashboard/workflows": () => import("../../jobs/pages/WorkflowsPage"),
+  "/dashboard/manual-broadcasts": () =>
+    import("../../manual-actions/pages/ManualBroadcastsHubPage"),
+  "/dashboard/configuration": () =>
+    import("../../configurations/pages/ConfigurationPage"),
+  "/dashboard/profile": () => import("../../users/pages/UserProfilePage"),
+  "/dashboard/settings": () => import("../../settings/pages/SettingsPage"),
+};
+
+function resolvePrefetchRoute(pathname: string): string {
+  if (SIDEBAR_ROUTE_PRELOADERS[pathname]) {
+    return pathname;
+  }
+
+  if (pathname.startsWith("/dashboard/kpis")) {
+    return "/dashboard/kpis";
+  }
+
+  if (pathname.startsWith("/dashboard/sms-routes")) {
+    return "/dashboard/settings";
+  }
+
+  return pathname;
+}
+
 export default function Sidebar({
   isOpen,
   onClose,
@@ -126,6 +224,7 @@ export default function Sidebar({
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [isMinimized, setIsMinimized] = useState(initialMinimized);
   const previousPathnameRef = useRef<string>("");
+  const prefetchedRoutesRef = useRef<Set<string>>(new Set());
   const { user, logout } = useAuth();
   const [currentUserRole, setCurrentUserRole] = useState<string>(
     t.sidebar.user.defaultRole,
@@ -228,10 +327,17 @@ export default function Sidebar({
             type: "single",
             entity: "campaigns",
           },
+          // {
+          //   name: t.sidebar.navigation.programs,
+          //   href: "/dashboard/programs",
+          //   icon: GitBranch,
+          //   type: "single",
+          //   entity: "campaigns",
+          // },
           {
-            name: t.sidebar.navigation.programs,
-            href: "/dashboard/programs",
-            icon: GitBranch,
+            name: "Campaign Broadcasts",
+            href: "/dashboard/campaign-broadcasts",
+            icon: Send,
             type: "single",
             entity: "campaigns",
           },
@@ -345,6 +451,20 @@ export default function Sidebar({
             icon: List,
             type: "single",
             entity: "quicklists",
+          },
+          {
+            name: "VIP List",
+            href: "/dashboard/vip-list-management",
+            icon: Gift,
+            type: "single",
+            entity: "segments",
+          },
+          {
+            name: "Seed List",
+            href: "/dashboard/seed-list-management",
+            icon: Zap,
+            type: "single",
+            entity: "segments",
           },
         ],
       },
@@ -737,6 +857,39 @@ export default function Sidebar({
     }
   };
 
+  const prefetchRoute = useCallback((pathname: string) => {
+    const routeKey = resolvePrefetchRoute(pathname);
+    const preload = SIDEBAR_ROUTE_PRELOADERS[routeKey];
+
+    if (!preload || prefetchedRoutesRef.current.has(routeKey)) {
+      return;
+    }
+
+    prefetchedRoutesRef.current.add(routeKey);
+    preload().catch(() => {
+      prefetchedRoutesRef.current.delete(routeKey);
+    });
+  }, []);
+
+  const handleSidebarIntentPrefetch = useCallback(
+    (event: React.MouseEvent<HTMLElement> | React.FocusEvent<HTMLElement>) => {
+      const target = event.target as HTMLElement | null;
+      const anchor = target?.closest("a[href]") as HTMLAnchorElement | null;
+
+      if (!anchor) {
+        return;
+      }
+
+      const href = anchor.getAttribute("href");
+      if (!href || !href.startsWith("/dashboard")) {
+        return;
+      }
+
+      prefetchRoute(href);
+    },
+    [prefetchRoute],
+  );
+
   return (
     <>
       <style>{hideScrollbarStyle}</style>
@@ -749,6 +902,8 @@ export default function Sidebar({
           />
           <div
             className="fixed inset-y-0 left-0 flex w-72 sm:w-80 flex-col shadow-xl transform transition-all duration-300 ease-out animate-in slide-in-from-left-4 fade-in"
+            onMouseOver={handleSidebarIntentPrefetch}
+            onFocusCapture={handleSidebarIntentPrefetch}
             style={{
               background: `linear-gradient(to bottom, ${color.gradients.sidebar.top} 0%, ${color.gradients.sidebar.middle} 70%, ${color.gradients.sidebar.bottom} 100%)`,
             }}
@@ -1917,6 +2072,8 @@ export default function Sidebar({
       {/* Desktop Sidebar - Minimized on md/lg, Full on xl */}
       <div
         className={`hidden md:fixed md:inset-y-0 md:z-50 md:flex md:flex-col transition-all duration-300 ${isMinimized ? "md:w-24 xl:w-24" : "md:w-32 xl:w-80"}`}
+        onMouseOver={handleSidebarIntentPrefetch}
+        onFocusCapture={handleSidebarIntentPrefetch}
       >
         <div
           className="flex flex-col h-screen md:px-3 xl:px-6 md:pt-2 xl:pt-0 pb-6"

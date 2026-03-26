@@ -13,63 +13,28 @@ import {
 } from "lucide-react";
 
 import { tw, zIndex } from "../../../../shared/utils/utils";
-interface UniversalControlGroup {
-  id: string;
-  name: string;
-  status: "active" | "inactive" | "expired";
-  percentage: number;
-  generationTime: string;
-  memberCount: number;
-  customerBase: "active_subscribers" | "all_customers" | "saved_segments";
-  sizeMethod: "percentage" | "fixed_value" | "advanced_parameters";
-  outlierRemoval: boolean;
-  varianceCalculation: boolean;
-  recurrence: "once" | "daily" | "weekly" | "monthly";
-  createdAt: string;
-}
+import {
+  UniversalControlGroup,
+  UNIVERSAL_CONTROL_GROUPS,
+} from "../configs/universalControlGroupsConfig";
+import SegmentConditionsBuilder from "../../../segments/components/SegmentConditionsBuilder";
+import type { SegmentConditionGroup } from "../../../segments/types/segment";
 
 interface UniversalControlGroupModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSelect?: (groupId: string) => void;
+  selectionMode?: boolean;
 }
-
-const mockControlGroups: UniversalControlGroup[] = [
-  {
-    id: "1",
-    name: "UCG Sep 2025",
-    status: "active",
-    percentage: 10,
-    generationTime: "01 Sep 2025 01:00 AM",
-    memberCount: 106889,
-    customerBase: "active_subscribers",
-    sizeMethod: "percentage",
-    outlierRemoval: true,
-    varianceCalculation: true,
-    recurrence: "monthly",
-    createdAt: "2025-09-01",
-  },
-  {
-    id: "2",
-    name: "UCG Aug 2025",
-    status: "expired",
-    percentage: 8,
-    generationTime: "01 Aug 2025 01:00 AM",
-    memberCount: 100300,
-    customerBase: "active_subscribers",
-    sizeMethod: "percentage",
-    outlierRemoval: false,
-    varianceCalculation: false,
-    recurrence: "monthly",
-    createdAt: "2025-08-01",
-  },
-];
 
 export default function UniversalControlGroupModal({
   isOpen,
   onClose,
+  onSelect,
+  selectionMode = false,
 }: UniversalControlGroupModalProps) {
   const [controlGroups, setControlGroups] =
-    useState<UniversalControlGroup[]>(mockControlGroups);
+    useState<UniversalControlGroup[]>(UNIVERSAL_CONTROL_GROUPS);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingGroup, setEditingGroup] =
     useState<UniversalControlGroup | null>(null);
@@ -109,7 +74,7 @@ export default function UniversalControlGroupModal({
     >
       <div
         className={`bg-white ${tw.rounded} shadow-xl w-full max-w-6xl h-[90vh] flex flex-col`}
-        style={{ zIndex: zIndexTokens.modal }}
+        style={{ zIndex: zIndex.modal }}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -175,7 +140,15 @@ export default function UniversalControlGroupModal({
               {controlGroups.map((group) => (
                 <div
                   key={group.id}
-                  className={`grid grid-cols-12 gap-4 px-4 py-4 bg-white border border-gray-200 ${tw.rounded} hover:shadow-sm transition-shadow`}
+                  onClick={() => {
+                    if (selectionMode && onSelect) {
+                      onSelect(group.id);
+                      onClose();
+                    }
+                  }}
+                  className={`grid grid-cols-12 gap-4 px-4 py-4 bg-white border border-gray-200 ${tw.rounded} ${
+                    selectionMode ? "cursor-pointer hover:bg-blue-50 hover:shadow-sm" : "hover:shadow-sm"
+                  } transition-shadow`}
                 >
                   <div className="col-span-3">
                     <div className="font-medium text-gray-900">
@@ -237,33 +210,30 @@ export default function UniversalControlGroupModal({
           )}
         </div>
       </div>
-      , document.body );
-      {/* Create/Edit Modal */}
-      {(showCreateModal || editingGroup) && (
+
+      {showCreateModal && (
         <CreateControlGroupModal
-          isOpen={true}
+          isOpen={showCreateModal}
           onClose={() => {
             setShowCreateModal(false);
             setEditingGroup(null);
           }}
           editingGroup={editingGroup}
-          onSave={(group) => {
+          onSave={(newGroup) => {
             if (editingGroup) {
               setControlGroups((prev) =>
-                prev.map((g) => (g.id === group.id ? group : g))
+                prev.map((g) => (g.id === newGroup.id ? newGroup : g))
               );
+              setEditingGroup(null);
             } else {
-              setControlGroups((prev) => [
-                ...prev,
-                { ...group, id: Date.now().toString() },
-              ]);
+              setControlGroups((prev) => [...prev, newGroup]);
             }
             setShowCreateModal(false);
-            setEditingGroup(null);
           }}
         />
       )}
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -291,6 +261,9 @@ function CreateControlGroupModal({
     recurrence: editingGroup?.recurrence || "monthly",
     status: editingGroup?.status || "active",
   });
+  const [segmentConditions, setSegmentConditions] = useState<
+    SegmentConditionGroup[]
+  >([]);
 
   if (!isOpen) return null;
 
@@ -353,7 +326,7 @@ function CreateControlGroupModal({
         bottom: 0,
         width: "100vw",
         height: "100vh",
-        zIndex: zIndexTokens.overlay,
+        zIndex: zIndex.modal,
       }}
     >
       <div
@@ -425,7 +398,7 @@ function CreateControlGroupModal({
         </div>
 
         {/* Content */}
-        <div className="p-6 max-h-96 overflow-y-auto">
+        <div className="p-6 max-h-[calc(90vh-300px)] overflow-y-auto">
           {currentStep === 1 && (
             <div className="space-y-6">
               <div>
@@ -461,8 +434,8 @@ function CreateControlGroupModal({
                     },
                     {
                       value: "saved_segments",
-                      label: "Saved Segments",
-                      description: "Use predefined customer segments",
+                      label: "Custom Segment",
+                      description: "Define custom segment conditions",
                     },
                   ].map((option) => (
                     <label
@@ -498,82 +471,95 @@ function CreateControlGroupModal({
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Select the size criteria for your Control Group's customer
-                  base
-                </label>
-                <div className="space-y-3">
-                  {[
-                    {
-                      value: "percentage",
-                      label: "Base %",
-                      description: "Percentage of customer base",
-                    },
-                    {
-                      value: "fixed_value",
-                      label: "Fixed Value",
-                      description: "Fixed number of customers",
-                    },
-                    {
-                      value: "advanced_parameters",
-                      label: "Advanced Parameters",
-                      description: "Statistical parameters",
-                    },
-                  ].map((option) => (
-                    <label
-                      key={option.value}
-                      className={`flex items-start p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50`}
-                    >
+              {formData.customerBase === "saved_segments" ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Define Custom Segment Conditions
+                  </label>
+                  <SegmentConditionsBuilder
+                    conditions={segmentConditions}
+                    onChange={setSegmentConditions}
+                  />
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Select the size criteria for your Control Group's customer
+                    base
+                  </label>
+                  <div className="space-y-3">
+                    {[
+                      {
+                        value: "percentage",
+                        label: "Base %",
+                        description: "Percentage of customer base",
+                      },
+                      {
+                        value: "fixed_value",
+                        label: "Fixed Value",
+                        description: "Fixed number of customers",
+                      },
+                      {
+                        value: "advanced_parameters",
+                        label: "Advanced Parameters",
+                        description: "Statistical parameters",
+                      },
+                    ].map((option) => (
+                      <label
+                        key={option.value}
+                        className={`flex items-start p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50`}
+                      >
+                        <input
+                          type="radio"
+                          name="sizeMethod"
+                          value={option.value}
+                          checked={formData.sizeMethod === option.value}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              sizeMethod: e.target.value as
+                                | "percentage"
+                                | "fixed_value"
+                                | "advanced_parameters",
+                            })
+                          }
+                          className="mt-1 w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157]"
+                        />
+                        <div className="ml-3">
+                          <div className="font-medium text-gray-900">
+                            {option.label}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {option.description}
+                          </div>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+
+                  {formData.sizeMethod === "percentage" && (
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Size Percentage Value: {formData.percentage}%
+                      </label>
                       <input
-                        type="radio"
-                        name="sizeMethod"
-                        value={option.value}
-                        checked={formData.sizeMethod === option.value}
+                        type="range"
+                        min="1"
+                        max="50"
+                        step="1"
+                        value={formData.percentage || 10}
                         onChange={(e) =>
                           setFormData({
                             ...formData,
-                            sizeMethod: e.target.value as
-                              | "percentage"
-                              | "fixed_value"
-                              | "advanced_parameters",
+                            percentage: parseInt(e.target.value),
                           })
                         }
-                        className="mt-1 w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157]"
+                        className="w-full"
                       />
-                      <div className="ml-3">
-                        <div className="font-medium text-gray-900">
-                          {option.label}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {option.description}
-                        </div>
-                      </div>
-                    </label>
-                  ))}
+                    </div>
+                  )}
                 </div>
-
-                {formData.sizeMethod === "percentage" && (
-                  <div className="mt-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Size Percentage Value
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="50"
-                      value={formData.percentage}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          percentage: parseInt(e.target.value),
-                        })
-                      }
-                      className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-1 focus:ring-[#588157] focus:border-[#588157]`}
-                    />
-                  </div>
-                )}
-              </div>
+              )}
             </div>
           )}
 
@@ -754,48 +740,45 @@ function CreateControlGroupModal({
           >
             Previous
           </button>
-          <div className="flex space-x-3">
+          {currentStep === 3 ? (
             <button
-              onClick={onClose}
-              className={`px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} hover:bg-gray-50`}
+              onClick={handleSave}
+              className={`px-4 py-2 text-white ${tw.rounded}`}
+              style={{ backgroundColor: "#588157" }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "#3A5A40";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "#588157";
+              }}
             >
-              Cancel
+              {editingGroup ? "Update" : "Create"} Control Group
             </button>
-            {currentStep === 3 ? (
-              <button
-                onClick={handleSave}
-                className={`px-4 py-2  text-white ${tw.rounded} hover:bg-[#3A5A40]`}
-              >
-                {editingGroup ? "Update" : "Create"} Control Group
-              </button>
-            ) : (
-              <button
-                onClick={handleNext}
-                disabled={!canProceedToNextStep()}
-                className={`px-4 py-2  text-white ${tw.rounded} hover:bg-[#3A5A40] disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400`}
-              >
-                Next
-              </button>
-            )}
-          </div>
+          ) : (
+            <button
+              onClick={handleNext}
+              disabled={!canProceedToNextStep()}
+              className={`px-4 py-2 text-white ${tw.rounded} disabled:opacity-50 disabled:cursor-not-allowed`}
+              style={{
+                backgroundColor: !canProceedToNextStep()
+                  ? "#ccc"
+                  : "#588157",
+              }}
+              onMouseEnter={(e) => {
+                if (!canProceedToNextStep()) return;
+                e.currentTarget.style.backgroundColor = "#3A5A40";
+              }}
+              onMouseLeave={(e) => {
+                if (!canProceedToNextStep()) return;
+                e.currentTarget.style.backgroundColor = "#588157";
+              }}
+            >
+              Next
+            </button>
+          )}
         </div>
       </div>
     </div>,
-    <>
-      <DeleteConfirmModal
-        isOpen={showDeleteModal}
-        onClose={handleCancelDelete}
-        onConfirm={handleConfirmDelete}
-        title="Delete Control Group"
-        description="Are you sure you want to delete this control group? This action cannot be undone."
-        itemName={
-          controlGroups.find((g) => g.id === controlGroupToDelete)?.name || ""
-        }
-        isLoading={false}
-        confirmText="Delete Control Group"
-        cancelText="Cancel"
-      />
-    </>,
     document.body
   );
 }

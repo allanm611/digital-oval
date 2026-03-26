@@ -35,7 +35,81 @@ const OFFER_PRODUCTS_BASE_URL = buildApiUrl(
   API_CONFIG.ENDPOINTS.OFFER_PRODUCTS
 );
 
+const OFFER_FIELD_DEFAULTS = {
+  name: "Not specified",
+  code: "Not specified",
+  description: "Not specified",
+  offer_type: "other" as const,
+  status: "draft" as const,
+};
+
 class OfferService {
+  private normalizeOffer(data: any): any {
+    if (!data) {
+      return {
+        id: 0,
+        name: OFFER_FIELD_DEFAULTS.name,
+        code: OFFER_FIELD_DEFAULTS.code,
+        description: OFFER_FIELD_DEFAULTS.description,
+        offer_type: OFFER_FIELD_DEFAULTS.offer_type,
+        category_id: null,
+        primary_product_id: null,
+        discount_percentage: null,
+        discount_amount: null,
+        bonus_value: null,
+        eligibility_rules: null,
+        min_spend: null,
+        max_usage_per_customer: 0,
+        valid_from: null,
+        product_ids: [],
+        valid_to: null,
+        is_reusable: false,
+        supports_multi_language: false,
+        metadata: null,
+        tags: [],
+        status: OFFER_FIELD_DEFAULTS.status,
+        approval_status: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        created_by: null,
+        updated_by: null,
+      };
+    }
+
+    return {
+      id: data.id || 0,
+      name: data.name || OFFER_FIELD_DEFAULTS.name,
+      code: data.code || OFFER_FIELD_DEFAULTS.code,
+      description: data.description || OFFER_FIELD_DEFAULTS.description,
+      offer_type: data.offer_type || OFFER_FIELD_DEFAULTS.offer_type,
+      category_id: data.category_id || null,
+      primary_product_id: data.primary_product_id || null,
+      discount_percentage: data.discount_percentage ?? null,
+      discount_amount: data.discount_amount ?? null,
+      bonus_value: data.bonus_value ?? null,
+      eligibility_rules: data.eligibility_rules || null,
+      min_spend: data.min_spend ?? null,
+      max_usage_per_customer: data.max_usage_per_customer ?? 0,
+      valid_from: data.valid_from || null,
+      product_ids: Array.isArray(data.product_ids) ? data.product_ids : [],
+      valid_to: data.valid_to || null,
+      is_reusable: data.is_reusable ?? false,
+      supports_multi_language: data.supports_multi_language ?? false,
+      metadata: data.metadata || null,
+      tags: Array.isArray(data.tags) ? data.tags : [],
+      status: data.status || OFFER_FIELD_DEFAULTS.status,
+      approval_status: data.approval_status || null,
+      created_at: data.created_at || new Date().toISOString(),
+      updated_at: data.updated_at || new Date().toISOString(),
+      created_by: data.created_by || null,
+      updated_by: data.updated_by || null,
+    };
+  }
+
+  private normalizeOfferArray(offers: any[]): any[] {
+    return Array.isArray(offers) ? offers.map((offer) => this.normalizeOffer(offer)) : [];
+  }
+
   private async request<T>(
     endpoint: string,
     options: RequestInit = {},
@@ -152,6 +226,8 @@ class OfferService {
     // If we have a search term, use /search endpoint (only accepts basic params)
     const hasSearchTerm = params.search || params.searchTerm;
 
+    let response: OffersResponse;
+
     if (hasSearchTerm) {
       // /search endpoint only accepts searchTerm, limit, offset, skipCache
       if (params.search) {
@@ -174,7 +250,7 @@ class OfferService {
       if (params.skipCache) queryParams.append("skipCache", "true");
 
       const queryString = queryParams.toString();
-      return this.request<OffersResponse>(
+      response = await this.request<OffersResponse>(
         `/search${queryString ? `?${queryString}` : ""}`
       );
     } else {
@@ -200,10 +276,19 @@ class OfferService {
       if (params.skipCache) queryParams.append("skipCache", "true");
 
       const queryString = queryParams.toString();
-      return this.request<OffersResponse>(
+      response = await this.request<OffersResponse>(
         `/${queryString ? `?${queryString}` : ""}`
       );
     }
+
+    // Normalize all offers in paginated response
+    if (response?.data && Array.isArray(response.data)) {
+      return {
+        ...response,
+        data: this.normalizeOfferArray(response.data),
+      };
+    }
+    return response;
   }
 
   async getActiveOffers(params: FilterParams = {}): Promise<OffersResponse> {
@@ -212,7 +297,16 @@ class OfferService {
     if (params.offset) queryParams.append("offset", params.offset.toString());
     if (params.skipCache) queryParams.append("skipCache", "true");
 
-    return this.request<OffersResponse>(`/active?${queryParams.toString()}`);
+    const response = await this.request<OffersResponse>(`/active?${queryParams.toString()}`);
+
+    // Normalize all offers in paginated response
+    if (response?.data && Array.isArray(response.data)) {
+      return {
+        ...response,
+        data: this.normalizeOfferArray(response.data),
+      };
+    }
+    return response;
   }
 
   async getCurrentOffers(params: FilterParams = {}): Promise<OffersResponse> {
@@ -221,7 +315,16 @@ class OfferService {
     if (params.offset) queryParams.append("offset", params.offset.toString());
     if (params.skipCache) queryParams.append("skipCache", "true");
 
-    return this.request<OffersResponse>(`/current?${queryParams.toString()}`);
+    const response = await this.request<OffersResponse>(`/current?${queryParams.toString()}`);
+
+    // Normalize all offers in paginated response
+    if (response?.data && Array.isArray(response.data)) {
+      return {
+        ...response,
+        data: this.normalizeOfferArray(response.data),
+      };
+    }
+    return response;
   }
 
   async getExpiredOffers(params: FilterParams = {}): Promise<OffersResponse> {
@@ -325,9 +428,18 @@ class OfferService {
     if (params.offset) queryParams.append("offset", params.offset.toString());
     if (params.skipCache) queryParams.append("skipCache", "true");
 
-    return this.request<OffersResponse>(
+    const response = await this.request<OffersResponse>(
       `/category/${categoryId}?${queryParams.toString()}`
     );
+
+    // Normalize all offers in paginated response
+    if (response?.data && Array.isArray(response.data)) {
+      return {
+        ...response,
+        data: this.normalizeOfferArray(response.data),
+      };
+    }
+    return response;
   }
 
   async getOffersByProduct(
@@ -435,17 +547,35 @@ class OfferService {
     skipCache: boolean = false
   ): Promise<OfferResponse> {
     const params = skipCache ? "?skipCache=true" : "";
-    return this.request<OfferResponse>(`/${id}${params}`);
+    const response = await this.request<OfferResponse>(`/${id}${params}`);
+
+    // Normalize the offer
+    if (response?.data) {
+      return {
+        ...response,
+        data: this.normalizeOffer(response.data),
+      };
+    }
+    return response;
   }
 
   async updateOffer(
     id: number,
     offer: UpdateOfferRequest
   ): Promise<OfferResponse> {
-    return this.request<OfferResponse>(`/${id}`, {
+    const response = await this.request<OfferResponse>(`/${id}`, {
       method: "PUT",
       body: JSON.stringify(offer),
     });
+
+    // Normalize the updated offer
+    if (response?.data) {
+      return {
+        ...response,
+        data: this.normalizeOffer(response.data),
+      };
+    }
+    return response;
   }
 
   async deleteOffer(

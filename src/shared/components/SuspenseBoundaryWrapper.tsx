@@ -16,10 +16,7 @@ interface SuspenseBoundaryProps {
   type?: "form" | "stepper" | "detail" | "list" | "table" | "grid";
 }
 
-/**
- * Wrapper for Suspense boundaries with error handling
- * Shows appropriate skeleton based on page type
- */
+
 export function SuspenseBoundary({
   children,
   fallback,
@@ -44,10 +41,7 @@ export function SuspenseBoundary({
   );
 }
 
-/**
- * Multiple independent Suspense boundaries that load in order
- * Better UX than waiting for all data at once
- */
+
 export function SuspenseList_({
   children,
   revealOrder = "forwards",
@@ -64,9 +58,6 @@ export function SuspenseList_({
   );
 }
 
-/**
- * Simple error boundary for Suspense errors
- */
 class ErrorBoundary extends React.Component<
   {
     children: React.ReactNode;

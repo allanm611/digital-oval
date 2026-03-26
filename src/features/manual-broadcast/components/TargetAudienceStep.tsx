@@ -55,31 +55,42 @@ export default function TargetAudienceStep({
 
     // Restore selected quicklist if they had selected one
     if (data.inputMethod === "file" && data.quicklistId) {
-      // Try to fetch the actual quicklist details
-      quicklistService
-        .getQuickListById(data.quicklistId)
-        .then((response) => {
-          if (response.data) {
-            setSelectedQuickList({
-              id: response.data.id,
-              name: response.data.name,
-              upload_type: response.data.processing_status || "multi",
-              row_count: response.data.rows_imported || 0,
-              created_at: response.data.created_at,
-            });
-          }
-        })
-        .catch((err) => {
-          console.error("Failed to load quicklist details:", err);
-          // Fallback to minimal info we have
-          setSelectedQuickList({
-            id: data.quicklistId,
-            name: "QuickList",
-            upload_type: data.uploadType || "multi",
-            row_count: data.rowCount || 0,
-            created_at: new Date().toISOString(),
-          });
+      // Use pre-fetched quicklist data if available (from edit mode)
+      if (data.quicklist) {
+        setSelectedQuickList({
+          id: data.quicklist.id,
+          name: data.quicklist.name,
+          upload_type: data.quicklist.processing_status || "multi",
+          row_count: data.quicklist.rows_imported || 0,
+          created_at: data.quicklist.created_at,
         });
+      } else {
+        // Otherwise try to fetch the actual quicklist details
+        quicklistService
+          .getQuickListById(data.quicklistId)
+          .then((response) => {
+            if (response.data) {
+              setSelectedQuickList({
+                id: response.data.id,
+                name: response.data.name,
+                upload_type: response.data.processing_status || "multi",
+                row_count: response.data.rows_imported || 0,
+                created_at: response.data.created_at,
+              });
+            }
+          })
+          .catch((err) => {
+            console.error("Failed to load quicklist details:", err);
+            // Fallback to minimal info we have
+            setSelectedQuickList({
+              id: data.quicklistId,
+              name: "QuickList",
+              upload_type: data.uploadType || "multi",
+              row_count: data.rowCount || 0,
+              created_at: new Date().toISOString(),
+            });
+          });
+      }
     } else {
       setSelectedQuickList(null);
     }
@@ -134,6 +145,13 @@ export default function TargetAudienceStep({
     setSelectedQuickList(quicklist);
     setError("");
     setShowPickerModal(false);
+    // Immediately update parent state so selection is preserved when navigating
+    // IMPORTANT: Clear the cached quicklist object so it doesn't restore the old one
+    onUpdate({
+      quicklistId: quicklist.id,
+      rowCount: quicklist.row_count,
+      quicklist: null, // Clear cached data to force fresh load
+    });
   };
 
   const handleCreateQuickList = async (request: CreateQuickListRequest) => {
@@ -157,6 +175,13 @@ export default function TargetAudienceStep({
         setIsQuickListCreated(true);
         setShowCreateModal(false);
         setError("");
+        // Immediately update parent state so selection is preserved when navigating
+        // IMPORTANT: Clear the cached quicklist object so it doesn't restore an old one
+        onUpdate({
+          quicklistId: quicklistId,
+          rowCount: rowsImported,
+          quicklist: null, // Clear cached data
+        });
       }
     } catch (err) {
       console.error("Failed to create quicklist:", err);
@@ -195,6 +220,10 @@ export default function TargetAudienceStep({
       if (inputMethod === "file" && selectedQuickList) {
         updateData.quicklistId = selectedQuickList.id;
         updateData.rowCount = selectedQuickList.row_count;
+        // Preserve the pre-fetched quicklist data if available
+        if (data.quicklist) {
+          updateData.quicklist = data.quicklist;
+        }
         // uploadType already set above from user's list type selection - don't overwrite
       }
 
@@ -310,16 +339,16 @@ export default function TargetAudienceStep({
         {/* QuickList Selection - Show only when Upload File is selected */}
         {inputMethod === "file" && (
           <div className="space-y-3  rounded-md">
-            <label className="text-sm font-medium text-gray-900 block">
+            <label className="text-sm font-medium text-gray-900 block mb-0">
               Select or Create QuickList *
             </label>
 
             {selectedQuickList ? (
               <>
                 <div className="flex items-center gap-2 mb-3">
-                  <p className="text-xs text-gray-600">
+                  {/* <p className="text-xs text-gray-600">
                     Select an existing quicklist or create a new one
-                  </p>
+                  </p> */}
                   <button
                     type="button"
                     onClick={() => {
@@ -346,7 +375,7 @@ export default function TargetAudienceStep({
               </>
             ) : (
               <p className="text-xs text-gray-600 mb-3">
-                Select an existing quicklist or create a new one
+                {/* Select an existing quicklist or create a new one */}
               </p>
             )}
 
@@ -356,7 +385,7 @@ export default function TargetAudienceStep({
                   type="button"
                   onClick={() => setShowPickerModal(true)}
                   disabled={isSubmitting}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium border border-gray-300 rounded-md  disabled:opacity-50 transition-colors"
                 >
                   <List className="w-4 h-4" />
                   Select from Existing

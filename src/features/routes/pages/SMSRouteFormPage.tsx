@@ -216,19 +216,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
   return (
     <div className="space-y-6">
       {/* Header with Back Button */}
-      <div className="flex items-center gap-4">
-        <BackButton fallbackTo="/dashboard/sms-routes" />
-        <div>
-          <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
-            {mode === "create" ? "Create SMS Route" : "Edit SMS Route"}
-          </h1>
-          <p className={`${tw.textSecondary} mt-1 text-sm`}>
-            {mode === "create"
-              ? "Configure a new custom SMS gateway route"
-              : `Editing: ${route?.name || ""}`}
-          </p>
-        </div>
-      </div>
+      <BackButton fallbackTo="/dashboard/sms-routes" showBreadcrumb={true} currentLabel={mode === "create" ? "Create SMS Route" : "Edit SMS Route"} />
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">

@@ -1,5 +1,5 @@
 import TypeConfigurationPage from "../../../shared/components/TypeConfigurationPage";
-import { getSenderIdsConfig } from "../../../shared/configs/configurationPageConfigs";
+import { getSenderIdsConfig } from "../../configurations/configs/configurationPageConfigs";
 import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function SenderIdsPage() {

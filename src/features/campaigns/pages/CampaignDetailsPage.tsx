@@ -18,15 +18,22 @@ import {
   TrendingUp,
   Eye,
   X,
+  ChevronDown,
 } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
+import { getUserDisplayName } from "../../../shared/utils/userNameCache";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { campaignService } from "../services/campaignService";
 import { campaignFlowService } from "../services/campaignFlowService";
+import {
+  canShowCampaignButton,
+  handleCampaignAction,
+  type CampaignActionParams,
+} from "../utils/campaignActions";
 import { offerService } from "../../offers/services/offerService";
 import { segmentService } from "../../segments/services/segmentService";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -35,14 +42,22 @@ import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { userService } from "../../users/services/userService";
 import { PermissionGate } from "../../auth/components/PermissionGate";
-import ExecuteCampaignModal from "../components/ExecuteCampaignModal";
+import RunCampaignModal from "../components/RunCampaignModal";
 import EditCampaignFlowModal from "../components/EditCampaignFlowModal";
+import BroadcastsModal from "../components/BroadcastsModal";
+import FailedModal from "../components/FailedModal";
+import ExecutionTimeModal from "../components/ExecutionTimeModal";
+import SuccessRateModal from "../components/SuccessRateModal";
+import ScheduledModal from "../components/ScheduledModal";
 import {
   Campaign,
   CampaignSegmentDetail,
   CampaignBudgetUtilisation,
 } from "../types/campaign";
-import { CampaignFlowConfig, CampaignFlowResponseData } from "../types/campaignFlow";
+import {
+  CampaignFlowConfig,
+  CampaignFlowResponseData,
+} from "../types/campaignFlow";
 import { Offer } from "../../offers/types/offer";
 import { SegmentType } from "../../segments/types/segment";
 
@@ -91,19 +106,21 @@ export default function CampaignDetailsPage() {
     useState<CampaignBudgetUtilisation | null>(null);
   const [isLoadingBudgetUtil, setIsLoadingBudgetUtil] = useState(false);
   const [createdByName, setCreatedByName] = useState<string>("");
+  const [updatedByName, setUpdatedByName] = useState<string>("");
+  const [approvedByName, setApprovedByName] = useState<string>("");
   const [showFlowEditModal, setShowFlowEditModal] = useState(false);
   const [showFlowDeleteModal, setShowFlowDeleteModal] = useState(false);
-  const [selectedFlow, setSelectedFlow] = useState<CampaignFlowResponseData | null>(
-    null,
-  );
+  const [selectedFlow, setSelectedFlow] =
+    useState<CampaignFlowResponseData | null>(null);
   const [editedFlow, setEditedFlow] = useState<Partial<CampaignFlowConfig>>({});
-  const [rawConditionRuleInput, setRawConditionRuleInput] = useState<string>("");
+  const [rawConditionRuleInput, setRawConditionRuleInput] =
+    useState<string>("");
   const [conditionRuleError, setConditionRuleError] = useState<string>("");
   const [isFlowActionLoading, setIsFlowActionLoading] = useState(false);
   const [activeSegments, setActiveSegments] = useState<SegmentType[]>([]);
   const [activeOffers, setActiveOffers] = useState<Offer[]>([]);
   const [isLoadingActiveData, setIsLoadingActiveData] = useState(false);
-  const [showExecuteModal, setShowExecuteModal] = useState(false);
+  const [showRunModal, setShowRunModal] = useState(false);
   const [executionMetrics, setExecutionMetrics] = useState<{
     total_messages_sent: number;
     total_messages_failed: number;
@@ -111,6 +128,13 @@ export default function CampaignDetailsPage() {
     broadcasts_completed: number;
     execution_time_ms: number;
   } | null>(null);
+
+  // Stat card modal states
+  const [showBroadcastsModal, setShowBroadcastsModal] = useState(false);
+  const [showFailedModal, setShowFailedModal] = useState(false);
+  const [showExecutionTimeModal, setShowExecutionTimeModal] = useState(false);
+  const [showSuccessRateModal, setShowSuccessRateModal] = useState(false);
+  const [showScheduledModal, setShowScheduledModal] = useState(false);
 
   const formatObjective = (objective?: string | null) => {
     if (!objective) return "—";
@@ -201,30 +225,35 @@ export default function CampaignDetailsPage() {
           }
         }
 
-        if (campaignData.created_by) {
+        // Fetch created_by, updated_by, and approved_by user names
+        if (
+          campaignData.created_by ||
+          campaignData.updated_by ||
+          campaignData.approved_by
+        ) {
           try {
-            const creatorResponse = await userService.getUserById(
-              Number(campaignData.created_by),
-              true,
-            );
-            const creator = creatorResponse?.data;
-            if (creator) {
-              const nameFromParts = `${creator.first_name || ""} ${
-                creator.last_name || ""
-              }`.trim();
-              const displayName =
-                creator.display_name ||
-                nameFromParts ||
-                creator.email_address ||
-                `User #${campaignData.created_by}`;
-              setCreatedByName(displayName);
-            }
+            const [createdName, updatedName, approvedName] = await Promise.all([
+              getUserDisplayName(campaignData.created_by),
+              getUserDisplayName(campaignData.updated_by),
+              getUserDisplayName(campaignData.approved_by),
+            ]);
+            setCreatedByName(createdName);
+            setUpdatedByName(updatedName);
+            setApprovedByName(approvedName);
           } catch (error) {
-            console.error("Failed to fetch creator info:", error);
-            setCreatedByName(`User #${campaignData.created_by}`);
+            console.error("Failed to fetch user names:", error);
+            setCreatedByName(
+              campaignData.created_by ? `User #${campaignData.created_by}` : "",
+            );
+            setUpdatedByName(
+              campaignData.updated_by ? `User #${campaignData.updated_by}` : "",
+            );
+            setApprovedByName(
+              campaignData.approved_by
+                ? `User #${campaignData.approved_by}`
+                : "",
+            );
           }
-        } else {
-          setCreatedByName("");
         }
 
         // Fetch campaign segments and offers FIRST (they're needed for flows matching)
@@ -264,16 +293,22 @@ export default function CampaignDetailsPage() {
       );
       if (response && response.success && Array.isArray(response.data)) {
         // Convert segment info from API to CampaignSegmentDetail format
-        const fetchedSegments: CampaignSegmentDetail[] = response.data.map(
-          (segment) => ({
-            id: segment.id,
-            name: segment.name,
-            code: segment.code,
-            total_subscribers: 0, // Not provided by campaign flows endpoint
-            created_at: "",
-            updated_at: "",
-          }),
-        );
+        const fetchedSegments: CampaignSegmentDetail[] = response.data
+          .map((segment) => {
+            // API returns segment_id and segment_name
+            if (!segment || !segment.segment_id || !segment.segment_name) {
+              return null;
+            }
+            return {
+              id: parseInt(segment.segment_id),
+              name: segment.segment_name,
+              code: segment.code || "",
+              total_subscribers: 0,
+              created_at: "",
+              updated_at: "",
+            };
+          })
+          .filter((s): s is CampaignSegmentDetail => s !== null);
         setSegments(fetchedSegments);
       } else {
         setSegments([]);
@@ -295,27 +330,35 @@ export default function CampaignDetailsPage() {
       const response = await campaignFlowService.getCampaignFlows(campaignId);
       if (response && response.success && Array.isArray(response.data)) {
         // Convert API response to CampaignFlowResponseData format (includes id)
-        const flowsData: CampaignFlowResponseData[] = response.data.map((flow) => ({
-          id: flow.id,
-          campaign_id: flow.campaign_id,
-          segment_id:
-            typeof flow.segment_id === "string"
-              ? parseInt(flow.segment_id)
-              : flow.segment_id,
-          offer_id: flow.offer_id,
-          offer_creative_id: flow.offer_creative_id || undefined,
-          template_id: flow.template_id || undefined,
-          flow_type: flow.flow_type,
-          step_order: flow.step_order,
-          wait_interval_hours: flow.wait_interval_hours,
-          bucket_allocation: flow.bucket_allocation || undefined,
-          condition_rule: flow.condition_rule || undefined,
-          is_active: flow.is_active,
-          created_at: flow.created_at,
-          updated_at: flow.updated_at,
-          created_by: flow.created_by,
-          updated_by: flow.updated_by,
-        }));
+        const flowsData: CampaignFlowResponseData[] = response.data
+          .map((flow) => {
+            // Null checks for critical fields
+            if (!flow || !flow.id || !flow.campaign_id || !flow.offer_id) {
+              return null;
+            }
+            return {
+              id: flow.id,
+              campaign_id: flow.campaign_id,
+              segment_id:
+                typeof flow.segment_id === "string" && flow.segment_id
+                  ? parseInt(flow.segment_id)
+                  : flow.segment_id || 0,
+              offer_id: flow.offer_id,
+              offer_creative_id: flow.offer_creative_id || undefined,
+              template_id: flow.template_id || undefined,
+              flow_type: flow.flow_type || "",
+              step_order: flow.step_order || 0,
+              wait_interval_hours: flow.wait_interval_hours || 0,
+              bucket_allocation: flow.bucket_allocation || undefined,
+              condition_rule: flow.condition_rule || undefined,
+              is_active: flow.is_active ?? true,
+              created_at: flow.created_at || "",
+              updated_at: flow.updated_at || "",
+              created_by: flow.created_by || null,
+              updated_by: flow.updated_by || null,
+            };
+          })
+          .filter((f): f is CampaignFlowResponseData => f !== null);
         setFlows(flowsData);
         return flowsData;
       } else {
@@ -331,7 +374,9 @@ export default function CampaignDetailsPage() {
     }
   };
 
-  const fetchOffersFromFlows = async (flowsData: CampaignFlowResponseData[]) => {
+  const fetchOffersFromFlows = async (
+    flowsData: CampaignFlowResponseData[],
+  ) => {
     try {
       setIsLoadingOffers(true);
       // Extract unique offer IDs from flows data
@@ -427,7 +472,11 @@ export default function CampaignDetailsPage() {
       showToast("success", "Campaign approved successfully");
       // Refresh campaign data with both approval_status and status updates
       if (campaign) {
-        setCampaign({ ...campaign, approval_status: "approved", status: "approved" });
+        setCampaign({
+          ...campaign,
+          approval_status: "approved",
+          status: "approved",
+        });
       }
     } catch (error) {
       console.error("Failed to approve campaign:", error);
@@ -502,91 +551,75 @@ export default function CampaignDetailsPage() {
     }
   };
 
-  const handlePauseCampaign = async () => {
-    if (!id) return;
+  // Consolidated campaign action handler for details page
+  interface CampaignDetailActionParams {
+    action: "pause" | "resume" | "delete";
+    successMessage: string;
+    onSuccess?: () => void;
+  }
 
-    try {
-      setIsActionLoading(true);
-      const pauseResponse = await campaignService.pauseCampaign(parseInt(id), {
-        updated_by: 1,
-      });
-      showToast("success", "Campaign paused");
+  const handleCampaignDetailAction = async (
+    params: CampaignDetailActionParams,
+  ) => {
+    const { action, successMessage, onSuccess } = params;
+    if (!id || !campaign) return;
 
-      // Update campaign with the response data
-      const responseData = pauseResponse as unknown as {
-        success?: boolean;
-        data?: Campaign;
-      };
+    const campaignId = parseInt(id);
+    const updateFields: Partial<Campaign> = {};
 
-      if (responseData?.success && responseData?.data) {
-        setCampaign(responseData.data);
-      } else {
-        // Fallback: refetch campaign if response doesn't contain full data
-        const fetchResponse = (await campaignService.getCampaignById(id, true)) as {
-          data?: Campaign;
-          success?: boolean;
-        };
-        const campaignData = fetchResponse.data || (fetchResponse as Campaign);
-        if (campaignData) {
-          setCampaign(campaignData);
-        }
-      }
-    } catch (error) {
-      console.error("Failed to pause campaign:", error);
-      showToast("error", "Failed to pause campaign");
-    } finally {
-      setIsActionLoading(false);
+    // Map action to fields that need updating
+    switch (action) {
+      case "pause":
+        updateFields.status = "paused";
+        break;
+      case "resume":
+        updateFields.status = "active";
+        break;
     }
-  };
 
-  const handleResumeCampaign = async () => {
-    if (!id) return;
+    await handleCampaignAction(
+      {
+        campaignId,
+        campaignName: campaign.name,
+        action: action as "pause" | "resume" | "activate" | "submit",
+        successMessage,
+        errorMessage: `Failed to ${action} campaign`,
+        updateFields,
+      },
+      {
+        onSetLoading: (state) =>
+          setIsActionLoading(
+            typeof state === "function"
+              ? state(new Set([campaignId])).size > 0
+              : state.size > 0,
+          ),
+        onCloseMenu: () => {},
+        onSetCampaign: (updatedCampaign) =>
+          setCampaign({ ...campaign, ...updatedCampaign }),
+        onSuccess: (message) => {
+          showToast("success", message);
+          // Close dropdown immediately so user doesn't see stale button state
+          if (onSuccess) onSuccess();
 
-    try {
-      setIsActionLoading(true);
-      const resumeResponse = await campaignService.resumeCampaign(parseInt(id));
-      showToast("success", "Campaign resumed");
+          // Refetch campaign data for pause/resume to sync button state (in background)
+          if (action === "pause" || action === "resume") {
+            campaignService
+              .getCampaignById(id, true)
+              .then((response) => {
+                if (response && response.data) {
+                  setCampaign(response.data);
+                }
+              })
+              .catch((error) => {
+                console.error("Failed to refetch campaign:", error);
+              });
+          }
+        },
+        onError: (title, message) => showToast("error", title, message),
+      },
+    );
 
-      // Update campaign with the response data
-      const responseData = resumeResponse as unknown as {
-        success?: boolean;
-        data?: Campaign;
-      };
-
-      if (responseData?.success && responseData?.data) {
-        setCampaign(responseData.data);
-      } else {
-        // Fallback: refetch campaign if response doesn't contain full data
-        const fetchResponse = (await campaignService.getCampaignById(id, true)) as {
-          data?: Campaign;
-          success?: boolean;
-        };
-        const campaignData = fetchResponse.data || (fetchResponse as Campaign);
-        if (campaignData) {
-          setCampaign(campaignData);
-        }
-      }
-    } catch (error) {
-      console.error("Failed to resume campaign:", error);
-      showToast("error", "Failed to resume campaign");
-    } finally {
-      setIsActionLoading(false);
-    }
-  };
-
-  const handleDeleteCampaign = async () => {
-    if (!id) return;
-
-    try {
-      setIsActionLoading(true);
-      await campaignService.deleteCampaign(parseInt(id));
-      showToast("success", "Campaign deleted successfully");
-      navigate("/dashboard/campaigns");
-    } catch (error) {
-      console.error("Failed to delete campaign:", error);
-      showToast("error", "Failed to delete campaign");
-    } finally {
-      setIsActionLoading(false);
+    if (action === "delete") {
       setShowDeleteModal(false);
     }
   };
@@ -636,7 +669,7 @@ export default function CampaignDetailsPage() {
     });
     // Initialize raw condition rule input from existing rule or empty
     setRawConditionRuleInput(
-      flow.condition_rule ? JSON.stringify(flow.condition_rule, null, 2) : ""
+      flow.condition_rule ? JSON.stringify(flow.condition_rule, null, 2) : "",
     );
 
     // Load active segments and offers if not already loaded
@@ -722,7 +755,6 @@ export default function CampaignDetailsPage() {
         return;
       }
 
-      console.log("Updating flow with ID:", flowId, "Data:", updateData);
       await campaignFlowService.updateCampaignFlow(flowId, updateData);
 
       showToast("success", "Flow updated successfully");
@@ -765,7 +797,6 @@ export default function CampaignDetailsPage() {
         return;
       }
 
-      console.log("Deleting flow with ID:", flowId);
       // Call deleteCampaignFlow
       await campaignFlowService.deleteCampaignFlow(flowId);
 
@@ -819,7 +850,7 @@ export default function CampaignDetailsPage() {
           </p>
           <button
             onClick={handleBack}
-            className={`px-4 py-2 ${tw.rounded} font-semibold flex items-center gap-2 mx-auto text-base text-white`}
+            className={`px-4 py-2 ${tw.rounded} font-semibold flex items-center gap-2 mx-auto text-sm text-white`}
             style={{ backgroundColor: color.primary.action }}
           >
             <ArrowLeft className="w-4 h-4" />
@@ -833,18 +864,18 @@ export default function CampaignDetailsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-        <div className="flex items-center space-x-2 sm:space-x-4">
-          <BackButton fallbackTo="/dashboard/campaigns" onClick={handleBack} />
-          <div>
-            <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-              {t.pages.campaignDetails}
-            </h1>
-            <p className={`${tw.textSecondary} mt-2 text-sm`}>
-              View and manage campaign information
-            </p>
-          </div>
-        </div>
+        <BackButton fallbackTo="/dashboard/campaigns" onClick={handleBack} showBreadcrumb={true} currentLabel="Campaign Details" />
         <div className="flex flex-wrap items-center gap-2">
+          {/* Scheduled Run Clock Button */}
+          <button
+            onClick={() => setShowScheduledModal(true)}
+            className={`flex items-center justify-center p-2 ${tw.rounded} text-white hover:opacity-80 transition-opacity`}
+            style={{ backgroundColor: color.primary.accent }}
+            title="View campaign schedule"
+          >
+            <Clock className="w-5 h-5" />
+          </button>
+
           {/* Step 1: Request Approval (draft status) */}
           {campaign.status === "draft" && (
             <button
@@ -880,35 +911,37 @@ export default function CampaignDetailsPage() {
           )}
 
           {/* Step 3: Activate Campaign (approved + is_active=false) */}
-          {campaign.approval_status === "approved" && campaign?.is_active === false && (
-            <button
-              onClick={handleActivateCampaign}
-              disabled={isActionLoading}
-              className={`flex items-center gap-2 ${tw.button} text-sm disabled:opacity-50`}
-              style={{ backgroundColor: color.primary.action }}
-            >
-              {isActionLoading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              ) : (
-                <Zap className="w-4 h-4" />
-              )}
-              {isActionLoading ? "Activating..." : "Activate Campaign"}
-            </button>
-          )}
-
-          {/* Step 4: Execute Campaign (approved + is_active=true) */}
-          {campaign.approval_status === "approved" && campaign?.is_active === true && (
-            <PermissionGate permission="campaigns.execute">
+          {campaign.approval_status === "approved" &&
+            campaign?.is_active === false && (
               <button
-                onClick={() => setShowExecuteModal(true)}
-                className={`flex items-center gap-2 ${tw.button} text-sm`}
+                onClick={handleActivateCampaign}
+                disabled={isActionLoading}
+                className={`flex items-center gap-2 ${tw.button} text-sm disabled:opacity-50`}
                 style={{ backgroundColor: color.primary.action }}
               >
-                <Play className="w-4 h-4" />
-                Execute Campaign
+                {isActionLoading ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                ) : (
+                  <Zap className="w-4 h-4" />
+                )}
+                {isActionLoading ? "Activating..." : "Activate Campaign"}
               </button>
-            </PermissionGate>
-          )}
+            )}
+
+          {/* Step 4: Execute Campaign (approved + is_active=true) */}
+          {campaign.approval_status === "approved" &&
+            campaign?.is_active === true && (
+              <PermissionGate permission="campaigns.execute">
+                <button
+                  onClick={() => setShowRunModal(true)}
+                  className={`flex items-center gap-2 ${tw.button} text-sm`}
+                  style={{ backgroundColor: color.primary.action }}
+                >
+                  <Play className="w-4 h-4" />
+                  Run Now
+                </button>
+              </PermissionGate>
+            )}
 
           {/* Edit Button - Always Visible */}
           <PermissionGate permission="campaigns.update">
@@ -948,53 +981,51 @@ export default function CampaignDetailsPage() {
                 className={`absolute right-0 mt-2 w-52 bg-white border border-gray-200 ${tw.rounded} shadow-xl py-2 z-50`}
               >
                 {/* Pause Campaign - Only if approved and not paused */}
-                {campaign.approval_status === "approved" &&
-                  campaign?.status !== "paused" && (
-                    <button
-                      onClick={() => {
-                        handlePauseCampaign();
-                        setShowMoreMenu(false);
-                      }}
-                      disabled={isActionLoading}
-                      className="w-full flex items-center px-4 py-2 text-sm disabled:opacity-50"
-                      style={{
-                        color: color.status.warning,
-                      }}
-                    >
-                      {isActionLoading ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-3"></div>
-                      ) : (
-                        <Pause className="w-4 h-4 mr-3" />
-                      )}
-                      {isActionLoading ? "Pausing..." : "Pause Campaign"}
-                    </button>
-                  )}
+                {canShowCampaignButton(campaign, "pause") && (
+                  <button
+                    onClick={() => {
+                      handleCampaignDetailAction({
+                        action: "pause",
+                        successMessage: "Campaign paused successfully!",
+                        onSuccess: () => setShowMoreMenu(false),
+                      });
+                    }}
+                    disabled={isActionLoading}
+                    className="w-full flex items-center px-4 py-2 text-sm text-gray-700 disabled:opacity-50"
+                  >
+                    {isActionLoading ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-3"></div>
+                    ) : (
+                      <Pause className="w-4 h-4 mr-3" />
+                    )}
+                    {isActionLoading ? "Pausing..." : "Pause Campaign"}
+                  </button>
+                )}
 
                 {/* Resume Campaign - Only if approved and paused */}
-                {campaign.approval_status === "approved" &&
-                  campaign?.status === "paused" && (
-                    <button
-                      onClick={() => {
-                        handleResumeCampaign();
-                        setShowMoreMenu(false);
-                      }}
-                      disabled={isActionLoading}
-                      className="w-full flex items-center px-4 py-2 text-sm disabled:opacity-50"
-                      style={{
-                        color: color.primary.action,
-                      }}
-                    >
-                      {isActionLoading ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-3"></div>
-                      ) : (
-                        <Play className="w-4 h-4 mr-3" />
-                      )}
-                      {isActionLoading ? "Resuming..." : "Resume Campaign"}
-                    </button>
-                  )}
+                {canShowCampaignButton(campaign, "resume") && (
+                  <button
+                    onClick={() => {
+                      handleCampaignDetailAction({
+                        action: "resume",
+                        successMessage: "Campaign resumed successfully!",
+                        onSuccess: () => setShowMoreMenu(false),
+                      });
+                    }}
+                    disabled={isActionLoading}
+                    className="w-full flex items-center px-4 py-2 text-sm text-gray-700 disabled:opacity-50"
+                  >
+                    {isActionLoading ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-3"></div>
+                    ) : (
+                      <Play className="w-4 h-4 mr-3" />
+                    )}
+                    {isActionLoading ? "Resuming..." : "Resume Campaign"}
+                  </button>
+                )}
 
                 {/* Reject - Only if pending */}
-                {campaign.approval_status === "pending" && (
+                {canShowCampaignButton(campaign, "reject") && (
                   <button
                     onClick={() => {
                       setShowRejectModal(true);
@@ -1031,98 +1062,482 @@ export default function CampaignDetailsPage() {
 
       {/* Execution Metrics Cards - Always Display */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          {/* Messages Sent Card */}
-          <div
-            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-          >
-            <div className="flex items-center gap-2">
-              <Send
-                className="h-5 w-5"
-                style={{ color: color.primary.accent }}
-              />
-              <p className="text-sm font-medium text-gray-600">Messages Sent</p>
+        {/* Messages Sent Card */}
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
+          <div className="flex items-center gap-2">
+            <Send className="h-5 w-5" style={{ color: color.primary.accent }} />
+            <p className="text-sm font-medium text-gray-600">Messages Sent</p>
+          </div>
+          <p className="mt-2 text-3xl font-bold text-gray-900">
+            {(executionMetrics?.total_messages_sent || 0).toLocaleString()}
+          </p>
+        </div>
+
+        {/* Messages Failed Card */}
+        <div
+          onClick={() => setShowFailedModal(true)}
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm cursor-pointer hover:shadow-md hover:border-gray-300 transition-all`}
+        >
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-5 w-5" style={{ color: "#DC2626" }} />
+            <p className="text-sm font-medium text-gray-600">Failed</p>
+          </div>
+          <p className="mt-2 text-3xl font-bold text-gray-900">
+            {(executionMetrics?.total_messages_failed || 0).toLocaleString()}
+          </p>
+        </div>
+
+        {/* Success Rate Card */}
+        <div
+          onClick={() => setShowSuccessRateModal(true)}
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm cursor-pointer hover:shadow-md hover:border-gray-300 transition-all`}
+        >
+          <div className="flex items-center gap-2">
+            <CheckCircle
+              className="h-5 w-5"
+              style={{ color: color.primary.accent }}
+            />
+            <p className="text-sm font-medium text-gray-600">Success Rate</p>
+          </div>
+          <p className="mt-2 text-3xl font-bold text-gray-900">
+            {(executionMetrics?.total_messages_sent || 0) +
+              (executionMetrics?.total_messages_failed || 0) >
+            0
+              ? (
+                  ((executionMetrics?.total_messages_sent || 0) /
+                    ((executionMetrics?.total_messages_sent || 0) +
+                      (executionMetrics?.total_messages_failed || 0))) *
+                  100
+                ).toFixed(1)
+              : "0.0"}
+            %
+          </p>
+        </div>
+
+        {/* Broadcasts Card */}
+        <div
+          onClick={() => setShowBroadcastsModal(true)}
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm cursor-pointer hover:shadow-md hover:border-gray-300 transition-all`}
+        >
+          <div className="flex items-center gap-2">
+            <TrendingUp
+              className="h-5 w-5"
+              style={{ color: color.primary.accent }}
+            />
+            <p className="text-sm font-medium text-gray-600">Broadcasts</p>
+          </div>
+          <p className="mt-2 text-3xl font-bold text-gray-900">
+            {executionMetrics?.broadcasts_completed || 0} /
+            {executionMetrics?.total_broadcasts || 0}
+          </p>
+        </div>
+
+        {/* Execution Time Card */}
+        <div
+          onClick={() => setShowExecutionTimeModal(true)}
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm cursor-pointer hover:shadow-md hover:border-gray-300 transition-all`}
+        >
+          <div className="flex items-center gap-2">
+            <Clock
+              className="h-5 w-5"
+              style={{ color: color.primary.accent }}
+            />
+            <p className="text-sm font-medium text-gray-600">Execution Time</p>
+          </div>
+          <p className="mt-2 text-3xl font-bold text-gray-900">
+            {((executionMetrics?.execution_time_ms || 0) / 1000).toFixed(2)}s
+          </p>
+        </div>
+      </div>
+
+      {/* Campaign Information Card */}
+      <div
+        className={`bg-white ${tw.rounded} border p-6 shadow-sm mb-6`}
+        style={{ borderColor: color.border.default }}
+      >
+        <h3 className={`text-base font-semibold ${tw.textPrimary} mb-4`}>
+          Campaign Information
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              Name
+            </label>
+            <p className={`text-sm ${tw.textPrimary}`}>{campaign.name}</p>
+          </div>
+          <div>
+            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              Code
+            </label>
+            <p className={`text-sm ${tw.textPrimary}`}>{campaign.code}</p>
+          </div>
+          <div>
+            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              Status
+            </label>
+            <div className="flex items-center flex-wrap gap-2">
+              {campaign.status && (
+                <span
+                  className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-white ${getStatusBadge(
+                    campaign.status,
+                  ).replace(/text-\S+/, "")}`}
+                  style={{
+                    backgroundColor:
+                      campaign.status === "active" || campaign.status === "approved"
+                        ? "#10B981"
+                        : campaign.status === "draft"
+                          ? "#6B7280"
+                          : campaign.status === "paused"
+                            ? "#F59E0B"
+                            : "#EF4444",
+                  }}
+                >
+                  {campaign.status?.replace(/_/g, " ")}
+                </span>
+              )}
             </div>
-            <p className="mt-2 text-3xl font-bold text-gray-900">
-              {(executionMetrics?.total_messages_sent || 0).toLocaleString()}
+          </div>
+          <div>
+            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              Approval Status
+            </label>
+            <div className="flex items-center flex-wrap gap-2">
+              {campaign.approval_status && (
+                <span
+                  className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-white`}
+                  style={{
+                    backgroundColor:
+                      campaign.approval_status === "approved"
+                        ? "#10B981"
+                        : campaign.approval_status === "rejected"
+                          ? "#EF4444"
+                          : "#F59E0B",
+                  }}
+                >
+                  {campaign.approval_status === "rejected" && (
+                    <XCircle className="w-3 h-3 mr-1" />
+                  )}
+                  {campaign.approval_status === "pending" && (
+                    <Clock className="w-3 h-3 mr-1" />
+                  )}
+                  {campaign.approval_status?.replace(/_/g, " ")}
+                </span>
+              )}
+            </div>
+          </div>
+          <div>
+            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              Category
+            </label>
+            <p className={`text-sm ${tw.textPrimary}`}>
+              {categoryName || "—"}
             </p>
           </div>
-
-          {/* Messages Failed Card */}
-          <div
-            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-          >
-            <div className="flex items-center gap-2">
-              <AlertCircle
-                className="h-5 w-5"
-                style={{ color: "#DC2626" }}
-              />
-              <p className="text-sm font-medium text-gray-600">Failed</p>
-            </div>
-            <p className="mt-2 text-3xl font-bold text-gray-900">
-              {(executionMetrics?.total_messages_failed || 0).toLocaleString()}
+          <div>
+            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              Objective
+            </label>
+            <p className={`text-sm ${tw.textPrimary}`}>
+              {formatObjective(campaign.objective)}
             </p>
           </div>
-
-          {/* Success Rate Card */}
-          <div
-            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-          >
-            <div className="flex items-center gap-2">
-              <CheckCircle
-                className="h-5 w-5"
-                style={{ color: color.primary.accent }}
-              />
-              <p className="text-sm font-medium text-gray-600">Success Rate</p>
+          <div>
+            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              Tags
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {campaign.tags && campaign.tags.length > 0 ? (
+                campaign.tags.map((tag, index) => {
+                  const tagName =
+                    typeof tag === "object" && tag !== null
+                      ? (tag as any).name || String(tag)
+                      : String(tag);
+                  return (
+                    <span
+                      key={index}
+                      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white"
+                      style={{
+                        backgroundColor: color.primary.accent,
+                      }}
+                    >
+                      {tagName.replace("catalog:", "")}
+                    </span>
+                  );
+                })
+              ) : (
+                <p className={`text-sm ${tw.textPrimary}`}>—</p>
+              )}
             </div>
-            <p className="mt-2 text-3xl font-bold text-gray-900">
-              {(executionMetrics?.total_messages_sent || 0) + (executionMetrics?.total_messages_failed || 0) > 0
-                ? (
-                    ((executionMetrics?.total_messages_sent || 0) /
-                      ((executionMetrics?.total_messages_sent || 0) +
-                        (executionMetrics?.total_messages_failed || 0))) *
-                    100
-                  ).toFixed(1)
-                : "0.0"}
-              %
-            </p>
           </div>
-
-          {/* Broadcasts Card */}
-          <div
-            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-          >
-            <div className="flex items-center gap-2">
-              <TrendingUp
-                className="h-5 w-5"
-                style={{ color: color.primary.accent }}
-              />
-              <p className="text-sm font-medium text-gray-600">Broadcasts</p>
-            </div>
-            <p className="mt-2 text-3xl font-bold text-gray-900">
-              {executionMetrics?.broadcasts_completed || 0} /
-              {executionMetrics?.total_broadcasts || 0}
-            </p>
-          </div>
-
-          {/* Execution Time Card */}
-          <div
-            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-          >
-            <div className="flex items-center gap-2">
-              <Clock
-                className="h-5 w-5"
-                style={{ color: color.primary.accent }}
-              />
-              <p className="text-sm font-medium text-gray-600">Execution Time</p>
-            </div>
-            <p className="mt-2 text-3xl font-bold text-gray-900">
-              {((executionMetrics?.execution_time_ms || 0) / 1000).toFixed(2)}s
+          <div>
+            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              Program ID
+            </label>
+            <p className={`text-sm ${tw.textPrimary}`}>
+              {campaign.program_id || "—"}
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Schedule & Targets Combined Card */}
+      <div
+        className={`bg-white ${tw.rounded} border p-6 shadow-sm mb-6`}
+        style={{ borderColor: color.border.default }}
+      >
+        {/* Schedule Section */}
+        <div className="mb-8">
+          <h3
+            className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide mb-4`}
+          >
+            Schedule & Timeline
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label
+                className={`text-sm font-medium ${tw.textMuted} block mb-1`}
+              >
+                Start Date
+              </label>
+              <p className={`text-sm ${tw.textPrimary}`}>
+                {campaign.start_date ? (
+                  <DateFormatter
+                    date={campaign.start_date}
+                    useLocale
+                    year="numeric"
+                    month="long"
+                    day="numeric"
+                  />
+                ) : (
+                  "—"
+                )}
+              </p>
+            </div>
+            <div>
+              <label
+                className={`text-sm font-medium ${tw.textMuted} block mb-1`}
+              >
+                End Date
+              </label>
+              <p className={`text-sm ${tw.textPrimary}`}>
+                {campaign.end_date ? (
+                  <DateFormatter
+                    date={campaign.end_date}
+                    useLocale
+                    year="numeric"
+                    month="long"
+                    day="numeric"
+                  />
+                ) : (
+                  "—"
+                )}
+              </p>
+            </div>
+            <div>
+              <label
+                className={`text-sm font-medium ${tw.textMuted} block mb-1`}
+              >
+                Timezone
+              </label>
+              <p className={`text-sm ${tw.textPrimary}`}>
+                {campaign.timezone}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="border-t border-gray-200 my-6"></div>
+
+        {/* Targets & Performance Section */}
+        <div>
+          <h3
+            className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide mb-4`}
+          >
+            Targets & Performance
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label
+                className={`text-sm font-medium ${tw.textMuted} block mb-1`}
+              >
+                Max Participants
+              </label>
+              <p className={`text-sm ${tw.textPrimary}`}>
+                {campaign.max_participants ?? "—"}
+              </p>
+            </div>
+            <div>
+              <label
+                className={`text-sm font-medium ${tw.textMuted} block mb-1`}
+              >
+                Current Participants
+              </label>
+              <p className={`text-sm ${tw.textPrimary}`}>
+                {campaign.current_participants ?? "—"}
+              </p>
+            </div>
+            <div>
+              <label
+                className={`text-sm font-medium ${tw.textMuted} block mb-1`}
+              >
+                Target Reach
+              </label>
+              <p className={`text-sm ${tw.textPrimary}`}>
+                {campaign.target_reach ?? "—"}
+              </p>
+            </div>
+            <div>
+              <label
+                className={`text-sm font-medium ${tw.textMuted} block mb-1`}
+              >
+                Target Conversion Rate
+              </label>
+              <p className={`text-sm ${tw.textPrimary}`}>
+                {campaign.target_conversion_rate
+                  ? `${campaign.target_conversion_rate}%`
+                  : "—"}
+              </p>
+            </div>
+            <div>
+              <label
+                className={`text-sm font-medium ${tw.textMuted} block mb-1`}
+              >
+                Target Revenue
+              </label>
+              <p className={`text-sm ${tw.textPrimary}`}>
+                {campaign.target_revenue ? (
+                  <CurrencyFormatter
+                    amount={parseFloat(String(campaign.target_revenue))}
+                  />
+                ) : (
+                  "—"
+                )}
+              </p>
+            </div>
+            <div>
+              <label
+                className={`text-sm font-medium ${tw.textMuted} block mb-1`}
+              >
+                Control Group Enabled
+              </label>
+              <p className={`text-sm ${tw.textPrimary}`}>
+                {campaign.control_group_enabled ? "Yes" : "No"}
+              </p>
+            </div>
+            <div>
+              <label
+                className={`text-sm font-medium ${tw.textMuted} block mb-1`}
+              >
+                Control Group Percentage
+              </label>
+              <p className={`text-sm ${tw.textPrimary}`}>
+                {campaign.control_group_percentage
+                  ? `${campaign.control_group_percentage}%`
+                  : "—"}
+              </p>
+            </div>
+            <div>
+              <label
+                className={`text-sm font-medium ${tw.textMuted} block mb-1`}
+              >
+                Control Group UUID
+              </label>
+              <p className={`text-sm ${tw.textPrimary} break-all text-sm`}>
+                {campaign.campaign_uuid}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Audit Trail Card */}
+      <div
+        className={`bg-white ${tw.rounded} border p-6 shadow-sm mb-6`}
+        style={{ borderColor: color.border.default }}
+      >
+        <h3 className={`text-base font-semibold ${tw.textPrimary} mb-4`}>
+          Audit Trail
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              Created Date
+            </label>
+            <p className={`text-sm ${tw.textPrimary}`}>
+              <DateFormatter
+                date={campaign.created_at}
+                useLocale
+                year="numeric"
+                month="long"
+                day="numeric"
+              />
+            </p>
+          </div>
+          <div>
+            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              Created By
+            </label>
+            <p className={`text-sm ${tw.textPrimary}`}>
+              {createdByName || "—"}
+            </p>
+          </div>
+          <div>
+            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              Updated Date
+            </label>
+            <p className={`text-sm ${tw.textPrimary}`}>
+              <DateFormatter
+                date={campaign.updated_at}
+                useLocale
+                year="numeric"
+                month="long"
+                day="numeric"
+              />
+            </p>
+          </div>
+          <div>
+            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              Updated By
+            </label>
+            <p className={`text-sm ${tw.textPrimary}`}>
+              {updatedByName || "—"}
+            </p>
+          </div>
+          <div>
+            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              Approved Date
+            </label>
+            <p className={`text-sm ${tw.textPrimary}`}>
+              {campaign.approved_at ? (
+                <DateFormatter
+                  date={campaign.approved_at}
+                  useLocale
+                  year="numeric"
+                  month="long"
+                  day="numeric"
+                />
+              ) : (
+                "—"
+              )}
+            </p>
+          </div>
+          <div>
+            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              Approved By
+            </label>
+            <p className={`text-sm ${tw.textPrimary}`}>
+              {approvedByName || "—"}
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* Campaign Information and Budget Utilization - Side by Side */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-start hidden">
         {/* Campaign Information Card */}
         <div
           className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
@@ -1132,20 +1547,21 @@ export default function CampaignDetailsPage() {
           <div className="mb-3 pb-3 border-b border-gray-200">
             <div className="flex flex-wrap items-center gap-3 mb-2">
               <h2 className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
-                {campaign.name}
+                {campaign.name || "—"}
               </h2>
               <div className="flex items-center flex-wrap gap-2">
-                {(!campaign.approval_status ||
-                  campaign.approval_status?.toLowerCase() !==
-                    campaign.status?.toLowerCase()) && (
-                  <span
-                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(
-                      campaign.status,
-                    )}`}
-                  >
-                    {campaign.status.replace(/_/g, " ")}
-                  </span>
-                )}
+                {campaign.status &&
+                  (!campaign.approval_status ||
+                    campaign.approval_status?.toLowerCase() !==
+                      campaign.status?.toLowerCase()) && (
+                    <span
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(
+                        campaign.status,
+                      )}`}
+                    >
+                      {campaign.status?.replace(/_/g, " ")}
+                    </span>
+                  )}
                 {campaign.approval_status && (
                   <span
                     className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getApprovalBadge(
@@ -1161,13 +1577,13 @@ export default function CampaignDetailsPage() {
                     {campaign.approval_status === "pending" && (
                       <Clock className="w-3 h-3 mr-1" />
                     )}
-                    {campaign.approval_status.replace(/_/g, " ")}
+                    {campaign.approval_status?.replace(/_/g, " ")}
                   </span>
                 )}
               </div>
             </div>
-            <p className={`${tw.textSecondary} mb-2 text-base leading-relaxed`}>
-              {campaign.description}
+            <p className={`${tw.textSecondary} mb-2 text-sm leading-relaxed`}>
+              {campaign.description || "—"}
             </p>
             {/* Rejection Reason Display */}
             {campaign.approval_status === "rejected" &&
@@ -1190,204 +1606,244 @@ export default function CampaignDetailsPage() {
               )}
           </div>
 
-          {/* Campaign Details Grid */}
-          <div>
-            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
-              Campaign Information
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label
-                  className={`text-sm font-medium ${tw.textMuted} block mb-2`}
-                >
-                  Campaign ID
-                </label>
-                <p className={`text-base ${tw.textPrimary} font-mono`}>
-                  {campaign.id}
-                </p>
+          {/* Campaign Details - Organized by Priority - Each in Own Card */}
+          <div className="space-y-6">
+            {/* Core Details Card */}
+            <div
+              className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
+              style={{ borderColor: color.border.default }}
+            >
+              <h4
+                className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide mb-4`}
+              >
+                Core Details
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label
+                    className={`text-sm font-medium ${tw.textMuted} block mb-2`}
+                  >
+                    Campaign ID
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary} font-mono`}>
+                    {campaign.id}
+                  </p>
+                </div>
+                <div>
+                  <label
+                    className={`text-sm font-medium ${tw.textMuted} block mb-2`}
+                  >
+                    Objective
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    {formatObjective(campaign.objective)}
+                  </p>
+                </div>
+                <div>
+                  <label
+                    className={`text-sm font-medium ${tw.textMuted} block mb-2`}
+                  >
+                    Category
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    {categoryName}
+                  </p>
+                </div>
+                <div>
+                  <label
+                    className={`text-sm font-medium ${tw.textMuted} block mb-2`}
+                  >
+                    Campaign Manager
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    {campaign.campaign_manager_id || "—"}
+                  </p>
+                </div>
               </div>
-              <div>
-                <label
-                  className={`text-sm font-medium ${tw.textMuted} block mb-2`}
-                >
-                  Objective
-                </label>
-                <p className={`text-base ${tw.textPrimary}`}>
-                  {formatObjective(campaign.objective)}
-                </p>
+            </div>
+
+            {/* Timeline Card */}
+            <div
+              className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
+              style={{ borderColor: color.border.default }}
+            >
+              <h4
+                className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide mb-4`}
+              >
+                Schedule & Timeline
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label
+                    className={`text-sm font-medium ${tw.textMuted} block mb-2`}
+                  >
+                    Start Date
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    {campaign.start_date ? (
+                      <DateFormatter
+                        date={campaign.start_date}
+                        useLocale
+                        year="numeric"
+                        month="long"
+                        day="numeric"
+                      />
+                    ) : (
+                      "—"
+                    )}
+                  </p>
+                </div>
+                <div>
+                  <label
+                    className={`text-sm font-medium ${tw.textMuted} block mb-2`}
+                  >
+                    End Date
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    {campaign.end_date ? (
+                      <DateFormatter
+                        date={campaign.end_date}
+                        useLocale
+                        year="numeric"
+                        month="long"
+                        day="numeric"
+                      />
+                    ) : (
+                      "—"
+                    )}
+                  </p>
+                </div>
+                <div>
+                  <label
+                    className={`text-sm font-medium ${tw.textMuted} block mb-2`}
+                  >
+                    Timezone
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    {campaign.timezone}
+                  </p>
+                </div>
               </div>
-              <div>
-                <label
-                  className={`text-sm font-medium ${tw.textMuted} block mb-2`}
-                >
-                  Category
-                </label>
-                <p className={`text-base ${tw.textPrimary}`}>{categoryName}</p>
+            </div>
+
+            {/* Targets & Performance Card */}
+            <div
+              className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
+              style={{ borderColor: color.border.default }}
+            >
+              <h4
+                className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide mb-4`}
+              >
+                Targets & Performance
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label
+                    className={`text-sm font-medium ${tw.textMuted} block mb-2`}
+                  >
+                    Max Participants
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    {campaign.max_participants ?? "—"}
+                  </p>
+                </div>
+                <div>
+                  <label
+                    className={`text-sm font-medium ${tw.textMuted} block mb-2`}
+                  >
+                    Current Participants
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    {campaign.current_participants ?? "—"}
+                  </p>
+                </div>
+                <div>
+                  <label
+                    className={`text-sm font-medium ${tw.textMuted} block mb-2`}
+                  >
+                    Target Reach
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    {campaign.target_reach ?? "—"}
+                  </p>
+                </div>
+                <div>
+                  <label
+                    className={`text-sm font-medium ${tw.textMuted} block mb-2`}
+                  >
+                    Target Conversion Rate
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    {campaign.target_conversion_rate
+                      ? `${campaign.target_conversion_rate}%`
+                      : "—"}
+                  </p>
+                </div>
+                <div>
+                  <label
+                    className={`text-sm font-medium ${tw.textMuted} block mb-2`}
+                  >
+                    Target Revenue
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    {campaign.target_revenue ? (
+                      <CurrencyFormatter
+                        amount={parseFloat(String(campaign.target_revenue))}
+                      />
+                    ) : (
+                      "—"
+                    )}
+                  </p>
+                </div>
               </div>
-              <div>
-                <label
-                  className={`text-sm font-medium ${tw.textMuted} block mb-2`}
-                >
-                  Segments
-                </label>
-                <p className={`text-base ${tw.textPrimary}`}>
-                  {segments.length} segment{segments.length !== 1 ? "s" : ""}
-                </p>
-              </div>
-              <div>
-                <label
-                  className={`text-sm font-medium ${tw.textMuted} block mb-2`}
-                >
-                  Offers
-                </label>
-                <p className={`text-base ${tw.textPrimary}`}>
-                  {isLoadingOffers
-                    ? "Loading..."
-                    : `${offers.length} offer${offers.length !== 1 ? "s" : ""}`}
-                </p>
-              </div>
-              <div>
-                <label
-                  className={`text-sm font-medium ${tw.textMuted} block mb-2`}
-                >
-                  Created Date
-                </label>
-                <p className={`text-base ${tw.textPrimary} flex items-center`}>
-                  <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-                  <DateFormatter
-                    date={campaign.created_at}
-                    useLocale
-                    year="numeric"
-                    month="long"
-                    day="numeric"
-                  />
-                </p>
-              </div>
-              <div>
-                <label
-                  className={`text-sm font-medium ${tw.textMuted} block mb-2`}
-                >
-                  Created By
-                </label>
-                <p className={`text-base ${tw.textPrimary}`}>
-                  {createdByName || "—"}
-                </p>
-              </div>
-              <div className="md:col-span-2">
-                <label
-                  className={`text-sm font-medium ${tw.textMuted} block mb-2`}
+            </div>
+
+            {/* Tags Card */}
+            {campaign.tags && campaign.tags.length > 0 && (
+              <div
+                className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
+                style={{ borderColor: color.border.default }}
+              >
+                <h4
+                  className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide mb-4`}
                 >
                   Tags
-                </label>
-                {campaign.tags && campaign.tags.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {campaign.tags.map((tag, index) => (
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {campaign.tags.map((tag, index) => {
+                    const tagName =
+                      typeof tag === "object" && tag !== null
+                        ? (tag as any).name || String(tag)
+                        : String(tag);
+                    const tagKey =
+                      typeof tag === "object" && tag !== null
+                        ? (tag as any).id || index
+                        : tag;
+                    return (
                       <span
-                        key={`${tag}-${index}`}
+                        key={`${tagKey}-${index}`}
                         className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium`}
                         style={{
                           backgroundColor: color.primary.accent,
                           color: "white",
                         }}
                       >
-                        {tag.replace("catalog:", "")}
+                        {tagName.replace("catalog:", "")}
                       </span>
-                    ))}
-                  </div>
-                ) : (
-                  <p className={`text-base ${tw.textSecondary}`}>
-                    No tags added
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Budget Utilization Card */}
-        {budgetUtilisation && (
-          <div
-            className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
-          style={{ borderColor: color.border.default }}
-          >
-            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
-              Budget Utilization
-            </h3>
-            {isLoadingBudgetUtil ? (
-              <div className="flex items-center justify-center py-4">
-                <LoadingSpinner variant="modern" size="sm" color="primary" />
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className={`text-sm ${tw.textSecondary}`}>
-                      Utilization:{" "}
-                      {budgetUtilisation.utilization_percentage.toFixed(1)}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="h-2 rounded-full transition-all"
-                      style={{
-                        width: `${Math.min(
-                          budgetUtilisation.utilization_percentage,
-                          100,
-                        )}%`,
-                        backgroundColor: color.primary.accent,
-                      }}
-                    />
-                  </div>
+                    );
+                  })}
                 </div>
-                <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                  <span className={`text-sm ${tw.textSecondary}`}>
-                    Remaining Budget
-                  </span>
-                  <span className={`text-sm font-semibold ${tw.textPrimary}`}>
-                    <CurrencyFormatter
-                      amount={budgetUtilisation.remaining_budget}
-                    />
-                  </span>
-                </div>
-                {campaign.budget_allocated && campaign.budget_spent && (
-                  <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-200">
-                    <div>
-                      <span
-                        className={`text-xs ${tw.textSecondary} block mb-1`}
-                      >
-                        Allocated
-                      </span>
-                      <span className={`text-sm font-medium ${tw.textPrimary}`}>
-                        <CurrencyFormatter
-                          amount={parseFloat(String(campaign.budget_allocated))}
-                        />
-                      </span>
-                    </div>
-                    <div>
-                      <span
-                        className={`text-xs ${tw.textSecondary} block mb-1`}
-                      >
-                        Spent
-                      </span>
-                      <span className={`text-sm font-medium ${tw.textPrimary}`}>
-                        <CurrencyFormatter
-                          amount={parseFloat(String(campaign.budget_spent))}
-                        />
-                      </span>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
           </div>
-        )}
+        </div>
       </div>
 
       {/* Campaign Segments Table - COMMENTED OUT */}
       {/* <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <h3
-            className={`text-lg font-semibold ${tw.textPrimary} flex items-center gap-2`}
+            className={`text-base font-semibold ${tw.textPrimary} flex items-center gap-2`}
           >
             <Users className="w-5 h-5" />
             Campaign Segments ({segments.length})
@@ -1468,7 +1924,7 @@ export default function CampaignDetailsPage() {
                             },
                           )
                         }
-                        className={`font-semibold text-base ${tw.textPrimary} truncate`}
+                        className={`font-semibold text-sm ${tw.textPrimary} truncate`}
                         title={segment.segment_name}
                         style={{ color: color.primary.accent }}
                       >
@@ -1493,7 +1949,7 @@ export default function CampaignDetailsPage() {
                       )}
                     </td>
                     <td
-                      className={`px-6 py-4 text-base ${tw.textPrimary}`}
+                      className={`px-6 py-4 text-sm ${tw.textPrimary}`}
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       {segment.segment_type}
@@ -1538,7 +1994,7 @@ export default function CampaignDetailsPage() {
       {/* <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <h3
-            className={`text-lg font-semibold ${tw.textPrimary} flex items-center gap-2`}
+            className={`text-base font-semibold ${tw.textPrimary} flex items-center gap-2`}
           >
             <Package className="w-5 h-5" />
             Campaign Offers ({offers.length})
@@ -1616,7 +2072,7 @@ export default function CampaignDetailsPage() {
                             },
                           })
                         }
-                        className={`font-semibold text-base ${tw.textPrimary} truncate`}
+                        className={`font-semibold text-sm ${tw.textPrimary} truncate`}
                         title={offer.name}
                         style={{ color: color.primary.accent }}
                       >
@@ -1641,7 +2097,7 @@ export default function CampaignDetailsPage() {
                       )}
                     </td>
                     <td
-                      className={`px-6 py-4 text-base ${tw.textPrimary}`}
+                      className={`px-6 py-4 text-sm ${tw.textPrimary}`}
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       {offer.code || "—"}
@@ -1669,7 +2125,7 @@ export default function CampaignDetailsPage() {
                       )}
                     </td>
                     <td
-                      className={`px-6 py-4 hidden md:table-cell text-base ${tw.textMuted}`}
+                      className={`px-6 py-4 hidden md:table-cell text-sm ${tw.textMuted}`}
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       {offer.offer_type || "—"}
@@ -1698,7 +2154,7 @@ export default function CampaignDetailsPage() {
                   <XCircle className="w-6 h-6 text-red-600" />
                 </div>
                 <div>
-                  <h3 className={`text-lg font-semibold ${tw.textPrimary}`}>
+                  <h3 className={`text-base font-semibold ${tw.textPrimary}`}>
                     Reject Campaign
                   </h3>
                   <p className={`text-sm ${tw.textMuted}`}>
@@ -1750,14 +2206,86 @@ export default function CampaignDetailsPage() {
         </div>
       )}
 
-      {/* Campaign Flows Table */}
+      {/* Budget Utilization Card */}
+      {budgetUtilisation && (
+        <div
+          className={`bg-white ${tw.rounded} border p-6 shadow-sm mb-6`}
+          style={{ borderColor: color.border.default }}
+        >
+          <h3 className={`text-base font-semibold ${tw.textPrimary} mb-4`}>
+            Budget Utilization
+          </h3>
+          {isLoadingBudgetUtil ? (
+            <div className="flex items-center justify-center py-4">
+              <LoadingSpinner variant="modern" size="sm" color="primary" />
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className={`text-sm ${tw.textSecondary}`}>
+                    Utilization:{" "}
+                    {budgetUtilisation.utilization_percentage.toFixed(1)}%
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className="h-2 rounded-full transition-all"
+                    style={{
+                      width: `${Math.min(
+                        budgetUtilisation.utilization_percentage,
+                        100,
+                      )}%`,
+                      backgroundColor: color.primary.accent,
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                <span className={`text-sm ${tw.textSecondary}`}>
+                  Remaining Budget
+                </span>
+                <span className={`text-sm font-semibold ${tw.textPrimary}`}>
+                  <CurrencyFormatter
+                    amount={budgetUtilisation.remaining_budget}
+                  />
+                </span>
+              </div>
+              {campaign.budget_allocated && campaign.budget_spent && (
+                <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-200">
+                  <div>
+                    <span className={`text-xs ${tw.textSecondary} block mb-1`}>
+                      Allocated
+                    </span>
+                    <span className={`text-sm font-medium ${tw.textPrimary}`}>
+                      <CurrencyFormatter
+                        amount={parseFloat(String(campaign.budget_allocated))}
+                      />
+                    </span>
+                  </div>
+                  <div>
+                    <span className={`text-xs ${tw.textSecondary} block mb-1`}>
+                      Spent
+                    </span>
+                    <span className={`text-sm font-medium ${tw.textPrimary}`}>
+                      <CurrencyFormatter
+                        amount={parseFloat(String(campaign.budget_spent))}
+                      />
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Segment-Offer Mappings Table */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-4">
-            <h3
-              className={`text-lg font-semibold ${tw.textPrimary}`}
-            >
-              Campaign Flows
+            <h3 className={`text-base font-semibold ${tw.textPrimary}`}>
+              Offers by Segment
             </h3>
           </div>
         </div>
@@ -1769,7 +2297,7 @@ export default function CampaignDetailsPage() {
           <div className="text-center py-8">
             <Zap className="w-12 h-12 text-gray-400 mx-auto mb-3" />
             <p className={`text-sm ${tw.textSecondary}`}>
-              No delivery flows configured for this campaign
+              No mappings configured for this campaign
             </p>
           </div>
         ) : (
@@ -1832,7 +2360,7 @@ export default function CampaignDetailsPage() {
                   // Match on segment_id (not id which is the association ID)
                   // Name is in segment_name (not name)
                   const segment = segments.find(
-                    (s) => s.segment_id === flow.segment_id
+                    (s) => s.segment_id === flow.segment_id,
                   );
                   const offer = offers.find(
                     (o) => parseInt(o.id) === flow.offer_id,
@@ -1984,7 +2512,7 @@ export default function CampaignDetailsPage() {
               className={`relative bg-white ${tw.rounded} shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto`}
             >
               <div className="flex items-center justify-between mb-6">
-                <h3 className={`text-lg font-semibold ${tw.textPrimary}`}>
+                <h3 className={`text-base font-semibold ${tw.textPrimary}`}>
                   Edit Campaign Flow
                 </h3>
                 <button
@@ -2044,7 +2572,6 @@ export default function CampaignDetailsPage() {
 
                 {/* Core Selection */}
                 <div className="space-y-4">
-
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label
@@ -2129,12 +2656,16 @@ export default function CampaignDetailsPage() {
                       }}
                       placeholder='{"condition": "value"}'
                       className={`w-full px-3 py-2 border ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-xs ${
-                        conditionRuleError ? "border-red-500" : "border-gray-300"
+                        conditionRuleError
+                          ? "border-red-500"
+                          : "border-gray-300"
                       }`}
                       rows={3}
                     />
                     {conditionRuleError && (
-                      <p className="text-xs text-red-600 mt-1">{conditionRuleError}</p>
+                      <p className="text-xs text-red-600 mt-1">
+                        {conditionRuleError}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -2276,7 +2807,10 @@ export default function CampaignDetailsPage() {
                       }
                       className="w-4 h-4"
                     />
-                    <label htmlFor="flowActive" className={`text-sm font-medium ${tw.textPrimary}`}>
+                    <label
+                      htmlFor="flowActive"
+                      className={`text-sm font-medium ${tw.textPrimary}`}
+                    >
                       Active Flow
                     </label>
                   </div>
@@ -2331,7 +2865,13 @@ export default function CampaignDetailsPage() {
       <DeleteConfirmModal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
-        onConfirm={handleDeleteCampaign}
+        onConfirm={() =>
+          handleCampaignDetailAction({
+            action: "delete",
+            successMessage: "Campaign deleted successfully!",
+            onSuccess: () => navigate("/dashboard/campaigns"),
+          })
+        }
         title="Delete Campaign"
         description="Are you sure you want to delete this campaign? This action cannot be undone and all campaign data will be permanently removed."
         itemName={campaign?.name || ""}
@@ -2342,15 +2882,15 @@ export default function CampaignDetailsPage() {
 
       {/* Execute Campaign Modal */}
       {campaign && (
-        <ExecuteCampaignModal
-          isOpen={showExecuteModal}
-          onClose={() => setShowExecuteModal(false)}
+        <RunCampaignModal
+          isOpen={showRunModal}
+          onClose={() => setShowRunModal(false)}
           campaignId={parseInt(id || "0")}
           campaignName={campaign.name}
           isActive={campaign?.is_active}
           approvalStatus={campaign.approval_status}
           onSuccess={(executionData) => {
-            setShowExecuteModal(false);
+            setShowRunModal(false);
             // Store execution metrics
             if (executionData) {
               setExecutionMetrics({
@@ -2364,6 +2904,57 @@ export default function CampaignDetailsPage() {
             refreshCampaignStatus();
           }}
         />
+      )}
+
+      {/* Stat Card Modals */}
+      {campaign && (
+        <>
+          <ScheduledModal
+            isOpen={showScheduledModal}
+            onClose={() => setShowScheduledModal(false)}
+            campaignName={campaign.name}
+            startDate={campaign?.start_date || null}
+            endDate={campaign?.end_date || null}
+          />
+          <BroadcastsModal
+            isOpen={showBroadcastsModal}
+            onClose={() => setShowBroadcastsModal(false)}
+            campaignName={campaign.name}
+          />
+          <FailedModal
+            isOpen={showFailedModal}
+            onClose={() => setShowFailedModal(false)}
+            campaignName={campaign.name}
+          />
+          <ExecutionTimeModal
+            isOpen={showExecutionTimeModal}
+            onClose={() => setShowExecutionTimeModal(false)}
+            campaignName={campaign.name}
+            totalExecutionTimeMs={executionMetrics?.execution_time_ms || 0}
+          />
+          <SuccessRateModal
+            isOpen={showSuccessRateModal}
+            onClose={() => setShowSuccessRateModal(false)}
+            campaignName={campaign.name}
+            totalDelivered={executionMetrics?.total_messages_sent || 0}
+            totalMessages={
+              (executionMetrics?.total_messages_sent || 0) +
+              (executionMetrics?.total_messages_failed || 0)
+            }
+            successRate={
+              (executionMetrics?.total_messages_sent || 0) +
+                (executionMetrics?.total_messages_failed || 0) >
+              0
+                ? (
+                    ((executionMetrics?.total_messages_sent || 0) /
+                      ((executionMetrics?.total_messages_sent || 0) +
+                        (executionMetrics?.total_messages_failed || 0))) *
+                    100
+                  )
+                : 0
+            }
+          />
+        </>
       )}
     </div>
   );

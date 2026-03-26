@@ -4,6 +4,7 @@ import { Plus, Search, Edit, Trash2, ArrowLeft } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import BackButton from "../../../shared/components/ui/BackButton";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { color, tw, components, helpers } from "../../../shared/utils/utils";
 import {
@@ -203,22 +204,7 @@ export default function CommunicationPolicyPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center space-x-2 sm:space-x-4">
-          <button
-            onClick={() => navigate("/dashboard/configuration")}
-            className={`p-2 ${tw.textSecondary} ${tw.rounded} transition-colors`}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div>
-            <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
-              {t.communicationPolicy.title}
-            </h1>
-            <p className={`${tw.textSecondary} mt-2 text-sm`}>
-              {t.communicationPolicy.subtitle}
-            </p>
-          </div>
-        </div>
+        <BackButton fallbackTo="/dashboard/configuration" showBreadcrumb={true} currentLabel={t.communicationPolicy.title} />
         <div className="flex items-center gap-3 w-auto">
           <button
             onClick={handleCreatePolicy}

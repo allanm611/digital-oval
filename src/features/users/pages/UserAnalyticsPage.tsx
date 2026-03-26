@@ -522,17 +522,7 @@ export default function UserAnalyticsPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <div className="flex items-center gap-4">
-        <BackButton />
-        <div>
-          <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-            User Analytics
-          </h1>
-          <p className={`${tw.textSecondary} mt-1 text-sm`}>
-            Overview of user distribution and status reports
-          </p>
-        </div>
-      </div>
+      <BackButton showBreadcrumb={true} currentLabel="User Analytics" />
 
       {isLoading ? (
         <div className="flex items-center justify-center py-16">

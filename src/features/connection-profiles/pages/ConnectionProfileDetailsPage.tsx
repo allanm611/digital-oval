@@ -282,16 +282,9 @@ export default function ConnectionProfileDetailsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-4">
-            <BackButton fallbackTo="/dashboard/connection-profiles" />
-            <div>
-              <h1 className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
-                {profile.profile_name}
-              </h1>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+          <BackButton fallbackTo="/dashboard/connection-profiles" showBreadcrumb={true} currentLabel="Connection Profile Details" />
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={handleToggleActive}
               disabled={togglingStatus}

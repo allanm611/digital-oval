@@ -85,17 +85,12 @@ export default function CustomerIdentityFieldDetailsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <BackButton
-          fallbackTo="/dashboard/customer-identity"
-          onClick={handleBack}
-        />
-        <div>
-          <h1 className={`${tw.mainHeading} text-gray-900`}>
-            {field ? field.field_name : t.customerIdentity.fieldDetails}
-          </h1>
-        </div>
-      </div>
+      <BackButton
+        fallbackTo="/dashboard/customer-identity"
+        onClick={handleBack}
+        showBreadcrumb={true}
+        currentLabel="Field Details"
+      />
 
       {isLoading ? (
         <div

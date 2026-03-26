@@ -18,6 +18,7 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import RegularModal from "../../../shared/components/ui/RegularModal";
 import CreateButton from "../../../shared/components/ui/CreateButton";
+import BackButton from "../../../shared/components/ui/BackButton";
 import Pagination from "../../../shared/components/ui/Pagination";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 
@@ -277,23 +278,7 @@ export default function ManualRewardsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            title="Go back"
-          >
-            <ArrowLeft className="h-5 w-5 text-gray-600" />
-          </button>
-          <div>
-            <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
-              Manual Rewards
-            </h1>
-            <p className={`${tw.textSecondary} mt-2 text-sm`}>
-              Apply rewards directly to customers
-            </p>
-          </div>
-        </div>
+        <BackButton fallbackTo="/dashboard" showBreadcrumb={true} currentLabel="Manual Rewards" />
         <div className="flex items-center gap-3">
           <PermissionGate permission="manual-rewards.create">
             <CreateButton route="/dashboard/manual-rewards/create" />

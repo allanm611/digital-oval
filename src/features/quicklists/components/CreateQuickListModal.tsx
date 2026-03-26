@@ -559,79 +559,6 @@ export default function CreateQuickListModal({
               )}
             </div>
 
-            {(() => {
-              // Parse headers from the uploaded file
-              const parseHeaders = (): string[] => {
-                if (!form.list_headers || !form.file_delimiter) {
-                  return [];
-                }
-                // Convert delimiter string to actual character for splitting
-                let delimiter = form.file_delimiter;
-                if (delimiter === "\\t" || delimiter === "\t") {
-                  delimiter = "\t";
-                }
-
-                return form.list_headers
-                  .split(delimiter)
-                  .map((h) => h.trim().replace(/^["']|["']$/g, "")) // Remove quotes from start/end
-                  .filter((h) => h.length > 0);
-              };
-
-              const headerOptions = parseHeaders();
-
-              return (
-                <>
-                  <SubscriptionIdSelector
-                    fileColumns={headerOptions}
-                    selectedColumn={form.subscriber_id_col_name || null}
-                    onColumnSelect={(column) =>
-                      handleInputChange("subscriber_id_col_name", column)
-                    }
-                    disabled={isSubmitting}
-                    error={!!errors.subscriber_id_col_name}
-                    errorMessage={errors.subscriber_id_col_name}
-                  />
-
-                  {/* Customer Identity Field Mapping Dropdown */}
-                  <div className="mt-4">
-                    <label className={`block text-sm font-medium ${tw.textPrimary} mb-0`}>
-                      Map to Customer Identity Field *
-                    </label>
-                    <p className={`text-xs ${tw.textSecondary} mb-2`}>
-                      Select which customer field this column represents
-                    </p>
-                    <HeadlessSelect
-                      options={customerIdentityFields.map((field) => ({
-                        value: field.field_value,
-                        label: field.field_name,
-                      }))}
-                      value={form.subscriber_id_field_mapping || ""}
-                      onChange={(value) =>
-                        handleInputChange(
-                          "subscriber_id_field_mapping",
-                          String(value)
-                        )
-                      }
-                      placeholder={
-                        !form.subscriber_id_col_name.trim()
-                          ? "Select subscriber ID column first..."
-                          : "Select identity field..."
-                      }
-                      placeholderClassName="text-sm"
-                      disabled={isSubmitting || isLoadingFields || customerIdentityFields.length === 0 || !form.subscriber_id_col_name.trim()}
-                      error={!!errors.subscriber_id_field_mapping}
-                      zIndex={10100}
-                    />
-                    {errors.subscriber_id_field_mapping && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {errors.subscriber_id_field_mapping}
-                      </p>
-                    )}
-                  </div>
-                </>
-              );
-            })()}
-
             <div>
               <label className="text-sm font-medium text-black mb-1 block">
                 File Delimiter
@@ -992,6 +919,79 @@ export default function CreateQuickListModal({
                 className="hidden"
               />
             </div>
+
+            {(() => {
+              // Parse headers from the uploaded file
+              const parseHeaders = (): string[] => {
+                if (!form.list_headers || !form.file_delimiter) {
+                  return [];
+                }
+                // Convert delimiter string to actual character for splitting
+                let delimiter = form.file_delimiter;
+                if (delimiter === "\\t" || delimiter === "\t") {
+                  delimiter = "\t";
+                }
+
+                return form.list_headers
+                  .split(delimiter)
+                  .map((h) => h.trim().replace(/^["']|["']$/g, "")) // Remove quotes from start/end
+                  .filter((h) => h.length > 0);
+              };
+
+              const headerOptions = parseHeaders();
+
+              return (
+                <>
+                  <SubscriptionIdSelector
+                    fileColumns={headerOptions}
+                    selectedColumn={form.subscriber_id_col_name || null}
+                    onColumnSelect={(column) =>
+                      handleInputChange("subscriber_id_col_name", column)
+                    }
+                    disabled={isSubmitting}
+                    error={!!errors.subscriber_id_col_name}
+                    errorMessage={errors.subscriber_id_col_name}
+                  />
+
+                  {/* Customer Identity Field Mapping Dropdown */}
+                  <div className="mt-4">
+                    <label className={`block text-sm font-medium ${tw.textPrimary} mb-0`}>
+                      Map to Customer Identity Field *
+                    </label>
+                    <p className={`text-xs ${tw.textSecondary} mb-2`}>
+                      Select which customer field this column represents
+                    </p>
+                    <HeadlessSelect
+                      options={customerIdentityFields.map((field) => ({
+                        value: field.field_value,
+                        label: field.field_name,
+                      }))}
+                      value={form.subscriber_id_field_mapping || ""}
+                      onChange={(value) =>
+                        handleInputChange(
+                          "subscriber_id_field_mapping",
+                          String(value)
+                        )
+                      }
+                      placeholder={
+                        !form.subscriber_id_col_name.trim()
+                          ? "Select subscriber ID column first..."
+                          : "Select identity field..."
+                      }
+                      placeholderClassName="text-sm"
+                      disabled={isSubmitting || isLoadingFields || customerIdentityFields.length === 0 || !form.subscriber_id_col_name.trim()}
+                      error={!!errors.subscriber_id_field_mapping}
+                      zIndex={10100}
+                    />
+                    {errors.subscriber_id_field_mapping && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.subscriber_id_field_mapping}
+                      </p>
+                    )}
+                  </div>
+                </>
+              );
+            })()}
 
             {errors.submit && (
               <p className="text-sm text-red-600">{errors.submit}</p>

@@ -65,6 +65,7 @@ import {
   SegmentationFieldsResponse,
   GenerateQueryPreviewRequest,
   GenerateQueryPreviewResponse,
+  SegmentPayload,
 } from "../types/segment";
 import {
   API_CONFIG,
@@ -76,7 +77,100 @@ const BASE_URL = buildApiUrl(API_CONFIG.ENDPOINTS.SEGMENTS || "/segments");
 const CATEGORIES_BASE_URL = buildApiUrl("/segment-categories");
 const MEMBERS_BASE_URL = buildApiUrl("/segment-members");
 
+const SEGMENT_FIELD_DEFAULTS = {
+  name: "Not specified",
+  code: "Not specified",
+  description: "Not specified",
+  type: "static" as const,
+  visibility: "private" as const,
+};
+
+const SEGMENT_CATEGORY_FIELD_DEFAULTS = {
+  name: "Not specified",
+  description: "Not specified",
+};
+
 class SegmentService {
+  private normalizeSegment(data: any): SegmentType {
+    if (!data) {
+      return {
+        id: 0,
+        name: SEGMENT_FIELD_DEFAULTS.name,
+        code: SEGMENT_FIELD_DEFAULTS.code,
+        type: SEGMENT_FIELD_DEFAULTS.type,
+        category: null,
+        parent_segment: null,
+        description: SEGMENT_FIELD_DEFAULTS.description,
+        definition: null,
+        query: null,
+        count_query: null,
+        size_estimate: null,
+        last_computed_at: null,
+        tags: [],
+        is_active: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        updated_by: null,
+        visibility: SEGMENT_FIELD_DEFAULTS.visibility,
+        created_by_user_id: null,
+      };
+    }
+
+    return {
+      id: data.id || 0,
+      name: data.name || SEGMENT_FIELD_DEFAULTS.name,
+      code: data.code || SEGMENT_FIELD_DEFAULTS.code,
+      type: data.type || SEGMENT_FIELD_DEFAULTS.type,
+      category: data.category || null,
+      parent_segment: data.parent_segment || null,
+      description: data.description || SEGMENT_FIELD_DEFAULTS.description,
+      definition: data.definition || null,
+      query: data.query || null,
+      count_query: data.count_query || null,
+      size_estimate: data.size_estimate || null,
+      last_computed_at: data.last_computed_at || null,
+      tags: Array.isArray(data.tags) ? data.tags : [],
+      is_active: data.is_active ?? false,
+      created_at: data.created_at || new Date().toISOString(),
+      updated_at: data.updated_at || new Date().toISOString(),
+      updated_by: data.updated_by || null,
+      visibility: data.visibility || SEGMENT_FIELD_DEFAULTS.visibility,
+      created_by_user_id: data.created_by_user_id || null,
+    };
+  }
+
+  private normalizeSegmentCategory(data: any): SegmentCategoryType {
+    if (!data) {
+      return {
+        id: 0,
+        name: SEGMENT_CATEGORY_FIELD_DEFAULTS.name,
+        description: SEGMENT_CATEGORY_FIELD_DEFAULTS.description,
+        parent_category_id: null,
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+    }
+
+    return {
+      id: data.id || 0,
+      name: data.name || SEGMENT_CATEGORY_FIELD_DEFAULTS.name,
+      description: data.description || SEGMENT_CATEGORY_FIELD_DEFAULTS.description,
+      parent_category_id: data.parent_category_id || null,
+      is_active: data.is_active ?? true,
+      created_at: data.created_at || new Date().toISOString(),
+      updated_at: data.updated_at || new Date().toISOString(),
+    };
+  }
+
+  private normalizeSegmentArray(segments: any[]): SegmentType[] {
+    return Array.isArray(segments) ? segments.map((seg) => this.normalizeSegment(seg)) : [];
+  }
+
+  private normalizeSegmentCategoryArray(categories: any[]): SegmentCategoryType[] {
+    return Array.isArray(categories) ? categories.map((cat) => this.normalizeSegmentCategory(cat)) : [];
+  }
+
   private async request<T>(
     endpoint: string,
     options: RequestInit = {},
@@ -238,9 +332,18 @@ class SegmentService {
     skipCache: boolean = true,
   ): Promise<SegmentCategoriesResponse> {
     const queryString = this.buildQueryParams({ search, skipCache });
-    return this.requestCategories<SegmentCategoriesResponse>(
+    const response = await this.requestCategories<SegmentCategoriesResponse>(
       `/root${queryString}`,
     );
+
+    // Normalize all categories in response
+    if (response?.data && Array.isArray(response.data)) {
+      return {
+        ...response,
+        data: response.data.map((cat) => this.normalizeSegmentCategory(cat)),
+      };
+    }
+    return response;
   }
 
   /**
@@ -290,9 +393,18 @@ class SegmentService {
     skipCache: boolean = true,
   ): Promise<ApiSuccessResponse<SegmentCategoryType>> {
     const queryString = this.buildQueryParams({ skipCache });
-    return this.requestCategories<ApiSuccessResponse<SegmentCategoryType>>(
+    const response = await this.requestCategories<ApiSuccessResponse<SegmentCategoryType>>(
       `/${id}${queryString}`,
     );
+
+    // Normalize the category
+    if (response?.data) {
+      return {
+        ...response,
+        data: this.normalizeSegmentCategory(response.data),
+      };
+    }
+    return response;
   }
 
   /**
@@ -301,10 +413,19 @@ class SegmentService {
   async createSegmentCategory(
     request: CreateSegmentCategoryRequest,
   ): Promise<ApiSuccessResponse<SegmentCategoryType>> {
-    return this.requestCategories<ApiSuccessResponse<SegmentCategoryType>>("", {
+    const response = await this.requestCategories<ApiSuccessResponse<SegmentCategoryType>>("", {
       method: "POST",
       body: JSON.stringify(request),
     });
+
+    // Normalize the created category
+    if (response?.data) {
+      return {
+        ...response,
+        data: this.normalizeSegmentCategory(response.data),
+      };
+    }
+    return response;
   }
 
   /**
@@ -314,13 +435,22 @@ class SegmentService {
     id: number,
     request: UpdateSegmentCategoryRequest,
   ): Promise<ApiSuccessResponse<SegmentCategoryType>> {
-    return this.requestCategories<ApiSuccessResponse<SegmentCategoryType>>(
+    const response = await this.requestCategories<ApiSuccessResponse<SegmentCategoryType>>(
       `/${id}`,
       {
         method: "PUT",
         body: JSON.stringify(request),
       },
     );
+
+    // Normalize the updated category
+    if (response?.data) {
+      return {
+        ...response,
+        data: this.normalizeSegmentCategory(response.data),
+      };
+    }
+    return response;
   }
 
   /**
@@ -351,7 +481,16 @@ class SegmentService {
       skipCache: filters?.skipCache,
     });
 
-    return this.request<PaginatedResponse<SegmentType>>(`/${queryString}`);
+    const response = await this.request<PaginatedResponse<SegmentType>>(`/${queryString}`);
+
+    // Normalize all segments in paginated response
+    if (response?.data && Array.isArray(response.data)) {
+      return {
+        ...response,
+        data: response.data.map((segment) => this.normalizeSegment(segment)),
+      };
+    }
+    return response;
   }
 
   /**
@@ -360,10 +499,21 @@ class SegmentService {
   async createSegment(
     segment: CreateSegmentRequest,
   ): Promise<ApiSuccessResponse<SegmentType>> {
-    return this.request<ApiSuccessResponse<SegmentType>>("/", {
+    const response = await this.request<ApiSuccessResponse<SegmentType>>("/", {
       method: "POST",
       body: JSON.stringify(segment),
     });
+
+    // Normalize the created segment - backend returns data as array
+    if (response?.data) {
+      const rawData = response.data as unknown;
+      const segmentData = Array.isArray(rawData) ? rawData[0] : rawData;
+      return {
+        ...response,
+        data: this.normalizeSegment(segmentData),
+      };
+    }
+    return response;
   }
 
   /**
@@ -374,9 +524,18 @@ class SegmentService {
     skipCache: boolean = true,
   ): Promise<ApiSuccessResponse<SegmentType>> {
     const queryString = this.buildQueryParams({ skipCache });
-    return this.request<ApiSuccessResponse<SegmentType>>(
+    const response = await this.request<ApiSuccessResponse<SegmentType>>(
       `/${id}${queryString}`,
     );
+
+    // Normalize the segment
+    if (response?.data) {
+      return {
+        ...response,
+        data: this.normalizeSegment(response.data),
+      };
+    }
+    return response;
   }
 
   /**
@@ -386,10 +545,21 @@ class SegmentService {
     id: number,
     segment: Partial<UpdateSegmentRequest>,
   ): Promise<ApiSuccessResponse<SegmentType>> {
-    return this.request<ApiSuccessResponse<SegmentType>>(`/${id}`, {
+    const response = await this.request<ApiSuccessResponse<SegmentType>>(`/${id}`, {
       method: "PUT",
       body: JSON.stringify(segment),
     });
+
+    // Normalize the updated segment - backend may return data as array
+    if (response?.data) {
+      const rawData = response.data as unknown;
+      const segmentData = Array.isArray(rawData) ? rawData[0] : rawData;
+      return {
+        ...response,
+        data: this.normalizeSegment(segmentData),
+      };
+    }
+    return response;
   }
 
   /**
@@ -430,9 +600,18 @@ class SegmentService {
       skipCache: query.skipCache !== false ? true : false,
     });
 
-    return this.request<PaginatedResponse<SegmentType>>(
+    const response = await this.request<PaginatedResponse<SegmentType>>(
       `/search${queryString}`,
     );
+
+    // Normalize all segments in paginated response
+    if (response?.data && Array.isArray(response.data)) {
+      return {
+        ...response,
+        data: this.normalizeSegmentArray(response.data),
+      };
+    }
+    return response;
   }
 
   /**
@@ -728,9 +907,18 @@ class SegmentService {
     filters?: GetSegmentsQuery,
   ): Promise<PaginatedResponse<SegmentType>> {
     const queryString = this.buildQueryParams(filters || {});
-    return this.request<PaginatedResponse<SegmentType>>(
+    const response = await this.request<PaginatedResponse<SegmentType>>(
       `/active${queryString}`,
     );
+
+    // Normalize all segments in paginated response
+    if (response?.data && Array.isArray(response.data)) {
+      return {
+        ...response,
+        data: this.normalizeSegmentArray(response.data),
+      };
+    }
+    return response;
   }
 
   /**
@@ -740,9 +928,18 @@ class SegmentService {
     filters?: GetSegmentsQuery,
   ): Promise<PaginatedResponse<SegmentType>> {
     const queryString = this.buildQueryParams(filters || {});
-    return this.request<PaginatedResponse<SegmentType>>(
+    const response = await this.request<PaginatedResponse<SegmentType>>(
       `/parents${queryString}`,
     );
+
+    // Normalize all segments in paginated response
+    if (response?.data && Array.isArray(response.data)) {
+      return {
+        ...response,
+        data: this.normalizeSegmentArray(response.data),
+      };
+    }
+    return response;
   }
 
   /**
@@ -752,7 +949,16 @@ class SegmentService {
     filters?: GetSegmentsQuery,
   ): Promise<PaginatedResponse<SegmentType>> {
     const queryString = this.buildQueryParams(filters || {});
-    return this.request<PaginatedResponse<SegmentType>>(`/empty${queryString}`);
+    const response = await this.request<PaginatedResponse<SegmentType>>(`/empty${queryString}`);
+
+    // Normalize all segments in paginated response
+    if (response?.data && Array.isArray(response.data)) {
+      return {
+        ...response,
+        data: this.normalizeSegmentArray(response.data),
+      };
+    }
+    return response;
   }
 
   /**
@@ -762,9 +968,18 @@ class SegmentService {
     limit: number = 10,
   ): Promise<ApiSuccessResponse<SegmentType[]>> {
     const queryString = this.buildQueryParams({ limit });
-    return this.request<ApiSuccessResponse<SegmentType[]>>(
+    const response = await this.request<ApiSuccessResponse<SegmentType[]>>(
       `/most-used${queryString}`,
     );
+
+    // Normalize all segments in response
+    if (response?.data && Array.isArray(response.data)) {
+      return {
+        ...response,
+        data: this.normalizeSegmentArray(response.data),
+      };
+    }
+    return response;
   }
 
   /**
@@ -774,9 +989,18 @@ class SegmentService {
     filters?: GetSegmentsQuery,
   ): Promise<PaginatedResponse<SegmentType>> {
     const queryString = this.buildQueryParams(filters || {});
-    return this.request<PaginatedResponse<SegmentType>>(
+    const response = await this.request<PaginatedResponse<SegmentType>>(
       `/needing-refresh${queryString}`,
     );
+
+    // Normalize all segments in paginated response
+    if (response?.data && Array.isArray(response.data)) {
+      return {
+        ...response,
+        data: this.normalizeSegmentArray(response.data),
+      };
+    }
+    return response;
   }
 
   /**
@@ -787,9 +1011,18 @@ class SegmentService {
     skipCache: boolean = true,
   ): Promise<ApiSuccessResponse<SegmentType>> {
     const queryString = this.buildQueryParams({ skipCache });
-    return this.request<ApiSuccessResponse<SegmentType>>(
+    const response = await this.request<ApiSuccessResponse<SegmentType>>(
       `/code/${code}${queryString}`,
     );
+
+    // Normalize the segment
+    if (response?.data) {
+      return {
+        ...response,
+        data: this.normalizeSegment(response.data),
+      };
+    }
+    return response;
   }
 
   /**
@@ -800,9 +1033,18 @@ class SegmentService {
     skipCache: boolean = true,
   ): Promise<ApiSuccessResponse<SegmentType>> {
     const queryString = this.buildQueryParams({ skipCache });
-    return this.request<ApiSuccessResponse<SegmentType>>(
+    const response = await this.request<ApiSuccessResponse<SegmentType>>(
       `/name/${name}${queryString}`,
     );
+
+    // Normalize the segment
+    if (response?.data) {
+      return {
+        ...response,
+        data: this.normalizeSegment(response.data),
+      };
+    }
+    return response;
   }
 
   /**
@@ -813,9 +1055,18 @@ class SegmentService {
     filters?: GetSegmentsQuery,
   ): Promise<PaginatedResponse<SegmentType>> {
     const queryString = this.buildQueryParams(filters || {});
-    return this.request<PaginatedResponse<SegmentType>>(
+    const response = await this.request<PaginatedResponse<SegmentType>>(
       `/type/${type}${queryString}`,
     );
+
+    // Normalize all segments in paginated response
+    if (response?.data && Array.isArray(response.data)) {
+      return {
+        ...response,
+        data: this.normalizeSegmentArray(response.data),
+      };
+    }
+    return response;
   }
 
   /**
@@ -826,9 +1077,18 @@ class SegmentService {
     filters?: GetSegmentsQuery,
   ): Promise<PaginatedResponse<SegmentType>> {
     const queryString = this.buildQueryParams(filters || {});
-    return this.request<PaginatedResponse<SegmentType>>(
+    const response = await this.request<PaginatedResponse<SegmentType>>(
       `/category/${categoryId}${queryString}`,
     );
+
+    // Normalize all segments in paginated response
+    if (response?.data && Array.isArray(response.data)) {
+      return {
+        ...response,
+        data: this.normalizeSegmentArray(response.data),
+      };
+    }
+    return response;
   }
 
   /**
@@ -839,9 +1099,18 @@ class SegmentService {
     filters?: GetSegmentsQuery,
   ): Promise<PaginatedResponse<SegmentType>> {
     const queryString = this.buildQueryParams(filters || {});
-    return this.request<PaginatedResponse<SegmentType>>(
+    const response = await this.request<PaginatedResponse<SegmentType>>(
       `/visibility/${visibility}${queryString}`,
     );
+
+    // Normalize all segments in paginated response
+    if (response?.data && Array.isArray(response.data)) {
+      return {
+        ...response,
+        data: this.normalizeSegmentArray(response.data),
+      };
+    }
+    return response;
   }
 
   /**
@@ -852,9 +1121,18 @@ class SegmentService {
     filters?: GetSegmentsQuery,
   ): Promise<PaginatedResponse<SegmentType>> {
     const queryString = this.buildQueryParams(filters || {});
-    return this.request<PaginatedResponse<SegmentType>>(
+    const response = await this.request<PaginatedResponse<SegmentType>>(
       `/creator/${creatorId}${queryString}`,
     );
+
+    // Normalize all segments in paginated response
+    if (response?.data && Array.isArray(response.data)) {
+      return {
+        ...response,
+        data: this.normalizeSegmentArray(response.data),
+      };
+    }
+    return response;
   }
 
   /**
@@ -865,9 +1143,18 @@ class SegmentService {
     filters?: GetSegmentsQuery,
   ): Promise<PaginatedResponse<SegmentType>> {
     const queryString = this.buildQueryParams(filters || {});
-    return this.request<PaginatedResponse<SegmentType>>(
+    const response = await this.request<PaginatedResponse<SegmentType>>(
       `/tag/${tag}${queryString}`,
     );
+
+    // Normalize all segments in paginated response
+    if (response?.data && Array.isArray(response.data)) {
+      return {
+        ...response,
+        data: this.normalizeSegmentArray(response.data),
+      };
+    }
+    return response;
   }
 
   // ==================== SEGMENT-SPECIFIC OPERATIONS (15 endpoints) ====================
@@ -880,9 +1167,18 @@ class SegmentService {
     filters?: GetSegmentsQuery,
   ): Promise<PaginatedResponse<SegmentType>> {
     const queryString = this.buildQueryParams(filters || {});
-    return this.request<PaginatedResponse<SegmentType>>(
+    const response = await this.request<PaginatedResponse<SegmentType>>(
       `/${id}/children${queryString}`,
     );
+
+    // Normalize all segments in paginated response
+    if (response?.data && Array.isArray(response.data)) {
+      return {
+        ...response,
+        data: this.normalizeSegmentArray(response.data),
+      };
+    }
+    return response;
   }
 
   /**
@@ -1544,13 +1840,13 @@ class SegmentService {
   }
 
   /**
-   * POST /segments/generate-query/preview - Generate SQL query preview from conditions
+   * POST /segments/generate-query/preview - Generate SQL query preview from layer-based conditions (v2.0)
    * This endpoint takes the user's segment conditions and returns the generated SQL queries
    */
   async generateSegmentQueryPreview(
-    request: GenerateQueryPreviewRequest,
+    request: SegmentPayload,
   ): Promise<GenerateQueryPreviewResponse> {
-    const url = `${buildApiUrl("/segments")}/generate-query/preview`;
+    const url = `${BASE_URL}/generate-query/preview`;
 
     const response = await fetch(url, {
       method: "POST",

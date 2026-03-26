@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { ArrowLeft, Users, MessageSquare, Send, Calendar } from "lucide-react";
+import { ArrowLeft, Users, MessageSquare, Calendar } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -15,12 +15,13 @@ import ProgressStepper, {
 } from "../../../shared/components/ui/ProgressStepper";
 import TargetAudienceStep from "../components/TargetAudienceStep";
 import DefineCommunicationStep from "../components/DefineCommunicationStep";
-import TestBroadcastStep from "../components/TestBroadcastStep";
 import ScheduleStep from "../components/ScheduleStep";
 import { communicationService } from "../../communications/services/communicationService";
+import { quicklistService } from "../../quicklists/services/quicklistService";
 import type { TemplateVariable, AudienceInputMethod } from "../types";
 import type { CommunicationPolicyConfiguration } from "../../campaigns/types/communicationPolicyConfig";
 import type { ManualCommunicationRecipient } from "../../communications/types/communication";
+import type { QuickListWithDetails } from "../../quicklists/types/quicklist";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 
 export interface ManualBroadcastData {
@@ -31,6 +32,7 @@ export interface ManualBroadcastData {
   audienceDescription?: string;
   uploadType?: string;
   quicklistId?: number;
+  quicklist?: QuickListWithDetails; // Full quicklist object for edit mode
   rowCount?: number;
   subscriptionIdColumn?: string;
   fileColumns?: string[];
@@ -39,6 +41,7 @@ export interface ManualBroadcastData {
   inputMethod?: AudienceInputMethod;
 
   // Step 2: Communication
+  communicationId?: number; // ID of the communication definition (for editing)
   channel?: "EMAIL" | "SMS" | "WHATSAPP" | "PUSH";
   messageTitle?: string;
   messageBody?: string;
@@ -102,12 +105,6 @@ export default function CreateManualBroadcastPage() {
     },
     {
       id: 3,
-      name: t.manualBroadcast.testBroadcast,
-      description: t.manualBroadcast.testBroadcastDesc,
-      icon: Send,
-    },
-    {
-      id: 4,
       name: t.manualBroadcast.schedule,
       description: t.manualBroadcast.scheduleDesc,
       icon: Calendar,
@@ -125,10 +122,10 @@ export default function CreateManualBroadcastPage() {
           setIsLoading(true);
 
           // Get execution details for recipient list and broadcast info
-          const execResponse = await communicationService.getExecutionDetails(executionId);
+          const execResponse = await communicationService.getExecutionDetails(executionId, true);
 
           if (!execResponse?.success || !execResponse?.data?.execution) {
-            showError("Failed to load broadcast details");
+            showError("Failed to load broadcast details", "", true); // bypassSilentMode
             navigate("/dashboard/manual-communications");
             return;
           }
@@ -155,6 +152,7 @@ export default function CreateManualBroadcastPage() {
 
           // Prefill form data
           const prefillData: Partial<ManualBroadcastData> = {
+            communicationId: exec?.communication_id,
             audienceName: exec?.name || exec?.source_name || `Broadcast ${exec?.id || "Unknown"}`,
             channel: (channel as "EMAIL" | "SMS" | "WHATSAPP" | "PUSH") || "EMAIL",
             messageTitle: messageTitle,
@@ -168,8 +166,20 @@ export default function CreateManualBroadcastPage() {
 
           // Handle source type specific prefilling
           if (exec?.source_type === "quicklist" && exec?.source_id) {
+            prefillData.inputMethod = "file"; // Set input method to file for quicklist
             prefillData.quicklistId = exec.source_id;
             prefillData.audienceName = exec?.source_name || `Quicklist ${exec.source_id}`;
+
+            // Fetch full quicklist details for display in edit mode
+            try {
+              const quicklistResponse = await quicklistService.getQuickListById(exec.source_id);
+              if (quicklistResponse.success && "data" in quicklistResponse) {
+                prefillData.quicklist = quicklistResponse.data;
+              }
+            } catch (err) {
+              console.error("Failed to fetch quicklist details:", err);
+              // Continue with just the ID and name if fetch fails
+            }
           } else if (exec?.source_type === "manual") {
             prefillData.inputMethod = "manual";
             prefillData.audienceName = exec?.name || exec?.source_name || "Manual Audience";
@@ -178,7 +188,7 @@ export default function CreateManualBroadcastPage() {
           setBroadcastData(prefillData);
         } catch (err) {
           console.error("Failed to load broadcast details:", err);
-          showError("Failed to load broadcast details");
+          showError("Failed to load broadcast details", "", true); // bypassSilentMode
           navigate("/dashboard/manual-communications");
         } finally {
           setIsLoading(false);
@@ -229,11 +239,7 @@ export default function CreateManualBroadcastPage() {
           broadcastData.messageBody &&
           (broadcastData.channel !== "EMAIL" || broadcastData.messageTitle)
         );
-      case 3: // Test Broadcast
-        return (
-          !!broadcastData.testContacts && broadcastData.testContacts.length > 0
-        );
-      case 4: // Schedule
+      case 3: // Schedule
         return !!(broadcastData.scheduleType && broadcastData.scheduleDate);
       default:
         return true;
@@ -326,10 +332,35 @@ export default function CreateManualBroadcastPage() {
       // Don't set isLoading - let ScheduleStep button handle the loading state
       // This keeps the page visible while the API is processing
 
-      // In edit mode, resend the communication with updated message content
-      if (isEditMode && executionId) {
-        // For edit mode, resend the broadcast with the same audience but updated message
+      // In edit mode, update the communication definition and resend
+      if (isEditMode && executionId && broadcastData.communicationId) {
+        // Step 1: Update the communication definition using PUT endpoint
+        const updateResponse = await communicationService.updateCommunication(
+          broadcastData.communicationId,
+          {
+            name: broadcastData.audienceName || `Broadcast ${new Date().toLocaleDateString()}`,
+            description: `Manual broadcast update`,
+            source_type: broadcastData.quicklistId ? "quicklist" : "manual",
+            ...(broadcastData.quicklistId ? { source_id: broadcastData.quicklistId } : {}),
+            channels: broadcastData.channel ? [broadcastData.channel] : [],
+            message_template: {
+              ...(broadcastData.messageTitle &&
+              broadcastData.channel === "EMAIL"
+                ? { title: broadcastData.messageTitle }
+                : {}),
+              body: broadcastData.messageBody || "",
+            },
+            created_by: user?.user_id,
+          }
+        );
+
+        if (!updateResponse.success) {
+          throw new Error("Failed to update communication definition");
+        }
+
+        // Step 2: Resend the broadcast with the updated message
         const response = await communicationService.sendCommunication({
+          communication_id: broadcastData.communicationId,
           source_type: broadcastData.quicklistId ? "quicklist" : "manual",
           ...(broadcastData.quicklistId ? { source_id: broadcastData.quicklistId } : {}),
           ...(broadcastData.audienceName ? { name: broadcastData.audienceName } : {}),
@@ -351,7 +382,7 @@ export default function CreateManualBroadcastPage() {
           // Fetch updated communications list
           await communicationService.getCommunications();
 
-          showToast(t.manualBroadcast.updatedSuccess || "Broadcast resent successfully!");
+          showToast(t.manualBroadcast.updatedSuccess || "Broadcast updated successfully!");
           clearPersistedFormData("broadcast_form_data");
           navigate("/dashboard/manual-communications");
           return;
@@ -510,11 +541,13 @@ export default function CreateManualBroadcastPage() {
         showError(
           "Failed to create manual communication",
           "The request timed out. Please try again.",
+          true // bypassSilentMode
         );
       } else {
         showError(
           t.manualBroadcast.createFailed,
           errorMessage,
+          true // bypassSilentMode
         );
       }
     }
@@ -541,20 +574,12 @@ export default function CreateManualBroadcastPage() {
         );
       case 3:
         return (
-          <TestBroadcastStep
-            data={broadcastData}
-            onUpdate={updateBroadcastData}
-            onNext={handleNext}
-            onPrevious={handlePrevious}
-          />
-        );
-      case 4:
-        return (
           <ScheduleStep
             data={broadcastData}
             onUpdate={updateBroadcastData}
             onSubmit={handleSubmit}
             onPrevious={handlePrevious}
+            isEditMode={isEditMode}
           />
         );
       default:

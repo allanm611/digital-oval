@@ -1,0 +1,2249 @@
+{
+  "info": {
+    "_postman_id": "608cd9c5-c5ce-4af4-82d2-66345b92fdec",
+    "name": "NGS BACKEND TESTS",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "38928674",
+    "_collection_link": "https://go.postman.co/collection/38928674-608cd9c5-c5ce-4af4-82d2-66345b92fdec?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "File Management",
+      "item": [
+        {
+          "name": "1. Core File Operations",
+          "item": [
+            {
+              "name": "1.1 Upload File",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "1.1.1 Uploading Duplicate File",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "1.2 List My Files",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "1.3.1 Download File Public",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "1.3.2 Download File Private",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "1.4.1 Get File Metadata Public",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "1.4.2 Get File Metadata Private",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "1.5 Replace File Content",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "1.6 Update File Visibility",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "1.7 Rename File",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "1.8 Soft Delete File",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "1.9 Restore File from Trash",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "1.10 Hard Delete File",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "2. Virtual Path Serving",
+          "item": [
+            {
+              "name": "2.1 Serve Public Files",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "2.2 Serve Private Files",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "3. Permission Management",
+          "item": [
+            {
+              "name": "3.1 Grant Permissions",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "3.2 List FIle Permissions",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "3.2.1 User with file permissions",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "3.3 Update Permissions",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "3.4 Revoke Permission",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "3.5 Bulk Grant Permissions",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "3.6 Permission Summary",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "4. Simplified Sharing API",
+          "item": [
+            {
+              "name": "4.1 Share File",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "4.2 Get File Sharing Info",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "4.3 Update User Access",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "4.4 Unshare File",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "4.5 Bulk Share File",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "4.6 Files shared with me",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "5. Trash & Maintenance",
+          "item": [
+            {
+              "name": "5.1 List Deleted Files",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "5.2 Empty Trash",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "5.3 Get Storage Statistics",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "5.3.1 Get Storage Statistics Global",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "5.4 Cleanup Expired Permissions",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "5.5 Purge Old Deleted Files",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "6. Inheritance Rules",
+          "item": [
+            {
+              "name": "6.1 List Inheritance Rules",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "6.2 Create Inheritance Rule",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "6.3 Get Inheritance Rule",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "6.4 Update Inheritance Rule",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "6.5 Delete Inheritance Rule",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "6.6 Get User Hierarchy",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "6.7 Get Inherited Accessible Files",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Post Login",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "Current User",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Monitoring Hub",
+      "item": [
+        {
+          "name": "1. Campaign Insights & Operations",
+          "item": [
+            {
+              "name": "1.1 Get Campaign Performance",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "1.2 Get Campaign Audience (A/B & Status)",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "1.3 Campaign Execution Health",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "1.4 Campaign Batch Progress",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "1.5 Notification Hub Stats",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "1.6 Get Campaign KPI's",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "1.7 Get Campaign Trends",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "1.8 Get Top Performing Campaigns",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "1.9 Compare Campaigns",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "2. Offer & Engagement Insights",
+          "item": [
+            {
+              "name": "2.1 Get Offer Performance",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "2.2 Get Conversion Metrics",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "2.3 Get Offer Trends",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "2.4 Get Top Performing Offers",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "2.5 Get Offers by Category",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "2.6 Compare Offers",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "3. ETL & Data Pipeline Operations",
+          "item": [
+            {
+              "name": "3.1 ETL Task Queue (Real-time Hub)",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "3.2 Global File Registry Stats",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "3.3 Raw Data Feed Monitoring (CDR)",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "3.4 Get Job Performance",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "3.5 Get Reliability Metrics",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "3.6 Get Data Quality Metrics",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "3.7 Get Execution History",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "3.8 Get Slowest Performing Jobs",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "3.9 Get Failed Executions",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "3.10 Get File Processing Metrics",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "4. System Intelligence & Dictionary",
+          "item": [
+            {
+              "name": "4.1 Profile Dictionary (Paginated)",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "4.2 Quicklist Inventory",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "4.3 Subscriber 360 Summary",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "IAM",
+      "item": [
+        {
+          "name": "1. Public Password Reset Flow",
+          "item": [
+            {
+              "name": "1.1 Request Password Reset",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "1.2 Complete Password Reset",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "1.2.1 Login with New Password",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "2. Admin-Triggered Reset Flow",
+          "item": [
+            {
+              "name": "2.1 Admin Generate Reset Token",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "3. Token Validation",
+          "item": [
+            {
+              "name": "3.1 Validate Reset Token",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Subscriber",
+      "item": [
+        {
+          "name": "1. Add Subscriber",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "2. View Subscriber",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "3. Edit Subscriber",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "List subscribers",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "Bulk Create Subscribers",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "1. Manual Broadcasts",
+      "item": [
+        {
+          "name": "1.1 Fetch Manual Broadcasts",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Communication Management (Drafts & Templates)",
+      "item": [
+        {
+          "name": "2.1 Create New Communication",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"January Promo Blast\",\r\n    \"description\": \"Monthly promotional message for high-value customers\",\r\n    \"source_type\": \"quicklist\",\r\n    \"source_id\": 15,\r\n    \"channels\": [\"SMS\", \"EMAIL\"],\r\n    \"message_template\": {\r\n        \"title\": \"Special Offer\",\r\n        \"body\": \"Hello {{first_name}}, get 50% off today!\"\r\n    },\r\n    \"created_by\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://sentra.groupngs.com:8080/api/database-service/communications",
+              "protocol": "http",
+              "host": [
+                "sentra",
+                "groupngs",
+                "com"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "database-service",
+                "communications"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2.2 List All Communications",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "2.3 Get Communication By ID",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "2.4 Update Communication",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "2.5 Delete Communication",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "2.6 Send Saved Communication",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "New Request Copy",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "New Request Copy 2",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "New Request Copy 3",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "Fetch Logs",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "List History",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "New Request Copy",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. QuickLists (Reference)",
+      "item": [
+        {
+          "name": "Edit Quicklists",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"Updated VIP List 2026\",\r\n    \"description\": \"Cleaned list for Q1\"\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/quicklists/15",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "quicklists",
+                "15"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "System Events & File Upload",
+      "item": [
+        {
+          "name": "1.1: Get Segmentation Fields (With Cache)",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "1.2: Get Segmentation Fields (Skip Cache)",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "1.3: Invalid skipCache Value",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "2.1: Get System Events (With Cache)",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "2.2: Get System Events (Skip Cache)",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "3.1: Generate Segment Query with System Events",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "3.2: Generate Segment Query with Multiple Events",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "4.1: Upload Valid CDR File",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "5.1: Upload Valid TDR File",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "6.1: Upload Non-CDR/TDR File",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Resource Types",
+      "item": [
+        {
+          "name": "1.1 List Campaign types",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "1.2 Create Campaign Type",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "1.3 Update campaign Type",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "1.4 Delete campaign Type",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "2.1 List Product Types",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "2.2 Create Product Type",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "2.2.1 Create Product Type Sub Category",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "2.3 Update product type",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "2.4 Delete Product Type",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "3.1 List Offer Types",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "3.2 Create Offer Type",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "3.3 Update Offer Type",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "3.4 Delete Offer Type",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "4.1 List Segment Types",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "4.2 Create Segment Type",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "4.3 Update Segment Types",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "4.4 Delete Segment Type",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "5.1 List Reward Types",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "5.2 Create Reward Type",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "5.3 Update Reward Type",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "5.3 Update Reward Type Copy",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Sender Ids",
+      "item": [
+        {
+          "name": "List Sender Ids",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/sender",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sender"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Sender id",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"Test\",\r\n    \"description\": \"Test\",\r\n    \"gateway_key\": \"Tester123\",\r\n    \"is_active\": true\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/sender",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sender"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Sender id",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"tester1\",\r\n    \"is_active\": false\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/sender/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sender",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/sender/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "sender",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Character Sets",
+      "item": [
+        {
+          "name": "List Character Sets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/character-set",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "character-set"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Character Set",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Test Set\",\r\n  \"description\": \"Japanese language character encoding\",\r\n  \"is_active\": true,\r\n  \"message_type\": \"SMS\",\r\n  \"character_set_type\": \"UNICODE\",\r\n  \"character_set_size\": 70,\r\n  \"standard_chars\": \"あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん\",\r\n  \"double_chars\": \"\",\r\n  \"triple_chars\": \"\",\r\n  \"quad_chars\": \"\"\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/character-set",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "character-set"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Character Sets",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"Tester\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/character-set/2",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "character-set",
+                "2"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Character Set",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/character-set/2",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "character-set",
+                "2"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Languages",
+      "item": [
+        {
+          "name": "List Languages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/language",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "language"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Language",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"English (US)\",\r\n  \"description\": \"US English for mobile offers\",\r\n  \"is_active\": true,\r\n  \"language_code\": \"en\",\r\n  \"country\": \"US\",\r\n  \"character_set\": \"UTF-8\"\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/language",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "language"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Language",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"English (UK)\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/language/2",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "language",
+                "2"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Language",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/language/2",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "language",
+                "2"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Creative Templates",
+      "item": [
+        {
+          "name": "List Templates",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/creative-template",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "creative-template"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Template Single",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"SMS Transactional Template\",\r\n  \"code\": \"SMS_TXN_01\",\r\n  \"description\": \"Two-line SMS with placeholders\",\r\n  \"isActive\": true,\r\n  \"primaryChannel\": \"SMS\",\r\n  \"locale\": \"en\",\r\n  \"title\": \"Transaction Alert\",\r\n  \"text_body\": \"Your transaction of {{amount}} on {{date}} was successful.\",\r\n  \"variables\": { \"amount\": \"KES 100\", \"date\": \"2024-01-15\" }\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/creative-template",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "creative-template"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Template Bulk",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "[\r\n  {\r\n    \"name\": \"SMS Template A\",\r\n    \"code\": \"SMS_A_v1\",\r\n    \"description\": \"Standard welcome SMS\",\r\n    \"isActive\": true,\r\n    \"primaryChannel\": \"SMS\",\r\n    \"locale\": \"en\",\r\n    \"text_body\": \"Welcome to our service!\"\r\n  },\r\n  {\r\n    \"name\": \"Email Template B\",\r\n    \"code\": \"EMAIL_B_v1\",\r\n    \"description\": \"Weekly newsletter header\",\r\n    \"isActive\": true,\r\n    \"primaryChannel\": \"Email\",\r\n    \"locale\": \"en\",\r\n    \"title\": \"Weekly Update\",\r\n    \"html_body\": \"<h1>Your Weekly Newsletter</h1>\",\r\n    \"variables\": { \"user_name\": \"Valued Customer\" }\r\n  }\r\n]\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/creative-template",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "creative-template"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Edit template",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Updated SMS Template\",\r\n  \"description\": \"Now with better wording\",\r\n  \"text_body\": \"Hi {{user_name}}, here is your revised offer!\",\r\n  \"variables\": { \"user_name\": \"Subscriber\" }\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/creative-template/3",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "creative-template",
+                "3"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Template",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/creative-template/3",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "creative-template",
+                "3"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Manual Rewards",
+      "item": [
+        {
+          "name": "List Manual Rewards",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/manual-reward",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "manual-reward"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Manual Reward",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"audienceName\": \"VIP Customer Bonus Promo\",\r\n  \"audienceDescription\": \"Rewarding top 100 users\",\r\n  \"uploadType\": \"quicklist\",\r\n  \"quicklistId\": 12,\r\n  \"rowCount\": 100,\r\n  \"rewardType\": \"points\",\r\n  \"rewardValue\": \"500\",\r\n  \"description\": \"500 Loyalty points for Q1\",\r\n  \"applyType\": \"now\",\r\n  \"previewData\": {}\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/manual-reward",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "manual-reward"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create manual Reward Scheduled",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"audienceName\": \"Weekend Bundle Promo\",\r\n  \"uploadType\": \"file\",\r\n  \"rowCount\": 2000,\r\n  \"rewardType\": \"bundle\",\r\n  \"rewardValue\": \"2GB_DATA\",\r\n  \"bundleTrack\": \"TRACK_A\",\r\n  \"applyType\": \"later\",\r\n  \"applyDate\": \"2026-03-25T00:00:00Z\",\r\n  \"applyTime\": \"08:00\"\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/manual-reward",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "manual-reward"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Edit Manual Reward",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"rewardType\": \"discount\",\r\n  \"rewardValue\": \"20%\",\r\n  \"applyType\": \"later\",\r\n  \"applyDate\": \"2026-03-30T00:00:00Z\",\r\n  \"applyTime\": \"12:00\"\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/manual-reward/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "manual-reward",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Manual Reward",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"rewardType\": \"discount\",\r\n  \"rewardValue\": \"20%\",\r\n  \"applyType\": \"later\",\r\n  \"applyDate\": \"2026-03-30T00:00:00Z\",\r\n  \"applyTime\": \"12:00\"\r\n}\r\n"
+            },
+            "url": {
+              "raw": "{{base_url}}/manual-reward/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "manual-reward",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Get Notification Stats",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Campaign Objectives",
+      "item": [
+        {
+          "name": "List Campaign Objectives",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "Create Campaign Objective",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Brand Awareness\",\r\n  \"description\": \"Increase brand awareness among target audience\",\r\n  \"is_active\": true\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/campaign-objectives",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "campaign-objectives"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Campaign Objective",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Brand Awareness\",\r\n  \"description\": \"Increase brand awareness among target audience\",\r\n  \"is_active\": true\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/campaign-objectives/3",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "campaign-objectives",
+                "3"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Campaign Objective",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/campaign-objectives/3",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "campaign-objectives",
+                "3"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Departments",
+      "item": [
+        {
+          "name": "List Departments",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "Create Department",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Marketing\",\r\n  \"description\": \"Responsible for marketing campaigns and customer acquisition\",\r\n  \"is_active\": true\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/departments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "departments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Edit Department",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Global Marketing\",\r\n  \"is_active\": true\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/departments/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "departments",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Department",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Global Marketing\",\r\n  \"is_active\": true\r\n}\r\n"
+            },
+            "url": {
+              "raw": "{{base_url}}/departments/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "departments",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Line of Business",
+      "item": [
+        {
+          "name": "List Line of Business",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/lines-of-business",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "lines-of-business"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Line of Business",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"GSM\",\r\n  \"description\": \"Global System for Mobile Communications - Mobile network services\",\r\n  \"is_active\": true\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/lines-of-business",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "lines-of-business"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Line of Business",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"GSM (Updated)\",\r\n  \"is_active\": true\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/lines-of-business/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "lines-of-business",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Line of Business",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"GSM (Updated)\",\r\n  \"is_active\": true\r\n}\r\n"
+            },
+            "url": {
+              "raw": "{{base_url}}/lines-of-business/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "lines-of-business",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Hash Password",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    },
+    {
+      "name": "Log In",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Role",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://cvm.groupngs.com:8080/api/database-service/roles/7",
+          "protocol": "http",
+          "host": [
+            "cvm",
+            "groupngs",
+            "com"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "database-service",
+            "roles",
+            "7"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Permission",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://104.248.216.244:8080/api/database-service/permissions/415",
+          "protocol": "http",
+          "host": [
+            "104",
+            "248",
+            "216",
+            "244"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "database-service",
+            "permissions",
+            "415"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Permission",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    },
+    {
+      "name": "New Request",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    },
+    {
+      "name": "Listing customers",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    },
+    {
+      "name": "Bulk create customers",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    },
+    {
+      "name": "New Request",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    },
+    {
+      "name": "New Request",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    },
+    {
+      "name": "New Request Copy",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"msisdn\" : \"254764555247\",\r\n    \"message\" : \"Test\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/communications/test/sms",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "communications",
+            "test",
+            "sms"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "New Request Copy 2",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"msisdn\" : \"254764555247\",\r\n    \"message\" : \"Test\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/communications/test/sms",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "communications",
+            "test",
+            "sms"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "New Request Copy 4",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"msisdn\" : \"254764555247\",\r\n    \"message\" : \"Test\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/communications/test/sms",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "communications",
+            "test",
+            "sms"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "New Request Copy 3",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"msisdn\" : \"254764555247\",\r\n    \"message\" : \"Test\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/communications/test/sms",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "communications",
+            "test",
+            "sms"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

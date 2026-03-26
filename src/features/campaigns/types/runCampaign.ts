@@ -8,18 +8,18 @@ export type CampaignChannel =
   | "INAPP";
 
 export interface RunCampaignRequest {
-  campaignId: number; // required, positive integer
-  offerId: number; // required, positive integer
-  controlGroupId: number; // required, positive integer
-  blackoutPoliciesId: number; // required, positive integer
-  calendarId: number; // required, positive integer
-  trackingSourcesId: number; // required, positive integer
-  segmentId?: number; // optional, positive integer
-  sampleSize?: number; // optional, 1-5000, default: 100
-  includeDetails?: boolean; // optional, default: false
-  validateOnly?: boolean; // optional, default: false
-  channel?: CampaignChannel; // optional
-  startTime?: string; // optional
+  campaignId: number;
+  offerId: number;
+  controlGroupId: number;
+  blackoutPoliciesId: number;
+  calendarId: number;
+  trackingSourcesId: number;
+  segmentId?: number;
+  sampleSize?: number;
+  includeDetails?: boolean;
+  validateOnly?: boolean;
+  channel?: CampaignChannel;
+  startTime?: string;
 }
 
 export interface RunCampaignResponse {

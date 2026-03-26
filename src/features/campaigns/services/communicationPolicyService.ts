@@ -160,5 +160,5 @@ class CommunicationPolicyService {
     }
 }
 
-// Export singleton instance
+
 export const communicationPolicyService = new CommunicationPolicyService();
