@@ -384,21 +384,14 @@ Your campaign progress is automatically saved as a draft. You can:
 - **Submit for Approval** - When ready to launch
 - **Make Edits** - Return to any step to modify details before submission
 
----
+<!-- --- -->
 
-## After Creation
+<!-- ## After Creation
 
 Once you've created your campaign:
 
 1. **Approval Process** - Campaign goes to approval queue
 2. **Approver Review** - Assigned approvers review and approve/reject
 3. **Ready to Execute** - Once approved, you can run the campaign
-4. **Monitor Performance** - Track results on the [Campaign Reports](./campaign-reports) page
+4. **Monitor Performance** - Track results on the [Campaign Reports](./campaign-reports) page -->
 
----
-
-## Need Help?
-
-- Having trouble with a specific step? See [View Campaign Details](./view-campaign-details)
-- Want to understand campaign objectives? See [Campaign Objectives](./campaign-objectives)
-- Need to know about campaigns in general? See [Campaign](./campaigns-list)

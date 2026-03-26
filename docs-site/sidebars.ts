@@ -28,6 +28,7 @@ const sidebars: SidebarsConfig = {
               label: 'Campaign List',
             },
             'campaigns/create-campaign',
+            'campaigns/edit-campaign',
             'campaigns/view-campaign-details',
             {
               type: 'doc',
