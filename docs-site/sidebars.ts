@@ -28,7 +28,6 @@ const sidebars: SidebarsConfig = {
               label: 'Campaign List',
             },
             'campaigns/create-campaign',
-            'campaigns/campaign-types',
             'campaigns/edit-campaign',
             'campaigns/view-campaign-details',
             {
@@ -41,6 +40,8 @@ const sidebars: SidebarsConfig = {
         'campaigns/campaign-broadcasts',
         'campaigns/campaign-objectives',
         'campaigns/campaign-catalog',
+        'campaigns/campaign-types',
+
        
       ],
     },
@@ -54,23 +55,14 @@ const sidebars: SidebarsConfig = {
           items: [
             {
               type: 'doc',
-              id: 'offers/offers-list',
+              id: 'offers/offer-list',
               label: 'Offer List',
             },
             'offers/create-offer',
             'offers/view-offer-details',
-            'offers/offer-reports',
           ],
         },
-        {
-          type: 'category',
-          label: 'Offer Catalogs',
-          items: [
-            'offers/offer-catalog',
-            'offers/offer-assign-items-modal',
-            'offers/offer-view-catalog-modal',
-          ],
-        },
+        'offers/offer-catalog',
       ],
     },
     {

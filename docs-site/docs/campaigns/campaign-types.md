@@ -101,24 +101,7 @@ When creating a campaign, you choose from the following campaign types:
 - Levels: Customers progress through offer tiers
 - Use case: Tiered loyalty programs, escalating engagement campaigns
 
----
-
-## Selecting Campaign Type During Creation
-
-When you create a campaign:
-
-1. Go to **Step 2: Campaign Configuration**
-2. Select your **Campaign Type** from the dropdown
-3. The available configuration options adapt based on your selection:
-   - **Multiple Target Group** - Configure multiple segments and offer mappings
-   - **Champion Challenger** - Define champion and challenger segments
-   - **A/B Testing** - Select exactly 2 segments (variant A and variant B)
-   - **Round Robin** - Select 1 segment and order your offer sequence
-   - **Multiple Level** - Select 1 segment and order your offer sequence
-
-4. Continue with [Step 3: Offer Configuration](./create-campaign) and remaining steps
-
----
+<!-- ---
 
 ## Key Differences
 
@@ -127,4 +110,4 @@ When you create a campaign:
 | **Segments** | Multiple | Multiple (1 champion + 1+ challengers) | Exactly 2 | 1 | 1 |
 | **Offers** | One per segment | Different per segment | Two variants | Sequential | Sequential |
 | **Execution** | Parallel | Parallel | Parallel | Sequential | Sequential |
-| **Purpose** | Different offers to different groups | Test new vs. proven | Two variants head-to-head | Progressive offers | Tiered offers |
+| **Purpose** | Different offers to different groups | Test new vs. proven | Two variants head-to-head | Progressive offers | Tiered offers | -->
