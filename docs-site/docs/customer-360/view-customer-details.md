@@ -7,7 +7,6 @@ View and manage individual customer profiles with complete access to their infor
 **Screenshot:**
 [Insert screenshot of customer details page]
 
----
 
 ## Customer Information Section
 
@@ -21,7 +20,6 @@ View all customer data:
 **Screenshot:**
 [Insert screenshot of customer info]
 
----
 
 ## Interaction History
 
@@ -35,7 +33,6 @@ View customer interactions:
 **Screenshot:**
 [Insert screenshot of interaction history]
 
----
 
 ## Customer Preferences
 
@@ -49,7 +46,6 @@ Manage communication preferences:
 **Screenshot:**
 [Insert screenshot of preferences]
 
----
 
 ## Action Buttons
 
@@ -65,7 +61,6 @@ Modify customer information and settings.
 **Screenshot:**
 [Insert screenshot of edit action]
 
----
 
 ### View Campaigns
 See campaigns this customer is part of.
@@ -79,7 +74,6 @@ See campaigns this customer is part of.
 **Screenshot:**
 [Insert screenshot of campaigns]
 
----
 
 ### Send Communication
 Send direct message to customer.
@@ -92,7 +86,6 @@ Send direct message to customer.
 **Screenshot:**
 [Insert screenshot of send communication]
 
----
 
 ### Add to Segment
 Add customer to one or more segments.
@@ -105,7 +98,6 @@ Add customer to one or more segments.
 **Screenshot:**
 [Insert screenshot of add to segment]
 
----
 
 ### Export Data
 Download customer data as CSV.
@@ -116,7 +108,6 @@ Download customer data as CSV.
 - Preferences
 - Custom fields
 
----
 
 ### Delete Customer
 Permanently remove customer (if applicable).
@@ -126,7 +117,6 @@ Permanently remove customer (if applicable).
 **Screenshot:**
 [Insert screenshot of delete confirmation]
 
----
 
 ## Segments & Tags
 
@@ -139,7 +129,6 @@ View customer segments and tags:
 **Screenshot:**
 [Insert screenshot of segments section]
 
----
 
 ## Campaign History
 
@@ -152,7 +141,6 @@ See campaign participation:
 **Screenshot:**
 [Insert screenshot of campaign history]
 
----
 
 ## Tips & Best Practices
 
@@ -162,7 +150,6 @@ See campaign participation:
 4. **Monitor Interactions** - Track engagement
 5. **Use History** - Refer to interaction history for context
 
----
 
 ## Related Pages
 

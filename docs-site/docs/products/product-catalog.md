@@ -6,7 +6,6 @@ Product Catalogs organize products into categories for easier management and org
 
 **[Insert screenshot of product catalogs page]**
 
----
 
 ## Summary Statistics
 
@@ -18,7 +17,6 @@ The Product Catalogs page displays key metrics at the top in five stat cards:
 - **With Products** - Number of catalogs that contain products
 - **Unused** - Number of catalogs that have no products assigned
 
----
 
 ## Catalog Cards
 
@@ -38,7 +36,6 @@ Catalogs are displayed as cards in a grid or list view with the following inform
 - View Products link
 - Action buttons (Toggle Active, Edit, Delete)
 
----
 
 ## Catalog Actions
 
@@ -67,7 +64,6 @@ Click the power icon on any catalog card to enable or disable it:
 
 Click the **Delete** button (trash icon) to permanently remove a catalog. You will be asked to confirm the deletion.
 
----
 
 ## View Products in Catalog
 
@@ -78,7 +74,6 @@ Click the **View Products** button on any catalog card to open the View Products
 - Product status badge (Active, Inactive)
 - Option to remove products from the catalog individually
 
----
 
 ## Add Products to Catalog
 
@@ -98,7 +93,6 @@ Click the **Add Products** action button within the View Products modal to open 
 - Already assigned products appear dimmed and cannot be selected again
 - A success message appears when products are assigned
 
----
 
 ## Search and Filters
 
@@ -123,7 +117,6 @@ Toggle between:
 - **Grid View** - Cards displayed in a grid layout
 - **List View** - Catalogs displayed in a list with full details
 
----
 
 ## Managing Catalog Contents
 
@@ -133,4 +126,3 @@ Each catalog card shows the total number of products, including the count of act
 - Remove products individually (if they are not the primary category)
 - Add more products using the Add Products modal
 
----

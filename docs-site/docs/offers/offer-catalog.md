@@ -6,7 +6,6 @@ Offer Catalogs organize offers into categories for easier management and organiz
 
 **[Insert screenshot of offer catalogs page]**
 
----
 
 ## Summary Statistics
 
@@ -18,7 +17,6 @@ The Offer Catalogs page displays key metrics at the top in five stat cards:
 - **With Offers** - Number of catalogs that contain offers
 - **Unused** - Number of catalogs that have no offers assigned
 
----
 
 ## Catalog Cards
 
@@ -38,7 +36,6 @@ Catalogs are displayed as cards in a grid or list view with the following inform
 - View Offers link
 - Action buttons (Toggle Active, Edit, Delete)
 
----
 
 ## Catalog Actions
 
@@ -67,7 +64,6 @@ Click the power icon on any catalog card to enable or disable it:
 
 Click the **Delete** button (trash icon) to permanently remove a catalog. You will be asked to confirm the deletion.
 
----
 
 ## View Offers in Catalog
 
@@ -78,7 +74,6 @@ Click the **View Offers** button on any catalog card to open the View Offers mod
 - Offer status badge (Active, Draft, Paused, etc.)
 - Option to remove offers from the catalog individually
 
----
 
 ## Add Offers to Catalog
 
@@ -99,7 +94,6 @@ Click the **Add Offers** action button within the View Offers modal to open the 
 - Already assigned offers appear dimmed and cannot be selected again
 - A success message appears when offers are assigned
 
----
 
 ## Search and Filters
 
@@ -124,7 +118,6 @@ Toggle between:
 - **Grid View** - Cards displayed in a grid layout
 - **List View** - Catalogs displayed in a list with full details
 
----
 
 ## Managing Catalog Contents
 
@@ -134,4 +127,3 @@ Each catalog card shows the total number of offers, including the count of activ
 - Remove offers individually (if they are not the primary category)
 - Add more offers using the Add Offers modal
 
----

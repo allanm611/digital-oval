@@ -12,7 +12,6 @@ The Offer section is your hub for managing all customer offers and promotional d
 - **Campaign Integration** - Assign offers to campaigns
 - **Search & Filter** - Quickly find offers
 
----
 
 ## Getting Started
 
@@ -28,7 +27,6 @@ To track offer performance and redemption metrics, see [Offer Reports](./offer-r
 ### Offer Catalogs
 To organize offers into catalogs, see [Offer Catalogs](./offer-catalogs).
 
----
 
 ## Offer Status
 
@@ -38,7 +36,6 @@ To organize offers into catalogs, see [Offer Catalogs](./offer-catalogs).
 - **Archived** - Old offers for reference
 - **Expired** - Offer end date passed
 
----
 
 ## Tips & Best Practices
 
@@ -48,7 +45,6 @@ To organize offers into catalogs, see [Offer Catalogs](./offer-catalogs).
 4. **Archive Old Offers** - Keep your list organized
 5. **Test Offers** - Verify impact before full rollout
 
----
 
 ## Need Help?
 

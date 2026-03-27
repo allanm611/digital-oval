@@ -4,7 +4,6 @@
 
 The Password Reset page allows users to create a new password after requesting a password reset from the login page.
 
----
 
 ## Accessing Password Reset
 
@@ -16,7 +15,8 @@ Password reset is initiated from the login page:
 4. Check your email for a password reset link
 5. Click the link to access the Password Reset page
 
----
+![Forgot Password Modal](/img/auth-images/forgot-password.png)
+
 
 ## Password Requirements
 
@@ -41,13 +41,11 @@ When creating a new password, the password must meet the following requirements:
 **Validation:**
 - Must match the password entered above exactly
 
----
 
 ## Show/Hide Password
 
 Click the eye icon next to each password field to toggle visibility between hidden (dots) and plain text. This applies independently to the Password and Confirm Password fields.
 
----
 
 ## Password Reset Process
 
@@ -59,7 +57,6 @@ Click the eye icon next to each password field to toggle visibility between hidd
 6. A success page will be displayed confirming the reset
 7. You will be automatically redirected to the login page after 3 seconds
 
----
 
 ## Error Handling
 
@@ -74,7 +71,6 @@ Click the eye icon next to each password field to toggle visibility between hidd
 - Verify your password includes uppercase, lowercase, and numbers
 - Ensure your password is at least 8 characters long
 
----
 
 ## Next Steps
 
@@ -83,4 +79,3 @@ After successfully resetting your password:
 - Log in with your email address and new password
 - You will have access to your account
 
----

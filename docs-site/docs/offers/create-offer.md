@@ -4,7 +4,6 @@
 
 The Create Offer workflow guides you through a 6-step process to set up a new promotional offer that can be used in campaigns.
 
----
 
 ## Step 1: Basic Info
 
@@ -38,7 +37,6 @@ Configure the essential details of your offer.
 - Maximum number of times a single customer can use this offer
 - Default: 0 (unlimited)
 
----
 
 ## Step 2: Products
 
@@ -48,7 +46,6 @@ Select products to include in this offer.
 
 Select one or more products that this offer applies to. These products will be available when the offer is used in campaigns.
 
----
 
 ## Step 3: Creative
 
@@ -68,7 +65,6 @@ Define how the offer will be presented to customers across different channels:
 - **Locale** - Language/region for the creative
 - **Variables** - Custom variables that can be personalized per customer (email only)
 
----
 
 ## Step 4: Tracking
 
@@ -82,7 +78,6 @@ Set up how the offer's performance will be tracked:
 - Revenue tracking
 - Other performance indicators
 
----
 
 ## Step 5: Rewards
 
@@ -96,7 +91,6 @@ Configure what reward or incentive is provided:
 - Redemption terms
 - Reward expiration (if applicable)
 
----
 
 ## Step 6: Review
 
@@ -115,7 +109,6 @@ Review all the information you've entered:
 - **Save as Draft** - Save the offer without submitting for approval (can edit later)
 - **Save and Request Approval** - Submit the offer for approval by authorized reviewers
 
----
 
 ## Offer Status After Creation
 

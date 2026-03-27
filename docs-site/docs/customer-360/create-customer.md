@@ -4,7 +4,6 @@
 
 Add new customers to your system to build your customer database and enable targeted campaigns and communications.
 
----
 
 ## Creating a Customer
 
@@ -18,7 +17,6 @@ Add new customers to your system to build your customer database and enable targ
 **Screenshot:**
 [Insert screenshot of basic information form]
 
----
 
 ### Step 2: Account Details
 **Configure customer account settings:**
@@ -30,7 +28,6 @@ Add new customers to your system to build your customer database and enable targ
 **Screenshot:**
 [Insert screenshot of account details]
 
----
 
 ### Step 3: Preferences
 **Set customer communication preferences:**
@@ -42,7 +39,6 @@ Add new customers to your system to build your customer database and enable targ
 **Screenshot:**
 [Insert screenshot of preferences]
 
----
 
 ### Step 4: Additional Data
 **Add optional customer information:**
@@ -53,7 +49,6 @@ Add new customers to your system to build your customer database and enable targ
 **Screenshot:**
 [Insert screenshot of additional data]
 
----
 
 ## Saving the Customer
 
@@ -65,7 +60,6 @@ Add new customers to your system to build your customer database and enable targ
 **Screenshot:**
 [Insert screenshot of save options]
 
----
 
 ## Bulk Upload
 
@@ -80,7 +74,6 @@ Import multiple customers at once:
 **Screenshot:**
 [Insert screenshot of bulk import]
 
----
 
 ## Best Practices
 
@@ -90,7 +83,6 @@ Import multiple customers at once:
 4. **Complete Profile** - Fill required fields
 5. **Review Before Saving** - Double-check information
 
----
 
 ## Next Steps
 

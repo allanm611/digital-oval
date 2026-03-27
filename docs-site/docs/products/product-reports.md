@@ -4,7 +4,6 @@
 
 Product Reports provide analytics on product performance, sales, and customer engagement.
 
----
 
 ## Key Metrics
 
@@ -17,7 +16,6 @@ Product Reports provide analytics on product performance, sales, and customer en
 **Screenshot:**
 [Insert screenshot of sales metrics]
 
----
 
 ### Engagement Metrics
 - **Customer Views** - Times viewed by customers
@@ -25,7 +23,6 @@ Product Reports provide analytics on product performance, sales, and customer en
 - **Purchase Rate** - % who purchased after viewing
 - **Return Rate** - % of returns
 
----
 
 ### Inventory Metrics
 - **Stock Levels** - Current inventory
@@ -36,7 +33,6 @@ Product Reports provide analytics on product performance, sales, and customer en
 **Screenshot:**
 [Insert screenshot of inventory metrics]
 
----
 
 ## Filtering & Analysis
 
@@ -48,13 +44,11 @@ Product Reports provide analytics on product performance, sales, and customer en
 **Screenshot:**
 [Insert screenshot of filters]
 
----
 
 ## Exporting
 
 Export data for further analysis.
 
----
 
 ## Tips
 
@@ -63,7 +57,6 @@ Export data for further analysis.
 - Optimize inventory levels
 - Analyze seasonal trends
 
----
 
 ## Related Pages
 

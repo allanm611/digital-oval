@@ -7,7 +7,6 @@ The Campaign Details page displays all information about a specific campaign inc
 **Screenshot:**
 [Insert screenshot of campaign details page]
 
----
 
 ## Campaign Overview Header
 
@@ -17,7 +16,6 @@ At the top of the page, displays basic campaign identification:
 - **Status Badge** - Current execution status (Draft, Active, Paused, Completed, etc.)
 - **Approval Status Badge** - Current approval state (Pending Approval, Approved, Rejected)
 
----
 
 ## Execution Metrics
 
@@ -46,7 +44,6 @@ Real-time metrics showing campaign performance during execution:
 - Displayed in seconds
 - Helps monitor campaign duration
 
----
 
 ## Campaign Information Section
 
@@ -85,7 +82,6 @@ Comprehensive campaign details displayed in an organized grid:
 - **Approved By** - User who approved (if applicable)
 - **Approved Date** - When approval occurred
 
----
 
 ## Action Buttons
 
@@ -94,7 +90,6 @@ Each campaign has an action menu (three dots) with the following options:
 ### Edit Campaign
 See [Edit Campaign](./edit-campaign) for comprehensive information about editing campaigns.
 
----
 
 ### Pause Campaign
 **What it does:** Temporarily stop an active campaign from sending messages.
@@ -106,7 +101,6 @@ See [Edit Campaign](./edit-campaign) for comprehensive information about editing
 **Screenshot:**
 [Insert screenshot of pause action]
 
----
 
 ### Resume Campaign
 **What it does:** Restart a paused campaign.
@@ -118,7 +112,6 @@ See [Edit Campaign](./edit-campaign) for comprehensive information about editing
 **Screenshot:**
 [Insert screenshot of resume action]
 
----
 
 ### Approve Campaign
 **What it does:** Approve a campaign pending approval.
@@ -135,7 +128,6 @@ See [Edit Campaign](./edit-campaign) for comprehensive information about editing
 **Screenshot:**
 [Insert screenshot of approve modal]
 
----
 
 ### Reject Campaign
 **What it does:** Reject a campaign pending approval.
@@ -151,7 +143,6 @@ See [Edit Campaign](./edit-campaign) for comprehensive information about editing
 **Screenshot:**
 [Insert screenshot of reject modal]
 
----
 
 ### Run Campaign
 **What it does:** Launch an approved campaign to start sending messages.
@@ -170,7 +161,6 @@ See [Edit Campaign](./edit-campaign) for comprehensive information about editing
 **Screenshot:**
 [Insert screenshot of execute modal]
 
----
 
 ### Archive Campaign
 **What it does:** Move campaign to archived state.
@@ -184,7 +174,6 @@ See [Edit Campaign](./edit-campaign) for comprehensive information about editing
 **Screenshot:**
 [Insert screenshot of archived campaigns filter]
 
----
 
 ### Delete Campaign
 **What it does:** Permanently remove campaign from system.
@@ -196,7 +185,6 @@ See [Edit Campaign](./edit-campaign) for comprehensive information about editing
 **Screenshot:**
 [Insert screenshot of delete confirmation]
 
----
 
 ## Sections Overview
 
@@ -240,7 +228,6 @@ Track campaign creation, updates, and approvals:
 - **Approved Date** - When campaign was approved (if applicable)
 - **Approved By** - User who approved the campaign
 
----
 
 ## Approval Workflow
 
@@ -295,7 +282,6 @@ To edit a campaign, click the **three dots menu (⋯)** and select **Edit Campai
 
 For detailed information about editing campaigns, field restrictions, and edit workflows, see [Edit Campaign](./edit-campaign).
 
----
 
 ## Related Pages
 
@@ -306,7 +292,6 @@ For detailed information about editing campaigns, field restrictions, and edit w
 - View all campaigns on [Campaign List](./campaigns-list) - Browse, search, and manage campaigns
 - Learn about campaign [types and configurations](./campaign-types) - Different campaign type structures
 
----
 
 ## Tips & Best Practices
 
@@ -319,7 +304,6 @@ For detailed information about editing campaigns, field restrictions, and edit w
 7. **Test with Seed Lists** - Always test with seed lists before launching to full audience (done during creation)
 8. **Control Group Analysis** - Review control group performance to measure true campaign impact vs. natural behavior
 
----
 
 ## Troubleshooting
 

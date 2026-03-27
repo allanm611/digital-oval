@@ -6,7 +6,6 @@ The Segment List page displays all segments in your system with summary statisti
 
 **[Insert screenshot of segment list page]**
 
----
 
 ## Summary Statistics
 
@@ -17,7 +16,6 @@ The Segment List page displays key metrics at the top in four stat cards:
 - **Stale Segments** - Number of segments that need refresh
 - **Top Segment** - Name of the largest segment with member count
 
----
 
 ## Search and Filtering
 
@@ -52,7 +50,6 @@ Click the **Filters** button to access filtering options:
 - Public
 - Private
 
----
 
 ## Segments Table
 
@@ -66,7 +63,6 @@ The segments are displayed in a table with the following information:
 - **Created** - Date the segment was created
 - **Actions** - Available management actions
 
----
 
 ## Action Buttons
 
@@ -84,7 +80,6 @@ Each segment row has action buttons with the following options:
 
 **Refresh** - Update segment member list
 
----
 
 ## Bulk Actions
 
@@ -109,12 +104,10 @@ When segments are selected, the following bulk actions become available:
 **Compare** (exactly 2 segments selected)
 - Compare overlap between two segments to see how many customers appear in both
 
----
 
 ## Pagination
 
 Use the pagination controls at the bottom to navigate through segments if there are more than the displayed page size.
 
----
 
 

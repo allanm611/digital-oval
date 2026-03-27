@@ -4,7 +4,6 @@
 
 Segment Reports provide analytics on segment performance, engagement, and impact across campaigns.
 
----
 
 ## Key Metrics
 
@@ -17,7 +16,6 @@ Segment Reports provide analytics on segment performance, engagement, and impact
 **Screenshot:**
 [Insert screenshot of size metrics]
 
----
 
 ### Performance Metrics
 - **Engagement Rate** - % engaged in campaigns
@@ -25,7 +23,6 @@ Segment Reports provide analytics on segment performance, engagement, and impact
 - **Revenue** - Revenue from segment
 - **Customer Lifetime Value** - Long-term value
 
----
 
 ### Campaign Performance
 - **Campaigns Run** - Number of campaigns
@@ -36,7 +33,6 @@ Segment Reports provide analytics on segment performance, engagement, and impact
 **Screenshot:**
 [Insert screenshot of campaign performance]
 
----
 
 ## Demographic Breakdown
 
@@ -49,7 +45,6 @@ View segment composition:
 **Screenshot:**
 [Insert screenshot of demographics]
 
----
 
 ## Filtering & Analysis
 
@@ -61,13 +56,11 @@ View segment composition:
 **Screenshot:**
 [Insert screenshot of filters]
 
----
 
 ## Exporting
 
 Export data for further analysis.
 
----
 
 ## Tips
 
@@ -76,7 +69,6 @@ Export data for further analysis.
 - Compare segment performance
 - Optimize targeting based on data
 
----
 
 ## Related Pages
 

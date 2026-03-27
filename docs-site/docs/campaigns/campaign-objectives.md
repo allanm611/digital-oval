@@ -4,7 +4,6 @@
 
 Campaign Objectives define the business goals and purposes for your campaigns. Each objective represents a specific target outcome you want to achieve with your marketing efforts. When creating a campaign, you select a Primary Objective that clearly states the campaign's main goal.
 
----
 
 ## Selecting an Objective When Creating a Campaign
 

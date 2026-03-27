@@ -7,7 +7,6 @@ Campaign Catalogs are organizational structures that group and organize campaign
 **Screenshot:**
 [Insert screenshot of campaign catalogs page]
 
----
 
 ## Summary Statistics
 
@@ -20,7 +19,6 @@ The Campaign Catalog page displays key metrics at the top:
 - **Unused Catalogs** - Catalogs with no campaigns
 - **Most Popular Catalog** - The catalog with the most campaigns assigned
 
----
 
 ## Catalog Cards
 
@@ -31,7 +29,6 @@ Each catalog is displayed as a card showing:
 - **Campaign Count** - Number of campaigns in this catalog
 - **Status** - Whether the catalog is active or inactive
 
----
 
 ## Catalog Actions
 
@@ -68,7 +65,6 @@ Click the **Power** button (activate/deactivate) on any catalog card:
 - **Activated** - Catalog is available for use
 - **Deactivated** - Catalog is disabled but catalogs are preserved
 
----
 
 ## View Campaigns in Catalog
 
@@ -103,7 +99,6 @@ If no campaigns are assigned to the catalog, a message appears suggesting to cre
 
 In the View Campaigns modal, click the **Remove** button next to a campaign to unassign it from the catalog. The campaign itself is not deleted, only its association with the catalog is removed.
 
----
 
 ## Add Campaigns to Catalog
 
@@ -157,7 +152,6 @@ If no campaigns are available, a message appears.
 **Removing Campaigns from Catalog**
 In the Assign Campaigns modal, campaigns already in the catalog show a **Remove** button in the Actions column. Click this button to unassign the campaign from the catalog (without deleting the campaign itself).
 
----
 
 ## Search and Filter
 
@@ -165,7 +159,6 @@ Use the **Search** field to find catalogs by:
 - Catalog name
 - Catalog description
 
----
 
 ## View Modes
 

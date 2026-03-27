@@ -7,7 +7,6 @@ Customer Reports provide analytics on customer behavior, engagement, and lifecyc
 **Screenshot:**
 [Insert screenshot of customer reports page]
 
----
 
 ## Key Metrics
 
@@ -21,7 +20,6 @@ Customer Reports provide analytics on customer behavior, engagement, and lifecyc
 **Screenshot:**
 [Insert screenshot of base metrics]
 
----
 
 ### Engagement Metrics
 - **Email Opens** - Customers who opened emails
@@ -30,7 +28,6 @@ Customer Reports provide analytics on customer behavior, engagement, and lifecyc
 - **Campaign Participation** - Campaigns customer joined
 - **Engagement Score** - Overall engagement level
 
----
 
 ### Transaction Metrics
 - **Total Purchases** - Number of transactions
@@ -42,7 +39,6 @@ Customer Reports provide analytics on customer behavior, engagement, and lifecyc
 **Screenshot:**
 [Insert screenshot of transaction metrics]
 
----
 
 ## Report Types
 
@@ -56,7 +52,6 @@ Breakdown of customers by segment:
 **Screenshot:**
 [Insert screenshot of segmentation report]
 
----
 
 ### Customer Lifecycle Report
 Track customer journey stages:
@@ -69,7 +64,6 @@ Track customer journey stages:
 **Screenshot:**
 [Insert screenshot of lifecycle report]
 
----
 
 ### Communication Preference Report
 Analyze opt-in/opt-out status:
@@ -81,7 +75,6 @@ Analyze opt-in/opt-out status:
 **Screenshot:**
 [Insert screenshot of preference report]
 
----
 
 ### Campaign Engagement Report
 Customer participation in campaigns:
@@ -93,7 +86,6 @@ Customer participation in campaigns:
 **Screenshot:**
 [Insert screenshot of campaign report]
 
----
 
 ## Filtering & Analysis
 
@@ -107,7 +99,6 @@ Customer participation in campaigns:
 **Screenshot:**
 [Insert screenshot of filters]
 
----
 
 ### Exporting Reports
 
@@ -119,7 +110,6 @@ Download data for further analysis:
 **Screenshot:**
 [Insert screenshot of export options]
 
----
 
 ## Insights & Trends
 
@@ -139,7 +129,6 @@ Compare against:
 **Screenshot:**
 [Insert screenshot of insights]
 
----
 
 ## Tips for Analysis
 
@@ -149,7 +138,6 @@ Compare against:
 4. **Plan Campaigns** - Use insights for targeting
 5. **Document Findings** - Record learnings
 
----
 
 ## Related Pages
 

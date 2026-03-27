@@ -2,13 +2,11 @@
 
 Campaign Types define the structure and execution model for your campaigns. When creating a campaign, you select a campaign type in **Step 2: Campaign Configuration** that determines how the campaign will run and which configuration options are available.
 
----
 
 ## Overview
 
 Campaign types are configured at the system level by administrators, but this guide explains the five campaign types available and when to use each one.
 
----
 
 ## Campaign Type Options
 
@@ -29,7 +27,6 @@ When creating a campaign, you choose from the following campaign types:
 - Offer Mapping: One or more offers per segment
 - Execution: Parallel (all segments run at the same time)
 
----
 
 ### 2. Champion Challenger
 
@@ -47,7 +44,6 @@ When creating a campaign, you choose from the following campaign types:
 - Metrics: Campaign tracks performance of champion vs. each challenger
 - Execution: Parallel (all run simultaneously for fair comparison)
 
----
 
 ### 3. A/B Testing
 
@@ -65,7 +61,6 @@ When creating a campaign, you choose from the following campaign types:
 - Requirements: Exactly 2 segments (one per variant)
 - Metrics: Side-by-side comparison of variant performance
 
----
 
 ### 4. Round Robin
 
@@ -83,7 +78,6 @@ When creating a campaign, you choose from the following campaign types:
 - Timing: Each offer is sent according to its schedule within the campaign timeline
 - Use case: Progressive discounts, multi-step nurturing campaigns
 
----
 
 ### 5. Multiple Level
 

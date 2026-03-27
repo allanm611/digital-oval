@@ -12,7 +12,6 @@ The Customer 360 section provides a unified view of all customer information and
 - **Interaction History** - View all customer interactions and communications
 - **Segmentation** - Organize customers into segments for targeting
 
----
 
 ## Getting Started
 
@@ -31,7 +30,6 @@ To track customer metrics and performance, see [Customer Reports](./customer-rep
 ### Customer Identity
 To manage customer identity and data relationships, see [Customer Identity](./customer-identity).
 
----
 
 ## Customer Profile Components
 
@@ -52,7 +50,6 @@ To manage customer identity and data relationships, see [Customer Identity](./cu
 - Do Not Disturb settings
 - Opt-in/opt-out status
 
----
 
 ## Tips & Best Practices
 
@@ -62,7 +59,6 @@ To manage customer identity and data relationships, see [Customer Identity](./cu
 4. **Respect Preferences** - Honor customer communication choices
 5. **Verify Identity** - Ensure accurate customer identification
 
----
 
 ## Related Pages
 

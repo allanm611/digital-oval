@@ -15,7 +15,6 @@ The All Campaigns page is your central hub for managing all customer marketing c
 - **Bulk Actions** - Perform actions on multiple campaigns simultaneously
 - **Campaign Analytics** - View performance metrics (sent, delivered, opened, converted)
 
----
 
 ## Action Buttons Explained
 
@@ -29,7 +28,6 @@ Each campaign in the list has an action menu (three dots) with the following opt
 **Screenshot:**
 [Insert screenshot of campaign details page]
 
----
 
 ### Edit Campaign
 **What it does:** Allows you to modify campaign details such as name, description, objectives, segments, offers, delivery flows, and scheduling.
@@ -41,7 +39,6 @@ Each campaign in the list has an action menu (three dots) with the following opt
 **Screenshot:**
 [Insert screenshot of edit campaign form]
 
----
 
 ### Pause Campaign
 **What it does:** Temporarily stops an active campaign from running or sending messages.
@@ -53,7 +50,6 @@ Each campaign in the list has an action menu (three dots) with the following opt
 **Screenshot:**
 [Insert screenshot of pause action]
 
----
 
 ### Resume Campaign
 **What it does:** Restarts a paused campaign so it continues running.
@@ -65,7 +61,6 @@ Each campaign in the list has an action menu (three dots) with the following opt
 **Screenshot:**
 [Insert screenshot of resume action]
 
----
 
 ### Approve Campaign
 **What it does:** Approves a campaign that is pending approval before it can be ran.
@@ -82,7 +77,6 @@ Each campaign in the list has an action menu (three dots) with the following opt
 **Screenshot:**
 [Insert screenshot of approve campaign modal]
 
----
 
 ### Reject Campaign
 **What it does:** Rejects a campaign that is pending approval, sending it back for revisions.
@@ -98,7 +92,6 @@ Each campaign in the list has an action menu (three dots) with the following opt
 **Screenshot:**
 [Insert screenshot of reject campaign modal]
 
----
 
 ### Run Campaign
 **What it does:** Immediately launches an approved campaign to send messages to the target audience.
@@ -115,7 +108,6 @@ Each campaign in the list has an action menu (three dots) with the following opt
 **Screenshot:**
 [Insert screenshot of Run campaign modal]
 
----
 
 ### Archive Campaign
 **What it does:** Moves a campaign to an archived state, removing it from the active list.
@@ -129,7 +121,6 @@ Each campaign in the list has an action menu (three dots) with the following opt
 **Screenshot:**
 [Insert screenshot of archived campaigns filter]
 
----
 
 ### Delete Campaign
 **What it does:** Permanently removes a campaign from the system.
@@ -143,7 +134,6 @@ Each campaign in the list has an action menu (three dots) with the following opt
 **Screenshot:**
 [Insert screenshot of delete confirmation modal]
 
----
 
 ## Search & Filter
 
@@ -164,7 +154,6 @@ Click the **Filter** icon to access advanced filtering options:
 **Screenshot:**
 [Insert screenshot of advanced filters panel]
 
----
 
 ## Campaign Status Explained
 
@@ -176,7 +165,6 @@ Click the **Filter** icon to access advanced filtering options:
 - **Archived** - Campaign is complete and archived
 - **Rejected** - Campaign was rejected during approval process
 
----
 
 ## Creating a New Campaign
 
@@ -245,7 +233,6 @@ The campaign creation process consists of **5 steps**:
 - **Draft** - Save as draft to continue later (progress is auto-saved)
 - **Submit for Approval** - Submit the campaign for approval (only when ready)
 
----
 
 ## Tips & Best Practices
 
@@ -257,7 +244,6 @@ The campaign creation process consists of **5 steps**:
 6. **Archive Completed Campaigns** - Keep your list organized by archiving old campaigns
 7. **Use Control Groups** - Include control groups to measure true campaign impact
 
----
 
 ## Troubleshooting
 

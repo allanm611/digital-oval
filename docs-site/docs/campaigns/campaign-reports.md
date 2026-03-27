@@ -7,7 +7,6 @@ Campaign Analytics provides a comprehensive overview of all your campaigns with 
 **Screenshot:**
 [Insert screenshot of campaign analytics page]
 
----
 
 ## Key Metrics Overview
 
@@ -33,7 +32,6 @@ At the top of the page, view key campaign metrics:
 - **Average Budget per Campaign** - Average spend per campaign
 - **Total Campaign Flow Count** - Total number of campaign flows/offer configurations
 
----
 
 ## Distribution Charts
 
@@ -44,14 +42,12 @@ Pie chart showing campaigns broken down by approval state:
 - **Rejected** - Sent back for changes
 - **Draft** - Not yet submitted
 
----
 
 ### Control Groups Distribution
 Pie chart displaying control group usage:
 - **With Control Group** - Campaigns using control groups for testing
 - **Without Control Group** - Campaigns delivering to 100% of audience
 
----
 
 ### Targets Distribution
 Bar chart showing campaigns with specific target metrics:
@@ -59,7 +55,6 @@ Bar chart showing campaigns with specific target metrics:
 - **With Target Conversion** - Campaigns with conversion goals
 - **With Target Revenue** - Campaigns with revenue targets
 
----
 
 ### Campaign Status Distribution
 Bar chart displaying campaign execution status:
@@ -69,7 +64,6 @@ Bar chart displaying campaign execution status:
 - **Completed** - Finished execution
 - **Archived** - Archived/inactive
 
----
 
 ### Activity Status Overview
 Bar chart showing campaign activity state:
@@ -77,14 +71,12 @@ Bar chart showing campaign activity state:
 - **Inactive Campaigns** - Paused or archived
 - **Currently Running** - Actively sending messages
 
----
 
 ### Budget Distribution
 Bar chart showing campaigns grouped by budget ranges:
 - Budget ranges show how many campaigns fall into each spending category
 - Helps understand budget allocation patterns across the portfolio
 
----
 
 ## How to Use
 

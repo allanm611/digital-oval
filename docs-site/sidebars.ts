@@ -10,8 +10,15 @@ const sidebars: SidebarsConfig = {
         'authentication/login',
         'authentication/registration',
         'authentication/password-reset',
-        'authentication/unauthorized',
         'authentication/landing',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Getting Started',
+      items: [
+        'getting-started/dashboard',
+        'getting-started/global-search',
       ],
     },
     {
@@ -174,6 +181,7 @@ const sidebars: SidebarsConfig = {
           type: 'category',
           label: 'Access Control',
           items: [
+            'users/unauthorized',
             'users/role-management',
             'users/permissions',
             'users/assign-permissions',
@@ -797,6 +805,7 @@ const sidebars: SidebarsConfig = {
       items: [
         'user-settings/my-profile',
         'user-settings/settings',
+        'user-settings/notifications',
       ],
     },
   ],

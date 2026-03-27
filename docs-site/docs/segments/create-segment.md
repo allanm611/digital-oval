@@ -6,7 +6,6 @@ Create custom customer segments based on various criteria to build targeted audi
 
 **[Insert screenshot of segment builder modal]**
 
----
 
 ## Form Fields
 
@@ -21,7 +20,6 @@ Create custom customer segments based on various criteria to build targeted audi
 **Category** (optional)
 - Assign the segment to a catalog category for organization
 
----
 
 ## Segment Conditions
 
@@ -51,7 +49,6 @@ Define the criteria that determines which customers belong to this segment. The 
 - **OR** - Any condition can be true
 - Combine multiple conditions to create complex rules
 
----
 
 ## Tags
 
@@ -60,7 +57,6 @@ Add tags to organize and label your segment:
 - Tags can be used for filtering and organization
 - Remove tags by clicking the delete button
 
----
 
 ## Preview & Confirmation
 
@@ -77,7 +73,6 @@ When you're ready:
 - Click **Create Segment** to save your segment
 - The segment will be available immediately for use in campaigns
 
----
 
 ## Next Steps
 
@@ -87,5 +82,4 @@ After creating a segment, you can:
 - View detailed information on the [Segment Details](./view-segment-details) page
 - Compute segment membership to get accurate audience size
 
----
 

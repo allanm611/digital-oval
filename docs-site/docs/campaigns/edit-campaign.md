@@ -4,7 +4,6 @@
 
 After creating a campaign, you can edit it to modify campaign details, audience configuration, offer assignments, or scheduling. The edit experience returns you to the same 5-step creation flow where you can update any aspect of your campaign.
 
----
 
 ## When You Can Edit
 
@@ -14,7 +13,6 @@ You can edit a campaign at any time as long as you have the `campaigns.edit` per
 - Address feedback from approvers after rejection
 - Continue working on draft campaigns
 
----
 
 ## How to Edit a Campaign
 
@@ -60,7 +58,6 @@ When editing, you return to the same 5-step creation workflow:
 - **Back button** - Return to previous step
 - **Step indicators** - Click any completed step to jump back and edit
 
----
 
 ## Saving Changes
 
@@ -82,7 +79,6 @@ When editing, you return to the same 5-step creation workflow:
 - All unsaved changes are lost
 - Returns to campaign details page
 
----
 
 ## Permissions Required
 

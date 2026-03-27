@@ -1,6 +1,11 @@
 import {themes as prismThemes} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
+import dotenv from 'dotenv';
+import path from 'path';
+
+
+dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
@@ -60,13 +65,18 @@ const config: Config = {
   ],
 
   themeConfig: {
-    // Replace with your project's social card
     image: 'img/docusaurus-social-card.jpg',
     colorMode: {
       respectPrefersColorScheme: true,
     },
     navbar: {
       title: 'Sentra CVM',
+      logo: {
+        alt: 'Sentra CVM Logo',
+        src: 'img/favicon.png',
+        href: `${process.env.MAIN_APP_URL}/landing`,
+        target: '_self',
+      },
       items: [
         {
           type: 'docSidebar',

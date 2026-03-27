@@ -1,10 +1,17 @@
+---
+title: Login
+---
+
+import { EditButton } from '@site/src/components/EditButton';
+
 # Login
 
 ## Overview
 
 The login page allows users to authenticate with their email and password to access the Sentra CVM platform.
 
----
+![Login Page](/img/auth-images/login.png)
+
 
 ## Login Form
 
@@ -27,7 +34,6 @@ The login page allows users to authenticate with their email and password to acc
 
 Click the eye icon to toggle password visibility between hidden (dots) and plain text.
 
----
 
 ## Additional Options
 
@@ -37,7 +43,7 @@ Enable the "Remember Me" checkbox to keep your login session active longer on th
 
 ### Forgot Password?
 
-If you've forgotten your password:
+If you've forgotten your password, see the [Password Reset](./password-reset) page for detailed instructions:
 
 1. Click the **Forgot Password?** link
 2. Enter your email address in the modal
@@ -45,7 +51,6 @@ If you've forgotten your password:
 4. Check your email for a password reset link
 5. Follow the link to reset your password
 
----
 
 ## Login Process
 
@@ -55,7 +60,6 @@ If you've forgotten your password:
 4. Click **Login**
 5. You will be redirected to the dashboard upon successful authentication
 
----
 
 ## Error Handling
 
@@ -64,14 +68,15 @@ If login fails:
 - **Account Not Found** - Verify your email address is registered in the system
 - **Account Inactive** - Contact your administrator if your account has been deactivated
 
----
 
 ## New Users
 
 If you don't have an account, click **Request Account** to start the [account request process](./registration).
 
----
+<!-- ---
 
 ## Tour & Help
 
-Click the **Tour** button for a guided introduction to the Sentra CVM platform features and benefits.
+Click the **Tour** button for a guided introduction to the Sentra CVM platform features and benefits. -->
+
+<EditButton docSlug="authentication/login" docTitle="Login" />

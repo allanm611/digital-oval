@@ -16,7 +16,6 @@ Get up and running quickly with these essential guides:
 - **[Customer 360](./customer-360/customers-list)** - Explore unified customer profiles
 - **[Reports & Analytics](./analytics/overall-dashboard-performance)** - Monitor key metrics
 
----
 
 ## Documentation Structure
 
@@ -30,7 +29,6 @@ This documentation is organized by feature and function:
 
 Each section contains detailed guides, best practices, and step-by-step instructions.
 
----
 
 ## Core Features
 
@@ -140,7 +138,6 @@ Manage user permissions and security.
 - [All Users](./users/users-list) - Manage platform users
 - [Access Control](./users/access-control) - Set user permissions
 
----
 
 ## Tips for Success
 
@@ -150,7 +147,6 @@ Manage user permissions and security.
 4. **Monitor Analytics** - Track performance and optimize continuously
 5. **Configure Settings** - Customize the platform to your workflow
 
----
 
 ## Need Help?
 

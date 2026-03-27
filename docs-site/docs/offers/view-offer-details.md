@@ -6,7 +6,6 @@ The Offer Details page displays complete information about a specific offer incl
 
 **[Insert screenshot of offer details page]**
 
----
 
 ## Offer Information
 
@@ -25,7 +24,6 @@ The top of the page displays:
 - **Catalog** - Assigned catalog/category
 - **Max Usage Per Customer** - Redemption limit per customer
 
----
 
 ## Linked Products
 
@@ -38,7 +36,6 @@ Shows all products included in this offer.
 - Option to add more products
 - Option to remove products
 
----
 
 ## Offer Creatives
 
@@ -57,7 +54,6 @@ Displays the marketing content for this offer across different channels.
 **Add New Creative**
 - Click to add creative content for additional channels or locales
 
----
 
 ## Action Buttons
 
@@ -87,7 +83,6 @@ Action buttons at the top display based on the offer's status and your permissio
 **Edit**
 - Modify offer details and configuration
 
----
 
 ## Offer Status States
 
@@ -99,7 +94,6 @@ Action buttons at the top display based on the offer's status and your permissio
 - **Expired** - Offer expiration date has passed
 - **Archived** - Inactive, preserved for reference
 
----
 
 ## Approval Workflow
 
@@ -112,7 +106,6 @@ Offers follow an approval workflow before they can be activated:
 5. **Approved** - Ready to activate
 6. **Activate** - Make available in campaigns
 
----
 
 ## Tips
 

@@ -6,13 +6,11 @@ The Edit Segment page allows you to modify an existing segment's conditions, des
 
 **[Insert screenshot of edit segment form]**
 
----
 
 ## When You Can Edit a Segment
 
 You can edit a segment at any time with proper permissions. There are no restrictions based on segment status or usage.
 
----
 
 ## Editable Fields
 
@@ -36,7 +34,6 @@ The following fields can be modified:
 - Add or remove tags for organization
 - Use tags for filtering and categorization
 
----
 
 ## Editing a Segment
 
@@ -46,7 +43,6 @@ The following fields can be modified:
 4. Click **Save Segment** to apply the changes
 5. The segment will be updated immediately
 
----
 
 ## Next Steps
 
@@ -55,4 +51,3 @@ After editing a segment, you can:
 - Return to the [Segment List](./segments-list) to manage other segments
 - Recompute the segment to refresh membership with the new criteria
 
----

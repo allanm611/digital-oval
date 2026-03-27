@@ -6,7 +6,6 @@ Segment Catalogs organize segments into categories for easier management and org
 
 **[Insert screenshot of segment catalogs page]**
 
----
 
 ## Summary Statistics
 
@@ -18,7 +17,6 @@ The Segment Catalogs page displays key metrics at the top in five stat cards:
 - **With Segments** - Number of catalogs that contain segments
 - **Unused** - Number of catalogs that have no segments assigned
 
----
 
 ## Catalog Cards
 
@@ -38,7 +36,6 @@ Catalogs are displayed as cards in a grid or list view with the following inform
 - View Segments link
 - Action buttons (Toggle Active, Edit, Delete)
 
----
 
 ## Catalog Actions
 
@@ -67,7 +64,6 @@ Click the power icon on any catalog card to enable or disable it:
 
 Click the **Delete** button (trash icon) to permanently remove a catalog. You will be asked to confirm the deletion.
 
----
 
 ## View Segments in Catalog
 
@@ -78,7 +74,6 @@ Click the **View Segments** button on any catalog card to open the View Segments
 - Segment status badge (Active, Inactive, etc.)
 - Option to remove segments from the catalog individually
 
----
 
 ## Add Segments to Catalog
 
@@ -99,7 +94,6 @@ Click the **Add Segments** action button within the View Segments modal to open 
 - Already assigned segments appear dimmed and cannot be selected again
 - A success message appears when segments are assigned
 
----
 
 ## Search and Filters
 
@@ -124,7 +118,6 @@ Toggle between:
 - **Grid View** - Cards displayed in a grid layout
 - **List View** - Catalogs displayed in a list with full details
 
----
 
 ## Managing Catalog Contents
 
@@ -134,4 +127,3 @@ Each catalog card shows the total number of segments, including the count of act
 - Remove segments individually (if they are not the primary category)
 - Add more segments using the Add Segments modal
 
----

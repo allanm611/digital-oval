@@ -4,7 +4,6 @@
 
 The Request Account page is a multi-step form that allows new users to request access to the Sentra CVM platform. Account requests are subject to administrator approval.
 
----
 
 ## Step 1: Personal Information
 
@@ -33,7 +32,8 @@ The Request Account page is a multi-step form that allows new users to request a
 **Required:** No (optional)
 - Your contact phone number
 
----
+![Request Access - Step 1](/img/auth-images/requestaccess-1.png)
+
 
 ## Step 2: Professional Details
 
@@ -56,7 +56,8 @@ The Request Account page is a multi-step form that allows new users to request a
 **Required:** Yes
 - Briefly explain why you need access to the platform
 
----
+![Request Access - Step 2](/img/auth-images/requestaccess-2.png)
+
 
 ## Account Request Process
 
@@ -69,7 +70,6 @@ The Request Account page is a multi-step form that allows new users to request a
 7. Your request will be reviewed by an administrator
 8. You will receive an email once your account has been approved or denied
 
----
 
 ## Returning to Previous Step
 
@@ -77,7 +77,6 @@ While filling out the form:
 - Click **Back** to return to the previous step
 - Your information will be saved so you can continue later
 
----
 
 ## Next Steps
 
@@ -85,5 +84,3 @@ After submitting your request:
 - Wait for administrator approval (processing time varies)
 - Check your email for approval notification
 - Once approved, you can log in with your registered email address
-
----

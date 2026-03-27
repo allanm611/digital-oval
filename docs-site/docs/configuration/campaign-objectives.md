@@ -4,7 +4,6 @@
 
 Campaign Objectives define the business goals and purposes for your campaigns. Each objective represents a specific target outcome you want to achieve with your marketing efforts. Objectives are used when creating campaigns to clearly state the campaign's primary goal.
 
----
 
 ## Available Objectives
 
@@ -50,7 +49,6 @@ Use this objective when:
 - Running reactivation campaigns with special offers
 - Recovering lost revenue from inactive segments
 
----
 
 ## Creating Custom Objectives
 
@@ -64,7 +62,6 @@ To create a new campaign objective:
 
 The new objective will be available for selection when creating campaigns.
 
----
 
 ## Using Objectives in Campaigns
 
@@ -81,7 +78,6 @@ The selected objective helps:
 - Track performance by objective type
 - Analyze which objectives deliver best results
 
----
 
 ## Managing Objectives
 
@@ -103,7 +99,6 @@ Access the Campaign Objectives configuration page to see all available objective
 
 **Note:** Be careful deleting objectives that are in use by active campaigns.
 
----
 
 ## Best Practices
 

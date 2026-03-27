@@ -6,7 +6,6 @@ The Offer List page displays all offers in your system with summary statistics, 
 
 **[Insert screenshot of offer list page]**
 
----
 
 ## Summary Statistics
 
@@ -17,7 +16,6 @@ The Offer List page displays key metrics at the top in four stat cards:
 - **Expired Offers** - Number of offers past their expiration date
 - **Draft** - Number of draft offers pending approval
 
----
 
 ## Search and Filtering
 
@@ -44,7 +42,6 @@ Use the **Search** field to find offers by:
 **Advanced Filters**
 - Click the **Filters** button to access additional filtering options
 
----
 
 ## Offers Table
 
@@ -59,7 +56,6 @@ The offers are displayed in a table with the following columns:
 | **Created** | Date the offer was created |
 | **Actions** | Available management actions (View, Edit, Pause/Resume, Archive, Delete, etc.) |
 
----
 
 ## Action Buttons
 
@@ -87,13 +83,11 @@ Each offer row has an actions menu with available buttons based on the offer's s
 **Delete** - Permanently remove the offer
 - Available when: offer is in Draft status or has no campaign associations
 
----
 
 ## Pagination
 
 Use the pagination controls at the bottom to navigate through offers if there are more than the displayed page size.
 
----
 
 ## Tips
 

@@ -6,7 +6,6 @@ The Segment Details page displays complete information about a specific segment 
 
 **[Insert screenshot of segment details page]**
 
----
 
 ## Segment Overview
 
@@ -18,7 +17,6 @@ The top section displays:
 - **Category** - Organization category if assigned
 - **Member Count** - Total estimated members in the segment
 
----
 
 ## Action Buttons
 
@@ -42,7 +40,6 @@ The top section displays:
 **Delete Segment**
 - Permanently remove the segment
 
----
 
 ## Segment Information
 
@@ -54,7 +51,6 @@ The page displays detailed segment information including:
 - **Last Refresh** - When segment membership was last updated
 - **Size Estimate** - Estimated number of members
 
----
 
 ## Segment Hierarchy
 
@@ -63,7 +59,6 @@ If the segment is part of a hierarchy:
 - **Parent Segment** - The parent segment (if applicable)
 - **Child Segments** - Any child segments derived from this one
 
----
 
 ## Performance Metrics
 
@@ -73,7 +68,6 @@ View how the segment performs in campaigns:
 - **Campaign Count** - Number of active campaigns using this segment
 - **Average Engagement** - Average engagement metrics
 
----
 
 ## Growth Trend
 
@@ -82,7 +76,6 @@ A chart showing:
 - Historical member count growth over time
 - Trend visualization of segment growth
 
----
 
 ## Campaign Flows
 
@@ -93,7 +86,6 @@ View which campaigns use this segment:
 - **Flow Type** - Type of campaign flow
 - **Wait Interval** - Time between communications
 
----
 
 ## Members Management
 
@@ -103,6 +95,5 @@ View and manage segment members:
 - **Add Members** - Manually add customers to the segment
 - **Search Members** - Find specific members within the segment
 
----
 
 

@@ -7,7 +7,6 @@ Campaign Broadcasts are execution records of campaigns. Each broadcast represent
 **Screenshot:**
 [Insert screenshot of campaign broadcasts page]
 
----
 
 ## What is a Broadcast?
 
@@ -18,7 +17,6 @@ A broadcast is a record of a campaign execution:
 - **Records execution details** (status, channels used, recipients)
 - **Captures metadata** (when sent, who created it)
 
----
 
 ## Broadcast Fields & Metrics
 
@@ -49,7 +47,6 @@ A broadcast is a record of a campaign execution:
 - **Failed** - Messages that failed to send
 - **Unsubscribed** - Customers who unsubscribed
 
----
 
 ## Broadcast Statistics
 
@@ -62,7 +59,6 @@ The Broadcasts page displays key aggregate metrics:
 - **Total Recipients** - Sum of all recipients across broadcasts
 - **Total Conversions** - Sum of conversions across all broadcasts
 
----
 
 ## Viewing Broadcasts
 
@@ -79,7 +75,6 @@ View all broadcast records with:
 - **Search** - Find broadcasts by campaign name or creator
 - **Filter by Status** - View broadcasts by execution status (Scheduled, In Progress, Completed, Failed, etc.)
 
----
 
 ## Broadcast Status States
 
@@ -92,7 +87,6 @@ View all broadcast records with:
 | **Failed** | Errors occurred during execution |
 | **Paused** | Execution was temporarily stopped |
 
----
 
 ## Broadcast Engagement Rates
 
@@ -103,7 +97,6 @@ Broadcasts show engagement based on delivered messages:
 - **Click Rate** = Clicked / Delivered × 100%
 - **Conversion Rate** = Conversions / Delivered × 100%
 
----
 
 ## Broadcast Details Page
 

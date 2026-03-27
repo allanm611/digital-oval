@@ -6,7 +6,6 @@ The Product List page displays all products in your system with summary statisti
 
 **[Insert screenshot of product list page]**
 
----
 
 ## Summary Statistics
 
@@ -18,7 +17,6 @@ The Product List page displays key metrics at the top in five stat cards:
 - **Average Price** - Average product price across all products
 - **Top Selling** - Count of top-selling products and the name of the top product
 
----
 
 ## Search and Filtering
 
@@ -45,7 +43,6 @@ Use the **Search** field to find products by:
 - Name Z-A
 - Product ID A-Z
 
----
 
 ## Products Table
 
@@ -61,7 +58,6 @@ The products are displayed in a table with the following columns:
 | **Created** | Date the product was created |
 | **Actions** | Available management actions |
 
----
 
 ## Action Buttons
 
@@ -77,12 +73,10 @@ Each product row has action buttons with the following options:
 
 **Delete** - Permanently remove the product with confirmation
 
----
 
 ## Pagination
 
 Use the pagination controls at the bottom to navigate through products if there are more than the displayed page size.
 
----
 
 

@@ -6,7 +6,6 @@ The Create Product form guides you through setting up a new product that can be 
 
 **[Insert screenshot of create product form]**
 
----
 
 ## Form Fields
 
@@ -47,7 +46,6 @@ The Create Product form guides you through setting up a new product that can be 
 **Validity Hours**
 - How long the product is valid for (in hours)
 
----
 
 ## Creating a Product
 
@@ -55,7 +53,6 @@ The Create Product form guides you through setting up a new product that can be 
 2. Add optional information as needed
 3. Click **Create Product** to save
 
----
 
 ## Next Steps
 
@@ -64,5 +61,4 @@ After creating a product, you can:
 - Edit the product using [Edit Product](./product-edit)
 - View detailed information on the [Product Details](./view-product-details) page
 
----
 

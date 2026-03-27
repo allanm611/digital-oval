@@ -4,7 +4,6 @@
 
 Offer Reports provide analytics on offer performance, redemption, and impact.
 
----
 
 ## Key Metrics
 
@@ -17,7 +16,6 @@ Offer Reports provide analytics on offer performance, redemption, and impact.
 **Screenshot:**
 [Insert screenshot of redemption metrics]
 
----
 
 ### Financial Metrics
 - **Total Discount** - Total value given
@@ -25,7 +23,6 @@ Offer Reports provide analytics on offer performance, redemption, and impact.
 - **ROI** - Return on investment
 - **Cost per Redemption** - Cost efficiency
 
----
 
 ### Performance Over Time
 - **Redemption Trends** - Over campaign duration
@@ -35,7 +32,6 @@ Offer Reports provide analytics on offer performance, redemption, and impact.
 **Screenshot:**
 [Insert screenshot of performance over time]
 
----
 
 ## Filtering & Analysis
 
@@ -47,13 +43,11 @@ Offer Reports provide analytics on offer performance, redemption, and impact.
 **Screenshot:**
 [Insert screenshot of filters]
 
----
 
 ## Exporting
 
 Export data for further analysis in CSV or PDF format.
 
----
 
 ## Tips
 
@@ -62,7 +56,6 @@ Export data for further analysis in CSV or PDF format.
 - Optimize based on data
 - Document successful offers
 
----
 
 ## Related Pages
 

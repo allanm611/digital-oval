@@ -4,7 +4,6 @@
 
 The campaign creation process is a guided workflow that walks you through all the necessary steps to set up a complete campaign. You'll configure campaign details, select your target audience, set up offer configuration, schedule execution, and preview before launch.
 
----
 
 ## Campaign Creation Flow
 
@@ -87,7 +86,6 @@ Configure all basic campaign details, goals, organizational structure, and timel
 ![Step 1 - Campaign Configuration](/img/campaign-images/step1.1-creation.png)
 
 
----
 
 ### Step 2: Audience Configuration
 
@@ -168,7 +166,6 @@ Seed lists are special contact lists used for quality assurance and testing:
 - Seed lists ensure message quality before sending to full audience
 - Mutually exclusive segments prevent audience overlap
 
----
 
 ### Step 3: Offer Configuration
 
@@ -226,7 +223,6 @@ For each segment, configure:
 <!-- - Bucket allocations for testing should match your hypothesis -->
 <!-- - Offer creative must be compatible with delivery channel -->
 
----
 
 ### Step 4: Scheduling
 
@@ -285,7 +281,6 @@ Define when and how often your campaign will run, including delivery windows and
 **Screenshot:**
 [Insert screenshot of scheduling step]
 
----
 
 ### Step 5: Preview & Launch
 
@@ -369,7 +364,6 @@ Items must show ✓ before campaign can be submitted for approval.
 - Double-check audience size to avoid unexpected reach
 - Verify offers are correctly mapped to segments
 
----
 
 ## Navigation
 
@@ -377,7 +371,6 @@ Items must show ✓ before campaign can be submitted for approval.
 - **Back Button** - Return to previous step
 - **Step Indicators** - Click on any completed step to jump back and edit
 
----
 
 ## Saving Progress
 
