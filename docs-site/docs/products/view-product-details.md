@@ -2,58 +2,88 @@
 
 ## Overview
 
-The Product Details page shows all product information and management options.
+The Product Details page displays complete information about a specific product including its configuration, pricing, validity period, and available management actions.
 
-**Screenshot:**
-[Insert screenshot of product details page]
+**[Insert screenshot of product details page]**
 
 ---
 
-## Product Information
+## Product Overview
 
-- **Name & SKU** - Product identifier
-- **Description** - Product details
-- **Category** - Product category
-- **Price** - Product pricing
-- **Stock** - Current inventory
+The top of the page displays:
+
+**Product Header**
+- Product name and icon
+- Description
+- Status badge (Active or Inactive)
+- Category badge
+
+---
+
+## Basic Information
+
+The Basic Information section displays:
+
+- **Product Code** - Unique identifier for the product
+- **DA ID** - Digital Assistant ID
+- **Category** - The product category
+- **Requires Inventory** - Whether the product requires inventory tracking
+
+---
+
+## Pricing
+
+The Pricing section displays:
+
+- **Price** - The product's base price
+- **Cost** (if available) - The cost of the product
+
+---
+
+## Validity Period
+
+If the product has validity settings, this section displays:
+
+- **Validity Days** - Number of days the product is valid
+- **Validity Hours** - Number of hours the product is valid
+- **Effective From** - Start date for product validity
+- **Effective To** - End date for product validity
+
+---
+
+## Timeline
+
+The Timeline section shows:
+
+- **Created** - Date and time the product was created
+- **Last Updated** - Date and time the product was last modified
+
+---
+
+## Additional Information
+
+The Additional Information section displays:
+
+- **Available Quantity** - Current inventory available
 
 ---
 
 ## Action Buttons
 
-### Edit Product
-Modify product information.
+Action buttons at the top display based on the product's status:
 
-### Pause Product
-Temporarily disable product.
+**Activate** (when Inactive)
+- Activate the product to make it available for use
 
-### Resume Product
-Re-enable disabled product.
+**Deactivate** (when Active)
+- Temporarily disable the product from being used
 
-### Archive Product
-Archive for historical records.
+**Edit**
+- Modify product details and configuration
 
-### Delete Product
-Remove product.
-
-**Screenshot:**
-[Insert screenshot of actions]
+**Delete**
+- Permanently remove the product
 
 ---
 
-## Inventory Management
 
-- **Current Stock** - Available inventory
-- **Reorder Level** - Low stock alert threshold
-- **Update Stock** - Adjust inventory levels
-
-**Screenshot:**
-[Insert screenshot of inventory section]
-
----
-
-## Related Pages
-
-- [Create Product](./create-product)
-- [Product Reports](./product-reports)
-- [Product Catalogs](./product-catalogs)

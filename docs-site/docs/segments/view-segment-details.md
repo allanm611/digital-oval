@@ -2,68 +2,107 @@
 
 ## Overview
 
-The Segment Details page shows segment information, audience size, and management options.
+The Segment Details page displays complete information about a specific segment including its configuration, member count, and available management actions.
 
-**Screenshot:**
-[Insert screenshot of segment details page]
-
----
-
-## Segment Information
-
-- **Name & Description** - Segment identity
-- **Catalog** - Organization
-- **Size** - Number of customers in segment
-- **Status** - Current status
-- **Last Updated** - When segment was refreshed
+**[Insert screenshot of segment details page]**
 
 ---
 
-## Audience Insights
+## Segment Overview
 
-- **Total Customers** - Segment size
-- **Demographic Breakdown** - Age, location, etc.
-- **Behavioral Insights** - Customer actions
-- **Value Metrics** - Average customer value
+The top section displays:
 
-**Screenshot:**
-[Insert screenshot of audience insights]
+- **Segment Name** - Name of the segment
+- **Description** - Detailed description of the segment purpose
+- **Type** - Segment type (Static, Dynamic, Predictive, etc.)
+- **Category** - Organization category if assigned
+- **Member Count** - Total estimated members in the segment
 
 ---
 
 ## Action Buttons
 
-### Edit Segment
-Modify segment conditions.
+**Edit Segment**
+- Modify segment conditions and configuration
 
-### Refresh Segment
-Update segment data.
+**Send Communication**
+- Send messages (SMS, Email, etc.) to segment members
 
-### Pause Segment
-Disable segment.
+**More Menu:**
 
-### Archive Segment
-Archive segment.
+**Recompute Members**
+- Refresh the member list to get the latest count
 
-### Delete Segment
-Remove segment.
+**Compute Size**
+- Calculate the estimated audience size
 
-**Screenshot:**
-[Insert screenshot of actions]
+**Validate Query**
+- Check if the segment query is valid
 
----
-
-## Segment Usage
-
-View where segment is used:
-- **Active Campaigns** - Campaigns using this segment
-- **Campaign Count** - How many campaigns
-- **Performance** - Segment performance in campaigns
+**Delete Segment**
+- Permanently remove the segment
 
 ---
 
-## Related Pages
+## Segment Information
 
-- [Create Segment](./create-segment)
-- [Segment Reports](./segment-reports)
-- [Segment Catalogs](./segment-catalogs)
+The page displays detailed segment information including:
+
+- **Segment Conditions** - Rules that define who belongs to this segment
+- **Tags** - Labels assigned to the segment
+- **Creation Date** - When the segment was created
+- **Last Refresh** - When segment membership was last updated
+- **Size Estimate** - Estimated number of members
+
+---
+
+## Segment Hierarchy
+
+If the segment is part of a hierarchy:
+
+- **Parent Segment** - The parent segment (if applicable)
+- **Child Segments** - Any child segments derived from this one
+
+---
+
+## Performance Metrics
+
+View how the segment performs in campaigns:
+
+- **Conversion Rate** - Campaign conversion rate
+- **Campaign Count** - Number of active campaigns using this segment
+- **Average Engagement** - Average engagement metrics
+
+---
+
+## Growth Trend
+
+A chart showing:
+
+- Historical member count growth over time
+- Trend visualization of segment growth
+
+---
+
+## Campaign Flows
+
+View which campaigns use this segment:
+
+- **Campaign Name** - Name of the campaign
+- **Offer Name** - Associated offer
+- **Flow Type** - Type of campaign flow
+- **Wait Interval** - Time between communications
+
+---
+
+## Members Management
+
+View and manage segment members:
+
+- **View Members** - See list of members in the segment
+- **Add Members** - Manually add customers to the segment
+- **Search Members** - Find specific members within the segment
+
+---
+
+

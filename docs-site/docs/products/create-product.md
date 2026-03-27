@@ -2,44 +2,67 @@
 
 ## Overview
 
-Create new products to be used in your system for campaigns, inventory management, and customer interactions.
+The Create Product form guides you through setting up a new product that can be used in your system.
+
+**[Insert screenshot of create product form]**
 
 ---
 
-## Creation Steps
+## Form Fields
 
-**Screenshot:**
-[Insert screenshot of create product form]
+### Required Fields (marked with *)
 
-### Basic Information
-- **Product Name** - Product name
-- **SKU** - Stock keeping unit
-- **Description** - Product details
+**Product Code***
+- Unique identifier for the product in your system
 
-### Product Details
-- **Category** - Product category
-- **Price** - Product price
-- **Catalog** - Assign to catalog
+**Name***
+- The name of the product
 
-### Inventory
-- **Stock Quantity** - Initial stock
-- **Reorder Level** - Alert when stock low
+**Price***
+- The cost or price of the product
 
-### Save Options
-- **Save as Draft** - Finish later
-- **Publish** - Make available
+**DA ID***
+- Digital Assistant ID for the product
+
+### Optional Fields
+
+**Description**
+- Detailed description of what the product provides
+
+**Category***
+- Select which product category to organize this product under
+
+**Currency**
+- Select the currency for pricing (default: KES)
+
+**Scope**
+- Define the scope of the product
+
+**Unit**
+- Unit of measurement for the product
+
+**Unit Value**
+- Quantity for the unit
+
+**Validity Hours**
+- How long the product is valid for (in hours)
 
 ---
 
-## Tips
+## Creating a Product
 
-- Use clear product names
-- Assign correct categories
-- Set accurate pricing
-- Initialize inventory levels
+1. Fill in all required fields marked with *
+2. Add optional information as needed
+3. Click **Create Product** to save
 
 ---
 
 ## Next Steps
 
-See [View Product Details](./view-product-details) to manage your product.
+After creating a product, you can:
+- View the product details on the [Product List](./products-list)
+- Edit the product using [Edit Product](./product-edit)
+- View detailed information on the [Product Details](./view-product-details) page
+
+---
+

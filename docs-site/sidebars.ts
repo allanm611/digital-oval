@@ -80,25 +80,11 @@ const sidebars: SidebarsConfig = {
             },
             'products/create-product',
             'products/view-product-details',
+            'products/product-edit',
             'products/product-reports',
           ],
         },
-        {
-          type: 'category',
-          label: 'Product Catalogs',
-          items: [
-            'products/product-catalog',
-            'products/product-assign-items-modal',
-            'products/product-view-catalog-modal',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Edit Products',
-          items: [
-            'products/product-edit',
-          ],
-        },
+        'products/product-catalog',
       ],
     },
     {
@@ -120,15 +106,7 @@ const sidebars: SidebarsConfig = {
             'segments/segment-edit',
           ],
         },
-        {
-          type: 'category',
-          label: 'Segment Catalogs',
-          items: [
-            'segments/segment-catalog',
-            'segments/segment-assign-items-modal',
-            'segments/segment-view-catalog-modal',
-          ],
-        },
+        'segments/segment-catalog',
         {
           type: 'category',
           label: 'Quicklists',

@@ -1,55 +1,88 @@
-# Product
+# Product List
 
 ## Overview
 
-The Product section manages all products in your system. Organize products into catalogs, track inventory, and manage product-related information used in campaigns and customer interactions.
+The Product List page displays all products in your system with summary statistics, search capabilities, filtering options, and management tools for each product.
 
-## Key Features
-
-- **Product Management** - Create and manage products
-- **Product Catalogs** - Organize products by category
-- **Inventory Tracking** - Monitor stock levels
-- **Performance Analytics** - Track product performance
-- **Campaign Integration** - Link products to campaigns
+**[Insert screenshot of product list page]**
 
 ---
 
-## Getting Started
+## Summary Statistics
 
-### Creating a Product
-To create a new product, see the [Create Product](./create-product) guide.
+The Product List page displays key metrics at the top in five stat cards:
 
-### Viewing Product Details
-To manage and track individual products, see [View Product Details](./view-product-details).
-
-### Monitoring Performance
-To track product performance metrics, see [Product Reports](./product-reports).
-
-### Product Catalogs
-To organize products, see [Product Catalogs](./product-catalogs).
+- **Total Products** - Total number of products in your system
+- **Active Products** - Number of currently active products
+- **Inactive Products** - Number of inactive products
+- **Average Price** - Average product price across all products
+- **Top Selling** - Count of top-selling products and the name of the top product
 
 ---
 
-## Product Status
+## Search and Filtering
 
-- **Active** - Product available for use
-- **Inactive** - Product not available
-- **Discontinued** - Product no longer sold
-- **Draft** - Product being created
+### Search
+
+Use the **Search** field to find products by:
+- Product name
+
+### Filters
+
+**Category Filter**
+- Filter products by their assigned category
+- Option: "All Categories" (shows all products regardless of category)
+
+**Status Filter**
+- All Status
+- Active
+- Inactive
+
+**Sort Options**
+- Newest First (default)
+- Oldest First
+- Name A-Z
+- Name Z-A
+- Product ID A-Z
 
 ---
 
-## Tips & Best Practices
+## Products Table
 
-1. **Organize Catalogs** - Use catalogs for better organization
-2. **Track Inventory** - Keep inventory levels current
-3. **Monitor Performance** - Regularly review product metrics
-4. **Update Information** - Keep product info current
+The products are displayed in a table with the following columns:
+
+| Column | Description |
+|--------|-------------|
+| **Product** | Product name |
+| **Product ID** | Unique product identifier |
+| **DA ID** | Digital Assistant ID |
+| **Category** | The category the product belongs to (badge) |
+| **Status** | Current status - Active or Inactive (badge) |
+| **Created** | Date the product was created |
+| **Actions** | Available management actions |
 
 ---
 
-## Need Help?
+## Action Buttons
 
-- For creating products, see [Create Product](./create-product)
-- For managing products, see [View Product Details](./view-product-details)
-- For analytics, see [Product Reports](./product-reports)
+Each product row has action buttons with the following options:
+
+**View** - Opens the [Product Details](./view-product-details) page
+
+**Edit** - Allows you to modify product information
+
+**Activate/Deactivate** - Toggle the product status
+- Play icon: Product is inactive, click to activate
+- Pause icon: Product is active, click to deactivate
+
+**Delete** - Permanently remove the product with confirmation
+
+---
+
+## Pagination
+
+Use the pagination controls at the bottom to navigate through products if there are more than the displayed page size.
+
+---
+
+

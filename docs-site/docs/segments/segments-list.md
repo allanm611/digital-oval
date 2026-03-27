@@ -1,65 +1,120 @@
-# Segment
+# Segment List
 
 ## Overview
 
-The Segment section is your hub for managing customer segments. Create, define, and manage customer groupings based on attributes, behaviors, and preferences for targeted campaign delivery.
+The Segment List page displays all segments in your system with summary statistics, search capabilities, filtering options, and management tools for each segment.
 
-## Key Features
-
-- **Segment Creation** - Build custom customer segments
-- **Segment Management** - Organize and maintain segments
-- **Audience Insights** - View segment demographics and behaviors
-- **Campaign Integration** - Assign segments to campaigns
-- **Search & Filter** - Quickly find segments
+**[Insert screenshot of segment list page]**
 
 ---
 
-## Getting Started
+## Summary Statistics
 
-### Creating a Segment
-To create a new segment, see the [Create Segment](./create-segment) guide for a complete walkthrough.
+The Segment List page displays key metrics at the top in four stat cards:
 
-### Viewing Segment Details
-To manage and analyze segments, see [View Segment Details](./view-segment-details).
-
-### Monitoring Performance
-To track segment performance, see [Segment Reports](./segment-reports).
-
-### Segment Catalogs
-To organize segments, see [Segment Catalogs](./segment-catalogs).
+- **Total Segments** - Total number of segments in your system (includes "+X this week" count)
+- **Active Segments** - Number of currently active segments
+- **Stale Segments** - Number of segments that need refresh
+- **Top Segment** - Name of the largest segment with member count
 
 ---
 
-## Segment Status
+## Search and Filtering
 
-- **Active** - Segment available for campaigns
-- **Inactive** - Segment not available
-- **Draft** - Segment being created
-- **Archived** - Old segments for reference
+### Search
+
+Use the **Search** field to find segments by:
+- Segment name
+
+### Advanced Filters
+
+Click the **Filters** button to access filtering options:
+
+**Filter Tabs:**
+- All - Show all segments
+- Active - Show only active segments
+- Empty - Show segments with no members
+- Needs Refresh - Show stale segments
+- Parents - Show parent segments
+- Most Used - Show most frequently used segments
+
+**Type Filter:**
+- Static
+- Dynamic
+- Predictive
+- Behavioral
+- Demographic
+- Geographic
+- Transactional
+
+**Visibility Filter:**
+- All
+- Public
+- Private
 
 ---
 
-## Segment Types
+## Segments Table
 
-- **Demographic** - Based on customer attributes
-- **Behavioral** - Based on customer actions
-- **Transactional** - Based on purchase history
-- **Hybrid** - Combination of multiple criteria
+The segments are displayed in a table with the following information:
 
----
-
-## Tips & Best Practices
-
-1. **Define Clearly** - Use clear criteria for segments
-2. **Test First** - Verify segment size before campaigns
-3. **Monitor Performance** - Track segment response
-4. **Archive Unused** - Keep list organized
-5. **Regular Updates** - Refresh segment data regularly
+- **Segment Name** - Name of the segment
+- **Type** - Segment type (Static, Dynamic, Predictive, etc.)
+- **Size Estimate** - Estimated number of members
+- **Status** - Active or Inactive
+- **Last Refresh** - When the segment was last refreshed
+- **Created** - Date the segment was created
+- **Actions** - Available management actions
 
 ---
 
-## Need Help?
+## Action Buttons
 
-- For creating segments, see [Create Segment](./create-segment)
-- For managing segments, see [View Segment Details](./view-segment-details)
-- For analytics, see [Segment Reports](./segment-reports)
+Each segment row has action buttons with the following options:
+
+**View** - Opens the [Segment Details](./view-segment-details) page
+
+**Edit** - Allows you to modify segment criteria and configuration
+
+**Delete** - Permanently remove the segment
+
+**Compute** - Calculate or refresh segment membership
+
+**Duplicate** - Create a copy of the segment
+
+**Refresh** - Update segment member list
+
+---
+
+## Bulk Actions
+
+### Selection Mode
+
+Click **Select Segments** to enter bulk selection mode. In this mode, you can:
+
+- Select individual segments using checkboxes
+- Select all visible segments using the header checkbox
+- Clear all selections
+
+### Bulk Operations
+
+When segments are selected, the following bulk actions become available:
+
+**Refresh All**
+- Refresh member lists for all selected segments
+
+**Batch Compute** (2+ segments selected)
+- Calculate membership for multiple segments at once
+
+**Compare** (exactly 2 segments selected)
+- Compare overlap between two segments to see how many customers appear in both
+
+---
+
+## Pagination
+
+Use the pagination controls at the bottom to navigate through segments if there are more than the displayed page size.
+
+---
+
+
