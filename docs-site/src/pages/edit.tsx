@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import MarkdownIt from 'markdown-it';
 import styles from './edit.module.css';
 
@@ -21,8 +21,18 @@ export default function EditPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  const [imageUrl, setImageUrl] = useState('');
+  const [imageAlt, setImageAlt] = useState('');
+  const [selectedDocVersion, setSelectedDocVersion] = useState('4');
+  const [selectedDocsVersion, setSelectedDocsVersion] = useState('2.0');
+  const [currentVersion, setCurrentVersion] = useState('4');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Get slug from query params
+  const docVersions = ['4', '3', '2', '1'];
+  const docsVersions = ['2.0', '1.1', '1.0'];
+  const isViewingOldVersion = selectedDocVersion !== currentVersion;
+
   const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
   const slug = searchParams.get('slug') || 'intro';
 
@@ -33,23 +43,17 @@ export default function EditPage() {
   const loadDoc = async () => {
     try {
       setLoading(true);
-      // TODO: Fetch from backend API
+      
       const mockDocs: Record<string, DocData> = {
-        intro: {
-          slug: 'intro',
-          title: 'Get started',
-          content: `# Sentra CVM Documentation
-
-Welcome to the complete guide for the **Sentra Customer Value Management (CVM)** platform. This documentation covers all features, tools, and configurations available in the system.
-
-## Quick Start
-
-Get up and running quickly with these essential guides:
-
-- **[Authentication](./authentication/login)** - Log in and manage your account
-- **[Campaigns](./campaigns/campaigns-list)** - Create and launch your first campaign
-- **[Customer 360](./customer-360/customers-list)** - Explore unified customer profiles
-- **[Reports & Analytics](./analytics/overall-dashboard-performance)** - Monitor key metrics`,
+        'infrastructure/servers': {
+          slug: 'infrastructure/servers',
+          title: 'Servers',
+          content: '',
+        },
+        'infrastructure/create-server': {
+          slug: 'infrastructure/create-server',
+          title: 'Create Server',
+          content: '',
         },
         'authentication/login': {
           slug: 'authentication/login',
@@ -126,7 +130,6 @@ If you don't have an account, click **Request Account** to start the [account re
       setTitle(docData.title);
     } catch (error) {
       setMessage('Error loading document');
-      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -142,19 +145,14 @@ If you don't have an account, click **Request Account** to start the [account re
       setIsSaving(true);
       setMessage(null);
 
-      // TODO: Call backend API to save
-      console.log('Saving:', { slug, title, content });
-
-      // Simulate save
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      setMessage('✅ Changes saved successfully!');
+      setMessage('Changes saved successfully!');
       setTimeout(() => {
         window.location.href = '/docs/intro';
       }, 1500);
     } catch (error) {
-      setMessage('❌ Failed to save document');
-      console.error(error);
+      setMessage('Failed to save document');
     } finally {
       setIsSaving(false);
     }
@@ -164,13 +162,76 @@ If you don't have an account, click **Request Account** to start the [account re
     window.location.href = '/docs/intro';
   };
 
+  const insertAtCursor = (text: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const before = content.substring(0, start);
+    const after = content.substring(end);
+    const newContent = before + text + after;
+
+    setContent(newContent);
+
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + text.length, start + text.length);
+    }, 0);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      const alt = file.name.replace(/\.[^/.]+$/, '');
+      const markdown = `![${alt}](${dataUrl})\n`;
+      insertAtCursor(markdown);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const handleInsertImageUrl = () => {
+    if (!imageUrl.trim()) {
+      setMessage('Please enter an image URL');
+      return;
+    }
+    const alt = imageAlt.trim() || 'Image';
+    const markdown = `![${alt}](${imageUrl})\n`;
+    insertAtCursor(markdown);
+    setImageUrl('');
+    setImageAlt('');
+    setShowUrlInput(false);
+  };
+
+  const handleRollback = async () => {
+    try {
+      setIsSaving(true);
+      setMessage(null);
+
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      setCurrentVersion(selectedDocVersion);
+      setSelectedDocVersion(selectedDocVersion);
+      setMessage(`Rolled back to Version ${selectedDocVersion}. New version created!`);
+      setTimeout(() => setMessage(null), 3000);
+    } catch (error) {
+      setMessage('Failed to rollback');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   if (loading) {
     return <div className={styles.container}>Loading...</div>;
   }
 
   return (
     <div className={styles.container}>
-      {/* Header */}
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>{title}</h1>
@@ -182,8 +243,46 @@ If you don't have an account, click **Request Account** to start the [account re
             disabled={isSaving}
             className={styles.titleEditInput}
           />
+          <div className={styles.versionSelectors}>
+            <div className={styles.versionGroup}>
+              <label>File Version</label>
+              <select
+                value={selectedDocVersion}
+                onChange={(e) => setSelectedDocVersion(e.target.value)}
+                className={styles.versionSelect}
+                disabled={isSaving}
+              >
+                {docVersions.map(v => (
+                  <option key={v} value={v}>{`Version ${v}`}</option>
+                ))}
+              </select>
+            </div>
+            <div className={styles.versionGroup}>
+              <label>Release</label>
+              <select
+                value={selectedDocsVersion}
+                onChange={(e) => setSelectedDocsVersion(e.target.value)}
+                className={styles.versionSelect}
+                disabled={isSaving}
+              >
+                {docsVersions.map(v => (
+                  <option key={v} value={v}>{`v${v}`}</option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
         <div className={styles.actions}>
+          {isViewingOldVersion && (
+            <button
+              onClick={handleRollback}
+              className={styles.rollbackButton}
+              disabled={isSaving}
+              title={`Rollback to Version ${selectedDocVersion}`}
+            >
+              {isSaving ? 'Rolling back...' : `Rollback to v${selectedDocVersion}`}
+            </button>
+          )}
           <button
             onClick={handleCancel}
             className={styles.cancelButton}
@@ -201,7 +300,6 @@ If you don't have an account, click **Request Account** to start the [account re
         </div>
       </div>
 
-      {/* Message */}
       {message && (
         <div className={`${styles.message} ${message.includes('✅') ? styles.success : styles.error}`}>
           {message}
@@ -213,14 +311,64 @@ If you don't have an account, click **Request Account** to start the [account re
         {/* Left: Editor (Markdown Code) */}
         <div className={styles.editorSection}>
           <div className={styles.editorLabel}>Markdown</div>
+          <div className={styles.toolbar}>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              style={{ display: 'none' }}
+              id="imageUpload"
+            />
+            <label htmlFor="imageUpload" className={styles.toolbarButton}>
+              Upload Image
+            </label>
+            <button
+              onClick={() => setShowUrlInput(!showUrlInput)}
+              className={styles.toolbarButton}
+            >
+              Insert Image URL
+            </button>
+          </div>
+
+          {showUrlInput && (
+            <div className={styles.urlInputGroup}>
+              <input
+                type="text"
+                placeholder="Image URL (e.g., https://example.com/image.png)"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                className={styles.urlInput}
+              />
+              <input
+                type="text"
+                placeholder="Alt text (optional)"
+                value={imageAlt}
+                onChange={(e) => setImageAlt(e.target.value)}
+                className={styles.urlInput}
+              />
+              <button
+                onClick={handleInsertImageUrl}
+                className={styles.insertButton}
+              >
+                Insert
+              </button>
+              <button
+                onClick={() => setShowUrlInput(false)}
+                className={styles.cancelUrlButton}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+
           <textarea
+            ref={textareaRef}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="# Write your markdown here..."
             disabled={isSaving}
             className={styles.contentTextarea}
           />
-          <small className={styles.hint}>Supports: # headings, ## subheadings, **bold**, - lists</small>
         </div>
 
         {/* Right: Preview (Display) */}

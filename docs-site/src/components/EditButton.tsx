@@ -5,15 +5,19 @@ interface EditButtonProps {
   docTitle: string;
   docId?: string;
   canEdit?: boolean;
+  isEmpty?: boolean;
 }
 
 export function EditButton({
   docSlug,
   docTitle,
   docId,
-  canEdit = true
+  canEdit = true,
+  isEmpty = false
 }: EditButtonProps) {
   if (!canEdit) return null;
+
+  const buttonText = isEmpty ? 'Add content to this page' : 'Edit this page';
 
   return (
     <div style={{
@@ -33,7 +37,7 @@ export function EditButton({
           display: 'inline-block',
         }}
       >
-        Edit this page
+        {buttonText}
       </a>
     </div>
   );
