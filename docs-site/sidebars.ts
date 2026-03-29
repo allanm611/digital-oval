@@ -265,20 +265,20 @@ const sidebars: SidebarsConfig = {
             'infrastructure/edit-connection-profile',
           ],
         },
-        {
-          type: 'category',
-          label: 'Data Connectors',
-          items: [
-            {
-              type: 'doc',
-              id: 'infrastructure/data-connectors-list',
-              label: 'Data Connector List',
-            },
-            'infrastructure/create-data-connector',
-            'infrastructure/view-data-connector',
-            'infrastructure/edit-data-connector',
-          ],
-        },
+        // {
+        //   type: 'category',
+        //   label: 'Data Connectors',
+        //   items: [
+        //     {
+        //       type: 'doc',
+        //       id: 'infrastructure/data-connectors-list',
+        //       label: 'Data Connector List',
+        //     },
+        //     'infrastructure/create-data-connector',
+        //     'infrastructure/view-data-connector',
+        //     'infrastructure/edit-data-connector',
+        //   ],
+        // },
         {
           type: 'category',
           label: 'KPIs',
@@ -291,6 +291,28 @@ const sidebars: SidebarsConfig = {
             'infrastructure/create-kpi',
             'infrastructure/view-kpi',
             'infrastructure/edit-kpi',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'ETL',
+          items: [
+            'infrastructure/etl',
+            {
+              type: 'doc',
+              id: 'infrastructure/etl-file-registry',
+              label: 'File Registry',
+            },
+            {
+              type: 'doc',
+              id: 'infrastructure/etl-fetch-controls',
+              label: 'Fetch Controls',
+            },
+            {
+              type: 'doc',
+              id: 'infrastructure/etl-analytics',
+              label: 'Analytics',
+            },
           ],
         },
       ],

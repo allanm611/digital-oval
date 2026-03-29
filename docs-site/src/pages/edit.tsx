@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import MarkdownIt from 'markdown-it';
 import styles from './edit.module.css';
 import { validateLinks, formatBrokenLinks } from '@site/src/utils/linkValidator';
+import { PermissionGate } from '../../../src/features/auth/components/PermissionGate';
+import { useAuth } from '../../../src/contexts/AuthContext';
 
 const md = new MarkdownIt({
   html: false,
@@ -289,14 +291,16 @@ If you don't have an account, click **Request Account** to start the [account re
         </div>
         <div className={styles.actions}>
           {isViewingOldVersion && (
-            <button
-              onClick={handleRollback}
-              className={styles.rollbackButton}
-              disabled={isSaving}
-              title={`Rollback to Version ${selectedDocVersion}`}
-            >
-              {isSaving ? 'Rolling back...' : `Rollback to v${selectedDocVersion}`}
-            </button>
+            <PermissionGate permission="docs.edit">
+              <button
+                onClick={handleRollback}
+                className={styles.rollbackButton}
+                disabled={isSaving}
+                title={`Rollback to Version ${selectedDocVersion}`}
+              >
+                {isSaving ? 'Rolling back...' : `Rollback to v${selectedDocVersion}`}
+              </button>
+            </PermissionGate>
           )}
           <button
             onClick={handleCancel}
@@ -305,13 +309,15 @@ If you don't have an account, click **Request Account** to start the [account re
           >
             Cancel
           </button>
-          <button
-            onClick={handleSave}
-            className={styles.saveButton}
-            disabled={isSaving}
-          >
-            {isSaving ? 'Saving...' : 'Save Changes'}
-          </button>
+          <PermissionGate permission="docs.edit">
+            <button
+              onClick={handleSave}
+              className={styles.saveButton}
+              disabled={isSaving}
+            >
+              {isSaving ? 'Saving...' : 'Save Changes'}
+            </button>
+          </PermissionGate>
         </div>
       </div>
 
@@ -350,9 +356,10 @@ If you don't have an account, click **Request Account** to start the [account re
       )}
 
       {/* Main Content - Side by side */}
-      <div className={styles.editorLayout}>
-        {/* Left: Editor (Markdown Code) */}
-        <div className={styles.editorSection}>
+      <PermissionGate permission="docs.read">
+        <div className={styles.editorLayout}>
+          {/* Left: Editor (Markdown Code) */}
+          <div className={styles.editorSection}>
           <div className={styles.editorLabel}>Markdown</div>
           <div className={styles.toolbar}>
             <input
@@ -424,6 +431,7 @@ If you don't have an account, click **Request Account** to start the [account re
           </div>
         </div>
       </div>
+      </PermissionGate>
     </div>
   );
 }
