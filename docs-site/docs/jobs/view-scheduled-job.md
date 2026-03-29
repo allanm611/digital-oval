@@ -162,9 +162,9 @@ The Scheduled Job Details page displays complete information about a specific jo
 
 **Job Health**
 - Overall health indicator
-- 🟢 Green - Healthy
-- 🟡 Yellow - Warning
-- 🔴 Red - Critical
+- Green - Healthy
+- Yellow - Warning
+- Red - Critical
 
 **Success Streak**
 - Consecutive successful executions

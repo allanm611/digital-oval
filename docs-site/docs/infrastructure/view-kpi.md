@@ -179,30 +179,30 @@ The KPI Details page displays complete information about a specific Key Performa
 ## Calculation Status
 
 ### Healthy Status
-- 🟢 Green indicator
+- Green indicator
 - KPI calculating normally
 - Values up-to-date
 - Last calculation: recent timestamp
 
 ### Calculating Status
-- 🟡 Yellow indicator
+- Yellow indicator
 - Calculation currently in progress
 - Will be updated shortly
 
 ### Warning Status
-- 🟠 Orange indicator
+- Orange indicator
 - KPI has issues
 - Check alert conditions
 - Manual recalculation may help
 
 ### Error Status
-- 🔴 Red indicator
+- Red indicator
 - Calculation failed
 - Check connection and data source
 - Review error logs
 
 ### Unknown Status
-- ⚪ Gray indicator
+- Gray indicator
 - Status not yet determined
 - First calculation not yet run
 

@@ -81,14 +81,14 @@ Each execution entry displays:
 ## Execution Status Indicators
 
 ### Status Colors and Icons
-- ✅ **Success** - Green, execution completed successfully
-- ❌ **Failure** - Red, execution encountered errors
-- ⏳ **Pending** - Gray, waiting to execute
-- ⏱️ **Queued** - Blue, in queue
-- ⚙️ **Running** - Yellow, currently executing
-- 🛑 **Aborted** - Dark red, manually stopped
-- ⏱️ **Timeout** - Orange, exceeded time limit
-- ❎ **Cancelled** - Gray, cancelled
+- **Success** - Green, execution completed successfully
+- **Failure** - Red, execution encountered errors
+- **Pending** - Gray, waiting to execute
+- **Queued** - Blue, in queue
+- **Running** - Yellow, currently executing
+- **Aborted** - Dark red, manually stopped
+- **Timeout** - Orange, exceeded time limit
+- **Cancelled** - Gray, cancelled
 
 ## Sorting
 

@@ -182,14 +182,14 @@ export default function ControlGroupsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center space-x-2 sm:space-x-4">
           <BackButton fallbackTo="/dashboard/configuration" />
-          <div>
+          {/* <div>
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
               {t.controlGroups.title}
             </h1>
             <p className="text-gray-600 mt-1 text-sm">
               {t.controlGroups.subtitle}
             </p>
-          </div>
+          </div> */}
         </div>
         <div className="flex items-center gap-3 w-auto">
           <button

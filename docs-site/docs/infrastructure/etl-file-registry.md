@@ -174,11 +174,11 @@ When viewing file details:
 
 ## Status Indicators
 
-- 🟡 **Pending** - Waiting for processing
-- 🔄 **Processing** - Currently processing
-- 🟢 **Completed** - Successfully processed
-- 🔴 **Failed** - Processing error
-- 🚫 **Skipped** - File skipped
+- **Pending** - Waiting for processing
+- **Processing** - Currently processing
+- **Completed** - Successfully processed
+- **Failed** - Processing error
+- **Skipped** - File skipped
 
 ## Common Tasks
 

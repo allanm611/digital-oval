@@ -76,7 +76,6 @@ export default function UniversalControlGroupModal({
         className={`bg-white ${tw.rounded} shadow-xl w-full max-w-6xl h-[90vh] flex flex-col`}
         style={{ zIndex: zIndex.modal }}
       >
-        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">

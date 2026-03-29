@@ -124,9 +124,9 @@ Once servers are selected, bulk action buttons appear at the top of the list.
 
 ## Health Status Indicators
 
-- 🟢 **Healthy** - Server responding normally
-- 🔴 **Failing** - Server not responding
-- ⚪ **Unknown** - Health status unknown or not checked
-- 🔵 **Not Monitored** - Health check disabled
+- **Healthy** - Server responding normally
+- **Failing** - Server not responding
+- **Unknown** - Health status unknown or not checked
+- **Not Monitored** - Health check disabled
 
 <EditButton docSlug="infrastructure/servers-list" docTitle="Servers List" />

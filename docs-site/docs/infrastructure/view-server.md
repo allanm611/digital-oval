@@ -156,19 +156,19 @@ The Server Details page displays complete information about a specific server. F
 ## Health Status Details
 
 ### Healthy Status
-- 🟢 Green indicator
+- Green indicator
 - Server responding normally
 - All health checks passing
 - Last check: recent timestamp
 
 ### Failing Status
-- 🔴 Red indicator
+- Red indicator
 - Server not responding
 - Health checks failing
 - Consecutive failures shown
 
 ### Unknown Status
-- ⚪ Gray indicator
+- Gray indicator
 - Health status not yet determined
 - Health checks not yet run
 - Or health checks disabled

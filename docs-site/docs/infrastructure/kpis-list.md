@@ -161,10 +161,10 @@ Select multiple KPIs to:
 
 ## Status Indicators
 
-- 🟢 **Active** - Calculating normally
-- 🔴 **Inactive** - Disabled KPI
-- ⚠️ **Warning** - Issues detected
-- 🔵 **Error** - Calculation failed
+- **Active** - Calculating normally
+- **Inactive** - Disabled KPI
+- **Warning** - Issues detected
+- **Error** - Calculation failed
 
 ## Classification Colors
 

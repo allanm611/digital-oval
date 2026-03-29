@@ -177,10 +177,10 @@ Select multiple profiles to:
 
 ## Profile Status Indicators
 
-- 🟢 **Active** - Ready and operational
-- 🔴 **Inactive** - Disabled profile
-- ⚠️ **Expired** - Past valid date
-- 🔵 **Unknown** - Status not determined
+- **Active** - Ready and operational
+- **Inactive** - Disabled profile
+- **Expired** - Past valid date
+- **Unknown** - Status not determined
 
 ## Data Classification Colors
 
@@ -191,8 +191,8 @@ Select multiple profiles to:
 
 ## PII Indicator
 
-- 🔒 **Has PII** - Contains personal data
-- 🔓 **No PII** - No personal data
+- **Has PII** - Contains personal data
+- **No PII** - No personal data
 
 ## Common Tasks
 

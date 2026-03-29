@@ -261,7 +261,8 @@ If you don't have an account, click **Request Account** to start the [account re
             className={styles.titleEditInput}
           />
           <div className={styles.versionSelectors}>
-            <div className={styles.versionGroup}>
+            {/* File Version selector hidden in add mode - files have no versions yet */}
+            {/* <div className={styles.versionGroup}>
               <label>File Version</label>
               <select
                 value={selectedDocVersion}
@@ -273,7 +274,7 @@ If you don't have an account, click **Request Account** to start the [account re
                   <option key={v} value={v}>{`Version ${v}`}</option>
                 ))}
               </select>
-            </div>
+            </div> */}
             <div className={styles.versionGroup}>
               <label>Release</label>
               <select

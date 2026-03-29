@@ -228,19 +228,19 @@ The Connection Profile Details page displays complete information about a specif
 ## Health Status Details
 
 ### Healthy Status
-- 🟢 Green indicator
+- Green indicator
 - Connection responding normally
 - All health checks passing
 - Last check: recent timestamp
 
 ### Failing Status
-- 🔴 Red indicator
+- Red indicator
 - Connection not responding
 - Health checks failing
 - Consecutive failures shown
 
 ### Unknown Status
-- ⚪ Gray indicator
+- Gray indicator
 - Health status not yet determined
 - Health checks not yet run
 - Or health checks disabled

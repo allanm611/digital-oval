@@ -170,18 +170,18 @@ Select multiple jobs to:
 
 ## Status Indicators
 
-- 🟢 **Active** - Running per schedule
-- 🟡 **Paused** - Execution temporarily stopped
-- ⚪ **Draft** - Not yet activated
-- 🔵 **Archived** - No longer in use
+- **Active** - Running per schedule
+- **Paused** - Execution temporarily stopped
+- **Draft** - Not yet activated
+- **Archived** - No longer in use
 
 ## Last Execution Status
 
-- ✅ **Success** - Last execution completed successfully
-- ❌ **Failed** - Last execution encountered errors
-- ⏱️ **Running** - Currently executing
-- ⏳ **Queued** - Waiting for execution slot
-- ⚠️ **Unknown** - Status not determined
+- **Success** - Last execution completed successfully
+- **Failed** - Last execution encountered errors
+- **Running** - Currently executing
+- **Queued** - Waiting for execution slot
+- **Unknown** - Status not determined
 
 ## Common Tasks
 
