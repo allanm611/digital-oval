@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import MarkdownIt from 'markdown-it';
 import styles from './edit.module.css';
+import { validateLinks, formatBrokenLinks } from '@site/src/utils/linkValidator';
 
 const md = new MarkdownIt({
   html: false,
@@ -27,6 +28,8 @@ export default function EditPage() {
   const [selectedDocVersion, setSelectedDocVersion] = useState('4');
   const [selectedDocsVersion, setSelectedDocsVersion] = useState('2.0');
   const [currentVersion, setCurrentVersion] = useState('4');
+  const [brokenLinksWarning, setBrokenLinksWarning] = useState<string | null>(null);
+  const [skipValidation, setSkipValidation] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const docVersions = ['4', '3', '2', '1'];
@@ -141,9 +144,20 @@ If you don't have an account, click **Request Account** to start the [account re
       return;
     }
 
+    // Validate links if not skipping validation
+    if (!skipValidation) {
+      const validation = validateLinks(content, slug);
+      if (!validation.isValid) {
+        const warning = formatBrokenLinks(validation.brokenLinks);
+        setBrokenLinksWarning(warning);
+        return;
+      }
+    }
+
     try {
       setIsSaving(true);
       setMessage(null);
+      setBrokenLinksWarning(null);
 
       await new Promise(resolve => setTimeout(resolve, 1000));
 
@@ -155,6 +169,7 @@ If you don't have an account, click **Request Account** to start the [account re
       setMessage('Failed to save document');
     } finally {
       setIsSaving(false);
+      setSkipValidation(false);
     }
   };
 
@@ -303,6 +318,34 @@ If you don't have an account, click **Request Account** to start the [account re
       {message && (
         <div className={`${styles.message} ${message.includes('✅') ? styles.success : styles.error}`}>
           {message}
+        </div>
+      )}
+
+      {brokenLinksWarning && (
+        <div className={styles.brokenLinksWarning}>
+          <div className={styles.brokenLinksTitle}>
+            Broken Links Found
+          </div>
+          <div className={styles.brokenLinksList}>
+            {brokenLinksWarning}
+          </div>
+          <div className={styles.brokenLinksActions}>
+            <button
+              onClick={() => setBrokenLinksWarning(null)}
+              className={styles.fixButton}
+            >
+              Fix Links
+            </button>
+            <button
+              onClick={() => {
+                setSkipValidation(true);
+                setTimeout(() => handleSave(), 0);
+              }}
+              className={styles.saveAnywayButton}
+            >
+              Save Anyway
+            </button>
+          </div>
         </div>
       )}
 
