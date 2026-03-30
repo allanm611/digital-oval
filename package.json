@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "cd docs-site && npm run build && cd .. && npm run build:main",
+    "build": "cd docs-site && npm install && npm run build && cd .. && npm run build:main",
     "build:main": "tsc && vite build && rm -rf dist/docs && mkdir -p dist && cp -r docs-site/build dist/docs",
     "build:check": "tsc --noEmit",
     "build:lint": "npm run lint && tsc && vite build",

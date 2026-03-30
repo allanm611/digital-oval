@@ -1312,18 +1312,12 @@ export default function CreateCustomerModal({
                 <button
                   type="button"
                   onClick={() => {
-                    const sampleData = `FirstName,LastName,Phone,AlternatePhone,Email,AlternateEmail,Gender,DateOfBirth,LanguagePreference,City,PhysicalAddress,Region,PostalCode,CountryCode,CustomerTier,PreferredChannel,Timezone
-David,Kipchoge,254750902921,254712345679,david.kipchoge@email.com,david.alt@email.com,Male,1990-05-15,en,Nairobi,123 Kenyatta Ave,Nairobi,00100,KEN,Gold,SMS,Africa/Nairobi
-Grace,Wanjiru,254712345678,254712345680,grace.wanjiru@email.com,grace.alt@email.com,Female,1992-03-20,en,Mombasa,456 Nkrumah Rd,Mombasa,80100,KEN,VIP,EMAIL,Africa/Nairobi
-Peter,Ochieng,254734567890,254734567891,peter.ochieng@email.com,,Male,1988-12-10,en,Kisumu,789 Oginga Odinga,Kisumu,40100,KEN,Regular,USSD,Africa/Nairobi
-Fatima,Hassan,254720123456,,fatima.hassan@email.com,fatima.alt@email.com,Female,1995-07-25,en,Mombasa,321 Abdel Nasser,Mombasa,80200,KEN,Gold,SMS,Africa/Nairobi`;
-                    const blob = new Blob([sampleData], { type: "text/csv" });
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = "sample_customers.csv";
-                    a.click();
-                    window.URL.revokeObjectURL(url);
+                    const link = document.createElement("a");
+                    link.href = "/static/samples/customer_sample.csv";
+                    link.download = "customer_sample.csv";
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
                   }}
                   className={`inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium ${tw.rounded} transition-colors`}
                   style={{

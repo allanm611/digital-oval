@@ -325,27 +325,14 @@ export default function CreateQuickListModal({
     }
   };
 
-  const downloadSampleFile = async () => {
-    // Create sample data with Kenyan names
-    const sampleData = [
-      ["SUBSCRIPTION ID", "EMAIL", "FIRST NAME", "LAST NAME", "COUNTRY"],
-      ["SUB001", "kamau.james@example.com", "James", "Kamau", "Kenya"],
-      ["SUB002", "achieng.mary@example.com", "Mary", "Achieng", "Kenya"],
-      ["SUB003", "kipchoge.david@example.com", "David", "Kipchoge", "Kenya"],
-      ["SUB004", "mueni.susan@example.com", "Susan", "Mueni", "Kenya"],
-      ["SUB005", "okonkwo.peter@example.com", "Peter", "Okonkwo", "Kenya"],
-    ];
-
-    // Dynamic import - XLSX only loads when download is triggered
-    const XLSX = await import("xlsx");
-
-    // Create workbook and worksheet
-    const worksheet = XLSX.utils.aoa_to_sheet(sampleData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "QuickList Sample");
-
-    // Write file
-    XLSX.writeFile(workbook, "quicklist_sample.xlsx");
+  const downloadSampleFile = () => {
+    // Download static sample file from public folder
+    const link = document.createElement("a");
+    link.href = "/static/samples/quicklist_sample.csv";
+    link.download = "quicklist_sample.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleDragEnter = (e: React.DragEvent) => {
