@@ -1,1 +1,0 @@
-# Edit VIP List Management

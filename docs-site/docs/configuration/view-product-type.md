@@ -1,1 +1,0 @@
-# View Product Type

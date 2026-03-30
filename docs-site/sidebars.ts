@@ -405,312 +405,28 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Configuration',
       items: [
-        {
-          type: 'category',
-          label: 'Line of Business',
-          items: [
-            {
-              type: 'doc',
-              id: 'configuration/line-of-business-list',
-              label: 'Line of Business List',
-            },
-            'configuration/create-line-of-business',
-            'configuration/view-line-of-business',
-            'configuration/edit-line-of-business',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Campaign Communication Policy',
-          items: [
-            {
-              type: 'doc',
-              id: 'configuration/campaign-communication-policy-list',
-              label: 'Campaign Communication Policy List',
-            },
-            'configuration/create-campaign-communication-policy',
-            'configuration/view-campaign-communication-policy',
-            'configuration/edit-campaign-communication-policy',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Communication Channels',
-          items: [
-            {
-              type: 'doc',
-              id: 'configuration/communication-channels-list',
-              label: 'Communication Channel List',
-            },
-            'configuration/create-communication-channel',
-            'configuration/view-communication-channel',
-            'configuration/edit-communication-channel',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Routes',
-          items: [
-            {
-              type: 'doc',
-              id: 'configuration/routes-list',
-              label: 'Route List',
-            },
-            'configuration/create-route',
-            'configuration/view-route',
-            'configuration/edit-route',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Campaign Objectives',
-          items: [
-            {
-              type: 'doc',
-              id: 'configuration/campaign-objectives-list',
-              label: 'Campaign Objective List',
-            },
-            'configuration/create-campaign-objective',
-            'configuration/view-campaign-objective',
-            'configuration/edit-campaign-objective',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Departments',
-          items: [
-            {
-              type: 'doc',
-              id: 'configuration/departments-list',
-              label: 'Department List',
-            },
-            'configuration/create-department',
-            'configuration/view-department',
-            'configuration/edit-department',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Programs',
-          items: [
-            {
-              type: 'doc',
-              id: 'configuration/programs-list',
-              label: 'Program List',
-            },
-            'configuration/create-program',
-            'configuration/view-program',
-            'configuration/edit-program',
-          ],
-        },
+        'configuration/communication-channels',
+        'configuration/routes',
+        'configuration/campaign-objectives',
+        'configuration/departments',
+        'configuration/programs',
         'configuration/campaign-catalog',
-        {
-          type: 'category',
-          label: 'Campaign Types',
-          items: [
-            {
-              type: 'doc',
-              id: 'configuration/campaign-types-list',
-              label: 'Campaign Type List',
-            },
-            'configuration/create-campaign-type',
-            'configuration/view-campaign-type',
-            'configuration/edit-campaign-type',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Control Groups',
-          items: [
-            {
-              type: 'doc',
-              id: 'configuration/control-groups-list',
-              label: 'Control Group List',
-            },
-            'configuration/create-control-group',
-            'configuration/view-control-group',
-            'configuration/edit-control-group',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Job Types',
-          items: [
-            'configuration/job-types-list',
-            'configuration/create-job-type',
-            'configuration/view-job-type',
-            'configuration/edit-job-type',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'DND Management',
-          items: [
-            {
-              type: 'doc',
-              id: 'configuration/dnd-management-list',
-              label: 'DND Management List',
-            },
-            'configuration/create-dnd-management',
-            'configuration/view-dnd-management',
-            'configuration/edit-dnd-management',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'VIP List Management',
-          items: [
-            {
-              type: 'doc',
-              id: 'configuration/vip-list-management-list',
-              label: 'VIP List Management List',
-            },
-            'configuration/create-vip-list-management',
-            'configuration/view-vip-list-management',
-            'configuration/edit-vip-list-management',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Seed List Management',
-          items: [
-            {
-              type: 'doc',
-              id: 'configuration/seed-list-management-list',
-              label: 'Seed List Management List',
-            },
-            'configuration/create-seed-list-management',
-            'configuration/view-seed-list-management',
-            'configuration/edit-seed-list-management',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Offer Types',
-          items: [
-            {
-              type: 'doc',
-              id: 'configuration/offer-types-list',
-              label: 'Offer Type List',
-            },
-            'configuration/create-offer-type',
-            'configuration/view-offer-type',
-            'configuration/edit-offer-type',
-          ],
-        },
+        'configuration/campaign-types',
+        'configuration/control-groups',
+        'configuration/job-types',
+        'configuration/dnd-management',
+        'configuration/vip-list-management',
+        'configuration/seed-list-management',
+        'configuration/offer-types',
         'configuration/offer-catalog',
-        {
-          type: 'category',
-          label: 'Offer Tracking Sources',
-          items: [
-            {
-              type: 'doc',
-              id: 'configuration/offer-tracking-sources-list',
-              label: 'Offer Tracking Source List',
-            },
-            'configuration/create-offer-tracking-source',
-            'configuration/view-offer-tracking-source',
-            'configuration/edit-offer-tracking-source',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Creative Templates',
-          items: [
-            {
-              type: 'doc',
-              id: 'configuration/creative-templates-list',
-              label: 'Creative Template List',
-            },
-            'configuration/create-creative-template',
-            'configuration/view-creative-template',
-            'configuration/edit-creative-template',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Reward Types',
-          items: [
-            {
-              type: 'doc',
-              id: 'configuration/reward-types-list',
-              label: 'Reward Type List',
-            },
-            'configuration/create-reward-type',
-            'configuration/view-reward-type',
-            'configuration/edit-reward-type',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Sender IDs',
-          items: [
-            {
-              type: 'doc',
-              id: 'configuration/sender-ids-list',
-              label: 'Sender ID List',
-            },
-            'configuration/create-sender-id',
-            'configuration/view-sender-id',
-            'configuration/edit-sender-id',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'SMS Routes',
-          items: [
-            {
-              type: 'doc',
-              id: 'configuration/sms-routes-list',
-              label: 'SMS Route List',
-            },
-            'configuration/create-sms-route',
-            'configuration/view-sms-route',
-            'configuration/edit-sms-route',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Languages',
-          items: [
-            {
-              type: 'doc',
-              id: 'configuration/languages-list',
-              label: 'Language List',
-            },
-            'configuration/create-language',
-            'configuration/view-language',
-            'configuration/edit-language',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Character Sets',
-          items: [
-            {
-              type: 'doc',
-              id: 'configuration/character-sets-list',
-              label: 'Character Set List',
-            },
-            'configuration/create-character-set',
-            'configuration/view-character-set',
-            'configuration/edit-character-set',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Product Types',
-          items: [
-            {
-              type: 'doc',
-              id: 'configuration/product-types-list',
-              label: 'Product Type List',
-            },
-            'configuration/create-product-type',
-            'configuration/view-product-type',
-            'configuration/edit-product-type',
-          ],
-        },
+        'configuration/offer-tracking-sources',
+        'configuration/creative-templates',
+        'configuration/reward-types',
+        'configuration/sender-ids',
+        'configuration/sms-routes',
+        'configuration/languages',
+        'configuration/character-sets',
+        'configuration/product-types',
         {
           type: 'category',
           label: 'Combo Types',
@@ -755,34 +471,8 @@ const sidebars: SidebarsConfig = {
           ],
         },
         'configuration/segment-catalog',
-        {
-          type: 'category',
-          label: 'User Management',
-          items: [
-            {
-              type: 'doc',
-              id: 'configuration/user-management-list',
-              label: 'User Management List',
-            },
-            'configuration/create-user-mgmt',
-            'configuration/view-user-mgmt',
-            'configuration/edit-user-mgmt',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Settings',
-          items: [
-            {
-              type: 'doc',
-              id: 'configuration/settings-list',
-              label: 'Settings List',
-            },
-            'configuration/create-setting',
-            'configuration/view-setting',
-            'configuration/edit-setting',
-          ],
-        },
+      
+       
       ],
     },
     {

@@ -1,1 +1,0 @@
-# Create VIP List Management

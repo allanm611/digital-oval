@@ -1,1 +1,0 @@
-# View VIP List Management
