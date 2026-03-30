@@ -46,4 +46,3 @@ From the landing page, you can:
 - **Login** - Access your existing account
 - **Request Account** - Start the process of requesting a new account
 - View detailed information about platform capabilities
-

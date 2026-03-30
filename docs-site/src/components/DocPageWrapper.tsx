@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import { useHistory } from 'react-router-dom';
 import { DocsAuthGuard, DocsEditButton } from './DocsAuthGuard';
 import { EditDocModal, DocData } from './EditDocModal';
-import { PermissionGate } from '@site/../src/features/auth/components/PermissionGate';
+// import { PermissionGate } from '@site/../src/features/auth/components/PermissionGate';
 import { docsApiService } from '@site/src/services/docsApiService';
 
 interface DocPageWrapperProps {
@@ -19,6 +20,7 @@ export function DocPageWrapper({
   initialContent = '',
   children,
 }: DocPageWrapperProps) {
+  const history = useHistory();
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [docData, setDocData] = useState<DocData>({
     id: docId,
@@ -62,11 +64,9 @@ export function DocPageWrapper({
         </div>
       )}
 
-      {/* Edit button with permission check */}
+      {/* Edit button */}
       <div style={{ marginBottom: '20px' }}>
-        <PermissionGate permission="docs:edit">
-          <DocsEditButton onEdit={() => setIsEditOpen(true)} />
-        </PermissionGate>
+        <DocsEditButton onEdit={() => window.location.href = `/docs/edit?slug=${docSlug}`} />
       </div>
 
       {/* Doc content */}

@@ -3,8 +3,8 @@ import { useHistory, useLocation } from 'react-router-dom';
 import MarkdownIt from 'markdown-it';
 import styles from './edit.module.css';
 import { validateLinks, formatBrokenLinks } from '@site/src/utils/linkValidator';
-import { PermissionGate } from '../../../src/features/auth/components/PermissionGate';
-import { useAuth } from '../../../src/contexts/AuthContext';
+// import { PermissionGate } from '../../../src/features/auth/components/PermissionGate';
+// import { useAuth } from '../../../src/contexts/AuthContext';
 
 const md = new MarkdownIt({
   html: false,
@@ -53,14 +53,9 @@ function EditPageContent() {
       setLoading(true);
       
       const mockDocs: Record<string, DocData> = {
-        'infrastructure/servers': {
-          slug: 'infrastructure/servers',
-          title: 'Servers',
-          content: '',
-        },
-        'infrastructure/create-server': {
-          slug: 'infrastructure/create-server',
-          title: 'Create Server',
+        'users/create-user': {
+          slug: 'users/create-user',
+          title: 'Create User',
           content: '',
         },
         'authentication/login': {
@@ -168,7 +163,9 @@ If you don't have an account, click **Request Account** to start the [account re
 
       setMessage('Changes saved successfully!');
       setTimeout(() => {
-        history.push('/docs/intro');
+        if (typeof window !== 'undefined') {
+          window.location.href = `/docs/${slug}`;
+        }
       }, 1500);
     } catch (error) {
       setMessage('Failed to save document');
@@ -179,7 +176,9 @@ If you don't have an account, click **Request Account** to start the [account re
   };
 
   const handleCancel = () => {
-    history.push('/docs/intro');
+    if (typeof window !== 'undefined') {
+      window.location.href = `/docs/${slug}`;
+    }
   };
 
   const insertAtCursor = (text: string) => {
@@ -295,16 +294,14 @@ If you don't have an account, click **Request Account** to start the [account re
         </div>
         <div className={styles.actions}>
           {isViewingOldVersion && (
-            <PermissionGate permission="docs.edit">
-              <button
-                onClick={handleRollback}
-                className={styles.rollbackButton}
-                disabled={isSaving}
-                title={`Rollback to Version ${selectedDocVersion}`}
-              >
-                {isSaving ? 'Rolling back...' : `Rollback to v${selectedDocVersion}`}
-              </button>
-            </PermissionGate>
+            <button
+              onClick={handleRollback}
+              className={styles.rollbackButton}
+              disabled={isSaving}
+              title={`Rollback to Version ${selectedDocVersion}`}
+            >
+              {isSaving ? 'Rolling back...' : `Rollback to v${selectedDocVersion}`}
+            </button>
           )}
           <button
             onClick={handleCancel}
@@ -313,15 +310,13 @@ If you don't have an account, click **Request Account** to start the [account re
           >
             Cancel
           </button>
-          <PermissionGate permission="docs.edit">
-            <button
-              onClick={handleSave}
-              className={styles.saveButton}
-              disabled={isSaving}
-            >
-              {isSaving ? 'Saving...' : 'Save Changes'}
-            </button>
-          </PermissionGate>
+          <button
+            onClick={handleSave}
+            className={styles.saveButton}
+            disabled={isSaving}
+          >
+            {isSaving ? 'Saving...' : 'Save Changes'}
+          </button>
         </div>
       </div>
 
@@ -360,8 +355,7 @@ If you don't have an account, click **Request Account** to start the [account re
       )}
 
       {/* Main Content - Side by side */}
-      <PermissionGate permission="docs.read">
-        <div className={styles.editorLayout}>
+      <div className={styles.editorLayout}>
           {/* Left: Editor (Markdown Code) */}
           <div className={styles.editorSection}>
           <div className={styles.editorLabel}>Markdown</div>
@@ -430,12 +424,11 @@ If you don't have an account, click **Request Account** to start the [account re
           <div className={styles.previewLabel}>Preview</div>
           <div className={styles.previewContent}>
             <div dangerouslySetInnerHTML={{
-              __html: md.render(content)
+              __html: md.render(content).replace(/src="\/img\//g, 'src="/docs/img/')
             }} />
           </div>
         </div>
       </div>
-      </PermissionGate>
     </div>
   );
 }

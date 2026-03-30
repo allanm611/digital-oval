@@ -25,7 +25,7 @@ export function EditButton({
       paddingTop: '20px',
     }}>
       <a
-        href={`/edit?slug=${docSlug}`}
+        href={`/docs/edit?slug=${docSlug}`}
         style={{
           background: 'none',
           border: 'none',
