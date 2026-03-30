@@ -454,12 +454,12 @@ Seed list test messages include:
 **Scenario:** Campaign with complex personalization variables
 
 **Workflow:**
-1. Build campaign with personalization ({first_name}, {product_name}, etc.)
-2. Send test with multiple seed recipients
-3. Verify each variable populated correctly
-4. Check for edge cases (missing data, special characters)
-5. Verify conditional logic works
-6. Confirm all branches of logic tested
+1\. Build campaign with personalization (`{first_name}`, `{product_name}`, etc.)
+2\. Send test with multiple seed recipients
+3\. Verify each variable populated correctly
+4\. Check for edge cases (missing data, special characters)
+5\. Verify conditional logic works
+6\. Confirm all branches of logic tested
 
 **Benefit:** Ensure personalization variables work correctly before reaching customers
 

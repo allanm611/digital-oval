@@ -324,9 +324,12 @@ When rendering creative:
 5. Returns rendered message
 
 **Example:**
-- Template: `"Hi {{customer_name}}, enjoy {{discount_percent}}% off!"`
-- Variables: `{customer_name: "John", discount_percent: 20}`
-- Rendered: `"Hi John, enjoy 20% off!"`
+
+```
+Template: "Hi {{customer_name}}, enjoy {{discount_percent}}% off!"
+Variables: {customer_name: "John", discount_percent: 20}
+Rendered: "Hi John, enjoy 20% off!"
+```
 
 ---
 

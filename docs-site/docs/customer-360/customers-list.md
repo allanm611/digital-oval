@@ -1,68 +1,351 @@
-# Customer
+# Customer List
 
 ## Overview
 
-The Customer 360 section provides a unified view of all customer information and interactions. Access comprehensive customer profiles, manage customer data, and monitor customer engagement across all channels.
+The Customer List provides a unified view of all customers in your system. Access comprehensive customer profiles, search and filter customers, manage customer data, and monitor customer engagement across all channels.
 
-## Key Features
+---
 
-- **Unified Customer Profiles** - Complete view of each customer
-- **Customer Search** - Quickly find customers by name, ID, or attributes
-- **Profile Management** - Update and maintain customer information
-- **Interaction History** - View all customer interactions and communications
-- **Segmentation** - Organize customers into segments for targeting
+## Accessing the Customer List
 
+**Navigation:** Dashboard → Customer 360 → Customers
 
-## Getting Started
+The Customer List page displays all your customers with a table view showing key information and action buttons for managing individual customers.
 
-### Viewing Customers
-To browse and search for customers, see the [Customers](./customers-list) overview.
+---
 
-### Creating Customer Records
-To add new customers to the system, see [Create Customer](./create-customer).
+## Customer List Interface
 
-### Managing Individual Customers
-To view and manage specific customer profiles, see [View Customer Details](./view-customer-details).
+### Search & Filter
 
-### Analyzing Customer Data
-To track customer metrics and performance, see [Customer Reports](./customer-reports).
+**Search Customers**
 
-### Customer Identity
-To manage customer identity and data relationships, see [Customer Identity](./customer-identity).
+Use the search box to find customers by:
+- **Name** - First name or last name
+- **Phone Number (MSISDN)** - Mobile phone number in any format
+- **Email** - Email address
+- **Customer ID** - Unique identifier
+- **Attributes** - Custom fields and data
 
+**How It Works:**
+1\. Type search term in the search box
+2\. Results update as you type
+3\. Shows matching customers only
+4\. Clear search to see full list
 
-## Customer Profile Components
+**Search Examples:**
+- "John" - Finds customers with first or last name John
+- "0712345678" - Finds by phone number
+- "john@email.com" - Finds by email
+- "TIER_GOLD" - Finds by custom attribute
 
-### Basic Information
-- Customer name and contact details
-- Account status and creation date
-- Tier and segmentation
+### Filter by Field Type
 
-### Interaction History
-- Email communications
-- SMS messages
-- Campaign participation
-- Purchase history
+Use the dropdown filter to narrow results by customer attribute type:
+- **All** - Show all customers
+- **Text Fields** - Name, email, address
+- **Numeric Fields** - Age, customer ID
+- **Status Fields** - Active, VIP, Test Account
 
-### Preferences
+### Pagination
+
+Navigate through customer records:
+- **Page Size:** 20 customers per page (default)
+- **Navigation:** Previous/Next buttons
+- **Page Indicator:** Shows current page and total customers
+- **Jump to Page:** Click page numbers to jump directly
+
+---
+
+## Customer List Columns
+
+| Column | Description |
+|--------|-------------|
+| **Name** | Customer's first and last name |
+| **Phone (MSISDN)** | Primary mobile phone number |
+| **Email** | Primary email address |
+| **Status** | Active, Inactive, Blocked, or other status |
+| **Tier** | Customer tier/segment classification |
+| **Preferred Channel** | SMS, Email, WhatsApp, Push, USSD, IVR, etc. |
+| **Created** | Date customer record was created |
+| **Last Updated** | Date of most recent profile update |
+
+---
+
+## Action Buttons
+
+### View Customer Details
+
+Click the **View** (eye icon) button to open the customer's full profile.
+
+**Shows:**
+- Complete customer information
+- Interaction history
+- Campaigns participated in
 - Communication preferences
-- Channel preferences
-- Do Not Disturb settings
-- Opt-in/opt-out status
+- Segments and tags
+- Recent activities
 
+### Edit Customer
 
-## Tips & Best Practices
+Click the **Edit** (pencil icon) button to update customer information.
 
-1. **Keep Data Current** - Regularly update customer information
-2. **Use Segments** - Organize customers for better targeting
-3. **Monitor Interactions** - Review engagement history
-4. **Respect Preferences** - Honor customer communication choices
-5. **Verify Identity** - Ensure accurate customer identification
+**Editable Fields:**
+- Name (first, last)
+- Email addresses
+- Phone numbers
+- Customer tier
+- Status
+- Preferences
+- Custom attributes
 
+### Send Communication
 
-## Related Pages
+Click the **Message** button to send direct communication to the customer.
 
-- [Create Customer](./create-customer) - Add new customers
-- [View Customer Details](./view-customer-details) - Manage profiles
-- [Customer Reports](./customer-reports) - Analytics
-- [Customer Identity](./customer-identity) - Data relationships
+**Channels Available:**
+- Email
+- SMS (Normal SMS, Flash SMS)
+- WhatsApp
+- Push Notification
+- USSD
+- IVR
+
+### Delete Customer
+
+Click the **Delete** (trash icon) button to remove the customer record.
+
+**Warning:** This action is permanent and cannot be undone.
+
+---
+
+## Creating Customers
+
+### Single Customer Creation
+
+**Steps:**
+1\. Click **Create Customer** button (top-right)
+2\. Fill in required fields:
+   - First Name
+   - Last Name
+   - Phone Number (MSISDN)
+3\. Add optional information:
+   - Email
+   - Address, City, Region
+   - Customer Tier
+   - Preferred Channel
+   - Other attributes
+4\. Click **Save**
+
+See [Create Customer](./create-customer) for detailed guide.
+
+### Bulk Upload
+
+Import multiple customers at once:
+
+**Process:**
+1\. Click **Bulk Import** button
+2\. Download CSV template
+3\. Fill in customer data
+4\. Upload completed CSV file
+5\. Review and confirm
+6\. Customers are imported
+
+**CSV Format:**
+- **Required Columns:** MSISDN, First Name, Last Name
+- **Optional Columns:** Email, Country Code, Timezone, etc.
+- **Max File Size:** 100 MB
+- **Max Records:** 1,000,000 per upload
+
+---
+
+## Customer Notification Channels
+
+The system supports multiple communication channels for each customer:
+
+| Channel | Type | Best For |
+|---------|------|----------|
+| **Normal SMS** | SMS | Standard text messages |
+| **Flash SMS** | SMS | High-priority alerts |
+| **Email** | Email | Detailed communications |
+| **WhatsApp** | Messaging App | Personal messages |
+| **Push** | Push Notification | Mobile app notifications |
+| **USSD** | USSD | Feature phone interactions |
+| **Interactive USSD** | USSD | Menu-based interactions |
+| **In-App** | In-App Message | In-application notifications |
+| **IVR** | Voice | Voice calls and menu systems |
+| **OBD** | OBD | Operator-specific delivery |
+| **Short Code** | SMS | Short code responses |
+
+---
+
+## Customer Status & Attributes
+
+### Customer Status
+
+- **Active** - Customer can receive communications
+- **Inactive** - Customer exists but is not receiving campaigns
+- **Blocked** - Customer is blocked from receiving communications
+- **Suspended** - Temporary suspension (reason-specific)
+
+### Customer Attributes
+
+Standard customer attributes include:
+
+**Contact Information**
+- First Name, Last Name
+- Email, Alternate Email
+- Phone (MSISDN), Alternate Phone Numbers
+- Postal Address, City, Region, Country Code
+
+**Demographics**
+- Gender
+- Date of Birth / Age
+- Language Preference
+- Timezone
+
+**Account Details**
+- Customer Tier (Gold, Silver, Bronze, etc.)
+- Account Status
+- Account Created Date
+- Last Updated Date
+- Account Age
+
+**Preferences**
+- Preferred Communication Channel
+- Opt-in/Opt-out Status
+- Do Not Disturb Hours
+- Frequency Caps
+
+**Flags & Classifications**
+- VIP Status
+- Test Account Flag
+- Premium User
+- KYC Verified
+- Fraud Flag
+
+**Device Information**
+- Device Type
+- Device ID
+
+### Custom Attributes
+
+You can add unlimited custom attributes to store additional customer data:
+- Custom fields (defined by your organization)
+- Integration data from external systems
+- Business-specific attributes
+- Any structured data
+
+---
+
+## Best Practices
+
+### Data Management
+
+1\. **Verify Phone Numbers** - Ensure MSISDN format is correct for your region
+2\. **Update Regularly** - Keep customer information current
+3\. **Use Consistent Naming** - Maintain consistent name formatting
+4\. **Add Relevant Attributes** - Include data useful for segmentation and targeting
+5\. **Clean Duplicates** - Identify and merge duplicate customer records
+
+### Privacy & Compliance
+
+1\. **Respect Opt-in Status** - Honor customer communication preferences
+2\. **Secure Data** - Protect customer information
+3\. **DND Settings** - Respect Do Not Disturb hours
+4\. **Consent Management** - Verify customer consent before communications
+5\. **Data Retention** - Follow compliance requirements
+
+### Targeting & Segmentation
+
+1\. **Use Segments** - Organize customers by criteria for targeted campaigns
+2\. **Apply Tags** - Use tags for quick organization
+3\. **Monitor Tiers** - Segment by customer value/tier
+4\. **Track Lifecycle** - Monitor customer journey stage
+5\. **Review Regularly** - Keep segment definitions current
+
+---
+
+## Common Tasks
+
+### Find a Specific Customer
+
+**By Phone Number:**
+1\. Use search box
+2\. Enter phone number (any format)
+3\. Click matching customer
+
+**By Email:**
+1\. Use search box
+2\. Enter email address
+3\. Click matching customer
+
+**By Name:**
+1\. Use search box
+2\. Enter first or last name
+3\. Click matching customer
+
+### Update Customer Information
+
+1\. Find customer in list
+2\. Click **Edit** button
+3\. Update fields
+4\. Click **Save Changes**
+5\. Confirmation message appears
+
+### Send Direct Message
+
+1\. Find customer in list
+2\. Click **Message** button
+3\. Select channel (SMS, Email, etc.)
+4\. Compose message
+5\. Click **Send**
+
+### Add Customer to Segment
+
+1\. Find customer
+2\. Click **View** to open profile
+3\. Scroll to "Segments" section
+4\. Click **Add to Segment**
+5\. Select segment
+6\. Click **Confirm**
+
+---
+
+## Troubleshooting
+
+### Cannot Find Customer
+
+**Issue:** Search not returning expected customer
+
+- **Solution 1:** Try different search terms (phone, email, name)
+- **Solution 2:** Check spelling and formatting
+- **Solution 3:** Customer may not exist in system
+- **Solution 4:** Use simpler search terms (first name only)
+
+### Search Too Slow
+
+**Issue:** Search takes long time with large dataset
+
+- **Solution 1:** Use more specific search terms
+- **Solution 2:** Use filters to narrow results
+- **Solution 3:** Clear cache and refresh
+- **Solution 4:** Try again after peak usage hours
+
+### Bulk Import Failed
+
+**Issue:** CSV upload rejected or incomplete
+
+- **Solution 1:** Verify CSV format matches template
+- **Solution 2:** Check for required columns
+- **Solution 3:** Validate phone number format
+- **Solution 4:** Check file size (max 100 MB)
+
+---
+
+## Related Documentation
+
+- [Create Customer](./create-customer) - Add new customers to system
+- [View Customer Details](./view-customer-details) - Manage individual profiles
+- [Customer Reports](./customer-reports) - Analytics and insights
+- [Customer Identity](./customer-identity) - Manage segmentation fields
