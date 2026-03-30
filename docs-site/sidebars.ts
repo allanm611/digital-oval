@@ -427,49 +427,10 @@ const sidebars: SidebarsConfig = {
         'configuration/languages',
         'configuration/character-sets',
         'configuration/product-types',
-        {
-          type: 'category',
-          label: 'Combo Types',
-          items: [
-            {
-              type: 'doc',
-              id: 'configuration/combo-types-list',
-              label: 'Combo Type List',
-            },
-            'configuration/create-combo-type',
-            'configuration/view-combo-type',
-            'configuration/edit-combo-type',
-          ],
-        },
-        {
-          type: 'category',
-          label: 'Product Categories',
-          items: [
-            {
-              type: 'doc',
-              id: 'configuration/product-categories-list',
-              label: 'Product Category List',
-            },
-            'configuration/create-product-category',
-            'configuration/view-product-category',
-            'configuration/edit-product-category',
-          ],
-        },
+        'configuration/combo-types',
+       
         'configuration/product-catalog',
-        {
-          type: 'category',
-          label: 'Segment Types',
-          items: [
-            {
-              type: 'doc',
-              id: 'configuration/segment-types-list',
-              label: 'Segment Type List',
-            },
-            'configuration/create-segment-type',
-            'configuration/view-segment-type',
-            'configuration/edit-segment-type',
-          ],
-        },
+        'configuration/segment-types',
         'configuration/segment-catalog',
       
        
