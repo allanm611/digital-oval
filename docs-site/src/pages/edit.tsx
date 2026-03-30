@@ -3,6 +3,7 @@ import { useHistory, useLocation } from 'react-router-dom';
 import MarkdownIt from 'markdown-it';
 import styles from './edit.module.css';
 import { validateLinks, formatBrokenLinks } from '@site/src/utils/linkValidator';
+import { createDocument, getDocumentBySlug, updateDocument } from '@site/src/services/documentationService';
 // import { PermissionGate } from '../../../src/features/auth/components/PermissionGate';
 // import { useAuth } from '../../../src/contexts/AuthContext';
 
@@ -27,6 +28,7 @@ function EditPageContent() {
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isNewDocument, setIsNewDocument] = useState(false);
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
   const [imageAlt, setImageAlt] = useState('');
@@ -51,86 +53,29 @@ function EditPageContent() {
   const loadDoc = async () => {
     try {
       setLoading(true);
-      
-      const mockDocs: Record<string, DocData> = {
-        'users/create-user': {
-          slug: 'users/create-user',
-          title: 'Create User',
-          content: '',
-        },
-        'authentication/login': {
-          slug: 'authentication/login',
-          title: 'Login',
-          content: `# Login
 
-## Overview
+      // Try to fetch from backend API first
+      try {
+        const backendDoc = await getDocumentBySlug(slug);
+        setDoc({
+          slug: backendDoc.slug,
+          title: backendDoc.title,
+          content: backendDoc.markdown_content || '',
+        });
+        setContent(backendDoc.markdown_content || '');
+        setTitle(backendDoc.title);
+        setIsNewDocument(false);
+        return;
+      } catch (error) {
+        // Backend document doesn't exist - this is expected for new documents
+        console.log('[Edit Page] Creating new document:', slug);
+      }
 
-The login page allows users to authenticate with their email and password to access the Sentra CVM platform.
-
-![Login Page](/img/auth-images/login.png)
-
-## Login Form
-
-### Email Field
-
-**Type:** Text input
-**Required:** Yes
-**Validation:**
-- Must be a valid email format (e.g., user@example.com)
-
-### Password Field
-
-**Type:** Password input
-**Required:** Yes
-**Validation:**
-- Minimum 6 characters
-- Must match a registered account
-
-### Show/Hide Password
-
-Click the eye icon to toggle password visibility between hidden (dots) and plain text.
-
-## Additional Options
-
-### Remember Me
-
-Enable the "Remember Me" checkbox to keep your login session active longer on this device. This is optional.
-
-### Forgot Password?
-
-If you've forgotten your password, see the [Password Reset](./password-reset) page for detailed instructions:
-
-1. Click the **Forgot Password?** link
-2. Enter your email address in the modal
-3. Click **Send Reset Link**
-4. Check your email for a password reset link
-5. Follow the link to reset your password
-
-## Login Process
-
-1. Enter your registered email address
-2. Enter your password
-3. Optionally enable "Remember Me"
-4. Click **Login**
-5. You will be redirected to the dashboard upon successful authentication
-
-## Error Handling
-
-If login fails:
-- **Invalid Credentials** - Check that your email and password are correct
-- **Account Not Found** - Verify your email address is registered in the system
-- **Account Inactive** - Contact your administrator if your account has been deactivated
-
-## New Users
-
-If you don't have an account, click **Request Account** to start the [account request process](./registration).`,
-        },
-      };
-
-      const docData = mockDocs[slug] || { slug, title: slug, content: '' };
-      setDoc(docData);
-      setContent(docData.content);
-      setTitle(docData.title);
+      // Set empty document for new content
+      setDoc({ slug, title: slug, content: '' });
+      setContent('');
+      setTitle(slug);
+      setIsNewDocument(true);
     } catch (error) {
       setMessage('Error loading document');
     } finally {
@@ -159,16 +104,35 @@ If you don't have an account, click **Request Account** to start the [account re
       setMessage(null);
       setBrokenLinksWarning(null);
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (isNewDocument) {
+        // Create new document
+        await createDocument({
+          category_id: 0, // Placeholder - will be from sidebar categories in backend later
+          title,
+          slug,
+          doc_type: 'guide',
+          markdown_content: content,
+          summary: `Documentation for ${title}`,
+        });
+      } else {
+        // Update existing document
+        await updateDocument(slug, {
+          title,
+          doc_type: 'guide',
+          markdown_content: content,
+          summary: `Documentation for ${title}`,
+        });
+      }
 
-      setMessage('Changes saved successfully!');
+      setMessage('Document saved successfully!');
       setTimeout(() => {
         if (typeof window !== 'undefined') {
           window.location.href = `/docs/${slug}`;
         }
       }, 1500);
     } catch (error) {
-      setMessage('Failed to save document');
+      console.error('Error saving document:', error);
+      setMessage(error instanceof Error ? error.message : 'Failed to save document');
     } finally {
       setIsSaving(false);
       setSkipValidation(false);

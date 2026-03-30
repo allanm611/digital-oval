@@ -65,6 +65,10 @@ const config: Config = {
     ],
   ],
 
+  clientModules: [
+    require.resolve('./src/clientModule.ts'),
+  ],
+
   themeConfig: {
     image: 'img/docusaurus-social-card.jpg',
     colorMode: {

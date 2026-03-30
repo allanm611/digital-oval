@@ -10,7 +10,7 @@ import {
 
 // Get API base URL based on environment
 const getApiBaseUrl = () => {
-  if (typeof window === 'undefined') return '/api/database-service';
+  if (typeof window === 'undefined') return '/api/documentation';
 
   const isVercel =
     window.location.hostname.includes('vercel.app') ||
@@ -23,9 +23,9 @@ const getApiBaseUrl = () => {
     return '/api/proxy';
   }
   if (isLocalhost) {
-    return import.meta.env.VITE_API_BASE_URL || 'http://sentra.groupngs.com:8080/api/database-service';
+    return import.meta.env.VITE_API_BASE_URL || 'http://sentra.groupngs.com:8080/api/documentation';
   }
-  return `${window.location.protocol}//${window.location.host}/api/database-service`;
+  return `${window.location.protocol}//${window.location.host}/api/documentation`;
 };
 
 const BASE_URL = getApiBaseUrl();

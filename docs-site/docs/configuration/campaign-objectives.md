@@ -1,8 +1,6 @@
-# Campaign Objectives
+# Campaign Objectives Overview
 
-## Overview
-
-Campaign Objectives define the business goals and purposes for your campaigns. Each objective represents a specific target outcome you want to achieve with your marketing efforts. Objectives are used when creating campaigns to clearly state the campaign's primary goal.
+Campaign Objectives define the strategic goals and business purposes for your marketing campaigns. Each objective represents a specific target outcome you want to achieve, helping you organize campaigns, align teams, and measure success against your business strategy.
 
 
 ## Available Objectives
@@ -102,8 +100,56 @@ Access the Campaign Objectives configuration page to see all available objective
 
 ## Best Practices
 
+### Objective Creation & Naming
 1. **Clear Naming** - Use descriptive names that clearly indicate the business goal
+2. **Avoid Ambiguity** - Don't create objectives with overlapping purposes
+3. **Consistent Conventions** - Use consistent naming patterns
+4. **Meaningful Descriptions** - Provide clear context about when and how to use each objective
+
+### Campaign Usage
+1. **Accurate Selection** - Select the objective that truly matches campaign intent
 2. **Consistent Use** - Use the same objectives across similar campaign types
-3. **Meaningful Descriptions** - Provide context about when and how to use each objective
-4. **Regular Review** - Periodically review objectives to ensure they match business needs
-5. **Align with Strategy** - Ensure objectives align with overall business strategy
+3. **Single Primary Objective** - Focus on the main campaign goal
+4. **Strategic Alignment** - Ensure objective aligns with business priorities
+
+### Management & Maintenance
+1. **Regular Review** - Quarterly review of objectives and their usage
+2. **Align with Strategy** - Ensure objectives align with overall business strategy
+3. **Archive Unused** - Remove obsolete objectives periodically
+4. **Document Changes** - Keep records of objective modifications
+5. **Team Communication** - Keep team aligned on objective definitions
+
+## Measuring Success by Objective
+
+### New Customer Acquisition
+- **Key Metrics:** Conversion rate, CAC (Customer Acquisition Cost), New customers
+- **Target:** Maximize conversion while minimizing cost
+
+### Customer Retention
+- **Key Metrics:** Retention rate, CLV (Customer Lifetime Value), Engagement rate
+- **Target:** Increase customer lifetime value and reduce churn
+
+### Churn Prevention
+- **Key Metrics:** Retention rate of targeted customers, Save rate, Cost per save
+- **Target:** Minimize churn among at-risk segments
+
+### Upsell/Cross-sell
+- **Key Metrics:** Revenue increase, AOV (Average Order Value), Product adoption
+- **Target:** Maximize revenue per customer
+
+### Dormant Reactivation
+- **Key Metrics:** Reactivation rate, Revenue recovered, Cost per reactivation
+- **Target:** Maximize reactivation while minimizing cost
+
+## Related Documentation
+
+### Campaign Objectives Operations
+- [Campaign Objectives List](./campaign-objectives-list) - View all objectives
+- [Create Campaign Objective](./create-campaign-objective) - Add new objectives
+- [View Campaign Objective](./view-campaign-objective) - See objective details
+- [Edit Campaign Objective](./edit-campaign-objective) - Modify objectives
+
+### Related Features
+- [Campaigns](../../campaigns/create-campaign) - Create campaigns using objectives
+- [Campaign Communication Policy](../campaign-communication-policy-list) - Policy enforcement
+- [Line of Business](../line-of-business-list) - Business line configuration

@@ -503,16 +503,7 @@ const sidebars: SidebarsConfig = {
             'configuration/edit-program',
           ],
         },
-        {
-          type: 'category',
-          label: 'Campaign Catalogs',
-          items: [
-            'configuration/campaign-catalog',
-            'configuration/create-campaign-catalog',
-            'configuration/view-campaign-catalog',
-            'configuration/edit-campaign-catalog',
-          ],
-        },
+        'configuration/campaign-catalog',
         {
           type: 'category',
           label: 'Campaign Types',
@@ -607,16 +598,7 @@ const sidebars: SidebarsConfig = {
             'configuration/edit-offer-type',
           ],
         },
-        {
-          type: 'category',
-          label: 'Offer Catalogs',
-          items: [
-            'configuration/offer-catalog',
-            'configuration/create-offer-catalog',
-            'configuration/view-offer-catalog',
-            'configuration/edit-offer-catalog',
-          ],
-        },
+        'configuration/offer-catalog',
         {
           type: 'category',
           label: 'Offer Tracking Sources',
@@ -757,16 +739,7 @@ const sidebars: SidebarsConfig = {
             'configuration/edit-product-category',
           ],
         },
-        {
-          type: 'category',
-          label: 'Product Catalogs',
-          items: [
-            'configuration/product-catalog',
-            'configuration/create-product-catalog',
-            'configuration/view-product-catalog',
-            'configuration/edit-product-catalog',
-          ],
-        },
+        'configuration/product-catalog',
         {
           type: 'category',
           label: 'Segment Types',
@@ -781,16 +754,7 @@ const sidebars: SidebarsConfig = {
             'configuration/edit-segment-type',
           ],
         },
-        {
-          type: 'category',
-          label: 'Segment Catalogs',
-          items: [
-            'configuration/segment-catalog',
-            'configuration/create-segment-catalog',
-            'configuration/view-segment-catalog',
-            'configuration/edit-segment-catalog',
-          ],
-        },
+        'configuration/segment-catalog',
         {
           type: 'category',
           label: 'User Management',

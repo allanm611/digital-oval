@@ -1,1 +1,0 @@
-# View Segment Catalog
