@@ -34,6 +34,12 @@ Product Reports provide analytics on product performance, sales, and customer en
 [Insert screenshot of inventory metrics]
 
 
+## Related Reports
+
+See also:
+- [Campaign Reports](../campaigns/campaign-reports) - Campaign performance metrics
+- [Offer Reports](../analytics/offer-reports) - Offer performance
+
 ## Filtering & Analysis
 
 - Filter by date range
@@ -62,4 +68,4 @@ Export data for further analysis.
 
 - [Create Product](./create-product)
 - [View Product Details](./view-product-details)
-- [Campaign Reports](/docs/campaigns/campaign-reports)
+- [Campaign Reports](/campaigns/campaign-reports)

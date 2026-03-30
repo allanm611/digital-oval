@@ -33,6 +33,12 @@ Offer Reports provide analytics on offer performance, redemption, and impact.
 [Insert screenshot of performance over time]
 
 
+## Related Reports
+
+See also:
+- [Campaign Reports](../campaigns/campaign-reports) - Campaign performance metrics
+- [Customer Reports](../analytics/customer-profile-reports) - Customer analytics
+
 ## Filtering & Analysis
 
 - Filter by date range
@@ -61,4 +67,4 @@ Export data for further analysis in CSV or PDF format.
 
 - [Create Offer](./create-offer)
 - [View Offer Details](./view-offer-details)
-- [Campaign Reports](/docs/campaigns/campaign-reports)
+- [Campaign Reports](/campaigns/campaign-reports)

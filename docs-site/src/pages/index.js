@@ -2,7 +2,9 @@ import { useEffect } from 'react';
 
 export default function Home() {
   useEffect(() => {
-    window.location.href = '/docs/intro';
+    if (typeof window !== 'undefined') {
+      window.location.href = '/docs/intro';
+    }
   }, []);
 
   return null;

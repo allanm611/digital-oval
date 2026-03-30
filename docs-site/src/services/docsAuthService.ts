@@ -13,6 +13,10 @@ export interface ValidateTokenResponse {
 
 class DocsAuthService {
   private getApiBaseUrl(): string {
+    if (typeof window === 'undefined') {
+      return import.meta.env.VITE_API_BASE_URL || "http://sentra.groupngs.com:8080/api/auth";
+    }
+
     const isLocalhost =
       window.location.hostname === "localhost" ||
       window.location.hostname === "127.0.0.1";

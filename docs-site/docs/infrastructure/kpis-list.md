@@ -175,8 +175,8 @@ Select multiple KPIs to:
 
 ## PII Indicator
 
-- 🔒 **Has PII** - Contains personal data
-- 🔓 **No PII** - No personal data
+- **Has PII** - Contains personal data
+- **No PII** - No personal data
 
 ## Common Tasks
 

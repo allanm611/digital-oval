@@ -9,6 +9,8 @@ interface LoginRedirectProps {
 
 export function LoginRedirect({ redirectTo }: LoginRedirectProps): JSX.Element {
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     // Get return URL from query params or use current location
     const params = new URLSearchParams(window.location.search);
     const returnTo = params.get('return_to') || redirectTo || window.location.pathname;
@@ -43,6 +45,8 @@ export function LoginRedirect({ redirectTo }: LoginRedirectProps): JSX.Element {
  * Helper to check auth and redirect if needed
  */
 export function checkAuthAndRedirect(): boolean {
+  if (typeof window === 'undefined') return true;
+
   const token = docsAuthService.getAuthToken();
   const user = docsAuthService.getUser();
 

@@ -25,7 +25,7 @@ To view, manage, and track individual offers, see [View Offer Details](./view-of
 To track offer performance and redemption metrics, see [Offer Reports](./offer-reports).
 
 ### Offer Catalogs
-To organize offers into catalogs, see [Offer Catalogs](./offer-catalogs).
+To organize offers into catalogs, see [Offer Catalog](./offer-catalog).
 
 
 ## Offer Status

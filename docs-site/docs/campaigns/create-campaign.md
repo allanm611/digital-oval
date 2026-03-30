@@ -321,13 +321,13 @@ Review all campaign details, validate setup, and launch or save the campaign.
 
 **Readiness Checks** (Pre-submission validation)
 The system displays checks for:
-- Campaign name provided ✓
-- Segments configured ✓
-- Offers assigned ✓
-- Schedule defined ✓
-- All required fields completed ✓
+- Campaign name provided
+- Segments configured
+- Offers assigned
+- Schedule defined
+- All required fields completed
 
-Items must show ✓ before campaign can be submitted for approval.
+All items must be completed before campaign can be submitted for approval.
 
 #### Testing
 

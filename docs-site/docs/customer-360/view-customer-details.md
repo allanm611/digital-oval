@@ -112,7 +112,7 @@ Download customer data as CSV.
 ### Delete Customer
 Permanently remove customer (if applicable).
 
-**Warning:** ⚠️ This action is irreversible.
+**Warning:** This action is irreversible.
 
 **Screenshot:**
 [Insert screenshot of delete confirmation]

@@ -36,7 +36,8 @@ export function useDocsAuth(): UseDocsAuthReturn {
         setUser(null);
         setIsLoading(false);
         // Redirect to login
-        history.push(`/login?return_to=${window.location.pathname}`);
+        const pathname = typeof window !== 'undefined' ? window.location.pathname : '/';
+        history.push(`/login?return_to=${pathname}`);
         return;
       }
 
@@ -47,7 +48,8 @@ export function useDocsAuth(): UseDocsAuthReturn {
         setUser(null);
         setIsLoading(false);
         // Redirect to login
-        history.push(`/login?return_to=${window.location.pathname}`);
+        const pathname = typeof window !== 'undefined' ? window.location.pathname : '/';
+        history.push(`/login?return_to=${pathname}`);
         return;
       }
 
@@ -63,7 +65,9 @@ export function useDocsAuth(): UseDocsAuthReturn {
 
   const logout = () => {
     docsAuthService.clearAuth();
-    window.location.href = '/login';
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
   };
 
   return {

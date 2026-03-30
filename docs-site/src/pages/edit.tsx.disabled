@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useHistory, useLocation } from 'react-router-dom';
 import MarkdownIt from 'markdown-it';
 import styles from './edit.module.css';
 import { validateLinks, formatBrokenLinks } from '@site/src/utils/linkValidator';
@@ -17,7 +18,9 @@ interface DocData {
   content: string;
 }
 
-export default function EditPage() {
+function EditPageContent() {
+  const history = useHistory();
+  const location = useLocation();
   const [doc, setDoc] = useState<DocData | null>(null);
   const [content, setContent] = useState('');
   const [title, setTitle] = useState('');
@@ -38,8 +41,8 @@ export default function EditPage() {
   const docsVersions = ['2.0', '1.1', '1.0'];
   const isViewingOldVersion = selectedDocVersion !== currentVersion;
 
-  const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
-  const slug = searchParams.get('slug') || 'intro';
+  const params = new URLSearchParams(location.search);
+  const slug = params.get('slug') || 'intro';
 
   useEffect(() => {
     loadDoc();
@@ -165,7 +168,7 @@ If you don't have an account, click **Request Account** to start the [account re
 
       setMessage('Changes saved successfully!');
       setTimeout(() => {
-        window.location.href = '/docs/intro';
+        history.push('/docs/intro');
       }, 1500);
     } catch (error) {
       setMessage('Failed to save document');
@@ -176,7 +179,7 @@ If you don't have an account, click **Request Account** to start the [account re
   };
 
   const handleCancel = () => {
-    window.location.href = '/docs/intro';
+    history.push('/docs/intro');
   };
 
   const insertAtCursor = (text: string) => {
@@ -435,4 +438,13 @@ If you don't have an account, click **Request Account** to start the [account re
       </PermissionGate>
     </div>
   );
+}
+
+export default function EditPage() {
+  // Skip rendering on server - client only
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  return <EditPageContent />;
 }

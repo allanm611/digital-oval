@@ -40,6 +40,12 @@ Customer Reports provide analytics on customer behavior, engagement, and lifecyc
 [Insert screenshot of transaction metrics]
 
 
+## Related Reports
+
+See also:
+- [Campaign Reports](../campaigns/campaign-reports) - Campaign performance
+- [Offer Reports](../analytics/offer-reports) - Offer performance
+
 ## Report Types
 
 ### Customer Segmentation Report
@@ -144,4 +150,4 @@ Compare against:
 - [Create Customer](./create-customer) - Add customers
 - [View Customer Details](./view-customer-details) - Customer profiles
 - [Customer](./customers-list) - Overview
-- [Campaign Reports](/docs/campaigns/campaign-reports) - Campaign analytics
+- [Campaign Reports](/campaigns/campaign-reports) - Campaign analytics
