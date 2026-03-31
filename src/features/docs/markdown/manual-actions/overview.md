@@ -2,7 +2,7 @@
 
 ## Overview
 
-Manual Actions let you send direct communications and apply rewards to customers on-demand, without setting up full campaigns. Execute one-time messages and rewards immediately or schedule them for future execution.
+Manual Actions displays both manual communications and manual rewards.
 
 ---
 

@@ -10,6 +10,8 @@ The Manual Rewards list displays all rewards you've created and applied to custo
 2. Select **Manual Rewards**
 3. The system displays all rewards in a paginated list
 
+![Manual Rewards List](/img/manual-actions/manualrewardslist.png)
+
 ## List View Features
 
 ### Summary Statistics
@@ -24,18 +26,25 @@ At the top of the page, you'll see key metrics:
 
 Each reward in the list shows:
 
-| Column | Description |
-|--------|-------------|
-| **Name** | Reward identifier/description |
-| **Type** | Bundle, Points, Discount, or Cashback |
-| **Value** | Reward amount or quantity |
-| **Recipients** | Total number of customers |
-| **Applied** | Number successfully applied |
-| **Failed** | Number of failed applications |
-| **Status** | applied, pending, scheduled, or failed |
-| **Created** | Date and time created |
-| **Created By** | User who created the reward |
-| **Actions** | View, Edit, or Delete options |
+**Name** - Reward identifier/description
+
+**Type** - Bundle, Points, Discount, or Cashback
+
+**Value** - Reward amount or quantity
+
+**Recipients** - Total number of customers
+
+**Applied** - Number successfully applied
+
+**Failed** - Number of failed applications
+
+**Status** - applied, pending, scheduled, or failed
+
+**Created** - Date and time created
+
+**Created By** - User who created the reward
+
+**Actions** - View, Edit, or Delete options
 
 ### Status Indicators
 

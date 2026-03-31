@@ -1,174 +1,66 @@
-# Manual Communications List
+# Manual Communications
 
 ## Overview
 
-The Manual Communications list displays all communications you've created and executed. This page provides a centralized view of your one-time messaging campaigns with execution status and delivery metrics.
+Manual Communications allow you to send one-time messages to specific customer segments using various communication channels (Email, SMS, WhatsApp, Push Notifications). Unlike campaign-based communications, manual communications are created and executed on-demand without the need for campaign setup.
 
-## Accessing the List
+**Use Cases:**
+- Send urgent notifications or announcements
+- Communicate with specific customer segments
+- Test message content and delivery
+- Execute targeted promotional messages
+
+## Key Features
+
+- **Multi-Channel Support:** Email, SMS, WhatsApp, Push Notifications
+- **Flexible Audience:** Upload customer files or select from existing quicklists
+- **Message Templates:** Create rich text or plain text messages with dynamic variables
+- **Variable Insertion:** Insert customer data fields directly into messages for personalization
+- **Test Capability:** Send test messages before executing the full broadcast
+- **Scheduled Execution:** Send immediately or schedule for a specific date/time
+- **Communication Policies:** Apply policies for timing, frequency, and DND management
+- **Execution Tracking:** Monitor delivery status and performance metrics
+
+## How to Access
 
 1. Navigate to **Manual Actions** from the main menu
 2. Select **Manual Communications**
-3. The system displays all communications in a paginated list
+3. View all previously created communications or create a new one
 
-## List View Features
+![Manual Communications List](/img/manual-actions/communications-list.png)
 
-### Summary Statistics
+To create a new communication, click the **Create Communication** button. [Create Manual Communication](/documentation/manual-actions/create-manual-communication).
 
-At the top of the page, you'll see key metrics:
-- **Total Communications:** All communications created
-- **Completed:** Successfully executed
-- **Scheduled:** Pending execution
-- **Failed:** Encountered delivery issues
+## Managing Communications
 
-### Communication Details
+### Viewing Communication List
 
-Each communication in the list shows:
+The Manual Communications list displays:
+- **Name/ID:** Communication identifier
+- **Channel:** Email, SMS, WhatsApp, or Push
+- **Recipients:** Total number of target customers
+- **Sent:** Number of successfully sent messages
+- **Failed:** Number of failed deliveries
+- **Status:** completed, pending, or scheduled
+- **Created:** Date and time created
+- **Created By:** User who created it
 
-| Column | Description |
-|--------|-------------|
-| **Name/ID** | Communication identifier or execution ID |
-| **Channel** | Communication method (Email, SMS, WhatsApp, Push) |
-| **Recipients** | Total number of target customers |
-| **Sent** | Number of successfully delivered messages |
-| **Failed** | Number of failed deliveries |
-| **Status** | completed, pending, or scheduled |
-| **Created** | Date and time communication was created |
-| **Created By** | User who created the communication |
-| **Actions** | View, Edit, or Delete options |
+### Filtering & Searching
+- **Search:** Find communications by name or ID
+- **Channel Filter:** Show only specific channels
+- **Status Filter:** View by status (completed, pending, scheduled)
 
-### Status Indicators
+## Execution Status & Metrics
 
-**Completed** - Communication was successfully executed
-- All messages processed
-- Delivery completed
-- Results available
+### Status Types
+- **Pending:** Waiting for execution (scheduled for future)
+- **In Progress:** Currently being sent
+- **Completed:** Execution finished
+- **Failed:** Execution encountered errors
 
-**Scheduled** - Communication awaiting execution
-- Execution time not yet reached
-- Can be edited or cancelled
-- Will execute at scheduled time
-
-**Pending** - Communication is being sent
-- Currently in progress
-- Messages are being delivered
-- Cannot be modified during execution
-
-**Failed** - Communication encountered errors
-- Some or all messages failed
-- Review failure details
-- May retry or delete
-
-## Searching and Filtering
-
-### Search
-Use the search box to find communications by:
-- Communication name or ID
-- Execution ID
-- Recipient identifier
-
-**Search is real-time** - Results update as you type
-
-### Filters
-
-**Channel Filter**
-- Show all channels or specific channel (Email, SMS, WhatsApp, Push)
-- Helpful for reviewing channel-specific campaigns
-
-**Status Filter**
-- All Statuses
-- Completed
-- Scheduled
-- Pending
-- Failed
-
-**Date Range Filter**
-- Filter by creation date
-- Useful for finding recent communications
-
-## Actions
-
-### View Details
-Click the **View** button or communication name to:
-- See full message content
-- Review audience details
-- View delivery statistics
-- Check variable substitution
-- See execution summary
-
-See [View Manual Communication](/documentation/view-manual-communication)
-
-### Edit Communication
-Click the **Edit** button to:
-- Modify audience (for scheduled communications)
-- Update message content
-- Change communication policy
-- Adjust execution time
-- Update channel settings
-
-**Note:** Can only edit scheduled communications that haven't executed
-
-See [Edit Manual Communication](/documentation/edit-manual-communication)
-
-### Delete Communication
-Click the **Delete** button to:
-- Remove communication permanently
-- Free up system resources
-
-**Confirmation required** - You'll be asked to confirm deletion
-
-**Note:** Cannot delete executed communications
-
-### Retry Failed Communication
-For failed communications:
-- Click **Retry** to attempt delivery again
-- Failed recipient contacts are retried
-- Successfully sent contacts are skipped
-- New delivery report generated
-
-## Pagination
-
-The list is paginated for performance:
-- **Rows per page:** Select from dropdown (15, 25, 50, 100)
-- **Page navigation:** First, Previous, Next, Last buttons
-- **Total count:** Shows total communications matching filters
-
-## Export & Reporting
-
-### Export Data
-Export communication list with filters applied:
-- **Format options:** CSV, Excel, PDF
-- **Includes:** All visible columns
-- **Export what's visible:** Respects current filters and search
-
-### Delivery Reports
-For each communication, access detailed reports:
-- Per-channel delivery breakdown
-- Failed recipient list with error details
-- Variable substitution results
-- Timing and performance metrics
-
-## Best Practices
-
-### Organization
-- Use descriptive communication names
-- Include date in name for easy identification
-- Add purpose in description
-
-### Monitoring
-- Regularly check scheduled communications
-- Review failed communications promptly
-- Monitor delivery rates for channels
-- Track customer engagement
-
-### Cleanup
-- Delete old completed communications
-- Archive important execution results
-- Remove failed attempts after review
-- Maintain a clean list for performance
-
-### Quality Control
-- Review sample of sent messages
-- Verify recipient count before execution
-- Check variable substitution quality
-- Validate channel performance
-
+### Metrics
+- **Total Recipients:** Audience size
+- **Messages Sent:** Successfully delivered
+- **Messages Failed:** Delivery failures
+- **Delivery Rate:** Percentage of successful sends
+- **Execution Time:** Duration of send operation

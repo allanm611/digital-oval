@@ -6,317 +6,192 @@ This guide walks you through creating and executing a one-time manual communicat
 
 ## How to Start
 
+### Creating a New Communication
 1. Navigate to **Manual Actions → Manual Communications**
 2. Click the **Create Communication** button
-3. Follow the 4-step wizard
+3. Follow the 3-step wizard
+
+### Editing an Existing Communication
+The editing flow is identical to creating - you'll follow the same 3 steps. The only difference is:
+- **All fields are pre-filled** with current settings
+- You modify only what you need to change
+<!-- - Changes apply before execution time -->
+
+<!-- **Note:** Only scheduled communications that haven't started sending can be edited.
+- Cannot edit: Completed, Pending, or Failed communications
+- Cannot edit if execution time has passed -->
 
 ## Step 1: Define Target Audience
 
-### Choose Audience Source
+![Step 1 - Define Target Audience](/img/manual-actions/step1-communications.png)
 
-**Option A: Upload Customer File**
-1. Click **Upload File**
-2. Select a CSV or text file with customer data
-3. Confirm file details:
-   - Column count
-   - Row count
-   - Available columns
+Configure your communication audience using three fields:
 
-4. **Select Subscription ID Column**
-   - Choose which column contains unique customer identifier
-   - This is used to match customer data with system records
-   - Example: `subscription_id`, `customer_id`, `phone_number`
+### 1. Name
+- **What is it:** The name/label for this communication broadcast
+- **Required:** Yes
+- **Example:** "Weekend Promotion Announcement", "Urgent Service Update"
 
-5. **Confirm Audience**
-   - Review extracted columns
-   - Verify row count (number of customers)
-   - Check file preview for data quality
+### 2. List Type
+- **What is it:** Categorize the audience by type/tier
+- **Options:** Standard, Premium, or VIP
+- **Purpose:** Organize and manage different customer tiers
 
-**Option B: Select from Quicklist**
-1. Click **Select Quicklist**
-2. Browse available quicklists
-3. Select the quicklist to use
-4. System loads member count
+### 3. Input Method
+Choose ONE of two options:
 
-**Option C: Manual Entry**
-1. Click **Enter Manually**
-2. Enter recipient identifiers one per line
-3. Add customer identifiers based on selected ID column
+#### Option A: Upload File (via Quicklist)
+1. Click **Upload File** button
+2. Select an existing quicklist OR create a new one by uploading a CSV file
+3. System shows quicklist name and row count
+4. Confirm selection
 
-### Audience Summary
-Before proceeding, you'll see:
-- **Total Recipients:** Number of customers
-- **Source:** File, Quicklist, or Manual
-- **ID Type:** Subscription ID type being used
-- **Edit Option:** Change audience if needed
+#### Option B: Manual Input
+1. Click **Manual Input** option
+2. Enter recipient identifiers (one per line):
+   - Email addresses: john@example.com
+   - Phone numbers: +254712345678 (include country code)
+3. System validates in real-time
+4. Shows total valid recipients
 
-## Step 2: Define Communication
+### Validation & Next Steps
+Before proceeding to Step 2:
+- **Name:** Must be filled in
+- **List Type:** Must be selected
+- **Input Method:** Must be selected (Upload File OR Manual Input)
+- **Recipients:** At least one valid recipient required
+
+---
+
+## Step 2: Define Communication & Test
+
+![Step 2 - Define Communication](/img/manual-actions/step2-communications.png)
+
+Configure your message, then test it before sending.
 
 ### Channel Selection
 
 Choose your communication method:
 
-**Email**
-- Send formatted email messages
-- Supports HTML and plain text
-- Good for detailed messages
-- Higher delivery rates
+**Email** - Detailed messages, formatted content, higher delivery rates
 
-**SMS**
-- Short text messages (160 characters standard)
-- Fast delivery
-- Good for alerts and brief messages
-- Limited character count
+**SMS** - Alerts, brief messages (160 character limit), fast delivery
 
-**WhatsApp**
-- WhatsApp Business messages
-- Rich media support
-- Higher engagement rates
-- Requires WhatsApp integration
+**WhatsApp** - Rich media support, higher engagement rates
 
-**Push Notifications**
-- Mobile app push notifications
-- Immediate delivery
-- Good for time-sensitive messages
-- Requires app installation
+**Push** - Mobile app notifications, time-sensitive messages
 
 ### Message Composition
 
-#### Title/Subject (Email and Push)
-- **Field:** Message Title
-- **Required:** Yes
+#### Title/Subject (Email and Push only)
 - **Max Length:** 100 characters
-- **Purpose:** Email subject line or push notification title
+- **Required:** Yes
 
 #### Message Body
-- **Field:** Message Body
-- **Required:** Yes
-- **Max Length:** 5000 characters
-- **Format Options:**
-  - Plain Text (simple message)
-  - Rich Text (formatting: bold, italic, colors, images, links)
+- **Max Length:** 5,000 characters
+- **Format:** Plain text or Rich text (bold, italic, colors, links, images)
 
-#### Text Editor Features
-- Bold, italic, underline formatting
-- Text color and highlighting
-- Links and image insertion
-- Lists and tables
-- HTML/markdown support
+### Dynamic Variables & Personalization
 
-### Dynamic Variable Insertion
+Make messages personal by inserting customer data like `{{first_name}}` or `{{account_balance}}`.
 
-Insert customer-specific data to personalize messages:
+**How to Insert:**
+1. Click **Insert Variable** button
+2. Browse and select customer field
+3. Variable is inserted as `{{field_name}}`
 
-#### How to Insert Variables
+For detailed list of available variables, see [Variable Configuration](/documentation/configuration/variable-configuration).
 
-1. **Click Insert Variable** button
-2. **Browse Variable Hierarchy:**
-   - **Select Source:** Customer Identity, Subscription Details, Account Info, etc.
-   - **Select Field:** Phone, Email, Name, Balance, Status, etc.
-3. **Variable Added:** `{{field_name}}` appears in message
-4. **Test:** Use test step to verify substitution
+### Communication Policy
 
-#### Available Variables by Source
+Policies control when and how often messages are sent (timing rules, DND compliance, frequency limits).
 
-**Customer Identity**
-- Name (First, Last, Full)
-- Email address
-- Phone number
-- Date of birth
+**To Apply:**
+1. Click **Select Policy** (optional)
+2. Choose applicable policy
+3. Note: Some customers may be filtered out based on policy rules
 
-**Subscription Details**
-- Subscription ID
-- Subscription status
-- Plan name
-- Activation date
-
-**Account Information**
-- Account balance
-- Available credits
-- Account status
-- Loyalty points
-
-**Dynamic Fields**
-- Last purchase date
-- Last interaction
-- Customer segment
-- Campaign history
-
-#### Variable Formatting
-- Variables use syntax: `{{variable_name}}`
-- Replaced with actual data during sending
-- If data missing, shows placeholder or skips field
-- Test before full execution
-
-### Communication Policy Selection
-
-#### What is a Policy?
-Communication policies control:
-- When messages can be sent (time windows)
-- How frequently customers can receive messages
-- DND (Do Not Disturb) compliance
-- Special rules for VIP customers
-
-#### How to Select Policy
-1. **Optional Step** - Policies are optional
-2. **Click Select Policy** dropdown
-3. **Choose applicable policies:**
-   - Time Window Policy (e.g., "Business hours only")
-   - Frequency Policy (e.g., "Max 2 per week")
-   - DND Policy (e.g., "Respect DND settings")
-   - VIP Policy (e.g., "VIP bypass rules")
-
-4. **Impact:**
-   - Some customers may be filtered out
-   - Audience size may decrease
-   - Reasons shown if applicable
-
-#### No Policy
-- Send without restrictions
-- Respects only mandatory regulations
-- Fastest delivery
+For more details, see [Communication Policies](/documentation/configuration/communication-policies).
 
 ### SMS Route (SMS Channel Only)
 
-**What is SMS Route?**
-- SMS gateway/provider to use
-- Different routes may have different:
-  - Delivery speeds
-  - Rates/costs
-  - Coverage areas
+Select which SMS gateway/provider to use. Different routes may have different delivery speeds and coverage.
 
-**How to Select:**
+**To Select:**
 1. Click **Select SMS Route**
 2. Choose from available providers
-3. View route details:
-   - Provider name
-   - Delivery speed
-   - Coverage
-   - Rate information
-4. Confirm selection
+3. Confirm selection
 
-## Step 3: Test Communication
+For more details, see [SMS Routes Configuration](/documentation/configuration/sms-routes).
 
-### Why Test?
-- Verify message formatting
-- Check variable substitution
-- Confirm delivery works
-- Review final output
+---
 
-### Send Test Messages
+### Test Your Message
 
-1. **Add Test Recipients**
-   - Enter test phone numbers or email addresses
-   - Add multiple test contacts
-   - Use different formats to test
+Before sending to all customers, test with a few contacts:
 
-2. **Send Test**
-   - Click **Send Test** button
-   - Messages sent to test recipients immediately
-   - Results shown in real-time
+#### Send Test Message
+1. **Add Test Recipients:** Enter test phone numbers or email addresses
+2. **Click Send Test:** Messages sent immediately to test contacts
+<!-- 3. **Review Results:** Check status, message preview, variable substitution, and any errors
 
-### Review Test Results
+#### What to Look For
+- Message formatting appears correct
+- Variables substituted with real data
+- Links are clickable
+- Delivery successful -->
 
-For each test contact, you'll see:
-- **Status:** Sent, Failed, or Pending
-- **Message Preview:** How message appears to recipient
-- **Variables:** Actual values substituted
-- **Error Details:** If failed, reason for failure
+#### If Issues Found
+- Fix message content in this step
+- Re-test before proceeding
 
-### Common Test Issues
+Once satisfied with test results, click **Next** to proceed to Step 3.
 
-**Variable Not Substituted**
-- Verify variable syntax is correct
-- Check test contact has data for field
-- Some fields may be optional
+---
 
-**Formatting Issues**
-- Preview message as recipient sees it
-- Check special characters display correctly
-- Verify links are clickable
+## Step 3: Schedule & Execute
 
-**Delivery Failed**
-- Check phone/email format
-- Verify contact is valid
-- Check policy restrictions don't apply
+![Step 3 - Schedule Execution](/img/manual-actions/step4-reward.png)
 
-## Step 4: Schedule Execution
+Set when your message will be sent.
 
 ### Execution Timing
 
 **Option A: Send Now**
-- Message sent immediately
+- Message sent immediately to all recipients
 - Execution begins within 1-2 minutes
-- All recipients sent in batch
 - Results available in minutes
 
 **Option B: Schedule for Later**
-- **Select Date:** Pick execution date
-- **Select Time:** Choose execution time
-- **Timezone:** Shown and can be changed
-- **Note:** Uses server timezone if not specified
+- Select date and time for execution
+- Message queued until scheduled time
+- Auto-executes at specified time
 
 ### Final Review
 
 Before confirming, review all settings:
+- **Audience:** Number of recipients and source
+- **Message:** Content, channel, variables
+- **Settings:** Policy and SMS route (if applicable)
+- **Execution:** Time to send
 
-**Audience**
-- Number of recipients
-- Source (file, quicklist, manual)
-- Filters applied (if any)
-
-**Message**
-- Channel (Email, SMS, WhatsApp, Push)
-- Full message content
-- Variables being used
-
-**Settings**
-- Communication policy (if any)
-- SMS route (if applicable)
-- Execution time
-
-### Execute Communication
-
-**For Immediate Send:**
-1. Click **Send Now** button
-2. Confirmation dialog appears
-3. Click **Confirm** to execute
-4. System shows confirmation with execution ID
-
-**For Scheduled Send:**
-1. Click **Schedule** button
-2. Confirmation dialog appears
-3. Shows scheduled date/time
-4. Click **Confirm to Schedule**
-5. System shows confirmation with execution ID
+---
 
 ## After Creation
 
-### What Happens Next?
+### Monitoring Execution
 
-**Immediate Execution**
-- Begins sending within 1-2 minutes
-- View progress in list page
-- Completion notification when done
-
-**Scheduled Execution**
-- Appears in "Scheduled" status
-- Can still edit before execution time
-- Auto-executes at scheduled time
-- Notification when complete
-
-### Monitoring
-
-1. Go to **Manual Communications List**
-2. Find your communication
-3. Track status:
+1. Go to [Manual Communications List](/documentation/manual-actions/manual-communications-list)
+2. Find your communication and track status:
    - **Pending** - Currently sending
-   - **Completed** - Done
+   - **Completed** - Done sending
    - **Scheduled** - Waiting to send
+3. Click **View** to see detailed results:
 
-4. Click **View** to see detailed results:
+![View Communication Details](/img/manual-actions/detailscommunicationpage.png)
+
+You'll see:
    - Delivery metrics
    - Failed contacts
-   - Variable substitution
    - Channel breakdown
-
+   <!-- - Variable substitution details -->
