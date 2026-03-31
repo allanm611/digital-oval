@@ -39,18 +39,24 @@ function EditDocsPageContent() {
   const docsVersions = ['2.0', '1.1', '1.0'];
   const isViewingOldVersion = selectedDocVersion !== currentVersion;
 
+  const isAddMode = location.pathname.includes('/add');
   const params = new URLSearchParams(location.search);
   const slug = params.get('slug') || 'intro';
-  const { content: loadedContent } = useDocumentation(slug);
+  const { content: loadedContent } = useDocumentation(isAddMode ? undefined : slug);
 
   useEffect(() => {
     loadDoc();
-  }, [slug, loadedContent]);
+  }, [slug, loadedContent, isAddMode]);
 
   const loadDoc = async () => {
     try {
       setLoading(true);
-      if (loadedContent) {
+      if (isAddMode) {
+        // New document mode - start with blank
+        setDoc({ slug: '', title: '', content: '' });
+        setContent('');
+        setTitle('');
+      } else if (loadedContent) {
         // Extract title from first h1 or use slug
         const titleMatch = loadedContent.match(/^#\s+(.+)/m);
         setDoc({
@@ -87,8 +93,9 @@ function EditDocsPageContent() {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       setMessage('Document saved successfully!');
+      const destinationSlug = isAddMode ? slug || 'new-doc' : slug;
       setTimeout(() => {
-        navigate(`/documentation/${slug}`);
+        navigate(`/documentation/${destinationSlug}`);
       }, 1500);
     } catch (error) {
       console.error('Error saving document:', error);
@@ -99,7 +106,7 @@ function EditDocsPageContent() {
   };
 
   const handleCancel = () => {
-    navigate(`/documentation/${slug}`);
+    navigate(isAddMode ? '/documentation' : `/documentation/${slug}`);
   };
 
   const handleRollback = async () => {
@@ -174,29 +181,31 @@ function EditDocsPageContent() {
     <div className={styles.container}>
       <div className={styles.header}>
         <div>
-          <h1 className={styles.title}>{title}</h1>
+          <h1 className={styles.title}>{isAddMode ? 'Create New Document' : title || 'Edit Document'}</h1>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Document title"
+            placeholder={isAddMode ? "Enter document title" : "Document title"}
             disabled={isSaving}
             className={styles.titleEditInput}
           />
           <div className={styles.versionSelectors}>
-            <div className={styles.versionGroup}>
-              <label>File Version</label>
-              <select
-                value={selectedDocVersion}
-                onChange={(e) => setSelectedDocVersion(e.target.value)}
-                className={styles.versionSelect}
-                disabled={isSaving}
-              >
-                {docVersions.map(v => (
-                  <option key={v} value={v}>{`Version ${v}`}</option>
-                ))}
-              </select>
-            </div>
+            {!isAddMode && (
+              <div className={styles.versionGroup}>
+                <label>File Version</label>
+                <select
+                  value={selectedDocVersion}
+                  onChange={(e) => setSelectedDocVersion(e.target.value)}
+                  className={styles.versionSelect}
+                  disabled={isSaving}
+                >
+                  {docVersions.map(v => (
+                    <option key={v} value={v}>{`Version ${v}`}</option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className={styles.versionGroup}>
               <label>Release</label>
               <select
@@ -235,7 +244,7 @@ function EditDocsPageContent() {
             className={styles.saveButton}
             disabled={isSaving}
           >
-            {isSaving ? 'Saving...' : 'Save Changes'}
+            {isSaving ? (isAddMode ? 'Creating...' : 'Saving...') : (isAddMode ? 'Create Document' : 'Save Changes')}
           </button>
         </div>
       </div>
@@ -328,6 +337,8 @@ function EditDocsPageContent() {
 export default function EditDocsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isAddMode = location.pathname.includes('/add');
 
   if (!user) {
     return (
@@ -338,13 +349,15 @@ export default function EditDocsPage() {
     );
   }
 
+  const requiredPermission = isAddMode ? 'docs.create' : 'docs.update';
+
   return (
     <PermissionGate
-      permission="docs.update"
+      permission={requiredPermission}
       fallback={
         <div style={{ padding: '40px', textAlign: 'center', color: '#9ca3af' }}>
           <h2>Permission Denied</h2>
-          <p>You do not have permission to edit documentation.</p>
+          <p>You do not have permission to {isAddMode ? 'create' : 'edit'} documentation.</p>
         </div>
       }
     >

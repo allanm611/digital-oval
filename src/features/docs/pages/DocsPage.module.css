@@ -184,6 +184,12 @@
   margin-bottom: 24px;
 }
 
+.actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
 .editLink {
   background-color: transparent;
   color: #25c2a0;

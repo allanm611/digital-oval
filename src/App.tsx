@@ -75,6 +75,7 @@ function AppRoutes() {
             <Route path="/landingpage" element={<AuthenticatedLandingPage />} />
             <Route path="/dashboard/*" element={<Dashboard />} />
             <Route path="/documentation/edit" element={<EditDocsPage />} />
+            <Route path="/documentation/add" element={<EditDocsPage />} />
             <Route path="/documentation/*" element={<DocsPage />} />
           </Route>
 

@@ -86,14 +86,26 @@ export function DocsPage() {
       <article className={styles.article}>
         <div className={styles.breadcrumbRow}>
           <DocsBreadcrumb sidebarItems={SIDEBAR_ITEMS} />
-          <PermissionGate permission="docs.update">
-            <button
-              onClick={() => navigate(`/documentation/edit?slug=${slug}`)}
-              className={styles.editLink}
-            >
-              Edit
-            </button>
-          </PermissionGate>
+          <div className={styles.actions}>
+            {slug === 'authentication/login' && (
+              <PermissionGate permission="docs.create">
+                <button
+                  onClick={() => navigate(`/documentation/add`)}
+                  className={styles.editLink}
+                >
+                  Add
+                </button>
+              </PermissionGate>
+            )}
+            <PermissionGate permission="docs.update">
+              <button
+                onClick={() => navigate(`/documentation/edit?slug=${slug}`)}
+                className={styles.editLink}
+              >
+                Edit
+              </button>
+            </PermissionGate>
+          </div>
         </div>
 
         {/* Add IDs to headings for TOC linking */}
