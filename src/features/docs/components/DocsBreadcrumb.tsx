@@ -18,6 +18,17 @@ interface DocsBreadcrumbProps {
 }
 
 /**
+ * Get the first item's path from a category (for overview navigation)
+ */
+function getCategoryPath(item: SidebarItem): string | undefined {
+  if (item.path) return item.path;
+  if (item.items && item.items.length > 0) {
+    return getCategoryPath(item.items[0]);
+  }
+  return undefined;
+}
+
+/**
  * Recursively find the breadcrumb trail to the active path.
  * Returns an ordered array from root category to current page.
  */
@@ -32,8 +43,8 @@ function findBreadcrumbTrail(
     if (item.items && item.items.length > 0) {
       const childTrail = findBreadcrumbTrail(item.items, targetPath);
       if (childTrail !== null) {
-        // Prepend this category (no path since categories don't have paths)
-        return [{ label: item.label, path: item.path }, ...childTrail];
+        // Prepend this category with path to its first item (overview)
+        return [{ label: item.label, path: getCategoryPath(item) }, ...childTrail];
       }
     }
   }

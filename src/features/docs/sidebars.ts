@@ -15,6 +15,7 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Authentication',
       items: [
+        'authentication/overview',
         'authentication/login',
         'authentication/registration',
         'authentication/password-reset',
@@ -24,11 +25,8 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Getting Started',
-      link: {
-        type: 'doc',
-        id: 'getting-started/overview',
-      },
       items: [
+        'getting-started/overview',
         'getting-started/dashboard',
         'getting-started/global-search',
       ],
@@ -36,11 +34,8 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Campaign Management',
-      link: {
-        type: 'doc',
-        id: 'campaigns/overview',
-      },
       items: [
+        'campaigns/overview',
         {
           type: 'category',
           label: 'Campaigns',
@@ -71,11 +66,8 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Offer Management',
-      link: {
-        type: 'doc',
-        id: 'offers/overview',
-      },
       items: [
+        'offers/overview',
         {
           type: 'category',
           label: 'Offers',
@@ -95,11 +87,8 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Product Management',
-      link: {
-        type: 'doc',
-        id: 'products/overview',
-      },
       items: [
+        'products/overview',
         {
           type: 'category',
           label: 'Products',
@@ -121,11 +110,8 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Segment Management',
-      link: {
-        type: 'doc',
-        id: 'segments/overview',
-      },
       items: [
+        'segments/overview',
         {
           type: 'category',
           label: 'Segments',
@@ -161,11 +147,8 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Customer 360 Profile',
-      link: {
-        type: 'doc',
-        id: 'customer-360/overview',
-      },
       items: [
+        'customer-360/overview',
         {
           type: 'category',
           label: 'Customers',
@@ -225,6 +208,7 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Manual Actions',
       items: [
+        'manual-actions/overview',
         {
           type: 'category',
           label: 'Manual Rewards',
@@ -256,11 +240,8 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Reports & Analytics',
-      link: {
-        type: 'doc',
-        id: 'analytics/overview',
-      },
       items: [
+        'analytics/overview',
         'analytics/overall-dashboard-performance',
         'analytics/customer-profile-reports',
         'analytics/campaign-reports',
@@ -356,11 +337,8 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Job Management',
-      link: {
-        type: 'doc',
-        id: 'jobs/overview',
-      },
       items: [
+        'jobs/overview',
         {
           type: 'category',
           label: 'Scheduled Jobs',
@@ -444,11 +422,8 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Configuration',
-      link: {
-        type: 'doc',
-        id: 'configuration/overview',
-      },
       items: [
+        'configuration/overview',
         'configuration/communication-channels',
         'configuration/routes',
         'configuration/campaign-objectives',
