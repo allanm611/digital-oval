@@ -98,7 +98,7 @@
   transition: border-color 0.2s;
 }
 
-.markdown a:hover {
+.markdown a:hover:not(.headingLink) {
   border-bottom-color: #25c2a0;
 }
 
@@ -222,6 +222,7 @@
   align-items: center;
   text-decoration: none;
   cursor: pointer;
+  border: none;
 }
 
 .headingWithLink:hover .headingLink {
