@@ -19,7 +19,7 @@ export function DocsHeader() {
       <div className={styles.inner}>
         {/* Left: Logo + Brand + Documentation label */}
         <div className={styles.leftSection}>
-          <Link to="/documentation/intro" className={styles.brand}>
+          <Link to="/landing" className={styles.brand}>
             <img src={logo} alt="Sentra CVM" className={styles.logo} />
             <span className={styles.brandName}>Sentra CVM</span>
           </Link>
