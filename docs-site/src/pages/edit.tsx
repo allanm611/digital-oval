@@ -4,8 +4,8 @@ import MarkdownIt from 'markdown-it';
 import styles from './edit.module.css';
 import { validateLinks, formatBrokenLinks } from '@site/src/utils/linkValidator';
 import { createDocument, getDocumentBySlug, updateDocument } from '@site/src/services/documentationService';
-// import { PermissionGate } from '../../../src/features/auth/components/PermissionGate';
-// import { useAuth } from '../../../src/contexts/AuthContext';
+import { DocsAuthGuard } from '@site/src/components/DocsAuthGuard';
+import { useDocsPermission } from '@site/src/hooks/useDocsPermission';
 
 const md = new MarkdownIt({
   html: false,
@@ -22,6 +22,7 @@ interface DocData {
 function EditPageContent() {
   const history = useHistory();
   const location = useLocation();
+  const { canCreate, canUpdate } = useDocsPermission();
   const [doc, setDoc] = useState<DocData | null>(null);
   const [content, setContent] = useState('');
   const [title, setTitle] = useState('');
@@ -127,7 +128,7 @@ function EditPageContent() {
       setMessage('Document saved successfully!');
       setTimeout(() => {
         if (typeof window !== 'undefined') {
-          window.location.href = `/docs/${slug}`;
+          window.location.href = `/documentation/${slug}`;
         }
       }, 1500);
     } catch (error) {
@@ -141,7 +142,7 @@ function EditPageContent() {
 
   const handleCancel = () => {
     if (typeof window !== 'undefined') {
-      window.location.href = `/docs/${slug}`;
+      window.location.href = `/documentation/${slug}`;
     }
   };
 
@@ -277,7 +278,8 @@ function EditPageContent() {
           <button
             onClick={handleSave}
             className={styles.saveButton}
-            disabled={isSaving}
+            disabled={isSaving || (isNewDocument ? !canCreate : !canUpdate)}
+            title={isNewDocument && !canCreate ? 'You do not have permission to create documents' : isNewDocument === false && !canUpdate ? 'You do not have permission to update documents' : ''}
           >
             {isSaving ? 'Saving...' : 'Save Changes'}
           </button>
@@ -403,5 +405,9 @@ export default function EditPage() {
     return null;
   }
 
-  return <EditPageContent />;
+  return (
+    <DocsAuthGuard>
+      <EditPageContent />
+    </DocsAuthGuard>
+  );
 }

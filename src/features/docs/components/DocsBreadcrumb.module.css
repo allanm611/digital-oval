@@ -1,0 +1,32 @@
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0;
+  margin-bottom: 24px;
+  font-size: 0.85rem;
+  color: #9ca3af;
+  font-family: 'Google Sans', 'Arial', sans-serif;
+}
+
+.crumb {
+  color: #6b7280;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.crumb:hover {
+  color: #9ca3af;
+}
+
+.crumbActive {
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+.separator {
+  margin: 0 6px;
+  color: #4b5563;
+  font-size: 0.85rem;
+  user-select: none;
+}

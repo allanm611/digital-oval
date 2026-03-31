@@ -1,6 +1,6 @@
-import { User, LogOut, Menu } from "lucide-react";
+import { User, LogOut, Menu, BookOpen } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import logo from "../../../assets/Effortel_logo.svg";
@@ -188,20 +188,32 @@ export function GuestHeader({
     <header className={`${getHeaderStyles()} ${className}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20 lg:h-24">
-          {showLogo && (
-            <div className="flex items-center">
-              <div
-                className="w-24 h-24 sm:w-28 sm:h-28 lg:w-36 lg:h-36 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={() => navigate("/dashboard")}
-              >
-                <img
-                  src={logo}
-                  alt="Sentra Logo"
-                  className="w-full h-full object-contain"
-                />
+          <div className="flex items-center space-x-8">
+            {showLogo && (
+              <div className="flex items-center">
+                <div
+                  className="w-24 h-24 sm:w-28 sm:h-28 lg:w-36 lg:h-36 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => navigate("/dashboard")}
+                >
+                  <img
+                    src={logo}
+                    alt="Sentra Logo"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
               </div>
-            </div>
-          )}
+            )}
+
+            {showUserInfo && (
+              <Link
+                to="/documentation/intro"
+                className="flex items-center space-x-2 text-sm text-white/80 hover:text-white transition-colors p-2 rounded hover:bg-white/10"
+              >
+                <BookOpen className="w-4 h-4 flex-shrink-0" />
+                <span className="hidden sm:inline">Documentation</span>
+              </Link>
+            )}
+          </div>
 
           {showUserInfo && (
             <div className="flex items-center space-x-4">

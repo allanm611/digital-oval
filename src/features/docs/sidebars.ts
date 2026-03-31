@@ -1,0 +1,455 @@
+
+
+type SidebarsConfig = {
+  [key: string]: (string | Record<string, any>)[];
+};
+
+const sidebars: SidebarsConfig = {
+  tutorialSidebar: [
+    'intro',
+    {
+      type: 'category',
+      label: 'Authentication',
+      items: [
+        'authentication/login',
+        'authentication/registration',
+        'authentication/password-reset',
+        'authentication/landing',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Getting Started',
+      items: [
+        'getting-started/dashboard',
+        'getting-started/global-search',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Campaign Management',
+      items: [
+        {
+          type: 'category',
+          label: 'Campaigns',
+          items: [
+            {
+              type: 'doc',
+              id: 'campaigns/campaigns-list',
+              label: 'Campaign List',
+            },
+            'campaigns/create-campaign',
+            'campaigns/edit-campaign',
+            'campaigns/view-campaign-details',
+            {
+              type: 'doc',
+              id: 'campaigns/campaign-reports',
+              label: 'Campaign Analytics',
+            },
+          ],
+        },
+        'campaigns/campaign-broadcasts',
+        'campaigns/campaign-objectives',
+        'campaigns/campaign-catalog',
+        'campaigns/campaign-types',
+
+       
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Offer Management',
+      items: [
+        {
+          type: 'category',
+          label: 'Offers',
+          items: [
+            {
+              type: 'doc',
+              id: 'offers/offer-list',
+              label: 'Offer List',
+            },
+            'offers/create-offer',
+            'offers/view-offer-details',
+          ],
+        },
+        'offers/offer-catalog',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Product Management',
+      items: [
+        {
+          type: 'category',
+          label: 'Products',
+          items: [
+            {
+              type: 'doc',
+              id: 'products/products-list',
+              label: 'Product List',
+            },
+            'products/create-product',
+            'products/view-product-details',
+            'products/product-edit',
+            'products/product-reports',
+          ],
+        },
+        'products/product-catalog',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Segment Management',
+      items: [
+        {
+          type: 'category',
+          label: 'Segments',
+          items: [
+            {
+              type: 'doc',
+              id: 'segments/segments-list',
+              label: 'Segment List',
+            },
+            'segments/create-segment',
+            'segments/view-segment-details',
+            'segments/segment-reports',
+            'segments/segment-edit',
+          ],
+        },
+        'segments/segment-catalog',
+        {
+          type: 'category',
+          label: 'Quicklists',
+          items: [
+            {
+              type: 'doc',
+              id: 'segments/quicklists-list',
+              label: 'Quicklist List',
+            },
+            'segments/create-quicklist',
+            'segments/view-quicklist',
+            'segments/quicklist-edit',
+          ],
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Customer 360 Profile',
+      items: [
+        {
+          type: 'category',
+          label: 'Customers',
+          items: [
+            {
+              type: 'doc',
+              id: 'customer-360/customers-list',
+              label: 'Customer List',
+            },
+            'customer-360/create-customer',
+            'customer-360/view-customer-details',
+            'customer-360/customer-reports',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Customer Identity',
+          items: [
+            'customer-360/customer-identity',
+            'customer-360/view-customer-identity-details',
+          ],
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'User Management',
+      items: [
+        {
+          type: 'category',
+          label: 'Users',
+          items: [
+            {
+              type: 'doc',
+              id: 'users/users-list',
+              label: 'User List',
+            },
+            'users/create-user',
+            'users/view-user-details',
+            'users/user-reports',
+            'users/user-analytics',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Access Control',
+          items: [
+            'users/unauthorized',
+            'users/role-management',
+            'users/permissions',
+            'users/assign-permissions',
+          ],
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Manual Actions',
+      items: [
+        {
+          type: 'category',
+          label: 'Manual Rewards',
+          items: [
+            {
+              type: 'doc',
+              id: 'manual-actions/manual-rewards-list',
+              label: 'Manual Reward List',
+            },
+            'manual-actions/view-manual-reward',
+            'manual-actions/edit-manual-reward',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Manual Communications',
+          items: [
+            {
+              type: 'doc',
+              id: 'manual-actions/manual-communications-list',
+              label: 'Manual Communication List',
+            },
+            'manual-actions/view-manual-communication',
+            'manual-actions/edit-manual-communication',
+          ],
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Reports & Analytics',
+      items: [
+        'analytics/overall-dashboard-performance',
+        'analytics/customer-profile-reports',
+        'analytics/campaign-reports',
+        'analytics/offer-reports',
+        'analytics/delivery-sms-reports',
+        'analytics/delivery-email-reports',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Infrastructure',
+      items: [
+        {
+          type: 'category',
+          label: 'Servers',
+          items: [
+            {
+              type: 'doc',
+              id: 'infrastructure/servers-list',
+              label: 'Server List',
+            },
+            'infrastructure/create-server',
+            'infrastructure/view-server',
+            'infrastructure/edit-server',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Connection Profiles',
+          items: [
+            {
+              type: 'doc',
+              id: 'infrastructure/connection-profiles-list',
+              label: 'Connection Profile List',
+            },
+            'infrastructure/create-connection-profile',
+            'infrastructure/view-connection-profile',
+            'infrastructure/edit-connection-profile',
+          ],
+        },
+        // {
+        //   type: 'category',
+        //   label: 'Data Connectors',
+        //   items: [
+        //     {
+        //       type: 'doc',
+        //       id: 'infrastructure/data-connectors-list',
+        //       label: 'Data Connector List',
+        //     },
+        //     'infrastructure/create-data-connector',
+        //     'infrastructure/view-data-connector',
+        //     'infrastructure/edit-data-connector',
+        //   ],
+        // },
+        {
+          type: 'category',
+          label: 'KPIs',
+          items: [
+            {
+              type: 'doc',
+              id: 'infrastructure/kpis-list',
+              label: 'KPI List',
+            },
+            'infrastructure/create-kpi',
+            'infrastructure/view-kpi',
+            'infrastructure/edit-kpi',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'ETL',
+          items: [
+            'infrastructure/etl',
+            {
+              type: 'doc',
+              id: 'infrastructure/etl-file-registry',
+              label: 'File Registry',
+            },
+            {
+              type: 'doc',
+              id: 'infrastructure/etl-fetch-controls',
+              label: 'Fetch Controls',
+            },
+            {
+              type: 'doc',
+              id: 'infrastructure/etl-analytics',
+              label: 'Analytics',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Job Management',
+      items: [
+        {
+          type: 'category',
+          label: 'Scheduled Jobs',
+          items: [
+            {
+              type: 'doc',
+              id: 'jobs/scheduled-jobs-list',
+              label: 'Scheduled Job List',
+            },
+            'jobs/create-scheduled-job',
+            'jobs/view-scheduled-job',
+            'jobs/edit-scheduled-job',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Job Executions',
+          items: [
+            {
+              type: 'doc',
+              id: 'jobs/job-executions-list',
+              label: 'Job Execution List',
+            },
+            'jobs/view-job-execution',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Job Types',
+          items: [
+            {
+              type: 'doc',
+              id: 'jobs/job-types-list',
+              label: 'Job Type List',
+            },
+            'jobs/create-job-type',
+            'jobs/view-job-type',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Job Dependencies',
+          items: [
+            {
+              type: 'doc',
+              id: 'jobs/job-dependencies-list',
+              label: 'Job Dependency List',
+            },
+            'jobs/create-job-dependency',
+            'jobs/view-job-dependency',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Job Workflow Steps',
+          items: [
+            {
+              type: 'doc',
+              id: 'jobs/job-workflow-steps-list',
+              label: 'Job Workflow Step List',
+            },
+            'jobs/view-job-workflow-step',
+          ],
+        },
+        {
+          type: 'category',
+          label: 'Job Workflows',
+          items: [
+            {
+              type: 'doc',
+              id: 'jobs/job-workflows-list',
+              label: 'Job Workflow List',
+            },
+            'jobs/create-job-workflow',
+            'jobs/view-job-workflow',
+            'jobs/edit-job-workflow',
+          ],
+        },
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Configuration',
+      items: [
+        'configuration/communication-channels',
+        'configuration/routes',
+        'configuration/campaign-objectives',
+        'configuration/departments',
+        'configuration/programs',
+        'configuration/campaign-catalog',
+        'configuration/campaign-types',
+        'configuration/control-groups',
+        'configuration/job-types',
+        'configuration/dnd-management',
+        'configuration/vip-list-management',
+        'configuration/seed-list-management',
+        'configuration/offer-types',
+        'configuration/offer-catalog',
+        'configuration/offer-tracking-sources',
+        'configuration/creative-templates',
+        'configuration/reward-types',
+        'configuration/sender-ids',
+        'configuration/sms-routes',
+        'configuration/languages',
+        'configuration/character-sets',
+        'configuration/product-types',
+        'configuration/combo-types',
+       
+        'configuration/product-catalog',
+        'configuration/segment-types',
+        'configuration/segment-catalog',
+      
+       
+      ],
+    },
+    {
+      type: 'category',
+      label: 'User Settings',
+      items: [
+        'user-settings/my-profile',
+        'user-settings/settings',
+        'user-settings/notifications',
+      ],
+    },
+  ],
+};
+
+export default sidebars;

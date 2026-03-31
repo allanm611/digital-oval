@@ -6,6 +6,7 @@
 
 import React, { ReactNode } from 'react';
 import { useDocsAuth } from '../hooks/useDocsAuth';
+import { useDocsPermission } from '../hooks/useDocsPermission';
 
 interface DocsAuthGuardProps {
   children: ReactNode;
@@ -62,6 +63,13 @@ interface DocsEditButtonProps {
 }
 
 export function DocsEditButton({ onEdit }: DocsEditButtonProps): JSX.Element {
+  const { canUpdate } = useDocsPermission();
+
+  // Only show edit button if user has docs.update permission
+  if (!canUpdate) {
+    return <></>;
+  }
+
   return (
     <button
       onClick={onEdit}

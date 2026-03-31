@@ -1,0 +1,120 @@
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&display=swap');
+
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background-color: #0a1e2e;
+  border-bottom: 1px solid #1f2937;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+}
+
+.inner {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+}
+
+.leftSection {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: #f3f4f6;
+}
+
+.logo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.brandName {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #f3f4f6;
+  font-family: 'Google Sans', 'Arial', sans-serif;
+  letter-spacing: -0.2px;
+}
+
+.docLabel {
+  font-size: 0.9rem;
+  color: #25c2a0;
+  font-weight: 500;
+  font-family: 'Google Sans', 'Arial', sans-serif;
+}
+
+.rightSection {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background-color: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 6px;
+  height: 36px;
+}
+
+.searchIcon {
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.searchInput {
+  flex: 1;
+  background: none;
+  border: none;
+  color: #e5e7eb;
+  font-size: 0.9rem;
+  outline: none;
+  font-family: 'Google Sans', 'Arial', sans-serif;
+}
+
+.searchInput::placeholder {
+  color: #6b7280;
+}
+
+.searchHint {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-family: monospace;
+  flex-shrink: 0;
+}
+
+/* Mobile: collapse brand name and search on small screens */
+@media (max-width: 768px) {
+  .brandName {
+    display: none;
+  }
+
+  .searchInput {
+    display: none;
+  }
+
+  .searchHint {
+    display: none;
+  }
+
+  .searchBox {
+    width: auto;
+    padding: 6px 8px;
+  }
+}

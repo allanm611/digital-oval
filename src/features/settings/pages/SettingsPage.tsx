@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Save } from "lucide-react";
+import { Save, BookOpen } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useTheme } from "../../../contexts/ThemeContext";
@@ -487,35 +488,46 @@ export default function SettingsPage() {
           </p>
         </div>
 
-        {/* Save and Cancel Buttons */}
-        <PermissionGate permission="system.settings.manage">
-          <div className="flex flex-row items-center gap-2 md:gap-3 w-full md:w-auto overflow-x-auto whitespace-nowrap">
-            <button
-              onClick={handleReset}
-              className={`px-5 py-2.5 text-sm font-medium ${tw.rounded} border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 flex-shrink-0 whitespace-nowrap`}
-            >
-              {t.common.cancel}
-            </button>
+        {/* Save, Cancel, and Help Buttons */}
+        <div className="flex flex-row items-center gap-2 md:gap-3 w-full md:w-auto overflow-x-auto whitespace-nowrap">
+          <Link
+            to="/documentation/intro"
+            className={`px-5 py-2.5 text-sm font-medium ${tw.rounded} border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 flex-shrink-0 whitespace-nowrap flex items-center gap-2`}
+            title="View Documentation"
+          >
+            <BookOpen className="w-4 h-4" />
+            <span className="hidden sm:inline">Help</span>
+          </Link>
 
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className={`px-5 py-2.5 text-sm font-medium ${tw.rounded} text-white flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 whitespace-nowrap bg-[#252829]`}
-            >
-              {isSaving ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  {t.common.loading}
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  {t.settings.saveChanges}
-                </>
-              )}
-            </button>
-          </div>
-        </PermissionGate>
+          <PermissionGate permission="system.settings.manage">
+            <>
+              <button
+                onClick={handleReset}
+                className={`px-5 py-2.5 text-sm font-medium ${tw.rounded} border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 flex-shrink-0 whitespace-nowrap`}
+              >
+                {t.common.cancel}
+              </button>
+
+              <button
+                onClick={handleSave}
+                disabled={isSaving}
+                className={`px-5 py-2.5 text-sm font-medium ${tw.rounded} text-white flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 whitespace-nowrap bg-[#252829]`}
+              >
+                {isSaving ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    {t.common.loading}
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    {t.settings.saveChanges}
+                  </>
+                )}
+              </button>
+            </>
+          </PermissionGate>
+        </div>
       </div>
 
       {/* Settings Cards Grid */}

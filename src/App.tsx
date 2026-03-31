@@ -32,6 +32,8 @@ const AuthenticatedLandingPage = lazy(
   () => import("./features/dashboard/components/AuthenticatedLandingPage"),
 );
 const Dashboard = lazy(() => import("./features/dashboard/pages/Dashboard"));
+const DocsPage = lazy(() => import("./features/docs/pages/DocsPage").then(m => ({ default: m.DocsPage })));
+const EditDocsPage = lazy(() => import("./features/docs/pages/EditDocsPage"));
 
 // Loading fallback component
 function PageLoader() {
@@ -72,6 +74,8 @@ function AppRoutes() {
           <Route element={<ProtectedRoute />}>
             <Route path="/landingpage" element={<AuthenticatedLandingPage />} />
             <Route path="/dashboard/*" element={<Dashboard />} />
+            <Route path="/documentation/edit" element={<EditDocsPage />} />
+            <Route path="/documentation/*" element={<DocsPage />} />
           </Route>
 
           {/* Default redirect */}

@@ -2,9 +2,9 @@ import { getDocumentBySlug } from './services/documentationService';
 
 if (typeof window !== 'undefined') {
   window.addEventListener('load', () => {
-    // Extract slug from URL: /docs/{category}/{page} or /docs/{page}
+    // Extract slug from URL: /documentation/{category}/{page} or /documentation/{page}
     const pathname = window.location.pathname;
-    const docsMatch = pathname.match(/^\/docs\/(.+)$/);
+    const docsMatch = pathname.match(/^\/documentation\/(.+)$/);
 
     if (!docsMatch) return; // Not a docs page
 
@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
           });
 
           button.onclick = () => {
-            window.location.href = `/docs/edit?slug=${slug}`;
+            window.location.href = `/documentation/edit?slug=${slug}`;
           };
 
           // Clear content and show button

@@ -1,0 +1,144 @@
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&display=swap');
+
+.sidebarContent {
+  padding: 0;
+  font-family: 'Google Sans', 'Arial', sans-serif;
+}
+
+.section {
+  margin-bottom: 0;
+  border-bottom: none;
+}
+
+.sectionLabel,
+.sectionButton {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 12px 20px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #d1d5db;
+  cursor: pointer;
+  border: none;
+  background: none;
+  transition: all 0.2s;
+  text-decoration: none;
+  position: relative;
+  font-family: 'Google Sans', 'Arial', sans-serif;
+}
+
+.sectionLabel {
+  color: #f3f4f6;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  padding-top: 8px;
+  padding-bottom: 4px;
+  display: block;
+  font-family: 'Google Sans', 'Arial', sans-serif;
+}
+
+.sectionButton {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #d1d5db;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 8px 20px !important;
+  margin: 0 !important;
+  font-family: 'Google Sans', 'Arial', sans-serif;
+}
+
+.sectionButton:hover {
+  color: #f3f4f6;
+  background-color: rgba(37, 194, 160, 0.08);
+}
+
+.chevron {
+  display: inline-flex;
+  align-items: center;
+  transition: transform 0.2s;
+  color: #6b7280;
+}
+
+.chevron.expanded {
+  transform: rotate(180deg);
+}
+
+.subsections {
+  padding: 0;
+}
+
+.subsection {
+  padding: 0;
+}
+
+.subsectionLink,
+.subsectionButton {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 6px 20px 6px 40px;
+  font-size: 0.95rem;
+  color: #9ca3af;
+  cursor: pointer;
+  border: none;
+  background: none;
+  transition: all 0.2s;
+  text-decoration: none;
+  position: relative;
+  font-family: 'Google Sans', 'Arial', sans-serif;
+}
+
+.subsectionLink:hover,
+.subsectionButton:hover {
+  color: #d1d5db;
+  background-color: rgba(37, 194, 160, 0.08);
+}
+
+.subsectionLink.active {
+  color: #25c2a0;
+  background-color: rgba(37, 194, 160, 0.1);
+  border-left: 3px solid #25c2a0;
+  padding-left: 40px;
+  font-weight: 500;
+}
+
+.subsectionButton {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-family: 'Google Sans', 'Arial', sans-serif;
+}
+
+.nestedItems {
+  padding: 0;
+  background-color: transparent;
+}
+
+.nestedLink {
+  display: block;
+  padding: 4px 20px 4px 52px;
+  font-size: 0.9rem;
+  color: #9ca3af;
+  text-decoration: none;
+  transition: all 0.2s;
+  font-family: 'Google Sans', 'Arial', sans-serif;
+}
+
+.nestedLink:hover {
+  color: #9ca3af;
+  background-color: rgba(37, 194, 160, 0.08);
+}
+
+.nestedLink.active {
+  color: #25c2a0;
+  background-color: rgba(37, 194, 160, 0.1);
+  border-left: 3px solid #25c2a0;
+  padding-left: 57px;
+  font-weight: 500;
+}
