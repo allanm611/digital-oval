@@ -774,7 +774,7 @@ export const en: Translations = {
       "Join leading organizations worldwide and start maximizing your customer value today. Our team is ready to help you get started with Sentra.",
     startYourJourney: "Start Your Journey",
     existingUser: "Existing User? Sign In",
-    copyrightNotice: "&copy; 2025 Sentra CVM Platform. All rights reserved.",
+    copyrightNotice: `&copy; ${new Date().getFullYear()} Sentra CVM Platform. All rights reserved.`,
     corePlatform: "Core Platform",
     corePlatformDescription:
       "Discover the powerful modules that make up the Sentra ecosystem.",
