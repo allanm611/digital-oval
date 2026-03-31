@@ -85,8 +85,6 @@
   margin: 1.5rem 0 1rem 0;
   color: #f3f4f6;
   letter-spacing: -0.5px;
-  border-bottom: 3px solid var(--docusaurus-accent);
-  padding-bottom: 0.5rem;
 }
 
 .article h2 {

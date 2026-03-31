@@ -15,6 +15,7 @@ import { DocsSidebar } from '../components/DocsSidebar';
 import { DocsTOC } from '../components/DocsTOC';
 import { DocsHeader } from '../components/DocsHeader';
 import { DocsBreadcrumb } from '../components/DocsBreadcrumb';
+import { DocsNavigation } from '../components/DocsNavigation';
 import { convertDocusaurusSidebar } from '../utils/sidebarConverter';
 import sidebarsConfig from '../sidebars';
 import styles from './DocsPage.module.css';
@@ -111,6 +112,8 @@ export function DocsPage() {
         >
           <ReactMarkdown>{content}</ReactMarkdown>
         </div>
+
+        <DocsNavigation sidebarItems={SIDEBAR_ITEMS} currentSlug={slug} />
       </article>
     </DocsLayout>
   );

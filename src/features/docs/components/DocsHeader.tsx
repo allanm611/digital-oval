@@ -37,7 +37,6 @@ export function DocsHeader() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className={styles.searchInput}
             />
-            <span className={styles.searchHint}>⌘K</span>
           </div>
         </div>
       </div>
