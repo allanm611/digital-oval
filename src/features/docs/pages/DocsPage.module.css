@@ -31,6 +31,7 @@
   margin: 2rem 0 1rem 0;
   color: #f3f4f6;
   letter-spacing: -0.3px;
+  scroll-margin-top: 80px;
 }
 
 .markdown h3 {
@@ -38,6 +39,7 @@
   font-weight: 600;
   margin: 1.75rem 0 0.875rem 0;
   color: #f3f4f6;
+  scroll-margin-top: 80px;
 }
 
 .markdown h4 {
@@ -202,5 +204,30 @@
 }
 
 .editLink:hover {
+  color: #1fa584;
+}
+
+.headingWithLink {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.headingLink {
+  opacity: 0;
+  transition: opacity 0.2s;
+  color: #25c2a0;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.headingWithLink:hover .headingLink {
+  opacity: 1;
+}
+
+.headingLink:hover {
   color: #1fa584;
 }

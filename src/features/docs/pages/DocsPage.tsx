@@ -7,6 +7,7 @@
 import React, { useMemo } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
+import { Link as LinkIcon } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { PermissionGate } from '../../auth/components/PermissionGate';
 import { useDocumentation } from '../hooks/useDocumentation';
@@ -139,21 +140,33 @@ export function DocsPage() {
         </div>
 
         {/* Add IDs to headings for TOC linking */}
-        <div
-          className={styles.markdown}
-          onLoad={() => {
-            // Add IDs to headings for TOC
-            const headings = document.querySelectorAll('h2, h3');
-            headings.forEach(heading => {
-              if (!heading.id) {
-                const text = heading.textContent || '';
-                heading.id = text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
-              }
-            });
-          }}
-        >
+        <div className={styles.markdown}>
           <ReactMarkdown
             components={{
+              h2: ({ children }) => {
+                const text = String(children);
+                const id = text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+                return (
+                  <h2 id={id} className={styles.headingWithLink}>
+                    {children}
+                    <a href={`#${id}`} className={styles.headingLink} title="Copy link to section">
+                      <LinkIcon size={18} />
+                    </a>
+                  </h2>
+                );
+              },
+              h3: ({ children }) => {
+                const text = String(children);
+                const id = text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+                return (
+                  <h3 id={id} className={styles.headingWithLink}>
+                    {children}
+                    <a href={`#${id}`} className={styles.headingLink} title="Copy link to section">
+                      <LinkIcon size={18} />
+                    </a>
+                  </h3>
+                );
+              },
               a: ({ href, children }) => {
                 // Use React Router Link for internal documentation links
                 if (href && href.startsWith('/documentation/')) {

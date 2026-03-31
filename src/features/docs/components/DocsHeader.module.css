@@ -71,6 +71,14 @@
   border: 1px solid #1f2937;
   border-radius: 6px;
   height: 36px;
+  width: 300px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.searchBox:hover {
+  background-color: #1f2937;
+  border-color: #374151;
 }
 
 .searchIcon {
@@ -86,6 +94,7 @@
   font-size: 0.9rem;
   outline: none;
   font-family: 'Google Sans', 'Arial', sans-serif;
+  cursor: pointer;
 }
 
 .searchInput::placeholder {
@@ -99,22 +108,22 @@
   flex-shrink: 0;
 }
 
+
 /* Mobile: collapse brand name and search on small screens */
 @media (max-width: 768px) {
   .brandName {
     display: none;
   }
 
+  .searchBox {
+    width: 200px;
+  }
+
   .searchInput {
-    display: none;
+    font-size: 0.85rem;
   }
 
   .searchHint {
     display: none;
-  }
-
-  .searchBox {
-    width: auto;
-    padding: 6px 8px;
   }
 }
