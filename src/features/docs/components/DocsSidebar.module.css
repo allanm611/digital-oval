@@ -37,6 +37,11 @@
   letter-spacing: 0.3px !important;
 }
 
+.sectionLabel.active {
+  color: #25c2a0 !important;
+  background-color: rgba(46, 133, 85, 0.15) !important;
+}
+
 .sectionButton {
   display: flex !important;
   justify-content: space-between !important;
@@ -143,7 +148,7 @@
   font-family: 'Google Sans', 'Arial', sans-serif !important;
   font-weight: 400 !important;
   margin-left: 24px !important;
-  margin-bottom: 5px !important;
+  margin-bottom: 8px !important;
   line-height: 1.4 !important;
 }
 
