@@ -307,10 +307,3 @@ The top section displays critical business metrics at a glance:
 - **"Charts not rendering"** - Refresh page or clear cache
 - **"Export fails"** - Try smaller date range first
 
-## Related Documentation
-
-- [Campaign Reports](/documentation/campaign-reports) - Detailed campaign metrics
-- [Customer Profile Reports](/documentation/customer-profile-reports) - Customer analytics
-- [Offer Reports](/documentation/offer-reports) - Offer performance
-- [Delivery Reports](/documentation/delivery-sms-reports) - SMS delivery metrics
-- [Email Delivery Reports](/documentation/delivery-email-reports) - Email metrics

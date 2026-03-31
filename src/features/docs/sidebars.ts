@@ -24,6 +24,10 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Getting Started',
+      link: {
+        type: 'doc',
+        id: 'getting-started/overview',
+      },
       items: [
         'getting-started/dashboard',
         'getting-started/global-search',
@@ -32,6 +36,10 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Campaign Management',
+      link: {
+        type: 'doc',
+        id: 'campaigns/overview',
+      },
       items: [
         {
           type: 'category',
@@ -57,12 +65,16 @@ const sidebars: SidebarsConfig = {
         'campaigns/campaign-catalog',
         'campaigns/campaign-types',
 
-       
+
       ],
     },
     {
       type: 'category',
       label: 'Offer Management',
+      link: {
+        type: 'doc',
+        id: 'offers/overview',
+      },
       items: [
         {
           type: 'category',
@@ -83,6 +95,10 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Product Management',
+      link: {
+        type: 'doc',
+        id: 'products/overview',
+      },
       items: [
         {
           type: 'category',
@@ -105,6 +121,10 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Segment Management',
+      link: {
+        type: 'doc',
+        id: 'segments/overview',
+      },
       items: [
         {
           type: 'category',
@@ -141,6 +161,10 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Customer 360 Profile',
+      link: {
+        type: 'doc',
+        id: 'customer-360/overview',
+      },
       items: [
         {
           type: 'category',
@@ -232,6 +256,10 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Reports & Analytics',
+      link: {
+        type: 'doc',
+        id: 'analytics/overview',
+      },
       items: [
         'analytics/overall-dashboard-performance',
         'analytics/customer-profile-reports',
@@ -328,6 +356,10 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Job Management',
+      link: {
+        type: 'doc',
+        id: 'jobs/overview',
+      },
       items: [
         {
           type: 'category',
@@ -412,6 +444,10 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Configuration',
+      link: {
+        type: 'doc',
+        id: 'configuration/overview',
+      },
       items: [
         'configuration/communication-channels',
         'configuration/routes',

@@ -583,10 +583,3 @@ Campaign reports include:
 
 ---
 
-## Related Documentation
-
-- [Communication Policies](/documentation/campaign-communication-policy) - VIP integrated with communication policies
-- [DND Management](/documentation/dnd-management) - Customer preference management alongside VIP
-- [Campaigns](./documentation/campaigns/campaigns-list) - Using VIP lists in campaign execution
-- [Campaign Reports](./documentation/analytics/campaign-reports) - VIP customer metrics in reports
-- [Customer Management](./documentation/customer-360/customers-list) - Customer profile and VIP status

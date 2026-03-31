@@ -532,9 +532,3 @@ You can create type-specific campaigns:
 
 ---
 
-## Related Documentation
-
-- [Offers Management](./documentation/offers/offer-list) - Creating and managing offers by type
-- [Offer Reports](./documentation/analytics/offer-reports) - Performance tracking by offer type
-- [Campaigns](./documentation/campaigns/campaigns-list) - Using offers in campaign creation
-- [Offer Catalog](./documentation/configuration/offer-catalog) - Browsing available offers by type

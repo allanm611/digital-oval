@@ -2,92 +2,107 @@
 
 ## Overview
 
-The Global Search feature allows you to quickly find any item across the platform from anywhere. It appears as a search bar in the top navigation and can be accessed using a keyboard shortcut.
+Global Search is a powerful app-wide search feature that lets you quickly find any item across the entire platform—campaigns, offers, products, segments, users, configurations, and more—from anywhere in the application. Search results are categorized by type and you can drill down using filters on the search results page.
 
+---
 
-## Accessing Global Search
+## Opening Global Search
 
-- Click the **Search** icon in the top navigation bar
-- Use the keyboard shortcut (Cmd+K on Mac, Ctrl+K on Windows/Linux)
-- The search field will appear with a modal overlay
+**Search Icon** - Click the search icon in the top navigation bar
 
+The search modal will open with a search input field ready for your query.
 
-## Search Capabilities
+![Global Search Dropdown](/img/getstarted/search.png)
 
-The global search searches across the entire platform:
+---
 
-### Campaigns
-- Campaign names and descriptions
-- Navigate directly to campaign details
+## Live Search Dropdown
 
-### Offers
-- Offer names and types
-- Quick access to offer management
+When you open the search modal and start typing, results appear instantly as you type (minimum 2 characters required).
 
-### Products
-- Product names and codes
-- Product categories
+### Dropdown Layout
 
-### Segments
-- Segment names and descriptions
-- All segment types
-
-### Programs
-- Program names
-- Program configurations
-
-### Quicklists
-- Quicklist names
-- All stored lists
-
-### Users & Roles
-- User names and email addresses
-- Role configurations
-
-### Catalogs
-- Campaign catalogs
-- Offer catalogs
-- Product catalogs
-- Segment catalogs
-
-### Configuration
-- Line of Business
-- Campaign Communication Policy
-- Communication Channels
-- Routes
-- Campaign Objectives
-- Departments
-
-
-## How to Search
-
-1. Open the search modal (click search icon or use keyboard shortcut)
-2. Type your search query (minimum 2 characters)
-3. Results appear automatically as you type
-4. Click on any result to navigate directly to it
-5. Results are organized by type with icons for easy identification
-
-
-## Quick Searches
-
-Below the search input are quick access buttons:
-- **Campaigns** - Go to campaigns list
-- **Offers** - Go to offers list
-- **Products** - Go to products list
-- **Segments** - Go to segments list
-- **Programs** - Go to programs list
-
-
-## Recent Searches
-
-Your recent searches are stored and displayed when you open the search modal without typing. This helps you quickly access frequently used items.
-
-
-## Search Tips
-
-- Use descriptive names for your items to make them easier to find
-- Search is case-insensitive
-- Partial matches are supported (e.g., searching "camp" will find "Campaign Name")
+**Search Input**
+- Type your search query at the top
 - Results update in real-time as you type
-- Press Escape to close the search modal
+- Shows instant live feedback
+
+**Quick Access Buttons**
+- **Campaigns** - Jump to campaigns list
+- **Offers** - Jump to offers list
+- **Products** - Jump to products list
+- **Segments** - Jump to segments list
+- **Programs** - Jump to programs list
+
+These buttons let you quickly access module lists without searching.
+
+### Live Results Display
+
+As you type, the dropdown shows matching results organized by category:
+- **Campaigns** - Campaign names and descriptions
+- **Offers** - Offer names and offer types
+- **Products** - Product names, codes, and categories
+- **Segments** - Segment names and descriptions
+- **Programs** - Program names
+- **Quicklists** - Quicklist names
+- **Users & Roles** - User names, emails, and role names
+- **Catalogs** - Campaign, Offer, Product, and Segment catalogs
+- **Configuration** - Business units, channels, objectives, departments, and more
+
+**Each result shows:**
+- Item name/title
+- Category or type label
+- Icon indicating the item type
+
+### Clicking Results
+
+**Direct Navigation** - Click any result to navigate directly to that item's detail page
+
+**View All Results** - Click **"View Results"** button at the bottom to see the full search results page with advanced filtering options
+
+---
+
+## Search Results Page
+
+Click "View Results" in the dropdown to access the full search results page with filtering and advanced search capabilities.
+
+![Search Results Page](/img/getstarted/searchresults.png)
+
+### Results Display
+
+The search results page shows all matching items from your search query, organized by category:
+
+**Results List**
+- Shows all items matching your search
+- Items are grouped by type (Campaigns, Offers, Products, etc.)
+- Each item shows relevant metadata (status, type, created date, etc.)
+
+**Click any result** to navigate directly to that item's detail page or open it in the editor.
+
+### Filtering Results
+
+Use filters to narrow down your search results by type and other criteria:
+
+**Filter by Type**
+- Toggle categories on/off to show/hide results from that category
+- Example: Show only Campaigns and Offers, hide everything else
+- Quick filter buttons at the top for common types
+- Advanced filter options for more control
+
+**Filter by Status** (depending on item type)
+- Active/Inactive
+- Draft/Approved
+- Pending approval
+- Archived
+- Other status-specific filters
+
+**Filter by Category** (for applicable items)
+- Products by category
+- Segments by type (Static, Dynamic, Predictive, etc.)
+- Campaigns by catalog
+- And more
+
+**Additional Filters**
+- Search within results to further refine
+- Sort options (by name, date created, last modified, etc.)
 

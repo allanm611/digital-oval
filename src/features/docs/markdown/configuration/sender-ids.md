@@ -597,9 +597,3 @@ Fill in the following fields:
 
 ---
 
-## Related Documentation
-
-- [SMS Routes](/documentation/sms-routes) - Route configuration for SMS delivery
-- [Communication Channels](/documentation/communication-channels) - Multi-channel communication setup
-- [Campaigns](./documentation/campaigns/campaigns-list) - Creating campaigns with sender IDs
-- [Manual Communications](./documentation/manual-actions/manual-communications) - Manual message sending

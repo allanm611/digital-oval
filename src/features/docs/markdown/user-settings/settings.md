@@ -500,8 +500,3 @@ Create token for API access:
 
 ---
 
-## Related Documentation
-
-- [My Profile](/documentation/my-profile) - Manage your account information
-- [Notifications](/documentation/notifications) - Configure notification preferences
-- [User Management](./documentation/users/users-list) - Administer user accounts (admins only)

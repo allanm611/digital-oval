@@ -160,8 +160,3 @@ Common errors and solutions:
 - Avoid changing during campaign launches
 - Notify team of significant changes
 
-## Related Documentation
-
-- [Campaign Objectives List](/documentation/campaign-objectives-list) - View all objectives
-- [View Campaign Objective](/documentation/view-campaign-objective) - See objective details
-- [Create Campaign Objective](/documentation/create-campaign-objective) - Add new objectives

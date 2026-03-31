@@ -222,29 +222,3 @@ SMS Routes have special configuration:
 
 See [SMS Routes](/documentation/sms-routes) for SMS-specific details.
 
-## Related Documentation
-
-### Route Operations
-- [Routes Overview](/documentation/routes-list) - All routes information
-- [Create Route](/documentation/create-route) - Add new routes
-- [View Route](/documentation/view-route) - See route details
-- [Edit Route](/documentation/edit-route) - Modify routes
-
-### SMS Specific
-- [SMS Routes Overview](/documentation/sms-routes) - SMS routing details
-- [Create SMS Route](/documentation/create-sms-route) - Add SMS routes
-- [Edit SMS Route](/documentation/edit-sms-route) - Modify SMS routes
-- [View SMS Route](/documentation/view-sms-route) - SMS route details
-
-### Related Features
-- [Communication Channels](./documentation/communication-channels-list) - Messaging channels
-- [Campaign Communication Policies](./documentation/campaign-communication-policy-list) - Policy enforcement
-- [Campaigns](./documentation/./documentation/campaigns/create-campaign) - Create campaigns using routes
-
-## Quick Links
-
-- **View all routes:** [Routes List](/documentation/routes-list)
-- **Add new route:** [Create Route](/documentation/create-route)
-- **Modify route:** [Edit Route](/documentation/edit-route)
-- **Route details:** [View Route](/documentation/view-route)
-- **SMS routes:** [SMS Routes](/documentation/sms-routes)

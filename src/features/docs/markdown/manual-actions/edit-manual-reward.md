@@ -304,10 +304,3 @@ The form shows all current settings:
 - Review changes in details page
 - Document reason for changes
 
-## Related Documentation
-
-- [Manual Rewards Overview](/documentation/manual-rewards) - Feature overview
-- [Rewards List](/documentation/manual-rewards-list) - View all rewards
-- [Create Reward](/documentation/create-manual-reward) - How to create
-- [View Reward Details](/documentation/view-manual-reward) - View results
-- [Manual Communications](/documentation/manual-communications) - Send messages to customers

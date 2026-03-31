@@ -461,8 +461,3 @@ Job types are referenced when creating or editing scheduled jobs:
 
 ---
 
-## Related Documentation
-
-- [Scheduled Jobs](./documentation/jobs/scheduled-jobs) - Creating and managing scheduled jobs
-- [Job Workflows](./documentation/jobs/job-workflows) - Workflow configuration for jobs
-- [Job Reports](./documentation/analytics/job-reports) - Reporting and analytics by job type

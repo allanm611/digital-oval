@@ -336,10 +336,3 @@ For file-uploaded audiences:
 - Plan follow-up communications
 - Analyze long-term impact
 
-## Related Documentation
-
-- [Manual Rewards Overview](/documentation/manual-rewards) - Feature overview
-- [Rewards List](/documentation/manual-rewards-list) - View all rewards
-- [Create Reward](/documentation/create-manual-reward) - How to create
-- [Edit Reward](/documentation/edit-manual-reward) - Edit guide
-- [Manual Communications](/documentation/manual-communications) - Send messages to customers

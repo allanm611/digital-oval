@@ -272,11 +272,3 @@ The Manual Rewards list displays:
 - **"Invalid contact"** - Verify customer has valid email/phone
 - **"Policy blocked"** - DND or frequency limits may apply
 
-## Related Documentation
-
-- [Manual Rewards List](/documentation/manual-rewards-list) - View all rewards
-- [Create Manual Reward](/documentation/create-manual-reward) - Detailed creation guide
-- [View Reward Details](/documentation/view-manual-reward) - Details page reference
-- [Edit Reward](/documentation/edit-manual-reward) - Modification guide
-- [Manual Communications](/documentation/manual-communications) - Send communications to customers
-- [Communication Policies](./documentation/configuration/campaign-communication-policy-list) - Policy configuration

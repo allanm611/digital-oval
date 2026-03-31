@@ -117,8 +117,3 @@ Each category card shows the total number of products, including the count of ac
 - Remove products individually (if they are not the primary category)
 - Add more products using the Add Products modal
 
-## Related Documentation
-
-- [Product Catalog](/documentation/product-catalog) - Main product catalog management
-- [Products](./documentation/products/products-list) - Creating and managing individual products
-- [Product Types](/documentation/product-types) - Categorizing products by type

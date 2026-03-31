@@ -442,12 +442,3 @@ Visual representation of:
 4\. Click **Save**
 5\. Future messages use new channel
 
----
-
-## Related Documentation
-
-- [Customer List](/documentation/customers-list) - Browse all customers
-- [Create Customer](/documentation/create-customer) - Add new customers
-- [Customer Reports](/documentation/customer-reports) - Analytics and insights
-- [Customer Identity](/documentation/customer-identity) - Manage segmentation fields
-- [Campaigns](./documentation/campaigns/campaigns-list) - View campaigns

@@ -244,8 +244,3 @@ Before modifying or deleting a channel, understand:
 - SMTP configuration impact
 - Gateway integrations
 
-## Related Documentation
-
-- [Communication Channels List](/documentation/communication-channels-list) - View all channels
-- [Create Communication Channel](/documentation/create-communication-channel) - Add new channels
-- [Edit Communication Channel](/documentation/edit-communication-channel) - Modify channel settings

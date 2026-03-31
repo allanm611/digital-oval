@@ -536,12 +536,3 @@ Compare performance across segments:
 
 **Result:** Higher engagement, lower opt-outs
 
----
-
-## Related Documentation
-
-- [Customer List](/documentation/customers-list) - Browse and search customers
-- [Create Customer](/documentation/create-customer) - Add customers
-- [View Customer Details](/documentation/view-customer-details) - Customer profiles
-- [Customer Identity](/documentation/customer-identity) - Segmentation fields
-- [Campaign Reports](./documentation/campaigns/campaign-reports) - Campaign analytics

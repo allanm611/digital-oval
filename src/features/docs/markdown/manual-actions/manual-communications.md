@@ -233,11 +233,3 @@ The Manual Communications list displays:
 - **Syntax errors** - Verify variable format `{{field_name}}`
 - **Missing fields** - Some customers may lack certain fields
 
-## Related Documentation
-
-- [Manual Communications List](/documentation/manual-communications-list) - View all communications
-- [Create Manual Communication](/documentation/create-manual-communication) - Detailed creation guide
-- [View Communication Details](/documentation/view-manual-communication) - Details page reference
-- [Edit Communication](/documentation/edit-manual-communication) - Modification guide
-- [Manual Rewards](/documentation/manual-rewards) - Apply rewards to customers
-- [Communication Policies](./documentation/configuration/campaign-communication-policy-list) - Policy configuration

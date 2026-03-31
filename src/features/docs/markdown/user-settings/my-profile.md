@@ -353,8 +353,3 @@ Quick settings available on My Profile:
 
 ---
 
-## Related Documentation
-
-- [Notifications](/documentation/notifications) - Manage how you receive updates
-- [Settings](/documentation/settings) - System-wide preferences and settings
-- [User Management](./documentation/users/users-list) - Administer other user accounts (admins only)

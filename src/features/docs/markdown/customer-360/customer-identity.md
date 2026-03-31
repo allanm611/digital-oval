@@ -565,11 +565,3 @@ When creating customer segments:
 - **Solution 3:** Field may require specific data type
 - **Solution 4:** Check field validation rules
 
----
-
-## Related Documentation
-
-- [Customer List](/documentation/customers-list) - Browse all customers
-- [Create Customer](/documentation/create-customer) - Add customers
-- [View Customer Details](/documentation/view-customer-details) - Manage profiles
-- [Segments](./documentation/segments/segments-list) - Create customer segments

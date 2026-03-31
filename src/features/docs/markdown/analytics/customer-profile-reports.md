@@ -434,9 +434,3 @@ Detailed table of individual customers with key metrics:
 - **"Charts not rendering"** - Try different date range
 - **"Export times out"** - Export smaller date range first
 
-## Related Documentation
-
-- [Overall Dashboard](/documentation/overall-dashboard-performance) - Platform overview
-- [Campaign Reports](/documentation/campaign-reports) - Campaign analytics
-- [Offer Reports](/documentation/offer-reports) - Offer performance
-- [Customer Management](./documentation/customer-360/customers-list) - Customer profiles

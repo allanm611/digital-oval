@@ -320,10 +320,3 @@ Before confirming, review all settings:
    - Variable substitution
    - Channel breakdown
 
-## Related Documentation
-
-- [Manual Communications Overview](/documentation/manual-communications) - Feature overview
-- [Communications List](/documentation/manual-communications-list) - View all communications
-- [View Communication Details](/documentation/view-manual-communication) - View results
-- [Edit Communication](/documentation/edit-manual-communication) - Modify scheduled communications
-- [Communication Policies](./documentation/configuration/campaign-communication-policy-list) - Policy reference

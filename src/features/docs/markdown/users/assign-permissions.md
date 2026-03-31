@@ -487,9 +487,3 @@ Assign permissions to users and roles to control what users can do in the system
 
 ---
 
-## Related Documentation
-
-- [Permissions Reference](/documentation/permissions) - All permission codes
-- [Role Management](/documentation/role-management) - Create and manage roles
-- [User Management](./documentation/users-list) - Manage users
-- [View User Details](./documentation/view-user-details) - User profiles

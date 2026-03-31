@@ -178,15 +178,3 @@ Your system includes five pre-configured departments:
 - Payment processing
 - Budget compliance
 
-## Related Documentation
-
-### Department Operations
-- [Departments List](/documentation/departments-list) - View all departments
-- [Create Department](/documentation/create-department) - Add new departments
-- [View Department](/documentation/view-department) - See department details
-- [Edit Department](/documentation/edit-department) - Modify departments
-
-### Related Features
-- [Campaigns](./documentation/./documentation/campaigns/create-campaign) - Create campaigns using departments
-- [Line of Business](./documentation/line-of-business-list) - Business line configuration
-- [Campaign Objectives](./documentation/campaign-objectives-list) - Campaign goals

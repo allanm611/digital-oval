@@ -37,17 +37,24 @@ class DocsService {
   }
 
   /**
+   * Remove HTML comments from markdown content
+   */
+  removeHtmlComments(content: string): string {
+    return content.replace(/<!--[\s\S]*?-->/g, '');
+  }
+
+  /**
    * Parse markdown frontmatter and content
    */
   parseFrontmatter(content: string): { metadata: Record<string, any>; body: string } {
     // Check if markdown starts with frontmatter (---)
     if (!content.startsWith('---')) {
-      return { metadata: {}, body: content };
+      return { metadata: {}, body: this.removeHtmlComments(content) };
     }
 
     const parts = content.split('---');
     if (parts.length < 3) {
-      return { metadata: {}, body: content };
+      return { metadata: {}, body: this.removeHtmlComments(content) };
     }
 
     try {
@@ -63,9 +70,9 @@ class DocsService {
         }
       });
 
-      return { metadata, body };
+      return { metadata, body: this.removeHtmlComments(body) };
     } catch (error) {
-      return { metadata: {}, body: content };
+      return { metadata: {}, body: this.removeHtmlComments(content) };
     }
   }
 

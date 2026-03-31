@@ -527,9 +527,3 @@ Seed list test messages include:
 
 ---
 
-## Related Documentation
-
-- [Campaigns](./documentation/campaigns/campaigns-list) - Campaign creation with seed list testing
-- [Campaign Reports](./documentation/analytics/campaign-reports) - Campaign performance tracking
-- [Manual Communications](./documentation/manual-actions/manual-communications) - Testing manual broadcasts
-- [Communication Policies](/documentation/campaign-communication-policy) - Policy framework for communications

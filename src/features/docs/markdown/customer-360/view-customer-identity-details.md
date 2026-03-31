@@ -458,11 +458,3 @@ If multiple similar fields exist:
 - **Solution 3:** Try different operator
 - **Solution 4:** Review segment criteria
 
----
-
-## Related Documentation
-
-- [Customer Identity](/documentation/customer-identity) - Overview of all fields
-- [Create Customer](/documentation/create-customer) - Add customer data
-- [Segments](./documentation/segments/segments-list) - Use fields in segments
-- [Customer Reports](/documentation/customer-reports) - Analyze customer data

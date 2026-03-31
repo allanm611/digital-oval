@@ -729,9 +729,3 @@ Fill in the following fields:
 
 ---
 
-## Related Documentation
-
-- [Character Sets](/documentation/character-sets) - Character encoding and support
-- [Creative Templates](/documentation/creative-templates) - Message templates with language support
-- [Campaigns](./documentation/campaigns/campaigns-list) - Creating multilingual campaigns
-- [Customer 360](./documentation/customer-360/customers-list) - Customer language preferences

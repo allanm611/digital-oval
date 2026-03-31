@@ -565,10 +565,3 @@ Before creating account, verify:
 
 ---
 
-## Related Documentation
-
-- [User List](/documentation/users-list) - Manage all users
-- [View User Details](/documentation/view-user-details) - View/edit user profiles
-- [Role Management](/documentation/role-management) - Manage roles
-- [Assign Permissions](/documentation/assign-permissions) - Assign permissions
-- [Permissions](/documentation/permissions) - Permission reference

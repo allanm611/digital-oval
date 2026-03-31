@@ -352,10 +352,3 @@ Before applying, review:
 - **"Budget exceeded"** - Check account balance
 - **"System error"** - Contact support with reward ID
 
-## Related Documentation
-
-- [Manual Rewards Overview](/documentation/manual-rewards) - Feature overview
-- [Rewards List](/documentation/manual-rewards-list) - View all rewards
-- [View Reward Details](/documentation/view-manual-reward) - View results
-- [Edit Reward](/documentation/edit-manual-reward) - Modify scheduled rewards
-- [Manual Communications](/documentation/manual-communications) - Send messages to customers

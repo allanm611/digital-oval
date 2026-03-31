@@ -525,9 +525,3 @@ Combo types are referenced when creating or editing product bundles:
 
 ---
 
-## Related Documentation
-
-- [Products](./documentation/products/products-list) - Creating and managing products for bundles
-- [Product Types](/documentation/product-types) - Product categorization used in combos
-- [Offers](./documentation/offers/offer-list) - Creating offers for specific combo types
-- [Combo Analytics](./documentation/analytics/offer-reports) - Reporting and analytics by combo type

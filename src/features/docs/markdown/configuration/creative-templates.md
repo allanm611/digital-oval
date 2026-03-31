@@ -674,9 +674,3 @@ Each creative maintains version history:
 
 ---
 
-## Related Documentation
-
-- [Offer Management](./documentation/offers/offer-list) - Creating offers with creatives
-- [Campaigns](./documentation/campaigns/campaigns-list) - Using creatives in campaigns
-- [Campaign Reports](./documentation/analytics/campaign-reports) - Performance by channel
-- [Communications](./documentation/manual-actions/manual-communications) - Separate template system for manual messages

@@ -270,10 +270,3 @@ Review any test failures:
 - Verify audience quality
 - Confirm channel settings
 
-## Related Documentation
-
-- [Manual Communications Overview](/documentation/manual-communications) - Feature overview
-- [Communications List](/documentation/manual-communications-list) - View all communications
-- [Create Communication](/documentation/create-manual-communication) - How to create
-- [Edit Communication](/documentation/edit-manual-communication) - Edit guide
-- [Communication Policies](./documentation/configuration/campaign-communication-policy-list) - Policy reference

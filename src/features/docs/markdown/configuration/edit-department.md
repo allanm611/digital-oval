@@ -123,8 +123,3 @@ Modify an existing Department to update its name, description, or other details.
 - Notify affected team members
 - Test impact before finalizing
 
-## Related Documentation
-
-- [Departments List](/documentation/departments-list) - View all departments
-- [View Department](/documentation/view-department) - See details
-- [Create Department](/documentation/create-department) - Add new departments

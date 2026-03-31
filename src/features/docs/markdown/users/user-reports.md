@@ -415,10 +415,3 @@ The User Reports page displays interactive charts, tables, and filtering options
 
 ---
 
-## Related Documentation
-
-- [User List](/documentation/users-list) - Browse all users
-- [Create User](/documentation/create-user) - Add new users
-- [View User Details](/documentation/view-user-details) - User profiles
-- [User Analytics](/documentation/user-analytics) - Detailed analytics
-- [Permissions](/documentation/permissions) - Permission reference

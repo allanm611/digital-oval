@@ -706,9 +706,3 @@ Fill in the following fields:
 
 ---
 
-## Related Documentation
-
-- [Sender IDs](/documentation/sender-ids) - Configure SMS sender identifiers
-- [Communication Channels](/documentation/communication-channels) - SMS channel configuration
-- [Routes](/documentation/routes) - General routing configuration
-- [Campaigns](./documentation/campaigns/campaigns-list) - Create campaigns with SMS

@@ -141,15 +141,3 @@ Access the Campaign Objectives configuration page to see all available objective
 - **Key Metrics:** Reactivation rate, Revenue recovered, Cost per reactivation
 - **Target:** Maximize reactivation while minimizing cost
 
-## Related Documentation
-
-### Campaign Objectives Operations
-- [Campaign Objectives List](/documentation/campaign-objectives-list) - View all objectives
-- [Create Campaign Objective](/documentation/create-campaign-objective) - Add new objectives
-- [View Campaign Objective](/documentation/view-campaign-objective) - See objective details
-- [Edit Campaign Objective](/documentation/edit-campaign-objective) - Modify objectives
-
-### Related Features
-- [Campaigns](./documentation/./documentation/campaigns/create-campaign) - Create campaigns using objectives
-- [Campaign Communication Policy](./documentation/campaign-communication-policy-list) - Policy enforcement
-- [Line of Business](./documentation/line-of-business-list) - Business line configuration

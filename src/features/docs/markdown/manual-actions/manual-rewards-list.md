@@ -221,10 +221,3 @@ For each reward, access comprehensive reports:
 - Export multiple together
 - Batch retry failed applications
 
-## Related Documentation
-
-- [Manual Rewards Overview](/documentation/manual-rewards) - Feature overview
-- [Create Manual Reward](/documentation/create-manual-reward) - How to create
-- [View Reward Details](/documentation/view-manual-reward) - View results
-- [Edit Reward](/documentation/edit-manual-reward) - Edit guide
-- [Manual Communications](/documentation/manual-communications) - Send messages to customers

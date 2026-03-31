@@ -2,88 +2,160 @@
 
 ## Overview
 
-The Dashboard is the main landing page after logging in. It provides a comprehensive overview of your platform activity including stats, recent items, and key metrics across all modules (Campaigns, Offers, Segments, Products).
+The Dashboard is the main landing page after logging in. It provides a comprehensive overview of your platform activity including key statistics, recent items, distribution charts, and items requiring attention across all modules (Campaigns, Offers, Segments, Products).
 
+---
 
-## Dashboard Sections
+## Dashboard Layout
 
-### Summary Statistics
+The dashboard is organized into several sections that give you quick insights into your platform's status and recent activity.
 
-Quick overview cards showing:
-- **Campaigns** - Total campaigns and active count
-- **Offers** - Total offers, active, and pending approval
+---
+
+## Summary Statistics
+
+Quick overview cards showing the most important metrics at a glance:
+
+![Dashboard Stat Cards](/img/getstarted/statcards.png)
+
+**What You See:**
+- **Campaigns** - Total campaigns and count of active campaigns
+- **Offers** - Total offers, active count, and pending approval count
 - **Segments** - Total segments in the system
 - **Products** - Total products available
 
+**Click any stat card** to navigate directly to that module's list page.
 
-### Recent Items
+---
 
-View the most recently created or modified items:
+## Quick Insights
+
+Key performance metrics and alerts that need your attention:
+
+![Quick Insights](/img/getstarted/quickinsights.png)
+
+**Insights Include:**
+- Failed campaigns requiring review
+- Offers pending approval or expiring soon
+- Segments with data quality issues
+- Products with inventory or status concerns
+- Key performance indicators
+
+**Click any alert** to navigate to that item for further action.
+
+---
+
+## Recent Items & Quick Actions
+
+View the most recently created or modified items across all modules:
+
+![Recently Added Items](/img/getstarted/recentlyadded-quickactions.png)
+
+**Recent Items Section Shows:**
 - **Campaigns** - Latest campaign activity
-- **Offers** - Most recent offers
+- **Offers** - Most recent offers created or modified
 - **Segments** - Newly created segments
 - **Products** - Latest products added
 
-Use the filter buttons to switch between viewing campaigns, offers, segments, and products. On mobile, use the dropdown selector to choose which item type to view.
+**Filter by Type:**
+- Use the filter buttons to switch between viewing campaigns, offers, segments, and products
+- On mobile, use the dropdown selector to choose which item type to view
 
+**Quick Actions:**
+- View any recent item's details
+- Edit items directly
+- Delete items
+- Navigate to the full list for each type
+
+---
+
+## Distribution Charts
+
+Visual breakdown of your content by status and type:
+
+![Distribution Charts](/img/getstarted/piecharts.png)
 
 ### Campaign Status Distribution
 
-A pie chart showing the breakdown of campaigns by status:
-- Draft
-- Pending Approval
-- Approved
-- Scheduled
-- Active
-- Paused
-- Completed
-- Cancelled
-- Archived
-- Rejected
+A pie chart showing the breakdown of all campaigns by their current status:
+- Draft - Campaigns being created or edited
+- Pending Approval - Awaiting review
+- Approved - Ready to run
+- Scheduled - Set to run at specific time
+- Active - Currently running
+- Paused - Temporarily stopped
+- Completed - Finished running
+- Cancelled - Cancelled by user
+- Archived - Old campaigns for reference
+- Rejected - Not approved, returned to draft
 
+**Hover over any segment** to see the exact count and percentage.
 
 ### Offer Type Distribution
 
-A pie chart displaying offers broken down by type:
-- Discount
-- Cashback
-- Free Shipping
-- Buy One Get One
-- Voucher
-
+A pie chart displaying offers broken down by their type:
+- Discount - Percentage or fixed amount discounts
+- Cashback - Cash rewards
+- Free Shipping - Shipping cost waivers
+- Buy One Get One - BOGO promotions
+- Voucher - Fixed value vouchers
+- And other custom offer types
 
 ### Segment Type Distribution
 
 View the breakdown of segments by type:
-- Static segments
-- Dynamic segments
-- Predictive segments
-- Other types
+- Static segments - Manually defined groups
+- Dynamic segments - Auto-updated based on rules
+- Predictive segments - AI-driven segmentation
+- Other custom segment types
 
+---
 
-### Items Requiring Attention
+## Items Requiring Attention
 
-Critical alerts and actions needed:
+Critical alerts and actions needed displayed prominently:
+
+![Bottom Section](/img/getstarted/bottomsection.png)
+
+**Displays:**
 - Failed campaigns that need review
 - Offers pending approval or expiring soon
 - Segments with data quality issues
 - Products with inventory concerns
+- SLA breaches or performance warnings
 
-Click on any item to navigate to its details page for further action.
+**Take Action:**
+- Click any item to navigate to its details page
+- Review and fix issues
+- Approve pending items
+- Address warnings and alerts
+
+---
+
+## Top Performing Items
+
+View your best-performing campaigns and offers with flexible filtering options:
+
+![Bottom Section](/img/getstarted/bottomsection.png)
+
+### Top Campaigns
+
+Analyze your most successful campaigns with multiple filtering options:
+
+**Filter By:**
+- **Spend** - See campaigns by budget spent (highest to lowest)
+- **Participants** - View campaigns by audience reach
 
 
-### Top Performing Items
+### Top Offers
 
-View your best-performing campaigns and offers:
-- **Top Campaigns** - Filter by participants or spend
-- **Top Offers** - By utilization or conversion rates
+Analyze your best-performing offers:
 
+**Filter By:**
+- **Acceptance Rate** - See which offers have the highest acceptance rate
 
-## Navigation
-
-From the dashboard, you can:
-- Click on any stat card to navigate to the corresponding module list
-- Click on recent items to view their details
-- Click on items requiring attention to take action
-- Use the sidebar navigation to access specific modules
+<!-- **What You Can Do:**
+- Click any offer to view details and analytics
+- Identify which offers your customers are most likely to accept
+- Plan future offers based on proven patterns -->
 

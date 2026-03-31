@@ -608,11 +608,3 @@ After creating customers:
 - Create Segments - Organize customers for campaigns
 - Launch Campaigns - Send targeted communications
 
----
-
-## Related Documentation
-
-- [Customer List](/documentation/customers-list) - Browse and search customers
-- [View Customer Details](/documentation/view-customer-details) - Manage individual profiles
-- [Customer Reports](/documentation/customer-reports) - Analytics and insights
-- [Customer Identity](/documentation/customer-identity) - Manage segmentation fields

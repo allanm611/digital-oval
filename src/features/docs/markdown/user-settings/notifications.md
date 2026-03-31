@@ -577,9 +577,3 @@ You can customize your notification settings to control:
 
 ---
 
-## Related Documentation
-
-- [My Profile](/documentation/my-profile) - Manage account information
-- [Settings](/documentation/settings) - Configure system preferences
-- [Campaign Management](./documentation/campaigns/campaigns-list) - Where campaign notifications originate
-- [Offers](./documentation/offers/offer-list) - Where offer notifications originate

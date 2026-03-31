@@ -288,10 +288,3 @@ The form shows all current settings:
 - Review changes in details page
 - Document reason for changes
 
-## Related Documentation
-
-- [Manual Communications Overview](/documentation/manual-communications) - Feature overview
-- [Communications List](/documentation/manual-communications-list) - View all communications
-- [Create Communication](/documentation/create-manual-communication) - How to create
-- [View Communication Details](/documentation/view-manual-communication) - View results
-- [Communication Policies](./documentation/configuration/campaign-communication-policy-list) - Policy reference

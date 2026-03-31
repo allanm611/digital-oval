@@ -417,9 +417,3 @@ resource.action.scope
 
 ---
 
-## Related Documentation
-
-- [Role Management](/documentation/role-management) - Create and manage roles
-- [Assign Permissions](/documentation/assign-permissions) - Assign to users/roles
-- [User Management](./documentation/users-list) - Manage users
-- [Unauthorized](/documentation/unauthorized) - Access denied errors

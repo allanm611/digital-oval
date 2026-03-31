@@ -118,8 +118,3 @@ Consider relationships when planning campaigns.
 - Use objective to guide messaging
 - Track performance against objective
 
-## Related Documentation
-
-- [Campaign Objectives List](/documentation/campaign-objectives-list) - View all objectives
-- [Create Campaign Objective](/documentation/create-campaign-objective) - Add new objectives
-- [Edit Campaign Objective](/documentation/edit-campaign-objective) - Modify objectives

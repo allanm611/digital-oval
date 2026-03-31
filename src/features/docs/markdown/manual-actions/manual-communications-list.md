@@ -172,10 +172,3 @@ For each communication, access detailed reports:
 - Check variable substitution quality
 - Validate channel performance
 
-## Related Documentation
-
-- [Manual Communications Overview](/documentation/manual-communications) - Feature overview
-- [Create Manual Communication](/documentation/create-manual-communication) - How to create
-- [View Communication Details](/documentation/view-manual-communication) - View details
-- [Edit Communication](/documentation/edit-manual-communication) - Edit guide
-- [Manual Rewards](/documentation/manual-rewards) - Apply rewards to customers

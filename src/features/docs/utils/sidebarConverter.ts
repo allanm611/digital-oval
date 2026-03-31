@@ -7,6 +7,10 @@ interface DocusaurusItem {
   label?: string;
   id?: string;
   items?: (string | DocusaurusItem)[];
+  link?: {
+    type: 'doc';
+    id: string;
+  };
 }
 
 export interface SidebarItem {
@@ -32,6 +36,7 @@ export function convertDocusaurusSidebar(items: (string | DocusaurusItem)[]): Si
     if (item.type === 'category') {
       return {
         label: item.label || 'Untitled',
+        path: item.link && item.link.type === 'doc' ? `/${item.link.id}` : undefined,
         items: item.items ? convertDocusaurusSidebar(item.items) : undefined,
       };
     }

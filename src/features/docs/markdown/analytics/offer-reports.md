@@ -177,8 +177,3 @@ Offer Reports track the performance of your promotional offers, discounts, and d
 - Monitor customer response
 - Adjust in real-time
 
-## Related Documentation
-
-- [Overall Dashboard](/documentation/overall-dashboard-performance) - Platform overview
-- [Campaign Reports](/documentation/campaign-reports) - Campaign analytics
-- [Offer Management](./documentation/offers/offer-list) - Create and manage offers

@@ -257,8 +257,3 @@ After editing a channel:
 - Plan maintenance during low-traffic periods
 - Have rollback plan ready
 
-## Related Documentation
-
-- [Communication Channels List](/documentation/communication-channels-list) - View all channels
-- [View Communication Channel](/documentation/view-communication-channel) - See detailed information
-- [Create Communication Channel](/documentation/create-communication-channel) - Add new channels

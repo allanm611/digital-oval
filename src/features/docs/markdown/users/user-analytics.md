@@ -455,9 +455,3 @@ The User Analytics page displays detailed charts, behavioral analytics, and acti
 
 ---
 
-## Related Documentation
-
-- [User List](/documentation/users-list) - Browse users
-- [User Reports](/documentation/user-reports) - User reports
-- [View User Details](/documentation/view-user-details) - User profiles
-- [Permissions](/documentation/permissions) - Permission reference

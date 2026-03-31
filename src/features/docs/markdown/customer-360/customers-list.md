@@ -341,11 +341,3 @@ You can add unlimited custom attributes to store additional customer data:
 - **Solution 3:** Validate phone number format
 - **Solution 4:** Check file size (max 100 MB)
 
----
-
-## Related Documentation
-
-- [Create Customer](/documentation/create-customer) - Add new customers to system
-- [View Customer Details](/documentation/view-customer-details) - Manage individual profiles
-- [Customer Reports](/documentation/customer-reports) - Analytics and insights
-- [Customer Identity](/documentation/customer-identity) - Manage segmentation fields

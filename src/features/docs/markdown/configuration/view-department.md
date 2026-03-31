@@ -101,8 +101,3 @@ View detailed information about a Department including its name, description, as
 - User adoption
 - Product feedback
 
-## Related Documentation
-
-- [Departments List](/documentation/departments-list) - View all departments
-- [Create Department](/documentation/create-department) - Add new departments
-- [Edit Department](/documentation/edit-department) - Modify departments
