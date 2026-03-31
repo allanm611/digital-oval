@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import logo from "../../../assets/logo.png";
 import {
   ArrowRight,
   Target,
@@ -102,7 +103,7 @@ export default function LandingPage() {
               >
                 <div className="w-40 h-40 flex items-center justify-center">
                   <img
-                    src="/src/assets/logo.png"
+                    src={logo}
                     alt="Sentra Logo"
                     className="w-full h-full object-contain"
                   />
@@ -150,7 +151,7 @@ export default function LandingPage() {
               >
                 <div className="w-20 h-20 flex items-center justify-center">
                   <img
-                    src="/src/assets/logo.png"
+                    src={logo}
                     alt="Sentra Logo"
                     className="w-full h-full object-contain"
                   />
