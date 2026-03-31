@@ -10,26 +10,25 @@ export interface DocMetadata {
   path: string;
 }
 
-// Load all markdown files using Vite's glob
-const markdownModules = import.meta.glob<string>('../markdown/**/*.md', { as: 'raw', eager: false });
+// Load all markdown files using Vite's glob - eager load for instant access
+const markdownModules = import.meta.glob<string>('../markdown/**/*.md', { as: 'raw', eager: true });
 
 class DocsService {
   /**
    * Load markdown file by slug
    * Slug format: "intro", "authentication/login", "campaigns/create-campaign", etc.
    */
-  async loadMarkdown(slug: string): Promise<string> {
+  loadMarkdown(slug: string): string {
     try {
       // Normalize slug: "intro" or "authentication/login"
       const path = slug === 'intro' ? '../markdown/intro.md' : `../markdown/${slug}.md`;
 
-      const module = markdownModules[path];
-      if (!module) {
+      const content = markdownModules[path];
+      if (!content) {
         throw new Error(`File not found: ${path}`);
       }
 
-      // Call the module function if it's not eager loaded
-      const content = typeof module === 'function' ? await module() : module;
+      // Eager loaded modules return content directly (synchronous)
       return content || '';
     } catch (error) {
       console.error(`Failed to load markdown for slug: ${slug}`, error);

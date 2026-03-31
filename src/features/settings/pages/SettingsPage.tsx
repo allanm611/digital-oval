@@ -8,6 +8,7 @@ import { useNotificationSettings } from "../../../contexts/NotificationSettingsC
 import { setLanguageSettings } from "../../../shared/services/languageService";
 import { formatDate } from "../../../shared/services/dateService";
 import { tw } from "../../../shared/utils/utils";
+import { colors } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 // import DateFormatter from "../../../shared/components/DateFormatter";
 import countries from "world-countries";
@@ -492,7 +493,8 @@ export default function SettingsPage() {
         <div className="flex flex-row items-center gap-2 md:gap-3 w-full md:w-auto overflow-x-auto whitespace-nowrap">
           <Link
             to="/documentation"
-            className={`px-5 py-2.5 text-sm font-medium ${tw.rounded} text-[#25c2a0] hover:opacity-80 transition-all duration-200 flex-shrink-0 whitespace-nowrap`}
+            className={`px-5 py-2.5 text-base font-medium ${tw.rounded} hover:opacity-80 transition-all duration-200 flex-shrink-0 whitespace-nowrap`}
+            style={{ color: colors.primary.accent }}
             title="View Documentation"
           >
             Documentation

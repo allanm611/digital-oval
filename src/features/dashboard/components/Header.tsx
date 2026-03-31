@@ -1,4 +1,4 @@
-import { User, LogOut, Menu, BookOpen } from "lucide-react";
+import { User, LogOut, Menu } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -206,10 +206,9 @@ export function GuestHeader({
 
             {showUserInfo && (
               <Link
-                to="/documentation/intro"
+                to="/documentation"
                 className="flex items-center space-x-2 text-sm text-white/80 hover:text-white transition-colors p-2 rounded hover:bg-white/10"
               >
-                <BookOpen className="w-4 h-4 flex-shrink-0" />
                 <span className="hidden sm:inline">Documentation</span>
               </Link>
             )}

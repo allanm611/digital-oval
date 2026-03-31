@@ -13,25 +13,23 @@ export interface UseDocumentationReturn {
   reload: () => void;
 }
 
-export function useDocumentation(slug: string): UseDocumentationReturn {
+export function useDocumentation(slug?: string): UseDocumentationReturn {
   const [content, setContent] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadDoc = async () => {
-    setIsLoading(true);
-    setError(null);
+  const loadDoc = () => {
+    if (!slug) return;
 
     try {
-      const markdown = await docsService.loadMarkdown(slug);
-      // Strip frontmatter from markdown
+      // Synchronous load - markdown files are eagerly loaded by Vite
+      const markdown = docsService.loadMarkdown(slug);
       const { body } = docsService.parseFrontmatter(markdown);
       setContent(body);
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load documentation');
       setContent('');
-    } finally {
-      setIsLoading(false);
     }
   };
 
