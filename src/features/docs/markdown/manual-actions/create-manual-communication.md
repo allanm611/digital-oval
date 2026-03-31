@@ -322,8 +322,8 @@ Before confirming, review all settings:
 
 ## Related Documentation
 
-- [Manual Communications Overview](./manual-communications) - Feature overview
-- [Communications List](./manual-communications-list) - View all communications
-- [View Communication Details](./view-manual-communication) - View results
-- [Edit Communication](./edit-manual-communication) - Modify scheduled communications
-- [Communication Policies](../configuration/campaign-communication-policy-list) - Policy reference
+- [Manual Communications Overview](/documentation/manual-communications) - Feature overview
+- [Communications List](/documentation/manual-communications-list) - View all communications
+- [View Communication Details](/documentation/view-manual-communication) - View results
+- [Edit Communication](/documentation/edit-manual-communication) - Modify scheduled communications
+- [Communication Policies](./documentation/configuration/campaign-communication-policy-list) - Policy reference

@@ -162,6 +162,6 @@ Common errors and solutions:
 
 ## Related Documentation
 
-- [Campaign Objectives List](./campaign-objectives-list) - View all objectives
-- [View Campaign Objective](./view-campaign-objective) - See objective details
-- [Create Campaign Objective](./create-campaign-objective) - Add new objectives
+- [Campaign Objectives List](/documentation/campaign-objectives-list) - View all objectives
+- [View Campaign Objective](/documentation/view-campaign-objective) - See objective details
+- [Create Campaign Objective](/documentation/create-campaign-objective) - Add new objectives

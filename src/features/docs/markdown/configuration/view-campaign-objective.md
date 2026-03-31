@@ -56,7 +56,7 @@ View detailed information about a Campaign Objective. This page displays the obj
 ### Edit Objective
 - Click **Edit** button to modify details
 - Update name or description
-- See [Edit Campaign Objective](./edit-campaign-objective)
+- See [Edit Campaign Objective](/documentation/edit-campaign-objective)
 
 ### Delete Objective
 - Click **Delete** button to remove
@@ -120,6 +120,6 @@ Consider relationships when planning campaigns.
 
 ## Related Documentation
 
-- [Campaign Objectives List](./campaign-objectives-list) - View all objectives
-- [Create Campaign Objective](./create-campaign-objective) - Add new objectives
-- [Edit Campaign Objective](./edit-campaign-objective) - Modify objectives
+- [Campaign Objectives List](/documentation/campaign-objectives-list) - View all objectives
+- [Create Campaign Objective](/documentation/create-campaign-objective) - Add new objectives
+- [Edit Campaign Objective](/documentation/edit-campaign-objective) - Modify objectives

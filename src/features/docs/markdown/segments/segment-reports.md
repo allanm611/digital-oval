@@ -37,8 +37,8 @@ Segment Reports provide analytics on segment performance, engagement, and impact
 ## Related Reports
 
 See also:
-- [Campaign Reports](../campaigns/campaign-reports) - Campaign performance metrics
-- [Customer Reports](../analytics/customer-profile-reports) - Customer analytics
+- [Campaign Reports](./documentation/campaigns/campaign-reports) - Campaign performance metrics
+- [Customer Reports](./documentation/analytics/customer-profile-reports) - Customer analytics
 
 ## Demographic Breakdown
 
@@ -78,6 +78,6 @@ Export data for further analysis.
 
 ## Related Pages
 
-- [Create Segment](./create-segment)
-- [View Segment Details](./view-segment-details)
+- [Create Segment](/documentation/create-segment)
+- [View Segment Details](/documentation/view-segment-details)
 - [Campaign Reports](/campaigns/campaign-reports)

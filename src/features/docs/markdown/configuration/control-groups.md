@@ -390,6 +390,6 @@ When creating a campaign, you can optionally assign a control group:
 
 ## Related Documentation
 
-- [Campaign Types](./campaign-types) - Campaign structures using control groups
-- [Campaign Management](../campaigns/campaigns-list) - Creating campaigns with control groups
-- [Campaign Reports](../analytics/campaign-reports) - Analyzing campaign results with control groups
+- [Campaign Types](/documentation/campaign-types) - Campaign structures using control groups
+- [Campaign Management](./documentation/campaigns/campaigns-list) - Creating campaigns with control groups
+- [Campaign Reports](./documentation/analytics/campaign-reports) - Analyzing campaign results with control groups

@@ -95,21 +95,21 @@ Automatic failover sequence:
 
 **All Routes**
 - Navigate to **Configuration → Routes**
-- [See Communication Routes List](./routes-list)
+- [See Communication Routes List](/documentation/routes-list)
 
 **Specific Route Details**
 - Click route name to view configuration
-- [View Route Details](./view-route)
+- [View Route Details](/documentation/view-route)
 
 ### Managing Routes
 
 **Create New Route**
-- [Create Communication Route](./create-route)
+- [Create Communication Route](/documentation/create-route)
 - Connect new provider to channel
 - Configure credentials and settings
 
 **Edit Route**
-- [Edit Communication Route](./edit-route)
+- [Edit Communication Route](/documentation/edit-route)
 - Update provider credentials
 - Adjust configuration
 - Change priority/status
@@ -220,31 +220,31 @@ SMS Routes have special configuration:
 - **Character Encoding** - Handle special characters
 - **Long Messages** - Concatenate messages over 160 chars
 
-See [SMS Routes](./sms-routes) for SMS-specific details.
+See [SMS Routes](/documentation/sms-routes) for SMS-specific details.
 
 ## Related Documentation
 
 ### Route Operations
-- [Routes Overview](./routes-list) - All routes information
-- [Create Route](./create-route) - Add new routes
-- [View Route](./view-route) - See route details
-- [Edit Route](./edit-route) - Modify routes
+- [Routes Overview](/documentation/routes-list) - All routes information
+- [Create Route](/documentation/create-route) - Add new routes
+- [View Route](/documentation/view-route) - See route details
+- [Edit Route](/documentation/edit-route) - Modify routes
 
 ### SMS Specific
-- [SMS Routes Overview](./sms-routes) - SMS routing details
-- [Create SMS Route](./create-sms-route) - Add SMS routes
-- [Edit SMS Route](./edit-sms-route) - Modify SMS routes
-- [View SMS Route](./view-sms-route) - SMS route details
+- [SMS Routes Overview](/documentation/sms-routes) - SMS routing details
+- [Create SMS Route](/documentation/create-sms-route) - Add SMS routes
+- [Edit SMS Route](/documentation/edit-sms-route) - Modify SMS routes
+- [View SMS Route](/documentation/view-sms-route) - SMS route details
 
 ### Related Features
-- [Communication Channels](../communication-channels-list) - Messaging channels
-- [Campaign Communication Policies](../campaign-communication-policy-list) - Policy enforcement
-- [Campaigns](../../campaigns/create-campaign) - Create campaigns using routes
+- [Communication Channels](./documentation/communication-channels-list) - Messaging channels
+- [Campaign Communication Policies](./documentation/campaign-communication-policy-list) - Policy enforcement
+- [Campaigns](./documentation/./documentation/campaigns/create-campaign) - Create campaigns using routes
 
 ## Quick Links
 
-- **View all routes:** [Routes List](./routes-list)
-- **Add new route:** [Create Route](./create-route)
-- **Modify route:** [Edit Route](./edit-route)
-- **Route details:** [View Route](./view-route)
-- **SMS routes:** [SMS Routes](./sms-routes)
+- **View all routes:** [Routes List](/documentation/routes-list)
+- **Add new route:** [Create Route](/documentation/create-route)
+- **Modify route:** [Edit Route](/documentation/edit-route)
+- **Route details:** [View Route](/documentation/view-route)
+- **SMS routes:** [SMS Routes](/documentation/sms-routes)

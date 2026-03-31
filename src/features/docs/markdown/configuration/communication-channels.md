@@ -58,17 +58,17 @@ Your system comes with pre-configured channels:
 - Check status and descriptions
 
 **Create a new channel**
-- [Create Communication Channel](./create-communication-channel)
+- [Create Communication Channel](/documentation/create-communication-channel)
 - Add new SMS, Email, USSD, or Push channels
 - Configure channel-specific settings
 
 **Edit a channel**
-- [Edit Communication Channel](./edit-communication-channel)
+- [Edit Communication Channel](/documentation/edit-communication-channel)
 - Update channel name, description, or status
 - Modify configuration settings
 
 **View channel details**
-- [View Communication Channel](./view-communication-channel)
+- [View Communication Channel](/documentation/view-communication-channel)
 - See complete channel configuration
 - Review associated routes and settings
 
@@ -148,19 +148,19 @@ When creating campaigns:
 ## Related Documentation
 
 ### Channel Operations
-- [Communication Channels List](./communication-channels-list) - View all channels
-- [Create Communication Channel](./create-communication-channel) - Add new channels
-- [Edit Communication Channel](./edit-communication-channel) - Modify channels
-- [View Communication Channel](./view-communication-channel) - See channel details
+- [Communication Channels List](/documentation/communication-channels-list) - View all channels
+- [Create Communication Channel](/documentation/create-communication-channel) - Add new channels
+- [Edit Communication Channel](/documentation/edit-communication-channel) - Modify channels
+- [View Communication Channel](/documentation/view-communication-channel) - See channel details
 
 ### Related Features
-- [SMS Routes](../routes) - Configure SMS gateways
-- [Campaign Communication Policies](../campaign-communication-policy-list) - Manage messaging policies
-- [Campaigns](../../campaigns/create-campaign) - Create campaigns using channels
+- [SMS Routes](./documentation/routes) - Configure SMS gateways
+- [Campaign Communication Policies](./documentation/campaign-communication-policy-list) - Manage messaging policies
+- [Campaigns](./documentation/./documentation/campaigns/create-campaign) - Create campaigns using channels
 
 ## Quick Links
 
-- **Need help?** Check [Communication Channels List](./communication-channels-list) for overview
-- **Creating new?** See [Create Communication Channel](./create-communication-channel) guide
-- **Want to modify?** Follow [Edit Communication Channel](./edit-communication-channel) steps
-- **View details?** Go to [View Communication Channel](./view-communication-channel)
+- **Need help?** Check [Communication Channels List](/documentation/communication-channels-list) for overview
+- **Creating new?** See [Create Communication Channel](/documentation/create-communication-channel) guide
+- **Want to modify?** Follow [Edit Communication Channel](/documentation/edit-communication-channel) steps
+- **View details?** Go to [View Communication Channel](/documentation/view-communication-channel)

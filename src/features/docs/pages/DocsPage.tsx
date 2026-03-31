@@ -5,7 +5,7 @@
  */
 
 import React, { useMemo } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { useAuth } from '../../../contexts/AuthContext';
 import { PermissionGate } from '../../auth/components/PermissionGate';
@@ -77,6 +77,36 @@ export function DocsPage() {
     );
   }
 
+  if (!content) {
+    return (
+      <DocsLayout
+        sidebar={<DocsSidebar items={SIDEBAR_ITEMS} />}
+        header={<DocsHeader />}
+      >
+        <div className={styles.loading}>
+          <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+            <div style={{
+              display: 'inline-block',
+              width: '40px',
+              height: '40px',
+              border: '4px solid #374151',
+              borderTop: '4px solid #25c2a0',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite'
+            }} />
+            <p style={{ color: '#9ca3af', marginTop: '16px' }}>Loading documentation...</p>
+          </div>
+          <style>{`
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          `}</style>
+        </div>
+      </DocsLayout>
+    );
+  }
+
   return (
     <DocsLayout
       sidebar={<DocsSidebar items={SIDEBAR_ITEMS} />}
@@ -122,7 +152,20 @@ export function DocsPage() {
             });
           }}
         >
-          <ReactMarkdown>{content}</ReactMarkdown>
+          <ReactMarkdown
+            components={{
+              a: ({ href, children }) => {
+                // Use React Router Link for internal documentation links
+                if (href && href.startsWith('/documentation/')) {
+                  return <Link to={href}>{children}</Link>;
+                }
+                // Use regular <a> for external links
+                return <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>;
+              }
+            }}
+          >
+            {content}
+          </ReactMarkdown>
         </div>
 
         <DocsNavigation sidebarItems={SIDEBAR_ITEMS} currentSlug={slug} />

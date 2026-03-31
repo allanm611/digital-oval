@@ -511,7 +511,7 @@ Product types are referenced when creating or editing products:
 
 ## Related Documentation
 
-- [Products](../products/products-list) - Creating and managing products
-- [Product Categories](./product-categories) - Organizing products into hierarchical categories
-- [Offers](../offers/offer-list) - Creating offers for specific product types
-- [Product Reports](../analytics/offer-reports) - Reporting and analytics by product type
+- [Products](./documentation/products/products-list) - Creating and managing products
+- [Product Categories](/documentation/product-categories) - Organizing products into hierarchical categories
+- [Offers](./documentation/offers/offer-list) - Creating offers for specific product types
+- [Product Reports](./documentation/analytics/offer-reports) - Reporting and analytics by product type

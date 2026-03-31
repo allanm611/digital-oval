@@ -567,8 +567,8 @@ Before creating account, verify:
 
 ## Related Documentation
 
-- [User List](./users-list) - Manage all users
-- [View User Details](./view-user-details) - View/edit user profiles
-- [Role Management](./role-management) - Manage roles
-- [Assign Permissions](./assign-permissions) - Assign permissions
-- [Permissions](./permissions) - Permission reference
+- [User List](/documentation/users-list) - Manage all users
+- [View User Details](/documentation/view-user-details) - View/edit user profiles
+- [Role Management](/documentation/role-management) - Manage roles
+- [Assign Permissions](/documentation/assign-permissions) - Assign permissions
+- [Permissions](/documentation/permissions) - Permission reference

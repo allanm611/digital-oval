@@ -436,7 +436,7 @@ Detailed table of individual customers with key metrics:
 
 ## Related Documentation
 
-- [Overall Dashboard](./overall-dashboard-performance) - Platform overview
-- [Campaign Reports](./campaign-reports) - Campaign analytics
-- [Offer Reports](./offer-reports) - Offer performance
-- [Customer Management](../customer-360/customers-list) - Customer profiles
+- [Overall Dashboard](/documentation/overall-dashboard-performance) - Platform overview
+- [Campaign Reports](/documentation/campaign-reports) - Campaign analytics
+- [Offer Reports](/documentation/offer-reports) - Offer performance
+- [Customer Management](./documentation/customer-360/customers-list) - Customer profiles

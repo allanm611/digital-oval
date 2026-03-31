@@ -61,7 +61,7 @@ The offers are displayed in a table with the following columns:
 
 Each offer row has an actions menu with available buttons based on the offer's status:
 
-**View** - Opens the [Offer Details](./view-offer-details) page
+**View** - Opens the [Offer Details](/documentation/view-offer-details) page
 
 **Edit** - Allows you to modify offer configuration (available based on status and permissions)
 

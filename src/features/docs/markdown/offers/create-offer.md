@@ -30,7 +30,7 @@ Configure the essential details of your offer.
 - Options: Data, Voice, SMS, Combo, Voucher, Loyalty, Discount, Bundle, Bonus, Other
 
 **Catalog*** (required)
-- Select which [offer catalog](./offer-catalog) to organize this offer under
+- Select which [offer catalog](/documentation/offer-catalog) to organize this offer under
 - Use catalogs to group related offers
 
 **Max Usage Per Customer** (optional)
@@ -116,6 +116,6 @@ After creating an offer:
 - **Draft** - If you saved as draft (can be edited)
 - **Pending Approval** - If you submitted for approval (awaiting review)
 
-See [View Offer Details](./view-offer-details) to manage your offer after creation.
+See [View Offer Details](/documentation/view-offer-details) to manage your offer after creation.
 
 

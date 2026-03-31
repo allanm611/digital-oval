@@ -95,7 +95,7 @@ Click the **View** button or communication name to:
 - Check variable substitution
 - See execution summary
 
-See [View Manual Communication](./view-manual-communication)
+See [View Manual Communication](/documentation/view-manual-communication)
 
 ### Edit Communication
 Click the **Edit** button to:
@@ -107,7 +107,7 @@ Click the **Edit** button to:
 
 **Note:** Can only edit scheduled communications that haven't executed
 
-See [Edit Manual Communication](./edit-manual-communication)
+See [Edit Manual Communication](/documentation/edit-manual-communication)
 
 ### Delete Communication
 Click the **Delete** button to:
@@ -174,8 +174,8 @@ For each communication, access detailed reports:
 
 ## Related Documentation
 
-- [Manual Communications Overview](./manual-communications) - Feature overview
-- [Create Manual Communication](./create-manual-communication) - How to create
-- [View Communication Details](./view-manual-communication) - View details
-- [Edit Communication](./edit-manual-communication) - Edit guide
-- [Manual Rewards](./manual-rewards) - Apply rewards to customers
+- [Manual Communications Overview](/documentation/manual-communications) - Feature overview
+- [Create Manual Communication](/documentation/create-manual-communication) - How to create
+- [View Communication Details](/documentation/view-manual-communication) - View details
+- [Edit Communication](/documentation/edit-manual-communication) - Edit guide
+- [Manual Rewards](/documentation/manual-rewards) - Apply rewards to customers

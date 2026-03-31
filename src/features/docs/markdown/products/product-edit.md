@@ -34,7 +34,7 @@ The following fields can be modified:
 
 ## Editing a Product
 
-1. Click the **Edit** button on the [Product List](./products-list) or [Product Details](./view-product-details) page
+1. Click the **Edit** button on the [Product List](/documentation/products-list) or [Product Details](/documentation/view-product-details) page
 2. Modify the desired fields
 3. Click **Save Product** to apply the changes
 
@@ -42,6 +42,6 @@ The following fields can be modified:
 ## Next Steps
 
 After editing a product, you can:
-- View the updated product details on the [Product Details](./view-product-details) page
-- Return to the [Product List](./products-list) to manage other products
+- View the updated product details on the [Product Details](/documentation/view-product-details) page
+- Return to the [Product List](/documentation/products-list) to manage other products
 

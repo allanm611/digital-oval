@@ -21,7 +21,7 @@ Configure all basic campaign details, goals, organizational structure, and timel
 **Campaign Catalog** (Required)
 - Select which catalog this campaign belongs to
 - Catalogs organize campaigns by category or type
-- See [Campaign Catalogs](../configuration/campaign-catalogs) for more information
+- See [Campaign Catalogs](./documentation/configuration/campaign-catalogs) for more information
 
 
 **Line of Business** (Optional)
@@ -46,7 +46,7 @@ Configure all basic campaign details, goals, organizational structure, and timel
 
 **Primary Objective** (Required)
 - Define the main goal of your campaign
-- See [Campaign Objectives](../configuration/campaign-objectives) for available objective types
+- See [Campaign Objectives](./documentation/configuration/campaign-objectives) for available objective types
 
 
 **Campaign Priority** (Optional)
@@ -101,7 +101,7 @@ Select your target audience segments and configure how they interact with your c
 - **Round Robin** - Deliver different offers sequentially to a single segment
 - **Multiple Level** - Apply conditional logic to deliver different offers based on criteria
 
-*For more information about campaign types, see [Campaign Types](../configuration/campaign-types-list)*
+*For more information about campaign types, see [Campaign Types](./documentation/configuration/campaign-types-list)*
 
 #### Segment Selection
 
@@ -388,6 +388,6 @@ Once you've created your campaign:
 1. **Approval Process** - Campaign goes to approval queue
 2. **Approver Review** - Assigned approvers review and approve/reject
 3. **Ready to Execute** - Once approved, you can run the campaign
-4. **Monitor Performance** - Track results on the [Campaign Reports](./campaign-reports) page -->
+4. **Monitor Performance** - Track results on the [Campaign Reports](/documentation/campaign-reports) page -->
 
 

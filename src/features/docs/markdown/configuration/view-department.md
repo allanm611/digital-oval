@@ -56,7 +56,7 @@ View detailed information about a Department including its name, description, as
 ### Edit Department
 - Click **Edit** button to modify
 - Update name or description
-- See [Edit Department](./edit-department)
+- See [Edit Department](/documentation/edit-department)
 
 ### Delete Department
 - Click **Delete** button to remove
@@ -103,6 +103,6 @@ View detailed information about a Department including its name, description, as
 
 ## Related Documentation
 
-- [Departments List](./departments-list) - View all departments
-- [Create Department](./create-department) - Add new departments
-- [Edit Department](./edit-department) - Modify departments
+- [Departments List](/documentation/departments-list) - View all departments
+- [Create Department](/documentation/create-department) - Add new departments
+- [Edit Department](/documentation/edit-department) - Modify departments

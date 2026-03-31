@@ -236,7 +236,7 @@ If your system supports third-party integrations:
 
 ### Notification Preferences
 
-For detailed notification settings, see [Notifications](./notifications)
+For detailed notification settings, see [Notifications](/documentation/notifications)
 
 Quick settings available on My Profile:
 - Enable/disable email notifications
@@ -355,6 +355,6 @@ Quick settings available on My Profile:
 
 ## Related Documentation
 
-- [Notifications](./notifications) - Manage how you receive updates
-- [Settings](./settings) - System-wide preferences and settings
-- [User Management](../users/users-list) - Administer other user accounts (admins only)
+- [Notifications](/documentation/notifications) - Manage how you receive updates
+- [Settings](/documentation/settings) - System-wide preferences and settings
+- [User Management](./documentation/users/users-list) - Administer other user accounts (admins only)

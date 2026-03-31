@@ -259,6 +259,6 @@ After editing a channel:
 
 ## Related Documentation
 
-- [Communication Channels List](./communication-channels-list) - View all channels
-- [View Communication Channel](./view-communication-channel) - See detailed information
-- [Create Communication Channel](./create-communication-channel) - Add new channels
+- [Communication Channels List](/documentation/communication-channels-list) - View all channels
+- [View Communication Channel](/documentation/view-communication-channel) - See detailed information
+- [Create Communication Channel](/documentation/create-communication-channel) - Add new channels

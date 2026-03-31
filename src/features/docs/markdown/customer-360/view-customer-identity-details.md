@@ -462,7 +462,7 @@ If multiple similar fields exist:
 
 ## Related Documentation
 
-- [Customer Identity](./customer-identity) - Overview of all fields
-- [Create Customer](./create-customer) - Add customer data
-- [Segments](../segments/segments-list) - Use fields in segments
-- [Customer Reports](./customer-reports) - Analyze customer data
+- [Customer Identity](/documentation/customer-identity) - Overview of all fields
+- [Create Customer](/documentation/create-customer) - Add customer data
+- [Segments](./documentation/segments/segments-list) - Use fields in segments
+- [Customer Reports](/documentation/customer-reports) - Analyze customer data

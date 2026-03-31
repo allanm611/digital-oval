@@ -75,7 +75,7 @@ Click the eye icon next to each password field to toggle visibility between hidd
 ## Next Steps
 
 After successfully resetting your password:
-- You will be redirected to the [login page](./login)
+- You will be redirected to the [login page](/documentation/login)
 - Log in with your email address and new password
 - You will have access to your account
 

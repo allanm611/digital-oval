@@ -181,12 +181,12 @@ Your system includes five pre-configured departments:
 ## Related Documentation
 
 ### Department Operations
-- [Departments List](./departments-list) - View all departments
-- [Create Department](./create-department) - Add new departments
-- [View Department](./view-department) - See department details
-- [Edit Department](./edit-department) - Modify departments
+- [Departments List](/documentation/departments-list) - View all departments
+- [Create Department](/documentation/create-department) - Add new departments
+- [View Department](/documentation/view-department) - See department details
+- [Edit Department](/documentation/edit-department) - Modify departments
 
 ### Related Features
-- [Campaigns](../../campaigns/create-campaign) - Create campaigns using departments
-- [Line of Business](../line-of-business-list) - Business line configuration
-- [Campaign Objectives](../campaign-objectives-list) - Campaign goals
+- [Campaigns](./documentation/./documentation/campaigns/create-campaign) - Create campaigns using departments
+- [Line of Business](./documentation/line-of-business-list) - Business line configuration
+- [Campaign Objectives](./documentation/campaign-objectives-list) - Campaign goals

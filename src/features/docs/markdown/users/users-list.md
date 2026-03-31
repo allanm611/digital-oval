@@ -454,8 +454,8 @@ Additional actions may include:
 
 ## Related Documentation
 
-- [Create User](./create-user) - Add new users to system
-- [View User Details](./view-user-details) - Manage individual user profiles
-- [Role Management](./role-management) - Manage user roles
-- [Permissions](./permissions) - Configure permissions system
-- [Assign Permissions](./assign-permissions) - Assign permissions to users
+- [Create User](/documentation/create-user) - Add new users to system
+- [View User Details](/documentation/view-user-details) - Manage individual user profiles
+- [Role Management](/documentation/role-management) - Manage user roles
+- [Permissions](/documentation/permissions) - Configure permissions system
+- [Assign Permissions](/documentation/assign-permissions) - Assign permissions to users

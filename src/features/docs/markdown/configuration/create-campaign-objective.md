@@ -129,7 +129,7 @@ Create clear, descriptive objective names:
 ## Next Steps
 
 After creating an objective:
-1. [View the objective details](./view-campaign-objective)
-2. [Edit the objective](./edit-campaign-objective) if needed
+1. [View the objective details](/documentation/view-campaign-objective)
+2. [Edit the objective](/documentation/edit-campaign-objective) if needed
 3. Use the objective when creating campaigns
 4. Track campaign performance by objective

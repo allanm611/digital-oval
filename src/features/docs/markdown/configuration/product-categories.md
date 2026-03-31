@@ -119,6 +119,6 @@ Each category card shows the total number of products, including the count of ac
 
 ## Related Documentation
 
-- [Product Catalog](./product-catalog) - Main product catalog management
-- [Products](../products/products-list) - Creating and managing individual products
-- [Product Types](./product-types) - Categorizing products by type
+- [Product Catalog](/documentation/product-catalog) - Main product catalog management
+- [Products](./documentation/products/products-list) - Creating and managing individual products
+- [Product Types](/documentation/product-types) - Categorizing products by type

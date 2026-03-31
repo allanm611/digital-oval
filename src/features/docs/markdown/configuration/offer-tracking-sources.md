@@ -649,7 +649,7 @@ Metrics are available in:
 
 ## Related Documentation
 
-- [Offer Management](../offers/offer-list) - Creating offers with tracking
-- [Offer Reports](../analytics/offer-reports) - Viewing tracked metrics
-- [Campaign Performance](../analytics/campaign-reports) - Campaign-level tracking
-- [Offer Types](./offer-types) - Offer categorization and classification
+- [Offer Management](./documentation/offers/offer-list) - Creating offers with tracking
+- [Offer Reports](./documentation/analytics/offer-reports) - Viewing tracked metrics
+- [Campaign Performance](./documentation/analytics/campaign-reports) - Campaign-level tracking
+- [Offer Types](/documentation/offer-types) - Offer categorization and classification

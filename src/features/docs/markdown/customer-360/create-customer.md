@@ -603,8 +603,8 @@ The system validates:
 ## Next Steps
 
 After creating customers:
-- [View Customer Details](./view-customer-details) - View and manage profiles
-- [Customer Reports](./customer-reports) - Track customer metrics
+- [View Customer Details](/documentation/view-customer-details) - View and manage profiles
+- [Customer Reports](/documentation/customer-reports) - Track customer metrics
 - Create Segments - Organize customers for campaigns
 - Launch Campaigns - Send targeted communications
 
@@ -612,7 +612,7 @@ After creating customers:
 
 ## Related Documentation
 
-- [Customer List](./customers-list) - Browse and search customers
-- [View Customer Details](./view-customer-details) - Manage individual profiles
-- [Customer Reports](./customer-reports) - Analytics and insights
-- [Customer Identity](./customer-identity) - Manage segmentation fields
+- [Customer List](/documentation/customers-list) - Browse and search customers
+- [View Customer Details](/documentation/view-customer-details) - Manage individual profiles
+- [Customer Reports](/documentation/customer-reports) - Analytics and insights
+- [Customer Identity](/documentation/customer-identity) - Manage segmentation fields

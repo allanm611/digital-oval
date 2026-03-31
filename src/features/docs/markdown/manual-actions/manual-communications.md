@@ -235,9 +235,9 @@ The Manual Communications list displays:
 
 ## Related Documentation
 
-- [Manual Communications List](./manual-communications-list) - View all communications
-- [Create Manual Communication](./create-manual-communication) - Detailed creation guide
-- [View Communication Details](./view-manual-communication) - Details page reference
-- [Edit Communication](./edit-manual-communication) - Modification guide
-- [Manual Rewards](./manual-rewards) - Apply rewards to customers
-- [Communication Policies](../configuration/campaign-communication-policy-list) - Policy configuration
+- [Manual Communications List](/documentation/manual-communications-list) - View all communications
+- [Create Manual Communication](/documentation/create-manual-communication) - Detailed creation guide
+- [View Communication Details](/documentation/view-manual-communication) - Details page reference
+- [Edit Communication](/documentation/edit-manual-communication) - Modification guide
+- [Manual Rewards](/documentation/manual-rewards) - Apply rewards to customers
+- [Communication Policies](./documentation/configuration/campaign-communication-policy-list) - Policy configuration

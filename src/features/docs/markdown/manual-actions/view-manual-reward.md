@@ -217,7 +217,7 @@ Click **Edit** button to:
 
 **Availability:** Only for scheduled rewards
 
-See [Edit Manual Reward](./edit-manual-reward)
+See [Edit Manual Reward](/documentation/edit-manual-reward)
 
 ### Retry Failed Reward
 For failed rewards:
@@ -338,8 +338,8 @@ For file-uploaded audiences:
 
 ## Related Documentation
 
-- [Manual Rewards Overview](./manual-rewards) - Feature overview
-- [Rewards List](./manual-rewards-list) - View all rewards
-- [Create Reward](./create-manual-reward) - How to create
-- [Edit Reward](./edit-manual-reward) - Edit guide
-- [Manual Communications](./manual-communications) - Send messages to customers
+- [Manual Rewards Overview](/documentation/manual-rewards) - Feature overview
+- [Rewards List](/documentation/manual-rewards-list) - View all rewards
+- [Create Reward](/documentation/create-manual-reward) - How to create
+- [Edit Reward](/documentation/edit-manual-reward) - Edit guide
+- [Manual Communications](/documentation/manual-communications) - Send messages to customers

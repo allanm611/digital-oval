@@ -542,8 +542,8 @@ View and manage individual user profiles with complete access to their informati
 
 ## Related Documentation
 
-- [User List](./users-list) - Manage all users
-- [Create User](./create-user) - Add new users
-- [Role Management](./role-management) - Manage roles
-- [Permissions](./permissions) - Permission reference
-- [Assign Permissions](./assign-permissions) - Assign permissions
+- [User List](/documentation/users-list) - Manage all users
+- [Create User](/documentation/create-user) - Add new users
+- [Role Management](/documentation/role-management) - Manage roles
+- [Permissions](/documentation/permissions) - Permission reference
+- [Assign Permissions](/documentation/assign-permissions) - Assign permissions

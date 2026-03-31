@@ -99,7 +99,7 @@ Click the **View** button or reward name to:
 - Check per-customer results
 - See notification history
 
-See [View Manual Reward](./view-manual-reward)
+See [View Manual Reward](/documentation/view-manual-reward)
 
 ### Edit Reward
 Click the **Edit** button to:
@@ -110,7 +110,7 @@ Click the **Edit** button to:
 
 **Note:** Can only edit scheduled rewards that haven't been applied
 
-See [Edit Manual Reward](./edit-manual-reward)
+See [Edit Manual Reward](/documentation/edit-manual-reward)
 
 ### Delete Reward
 Click the **Delete** button to:
@@ -223,8 +223,8 @@ For each reward, access comprehensive reports:
 
 ## Related Documentation
 
-- [Manual Rewards Overview](./manual-rewards) - Feature overview
-- [Create Manual Reward](./create-manual-reward) - How to create
-- [View Reward Details](./view-manual-reward) - View results
-- [Edit Reward](./edit-manual-reward) - Edit guide
-- [Manual Communications](./manual-communications) - Send messages to customers
+- [Manual Rewards Overview](/documentation/manual-rewards) - Feature overview
+- [Create Manual Reward](/documentation/create-manual-reward) - How to create
+- [View Reward Details](/documentation/view-manual-reward) - View results
+- [Edit Reward](/documentation/edit-manual-reward) - Edit guide
+- [Manual Communications](/documentation/manual-communications) - Send messages to customers

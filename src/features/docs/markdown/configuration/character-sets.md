@@ -661,7 +661,7 @@ Fill in the following fields:
 
 ## Related Documentation
 
-- [Languages](./languages) - Language configuration with locale-specific formatting
-- [Creative Templates](./creative-templates) - Message templates with character considerations
-- [Campaigns](../campaigns/campaigns-list) - Creating campaigns with character set selection
-- [Communication Channels](./communication-channels) - Channel-specific character support
+- [Languages](/documentation/languages) - Language configuration with locale-specific formatting
+- [Creative Templates](/documentation/creative-templates) - Message templates with character considerations
+- [Campaigns](./documentation/campaigns/campaigns-list) - Creating campaigns with character set selection
+- [Communication Channels](/documentation/communication-channels) - Channel-specific character support

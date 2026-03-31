@@ -509,6 +509,6 @@ Manual rewards are created with specific reward types:
 
 ## Related Documentation
 
-- [Manual Rewards](../manual-actions/manual-rewards) - Creating and managing manual rewards
-- [Offers](../offers/offer-list) - Using rewards in offer configuration
-- [Reward Reports](../analytics/offer-reports) - Reporting and analytics by reward type
+- [Manual Rewards](./documentation/manual-actions/manual-rewards) - Creating and managing manual rewards
+- [Offers](./documentation/offers/offer-list) - Using rewards in offer configuration
+- [Reward Reports](./documentation/analytics/offer-reports) - Reporting and analytics by reward type

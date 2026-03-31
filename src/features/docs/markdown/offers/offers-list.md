@@ -16,16 +16,16 @@ The Offer section is your hub for managing all customer offers and promotional d
 ## Getting Started
 
 ### Creating an Offer
-To create a new offer, see the [Create Offer](./create-offer) guide for a complete step-by-step walkthrough.
+To create a new offer, see the [Create Offer](/documentation/create-offer) guide for a complete step-by-step walkthrough.
 
 ### Viewing Offer Details
-To view, manage, and track individual offers, see [View Offer Details](./view-offer-details).
+To view, manage, and track individual offers, see [View Offer Details](/documentation/view-offer-details).
 
 ### Monitoring Performance
-To track offer performance and redemption metrics, see [Offer Reports](./offer-reports).
+To track offer performance and redemption metrics, see [Offer Reports](/documentation/offer-reports).
 
 ### Offer Catalogs
-To organize offers into catalogs, see [Offer Catalog](./offer-catalog).
+To organize offers into catalogs, see [Offer Catalog](/documentation/offer-catalog).
 
 
 ## Offer Status
@@ -48,6 +48,6 @@ To organize offers into catalogs, see [Offer Catalog](./offer-catalog).
 
 ## Need Help?
 
-- For creating offers, see [Create Offer](./create-offer)
-- For managing offers, see [View Offer Details](./view-offer-details)
-- For performance tracking, see [Offer Reports](./offer-reports)
+- For creating offers, see [Create Offer](/documentation/create-offer)
+- For managing offers, see [View Offer Details](/documentation/view-offer-details)
+- For performance tracking, see [Offer Reports](/documentation/offer-reports)

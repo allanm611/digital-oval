@@ -152,7 +152,7 @@ Click **Edit** button to:
 
 **Availability:** Only for scheduled communications
 
-See [Edit Manual Communication](./edit-manual-communication)
+See [Edit Manual Communication](/documentation/edit-manual-communication)
 
 ### Retry Failed Communication
 For failed communications:
@@ -272,8 +272,8 @@ Review any test failures:
 
 ## Related Documentation
 
-- [Manual Communications Overview](./manual-communications) - Feature overview
-- [Communications List](./manual-communications-list) - View all communications
-- [Create Communication](./create-manual-communication) - How to create
-- [Edit Communication](./edit-manual-communication) - Edit guide
-- [Communication Policies](../configuration/campaign-communication-policy-list) - Policy reference
+- [Manual Communications Overview](/documentation/manual-communications) - Feature overview
+- [Communications List](/documentation/manual-communications-list) - View all communications
+- [Create Communication](/documentation/create-manual-communication) - How to create
+- [Edit Communication](/documentation/edit-manual-communication) - Edit guide
+- [Communication Policies](./documentation/configuration/campaign-communication-policy-list) - Policy reference

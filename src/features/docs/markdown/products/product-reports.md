@@ -37,8 +37,8 @@ Product Reports provide analytics on product performance, sales, and customer en
 ## Related Reports
 
 See also:
-- [Campaign Reports](../campaigns/campaign-reports) - Campaign performance metrics
-- [Offer Reports](../analytics/offer-reports) - Offer performance
+- [Campaign Reports](./documentation/campaigns/campaign-reports) - Campaign performance metrics
+- [Offer Reports](./documentation/analytics/offer-reports) - Offer performance
 
 ## Filtering & Analysis
 
@@ -66,6 +66,6 @@ Export data for further analysis.
 
 ## Related Pages
 
-- [Create Product](./create-product)
-- [View Product Details](./view-product-details)
+- [Create Product](/documentation/create-product)
+- [View Product Details](/documentation/view-product-details)
 - [Campaign Reports](/campaigns/campaign-reports)

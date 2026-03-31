@@ -125,6 +125,6 @@ Modify an existing Department to update its name, description, or other details.
 
 ## Related Documentation
 
-- [Departments List](./departments-list) - View all departments
-- [View Department](./view-department) - See details
-- [Create Department](./create-department) - Add new departments
+- [Departments List](/documentation/departments-list) - View all departments
+- [View Department](/documentation/view-department) - See details
+- [Create Department](/documentation/create-department) - Add new departments

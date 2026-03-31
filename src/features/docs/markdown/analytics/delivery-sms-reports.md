@@ -294,6 +294,6 @@ SMS Delivery Reports track the performance and health of your SMS messaging chan
 
 ## Related Documentation
 
-- [Overall Dashboard](./overall-dashboard-performance) - Platform overview
-- [Email Delivery Reports](./delivery-email-reports) - Email metrics
-- [Campaign Reports](./campaign-reports) - Campaign analytics
+- [Overall Dashboard](/documentation/overall-dashboard-performance) - Platform overview
+- [Email Delivery Reports](/documentation/delivery-email-reports) - Email metrics
+- [Campaign Reports](/documentation/campaign-reports) - Campaign analytics

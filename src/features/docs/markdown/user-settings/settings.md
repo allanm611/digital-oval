@@ -185,7 +185,7 @@ Control how your data is used:
 
 ## Notification Settings
 
-For detailed notification configuration, see [Notifications](./notifications)
+For detailed notification configuration, see [Notifications](/documentation/notifications)
 
 Quick settings available here:
 
@@ -502,6 +502,6 @@ Create token for API access:
 
 ## Related Documentation
 
-- [My Profile](./my-profile) - Manage your account information
-- [Notifications](./notifications) - Configure notification preferences
-- [User Management](../users/users-list) - Administer user accounts (admins only)
+- [My Profile](/documentation/my-profile) - Manage your account information
+- [Notifications](/documentation/notifications) - Configure notification preferences
+- [User Management](./documentation/users/users-list) - Administer user accounts (admins only)

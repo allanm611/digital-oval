@@ -569,7 +569,7 @@ When creating customer segments:
 
 ## Related Documentation
 
-- [Customer List](./customers-list) - Browse all customers
-- [Create Customer](./create-customer) - Add customers
-- [View Customer Details](./view-customer-details) - Manage profiles
-- [Segments](../segments/segments-list) - Create customer segments
+- [Customer List](/documentation/customers-list) - Browse all customers
+- [Create Customer](/documentation/create-customer) - Add customers
+- [View Customer Details](/documentation/view-customer-details) - Manage profiles
+- [Segments](./documentation/segments/segments-list) - Create customer segments

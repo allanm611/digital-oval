@@ -708,7 +708,7 @@ Fill in the following fields:
 
 ## Related Documentation
 
-- [Sender IDs](./sender-ids) - Configure SMS sender identifiers
-- [Communication Channels](./communication-channels) - SMS channel configuration
-- [Routes](./routes) - General routing configuration
-- [Campaigns](../campaigns/campaigns-list) - Create campaigns with SMS
+- [Sender IDs](/documentation/sender-ids) - Configure SMS sender identifiers
+- [Communication Channels](/documentation/communication-channels) - SMS channel configuration
+- [Routes](/documentation/routes) - General routing configuration
+- [Campaigns](./documentation/campaigns/campaigns-list) - Create campaigns with SMS

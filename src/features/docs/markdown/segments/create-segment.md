@@ -77,9 +77,9 @@ When you're ready:
 ## Next Steps
 
 After creating a segment, you can:
-- View segment details on the [Segment List](./segments-list)
-- Edit the segment using [Edit Segment](./segment-edit)
-- View detailed information on the [Segment Details](./view-segment-details) page
+- View segment details on the [Segment List](/documentation/segments-list)
+- Edit the segment using [Edit Segment](/documentation/segment-edit)
+- View detailed information on the [Segment Details](/documentation/view-segment-details) page
 - Compute segment membership to get accurate audience size
 
 

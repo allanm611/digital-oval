@@ -528,7 +528,7 @@ When a campaign is prepared to send messages:
 
 ## Related Documentation
 
-- [Communication Policies](./campaign-communication-policy) - DND integrated with communication policies
-- [Campaigns](../campaigns/campaigns-list) - Using DND in campaign execution
-- [Campaign Reports](../analytics/campaign-reports) - DND exclusions in campaign metrics
-- [Customer Management](../customer-360/customers-list) - Customer preference management
+- [Communication Policies](/documentation/campaign-communication-policy) - DND integrated with communication policies
+- [Campaigns](./documentation/campaigns/campaigns-list) - Using DND in campaign execution
+- [Campaign Reports](./documentation/analytics/campaign-reports) - DND exclusions in campaign metrics
+- [Customer Management](./documentation/customer-360/customers-list) - Customer preference management

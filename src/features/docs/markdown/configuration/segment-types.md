@@ -527,7 +527,7 @@ Segment types are referenced when creating or editing segments:
 
 ## Related Documentation
 
-- [Segments](../segments/segments-list) - Creating and managing customer segments
-- [Segment Catalog](./segment-catalog) - Organizing segments into catalogs
-- [Campaigns](../campaigns/campaigns-list) - Creating campaigns targeting segments
-- [Segment Analytics](../analytics/customer-profile-reports) - Reporting and analytics by segment type
+- [Segments](./documentation/segments/segments-list) - Creating and managing customer segments
+- [Segment Catalog](/documentation/segment-catalog) - Organizing segments into catalogs
+- [Campaigns](./documentation/campaigns/campaigns-list) - Creating campaigns targeting segments
+- [Segment Analytics](./documentation/analytics/customer-profile-reports) - Reporting and analytics by segment type

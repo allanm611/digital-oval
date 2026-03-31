@@ -309,8 +309,8 @@ The top section displays critical business metrics at a glance:
 
 ## Related Documentation
 
-- [Campaign Reports](./campaign-reports) - Detailed campaign metrics
-- [Customer Profile Reports](./customer-profile-reports) - Customer analytics
-- [Offer Reports](./offer-reports) - Offer performance
-- [Delivery Reports](./delivery-sms-reports) - SMS delivery metrics
-- [Email Delivery Reports](./delivery-email-reports) - Email metrics
+- [Campaign Reports](/documentation/campaign-reports) - Detailed campaign metrics
+- [Customer Profile Reports](/documentation/customer-profile-reports) - Customer analytics
+- [Offer Reports](/documentation/offer-reports) - Offer performance
+- [Delivery Reports](/documentation/delivery-sms-reports) - SMS delivery metrics
+- [Email Delivery Reports](/documentation/delivery-email-reports) - Email metrics

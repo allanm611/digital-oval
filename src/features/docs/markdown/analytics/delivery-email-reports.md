@@ -343,6 +343,6 @@ Email Delivery Reports track the health and performance of your email channel. M
 
 ## Related Documentation
 
-- [Overall Dashboard](./overall-dashboard-performance) - Platform overview
-- [SMS Delivery Reports](./delivery-sms-reports) - SMS metrics
-- [Campaign Reports](./campaign-reports) - Campaign analytics
+- [Overall Dashboard](/documentation/overall-dashboard-performance) - Platform overview
+- [SMS Delivery Reports](/documentation/delivery-sms-reports) - SMS metrics
+- [Campaign Reports](/documentation/campaign-reports) - Campaign analytics

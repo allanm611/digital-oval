@@ -599,7 +599,7 @@ Fill in the following fields:
 
 ## Related Documentation
 
-- [SMS Routes](./sms-routes) - Route configuration for SMS delivery
-- [Communication Channels](./communication-channels) - Multi-channel communication setup
-- [Campaigns](../campaigns/campaigns-list) - Creating campaigns with sender IDs
-- [Manual Communications](../manual-actions/manual-communications) - Manual message sending
+- [SMS Routes](/documentation/sms-routes) - Route configuration for SMS delivery
+- [Communication Channels](/documentation/communication-channels) - Multi-channel communication setup
+- [Campaigns](./documentation/campaigns/campaigns-list) - Creating campaigns with sender IDs
+- [Manual Communications](./documentation/manual-actions/manual-communications) - Manual message sending

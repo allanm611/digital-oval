@@ -42,7 +42,7 @@ Enable the "Remember Me" checkbox to keep your login session active longer on th
 
 ### Forgot Password?
 
-If you've forgotten your password, see the [Password Reset](./password-reset) page for detailed instructions:
+If you've forgotten your password, see the [Password Reset](/documentation/password-reset) page for detailed instructions:
 
 1. Click the **Forgot Password?** link
 2. Enter your email address in the modal
@@ -70,7 +70,7 @@ If login fails:
 
 ## New Users
 
-If you don't have an account, click **Request Account** to start the [account request process](./registration).
+If you don't have an account, click **Request Account** to start the [account request process](/documentation/registration).
 
 <!-- ---
 

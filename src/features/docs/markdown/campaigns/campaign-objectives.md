@@ -9,7 +9,7 @@ Campaign Objectives define the business goals and purposes for your campaigns. E
 
 When creating a campaign, you must select a **Primary Objective**:
 
-1. Go to [Create Campaign](./create-campaign) → **Step 1: Definition**
+1. Go to [Create Campaign](/documentation/create-campaign) → **Step 1: Definition**
 2. In the "Primary Objective" field, select from your available options
 3. Choose the objective that best matches your campaign goal
 4. Continue with campaign configuration

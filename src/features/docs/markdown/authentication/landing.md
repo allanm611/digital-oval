@@ -13,7 +13,7 @@ The hero section displays:
 - Platform branding and logo
 - Platform name and tagline
 - Benefits list highlighting key platform advantages
-- Call-to-action buttons for [Login](./login) and [Request Account](./registration)
+- Call-to-action buttons for [Login](/documentation/login) and [Request Account](/documentation/registration)
 
 
 ## Platform Features

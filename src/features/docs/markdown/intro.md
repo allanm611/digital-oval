@@ -11,10 +11,10 @@ Welcome to the complete guide for the **Sentra Customer Value Management (CVM)**
 
 Get up and running quickly with these essential guides:
 
-- **[Authentication](./authentication/login)** - Log in and manage your account
-- **[Campaigns](./campaigns/campaigns-list)** - Create and launch your first campaign
-- **[Customer 360](./customer-360/customers-list)** - Explore unified customer profiles
-- **[Reports & Analytics](./analytics/overall-dashboard-performance)** - Monitor key metrics
+- **[Authentication](/documentation/authentication/login)** - Log in and manage your account
+- **[Campaigns](/documentation/campaigns/campaigns-list)** - Create and launch your first campaign
+- **[Customer 360](/documentation/customer-360/customers-list)** - Explore unified customer profiles
+- **[Reports & Analytics](/documentation/analytics/overall-dashboard-performance)** - Monitor key metrics
 
 
 ## Documentation Structure
@@ -35,103 +35,103 @@ Each section contains detailed guides, best practices, and step-by-step instruct
 ### Campaign Management
 Manage all aspects of customer campaigns from creation to execution.
 
-- [All Campaigns](./campaigns/campaigns-list) - View and manage your campaigns
-- [Campaign Objectives](./campaigns/campaign-objectives) - Define campaign goals
-- [Campaign Catalog](./campaigns/campaign-catalog) - Browse campaign categories
-- [Campaign Types](./campaigns/campaign-types) - Understand different campaign types
+- [All Campaigns](/documentation/campaigns/campaigns-list) - View and manage your campaigns
+- [Campaign Objectives](/documentation/campaigns/campaign-objectives) - Define campaign goals
+- [Campaign Catalog](/documentation/campaigns/campaign-catalog) - Browse campaign categories
+- [Campaign Types](/documentation/campaigns/campaign-types) - Understand different campaign types
 
 ### Offer Management
 Manage and organize offers for targeted customer campaigns.
 
-- [All Offers](./offers/offers-list) - Manage your offers
-- [Offer Catalog](./offers/offer-catalog) - Browse offer categories
+- [All Offers](/documentation/offers/offers-list) - Manage your offers
+- [Offer Catalog](/documentation/offers/offer-catalog) - Browse offer categories
 
 ### Product Management
 Organize and manage your product catalog.
 
-- [All Products](./products/products-list) - View products
+- [All Products](/documentation/products/products-list) - View products
 
 ### Segment Management
 Build and manage customer segments for targeted campaigns.
 
-- [All Segments](./segments/segments-list) - View segments
-- [Segment Catalog](./segments/segment-catalog) - Browse segment categories
+- [All Segments](/documentation/segments/segments-list) - View segments
+- [Segment Catalog](/documentation/segments/segment-catalog) - Browse segment categories
 
 ### Customer 360 Profile
 View comprehensive, unified customer profiles.
 
-- [Customers](./customer-360/customers-list) - Browse customer profiles
-- [Customer Identity](./customer-360/customer-identity) - Manage customer identities
+- [Customers](/documentation/customer-360/customers-list) - Browse customer profiles
+- [Customer Identity](/documentation/customer-360/customer-identity) - Manage customer identities
 
 ### Reports & Analytics
 Monitor performance and gain insights into your campaigns.
 
-- [Overall Dashboard Performance](./analytics/overall-dashboard-performance) - System overview
-- [Campaign Reports](./analytics/campaign-reports) - Campaign performance metrics
-- [Offer Reports](./analytics/offer-reports) - Offer performance analysis
-- [Customer Profile Reports](./analytics/customer-profile-reports) - Customer analytics
-- [SMS Delivery Reports](./analytics/delivery-sms-reports) - SMS campaign metrics
-- [Email Delivery Reports](./analytics/delivery-email-reports) - Email campaign metrics
+- [Overall Dashboard Performance](/documentation/analytics/overall-dashboard-performance) - System overview
+- [Campaign Reports](/documentation/analytics/campaign-reports) - Campaign performance metrics
+- [Offer Reports](/documentation/analytics/offer-reports) - Offer performance analysis
+- [Customer Profile Reports](/documentation/analytics/customer-profile-reports) - Customer analytics
+- [SMS Delivery Reports](/documentation/analytics/delivery-sms-reports) - SMS campaign metrics
+- [Email Delivery Reports](/documentation/analytics/delivery-email-reports) - Email campaign metrics
 
 ### Manual Actions
 Execute manual customer actions and communications.
 
-- [Manual Rewards](./manual-actions/manual-rewards-list) - Manage manual rewards
-- [Manual Communications](./manual-actions/manual-communications-list) - Send manual communications
+- [Manual Rewards](/documentation/manual-actions/manual-rewards-list) - Manage manual rewards
+- [Manual Communications](/documentation/manual-actions/manual-communications-list) - Send manual communications
 
 ### Job Management
 Manage scheduled jobs and workflows.
 
-- [Scheduled Jobs](./jobs/scheduled-jobs) - View scheduled tasks
-- [Job Executions](./jobs/job-executions) - Monitor job runs
-- [Job Types](./jobs/job-types) - Manage job types
-- [Job Workflows](./jobs/job-workflows) - Create job workflows
-- [Job Workflow Steps](./jobs/job-workflow-steps) - Define workflow steps
-- [Job Dependencies](./jobs/job-dependencies) - Manage job dependencies
+- [Scheduled Jobs](/documentation/jobs/scheduled-jobs) - View scheduled tasks
+- [Job Executions](/documentation/jobs/job-executions) - Monitor job runs
+- [Job Types](/documentation/jobs/job-types) - Manage job types
+- [Job Workflows](/documentation/jobs/job-workflows) - Create job workflows
+- [Job Workflow Steps](/documentation/jobs/job-workflow-steps) - Define workflow steps
+- [Job Dependencies](/documentation/jobs/job-dependencies) - Manage job dependencies
 
 ### Infrastructure
 Configure system infrastructure and connections.
 
-- [Servers](./infrastructure/servers) - Manage servers
-- [Connection Profiles](./infrastructure/connection-profiles) - Configure connections
-- [Data Connectors](./infrastructure/data-connectors) - Set up data sources
-- [KPIs](./infrastructure/kpis) - Define key performance indicators
+- [Servers](/documentation/infrastructure/servers) - Manage servers
+- [Connection Profiles](/documentation/infrastructure/connection-profiles) - Configure connections
+- [Data Connectors](/documentation/infrastructure/data-connectors) - Set up data sources
+- [KPIs](/documentation/infrastructure/kpis) - Define key performance indicators
 
 ### System Configuration
 Configure and customize the platform to your needs.
 
-- [Line of Business](./configuration/line-of-business-list) - Manage business units
-- [Campaign Communication Policy](./configuration/campaign-communication-policy-list) - Set communication rules
-- [Communication Channels](./configuration/communication-channels-list) - Configure channels
-- [Routes](./configuration/routes-list) - Manage delivery routes
-- [Departments](./configuration/departments-list) - Organize by department
-- [Control Groups](./configuration/control-groups-list) - Set up control groups
-- [DND Management](./configuration/dnd-management-list) - Do Not Disturb lists
-- [VIP List Management](./configuration/vip-list-management-list) - VIP customer lists
-- [Seed List Management](./configuration/seed-list-management-list) - Seed lists
-- [Creative Templates](./configuration/creative-templates-list) - Message templates
-- [Reward Types](./configuration/reward-types-list) - Define rewards
-- [Sender IDs](./configuration/sender-ids-list) - Configure sender identities
-- [SMS Routes](./configuration/sms-routes-list) - SMS delivery routes
-- [Languages](./configuration/languages-list) - Supported languages
-- [Character Sets](./configuration/character-sets-list) - Character encoding
-- [Combo Types](./configuration/combo-types-list) - Product combinations
-- [Product Categories](./configuration/product-categories-list) - Categorize products
-- [Offer Tracking Sources](./configuration/offer-tracking-sources-list) - Track offer sources
-- [Settings](./configuration/settings-list) - General system settings
-- [User Management](./configuration/user-management-list) - Configure users
+- [Line of Business](/documentation/configuration/line-of-business-list) - Manage business units
+- [Campaign Communication Policy](/documentation/configuration/campaign-communication-policy-list) - Set communication rules
+- [Communication Channels](/documentation/configuration/communication-channels-list) - Configure channels
+- [Routes](/documentation/configuration/routes-list) - Manage delivery routes
+- [Departments](/documentation/configuration/departments-list) - Organize by department
+- [Control Groups](/documentation/configuration/control-groups-list) - Set up control groups
+- [DND Management](/documentation/configuration/dnd-management-list) - Do Not Disturb lists
+- [VIP List Management](/documentation/configuration/vip-list-management-list) - VIP customer lists
+- [Seed List Management](/documentation/configuration/seed-list-management-list) - Seed lists
+- [Creative Templates](/documentation/configuration/creative-templates-list) - Message templates
+- [Reward Types](/documentation/configuration/reward-types-list) - Define rewards
+- [Sender IDs](/documentation/configuration/sender-ids-list) - Configure sender identities
+- [SMS Routes](/documentation/configuration/sms-routes-list) - SMS delivery routes
+- [Languages](/documentation/configuration/languages-list) - Supported languages
+- [Character Sets](/documentation/configuration/character-sets-list) - Character encoding
+- [Combo Types](/documentation/configuration/combo-types-list) - Product combinations
+- [Product Categories](/documentation/configuration/product-categories-list) - Categorize products
+- [Offer Tracking Sources](/documentation/configuration/offer-tracking-sources-list) - Track offer sources
+- [Settings](/documentation/configuration/settings-list) - General system settings
+- [User Management](/documentation/configuration/user-management-list) - Configure users
 
 ### User Settings
 Manage your personal account settings.
 
-- [My Profile](./user-settings/my-profile) - View your profile
-- [Settings](./user-settings/settings) - Account preferences
+- [My Profile](/documentation/user-settings/my-profile) - View your profile
+- [Settings](/documentation/user-settings/settings) - Account preferences
 
 ### Access Control
 Manage user permissions and security.
 
-- [All Users](./users/users-list) - Manage platform users
-- [Access Control](./users/access-control) - Set user permissions
+- [All Users](/documentation/users/users-list) - Manage platform users
+- [Access Control](/documentation/users/access-control) - Set user permissions
 
 
 ## Tips for Success

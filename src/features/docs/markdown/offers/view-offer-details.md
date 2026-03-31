@@ -113,4 +113,4 @@ Offers follow an approval workflow before they can be activated:
 - Test offer creatives to ensure they display correctly
 - Set appropriate max usage limits to control costs
 - Archive expired offers to keep your list organized
-- Monitor offer performance using [Offer Reports](./offer-reports)
+- Monitor offer performance using [Offer Reports](/documentation/offer-reports)

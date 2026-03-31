@@ -372,7 +372,7 @@ Detailed list of all campaigns with key metrics:
 
 ## Related Documentation
 
-- [Overall Dashboard](./overall-dashboard-performance) - Platform overview
-- [Customer Profile Reports](./customer-profile-reports) - Customer analytics
-- [Offer Reports](./offer-reports) - Offer performance
-- [Campaign Management](../campaigns/campaigns-list) - Create/manage campaigns
+- [Overall Dashboard](/documentation/overall-dashboard-performance) - Platform overview
+- [Customer Profile Reports](/documentation/customer-profile-reports) - Customer analytics
+- [Offer Reports](/documentation/offer-reports) - Offer performance
+- [Campaign Management](./documentation/campaigns/campaigns-list) - Create/manage campaigns

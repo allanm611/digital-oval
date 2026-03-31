@@ -21,7 +21,7 @@ Or from KPI Details page:
 
 ## Form Fields
 
-All fields are the same as [Create KPI](./create-kpi.md) with the following notes:
+All fields are the same as [Create KPI](/documentation/create-kpi.md) with the following notes:
 
 ### Required Fields
 - KPI Name*
@@ -311,7 +311,7 @@ After successful save:
 4. Verify alerts trigger correctly (if enabled)
 
 ### Confirming Changes
-- Visit [KPI Details](./view-kpi.md) page
+- Visit [KPI Details](/documentation/view-kpi.md) page
 - Verify all updated values
 - Check metric values are reasonable
 - Review any error messages

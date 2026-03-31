@@ -544,7 +544,7 @@ Organizations can create custom roles:
 
 ## Related Documentation
 
-- [Permissions](./permissions) - Permission reference
-- [Assign Permissions](./assign-permissions) - Assign to users/roles
-- [User List](../users-list) - Manage users
-- [View User Details](../view-user-details) - User profiles
+- [Permissions](/documentation/permissions) - Permission reference
+- [Assign Permissions](/documentation/assign-permissions) - Assign to users/roles
+- [User List](./documentation/users-list) - Manage users
+- [View User Details](./documentation/view-user-details) - User profiles

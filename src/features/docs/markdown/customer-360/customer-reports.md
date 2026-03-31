@@ -540,8 +540,8 @@ Compare performance across segments:
 
 ## Related Documentation
 
-- [Customer List](./customers-list) - Browse and search customers
-- [Create Customer](./create-customer) - Add customers
-- [View Customer Details](./view-customer-details) - Customer profiles
-- [Customer Identity](./customer-identity) - Segmentation fields
-- [Campaign Reports](../campaigns/campaign-reports) - Campaign analytics
+- [Customer List](/documentation/customers-list) - Browse and search customers
+- [Create Customer](/documentation/create-customer) - Add customers
+- [View Customer Details](/documentation/view-customer-details) - Customer profiles
+- [Customer Identity](/documentation/customer-identity) - Segmentation fields
+- [Campaign Reports](./documentation/campaigns/campaign-reports) - Campaign analytics

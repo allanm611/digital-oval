@@ -211,7 +211,7 @@ You can customize your notification settings to control:
 
 **Email Address:**
 - Notifications sent to email in your profile
-- Update email in [My Profile](./my-profile)
+- Update email in [My Profile](/documentation/my-profile)
 - Verify new email before changes apply
 
 **Best For:**
@@ -579,7 +579,7 @@ You can customize your notification settings to control:
 
 ## Related Documentation
 
-- [My Profile](./my-profile) - Manage account information
-- [Settings](./settings) - Configure system preferences
-- [Campaign Management](../campaigns/campaigns-list) - Where campaign notifications originate
-- [Offers](../offers/offer-list) - Where offer notifications originate
+- [My Profile](/documentation/my-profile) - Manage account information
+- [Settings](/documentation/settings) - Configure system preferences
+- [Campaign Management](./documentation/campaigns/campaigns-list) - Where campaign notifications originate
+- [Offers](./documentation/offers/offer-list) - Where offer notifications originate

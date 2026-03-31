@@ -137,7 +137,7 @@ Click the **Delete** (trash icon) button to remove the customer record.
    - Other attributes
 4\. Click **Save**
 
-See [Create Customer](./create-customer) for detailed guide.
+See [Create Customer](/documentation/create-customer) for detailed guide.
 
 ### Bulk Upload
 
@@ -345,7 +345,7 @@ You can add unlimited custom attributes to store additional customer data:
 
 ## Related Documentation
 
-- [Create Customer](./create-customer) - Add new customers to system
-- [View Customer Details](./view-customer-details) - Manage individual profiles
-- [Customer Reports](./customer-reports) - Analytics and insights
-- [Customer Identity](./customer-identity) - Manage segmentation fields
+- [Create Customer](/documentation/create-customer) - Add new customers to system
+- [View Customer Details](/documentation/view-customer-details) - Manage individual profiles
+- [Customer Reports](/documentation/customer-reports) - Analytics and insights
+- [Customer Identity](/documentation/customer-identity) - Manage segmentation fields

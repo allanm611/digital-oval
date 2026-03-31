@@ -22,7 +22,7 @@ Or from job list:
 
 ## Form Fields
 
-All fields are the same as [Create Scheduled Job](./create-scheduled-job.md) with the following notes:
+All fields are the same as [Create Scheduled Job](/documentation/create-scheduled-job.md) with the following notes:
 
 ### Non-Editable Fields
 - **Job Code** - Cannot be changed after creation
@@ -307,7 +307,7 @@ After successful save:
 5. Review execution logs
 
 ### Confirming Changes
-- Visit [Job Details](./view-scheduled-job.md) page
+- Visit [Job Details](/documentation/view-scheduled-job.md) page
 - Verify all updated values
 - Check version history
 - Review next run time

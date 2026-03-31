@@ -446,8 +446,8 @@ Visual representation of:
 
 ## Related Documentation
 
-- [Customer List](./customers-list) - Browse all customers
-- [Create Customer](./create-customer) - Add new customers
-- [Customer Reports](./customer-reports) - Analytics and insights
-- [Customer Identity](./customer-identity) - Manage segmentation fields
-- [Campaigns](../campaigns/campaigns-list) - View campaigns
+- [Customer List](/documentation/customers-list) - Browse all customers
+- [Create Customer](/documentation/create-customer) - Add new customers
+- [Customer Reports](/documentation/customer-reports) - Analytics and insights
+- [Customer Identity](/documentation/customer-identity) - Manage segmentation fields
+- [Campaigns](./documentation/campaigns/campaigns-list) - View campaigns

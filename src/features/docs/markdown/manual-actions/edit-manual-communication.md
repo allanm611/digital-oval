@@ -290,8 +290,8 @@ The form shows all current settings:
 
 ## Related Documentation
 
-- [Manual Communications Overview](./manual-communications) - Feature overview
-- [Communications List](./manual-communications-list) - View all communications
-- [Create Communication](./create-manual-communication) - How to create
-- [View Communication Details](./view-manual-communication) - View results
-- [Communication Policies](../configuration/campaign-communication-policy-list) - Policy reference
+- [Manual Communications Overview](/documentation/manual-communications) - Feature overview
+- [Communications List](/documentation/manual-communications-list) - View all communications
+- [Create Communication](/documentation/create-manual-communication) - How to create
+- [View Communication Details](/documentation/view-manual-communication) - View results
+- [Communication Policies](./documentation/configuration/campaign-communication-policy-list) - Policy reference

@@ -34,7 +34,16 @@ export function useDocumentation(slug?: string): UseDocumentationReturn {
   };
 
   useEffect(() => {
-    loadDoc();
+    // Reset content when slug changes to show loader briefly
+    setContent('');
+    setError(null);
+
+    // Load on next tick to ensure loading state is visible
+    const timer = setTimeout(() => {
+      loadDoc();
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [slug]);
 
   return {

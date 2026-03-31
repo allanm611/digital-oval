@@ -354,8 +354,8 @@ Before applying, review:
 
 ## Related Documentation
 
-- [Manual Rewards Overview](./manual-rewards) - Feature overview
-- [Rewards List](./manual-rewards-list) - View all rewards
-- [View Reward Details](./view-manual-reward) - View results
-- [Edit Reward](./edit-manual-reward) - Modify scheduled rewards
-- [Manual Communications](./manual-communications) - Send messages to customers
+- [Manual Rewards Overview](/documentation/manual-rewards) - Feature overview
+- [Rewards List](/documentation/manual-rewards-list) - View all rewards
+- [View Reward Details](/documentation/view-manual-reward) - View results
+- [Edit Reward](/documentation/edit-manual-reward) - Modify scheduled rewards
+- [Manual Communications](/documentation/manual-communications) - Send messages to customers
