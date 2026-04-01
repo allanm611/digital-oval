@@ -2,353 +2,194 @@
 
 ## Overview
 
-This guide walks you through creating and applying a one-time reward to a specific customer segment. Rewards can be applied immediately or scheduled for future execution.
+This guide walks you through creating and applying a one-time reward to a specific customer segment. Choose from bundles, points, discounts, or cashback.
 
 ## How to Start
 
+### Creating a New Reward
 1. Navigate to **Manual Actions → Manual Rewards**
 2. Click the **Create Reward** button
 3. Follow the 4-step wizard
 
+### Editing an Existing Reward
+The editing flow is identical to creating - you'll follow the same 4 steps. The only difference is:
+- **All fields are pre-filled** with current settings
+- You modify only what you need to change
+- Changes apply before execution time
+
+**Note:** Only scheduled rewards that haven't started applying can be edited.
+
+---
+
 ## Step 1: Select Customers
 
-### Choose Customer Source
+![Step 1 - Select Customers](/img/manual-actions/step1-rewards.png)
 
-**Option A: Upload Customer File**
-1. Click **Upload File**
-2. Select a CSV or text file with customer data
-3. Confirm file details:
-   - Column count
-   - Row count (number of customers)
-   - Available columns
+Define which customers will receive this reward using three fields:
 
-4. **Review Audience**
-   - Extracted columns shown
-   - Row count verified
-   - Preview available
+### 1. Reward Name
+- **What is it:** The name/label for this reward
+- **Required:** Yes
+- **Example:** "VIP Loyalty Bonus", "Win-back Campaign Reward"
 
-**Option B: Select from Quicklist**
-1. Click **Select Quicklist**
-2. Browse available quicklists
-3. Select the quicklist to use
-4. System loads member count
+### 2. Reward Type
+- **What is it:** Categorize the audience by type/tier
+- **Options:** Standard, Premium, or VIP
+- **Purpose:** Organize and manage different customer tiers
 
-**Option C: Manual Entry**
-1. Click **Enter Manually**
-2. Enter customer identifiers one per line
-3. Identifiers matched to system records
+### 3. Input Method
+Choose ONE of two options:
 
-### Audience Summary
-Before proceeding, you'll see:
-- **Total Customers:** Number of recipients
-- **Source:** File, Quicklist, or Manual
-- **Segment:** Customer segment details (if available)
-- **Edit Option:** Change audience if needed
+#### Option A: Upload File (via Quicklist)
+1. Click **Upload File** button
+2. Select an existing quicklist OR create a new one by uploading a CSV file
+3. System shows quicklist name and row count
+4. Confirm selection
+
+#### Option B: Manual Input
+1. Click **Manual Input** option
+2. Enter recipient identifiers (one per line):
+   - Email addresses: john@example.com
+   - Phone numbers: +254712345678 (include country code)
+3. System validates in real-time
+4. Shows total valid recipients
+
+### Validation & Next Steps
+Before proceeding to Step 2:
+- **Reward Name:** Must be filled in
+- **Reward Type:** Must be selected
+- **Input Method:** Must be selected (Upload File OR Manual Input)
+- **Recipients:** At least one valid recipient required
+
+---
 
 ## Step 2: Define Reward
 
-### Select Reward Type
+![Step 2 - Define Reward](/img/manual-actions/step2-reward.png)
 
-Choose the type of reward to apply:
+Configure the reward type, value, and notification settings.
 
-#### Bundle Reward
-**What:** Pre-configured service bundles
-**Examples:** Data packages, SMS bundles, minutes
+### Reward Type Selection
 
-**Steps:**
-1. Click **Select Reward Type → Bundle**
-2. **Select Bundle Track:**
-   - Data packages (MB/GB quantities)
-   - SMS bundles (quantity of messages)
-   - Minutes bundles (talk time)
-   - Other bundled services
-3. **Review Bundle Details:**
-   - Bundle name
-   - Quantity/value
-   - Validity period
-   - Benefits
+Choose which type of reward to apply:
 
-#### Points Reward
-**What:** Loyalty or promotion points
+**Bundle**
+- Select from available data, minutes, SMS bundles, etc.
+- Customer receives bundle access immediately
+- Example: "500 MB Internet Bundle"
 
-**Steps:**
-1. Click **Select Reward Type → Points**
-2. **Enter Points Amount:**
-   - Number of points to award
-   - Example: 1000 points
-3. **Select Point Type:** (if applicable)
-   - Loyalty points
-   - Bonus points
-   - Promotional points
-4. **Validity:**
-   - Expiry date (if applicable)
-   - Point terms and conditions
+**Points**
+- Enter number of points to award
+- Points added to customer's account instantly
+- Example: "1000 Loyalty Points"
 
-#### Discount Reward
-**What:** Percentage or fixed amount discount
+**Discount**
+- **Type:** Percentage or Fixed Amount
+  - Percentage: "25%"
+  - Fixed: "KES 100"
+- Specify which products the discount applies to
+- Define validity period
 
-**Steps:**
-1. Click **Select Reward Type → Discount**
-2. **Select Discount Type:**
-   - **Percentage:** Enter % (e.g., 25%)
-   - **Fixed Amount:** Enter amount (e.g., KES 100)
-3. **Applicable Products:**
-   - Select which products discount applies to
-   - All products or specific categories
-4. **Validity:**
-   - Start date (usually today)
-   - Expiry date/validity period
-   - Usage limits (if any)
-
-#### Cashback Reward
-**What:** Direct monetary returns to customer
-
-**Steps:**
-1. Click **Select Reward Type → Cashback**
-2. **Enter Cashback Amount:**
-   - Monetary value
-   - Currency (KES, USD, etc.)
-   - Example: KES 500
-3. **Delivery Method:**
-   - Account credit
-   - Mobile wallet
-   - Bank transfer
-   - Check method available
-4. **Validity:**
-   - When available for use
-   - Expiry date
+**Cashback**
+- Enter monetary amount
+- Specify currency (KES, USD, etc.)
+- Example: "KES 500 Cashback"
 
 ### Reward Configuration
 
-**Reward Name/Description**
-- Internal identifier for the reward
-- Clear description of what's being awarded
-- Example: "VIP Customer Bonus Q4"
-
-**Reward Value Details**
-- Specific quantity/amount
-- Bundle parameters
-- Point count or discount percentage
-- Cashback amount
-
-**Terms & Conditions** (Optional)
-- Validity period
-- Usage restrictions
-- Applicable products/services
-- Special conditions
+**Reward Description** (Optional)
+- Additional details about the reward
+- Notes for reference
 
 ### Communication Policy
 
-**What is a Policy?**
-- Controls when customers are notified
-- Respects DND settings
-- Manages notification frequency
-- Special rules for VIP customers
+Apply policies that control when and how customers are notified:
+- Timing rules (don't send between 9 PM and 8 AM)
+- Frequency limits
+- DND (Do Not Disturb) compliance
 
-**How to Select Policy:**
-1. **Optional** - Policies are optional
-2. Click **Select Communication Policy** (optional dropdown)
-3. **Choose policies** that apply:
-   - Time Window Policy (notify during business hours)
-   - Frequency Policy (respect message limits)
-   - DND Policy (don't disturb settings)
-   - VIP Policy (special handling)
+For detailed policy options, see [Communication Policies](/documentation/configuration/communication-policies).
 
-4. **Impact:**
-   - Some customers may not be notified
-   - Reward still applied, notification may be delayed
-   - Policy restrictions shown
+---
 
 ## Step 3: Preview Reward
 
-### Why Preview?
-- Verify reward configuration before applying
-- Check impact on customers
-- Review notification message
-- Validate business logic
+![Step 3 - Preview Reward](/img/manual-actions/step3-reward.png)
 
-### Preview Content
+Review all settings before applying the reward.
 
-**Reward Summary**
+### What to Review
+
+**Audience Summary**
+- Total number of recipients
+- Source of audience (file, quicklist, manual)
+
+**Reward Details**
 - Reward type and value
-- Number of customers affected
-- Total reward cost/value
-- Validity information
+- Any applicable restrictions
+- Total cost if applicable
 
-**Impact Analysis**
-- Total customers receiving reward
-- Estimated system impact
-- Resource requirements
-- Processing time estimate
+**Impact**
+- How many customers will receive this reward
+- Any policy filtering that applies
 
-**Customer Impact**
-- Sample of affected customers
-- How reward appears to them
-- Notification message
-- Available actions for customer
+### Proceed or Go Back
 
-**Financial Impact**
-- Total reward cost
-- Average cost per customer
-- Budget impact
-- Cost breakdown by reward type
+- **If everything looks good:** Click **Next** to proceed to Step 4
+- **If changes needed:** Go back to Step 2 to modify settings
 
-### Make Changes
-If something needs adjustment:
-1. Click **Back to Step 2**
-2. Modify reward configuration
-3. Return to preview
-4. Changes reflected immediately
-
-### Validation Checks
-System verifies:
-- Budget availability for cashback/discounts
-- Customer eligibility
-- Reward configuration validity
-- Policy compatibility
+---
 
 ## Step 4: Apply Reward
+
+![Step 4 - Apply Reward](/img/manual-actions/step4-reward.png)
+
+Set when the reward will be applied and confirm.
 
 ### Execution Timing
 
 **Option A: Apply Now**
-- Reward applied immediately
-- Customers notified (based on policy)
-- Application begins within 1-2 minutes
-- All customers processed in batch
+- Reward applied immediately to all recipients
+- Notifications sent right away (if enabled)
+- Results available within minutes
 
 **Option B: Schedule for Later**
-- **Select Date:** Pick application date
-- **Select Time:** Choose application time
-- **Timezone:** Shown and can be changed
-- **Note:** Uses server timezone if not specified
+- Select date and time for reward application
+- Reward queued until scheduled time
+- Auto-applies at specified time
 
-### Final Confirmation
+### Final Review
 
-Before applying, review:
-
-**Customers**
-- Number of recipients
-- Source (file, quicklist, manual)
-- Segment details
-
-**Reward**
-- Reward type and value
-- Total cost
-- Validity terms
-
-**Policy**
-- Communication policy applied
-- Notification timing
-- Special rules
-
-**Timing**
-- Immediate or scheduled date/time
-- Processing duration
+Before confirming, review all settings:
+- **Audience:** Number of recipients
+- **Reward:** Type and value
+- **Execution:** Time to apply
+- **Notifications:** Policy and message
 
 ### Apply Reward
 
 **For Immediate Application:**
-1. Click **Apply Now** button
-2. Confirmation dialog appears
-3. Shows summary of action
-4. Click **Confirm** to apply
-5. System shows confirmation with reward ID
+1. Click **Apply Now**
+2. Confirm in dialog
+3. System shows reward ID and confirmation
 
 **For Scheduled Application:**
-1. Click **Schedule** button
-2. Confirmation dialog appears
-3. Shows scheduled date/time
-4. Click **Confirm to Schedule**
-5. System shows confirmation with reward ID
+1. Click **Schedule**
+2. Confirm in dialog
+3. System shows scheduled date/time and reward ID
+
+---
 
 ## After Creation
 
-### What Happens Next?
+### Monitoring Application
 
-**Immediate Application**
-- Begins processing within 1-2 minutes
-- View progress in list page
-- Completion notification when done
-- Customers notified per policy
-
-**Scheduled Application**
-- Appears in "Scheduled" status
-- Can still edit before application time
-- Auto-applies at scheduled time
-- Notification sent when complete
-
-### Monitoring
-
-1. Go to **Manual Rewards List**
-2. Find your reward
-3. Track status:
-   - **Pending** - Currently applying
-   - **Applied** - Done
+1. Go to [Manual Rewards List](/documentation/manual-actions/manual-rewards-list)
+2. Find your reward and track status:
+   - **Pending** - Currently being applied
+   - **Applied** - Successfully awarded
    - **Scheduled** - Waiting to apply
-
-4. Click **View** to see detailed results:
-   - Per-customer status
-   - Failure reasons (if any)
-   - Notification delivery
-   - Redemption status (if available)
-
-## Best Practices
-
-### Audience Selection
-- Start with small test segment
-- Verify customer data quality
-- Check file format and completeness
-- Review audience size before application
-- Ensure customer identifiers are unique
-
-### Reward Configuration
-- Set appropriate reward values
-- Consider customer segment value
-- Define clear validity terms
-- Align with business objectives
-- Calculate total cost
-
-### Communication
-- Notify customers promptly about reward
-- Use clear, positive messaging
-- Include reward terms and conditions
-- Explain how to use/redeem
-- Provide support information
-
-### Budgeting
-- Ensure budget available
-- Track total reward cost
-- Consider volume discounts
-- Plan for future campaigns
-- Monitor ROI and impact
-
-### Monitoring
-- Track application success rates
-- Monitor failed applications
-- Review customer response
-- Analyze reward impact
-- Adjust future strategy
-
-## Troubleshooting
-
-### File Upload Issues
-- **"Invalid file format"** - Use CSV or text format
-- **"No headers detected"** - Ensure first row contains column names
-- **"Empty file"** - Check file contains customer data
-
-### Reward Configuration Issues
-- **"Reward type not available"** - Verify selected type is configured
-- **"Invalid reward value"** - Check format and constraints
-- **"Quota exceeded"** - Verify account balance for monetary rewards
-
-### Policy Issues
-- **"Policy filters all customers"** - Modify or remove policy
-- **"Policy conflict"** - Check policy rules compatibility
-- **"Notification error"** - Verify communication settings
-
-### Application Issues
-- **"Customer not found"** - Verify customer identifiers
-- **"Budget exceeded"** - Check account balance
-- **"System error"** - Contact support with reward ID
-
+3. Click **View** to see detailed results:
+   - Application metrics
+   - Failed recipients
+   - Notification status

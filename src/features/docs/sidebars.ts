@@ -243,12 +243,12 @@ const sidebars: SidebarsConfig = {
       label: 'Reports & Analytics',
       items: [
         'analytics/overview',
-        'analytics/overall-dashboard-performance',
-        'analytics/customer-profile-reports',
-        'analytics/campaign-reports',
-        'analytics/offer-reports',
-        'analytics/delivery-sms-reports',
-        'analytics/delivery-email-reports',
+        'reports/overall-dashboard',
+        'reports/customer-profile-reports',
+        'reports/campaign-reports',
+        'reports/offer-reports',
+        'reports/sms-delivery-reports',
+        'reports/delivery-email-reports',
       ],
     },
     {

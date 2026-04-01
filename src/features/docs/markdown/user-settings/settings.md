@@ -2,7 +2,9 @@
 
 ## Overview
 
-Settings is where you configure system-wide preferences that affect how the platform behaves for you. These preferences control display options, data handling, notification defaults, and other user experience settings.
+Settings is where you configure your personal preferences for the platform. These settings control language, timezone, date and currency formats, theme, Do Not Disturb hours, and communication defaults. Settings are saved locally on your device and apply only to your current browser.
+
+**Note:** Settings are device-specific. If you use multiple devices or browsers, you'll need to configure settings on each separately.
 
 ## Accessing Settings
 
@@ -18,449 +20,203 @@ Settings is where you configure system-wide preferences that affect how the plat
 
 ---
 
-## Display &amp; Interface Settings
+## Theme
 
 ### Theme Selection
 
-**Choose Your Theme**
+![Display Theme Setting](/img/usersettings/themesetting.png)
 
-Available options:
-- **Light Mode** - Standard white background (default)
-- **Dark Mode** - Dark background, easier on eyes
-- **System Preference** - Follows your device/OS setting
+Choose how the interface appears:
+
+**Available Options:**
+- **Light Mode** - Standard light background (default)
+- **Dark Mode** - Dark background with light text
 
 **How to Change:**
 1. Go to Settings
-2. Find "Display &amp; Interface" section
-3. Select desired theme
+2. Find the Theme dropdown
+3. Select Light Mode or Dark Mode
 4. Changes apply immediately
-
-**Theme Settings Apply To:**
-- Page backgrounds
-- Text colors
-- Sidebar appearance
-- All interface elements
-
-### Interface Density
-
-**Adjust Layout Spacing**
-
-Options:
-- **Compact** - Minimal spacing, more items visible
-- **Comfortable** (default) - Standard spacing
-- **Spacious** - Extra spacing for easier reading
-
-**Affects:**
-- List item spacing
-- Card padding
-- Button sizes
-- Form field spacing
-
-### Font Size
-
-**Customize Text Size**
-
-Options:
-- **Small** - 12px base size
-- **Medium** (default) - 14px base size
-- **Large** - 16px base size
-- **Extra Large** - 18px base size
 
 ---
 
-## Language &amp; Localization
+## Language & Localization
+
+![Location & Localization Settings](/img/usersettings/location&localizationsetitngs.png)
 
 ### Language Preference
 
-**Select Interface Language**
+Select the language for the user interface:
 
-Available languages:
+**Available Languages:**
 - English (Default)
 - Français (French)
 - Español (Spanish)
-- Deutsch (German)
-- 中文 (Chinese)
-- 日本語 (Japanese)
-- Русский (Russian)
+- Swahili (Kiswahili)
 
 **How to Change:**
 1. Go to Settings
-2. Find "Language &amp; Localization"
+2. Find "Language" dropdown
 3. Select desired language
-4. Interface updates (may require refresh)
-
-**Applies To:**
-- All UI text and labels
-- Menu items and buttons
-- Placeholder text
-- Help messages
-- Error messages
-
-**NOTE:** Some custom content may remain in original language
+4. Click Save Settings
+5. Interface updates (may require page refresh)
 
 ### Regional Format
 
-**Date &amp; Time Format**
+![Date & Currency Settings](/img/usersettings/dateandcurrencysetting.png)
 
-Choose how dates and times display:
+Configure how dates and numbers display:
 
-**Date Formats:**
-- MM/DD/YYYY (United States)
-- DD/MM/YYYY (Europe, UK)
+**Date Format:**
 - YYYY-MM-DD (ISO standard)
-
-**Time Format:**
-- 12-hour (1:30 PM)
-- 24-hour (13:30)
-
-**Currency Symbol:**
-- $ (USD)
-- £ (GBP)
-- € (EUR)
-- ¥ (JPY)
-- Custom
+- MM/DD/YYYY (United States)
+- DD/MM/YYYY (Europe/UK)
+- DD-MM-YYYY
+- MM-DD-YYYY
+- YYYY/MM/DD
 
 **Timezone:**
 - Select your local timezone
-- Used for timestamp display
+- Used for displaying timestamps
 - Affects scheduled task times
+- Examples: Africa/Nairobi, Europe/London, America/New_York
 
-**How to Change:**
-1. Go to Settings
-2. Find "Regional Format"
-3. Select preferences
-4. Save changes
-5. Applies to all future displays
+**Currency:**
+- All currencies from currency-codes library
+- Examples: KES, USD, EUR, GBP
 
----
-
-## Data &amp; Privacy Settings
-
-### Data Handling
-
-**Activity Tracking**
-- Allow platform to track your actions
-- Helps with personalization
-- Used for audit trails
-- Default: Enabled
-
-**Usage Analytics**
-- Share anonymous usage data
-- Helps improve platform
-- No personal data included
-- Default: Enabled
-
-**Cookies &amp; Storage**
-- Allow cookies for session management
-- Allow local storage for preferences
-- Required for some features
-- Default: Enabled
-
-### Privacy Controls
-
-**Profile Visibility**
-
-Control who can see your profile:
-- **Private** - Only visible to admins
-- **Organization** - Visible to your organization members
-- **Public** - Visible to all users
-
-**Activity Visibility**
-
-Control who sees your activities:
-- **Private** - Only you and admins
-- **Organization** - Visible to organization
-- **Teams** - Visible to your team
-- **Public** - Visible to all
-
-**Data Sharing**
-
-Control how your data is used:
-- Allow personalization based on behavior
-- Allow recommendations
-- Share with integrated systems
-- Export capabilities
+**Number Format:**
+- 1,234.56 (comma thousands, period decimal)
+- 1 234,56 (space thousands, comma decimal)
+- 1.234,56 (period thousands, comma decimal)
+- 1'234.56 (apostrophe thousands, period decimal)
 
 ---
 
-## Notification Settings
+## Communication Preferences
 
-For detailed notification configuration, see [Notifications](/documentation/notifications)
+![Character Set & Default Channel Setting](/img/usersettings/characteranddefaultchannelsetting.png)
 
-Quick settings available here:
+![Sender ID & Route Setting](/img/usersettings/senderidandroutesetting.png)
 
-### Email Notifications
+### Default Communication Settings
 
-- Enable/Disable email notifications
-- Set notification frequency (real-time, daily, weekly)
-- Choose notification types
+Configure defaults for sending communications:
 
-### In-Platform Notifications
+**Default Communication Channel:**
+- SMS
+- Email
+- USSD
+- Push Notification
+- IVR
+- Voice
+- WhatsApp
 
-- Enable/Disable in-app notifications
-- Set notification badge display
-- Choose notification center behavior
+**Default Sender ID:**
+- Effortel
+- Equitel
+- EquitelKE
+- EquitelAlert
+- EquitelPromo
 
-### Do Not Disturb
+**Default SMS Route:**
+- Effortel SMS Gateway
 
-- Set DND hours
-- Select DND days (weekdays, weekends, all days)
-- Override for critical alerts
+**Character Set (for SMS):**
+- GSM-7 (Standard SMS) - Default
+- UTF-8 (Unicode)
+- ASCII (English only)
+- UCS-2 (Full Unicode)
 
----
-
-## List &amp; Table Settings
-
-### Default Page Size
-
-**How Many Items Per Page**
-
-Options:
-- 10 items (default)
-- 25 items
-- 50 items
-- 100 items
-
-**Where It Applies:**
-- Product lists
-- Campaign lists
-- Segment lists
-- Offer lists
-- All data tables
-
-### Default View Mode
-
-**Preferred List Layout**
-
-Options:
-- **Grid View** - Cards in grid layout
-- **List View** - Detailed list with full info
-- **Table View** - Spreadsheet-style table
-
-**Saved Per Section:**
-- Different views for different areas
-- System remembers your preference
-- Changes apply to specific section
-
-### Default Sort Order
-
-**How Lists Are Sorted**
-
-Options (varies by list):
-- Most Recent
-- Alphabetical (A-Z)
-- Alphabetical (Z-A)
-- Last Modified
-- Performance (highest first)
-- Status
+**Notification Sound:**
+- None (Silent)
+- Bell
+- Chime
+- Ding
+- Notification
+- Alert
+- Pop
+- Ping
 
 ---
 
-## Dashboard Settings
+## Do Not Disturb (DND)
 
-### Dashboard Customization
+![Do Not Disturb Settings](/img/usersettings/dndsettings.png)
 
-**Customize Your Dashboard**
+### Enable Do Not Disturb
 
-**Available Cards:**
-- Quick Stats (total items)
-- Recent Activities
-- Performance Metrics
-- Upcoming Tasks
-- Notifications Summary
-- Favorites
-- Custom Widgets
+Configure when notifications should be queued instead of delivered immediately:
 
-**Customize Layout:**
-1. Go to Dashboard
-2. Click "Customize" button
-3. Toggle cards on/off
-4. Drag to reorder
-5. Save configuration
+**Enable DND:**
+- Toggle to enable/disable Do Not Disturb
 
-**Multiple Dashboards:**
-- Create named dashboard layouts
-- Switch between layouts
-- Save layouts as templates
-- Share layouts with team (if permitted)
+**DND Hours:**
+- Set start time (e.g., 21:00 for 9 PM)
+- Set end time (e.g., 08:00 for 8 AM)
 
----
+**DND Days:**
+- Weekdays (Mon-Fri)
+- Weekends (Sat-Sun)
+- Daily (all days)
+- Custom Days
 
-## Export &amp; Import Settings
+**What Happens During DND:**
+- Notifications are queued (not sent immediately)
+- All notifications sent as batch when DND ends
+- Critical system alerts may still be delivered
 
-### Export Your Settings
-
-**Export Current Settings**
-
-1. Go to Settings
-2. Click "Export Settings"
-3. Choose export format (JSON, CSV)
-4. File downloads to your computer
-5. Keep backup for recovery
-
-**What's Exported:**
-- Display preferences
-- Notification settings
-- Dashboard configuration
-- Saved filters
-- Custom views
-
-### Import Settings
-
-**Import from File**
-
-1. Go to Settings
-2. Click "Import Settings"
-3. Select settings file
-4. Preview changes
-5. Confirm import
-6. Settings applied
-
-**Use Cases:**
-- Restore settings from backup
-- Transfer settings between devices
-- Share team settings
-- Migrate from old account
+**Default:** DND enabled from 21:00 to 08:00 daily
 
 ---
 
-## Accessibility Settings
+## Notification Types & Channels
 
-### Visual Accessibility
+![Notification Settings](/img/usersettings/notificationsetting.png)
 
-**High Contrast Mode**
-- Increases contrast between elements
-- Easier for visually impaired users
-- Default: Disabled
+### Enabled Notification Types
 
-**Large Fonts**
-- Increases default text size
-- Available in font size settings above
-- Applies system-wide
+Choose which notification types you want to receive:
 
-**Reduce Motion**
-- Disables animations
-- Reduces animated transitions
-- Better for motion-sensitive users
-- Default: Disabled
+- Campaigns
+- Offers
+- Segments
+- Products
+- Jobs
+- Users
+- System
 
-### Keyboard Navigation
+**Default:** All types enabled
 
-**Enable Keyboard Shortcuts**
-- Use keyboard to navigate
-- Show shortcut hints
-- Customize key bindings
-- Default: Enabled
+### Preferred Notification Channels
 
-**Keyboard Shortcuts Reference:**
-- Available in help menu
-- Search by function
-- Customize shortcuts
-- Print quick reference
+Select which channels to use for notifications:
 
-### Screen Reader Support
+- SMS
+- Email
+- USSD
+- Push
+- IVR
+- Voice
+- WhatsApp
 
-**Accessibility Features:**
-- Compatible with screen readers
-- ARIA labels on all elements
-- Semantic HTML structure
-- Skip navigation options
+**Default:** SMS and Email
 
 ---
 
-## Advanced Settings
+## Saving Settings
 
-### API &amp; Integrations
+### Automatic Saving
 
-**Personal API Token**
+Most settings save automatically when you change them. A confirmation message appears when changes are saved successfully.
 
-Create token for API access:
-1. Go to Settings
-2. Find "API &amp; Integrations"
-3. Click "Generate New Token"
-4. Copy token (shown once only)
-5. Use for API requests
+### Manual Save
 
-**Token Management:**
-- View active tokens
-- Revoke tokens
-- Set token expiration
-- Regenerate if compromised
-
-### Connected Applications
-
-**View Connected Apps**
-- Apps with access to your account
-- Permissions granted to each
-- Last activity date
-- Option to disconnect
-
-**Manage Permissions:**
-- Revoke app access
-- Restrict permissions
-- Enable/disable apps
-- Review required permissions
-
----
-
-## About &amp; System
-
-### System Information
-
-**View System Details**
-
-- **App Version** - Current platform version
-- **Build Number** - Build identifier
-- **Environment** - Production, Staging, etc.
-- **API Version** - Current API version
-- **Storage Used** - Your data usage
-
-### Help &amp; Support
-
-**Access Support Resources:**
-- User guide and documentation
-- FAQ section
-- Contact support form
-- Report bugs
-- Suggest features
-
-**System Status:**
-- Current system status
-- Scheduled maintenance
-- Known issues
-- Performance metrics
-
----
-
-## Saving &amp; Resetting
-
-### Save Changes
-
-**Automatic Save:**
-- Most settings auto-save
-- Confirmation appears after changes
-- No manual save button needed
-
-**Manual Save (if applicable):**
-1. Make changes
-2. Click "Save Settings" button
-3. Confirmation message appears
-4. Changes applied immediately
-
-### Reset to Defaults
-
-**Reset All Settings**
-
-1. Go to Settings
-2. Scroll to bottom
-3. Click "Reset to Default Settings"
-4. Confirm reset
-5. All settings return to default
-
-**Reset Specific Section:**
-- Each section may have reset option
-- Only resets that section
-- Other settings unchanged
+If changes are not saving automatically:
+1. Make your changes
+2. Click "Save Settings" button at bottom of page
+3. Wait for confirmation message
+4. Settings are now saved locally
 
 ---
 
@@ -468,35 +224,43 @@ Create token for API access:
 
 ### Settings Not Saving
 
-**Issue:** Changes don't persist
-- Solution: Check for error messages
-- Clear browser cache
-- Refresh page and try again
-- Check browser console for errors
+**Issue:** Changes don't persist after saving
+- Solution: Check for error messages on the page
+- Clear your browser cache and try again
+- Refresh the page and make changes again
+- Try a different browser
 
-### Language Not Changing
+### Settings Appear to Reset
 
-**Issue:** Interface still shows original language
-- Solution: Refresh page or clear cache
-- Logout and login again
-- Some cached content may stay original
-- Give browser time to update
+**Issue:** Settings changed back to defaults
+- Solution: Settings are stored in your browser's local storage
+- Clearing browser cache will reset settings
+- Reconfigure settings after clearing cache
+- Try not clearing cache to preserve settings
 
-### Theme Not Applying
+### Theme Not Changing
 
-**Issue:** Dark mode not activating
-- Solution: Check browser support for dark mode
-- Disable browser extensions
-- Clear browser cache
-- Try different theme option
+**Issue:** Dark mode not activating or changes not visible
+- Solution: Refresh the page after changing theme
+- Close and reopen the Settings page
+- Check if your browser supports dark mode
+- Disable browser extensions that might override theme
 
-### Preferences Not Syncing
+### Language Not Updating
 
-**Issue:** Settings different on different devices
-- Solution: Settings are device-specific
-- Not synced across devices
-- Change on each device individually
-- Use export/import to transfer
+**Issue:** Interface still shows previous language
+- Solution: Refresh the page after changing language
+- Close and reopen the app
+- Clear browser cache if language persists
+- Wait a moment for interface to update
+
+### Different Settings on Different Devices
+
+**Issue:** Settings are different when using another device
+- Solution: Settings are device-specific, not synced across devices
+- Configure settings separately on each device
+- Each browser/device maintains its own settings
+- This is expected behavior
 
 ---
 

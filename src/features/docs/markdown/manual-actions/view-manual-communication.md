@@ -75,7 +75,7 @@ A table showing delivery details for each recipient:
 **Created At**
 - Date and time of the delivery attempt
 
-## Available Actions
+<!-- ## Available Actions
 
 From the details page, you can:
 
@@ -84,4 +84,4 @@ From the details page, you can:
 - **Duplicate** - Create a copy of this communication
 - **Delete** - Permanently remove this communication
 - **Download Report** - Export detailed metrics and logs
-
+ -->
