@@ -374,12 +374,18 @@ Combo types are referenced when creating or editing product bundles:
 - Document code meaning in description
 
 **Examples:**
-| Type | Name | Code | Description |
-|------|------|------|-------------|
-| ✅ Good | Hardware + Software | `hardware_software` | Device with software license |
-| ✅ Good | Premium Bundle | `premium_bundle` | High-value product combination |
-| ❌ Poor | HS | `hs` | Too vague |
-| ❌ Poor | Hardware plus Software Bundle | `hardware_plus_software_bundle` | Name/code too long |
+
+**✅ Good** - Hardware + Software - `hardware_software` - Device with software license
+
+
+**✅ Good** - Premium Bundle - `premium_bundle` - High-value product combination
+
+
+**❌ Poor** - HS - `hs` - Too vague
+
+
+**❌ Poor** - Hardware plus Software Bundle - `hardware_plus_software_bundle` - Name/code too long
+
 
 ### Organization Strategy
 

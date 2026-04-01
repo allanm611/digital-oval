@@ -59,16 +59,21 @@ Navigate through customer records:
 
 ## Customer List Columns
 
-| Column | Description |
-|--------|-------------|
-| **Name** | Customer's first and last name |
-| **Phone (MSISDN)** | Primary mobile phone number |
-| **Email** | Primary email address |
-| **Status** | Active, Inactive, Blocked, or other status |
-| **Tier** | Customer tier/segment classification |
-| **Preferred Channel** | SMS, Email, WhatsApp, Push, USSD, IVR, etc. |
-| **Created** | Date customer record was created |
-| **Last Updated** | Date of most recent profile update |
+**Name** - Customer's first and last name
+
+**Phone (MSISDN)** - Primary mobile phone number
+
+**Email** - Primary email address
+
+**Status** - Active, Inactive, Blocked, or other status
+
+**Tier** - Customer tier/segment classification
+
+**Preferred Channel** - SMS, Email, WhatsApp, Push, USSD, IVR, etc.
+
+**Created** - Date customer record was created
+
+**Last Updated** - Date of most recent profile update
 
 ---
 
@@ -163,19 +168,27 @@ Import multiple customers at once:
 
 The system supports multiple communication channels for each customer:
 
-| Channel | Type | Best For |
-|---------|------|----------|
-| **Normal SMS** | SMS | Standard text messages |
-| **Flash SMS** | SMS | High-priority alerts |
-| **Email** | Email | Detailed communications |
-| **WhatsApp** | Messaging App | Personal messages |
-| **Push** | Push Notification | Mobile app notifications |
-| **USSD** | USSD | Feature phone interactions |
-| **Interactive USSD** | USSD | Menu-based interactions |
-| **In-App** | In-App Message | In-application notifications |
-| **IVR** | Voice | Voice calls and menu systems |
-| **OBD** | OBD | Operator-specific delivery |
-| **Short Code** | SMS | Short code responses |
+**Normal SMS** (SMS) - Standard text messages
+
+**Flash SMS** (SMS) - High-priority alerts
+
+**Email** (Email) - Detailed communications
+
+**WhatsApp** (Messaging App) - Personal messages
+
+**Push** (Push Notification) - Mobile app notifications
+
+**USSD** (USSD) - Feature phone interactions
+
+**Interactive USSD** (USSD) - Menu-based interactions
+
+**In-App** (In-App Message) - In-application notifications
+
+**IVR** (Voice) - Voice calls and menu systems
+
+**OBD** (OBD) - Operator-specific delivery
+
+**Short Code** (SMS) - Short code responses
 
 ---
 

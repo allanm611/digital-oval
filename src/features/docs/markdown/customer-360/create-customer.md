@@ -326,31 +326,89 @@ The CSV file maps column names to customer attributes. Each column in your CSV b
 
 ### Required Columns (Must Be Present)
 
-| CSV Column | Maps To | Format | Example | Notes |
-|-----------|---------|--------|---------|-------|
-| `msisdn` | Phone Number | Country code + number OR local number | `+27712345678` or `0712345678` | Unique identifier, required for every row |
-| `first_name` | First Name | Text (letters, spaces, hyphens) | `John` | Max 255 characters |
-| `last_name` | Last Name | Text (letters, spaces, hyphens) | `Smith` | Max 255 characters |
+**msisdn** → Phone Number
+- Format: Country code + number OR local number
+- Example: `+27712345678` or `0712345678`
+- Notes: Unique identifier, required for every row
+
+**first_name** → First Name
+- Format: Text (letters, spaces, hyphens)
+- Example: `John`
+- Notes: Max 255 characters
+
+**last_name** → Last Name
+- Format: Text (letters, spaces, hyphens)
+- Example: `Smith`
+- Notes: Max 255 characters
 
 **Note:** If any of these three required columns are missing or empty in a row, that row will fail validation.
 
 ### Optional Columns (Recommended)
 
-| CSV Column | Maps To | Format | Example | Notes |
-|-----------|---------|--------|---------|-------|
-| `email` | Email Address | Valid email format | `john@example.com` | Used for email campaigns |
-| `alternate_email` | Alternate Email | Valid email format | `john.work@company.com` | Secondary email backup |
-| `country_code` | Country | ISO 2-letter code | `ZA`, `US`, `GB` | Localization and compliance |
-| `timezone` | Timezone | IANA format | `Africa/Johannesburg` | Used for message scheduling |
-| `language_preference` | Language | Language code | `en`, `es`, `fr` | Message localization |
-| `gender` | Gender | M/F/O/Unspecified | `M` | Demographic segmentation |
-| `date_of_birth` | Date of Birth | YYYY-MM-DD | `1990-05-15` | Age calculation and targeting |
-| `city` | City | Text | `Johannesburg` | Geographic targeting |
-| `region` | Region/State/Province | Text | `Gauteng` | Geographic segmentation |
-| `postal_code` | Postal Code | Text | `2000` | Location-based targeting |
-| `physical_address` | Street Address | Text | `123 Main St` | Customer location |
-| `customer_tier` | Customer Tier | Predefined value | `Gold`, `Silver`, `Bronze` | Value-based segmentation |
-| `preferred_channel` | Preferred Channel | Channel code | `SMS`, `Email`, `WhatsApp` | Communication preference |
+**email** → Email Address
+- Format: Valid email format
+- Example: `john@example.com`
+- Notes: Used for email campaigns
+
+**alternate_email** → Alternate Email
+- Format: Valid email format
+- Example: `john.work@company.com`
+- Notes: Secondary email backup
+
+**country_code** → Country
+- Format: ISO 2-letter code
+- Example: `ZA`, `US`, `GB`
+- Notes: Localization and compliance
+
+**timezone** → Timezone
+- Format: IANA format
+- Example: `Africa/Johannesburg`
+- Notes: Used for message scheduling
+
+**language_preference** → Language
+- Format: Language code
+- Example: `en`, `es`, `fr`
+- Notes: Message localization
+
+**gender** → Gender
+- Format: M/F/O/Unspecified
+- Example: `M`
+- Notes: Demographic segmentation
+
+**date_of_birth** → Date of Birth
+- Format: YYYY-MM-DD
+- Example: `1990-05-15`
+- Notes: Age calculation and targeting
+
+**city** → City
+- Format: Text
+- Example: `Johannesburg`
+- Notes: Geographic targeting
+
+**region** → Region/State/Province
+- Format: Text
+- Example: `Gauteng`
+- Notes: Geographic segmentation
+
+**postal_code** → Postal Code
+- Format: Text
+- Example: `2000`
+- Notes: Location-based targeting
+
+**physical_address** → Street Address
+- Format: Text
+- Example: `123 Main St`
+- Notes: Customer location
+
+**customer_tier** → Customer Tier
+- Format: Predefined value
+- Example: `Gold`, `Silver`, `Bronze`
+- Notes: Value-based segmentation
+
+**preferred_channel** → Preferred Channel
+- Format: Channel code
+- Example: `SMS`, `Email`, `WhatsApp`
+- Notes: Communication preference
 
 ### Optional Columns (Custom/System-Specific)
 

@@ -359,12 +359,18 @@ Product types are referenced when creating or editing products:
 - Document code meaning in description
 
 **Examples:**
-| Type | Name | Code | Description |
-|------|------|------|-------------|
-| ✅ Good | Physical Product | `physical_product` | Tangible goods requiring shipping |
-| ✅ Good | Digital Service | `digital_service` | Digital services with instant delivery |
-| ❌ Poor | PP | `pp` | Too vague |
-| ❌ Poor | Physical Product Goods | `physical_product_goods` | Name/code too long |
+
+**✅ Good** - Physical Product - `physical_product` - Tangible goods requiring shipping
+
+
+**✅ Good** - Digital Service - `digital_service` - Digital services with instant delivery
+
+
+**❌ Poor** - PP - `pp` - Too vague
+
+
+**❌ Poor** - Physical Product Goods - `physical_product_goods` - Name/code too long
+
 
 ### Organization Strategy
 

@@ -373,12 +373,18 @@ Segment types are referenced when creating or editing segments:
 - Document code meaning in description
 
 **Examples:**
-| Type | Name | Code | Description |
-|------|------|------|-------------|
-| ✅ Good | Behavioral Segments | `behavioral` | Customer behavior-based segmentation |
-| ✅ Good | Lifecycle Segments | `lifecycle` | Customer journey stage segmentation |
-| ❌ Poor | B | `b` | Too vague |
-| ❌ Poor | Behavioral Engagement Segments | `behavioral_engagement_segments` | Name/code too long |
+
+**✅ Good** - Behavioral Segments - `behavioral` - Customer behavior-based segmentation
+
+
+**✅ Good** - Lifecycle Segments - `lifecycle` - Customer journey stage segmentation
+
+
+**❌ Poor** - B - `b` - Too vague
+
+
+**❌ Poor** - Behavioral Engagement Segments - `behavioral_engagement_segments` - Name/code too long
+
 
 ### Organization Strategy
 

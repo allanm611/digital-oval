@@ -90,17 +90,23 @@ The profile section displays core customer data:
 
 Customer supports multiple notification channels:
 
-| Channel | Description | When Used |
-|---------|-------------|-----------|
-| **SMS** | Text messages | High-priority, immediate delivery |
-| **Flash SMS** | Urgent text messages | Alerts, confirmations |
-| **Email** | Email messages | Detailed communications, newsletters |
-| **WhatsApp** | WhatsApp messaging | Personal, interactive messages |
-| **Push** | Mobile push notifications | App-based notifications |
-| **USSD** | USSD menu | Feature phone interactions |
-| **Interactive USSD** | Menu-based USSD | Feature phone menus |
-| **In-App** | In-application messages | Mobile/web app notifications |
-| **IVR** | Voice calls | Voice-based communications |
+**SMS** - Text messages (High-priority, immediate delivery)
+
+**Flash SMS** - Urgent text messages (Alerts, confirmations)
+
+**Email** - Email messages (Detailed communications, newsletters)
+
+**WhatsApp** - WhatsApp messaging (Personal, interactive messages)
+
+**Push** - Mobile push notifications (App-based notifications)
+
+**USSD** - USSD menu (Feature phone interactions)
+
+**Interactive USSD** - Menu-based USSD (Feature phone menus)
+
+**In-App** - In-application messages (Mobile/web app notifications)
+
+**IVR** - Voice calls (Voice-based communications)
 
 ---
 

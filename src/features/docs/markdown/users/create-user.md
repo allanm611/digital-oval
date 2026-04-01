@@ -436,25 +436,57 @@ Before creating account, verify:
 
 ## Field Mapping Reference
 
-| Field | Required | Type | Max Length | Validation |
-|-------|----------|------|------------|-----------|
-| Username | Yes | Text | 50 | Alphanumeric + . - _ |
-| Email | Yes | Email | 255 | Valid email format |
-| First Name | Yes | Text | 100 | Letters, spaces, -, ' |
-| Last Name | Yes | Text | 100 | Letters, spaces, -, ' |
-| Password | Yes | Password | N/A | Min 12 chars, complexity |
-| Role | Yes | Select | N/A | Must select valid role |
-| Middle Name | No | Text | 100 | Letters, spaces, -, ' |
-| Preferred Name | No | Text | 100 | Any characters |
-| Phone | No | Phone | 20 | International format |
-| Employee ID | No | Text | 50 | Any characters |
-| Department | No | Select/Text | 100 | Predefined or custom |
-| Job Title | No | Text | 100 | Any characters |
-| Manager | No | Select | N/A | Must select valid user |
-| Timezone | No | Select | N/A | Valid IANA timezone |
-| Language | No | Select | N/A | Valid language code |
-| Data Access | No | Select | N/A | public/internal/conf/restricted |
-| PII Access | No | Boolean | N/A | true/false |
+
+**Username** - Yes - Text - 50 - Alphanumeric + . - _
+
+
+**Email** - Yes - Email - 255 - Valid email format
+
+
+**First Name** - Yes - Text - 100 - Letters, spaces, -, '
+
+
+**Last Name** - Yes - Text - 100 - Letters, spaces, -, '
+
+
+**Password** - Yes - Password - N/A - Min 12 chars, complexity
+
+
+**Role** - Yes - Select - N/A - Must select valid role
+
+
+**Middle Name** - No - Text - 100 - Letters, spaces, -, '
+
+
+**Preferred Name** - No - Text - 100 - Any characters
+
+
+**Phone** - No - Phone - 20 - International format
+
+
+**Employee ID** - No - Text - 50 - Any characters
+
+
+**Department** - No - Select/Text - 100 - Predefined or custom
+
+
+**Job Title** - No - Text - 100 - Any characters
+
+
+**Manager** - No - Select - N/A - Must select valid user
+
+
+**Timezone** - No - Select - N/A - Valid IANA timezone
+
+
+**Language** - No - Select - N/A - Valid language code
+
+
+**Data Access** - No - Select - N/A - public/internal/conf/restricted
+
+
+**PII Access** - No - Boolean - N/A - true/false
+
 
 ---
 

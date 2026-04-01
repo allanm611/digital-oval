@@ -111,14 +111,24 @@ Control groups defined specifically for individual campaigns.
 
 ## Comparison: Control vs Treatment Group
 
-| Aspect | Control Group | Treatment Group |
-|--------|---------------|-----------------|
-| **Receives Offer** | No | Yes |
-| **Receives Message** | No | Yes |
-| **Purpose** | Baseline measurement | Campaign impact |
-| **Size** | Typically 10-30% | 70-90% |
-| **Behavior Tracked** | Natural behavior | Response to campaign |
-| **Comparison** | Baseline metric | Change from baseline |
+
+****Receives Offer**** - No - Yes
+
+
+****Receives Message**** - No - Yes
+
+
+****Purpose**** - Baseline measurement - Campaign impact
+
+
+****Size**** - Typically 10-30% - 70-90%
+
+
+****Behavior Tracked**** - Natural behavior - Response to campaign
+
+
+****Comparison**** - Baseline metric - Change from baseline
+
 
 **Example:**
 - Control Group (15%): 1,500 customers receive nothing

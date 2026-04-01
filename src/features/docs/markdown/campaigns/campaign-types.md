@@ -99,9 +99,15 @@ When creating a campaign, you choose from the following campaign types:
 
 ## Key Differences
 
-| Aspect | Multiple Target Group | Champion Challenger | A/B Testing | Round Robin | Multiple Level |
-|--------|----------------------|-------------------|------------|------------|----------------|
-| **Segments** | Multiple | Multiple (1 champion + 1+ challengers) | Exactly 2 | 1 | 1 |
-| **Offers** | One per segment | Different per segment | Two variants | Sequential | Sequential |
-| **Execution** | Parallel | Parallel | Parallel | Sequential | Sequential |
-| **Purpose** | Different offers to different groups | Test new vs. proven | Two variants head-to-head | Progressive offers | Tiered offers | -->
+
+****Segments**** - Multiple - Multiple (1 champion + 1+ challengers) - Exactly 2 - 1 - 1
+
+
+****Offers**** - One per segment - Different per segment - Two variants - Sequential - Sequential
+
+
+****Execution**** - Parallel - Parallel - Parallel - Sequential - Sequential
+
+
+****Purpose**** - Different offers to different groups - Test new vs. proven - Two variants head-to-head - Progressive offers - Tiered offers - -->
+

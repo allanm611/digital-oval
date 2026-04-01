@@ -357,12 +357,18 @@ Manual rewards are created with specific reward types:
 - Document code meaning in description
 
 **Examples:**
-| Type | Name | Code | Description |
-|------|------|------|-------------|
-| ✅ Good | Loyalty Points | `loyalty_points` | Points earned through customer purchases |
-| ✅ Good | Discount Code | `discount_code` | Percentage or fixed amount discount vouchers |
-| ❌ Poor | LP | `lp` | Too vague |
-| ❌ Poor | Customer Loyalty Reward Points System | `customer_loyalty_reward_points_system` | Name/code too long |
+
+**✅ Good** - Loyalty Points - `loyalty_points` - Points earned through customer purchases
+
+
+**✅ Good** - Discount Code - `discount_code` - Percentage or fixed amount discount vouchers
+
+
+**❌ Poor** - LP - `lp` - Too vague
+
+
+**❌ Poor** - Customer Loyalty Reward Points System - `customer_loyalty_reward_points_system` - Name/code too long
+
 
 ### Organization Strategy
 

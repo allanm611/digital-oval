@@ -81,21 +81,33 @@ These actions are always available regardless of campaign status:
 
 ### Campaign Status Reference
 
-| Status | Meaning | Actions Available |
-|--------|---------|------------------|
-| **Draft** | Campaign is being created/edited | Request Approval, Edit, Archive, Delete |
-| **Pending Approval** | Campaign is waiting for approval | Approve, Reject, Edit, Archive, Delete |
-| **Approved** | Campaign has been approved | Execute, Pause/Resume, Edit, Archive, Delete |
-| **Paused** | Approved campaign is temporarily paused | Resume, Edit, Archive, Delete |
-| **Active** | Campaign is currently running | Pause, Edit, Archive, Delete |
+
+****Draft**** - Campaign is being created/edited - Request Approval, Edit, Archive, Delete
+
+
+****Pending Approval**** - Campaign is waiting for approval - Approve, Reject, Edit, Archive, Delete
+
+
+****Approved**** - Campaign has been approved - Execute, Pause/Resume, Edit, Archive, Delete
+
+
+****Paused**** - Approved campaign is temporarily paused - Resume, Edit, Archive, Delete
+
+
+****Active**** - Campaign is currently running - Pause, Edit, Archive, Delete
+
 
 ### Approval Status States
 
-| Approval Status | Meaning |
-|---|---|
-| **Pending** | Campaign is awaiting reviewer approval |
-| **Approved** | Campaign has been approved and can be rund |
-| **Rejected** | Campaign was rejected and returned to draft for edits |
+
+****Pending**** - Campaign is awaiting reviewer approval
+
+
+****Approved**** - Campaign has been approved and can be rund
+
+
+****Rejected**** - Campaign was rejected and returned to draft for edits
+
 
 ### Key Notes
 

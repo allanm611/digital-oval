@@ -311,12 +311,18 @@ Job types are referenced when creating or editing scheduled jobs:
 - Document code meaning in description
 
 **Examples:**
-| Type | Name | Code | Description |
-|------|------|------|-------------|
-| ✅ Good | Data Import | `data_import` | ETL processes for importing customer data |
-| ✅ Good | Report Generation | `report_generation` | Monthly and on-demand business reports |
-| ❌ Poor | DI | `di` | Too vague |
-| ❌ Poor | Import Customer Data From File | `import_customer_data_from_file` | Name too long |
+
+**✅ Good** - Data Import - `data_import` - ETL processes for importing customer data
+
+
+**✅ Good** - Report Generation - `report_generation` - Monthly and on-demand business reports
+
+
+**❌ Poor** - DI - `di` - Too vague
+
+
+**❌ Poor** - Import Customer Data From File - `import_customer_data_from_file` - Name too long
+
 
 ### Organization Strategy
 

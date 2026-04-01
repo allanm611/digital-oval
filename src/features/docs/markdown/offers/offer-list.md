@@ -47,14 +47,17 @@ Use the **Search** field to find offers by:
 
 The offers are displayed in a table with the following columns:
 
-| Column | Description |
-|--------|-------------|
-| **Offer** | Offer name and description |
-| **Category** | The category/catalog the offer belongs to |
-| **Status** | Current status (Draft, Active, Paused, Expired, Archived) |
-| **Approval** | Approval status (Pending, Approved, Rejected) |
-| **Created** | Date the offer was created |
-| **Actions** | Available management actions (View, Edit, Pause/Resume, Archive, Delete, etc.) |
+**Offer** - Offer name and description
+
+**Category** - The category/catalog the offer belongs to
+
+**Status** - Current status (Draft, Active, Paused, Expired, Archived)
+
+**Approval** - Approval status (Pending, Approved, Rejected)
+
+**Created** - Date the offer was created
+
+**Actions** - Available management actions (View, Edit, Pause/Resume, Archive, Delete, etc.)
 
 
 ## Action Buttons

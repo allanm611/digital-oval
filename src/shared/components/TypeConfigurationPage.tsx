@@ -22,6 +22,7 @@ import HeadlessSelect from "./ui/HeadlessSelect";
 import Pagination from "./ui/Pagination";
 import BackButton from "./ui/BackButton";
 import CreateButton from "./ui/CreateButton";
+import LoadingSpinner from "./ui/LoadingSpinner";
 
 export interface TypeConfigurationItem extends ConfigurationItem {
   isActive?: boolean;
@@ -1150,10 +1151,19 @@ function TypeConfigurationModal({
             <button
               type="submit"
               disabled={isSaving}
-              className={`px-4 py-2 text-white ${tw.rounded} transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
+              className={`px-4 py-2 text-white ${tw.rounded} transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
               style={{ backgroundColor: color.primary.action }}
             >
-              {isSaving ? "Saving..." : item ? "Update" : "Create"}
+              {isSaving ? (
+                <>
+                  <LoadingSpinner size="sm" variant="default" color="white" />
+                  Saving...
+                </>
+              ) : item ? (
+                "Update"
+              ) : (
+                "Create"
+              )}
             </button>
           </div>
         </form>
@@ -1184,7 +1194,17 @@ export default function TypeConfigurationPage({
     }));
 
   // Determine if this config type uses backend API
-  const backendTypes = ["campaignTypes", "senderIds", "languages", "characterSets", "creativeTemplates"];
+  const backendTypes = [
+    "campaignTypes",
+    "offerTypes",
+    "segmentTypes",
+    "productTypes",
+    "rewardTypes",
+    "senderIds",
+    "languages",
+    "characterSets",
+    "creativeTemplates",
+  ];
   const useBackendConfig = backendTypes.includes(config.configType);
 
   // Always call hook - it returns null for unsupported types
@@ -1265,13 +1285,19 @@ export default function TypeConfigurationPage({
     try {
       if (useBackendConfig && backendConfig) {
         await backendConfig.delete(item.id);
+        showToast(
+          config.deleteConfirmTitle,
+          config.deleteSuccessMessage(item.name),
+        );
+        // Refresh data after delete completes
+        await backendConfig.refresh();
       } else {
         configurationDataService.deleteItem(config.configType, item.id);
+        showToast(
+          config.deleteConfirmTitle,
+          config.deleteSuccessMessage(item.name),
+        );
       }
-      showToast(
-        config.deleteConfirmTitle,
-        config.deleteSuccessMessage(item.name),
-      );
     } catch (err) {
       console.error(`Error deleting ${config.entityName}:`, err);
       showError(
@@ -1292,12 +1318,19 @@ export default function TypeConfigurationPage({
       setIsSaving(true);
       if (useBackendConfig && backendConfig) {
         if (editingItem) {
+          // Wait for API to complete before closing modal
           await backendConfig.update(editingItem.id, itemData);
           showToast(config.updateSuccessMessage);
         } else {
+          // Create new item
           await backendConfig.create(itemData);
           showToast(config.createSuccessMessage);
         }
+        // Close modal first, then refresh data
+        setIsModalOpen(false);
+        setEditingItem(undefined);
+        // Refresh data after modal closes
+        await backendConfig.refresh();
       } else {
         if (editingItem) {
           configurationDataService.updateItem(
@@ -1310,9 +1343,9 @@ export default function TypeConfigurationPage({
           configurationDataService.addItem(config.configType, itemData);
           showToast(config.createSuccessMessage);
         }
+        setIsModalOpen(false);
+        setEditingItem(undefined);
       }
-      setIsModalOpen(false);
-      setEditingItem(undefined);
     } catch (err) {
       console.error(`Failed to save ${config.entityName}:`, err);
       showError(`Failed to save ${config.entityName}`, config.saveErrorMessage);
@@ -1374,7 +1407,14 @@ export default function TypeConfigurationPage({
       <div
         className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
       >
-        {filteredItems.length === 0 ? (
+        {backendConfig?.loading ? (
+          <div className="text-center py-12">
+            <div className="flex justify-center mb-4">
+              <LoadingSpinner size="lg" variant="default" />
+            </div>
+            <p className={`${tw.textMuted}`}>Loading {config.entityNamePlural}...</p>
+          </div>
+        ) : filteredItems.length === 0 ? (
           <div className="text-center py-12">
             <IconComponent className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             {searchTerm && (

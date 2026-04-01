@@ -144,14 +144,24 @@ This campaign type implements conditional logic where offers are determined by c
 
 ## Comparison Matrix
 
-| Feature | Multiple Target Group | Champion-Challenger | A/B Test | Round Robin | Multiple Level |
-|---------|----------------------|-------------------|----------|------------|----------------|
-| **Complexity** | Medium | Medium | Low | Low | High |
-| **Segment Count** | Multiple | 2 (Champion + Challenger) | 2 | 1+ | Multiple |
-| **Distribution** | Custom per segment | Custom split | 50/50 equal | Time-based | Condition-based |
-| **Use Case** | Multi-segment campaigns | Controlled testing | Variant comparison | Offer rotation | Dynamic logic |
-| **Setup Time** | Medium | Medium | Low | Low | High |
-| **Analysis Depth** | Segment level | Baseline comparison | Variant comparison | Time-based trends | Condition tracking |
+
+****Complexity**** - Medium - Medium - Low - Low - High
+
+
+****Segment Count**** - Multiple - 2 (Champion + Challenger) - 2 - 1+ - Multiple
+
+
+****Distribution**** - Custom per segment - Custom split - 50/50 equal - Time-based - Condition-based
+
+
+****Use Case**** - Multi-segment campaigns - Controlled testing - Variant comparison - Offer rotation - Dynamic logic
+
+
+****Setup Time**** - Medium - Medium - Low - Low - High
+
+
+****Analysis Depth**** - Segment level - Baseline comparison - Variant comparison - Time-based trends - Condition tracking
+
 
 ---
 

@@ -78,14 +78,17 @@ View all broadcast records with:
 
 ## Broadcast Status States
 
-| Status | Meaning |
-|--------|---------|
-| **Scheduled** | Broadcast is scheduled but hasn't started yet |
-| **In Progress** | Currently sending messages |
-| **Completed** | All messages successfully sent |
-| **Sent** | Same as completed - broadcast finished |
-| **Failed** | Errors occurred during execution |
-| **Paused** | Execution was temporarily stopped |
+**Scheduled** - Broadcast is scheduled but hasn't started yet
+
+**In Progress** - Currently sending messages
+
+**Completed** - All messages successfully sent
+
+**Sent** - Same as completed - broadcast finished
+
+**Failed** - Errors occurred during execution
+
+**Paused** - Execution was temporarily stopped
 
 
 ## Broadcast Engagement Rates

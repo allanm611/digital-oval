@@ -48,15 +48,19 @@ Use the **Search** field to find products by:
 
 The products are displayed in a table with the following columns:
 
-| Column | Description |
-|--------|-------------|
-| **Product** | Product name |
-| **Product ID** | Unique product identifier |
-| **DA ID** | Digital Assistant ID |
-| **Category** | The category the product belongs to (badge) |
-| **Status** | Current status - Active or Inactive (badge) |
-| **Created** | Date the product was created |
-| **Actions** | Available management actions |
+**Product** - Product name
+
+**Product ID** - Unique product identifier
+
+**DA ID** - Digital Assistant ID
+
+**Category** - The category the product belongs to (badge)
+
+**Status** - Current status - Active or Inactive (badge)
+
+**Created** - Date the product was created
+
+**Actions** - Available management actions
 
 
 ## Action Buttons

@@ -68,29 +68,45 @@ resource.action.scope
 
 ### Campaign Management
 
-| Permission | Description | Use For |
-|-----------|-------------|---------|
-| campaign.create | Create new campaigns | Campaign managers |
-| campaign.read | View campaigns | All users |
-| campaign.update | Edit campaigns | Campaign managers |
-| campaign.delete | Delete campaigns | Campaign managers (restricted) |
-| campaign.execute | Launch/execute campaigns | Campaign managers |
-| campaign.admin | Administer campaigns | Admins |
+
+**campaign.create** - Create new campaigns - Campaign managers
+
+
+**campaign.read** - View campaigns - All users
+
+
+**campaign.update** - Edit campaigns - Campaign managers
+
+
+**campaign.delete** - Delete campaigns - Campaign managers (restricted)
+
+
+**campaign.execute** - Launch/execute campaigns - Campaign managers
+
+
+**campaign.admin** - Administer campaigns - Admins
+
 
 ### Campaign Approval
 
-| Permission | Description | Use For |
-|-----------|-------------|---------|
-| campaign.approve | Approve campaigns | Approvers |
-| campaign.reject | Reject campaigns | Approvers |
-| campaign.submit | Submit for approval | Campaign managers |
+
+**campaign.approve** - Approve campaigns - Approvers
+
+
+**campaign.reject** - Reject campaigns - Approvers
+
+
+**campaign.submit** - Submit for approval - Campaign managers
+
 
 ### Campaign Reporting
 
-| Permission | Description | Use For |
-|-----------|-------------|---------|
-| campaign.report.view | View campaign reports | All users |
-| campaign.report.export | Export campaign data | Analysts |
+
+**campaign.report.view** - View campaign reports - All users
+
+
+**campaign.report.export** - Export campaign data - Analysts
+
 
 ---
 
@@ -98,21 +114,33 @@ resource.action.scope
 
 ### Offer Management
 
-| Permission | Description | Use For |
-|-----------|-------------|---------|
-| offer.create | Create offers | Offer managers |
-| offer.read | View offers | All users |
-| offer.update | Edit offers | Offer managers |
-| offer.delete | Delete offers | Offer managers (restricted) |
-| offer.admin | Administer offers | Admins |
+
+**offer.create** - Create offers - Offer managers
+
+
+**offer.read** - View offers - All users
+
+
+**offer.update** - Edit offers - Offer managers
+
+
+**offer.delete** - Delete offers - Offer managers (restricted)
+
+
+**offer.admin** - Administer offers - Admins
+
 
 ### Offer Actions
 
-| Permission | Description | Use For |
-|-----------|-------------|---------|
-| offer.approve | Approve offers | Approvers |
-| offer.activate | Activate/enable offers | Offer managers |
-| offer.deactivate | Deactivate/disable offers | Offer managers |
+
+**offer.approve** - Approve offers - Approvers
+
+
+**offer.activate** - Activate/enable offers - Offer managers
+
+
+**offer.deactivate** - Deactivate/disable offers - Offer managers
+
 
 ---
 
@@ -120,20 +148,30 @@ resource.action.scope
 
 ### Segment Management
 
-| Permission | Description | Use For |
-|-----------|-------------|---------|
-| segment.create | Create segments | Segment managers |
-| segment.read | View segments | All users |
-| segment.update | Edit segments | Segment managers |
-| segment.delete | Delete segments | Segment managers (restricted) |
-| segment.admin | Administer segments | Admins |
+
+**segment.create** - Create segments - Segment managers
+
+
+**segment.read** - View segments - All users
+
+
+**segment.update** - Edit segments - Segment managers
+
+
+**segment.delete** - Delete segments - Segment managers (restricted)
+
+
+**segment.admin** - Administer segments - Admins
+
 
 ### Segment Actions
 
-| Permission | Description | Use For |
-|-----------|-------------|---------|
-| segment.execute | Execute/refresh segments | Segment managers |
-| segment.export | Export segment members | Analysts |
+
+**segment.execute** - Execute/refresh segments - Segment managers
+
+
+**segment.export** - Export segment members - Analysts
+
 
 ---
 
@@ -141,13 +179,21 @@ resource.action.scope
 
 ### Product Management
 
-| Permission | Description | Use For |
-|-----------|-------------|---------|
-| product.create | Create products | Product managers |
-| product.read | View products | All users |
-| product.update | Edit products | Product managers |
-| product.delete | Delete products | Product managers (restricted) |
-| product.admin | Administer products | Admins |
+
+**product.create** - Create products - Product managers
+
+
+**product.read** - View products - All users
+
+
+**product.update** - Edit products - Product managers
+
+
+**product.delete** - Delete products - Product managers (restricted)
+
+
+**product.admin** - Administer products - Admins
+
 
 ---
 
@@ -155,31 +201,51 @@ resource.action.scope
 
 ### User Administration
 
-| Permission | Description | Use For |
-|-----------|-------------|---------|
-| user.create | Create users | Admins |
-| user.read | View users | All users |
-| user.update | Edit user info | User/self or admins |
-| user.delete | Delete users | Admins (restricted) |
-| user.admin | Full user administration | Admins |
+
+**user.create** - Create users - Admins
+
+
+**user.read** - View users - All users
+
+
+**user.update** - Edit user info - User/self or admins
+
+
+**user.delete** - Delete users - Admins (restricted)
+
+
+**user.admin** - Full user administration - Admins
+
 
 ### User Actions
 
-| Permission | Description | Use For |
-|-----------|-------------|---------|
-| user.activate | Activate users | Admins |
-| user.deactivate | Deactivate users | Admins |
-| user.suspend | Suspend users | Admins |
-| user.unlock | Unlock locked accounts | Admins |
-| user.reset.password | Reset user passwords | Admins |
+
+**user.activate** - Activate users - Admins
+
+
+**user.deactivate** - Deactivate users - Admins
+
+
+**user.suspend** - Suspend users - Admins
+
+
+**user.unlock** - Unlock locked accounts - Admins
+
+
+**user.reset.password** - Reset user passwords - Admins
+
 
 ### User Roles & Permissions
 
-| Permission | Description | Use For |
-|-----------|-------------|---------|
-| user.role.assign | Assign roles to users | Admins |
-| user.mfa.enable | Enable MFA for users | Admins |
-| user.mfa.disable | Disable MFA for users | Admins |
+
+**user.role.assign** - Assign roles to users - Admins
+
+
+**user.mfa.enable** - Enable MFA for users - Admins
+
+
+**user.mfa.disable** - Disable MFA for users - Admins
+
 
 ---
 
@@ -187,13 +253,21 @@ resource.action.scope
 
 ### Role Administration
 
-| Permission | Description | Use For |
-|-----------|-------------|---------|
-| role.create | Create new roles | Admins |
-| role.read | View roles | All users |
-| role.update | Edit roles | Admins |
-| role.delete | Delete roles | Admins |
-| role.admin | Full role administration | Admins |
+
+**role.create** - Create new roles - Admins
+
+
+**role.read** - View roles - All users
+
+
+**role.update** - Edit roles - Admins
+
+
+**role.delete** - Delete roles - Admins
+
+
+**role.admin** - Full role administration - Admins
+
 
 ---
 
@@ -201,22 +275,36 @@ resource.action.scope
 
 ### Report Access
 
-| Permission | Description | Use For |
-|-----------|-------------|---------|
-| report.read | View reports | All users |
-| report.create | Create custom reports | Analysts |
-| report.export | Export report data | Analysts |
-| report.schedule | Schedule reports | Analysts |
-| report.admin | Administer reporting | Admins |
+
+**report.read** - View reports - All users
+
+
+**report.create** - Create custom reports - Analysts
+
+
+**report.export** - Export report data - Analysts
+
+
+**report.schedule** - Schedule reports - Analysts
+
+
+**report.admin** - Administer reporting - Admins
+
 
 ### Report Types
 
-| Permission | Description | Use For |
-|-----------|-------------|---------|
-| report.campaign | Access campaign reports | Marketing |
-| report.customer | Access customer reports | Analytics |
-| report.user | Access user reports | HR/Admins |
-| report.system | Access system reports | Admins |
+
+**report.campaign** - Access campaign reports - Marketing
+
+
+**report.customer** - Access customer reports - Analytics
+
+
+**report.user** - Access user reports - HR/Admins
+
+
+**report.system** - Access system reports - Admins
+
 
 ---
 
@@ -224,20 +312,30 @@ resource.action.scope
 
 ### Customer Data Access
 
-| Permission | Description | Use For |
-|-----------|-------------|---------|
-| customer.read | View customer data | Authorized users |
-| customer.create | Create customer records | Customer team |
-| customer.update | Edit customer data | Customer team |
-| customer.delete | Delete customer records | Admins (restricted) |
+
+**customer.read** - View customer data - Authorized users
+
+
+**customer.create** - Create customer records - Customer team
+
+
+**customer.update** - Edit customer data - Customer team
+
+
+**customer.delete** - Delete customer records - Admins (restricted)
+
 
 ### Sensitive Data
 
-| Permission | Description | Use For |
-|-----------|-------------|---------|
-| data.pii.access | Access PII (personal data) | Authorized users |
-| data.pii.export | Export personal data | Analysts (restricted) |
-| data.confidential | Access confidential data | Management |
+
+**data.pii.access** - Access PII (personal data) - Authorized users
+
+
+**data.pii.export** - Export personal data - Analysts (restricted)
+
+
+**data.confidential** - Access confidential data - Management
+
 
 ---
 
@@ -245,20 +343,30 @@ resource.action.scope
 
 ### System Management
 
-| Permission | Description | Use For |
-|-----------|-------------|---------|
-| system.config | Modify system configuration | Admins |
-| system.admin | Full system administration | Admins |
-| system.logs | View system logs | Admins |
-| system.backup | Manage backups | Admins |
+
+**system.config** - Modify system configuration - Admins
+
+
+**system.admin** - Full system administration - Admins
+
+
+**system.logs** - View system logs - Admins
+
+
+**system.backup** - Manage backups - Admins
+
 
 ### Audit & Compliance
 
-| Permission | Description | Use For |
-|-----------|-------------|---------|
-| audit.read | View audit logs | Admins/Compliance |
-| audit.export | Export audit data | Compliance |
-| compliance.review | Review compliance | Compliance officers |
+
+**audit.read** - View audit logs - Admins/Compliance
+
+
+**audit.export** - Export audit data - Compliance
+
+
+**compliance.review** - Review compliance - Compliance officers
+
 
 ---
 

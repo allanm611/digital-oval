@@ -1,5 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { campaignTypeService, CampaignType, CreateCampaignTypeRequest, UpdateCampaignTypeRequest } from "../../features/campaigns/services/campaignTypeService";
+import { offerTypeService, OfferType, CreateOfferTypeRequest, UpdateOfferTypeRequest } from "../../features/offers/services/offerTypeService";
+import { rewardTypeService, RewardType, CreateRewardTypeRequest, UpdateRewardTypeRequest } from "../../features/offers/services/rewardTypeService";
+import { segmentTypeService, SegmentType, CreateSegmentTypeRequest, UpdateSegmentTypeRequest } from "../../features/segments/services/segmentTypeService";
+import { productTypeService, ProductType, CreateProductTypeRequest, UpdateProductTypeRequest } from "../../features/products/services/productTypeService";
 import { senderIdService, SenderId } from "../../features/configurations/services/senderIdService";
 import { languageService, Language } from "../../features/configurations/services/languageService";
 import { characterSetService, CharacterSet } from "../../features/configurations/services/characterSetService";
@@ -197,6 +201,30 @@ function transformPayload(type: string, payload: any): any {
         delete transformed.metadataValue;
       }
       break;
+
+    case "campaignTypes":
+    case "offerTypes":
+    case "segmentTypes":
+    case "productTypes":
+      // Map isActive to is_active
+      if (transformed.isActive !== undefined) {
+        transformed.is_active = transformed.isActive;
+        delete transformed.isActive;
+      }
+      break;
+
+    case "rewardTypes":
+      // Map isActive to is_active
+      if (transformed.isActive !== undefined) {
+        transformed.is_active = transformed.isActive;
+        delete transformed.isActive;
+      }
+      // Note: reward_key should not be changed - it comes from metadataValue in modal
+      if (transformed.metadataValue) {
+        transformed.reward_key = transformed.metadataValue;
+        delete transformed.metadataValue;
+      }
+      break;
   }
 
   return transformed;
@@ -224,7 +252,7 @@ export type UseBackendConfigDataResult<T, CreateReq, UpdateReq> = UseBackendConf
  * Pass undefined to skip fetching (useful for conditional hook usage in React)
  */
 export function useBackendConfigurationData(
-  type: "campaignTypes" | "senderIds" | "languages" | "characterSets" | "creativeTemplates" | undefined
+  type: "campaignTypes" | "offerTypes" | "segmentTypes" | "productTypes" | "rewardTypes" | "senderIds" | "languages" | "characterSets" | "creativeTemplates" | undefined
 ): UseBackendConfigDataResult<any, any, any> | null {
   const [data, setData] = useState<CampaignType[]>([]);
   const [loading, setLoading] = useState(false);
@@ -299,6 +327,50 @@ export function useBackendConfigurationData(
           }
           break;
 
+        case "offerTypes":
+          response = await offerTypeService.getAllOfferTypes();
+          if (response?.success && response?.data) {
+            setData(normalizeApiResponse(type, Array.isArray(response.data) ? response.data : []));
+          } else if (Array.isArray(response)) {
+            setData(normalizeApiResponse(type, response));
+          } else {
+            setData([]);
+          }
+          break;
+
+        case "segmentTypes":
+          response = await segmentTypeService.getAllSegmentTypes();
+          if (response?.success && response?.data) {
+            setData(normalizeApiResponse(type, Array.isArray(response.data) ? response.data : []));
+          } else if (Array.isArray(response)) {
+            setData(normalizeApiResponse(type, response));
+          } else {
+            setData([]);
+          }
+          break;
+
+        case "productTypes":
+          response = await productTypeService.getAllProductTypes();
+          if (response?.success && response?.data) {
+            setData(normalizeApiResponse(type, Array.isArray(response.data) ? response.data : []));
+          } else if (Array.isArray(response)) {
+            setData(normalizeApiResponse(type, response));
+          } else {
+            setData([]);
+          }
+          break;
+
+        case "rewardTypes":
+          response = await rewardTypeService.getAllRewardTypes();
+          if (response?.success && response?.data) {
+            setData(normalizeApiResponse(type, Array.isArray(response.data) ? response.data : []));
+          } else if (Array.isArray(response)) {
+            setData(normalizeApiResponse(type, response));
+          } else {
+            setData([]);
+          }
+          break;
+
         default:
           throw new Error(`Unknown configuration type: ${type}`);
       }
@@ -324,11 +396,22 @@ export function useBackendConfigurationData(
           case "campaignTypes":
             response = await campaignTypeService.createCampaignType(payload);
             if (response?.success && response?.data) {
-              await refresh();
               return response.data;
             } else {
               throw new Error(response?.error || "Failed to create item");
             }
+          case "offerTypes":
+            response = await offerTypeService.createOfferType(payload);
+            return response?.data || response;
+          case "segmentTypes":
+            response = await segmentTypeService.createSegmentType(payload);
+            return response?.data || response;
+          case "productTypes":
+            response = await productTypeService.createProductType(payload);
+            return response?.data || response;
+          case "rewardTypes":
+            response = await rewardTypeService.createRewardType(payload);
+            return response?.data || response;
           case "senderIds":
           case "languages":
           case "characterSets":
@@ -337,7 +420,6 @@ export function useBackendConfigurationData(
             else if (type === "languages") response = await languageService.createLanguage(payload);
             else if (type === "characterSets") response = await characterSetService.createCharacterSet(payload);
             else if (type === "creativeTemplates") response = await creativeTemplateService.createCreativeTemplate(payload);
-            await refresh();
             // Return the data if wrapped, otherwise return response directly
             return response?.data || response;
           default:
@@ -351,7 +433,7 @@ export function useBackendConfigurationData(
         setLoading(false);
       }
     },
-    [type, refresh]
+    [type]
   );
 
   // Update existing item
@@ -366,11 +448,22 @@ export function useBackendConfigurationData(
           case "campaignTypes":
             response = await campaignTypeService.updateCampaignType(id, payload);
             if (response?.success && response?.data) {
-              await refresh();
               return response.data;
             } else {
               throw new Error(response?.error || "Failed to update item");
             }
+          case "offerTypes":
+            response = await offerTypeService.updateOfferType(id, payload);
+            return response?.data || response;
+          case "segmentTypes":
+            response = await segmentTypeService.updateSegmentType(id, payload);
+            return response?.data || response;
+          case "productTypes":
+            response = await productTypeService.updateProductType(id, payload);
+            return response?.data || response;
+          case "rewardTypes":
+            response = await rewardTypeService.updateRewardType(id, payload);
+            return response?.data || response;
           case "senderIds":
           case "languages":
           case "characterSets":
@@ -379,7 +472,6 @@ export function useBackendConfigurationData(
             else if (type === "languages") response = await languageService.updateLanguage(id, payload);
             else if (type === "characterSets") response = await characterSetService.updateCharacterSet(id, payload);
             else if (type === "creativeTemplates") response = await creativeTemplateService.updateCreativeTemplate(id, payload);
-            await refresh();
             // Return the data if wrapped, otherwise return response directly
             return response?.data || response;
           default:
@@ -393,7 +485,7 @@ export function useBackendConfigurationData(
         setLoading(false);
       }
     },
-    [type, refresh]
+    [type]
   );
 
   // Delete item
@@ -406,11 +498,21 @@ export function useBackendConfigurationData(
         switch (type) {
           case "campaignTypes":
             response = await campaignTypeService.deleteCampaignType(id);
-            if (response?.success) {
-              await refresh();
-            } else {
+            if (!response?.success) {
               throw new Error(response?.error || "Failed to delete item");
             }
+            break;
+          case "offerTypes":
+            await offerTypeService.deleteOfferType(id);
+            break;
+          case "segmentTypes":
+            await segmentTypeService.deleteSegmentType(id);
+            break;
+          case "productTypes":
+            await productTypeService.deleteProductType(id);
+            break;
+          case "rewardTypes":
+            await rewardTypeService.deleteRewardType(id);
             break;
           case "senderIds":
           case "languages":
@@ -420,7 +522,6 @@ export function useBackendConfigurationData(
             else if (type === "languages") await languageService.deleteLanguage(id);
             else if (type === "characterSets") await characterSetService.deleteCharacterSet(id);
             else if (type === "creativeTemplates") await creativeTemplateService.deleteCreativeTemplate(id);
-            await refresh();
             break;
           default:
             throw new Error(`Unknown configuration type: ${type}`);
@@ -433,7 +534,7 @@ export function useBackendConfigurationData(
         setLoading(false);
       }
     },
-    [type, refresh]
+    [type]
   );
 
   // Fetch data on mount

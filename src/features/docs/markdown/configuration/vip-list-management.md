@@ -409,11 +409,15 @@ Campaign reports include:
 - Include tier level in name if applicable
 
 **Examples:**
-| ✅ Good | ❌ Poor |
-|---------|---------|
-| "Premium VIP" | "List 1" |
-| "Gold VIP - $50K+ Annual" | "VIP" |
-| "Strategic Partnerships" | "Important Customers" |
+
+**"Premium VIP"** - "List 1"
+
+
+**"Gold VIP - $50K+ Annual"** - "VIP"
+
+
+**"Strategic Partnerships"** - "Important Customers"
+
 
 ### Customer Management
 

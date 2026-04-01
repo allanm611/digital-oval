@@ -517,18 +517,36 @@ You can create type-specific campaigns:
 
 ## Reference: Type Characteristics Matrix
 
-| Type | Best For | Typical Duration | Key Metric | Example |
-|------|----------|-----------------|------------|---------|
-| Data | Internet usage | 30 days | GB/MB | "5GB Monthly" |
-| Voice | Voice calls | 30 days | Minutes | "500 Minutes" |
-| SMS | Text messages | 30 days | Count | "100 SMS" |
-| Combo | All services | 30 days | Combined | "Data+Voice+SMS" |
-| Voucher | Prepaid | 60-90 days | Face value | "$10 Voucher" |
-| Loyalty | Retention | 365 days | Points | "500 Points" |
-| Discount | Savings | 7-30 days | % or $ | "20% Off" |
-| Bundle | Multiple items | 30 days | Package | "3-Item Bundle" |
-| Bonus | Extra value | 30 days | Added value | "Free 1GB" |
-| Other | Special cases | Varies | Custom | Custom offer |
+
+**Data** - Internet usage - 30 days - GB/MB - "5GB Monthly"
+
+
+**Voice** - Voice calls - 30 days - Minutes - "500 Minutes"
+
+
+**SMS** - Text messages - 30 days - Count - "100 SMS"
+
+
+**Combo** - All services - 30 days - Combined - "Data+Voice+SMS"
+
+
+**Voucher** - Prepaid - 60-90 days - Face value - "$10 Voucher"
+
+
+**Loyalty** - Retention - 365 days - Points - "500 Points"
+
+
+**Discount** - Savings - 7-30 days - % or $ - "20% Off"
+
+
+**Bundle** - Multiple items - 30 days - Package - "3-Item Bundle"
+
+
+**Bonus** - Extra value - 30 days - Added value - "Free 1GB"
+
+
+**Other** - Special cases - Varies - Custom - Custom offer
+
 
 ---
 

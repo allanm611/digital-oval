@@ -89,18 +89,25 @@ Navigate through user records:
 
 ## User List Columns
 
-| Column | Description |
-|--------|-------------|
-| **Name** | First and last name of user |
-| **Username** | System login username |
-| **Email** | Email address |
-| **Role** | Primary assigned role |
-| **Department** | Department assignment |
-| **Status** | Active, Inactive, Suspended, Locked |
-| **MFA** | Multi-factor authentication enabled? |
-| **Created** | Date user account was created |
-| **Last Login** | Most recent login date/time |
-| **Actions** | View, Edit, Disable, Delete buttons |
+**Name** - First and last name of user
+
+**Username** - System login username
+
+**Email** - Email address
+
+**Role** - Primary assigned role
+
+**Department** - Department assignment
+
+**Status** - Active, Inactive, Suspended, Locked
+
+**MFA** - Multi-factor authentication enabled?
+
+**Created** - Date user account was created
+
+**Last Login** - Most recent login date/time
+
+**Actions** - View, Edit, Disable, Delete buttons
 
 ---
 

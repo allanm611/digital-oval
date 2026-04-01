@@ -259,13 +259,25 @@ Campaigns are aligned with business objectives:
 
 **Good Performance Targets:**
 
-| Metric | Good | Excellent |
-|--------|------|-----------|
-| Delivery Rate | 95%+ | 98%+ |
-| Click-Through Rate | 5-8% | 10%+ |
-| Conversion Rate | 5-7% | 10%+ |
-| ROAS | 3-4x | 5x+ |
-| Unsubscribe Rate | <0.5% | <0.2% |
+**Delivery Rate**
+- Good: 95%+
+- Excellent: 98%+
+
+**Click-Through Rate**
+- Good: 5-8%
+- Excellent: 10%+
+
+**Conversion Rate**
+- Good: 5-7%
+- Excellent: 10%+
+
+**ROAS (Return on Ad Spend)**
+- Good: 3-4x
+- Excellent: 5x+
+
+**Unsubscribe Rate**
+- Good: <0.5%
+- Excellent: <0.2%
 
 **Note:** Benchmarks vary by industry, customer type, and offer. Compare against your historical performance and company goals.
 

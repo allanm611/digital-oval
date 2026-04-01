@@ -277,13 +277,21 @@ Assign permissions to users and roles to control what users can do in the system
 
 **Scope Selection Guide:**
 
-| Scenario | Recommended Scope | Reasoning |
-|----------|-------------------|-----------|
-| New user, basic access | own | Start restrictive |
-| Manager managing team | team | Team-only access |
-| Department head | department | Department-wide |
-| Analyst across org | all | Need full view |
-| System admin | all | Full administration |
+
+**New user, basic access** - own - Start restrictive
+
+
+**Manager managing team** - team - Team-only access
+
+
+**Department head** - department - Department-wide
+
+
+**Analyst across org** - all - Need full view
+
+
+**System admin** - all - Full administration
+
 
 ---
 

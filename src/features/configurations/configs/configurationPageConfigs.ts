@@ -1480,8 +1480,9 @@ export const rewardTypesConfig: TypeConfigurationPageConfig = {
   backPath: "/dashboard/configuration",
   icon: Gift,
   searchPlaceholder: "Search reward types...",
-  initialData: hardcodedRewardTypes,
+  initialData: [],
   createButtonText: "Create",
+  disableCreate: true, // Backend-managed configuration
   modalTitle: {
     create: "Create Reward Type",
     edit: "Edit Reward Type",
@@ -1492,11 +1493,7 @@ export const rewardTypesConfig: TypeConfigurationPageConfig = {
   descriptionRequired: false,
   nameMaxLength: 120,
   descriptionMaxLength: 600,
-  metadataField: {
-    label: "Fulfilment Key",
-    type: "text",
-    placeholder: "e.g., bundle, points, discount",
-  },
+  // Note: reward_key is managed by backend and hidden from UI
   statusLabel: "Status",
   // Permissions - Reward types are backend-managed, not creatable via UI
   disableCreate: true,
@@ -2140,10 +2137,11 @@ export const offerTypesConfig: TypeConfigurationPageConfig = {
   searchPlaceholder: "Search offer types by name or description...",
 
   // Data
-  initialData: hardcodedOfferTypes,
+  initialData: [],
 
   // Labels
   createButtonText: "Create",
+  disableCreate: true, // Backend-managed configuration
   modalTitle: {
     create: "Create New Offer Type",
     edit: "Edit Offer Type",
@@ -2191,10 +2189,11 @@ export const campaignTypesConfig: TypeConfigurationPageConfig = {
   searchPlaceholder: "Search campaign types by name or description...",
 
   // Data
-  initialData: hardcodedCampaignTypes,
+  initialData: [],
 
   // Labels
   createButtonText: "Create",
+  disableCreate: true, // Backend-managed configuration
   modalTitle: {
     create: "Create New Campaign Type",
     edit: "Edit Campaign Type",
@@ -2242,10 +2241,11 @@ export const segmentTypesConfig: TypeConfigurationPageConfig = {
   searchPlaceholder: "Search segment types by name or description...",
 
   // Data
-  initialData: hardcodedSegmentTypes,
+  initialData: [],
 
   // Labels
   createButtonText: "Create",
+  disableCreate: true, // Backend-managed configuration
   modalTitle: {
     create: "Create New Segment Type",
     edit: "Edit Segment Type",
@@ -2285,8 +2285,9 @@ export const productTypesConfig: TypeConfigurationPageConfig = {
   backPath: "/dashboard/products",
   icon: Briefcase,
   searchPlaceholder: "Search product types by name or description...",
-  initialData: hardcodedProductTypes,
+  initialData: [],
   createButtonText: "Create",
+  disableCreate: true, // Backend-managed configuration
   modalTitle: {
     create: "Create New Product Type",
     edit: "Edit Product Type",
