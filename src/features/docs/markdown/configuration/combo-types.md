@@ -255,6 +255,8 @@ The system provides real-time validation for the code field:
 - View summary information: Name, Code, Description, Category, Created Date
 - See count of combos using each type
 
+![Combo Types List](/img/configuration/combotypeslist.png)
+
 **Filtering &amp; Search**
 - Search by name, code, description, or category
 - Server-side search with debouncing for performance

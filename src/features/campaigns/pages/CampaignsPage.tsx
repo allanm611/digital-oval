@@ -13,6 +13,7 @@ import {
   Pause,
   Edit,
   Archive,
+  RotateCcw,
   Trash2,
   CheckCircle,
   Send,
@@ -753,6 +754,39 @@ export default function CampaignsPage() {
       console.error("Failed to archive campaign:", error);
       // Extract error message from backend response
       let errorMessage = "Failed to archive campaign";
+
+      if (error instanceof Error) {
+        const match = error.message.match(/details: ({.*})/);
+        if (match) {
+          try {
+            const errorData = JSON.parse(match[1]);
+            errorMessage = errorData.error || errorData.message || errorMessage;
+          } catch {
+            errorMessage = error.message;
+          }
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
+      showToast("error", errorMessage);
+    }
+  };
+
+  const handleUnarchiveCampaign = async (campaignId: number) => {
+    try {
+      const userId = user?.user_id;
+      if (!userId) {
+        throw new Error("User ID not available");
+      }
+      await campaignService.unarchiveCampaign(campaignId, userId);
+      showToast("success", "Campaign unarchived successfully!");
+      setShowActionMenu(null);
+      fetchCampaigns();
+      fetchCampaignStats();
+    } catch (error) {
+      console.error("Failed to unarchive campaign:", error);
+      let errorMessage = "Failed to unarchive campaign";
 
       if (error instanceof Error) {
         const match = error.message.match(/details: ({.*})/);
@@ -1557,16 +1591,29 @@ export default function CampaignsPage() {
                           Edit Campaign
                         </button>
 
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleArchiveCampaign(campaign.id);
-                          }}
-                          className="w-full flex items-center px-4 py-3 text-sm text-black"
-                        >
-                          <Archive className="w-4 h-4 mr-4 text-black" />
-                          Archive Campaign
-                        </button>
+                        {campaign.status === "archived" ? (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleUnarchiveCampaign(campaign.id);
+                            }}
+                            className="w-full flex items-center px-4 py-3 text-sm text-black"
+                          >
+                            <RotateCcw className="w-4 h-4 mr-4 text-black" />
+                            Unarchive Campaign
+                          </button>
+                        ) : (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleArchiveCampaign(campaign.id);
+                            }}
+                            className="w-full flex items-center px-4 py-3 text-sm text-black"
+                          >
+                            <Archive className="w-4 h-4 mr-4 text-black" />
+                            Archive Campaign
+                          </button>
+                        )}
 
                         {/* <button
                           onClick={(e) => {

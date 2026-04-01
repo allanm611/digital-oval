@@ -8,7 +8,7 @@ import { MESSAGE_TYPE_OPTIONS, MessageTypeEnum } from "../../configurations/conf
 import { CHARACTER_SET_TYPE_OPTIONS, CharacterSetTypeEnum } from "../../configurations/configs/ts/characterSetTypeEnum";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import BackButton from "../../../shared/components/ui/BackButton";
-import { tw, color } from "../../../shared/utils/utils";
+import { tw, color, button } from "../../../shared/utils/utils";
 
 export default function CharacterSetFormPage() {
   const { id } = useParams();
@@ -32,31 +32,37 @@ export default function CharacterSetFormPage() {
   const [quadChars, setQuadChars] = useState("");
 
   // Load existing character set if editing
+  // TODO: Uncomment when backend adds getCharacterSetById endpoint
+  // useEffect(() => {
+  //   if (id) {
+  //     const loadCharacterSet = async () => {
+  //       try {
+  //         const data = await characterSetService.getCharacterSetById(parseInt(id));
+  //         setName(data.name);
+  //         setDescription(data.description || "");
+  //         setIsActive(data.is_active ?? true);
+  //         setMessageType(data.message_type || "SMS");
+  //         setCharacterSetType(data.character_set_type || "");
+  //         setCharacterSetSize(String(data.character_set_size || ""));
+  //         setStandardChars(data.standard_chars || "");
+  //         setDoubleChars(data.double_chars || "");
+  //         setTripleChars(data.triple_chars || "");
+  //         setQuadChars(data.quad_chars || "");
+  //       } catch (err) {
+  //         showError("Error", "Failed to load character set");
+  //         navigate("/dashboard/character-sets");
+  //       } finally {
+  //         setLoading(false);
+  //       }
+  //     };
+  //     loadCharacterSet();
+  //   }
+  // }, [id, navigate, showError]);
+
+  // For now, remove loading state when component mounts
   useEffect(() => {
-    if (id) {
-      const loadCharacterSet = async () => {
-        try {
-          const data = await characterSetService.getCharacterSetById(parseInt(id));
-          setName(data.name);
-          setDescription(data.description || "");
-          setIsActive(data.is_active ?? true);
-          setMessageType(data.message_type || "SMS");
-          setCharacterSetType(data.character_set_type || "");
-          setCharacterSetSize(String(data.character_set_size || ""));
-          setStandardChars(data.standard_chars || "");
-          setDoubleChars(data.double_chars || "");
-          setTripleChars(data.triple_chars || "");
-          setQuadChars(data.quad_chars || "");
-        } catch (err) {
-          showError("Error", "Failed to load character set");
-          navigate("/dashboard/character-sets");
-        } finally {
-          setLoading(false);
-        }
-      };
-      loadCharacterSet();
-    }
-  }, [id, navigate, showError]);
+    setLoading(false);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,12 +114,12 @@ export default function CharacterSetFormPage() {
       <BackButton fallbackTo="/dashboard/character-sets" showBreadcrumb={true} currentLabel={id ? "Edit Character Set" : "Create Character Set"} />
 
       <form onSubmit={handleSubmit} className="space-y-6 bg-white rounded-lg p-6 border border-gray-200">
-        <h2 className="text-2xl font-bold text-gray-900">
+        <h2 className="text-sm font-bold text-gray-900">
           {id ? "Edit Character Set" : "Create Character Set"}
         </h2>
 
         {/* Basic Info */}
-        <div className="space-y-4 border-b pb-6">
+        <div className="space-y-4 pb-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Name *
@@ -140,60 +146,35 @@ export default function CharacterSetFormPage() {
               placeholder="Describe this character set"
             />
           </div>
-
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="isActive"
-              checked={isActive}
-              onChange={(e) => setIsActive(e.target.checked)}
-              className="w-4 h-4"
-            />
-            <label htmlFor="isActive" className="text-sm font-medium text-gray-700">
-              Active
-            </label>
-          </div>
         </div>
 
         {/* Configuration */}
-        <div className="space-y-4 border-b pb-6">
-          <h3 className="text-lg font-semibold text-gray-900">Configuration</h3>
+        <div className="space-y-4 pb-6">
+          <h3 className="text-sm font-semibold text-gray-900">Configuration</h3>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Message Type *
               </label>
-              <select
+              <HeadlessSelect
                 value={messageType}
-                onChange={(e) => setMessageType(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              >
-                <option value="">Select message type</option>
-                {MESSAGE_TYPE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+                onChange={(value) => setMessageType(String(value || ""))}
+                options={MESSAGE_TYPE_OPTIONS}
+                placeholder="Select message type"
+              />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Character Set Type *
               </label>
-              <select
+              <HeadlessSelect
                 value={characterSetType}
-                onChange={(e) => setCharacterSetType(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              >
-                <option value="">Select character set type</option>
-                {CHARACTER_SET_TYPE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+                onChange={(value) => setCharacterSetType(String(value || ""))}
+                options={CHARACTER_SET_TYPE_OPTIONS}
+                placeholder="Select character set type"
+              />
             </div>
           </div>
 
@@ -213,7 +194,7 @@ export default function CharacterSetFormPage() {
 
         {/* Characters */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900">Character Strings</h3>
+          <h3 className="text-sm font-semibold text-gray-900">Character Strings</h3>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -269,22 +250,82 @@ export default function CharacterSetFormPage() {
           </div>
         </div>
 
+        {/* Active Status */}
+        <div className="flex items-center gap-2 pt-4 pb-2">
+          <input
+            type="checkbox"
+            id="isActive"
+            checked={isActive}
+            onChange={(e) => setIsActive(e.target.checked)}
+            className="w-4 h-4 rounded"
+            style={{
+              accentColor: "#00BBCC",
+              cursor: "pointer",
+            }}
+          />
+          <label htmlFor="isActive" className="text-sm font-medium text-gray-700">
+            Active
+          </label>
+        </div>
+
         {/* Actions */}
-        <div className="flex items-center gap-3 pt-6 border-t">
-          <button
-            type="submit"
-            disabled={saving}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-          >
-            <Save className="w-4 h-4" />
-            {saving ? "Saving..." : "Save"}
-          </button>
+        <div className="flex items-center justify-end gap-3 pt-2">
           <button
             type="button"
             onClick={() => navigate("/dashboard/character-sets")}
-            className="flex items-center gap-2 px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+            style={{
+              background: button.bordered.background,
+              color: button.bordered.color,
+              border: button.bordered.border,
+              paddingTop: button.bordered.paddingY,
+              paddingBottom: button.bordered.paddingY,
+              paddingLeft: button.bordered.paddingX,
+              paddingRight: button.bordered.paddingX,
+              borderRadius: button.bordered.borderRadius,
+              fontSize: button.bordered.fontSize,
+              fontWeight: "500",
+              cursor: "pointer",
+              transition: "all 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor =
+                "rgba(37, 40, 41, 0.05)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor =
+                button.bordered.background;
+            }}
           >
             Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={saving}
+            style={{
+              background: button.action.background,
+              color: button.action.color,
+              border: button.action.border,
+              paddingTop: button.action.paddingY,
+              paddingBottom: button.action.paddingY,
+              paddingLeft: button.action.paddingX,
+              paddingRight: button.action.paddingX,
+              borderRadius: button.action.borderRadius,
+              fontSize: button.action.fontSize,
+              fontWeight: "500",
+              cursor: saving ? "not-allowed" : "pointer",
+              transition: "all 0.2s",
+              opacity: saving ? 0.5 : 1,
+            }}
+            onMouseEnter={(e) => {
+              if (!saving) {
+                e.currentTarget.style.opacity = "0.9";
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.opacity = saving ? "0.5" : "1";
+            }}
+          >
+            {saving ? "Saving..." : "Save"}
           </button>
         </div>
       </form>

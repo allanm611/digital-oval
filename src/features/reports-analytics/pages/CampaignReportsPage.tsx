@@ -341,6 +341,7 @@ const generateCampaignRows = (): CampaignRow[] => {
       const sent = targetGroup + controlGroup;
       const delivered = Math.floor(sent * (0.92 + Math.random() * 0.06));
       const conversions = Math.floor(delivered * (0.06 + Math.random() * 0.08));
+      const cgConversions = Math.floor((delivered * controlGroup / sent) * (0.04 + Math.random() * 0.06)); // CG has lower conversion rate
       const messagesGenerated = sent * (2 + Math.floor(Math.random() * 2));
 
       rows.push({
@@ -354,6 +355,7 @@ const generateCampaignRows = (): CampaignRow[] => {
         sent,
         delivered,
         conversions,
+        cgConversions,
         messagesGenerated,
         lastRunDate: runDate.toISOString().split("T")[0],
       });
@@ -1231,7 +1233,9 @@ export default function CampaignReportsPage() {
                     "Messages Generated",
                     "Sent",
                     "Delivered",
-                    "Conversions",
+                    "TG Conversions",
+                    "CG Conversions",
+                    "Percentage",
                     "Last Run",
                   ].map((header, idx, arr) => (
                     <th
@@ -1323,6 +1327,18 @@ export default function CampaignReportsPage() {
                       style={{ backgroundColor: colors.surface.tablebodybg }}
                     >
                       {entry.conversions.toLocaleString("en-US")}
+                    </td>
+                    <td
+                      className="px-6 py-4"
+                      style={{ backgroundColor: colors.surface.tablebodybg }}
+                    >
+                      {entry.cgConversions.toLocaleString("en-US")}
+                    </td>
+                    <td
+                      className="px-6 py-4"
+                      style={{ backgroundColor: colors.surface.tablebodybg }}
+                    >
+                      {entry.delivered > 0 ? ((entry.conversions / entry.delivered) * 100).toFixed(2) : 0}%
                     </td>
                     <td
                       className="px-6 py-4"

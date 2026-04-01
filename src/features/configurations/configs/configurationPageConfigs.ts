@@ -19,6 +19,7 @@ import {
   TypeConfigurationItem,
   TypeConfigurationPageConfig,
 } from "../components/TypeConfigurationPage";
+import { GATEWAY_KEY_OPTIONS } from "./ts";
 
 // Hardcoded objectives data
 const hardcodedObjectives: ConfigurationItem[] = [
@@ -2407,8 +2408,14 @@ export const senderIdsConfig: TypeConfigurationPageConfig = {
   nameRequired: true,
   descriptionLabel: "Description",
   descriptionRequired: false,
-  nameMaxLength: 12, // Sender IDs are typically 3-12 characters
-  descriptionMaxLength: 500,
+  nameMaxLength: 128,
+  descriptionMaxLength: 1000,
+  metadataField: {
+    label: "Gateway",
+    type: "select",
+    placeholder: "Select gateway",
+    options: GATEWAY_KEY_OPTIONS,
+  },
   statusLabel: "Status",
   deleteConfirmTitle: "Delete Sender ID",
   deleteConfirmMessage: (name: string) =>

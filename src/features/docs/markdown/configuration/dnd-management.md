@@ -253,6 +253,36 @@ Indicates a customer was previously in DND but has been removed (soft delete).
 
 **Route:** `/dashboard/dnd-management`
 
+### View Communication Policies
+
+Navigate to **Configuration → Communication Policies** to manage DND and other communication policies.
+
+![Communication Policies List](/img/configuration/communicaitonpolicylist.png)
+
+### Create Policy
+
+Click the **Create** button to add a new policy.
+
+![Create Policy](/img/configuration/createpolicy.png)
+
+**Policy Types:**
+
+**DND Policy:**
+
+![DND Policy Configuration](/img/configuration/createpolicy-dnd.png)
+
+**Maximum Frequency Policy:**
+
+![Maximum Frequency Policy](/img/configuration/createpolicy-maximum.png)
+
+**VIP Policy:**
+
+![VIP Policy Configuration](/img/configuration/createpolicy-vip.png)
+
+**Policy Type Dropdown:**
+
+![Policy Type Selection](/img/configuration/createpolicy-policydropdown.png)
+
 ---
 
 ### Channel-Specific Management

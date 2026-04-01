@@ -12,6 +12,8 @@ Create a new Campaign Objective to define a strategic goal or business outcome f
 2. Click the **Create** button at the top
 3. A modal dialog opens with the creation form
 
+![Create Campaign Objective](/img/configuration/createcampaignobjective.png)
+
 ### Step 2: Fill in Objective Information
 
 #### Objective Name (Required)

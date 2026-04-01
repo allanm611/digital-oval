@@ -14,6 +14,7 @@ import {
   Play,
   Pause,
   Archive,
+  RotateCcw,
   Filter,
   AlertCircle,
   Package,
@@ -651,7 +652,7 @@ export default function OffersPage() {
   interface OfferActionParams {
     offerId: number;
     offerName: string;
-    action: "activate" | "pause" | "archive" | "approve" | "reject";
+    action: "activate" | "pause" | "archive" | "unarchive" | "approve" | "reject";
     successMessage: string;
     updateFields: Partial<Offer>;
   }
@@ -671,6 +672,9 @@ export default function OffersPage() {
           break;
         case "archive":
           await offerService.archiveOffer(offerId);
+          break;
+        case "unarchive":
+          await offerService.unarchiveOffer(offerId);
           break;
         case "approve":
           await offerService.approveOffer(offerId);
@@ -795,6 +799,33 @@ export default function OffersPage() {
         action: "archive",
         successMessage: "Offer Archived: Offer has been archived successfully.",
         updateFields: { status: OfferStatusEnum.ARCHIVED },
+      },
+      {
+        onSetLoading: setLoadingAction,
+        onCloseMenu: () => setShowActionMenu(null),
+        onUpdateOffers: (offerId, updateFields) =>
+          setOffers((prev) =>
+            prev.map((o) =>
+              Number(o.id) === offerId ? { ...o, ...updateFields } : o
+            )
+          ),
+        onSuccess: success,
+        onError: showError,
+        onRefreshStats: fetchOfferStats,
+      }
+    );
+  };
+
+  const handleUnarchiveOffer = async (id: number) => {
+    const offer = offers.find((o) => Number(o.id) === id);
+    if (!offer) return;
+    await handleOfferAction(
+      {
+        offerId: id,
+        offerName: offer.name,
+        action: "unarchive",
+        successMessage: "Offer Unarchived: Offer has been unarchived successfully.",
+        updateFields: { status: OfferStatusEnum.DRAFT },
       },
       {
         onSetLoading: setLoadingAction,
@@ -1607,6 +1638,26 @@ export default function OffersPage() {
                               style={{ color: color.status.info }}
                             />
                             Request Approval
+                          </button>
+                        )}
+
+                        {/* Archived: Unarchive */}
+                        {offer.status === OfferStatusEnum.ARCHIVED && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (offer.id) {
+                                handleUnarchiveOffer(offer.id);
+                                setShowActionMenu(null);
+                              }
+                            }}
+                            className="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                          >
+                            <RotateCcw
+                              className="w-4 h-4 mr-3"
+                              style={{ color: color.primary.action }}
+                            />
+                            Unarchive Offer
                           </button>
                         )}
 

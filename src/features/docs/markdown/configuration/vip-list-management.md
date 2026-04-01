@@ -329,6 +329,8 @@ VIP Lists are integrated as one of four communication policy types:
 
 When creating a VIP List policy, you define:
 
+![VIP Policy Configuration](/img/configuration/createpolicy-vip.png)
+
 **Include Action**
 - VIP customers in selected lists receive special priority
 - Messages are prioritized for these customers

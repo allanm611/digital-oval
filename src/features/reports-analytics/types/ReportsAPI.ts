@@ -303,7 +303,8 @@ export interface CampaignRow {
   controlGroup: number;
   sent: number;
   delivered: number;
-  conversions: number;
+  conversions: number; // TG conversions (treatment group)
+  cgConversions: number; // CG conversions (control group)
   messagesGenerated: number;
   lastRunDate: string; // ISO 8601 format: YYYY-MM-DD
 }

@@ -201,6 +201,8 @@ Sender IDs vary by communication channel and have different requirements:
 - Select "Sender IDs" from the configuration menu
 - Click "Create Sender ID" button
 
+![Create Sender ID](/img/configuration/createsenderid.png)
+
 **Step 2: Select Sender Type**
 - Choose the channel type (SMS, Email, Push, WhatsApp, etc.)
 - System displays appropriate fields for selected type
@@ -286,6 +288,8 @@ Fill in the following fields:
 - View summary: Name, Channel Type, Sender Value, Status, Last Used
 - Filter by type, status, or channel
 - Search by name or sender value
+
+![Sender IDs List](/img/configuration/senderid.png)
 
 **Filtering &amp; Search**
 - Filter by sender type (SMS, Email, Push, etc.)

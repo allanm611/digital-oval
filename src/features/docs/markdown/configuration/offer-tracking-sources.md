@@ -308,6 +308,33 @@ Tracking sources can have multiple **Tracking Rules** that define specific condi
 
 ---
 
+## Managing Tracking Sources
+
+### View Tracking Sources
+
+Navigate to **Configuration → Offer Tracking Sources** to see all configured tracking sources.
+
+![Offer Tracking Sources List](/img/configuration/offertrackingsourceslist.png)
+
+### Create Tracking Source
+
+Click the **Create** button to add a new tracking source. Configure different tracking types:
+
+**Type Selection:**
+- **Type Dropdown** - Select from recharge, usage, engagement, redemption, churn, or custom
+
+![Create Offer Tracking - Type Dropdown](/img/configuration/createoffertrackingtypedropdown.png)
+
+**Source Selection:**
+- **Source Dropdown** - Choose the data source for your tracking metric
+
+![Create Offer Tracking - Source Dropdown](/img/configuration/createoffertrackingimagedropdownsource.png)
+
+**Configuration:**
+- Define the tracking rule with conditions and parameters
+
+![Create Offer Tracking](/img/configuration/createoffertrackingimage1.png)
+
 ## Using Tracking Sources in Offers
 
 ### Attaching Tracking Sources to Offers

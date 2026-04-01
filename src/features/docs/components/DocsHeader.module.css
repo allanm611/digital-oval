@@ -56,6 +56,116 @@
   font-family: 'Google Sans', 'Arial', sans-serif;
 }
 
+.centerSection {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  justify-content: center;
+}
+
+.releaseLabel {
+  font-size: 0.9rem;
+  color: #9ca3af;
+  font-weight: 500;
+  font-family: 'Google Sans', 'Arial', sans-serif;
+}
+
+.versionDropdownContainer {
+  position: relative;
+}
+
+.versionButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background-color: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 6px;
+  height: 36px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #e5e7eb;
+  font-family: 'Google Sans', 'Arial', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.versionButton:hover {
+  background-color: #1f2937;
+  border-color: #374151;
+}
+
+.versionText {
+  color: #25c2a0;
+  font-weight: 600;
+}
+
+.chevron {
+  color: #6b7280;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.versionDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 8px;
+  min-width: 280px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+  overflow: hidden;
+}
+
+.versionItem {
+  padding: 16px;
+  background-color: #111827;
+}
+
+.versionItemTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #25c2a0;
+  margin-bottom: 4px;
+  font-family: 'Google Sans', 'Arial', sans-serif;
+}
+
+.versionItemSubtitle {
+  font-size: 0.85rem;
+  color: #9ca3af;
+  margin-bottom: 8px;
+  font-family: 'Google Sans', 'Arial', sans-serif;
+}
+
+.versionItemDate {
+  font-size: 0.8rem;
+  color: #6b7280;
+  font-family: 'Google Sans', 'Arial', sans-serif;
+}
+
+.versionDivider {
+  height: 1px;
+  background-color: #1f2937;
+}
+
+.versionNote {
+  padding: 12px 16px;
+  font-size: 0.8rem;
+  color: #9ca3af;
+  background-color: #0f1419;
+  font-family: 'Google Sans', 'Arial', sans-serif;
+  font-style: italic;
+}
+
 .rightSection {
   display: flex;
   align-items: center;
@@ -112,6 +222,10 @@
 /* Mobile: collapse brand name and search on small screens */
 @media (max-width: 768px) {
   .brandName {
+    display: none;
+  }
+
+  .centerSection {
     display: none;
   }
 

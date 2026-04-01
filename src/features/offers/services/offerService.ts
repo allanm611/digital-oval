@@ -609,10 +609,17 @@ class OfferService {
   }
 
   async archiveOffer(id: number): Promise<OfferResponse> {
-    const statusRequest: UpdateStatusRequest = {
-      status: OfferStatusEnum.ARCHIVED,
-    };
-    return await this.updateOfferStatus(id, statusRequest);
+    return await this.request<OfferResponse>(`/${id}/archive`, {
+      method: "PATCH",
+      body: JSON.stringify({}),
+    });
+  }
+
+  async unarchiveOffer(id: number): Promise<OfferResponse> {
+    return await this.request<OfferResponse>(`/${id}/unarchive`, {
+      method: "PATCH",
+      body: JSON.stringify({}),
+    });
   }
 
   async expireOffer(id: number): Promise<OfferResponse> {

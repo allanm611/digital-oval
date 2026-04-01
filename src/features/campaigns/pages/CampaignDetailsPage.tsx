@@ -19,6 +19,8 @@ import {
   Eye,
   X,
   ChevronDown,
+  Archive,
+  RotateCcw,
 } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -1039,6 +1041,52 @@ export default function CampaignDetailsPage() {
                 )}
 
                 {/* Delete - Always available */}
+                {campaign.status === "archived" ? (
+                  <button
+                    onClick={async () => {
+                      try {
+                        setIsActionLoading(true);
+                        await campaignService.unarchiveCampaign(parseInt(id));
+                        setCampaign({ ...campaign, status: "draft" });
+                        showToast("success", "Campaign unarchived successfully!");
+                        setShowMoreMenu(false);
+                      } catch (error) {
+                        console.error("Failed to unarchive campaign:", error);
+                        showToast("error", "Failed to unarchive campaign");
+                      } finally {
+                        setIsActionLoading(false);
+                      }
+                    }}
+                    disabled={isActionLoading}
+                    className="w-full flex items-center px-4 py-2 text-sm text-gray-700 disabled:opacity-50"
+                  >
+                    <RotateCcw className="w-4 h-4 mr-3" />
+                    {isActionLoading ? "Unarchiving..." : "Unarchive Campaign"}
+                  </button>
+                ) : (
+                  <button
+                    onClick={async () => {
+                      try {
+                        setIsActionLoading(true);
+                        await campaignService.archiveCampaign(parseInt(id));
+                        setCampaign({ ...campaign, status: "archived" });
+                        showToast("success", "Campaign archived successfully!");
+                        setShowMoreMenu(false);
+                      } catch (error) {
+                        console.error("Failed to archive campaign:", error);
+                        showToast("error", "Failed to archive campaign");
+                      } finally {
+                        setIsActionLoading(false);
+                      }
+                    }}
+                    disabled={isActionLoading}
+                    className="w-full flex items-center px-4 py-2 text-sm text-gray-700 disabled:opacity-50"
+                  >
+                    <Archive className="w-4 h-4 mr-3" />
+                    {isActionLoading ? "Archiving..." : "Archive Campaign"}
+                  </button>
+                )}
+
                 <PermissionGate permission="campaigns.delete">
                   <button
                     onClick={() => {

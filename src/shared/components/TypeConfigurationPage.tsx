@@ -18,6 +18,8 @@ import type { ConfigurationItem } from "./GenericConfigurationPage";
 import { useBackendConfigurationData } from "../hooks/useBackendConfigurationData";
 import { MESSAGE_TYPE_OPTIONS, CHARACTER_SET_TYPE_OPTIONS, GATEWAY_KEY_OPTIONS } from "../../features/configurations/configs/ts";
 import { CHANNEL_OPTIONS } from "../../features/configurations/services/creativeTemplateService";
+import { characterSetService } from "../../features/configurations/services/characterSetService";
+import { languageService } from "../../features/configurations/services/languageService";
 import HeadlessSelect from "./ui/HeadlessSelect";
 import Pagination from "./ui/Pagination";
 import BackButton from "./ui/BackButton";
@@ -192,11 +194,64 @@ function TypeConfigurationModal({
   const [comboSharedValidity, setComboSharedValidity] = useState(true);
   const [comboValidityHours, setComboValidityHours] = useState<number>(720);
   const [comboPrice, setComboPrice] = useState<number | undefined>(undefined);
+  const [characterSetOptions, setCharacterSetOptions] = useState<
+    Array<{ value: string; label: string }>
+  >([]);
+  const [templateLocaleOptions, setTemplateLocaleOptions] = useState<
+    Array<{ value: string; label: string }>
+  >([]);
 
-  // Load languages for template locale selection
-  const languages = isCreativeTemplate
-    ? configurationDataService.getData("languages")
-    : [];
+  useEffect(() => {
+    const loadCharacterSets = async () => {
+      if (!isOpen || !isLanguage) return;
+      try {
+        const response = await characterSetService.getCharacterSets();
+        const characterSets = Array.isArray(response)
+          ? response
+          : (response as any)?.data || [];
+
+        const options = (characterSets || [])
+          .filter((cs: any) => cs?.is_active ?? cs?.isActive ?? true)
+          .map((cs: any) => ({
+            value: String(cs.name || ""),
+            label: String(cs.name || ""),
+          }))
+          .filter((opt: { value: string }) => opt.value);
+
+        setCharacterSetOptions(options);
+      } catch {
+        setCharacterSetOptions([]);
+      }
+    };
+
+    loadCharacterSets();
+  }, [isOpen, isLanguage]);
+
+  useEffect(() => {
+    const loadTemplateLocales = async () => {
+      if (!isOpen || !isCreativeTemplate) return;
+      try {
+        const response = await languageService.getLanguages();
+        const languages = Array.isArray(response)
+          ? response
+          : (response as any)?.data || [];
+
+        const options = (languages || [])
+          .filter((lang: any) => lang?.is_active ?? lang?.isActive ?? true)
+          .map((lang: any) => ({
+            value: String(lang.language_code || lang.metadataValue || ""),
+            label: String(lang.name || lang.language_code || ""),
+          }))
+          .filter((opt: { value: string }) => opt.value);
+
+        setTemplateLocaleOptions(options);
+      } catch {
+        setTemplateLocaleOptions([]);
+      }
+    };
+
+    loadTemplateLocales();
+  }, [isOpen, isCreativeTemplate]);
 
   // Load character sets dynamically for language configuration
   const getCharacterSetsOptions = () => {
@@ -206,6 +261,9 @@ function TypeConfigurationModal({
         f.fieldKey === "characterSet" && f.dynamicOptions === "characterSets",
     );
     if (characterSetField) {
+      if (characterSetOptions.length > 0) {
+        return characterSetOptions;
+      }
       const characterSets = configurationDataService.getData("characterSets");
       return (characterSets as TypeConfigurationItem[])
         .filter((cs) => cs.isActive)
@@ -353,6 +411,12 @@ function TypeConfigurationModal({
     // Validate code field for Creative Templates
     if (isCreativeTemplate && !code.trim()) {
       setError("Code is required for creative templates");
+      return;
+    }
+
+    // Sender IDs require a gateway enum value.
+    if (config.configType === "senderIds" && !String(metadataValue || "").trim()) {
+      setError("Gateway is required for sender IDs");
       return;
     }
 
@@ -511,7 +575,7 @@ function TypeConfigurationModal({
             />
           </div>
 
-          <div className="pb-0 border-b-0">
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               {config.descriptionLabel} {config.descriptionRequired && "*"}
             </label>
@@ -653,7 +717,7 @@ function TypeConfigurationModal({
           {/* Character String Fields (for Character Sets only) */}
           {isCharacterSet && (
             <>
-              <div className="border-t border-gray-200 pt-4 mt-4">
+              <div className="mt-6">
                 <h3 className="text-sm font-semibold text-gray-900 mb-4">
                   Character Strings
                 </h3>
@@ -736,7 +800,7 @@ function TypeConfigurationModal({
           {/* Template Content Fields (for Creative Templates only) */}
           {isCreativeTemplate && (
             <>
-              <div className="border-t border-gray-200 pt-4 mt-4">
+              <div className="mt-6">
                 <h3 className="text-sm font-semibold text-gray-900 mb-4">
                   {t.genericConfig.templateContent}
                 </h3>
@@ -783,12 +847,14 @@ function TypeConfigurationModal({
                       value: "",
                       label: t.genericConfig.selectLanguageOptional,
                     },
-                    ...(languages as TypeConfigurationItem[])
-                      .filter((lang) => lang.isActive)
-                      .map((lang) => ({
-                        value: String(lang.metadataValue || ""),
-                        label: lang.name,
-                      })),
+                    ...(templateLocaleOptions.length > 0
+                      ? templateLocaleOptions
+                      : (configurationDataService.getData("languages") as TypeConfigurationItem[])
+                          .filter((lang) => lang.isActive)
+                          .map((lang) => ({
+                            value: String(lang.metadataValue || ""),
+                            label: lang.name,
+                          }))),
                   ]}
                   placeholder={t.genericConfig.selectLanguageOptional}
                   openUpward={true}
@@ -1162,15 +1228,60 @@ function TypeConfigurationModal({
             <button
               type="button"
               onClick={onClose}
-              className={`px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 ${tw.rounded} transition-colors`}
+              style={{
+                background: button.bordered.background,
+                color: button.bordered.color,
+                border: button.bordered.border,
+                paddingTop: button.bordered.paddingY,
+                paddingBottom: button.bordered.paddingY,
+                paddingLeft: button.bordered.paddingX,
+                paddingRight: button.bordered.paddingX,
+                borderRadius: button.bordered.borderRadius,
+                fontSize: button.bordered.fontSize,
+                fontWeight: "500",
+                cursor: "pointer",
+                transition: "all 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor =
+                  "rgba(37, 40, 41, 0.05)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor =
+                  button.bordered.background;
+              }}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSaving}
-              className={`px-4 py-2 text-white ${tw.rounded} transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
-              style={{ backgroundColor: color.primary.action }}
+              style={{
+                background: button.action.background,
+                color: button.action.color,
+                border: button.action.border,
+                paddingTop: button.action.paddingY,
+                paddingBottom: button.action.paddingY,
+                paddingLeft: button.action.paddingX,
+                paddingRight: button.action.paddingX,
+                borderRadius: button.action.borderRadius,
+                fontSize: button.action.fontSize,
+                fontWeight: "500",
+                cursor: isSaving ? "not-allowed" : "pointer",
+                transition: "all 0.2s",
+                opacity: isSaving ? 0.5 : 1,
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+              onMouseEnter={(e) => {
+                if (!isSaving) {
+                  e.currentTarget.style.opacity = "0.9";
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.opacity = isSaving ? "0.5" : "1";
+              }}
             >
               {isSaving ? (
                 <>
@@ -1284,11 +1395,27 @@ export default function TypeConfigurationPage({
   const IconComponent = config.icon;
 
   const handleCreateItem = () => {
+    if (config.configType === "characterSets") {
+      navigate("/dashboard/character-sets/create");
+      return;
+    }
+    if (config.configType === "creativeTemplates") {
+      navigate("/dashboard/creative-templates/create");
+      return;
+    }
     setEditingItem(undefined);
     setIsModalOpen(true);
   };
 
   const handleEditItem = (item: TypeConfigurationItem) => {
+    if (config.configType === "characterSets") {
+      navigate(`/dashboard/character-sets/${item.id}`);
+      return;
+    }
+    if (config.configType === "creativeTemplates") {
+      navigate(`/dashboard/creative-templates/${item.id}`);
+      return;
+    }
     setEditingItem(item);
     setIsModalOpen(true);
   };

@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Search } from 'lucide-react';
+import { Search, ChevronDown } from 'lucide-react';
 import { SearchModal } from './SearchModal';
 import styles from './DocsHeader.module.css';
 import logo from '../../../assets/logo.png';
@@ -13,7 +13,11 @@ import logo from '../../../assets/logo.png';
 export function DocsHeader() {
   const location = useLocation();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isVersionOpen, setIsVersionOpen] = useState(false);
   const isDocsActive = location.pathname.startsWith('/documentation');
+
+  const currentVersion = 'v1.0';
+  const releaseDate = 'April 2026';
 
   return (
     <>
@@ -26,6 +30,35 @@ export function DocsHeader() {
               <span className={styles.brandName}>Sentra CVM</span>
             </Link>
             <span className={styles.docLabel}>Documentation</span>
+          </div>
+
+          {/* Center: Release Notes + Version Dropdown */}
+          <div className={styles.centerSection}>
+            <span className={styles.releaseLabel}>Release Notes</span>
+            <div className={styles.versionDropdownContainer}>
+              <button
+                onClick={() => setIsVersionOpen(!isVersionOpen)}
+                className={styles.versionButton}
+              >
+                <span className={styles.versionText}>{currentVersion}</span>
+                <ChevronDown
+                  size={16}
+                  className={`${styles.chevron} ${isVersionOpen ? styles.chevronOpen : ''}`}
+                />
+              </button>
+
+              {isVersionOpen && (
+                <div className={styles.versionDropdown}>
+                  <div className={styles.versionItem}>
+                    <div className={styles.versionItemTitle}>{currentVersion}</div>
+                    <div className={styles.versionItemSubtitle}>Current Release</div>
+                    <div className={styles.versionItemDate}>{releaseDate}</div>
+                  </div>
+                  <div className={styles.versionDivider}></div>
+                  <div className={styles.versionNote}>First Release of Sentra CVM Documentation</div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Right: Search */}

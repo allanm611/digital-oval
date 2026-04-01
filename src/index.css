@@ -3258,3 +3258,9 @@ Satoshi
     animation: none;
   }
 }
+
+/* Global Checkbox Styling - Accent Color */
+input[type="checkbox"] {
+  accent-color: #00BBCC;
+  cursor: pointer;
+}

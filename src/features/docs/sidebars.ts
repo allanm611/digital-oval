@@ -429,6 +429,7 @@ const sidebars: SidebarsConfig = {
         'configuration/routes',
         'configuration/campaign-objectives',
         'configuration/departments',
+        'configuration/line-of-business',
         'configuration/programs',
         'configuration/campaign-catalog',
         'configuration/campaign-types',
@@ -452,8 +453,7 @@ const sidebars: SidebarsConfig = {
         'configuration/product-catalog',
         'configuration/segment-types',
         'configuration/segment-catalog',
-      
-       
+        'configuration/dynamic-message-variables',
       ],
     },
     {

@@ -20,6 +20,7 @@ import {
   Play,
   Pause,
   Archive,
+  RotateCcw,
   MoreVertical,
   Save,
   Plus,
@@ -126,6 +127,7 @@ export default function OfferDetailsPage() {
   const [isDeletingCreative, setIsDeletingCreative] = useState(false);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [isArchiving, setIsArchiving] = useState(false);
+  const [isUnarchiving, setIsUnarchiving] = useState(false);
   const [showExpireModal, setShowExpireModal] = useState(false);
   const [isExpiring, setIsExpiring] = useState(false);
   const [showUnlinkModal, setShowUnlinkModal] = useState(false);
@@ -1135,7 +1137,7 @@ export default function OfferDetailsPage() {
 
   // Consolidated offer action handler for details page
   interface OfferDetailActionParams {
-    action: "approve" | "reject" | "request_approval" | "activate" | "pause" | "expire" | "archive";
+    action: "approve" | "reject" | "request_approval" | "activate" | "pause" | "expire" | "archive" | "unarchive";
     successMessage: string;
     updateFields: Partial<Offer>;
     onSuccess?: () => void;
@@ -1167,6 +1169,9 @@ export default function OfferDetailsPage() {
           break;
         case "archive":
           await offerService.updateOfferStatus(Number(id), { status: OfferStatusEnum.ARCHIVED });
+          break;
+        case "unarchive":
+          await offerService.unarchiveOffer(Number(id));
           break;
       }
 
@@ -1318,6 +1323,19 @@ export default function OfferDetailsPage() {
       });
     } finally {
       setIsArchiving(false);
+    }
+  };
+
+  const handleUnarchive = async () => {
+    setIsUnarchiving(true);
+    try {
+      await handleOfferDetailAction({
+        action: "unarchive",
+        successMessage: `Offer Unarchived: "${offer?.name}" has been unarchived.`,
+        updateFields: { status: OfferStatusEnum.DRAFT },
+      });
+    } finally {
+      setIsUnarchiving(false);
     }
   };
 
@@ -1776,6 +1794,21 @@ export default function OfferDetailsPage() {
                   >
                     <Archive className="w-4 h-4" />
                     Archive Offer
+                  </button>
+                )}
+
+                {/* Unarchive - Only for archived offers */}
+                {isArchived && (
+                  <button
+                    onClick={() => {
+                      handleUnarchive();
+                      setShowMoreMenu(false);
+                    }}
+                    disabled={isUnarchiving}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    {isUnarchiving ? "Unarchiving..." : "Unarchive Offer"}
                   </button>
                 )}
 
@@ -2895,7 +2928,7 @@ export default function OfferDetailsPage() {
                   }))
                 }
                 className="h-4 w-4 rounded border-gray-300"
-                style={{ accentColor: color.primary.action }}
+                style={{ accentColor: color.primary.accent }}
               />
               <label
                 htmlFor="new-creative-active"

@@ -12,6 +12,8 @@ Create a new Communication Channel to add a new messaging method to your platfor
 2. Click the **Create** button at the top of the page
 3. A modal dialog opens with the channel creation form
 
+![Create Communication Channel](/img/configuration/createcommunciationchannel.png)
+
 ### Step 2: Fill in Channel Information
 
 #### Channel Name (Required)

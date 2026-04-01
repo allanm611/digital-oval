@@ -83,6 +83,8 @@ The selected objective helps:
 
 Access the Campaign Objectives configuration page to see all available objectives with their descriptions.
 
+![Campaign Objectives List](/img/configuration/camapignobjectiveslist.png)
+
 ### Edit an Objective
 
 1. Click on any objective in the list

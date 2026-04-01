@@ -254,6 +254,8 @@ If primary SMS route fails:
 - Select "SMS Routes" from the configuration menu
 - Click "Create SMS Route" button
 
+![Create Route](/img/configuration/createroute.png)
+
 **Step 2: Enter Route Information**
 
 Fill in the following fields:

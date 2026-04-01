@@ -55,7 +55,7 @@ export default function SubscriptionIdSelector({
   return (
     <div className="space-y-2">
       <label className={`block text-sm font-medium ${tw.textPrimary}`}>
-        {t.manualBroadcast.subscriptionIdLabel || "Subscription ID Field *"}
+        {t.manualBroadcast.subscriptionIdLabel || "Subscriber ID Field *"}
       </label>
       <p className={`text-xs ${tw.textSecondary} mb-0`}>
         {t.manualBroadcast.subscriptionIdHelper ||
@@ -66,7 +66,7 @@ export default function SubscriptionIdSelector({
         options={options}
         value={selectedColumn || ""}
         onChange={handleChange}
-        placeholder={t.manualBroadcast.subscriptionIdPlaceholder || "Select Subscription ID column..."}
+        placeholder={t.manualBroadcast.subscriptionIdPlaceholder || "Select Subscriber ID column..."}
         disabled={disabled || fileColumns.length === 0}
         error={error}
         zIndex={10100}

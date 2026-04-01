@@ -57,6 +57,8 @@ Your system comes with pre-configured channels:
 - See list of all configured channels
 - Check status and descriptions
 
+![Communication Channels List](/img/configuration/communicationchannelslist.png)
+
 **Create a new channel**
 - [Create Communication Channel](/documentation/create-communication-channel)
 - Add new SMS, Email, USSD, or Push channels

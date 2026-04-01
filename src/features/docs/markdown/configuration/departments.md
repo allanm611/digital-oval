@@ -117,6 +117,20 @@ Your system includes five pre-configured departments:
 - Document department evolution
 - Maintain consistent naming
 
+## Managing Departments
+
+### View Departments List
+
+Navigate to **Configuration → Departments** to see all configured departments.
+
+![Departments List](/img/configuration/departmentslist.png)
+
+### Create Department
+
+Click the **Create** button to add a new department.
+
+![Create Department](/img/configuration/createdepartment.png)
+
 ## Common Department Structures
 
 ### By Function

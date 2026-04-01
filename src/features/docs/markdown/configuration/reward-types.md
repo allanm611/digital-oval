@@ -238,6 +238,8 @@ The system provides real-time validation for the code field:
 - View summary information: Name, Code, Description, Category, Created Date
 - See count of rewards using each type
 
+![Reward Types List](/img/configuration/rewardtypeslist.png)
+
 **Filtering &amp; Search**
 - Search by name, code, description, or category
 - Server-side search with debouncing for performance

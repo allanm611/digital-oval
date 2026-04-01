@@ -644,6 +644,18 @@ class CampaignService {
     });
   }
 
+  async unarchiveCampaign(
+    id: number,
+    updatedBy?: number,
+  ): Promise<CampaignDetail> {
+    return this.request<CampaignDetail>(`/${id}/unarchive`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        updated_by: updatedBy,
+      }),
+    });
+  }
+
   async updateCampaignStatus(
     id: number,
     status: CampaignStatus,

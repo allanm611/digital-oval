@@ -97,6 +97,8 @@ Automatic failover sequence:
 - Navigate to **Configuration → Routes**
 - [See Communication Routes List](/documentation/routes-list)
 
+![SMS Routes List](/img/configuration/routeslist.png)
+
 **Specific Route Details**
 - Click route name to view configuration
 - [View Route Details](/documentation/view-route)
