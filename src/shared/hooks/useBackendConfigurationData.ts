@@ -387,7 +387,6 @@ export function useBackendConfigurationData(
   // Create new item
   const create = useCallback(
     async (createData: any): Promise<any> => {
-      setLoading(true);
       setError(null);
       try {
         const payload = transformPayload(type || "", createData);
@@ -429,8 +428,6 @@ export function useBackendConfigurationData(
         const errorMsg = err instanceof Error ? err.message : "Unknown error";
         setError(errorMsg);
         throw err;
-      } finally {
-        setLoading(false);
       }
     },
     [type]
@@ -439,7 +436,6 @@ export function useBackendConfigurationData(
   // Update existing item
   const update = useCallback(
     async (id: number, updateData: any): Promise<any> => {
-      setLoading(true);
       setError(null);
       try {
         const payload = transformPayload(type || "", updateData);
@@ -481,8 +477,6 @@ export function useBackendConfigurationData(
         const errorMsg = err instanceof Error ? err.message : "Unknown error";
         setError(errorMsg);
         throw err;
-      } finally {
-        setLoading(false);
       }
     },
     [type]
@@ -491,7 +485,6 @@ export function useBackendConfigurationData(
   // Delete item
   const deleteItem = useCallback(
     async (id: number): Promise<void> => {
-      setLoading(true);
       setError(null);
       try {
         let response: any;
@@ -530,8 +523,6 @@ export function useBackendConfigurationData(
         const errorMsg = err instanceof Error ? err.message : "Unknown error";
         setError(errorMsg);
         throw err;
-      } finally {
-        setLoading(false);
       }
     },
     [type]

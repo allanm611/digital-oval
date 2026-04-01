@@ -1,7 +1,7 @@
 import { buildApiUrl, getAuthHeaders } from "../../../shared/services/api";
 
 export interface Language {
-  id?: number;
+  id: number;
   name: string;
   description?: string;
   is_active: boolean;
@@ -10,7 +10,20 @@ export interface Language {
   character_set?: string;
   created_at?: string;
   updated_at?: string;
+  created_by?: number;
+  updated_by?: number;
 }
+
+export interface CreateLanguageRequest {
+  name: string;
+  description?: string;
+  is_active?: boolean;
+  language_code: string;
+  country?: string;
+  character_set?: string;
+}
+
+export interface UpdateLanguageRequest extends Partial<CreateLanguageRequest> {}
 
 const BASE_URL = buildApiUrl("/language");
 
@@ -45,14 +58,14 @@ class LanguageService {
     return this.request<Language>(`/${id}`);
   }
 
-  async createLanguage(data: Omit<Language, "id" | "created_at" | "updated_at">): Promise<Language> {
+  async createLanguage(data: CreateLanguageRequest): Promise<Language> {
     return this.request<Language>("", {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
-  async updateLanguage(id: number, data: Partial<Language>): Promise<Language> {
+  async updateLanguage(id: number, data: UpdateLanguageRequest): Promise<Language> {
     return this.request<Language>(`/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),

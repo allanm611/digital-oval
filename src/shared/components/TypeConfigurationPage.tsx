@@ -1289,8 +1289,6 @@ export default function TypeConfigurationPage({
           config.deleteConfirmTitle,
           config.deleteSuccessMessage(item.name),
         );
-        // Refresh data after delete completes
-        await backendConfig.refresh();
       } else {
         configurationDataService.deleteItem(config.configType, item.id);
         showToast(
@@ -1307,6 +1305,7 @@ export default function TypeConfigurationPage({
     }
   };
 
+
   const handleItemSaved = async (itemData: {
     name: string;
     description?: string;
@@ -1318,19 +1317,30 @@ export default function TypeConfigurationPage({
       setIsSaving(true);
       if (useBackendConfig && backendConfig) {
         if (editingItem) {
-          // Wait for API to complete before closing modal
-          await backendConfig.update(editingItem.id, itemData);
-          showToast(config.updateSuccessMessage);
+          const optimisticItem = {
+            ...editingItem,
+            ...itemData,
+            isActive: itemData.isActive ?? editingItem.isActive,
+          };
+          setItems(items.map(item => item.id === editingItem.id ? optimisticItem : item));
+
+          // Send API call in background
+          try {
+            await backendConfig.update(editingItem.id, itemData);
+            showToast(config.updateSuccessMessage);
+          } catch (err) {
+            // Revert on error
+            setItems(items.map(item => item.id === editingItem.id ? editingItem : item));
+            throw err;
+          }
         } else {
-          // Create new item
+          // Create: show loading and wait for response (need ID from API)
           await backendConfig.create(itemData);
           showToast(config.createSuccessMessage);
         }
-        // Close modal first, then refresh data
+        // Close modal
         setIsModalOpen(false);
         setEditingItem(undefined);
-        // Refresh data after modal closes
-        await backendConfig.refresh();
       } else {
         if (editingItem) {
           configurationDataService.updateItem(

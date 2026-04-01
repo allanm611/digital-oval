@@ -1,21 +1,37 @@
 import { buildApiUrl, getAuthHeaders } from "../../../shared/services/api";
 
 export interface CreativeTemplate {
-  id?: number;
+  id: number;
+  name: string;
+  code: string;
+  description?: string;
+  is_active: boolean;
+  channel: 'SMS' | 'Email' | 'Push' | 'InApp' | 'Web' | 'IVR' | 'USSD' | 'WhatsApp';
+  locale: string;
+  title?: string;
+  body_text?: string;
+  body_html?: string;
+  variables?: Record<string, any>;
+  created_at?: string;
+  updated_at?: string;
+  created_by?: number;
+  updated_by?: number;
+}
+
+export interface CreateCreativeTemplateRequest {
   name: string;
   code: string;
   description?: string;
   isActive?: boolean;
-  is_active?: boolean;
-  primaryChannel: string;
+  primaryChannel: 'SMS' | 'Email' | 'Push' | 'InApp' | 'Web' | 'IVR' | 'USSD' | 'WhatsApp';
   locale?: string;
   title?: string;
   text_body?: string;
   html_body?: string;
-  variables?: Record<string, string>;
-  created_at?: string;
-  updated_at?: string;
+  variables?: Record<string, any>;
 }
+
+export interface UpdateCreativeTemplateRequest extends Partial<CreateCreativeTemplateRequest> {}
 
 const BASE_URL = buildApiUrl("/creative-template");
 
@@ -50,21 +66,21 @@ class CreativeTemplateService {
     return this.request<CreativeTemplate>(`/${id}`);
   }
 
-  async createCreativeTemplate(data: Omit<CreativeTemplate, "id" | "created_at" | "updated_at">): Promise<CreativeTemplate> {
+  async createCreativeTemplate(data: CreateCreativeTemplateRequest): Promise<CreativeTemplate> {
     return this.request<CreativeTemplate>("", {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
-  async createCreativeTemplates(data: Array<Omit<CreativeTemplate, "id" | "created_at" | "updated_at">>): Promise<CreativeTemplate[]> {
+  async createCreativeTemplates(data: CreateCreativeTemplateRequest[]): Promise<CreativeTemplate[]> {
     return this.request<CreativeTemplate[]>("", {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
-  async updateCreativeTemplate(id: number, data: Partial<CreativeTemplate>): Promise<CreativeTemplate> {
+  async updateCreativeTemplate(id: number, data: UpdateCreativeTemplateRequest): Promise<CreativeTemplate> {
     return this.request<CreativeTemplate>(`/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),

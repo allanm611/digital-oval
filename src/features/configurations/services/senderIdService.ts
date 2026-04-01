@@ -1,14 +1,25 @@
 import { buildApiUrl, getAuthHeaders } from "../../../shared/services/api";
 
 export interface SenderId {
-  id?: number;
+  id: number;
   name: string;
   description?: string;
-  gateway_key: string;
+  gateway_key: 'INTERNAL' | 'EXTERNAL_PROVIDER_A' | 'EXTERNAL_PROVIDER_B' | 'MOCANA' | 'SMSGW_HUB';
   is_active: boolean;
   created_at?: string;
   updated_at?: string;
+  created_by?: number;
+  updated_by?: number;
 }
+
+export interface CreateSenderIdRequest {
+  name: string;
+  description?: string;
+  gateway_key: 'INTERNAL' | 'EXTERNAL_PROVIDER_A' | 'EXTERNAL_PROVIDER_B' | 'MOCANA' | 'SMSGW_HUB';
+  is_active?: boolean;
+}
+
+export interface UpdateSenderIdRequest extends Partial<CreateSenderIdRequest> {}
 
 const BASE_URL = buildApiUrl("/sender");
 
@@ -43,14 +54,14 @@ class SenderIdService {
     return this.request<SenderId>(`/${id}`);
   }
 
-  async createSenderId(data: Omit<SenderId, "id" | "created_at" | "updated_at">): Promise<SenderId> {
+  async createSenderId(data: CreateSenderIdRequest): Promise<SenderId> {
     return this.request<SenderId>("", {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
-  async updateSenderId(id: number, data: Partial<SenderId>): Promise<SenderId> {
+  async updateSenderId(id: number, data: UpdateSenderIdRequest): Promise<SenderId> {
     return this.request<SenderId>(`/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),

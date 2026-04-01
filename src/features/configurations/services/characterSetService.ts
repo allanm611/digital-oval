@@ -1,20 +1,37 @@
 import { buildApiUrl, getAuthHeaders } from "../../../shared/services/api";
 
 export interface CharacterSet {
-  id?: number;
+  id: number;
   name: string;
   description?: string;
   is_active: boolean;
-  message_type: string;
-  character_set_type: string;
+  message_type: 'SMS' | 'FLASH_SMS' | 'UNICODE' | 'BINARY' | 'USSD';
+  character_set_type: 'GSM7' | 'UCS2' | 'UTF8' | 'ISO-8859-1';
   character_set_size: number;
-  standard_chars?: string;
+  standard_chars: string;
   double_chars?: string;
   triple_chars?: string;
   quad_chars?: string;
   created_at?: string;
   updated_at?: string;
+  created_by?: number;
+  updated_by?: number;
 }
+
+export interface CreateCharacterSetRequest {
+  name: string;
+  description?: string;
+  is_active?: boolean;
+  message_type: 'SMS' | 'FLASH_SMS' | 'UNICODE' | 'BINARY' | 'USSD';
+  character_set_type: 'GSM7' | 'UCS2' | 'UTF8' | 'ISO-8859-1';
+  character_set_size: number;
+  standard_chars: string;
+  double_chars?: string;
+  triple_chars?: string;
+  quad_chars?: string;
+}
+
+export interface UpdateCharacterSetRequest extends Partial<CreateCharacterSetRequest> {}
 
 const BASE_URL = buildApiUrl("/character-set");
 
@@ -49,14 +66,14 @@ class CharacterSetService {
     return this.request<CharacterSet>(`/${id}`);
   }
 
-  async createCharacterSet(data: Omit<CharacterSet, "id" | "created_at" | "updated_at">): Promise<CharacterSet> {
+  async createCharacterSet(data: CreateCharacterSetRequest): Promise<CharacterSet> {
     return this.request<CharacterSet>("", {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
-  async updateCharacterSet(id: number, data: Partial<CharacterSet>): Promise<CharacterSet> {
+  async updateCharacterSet(id: number, data: UpdateCharacterSetRequest): Promise<CharacterSet> {
     return this.request<CharacterSet>(`/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
