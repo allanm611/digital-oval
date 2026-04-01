@@ -1453,11 +1453,6 @@ export const creativeTemplatesConfig: TypeConfigurationPageConfig = {
   descriptionRequired: false,
   nameMaxLength: 120,
   descriptionMaxLength: 600,
-  metadataField: {
-    label: "Primary Channel",
-    type: "text",
-    placeholder: "e.g., SMS, Email, Push",
-  },
   statusLabel: "Status",
   deleteConfirmTitle: "Delete Creative Template",
   deleteConfirmMessage: (name: string) =>

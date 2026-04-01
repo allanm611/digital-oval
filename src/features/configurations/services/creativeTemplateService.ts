@@ -1,4 +1,27 @@
 import { buildApiUrl, getAuthHeaders } from "../../../shared/services/api";
+import { ApiResponse } from "../../../shared/types/api";
+
+export enum ChannelEnum {
+  SMS = 'SMS',
+  Email = 'Email',
+  Push = 'Push',
+  InApp = 'InApp',
+  Web = 'Web',
+  IVR = 'IVR',
+  USSD = 'USSD',
+  WhatsApp = 'WhatsApp',
+}
+
+export const CHANNEL_OPTIONS = [
+  { label: 'SMS', value: ChannelEnum.SMS },
+  { label: 'Email', value: ChannelEnum.Email },
+  { label: 'Push', value: ChannelEnum.Push },
+  { label: 'InApp', value: ChannelEnum.InApp },
+  { label: 'Web', value: ChannelEnum.Web },
+  { label: 'IVR', value: ChannelEnum.IVR },
+  { label: 'USSD', value: ChannelEnum.USSD },
+  { label: 'WhatsApp', value: ChannelEnum.WhatsApp },
+];
 
 export interface CreativeTemplate {
   id: number;
@@ -6,7 +29,7 @@ export interface CreativeTemplate {
   code: string;
   description?: string;
   is_active: boolean;
-  channel: 'SMS' | 'Email' | 'Push' | 'InApp' | 'Web' | 'IVR' | 'USSD' | 'WhatsApp';
+  channel: ChannelEnum;
   locale: string;
   title?: string;
   body_text?: string;
@@ -23,7 +46,7 @@ export interface CreateCreativeTemplateRequest {
   code: string;
   description?: string;
   isActive?: boolean;
-  primaryChannel: 'SMS' | 'Email' | 'Push' | 'InApp' | 'Web' | 'IVR' | 'USSD' | 'WhatsApp';
+  primaryChannel: ChannelEnum;
   locale?: string;
   title?: string;
   text_body?: string;
@@ -58,37 +81,37 @@ class CreativeTemplateService {
     return response.json();
   }
 
-  async getCreativeTemplates(): Promise<CreativeTemplate[]> {
-    return this.request<CreativeTemplate[]>("");
+  async getCreativeTemplates(): Promise<ApiResponse<CreativeTemplate[]>> {
+    return this.request<ApiResponse<CreativeTemplate[]>>("");
   }
 
-  async getCreativeTemplateById(id: number): Promise<CreativeTemplate> {
-    return this.request<CreativeTemplate>(`/${id}`);
+  async getCreativeTemplateById(id: number): Promise<ApiResponse<CreativeTemplate>> {
+    return this.request<ApiResponse<CreativeTemplate>>(`/${id}`);
   }
 
-  async createCreativeTemplate(data: CreateCreativeTemplateRequest): Promise<CreativeTemplate> {
-    return this.request<CreativeTemplate>("", {
+  async createCreativeTemplate(data: CreateCreativeTemplateRequest): Promise<ApiResponse<CreativeTemplate>> {
+    return this.request<ApiResponse<CreativeTemplate>>("", {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
-  async createCreativeTemplates(data: CreateCreativeTemplateRequest[]): Promise<CreativeTemplate[]> {
-    return this.request<CreativeTemplate[]>("", {
+  async createCreativeTemplates(data: CreateCreativeTemplateRequest[]): Promise<ApiResponse<CreativeTemplate[]>> {
+    return this.request<ApiResponse<CreativeTemplate[]>>("", {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
-  async updateCreativeTemplate(id: number, data: UpdateCreativeTemplateRequest): Promise<CreativeTemplate> {
-    return this.request<CreativeTemplate>(`/${id}`, {
+  async updateCreativeTemplate(id: number, data: UpdateCreativeTemplateRequest): Promise<ApiResponse<CreativeTemplate>> {
+    return this.request<ApiResponse<CreativeTemplate>>(`/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
     });
   }
 
-  async deleteCreativeTemplate(id: number): Promise<void> {
-    return this.request<void>(`/${id}`, {
+  async deleteCreativeTemplate(id: number): Promise<ApiResponse<{ message: string }>> {
+    return this.request<ApiResponse<{ message: string }>>(`/${id}`, {
       method: "DELETE",
     });
   }

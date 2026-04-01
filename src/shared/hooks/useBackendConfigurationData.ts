@@ -190,11 +190,8 @@ function transformPayload(type: string, payload: any): any {
       break;
 
     case "creativeTemplates":
-      // Map isActive to is_active
-      if (transformed.isActive !== undefined) {
-        transformed.is_active = transformed.isActive;
-        delete transformed.isActive;
-      }
+      // Remove isActive - API doesn't accept this field
+      delete transformed.isActive;
       // Map metadataValue to primaryChannel
       if (transformed.metadataValue) {
         transformed.primaryChannel = transformed.metadataValue;

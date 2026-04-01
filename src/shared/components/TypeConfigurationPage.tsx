@@ -10,7 +10,6 @@ import {
   X,
 } from "lucide-react";
 import { color, tw, button, zIndex } from "../utils/utils";
-import { useConfirm } from "../../contexts/ConfirmContext";
 import { useToast } from "../../contexts/ToastContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { configurationDataService } from "../services/configurationDataService";
@@ -18,17 +17,20 @@ import type { ConfigurationType } from "../services/configurationDataService";
 import type { ConfigurationItem } from "./GenericConfigurationPage";
 import { useBackendConfigurationData } from "../hooks/useBackendConfigurationData";
 import { MESSAGE_TYPE_OPTIONS, CHARACTER_SET_TYPE_OPTIONS, GATEWAY_KEY_OPTIONS } from "../../features/configurations/configs/ts";
+import { CHANNEL_OPTIONS } from "../../features/configurations/services/creativeTemplateService";
 import HeadlessSelect from "./ui/HeadlessSelect";
 import Pagination from "./ui/Pagination";
 import BackButton from "./ui/BackButton";
 import CreateButton from "./ui/CreateButton";
 import LoadingSpinner from "./ui/LoadingSpinner";
+import DeleteConfirmModal from "./ui/DeleteConfirmModal";
 
 export interface TypeConfigurationItem extends ConfigurationItem {
   isActive?: boolean;
   metadataValue?: number | string;
   // Template content fields (for Creative Templates)
   code?: string;
+  primaryChannel?: string;
   title?: string;
   text_body?: string;
   html_body?: string;
@@ -158,6 +160,7 @@ function TypeConfigurationModal({
   const [metadataValue, setMetadataValue] = useState<string | number>("");
   // Template content fields (for Creative Templates)
   const [code, setCode] = useState("");
+  const [primaryChannel, setPrimaryChannel] = useState("");
   const [title, setTitle] = useState("");
   const [textBody, setTextBody] = useState("");
   const [htmlBody, setHtmlBody] = useState("");
@@ -224,9 +227,10 @@ function TypeConfigurationModal({
       );
       if (isCreativeTemplate) {
         setCode(item.code || "");
+        setPrimaryChannel((item as any).primaryChannel || (item as any).channel || "");
         setTitle(item.title || "");
-        setTextBody(item.text_body || "");
-        setHtmlBody(item.html_body || "");
+        setTextBody((item as any).body_text || (item as any).text_body || "");
+        setHtmlBody((item as any).body_html || (item as any).html_body || "");
         setVariablesText(
           item.variables ? JSON.stringify(item.variables, null, 2) : "",
         );
@@ -267,6 +271,7 @@ function TypeConfigurationModal({
       setMetadataValue("");
       if (isCreativeTemplate) {
         setCode("");
+        setPrimaryChannel("");
         setTitle("");
         setTextBody("");
         setHtmlBody("");
@@ -399,6 +404,7 @@ function TypeConfigurationModal({
     // Add template content fields for Creative Templates
     if (isCreativeTemplate) {
       payload.code = code.trim() || undefined;
+      payload.primaryChannel = primaryChannel || undefined;
       payload.title = title.trim() || undefined;
       payload.text_body = textBody.trim() || undefined;
       payload.html_body = htmlBody.trim() || undefined;
@@ -465,7 +471,7 @@ function TypeConfigurationModal({
         }`}
       >
         <div
-          className={`flex items-center justify-between p-6 border-b border-gray-200 ${
+          className={`flex items-center justify-between p-6 ${
             isCreativeTemplate ? "flex-shrink-0" : ""
           }`}
         >
@@ -505,7 +511,7 @@ function TypeConfigurationModal({
             />
           </div>
 
-          <div>
+          <div className="pb-0 border-b-0">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               {config.descriptionLabel} {config.descriptionRequired && "*"}
             </label>
@@ -751,6 +757,18 @@ function TypeConfigurationModal({
                 <p className="text-xs text-gray-500 mt-1">
                   Unique identifier for this template
                 </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Channel *
+                </label>
+                <HeadlessSelect
+                  value={primaryChannel}
+                  onChange={(value) => setPrimaryChannel(String(value || ""))}
+                  options={CHANNEL_OPTIONS}
+                  placeholder="Select a channel"
+                />
               </div>
 
               <div>
@@ -1137,7 +1155,7 @@ function TypeConfigurationModal({
           )}
 
           <div
-            className={`flex items-center justify-end space-x-3 pt-4 border-t border-gray-100 ${
+            className={`flex items-center justify-end space-x-3 pt-4 ${
               isCreativeTemplate ? "flex-shrink-0" : ""
             }`}
           >
@@ -1183,7 +1201,6 @@ export default function TypeConfigurationPage({
   onRowClick,
 }: TypeConfigurationPageProps) {
   const navigate = useNavigate();
-  const { confirm } = useConfirm();
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
 
@@ -1220,6 +1237,11 @@ export default function TypeConfigurationPage({
   const [editingItem, setEditingItem] = useState<
     TypeConfigurationItem | undefined
   >();
+  const [deletingItem, setDeletingItem] = useState<
+    TypeConfigurationItem | undefined
+  >();
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   // Config type checks for conditional rendering
@@ -1271,37 +1293,46 @@ export default function TypeConfigurationPage({
     setIsModalOpen(true);
   };
 
-  const handleDeleteItem = async (item: TypeConfigurationItem) => {
-    const confirmed = await confirm({
-      title: config.deleteConfirmTitle,
-      message: config.deleteConfirmMessage(item.name),
-      type: "danger",
-      confirmText: t.genericConfig.delete,
-      cancelText: t.genericConfig.cancel,
-    });
+  const handleDeleteItem = (item: TypeConfigurationItem) => {
+    setDeletingItem(item);
+    setIsDeleteModalOpen(true);
+  };
 
-    if (!confirmed) return;
+  const handleDeleteConfirm = async () => {
+    if (!deletingItem) return;
 
+    setIsDeleting(true);
+    const itemToDelete = deletingItem;
+    const previousItems = items;
+
+    // Optimistically remove row from table immediately.
+    setItems((prev) => prev.filter((item) => item.id !== itemToDelete.id));
     try {
       if (useBackendConfig && backendConfig) {
-        await backendConfig.delete(item.id);
+        await backendConfig.delete(itemToDelete.id);
         showToast(
           config.deleteConfirmTitle,
-          config.deleteSuccessMessage(item.name),
+          config.deleteSuccessMessage(itemToDelete.name),
         );
       } else {
-        configurationDataService.deleteItem(config.configType, item.id);
+        configurationDataService.deleteItem(config.configType, itemToDelete.id);
         showToast(
           config.deleteConfirmTitle,
-          config.deleteSuccessMessage(item.name),
+          config.deleteSuccessMessage(itemToDelete.name),
         );
       }
+      setIsDeleteModalOpen(false);
+      setDeletingItem(undefined);
     } catch (err) {
+      // Roll back optimistic UI on failure.
+      setItems(previousItems);
       console.error(`Error deleting ${config.entityName}:`, err);
       showError(
         "Error",
         err instanceof Error ? err.message : config.deleteErrorMessage,
       );
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -1464,6 +1495,8 @@ export default function TypeConfigurationPage({
                   >
                     {config.configType === "characterSets"
                       ? "Character Set Name"
+                      : config.configType === "creativeTemplates"
+                      ? "Name"
                       : config.entityName}
                   </th>
                   {config.configType === "characterSets" ? (
@@ -1485,6 +1518,36 @@ export default function TypeConfigurationPage({
                         }}
                       >
                         Character Set Type
+                      </th>
+                      <th
+                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        style={{
+                          color: color.surface.tableHeaderText,
+                          backgroundColor: color.surface.tableHeader,
+                        }}
+                      >
+                        {config.statusLabel || "Status"}
+                      </th>
+                    </>
+                  ) : config.configType === "creativeTemplates" ? (
+                    <>
+                      <th
+                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        style={{
+                          color: color.surface.tableHeaderText,
+                          backgroundColor: color.surface.tableHeader,
+                        }}
+                      >
+                        Code
+                      </th>
+                      <th
+                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        style={{
+                          color: color.surface.tableHeaderText,
+                          backgroundColor: color.surface.tableHeader,
+                        }}
+                      >
+                        {config.metadataField?.label || "Channel"}
                       </th>
                       <th
                         className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
@@ -1601,6 +1664,47 @@ export default function TypeConfigurationPage({
                             {String(
                               (item as unknown as Record<string, unknown>)
                                 .characterSetType || "—",
+                            )}
+                          </div>
+                        </td>
+                        <td
+                          className="px-6 py-4"
+                          style={{
+                            backgroundColor: color.surface.tablebodybg,
+                          }}
+                        >
+                          <span className={`text-sm ${tw.textPrimary}`}>
+                            {(item.isActive ?? true)
+                              ? t.genericConfig.active
+                              : t.genericConfig.inactive}
+                          </span>
+                        </td>
+                      </>
+                    ) : config.configType === "creativeTemplates" ? (
+                      <>
+                        <td
+                          className="px-6 py-4"
+                          style={{
+                            backgroundColor: color.surface.tablebodybg,
+                          }}
+                        >
+                          <div className={`text-sm ${tw.textPrimary} font-mono`}>
+                            {String(
+                              (item as unknown as Record<string, unknown>)
+                                .code || "—",
+                            )}
+                          </div>
+                        </td>
+                        <td
+                          className="px-6 py-4"
+                          style={{
+                            backgroundColor: color.surface.tablebodybg,
+                          }}
+                        >
+                          <div className={`text-sm ${tw.textPrimary}`}>
+                            {String(
+                              (item as unknown as Record<string, unknown>)
+                                .primaryChannel || (item as unknown as Record<string, unknown>).channel || "—",
                             )}
                           </div>
                         </td>
@@ -1743,6 +1847,24 @@ export default function TypeConfigurationPage({
         onSave={handleItemSaved}
         isSaving={isSaving}
         config={config}
+      />
+
+      <DeleteConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          if (isDeleting) return;
+          setIsDeleteModalOpen(false);
+          setDeletingItem(undefined);
+        }}
+        onConfirm={handleDeleteConfirm}
+        title={config.deleteConfirmTitle}
+        description={
+          deletingItem ? config.deleteConfirmMessage(deletingItem.name) : ""
+        }
+        itemName={deletingItem?.name || ""}
+        isLoading={isDeleting}
+        confirmText={t.genericConfig.delete}
+        cancelText={t.genericConfig.cancel}
       />
     </div>
   );
