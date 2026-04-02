@@ -602,13 +602,20 @@ export default function SegmentCategoriesPage() {
       setTogglingCategoryId(category.id);
       const newActiveStatus = !category.is_active;
 
+      // Optimistic update - update local state immediately
+      setCategories((prev) =>
+        prev.map((cat) =>
+          cat.id === category.id ? { ...cat, is_active: newActiveStatus } : cat
+        )
+      );
+
       // Create a clean request object with only is_active field
       const updateRequest: UpdateSegmentCategoryRequest = {
         is_active: newActiveStatus,
       };
 
       await segmentService.updateSegmentCategory(category.id, updateRequest);
-      await loadCategories(true);
+
       success(
         newActiveStatus ? "Category Activated" : "Category Deactivated",
         `"${category.name}" has been ${
@@ -617,10 +624,12 @@ export default function SegmentCategoriesPage() {
       );
     } catch (err) {
       console.error("Failed to toggle category status:", err);
+      // Revert optimistic update on error by reloading
+      await loadCategories(true);
       // Display backend error message and bypass silent mode for important errors
       const errorMessage =
         err instanceof Error ? err.message : "Failed to update category";
-      showError("Deactivation Failed", errorMessage, true);
+      showError("Toggle Failed", errorMessage, true);
     } finally {
       setTogglingCategoryId(null);
     }

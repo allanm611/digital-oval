@@ -4,9 +4,6 @@
 
 The Campaign Details page displays all information about a specific campaign including its configuration, performance metrics, and available actions. From this page, you can manage the campaign's lifecycle with various actions.
 
-**Screenshot:**
-[Insert screenshot of campaign details page]
-
 
 ## Campaign Overview Header
 
@@ -43,6 +40,8 @@ Real-time metrics showing campaign performance during execution:
 - Total time elapsed during campaign execution
 - Displayed in seconds
 - Helps monitor campaign duration
+
+![Execution Metrics & Stat Cards](/img/campaign-images/campaigndetailsstatcards.png)
 
 
 ## Campaign Information Section
@@ -82,6 +81,12 @@ Comprehensive campaign details displayed in an organized grid:
 - **Approved By** - User who approved (if applicable)
 - **Approved Date** - When approval occurred
 
+![Campaign Information Section](/img/campaign-images/campaigndetails-campindetailssection.png)
+
+![Budget Information](/img/campaign-images/campaigndetails-budget.png)
+
+![Offers by Segment](/img/campaign-images/campaigndetails-offersbysegment.png)
+
 
 ## Action Buttons
 
@@ -98,9 +103,6 @@ See [Edit Campaign](/documentation/edit-campaign) for comprehensive information 
 
 **Status Change:** Active → Paused
 
-**Screenshot:**
-[Insert screenshot of pause action]
-
 
 ### Resume Campaign
 **What it does:** Restart a paused campaign.
@@ -108,9 +110,6 @@ See [Edit Campaign](/documentation/edit-campaign) for comprehensive information 
 **When to use:** When you're ready to continue a paused campaign.
 
 **Status Change:** Paused → Active
-
-**Screenshot:**
-[Insert screenshot of resume action]
 
 
 ### Approve Campaign
@@ -125,9 +124,6 @@ See [Edit Campaign](/documentation/edit-campaign) for comprehensive information 
 
 **Confirmation:** Approval modal appears for confirmation.
 
-**Screenshot:**
-[Insert screenshot of approve modal]
-
 
 ### Reject Campaign
 **What it does:** Reject a campaign pending approval.
@@ -139,9 +135,6 @@ See [Edit Campaign](/documentation/edit-campaign) for comprehensive information 
 - You must have approval permissions
 
 **Note:** Provide a rejection reason for the campaign creator.
-
-**Screenshot:**
-[Insert screenshot of reject modal]
 
 
 ### Run Campaign
@@ -158,8 +151,7 @@ See [Edit Campaign](/documentation/edit-campaign) for comprehensive information 
 
 **Confirmation:** Run modal appears for final confirmation.
 
-**Screenshot:**
-[Insert screenshot of execute modal]
+![Run Campaign Modal](/img/campaign-images/runcampaignmodal.png)
 
 
 ### Archive Campaign
@@ -171,9 +163,6 @@ See [Edit Campaign](/documentation/edit-campaign) for comprehensive information 
 
 **Note:** Archived campaigns can be viewed by filtering.
 
-**Screenshot:**
-[Insert screenshot of archived campaigns filter]
-
 
 ### Delete Campaign
 **What it does:** Permanently remove campaign from system.
@@ -181,9 +170,6 @@ See [Edit Campaign](/documentation/edit-campaign) for comprehensive information 
 **When to use:** To remove draft or unwanted campaigns.
 
 **Typical Use:** Draft campaigns, test campaigns
-
-**Screenshot:**
-[Insert screenshot of delete confirmation]
 
 
 ## Sections Overview
@@ -208,6 +194,8 @@ Campaign execution timing and recurrence:
 - **End Date** - Campaign end date (if set)
 - **Timezone** - Execution timezone for all scheduled activities
 
+![Schedule & Timeline](/img/campaign-images/campaigndetails-schedule&timeline.png)
+
 ### Targets & Performance Section
 Campaign scope and performance targets:
 - **Max Participants** - Maximum number of customers in campaign
@@ -227,6 +215,8 @@ Track campaign creation, updates, and approvals:
 - **Updated By** - User who last modified the campaign
 - **Approved Date** - When campaign was approved (if applicable)
 - **Approved By** - User who approved the campaign
+
+![Audit Trail](/img/campaign-images/campaigndetails-audittrail.png)
 
 
 ## Approval Workflow
@@ -248,7 +238,7 @@ Campaigns progress through defined approval states based on their lifecycle:
    - Approvers notified of pending review
 
 3. **Approved**
-   - Campaign approved and ready to execute
+   - Campaign approved and ready to run
    - Cannot be edited directly
    - Can be paused/resumed if running
    - Can be run when approval_status = "approved"
@@ -266,7 +256,7 @@ Campaigns progress through defined approval states based on their lifecycle:
 3. **Approver reviews details** - Reviews campaign configuration, audience, offers, and schedule
 4. **Approver makes decision** - Approves or rejects the campaign
 5. **Creator is notified** - Email/notification sent with decision
-6. **If approved:** Campaign can be executed by authorized users
+6. **If approved:** Campaign can be rund by authorized users
 7. **If rejected:** Creator receives rejection reason and can edit to address concerns
 
 ### Viewing Approval Information
@@ -324,13 +314,13 @@ For detailed information about editing campaigns, field restrictions, and edit w
 - Campaign approval_status is not "approved"
 - Campaign is already running (status = "active")
 - Campaign is_active = false (campaign has been deactivated)
-- You don't have `campaigns.execute` permission
+- You don't have `campaigns.run` permission
 
 **Solution:**
 - Ensure campaign has been approved by an approver
 - Check campaign status before attempting to run
 - Activate campaign if it's been deactivated
-- Request `campaigns.execute` permission if denied
+- Request `campaigns.run` permission if denied
 
 ### Reject or Approve Buttons Not Available
 **Possible Causes:**

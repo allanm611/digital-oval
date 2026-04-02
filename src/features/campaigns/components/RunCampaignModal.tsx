@@ -317,7 +317,7 @@ export default function RunCampaignModal({
           {/* Content */}
           <div className="p-6 space-y-6">
             {/* Error Alert - Only show if disabled */}
-            {executionDisabledReason && (
+            {runDisabledReason && (
               <div
                 className={`flex items-start gap-3 p-4 ${tw.rounded}`}
                 style={{
@@ -331,7 +331,7 @@ export default function RunCampaignModal({
                     Cannot Run Campaign
                   </h4>
                   <p className="text-sm text-red-700 mt-1">
-                    {executionDisabledReason}
+                    {runDisabledReason}
                   </p>
                 </div>
               </div>

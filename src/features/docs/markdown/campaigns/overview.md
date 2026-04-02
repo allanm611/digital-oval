@@ -16,10 +16,10 @@ Browse all your campaigns in one place. View campaign status, associated offers 
 
 Set up a new campaign through a 5-step process:
 1. **Definition** - Configure campaign details, name, catalog, and business unit
-2. **Campaign Configuration** - Select campaign type and configuration
-3. **Target Audience** - Choose customer segments to target
-4. **Offers** - Set up offers for your segments
-5. **Schedule & Preview** - Set execution timing and review before launch
+2. **Campaign Configuration & Target Audience** - Select campaign type and choose customer segments to target
+3. **Offers** - Set up offers for your segments
+4. **Schedule** - Set execution timing
+5. **Preview** - Review before launch
 
 ### [View Campaign Details](/documentation/campaigns/view-campaign-details)
 

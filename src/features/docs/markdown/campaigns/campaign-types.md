@@ -7,6 +7,8 @@ Campaign Types define the structure and execution model for your campaigns. When
 
 Campaign types are configured at the system level by administrators, but this guide explains the five campaign types available and when to use each one.
 
+![Campaign Types](/img/campaign-images/campaigntypes.png)
+
 
 ## Campaign Type Options
 

@@ -116,33 +116,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(user);
       localStorage.setItem("auth_user", JSON.stringify(user));
 
-      // Fetch actual role in background (non-blocking)
-      userService.getUserById(response.user.id)
-        .then((userResponse) => {
-          if (userResponse.success && userResponse.data) {
-            const fullUser = userResponse.data as { primary_role_id?: number; role_id?: number };
-            const primaryRoleId = fullUser.primary_role_id ?? fullUser.role_id;
-
-            if (primaryRoleId) {
-              return roleService.getRoleById(primaryRoleId, { skipCache: true });
+      // Fetch actual role in background (non-blocking) using role_id from login response
+      const roleId = (response.user as any).role_id;
+      if (roleId) {
+        roleService.getRoleById(roleId, { skipCache: true })
+          .then((roleResponse) => {
+            if (roleResponse) {
+              // Update user with actual role
+              const updatedUser = {
+                ...user,
+                role: roleResponse.name,
+              };
+              setUser(updatedUser);
+              localStorage.setItem("auth_user", JSON.stringify(updatedUser));
             }
-          }
-          return null;
-        })
-        .then((roleResponse) => {
-          if (roleResponse) {
-            // Update user with actual role
-            const updatedUser = {
-              ...user,
-              role: roleResponse.name,
-            };
-            setUser(updatedUser);
-            localStorage.setItem("auth_user", JSON.stringify(updatedUser));
-          }
-        })
-        .catch((error) => {
-          console.warn("Failed to fetch user role in background", error);
-        });
+          })
+          .catch((error) => {
+            console.warn("Failed to fetch user role in background", error);
+          });
+      }
     } else {
       // If no user data in response, login is incomplete
       throw new Error("Login successful but user data missing");

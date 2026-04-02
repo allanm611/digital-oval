@@ -113,5 +113,4 @@ These actions are always available regardless of campaign status:
 
 - **Permission Requirements**: Some actions require specific user permissions (e.g., only users with "Approve" permission can approve campaigns)
 - **Status Flow**: Campaigns flow from Draft → Pending Approval → Approved → can be paused/resumed → completed
-- **Editing**: You can edit campaigns at any point in their lifecycle
-- **Cannot Undo Delete**: Deleting a campaign is permanent
+

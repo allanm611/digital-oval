@@ -4,8 +4,7 @@
 
 Campaign Broadcasts are execution records of campaigns. Each broadcast represents an instance of sending a campaign to its target audience. Broadcasts track delivery across channels (email, SMS, push), engagement metrics (opens, clicks), and conversion data.
 
-**Screenshot:**
-[Insert screenshot of campaign broadcasts page]
+![Campaign Broadcasts List](/img/campaign-images/campaignbroadcastslist.png)
 
 
 ## What is a Broadcast?
@@ -24,7 +23,7 @@ A broadcast is a record of a campaign execution:
 - **Broadcast ID** - Unique identifier for this broadcast instance
 - **Campaign ID** - Associated campaign
 - **Campaign Name** - Name of the campaign that was broadcast
-- **Created By** - User who executed the broadcast
+- **Created By** - User who ran the broadcast
 
 ### Execution Details
 - **Status** - Current broadcast status:
@@ -35,7 +34,7 @@ A broadcast is a record of a campaign execution:
   - **Failed** - Encountered errors during execution
   - **Paused** - Temporarily stopped
 
-- **Sent At** - Timestamp when broadcast was executed
+- **Sent At** - Timestamp when broadcast was ran
 - **Channels** - Delivery channels used (email, SMS, push)
 
 ### Delivery Metrics
@@ -113,19 +112,23 @@ Quick overview with 4 metric cards:
 - **Opened** - Count opened + engagement rate %
 - **Conversions** - Count converted + conversion rate %
 
-### Delivery Breakdown
+![Broadcast Details - Stat Cards](/img/campaign-images/campaignbroadcastsdetailstatcards.png)
 
-Detailed breakdown of message delivery:
+### Delivery & Engagement Breakdown
+
+Detailed breakdown of message delivery and engagement:
+
+**Delivery:**
 - **Delivered** - Successfully sent messages
 - **Failed** - Messages that failed
 - **Unsubscribed** - Recipients who unsubscribed
 
-### Engagement Breakdown
-
-Detailed engagement metrics:
+**Engagement:**
 - **Opened** - Messages opened
 - **Clicked** - Links clicked
 - **Conversions** - Conversion actions completed
+
+![Delivery & Engagement Breakdown](/img/campaign-images/campaignbroadcatsdetaildelivery&engagementbreakdown.png)
 
 ### Broadcast Information
 
@@ -135,11 +138,15 @@ Core broadcast details:
 - **Status** - Current status (Scheduled, In Progress, Completed, Failed, Paused)
 - **Campaign ID** - Associated campaign ID
 
+![Broadcast Information](/img/campaign-images/campaignbroadcastdetail-broadcatsinfo.png)
+
 ### Audit Trail
 
 Broadcast execution metadata:
-- **Created By** - User who executed the broadcast
+- **Created By** - User who ran the broadcast
 - **Created At** - Timestamp when broadcast was sent
+
+![Audit Trail](/img/campaign-images/camapignbroadcatsdetail-audittrail.png)
 
 ### Channels Used
 
@@ -147,4 +154,6 @@ Shows which delivery channels were used:
 - **Email** - Email channel
 - **SMS** - Text message channel
 - **Push** - Push notification channel
+
+![Channels Used](/img/campaign-images/campaignbroadcatsdetailschannelsused.png)
 

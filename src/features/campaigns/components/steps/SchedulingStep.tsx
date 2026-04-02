@@ -1,4 +1,6 @@
+import { useState } from "react";
 import SchedulingComponent from "../../../../shared/components/SchedulingComponent";
+import ScheduledModal from "../ScheduledModal";
 import type { SchedulingData } from "../../../../shared/types/scheduling";
 import { CreateCampaignRequest } from "../../types/createCampaign";
 
@@ -16,6 +18,8 @@ export default function SchedulingStep({
   formData,
   setFormData,
 }: SchedulingStepProps) {
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+
   const handleSchedulingChange = (scheduling: SchedulingData) => {
     setFormData({
       ...formData,
@@ -25,24 +29,28 @@ export default function SchedulingStep({
 
   const handlePreviewSchedule = () => {
     if (formData.scheduling) {
-      const scheduleInfo = `
-Schedule Type: ${formData.scheduling.type === "immediate" ? "Immediate" : "Scheduled"}
-${formData.scheduling.type === "scheduled" ? `Start Date/Time: ${formData.scheduling.start_date}` : ""}
-${formData.scheduling.end_date ? `End Date/Time: ${formData.scheduling.end_date}` : ""}
-Time Zone: ${formData.scheduling.time_zone || "(GMT+02:00) Sudan"}
-      `.trim();
-      alert(scheduleInfo);
+      setShowPreviewModal(true);
     }
   };
 
   return (
-    <SchedulingComponent
-      scheduling={formData.scheduling || {}}
-      onSchedulingChange={handleSchedulingChange}
-      title="Broadcast Schedule Range"
-      subtitle="Configure your campaign broadcast schedule and delivery settings"
-      showPreviewButton={true}
-      onPreviewSchedule={handlePreviewSchedule}
-    />
+    <>
+      <SchedulingComponent
+        scheduling={formData.scheduling || {}}
+        onSchedulingChange={handleSchedulingChange}
+        title="Broadcast Schedule Range"
+        subtitle="Configure your campaign broadcast schedule and delivery settings"
+        showPreviewButton={true}
+        onPreviewSchedule={handlePreviewSchedule}
+      />
+
+      <ScheduledModal
+        isOpen={showPreviewModal}
+        onClose={() => setShowPreviewModal(false)}
+        campaignName={formData.name || "Campaign"}
+        startDate={formData.scheduling?.start_date || null}
+        endDate={formData.scheduling?.end_date || null}
+      />
+    </>
   );
 }

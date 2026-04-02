@@ -1,21 +1,34 @@
-# Campaign Objectives
+# Campaign Objectives Overview
 
-## Overview
+Campaign Objectives define the strategic goals and business purposes for your marketing campaigns. Each objective represents a specific target outcome you want to achieve, helping you organize campaigns, align teams, and measure success against your business strategy.
 
-Campaign Objectives define the business goals and purposes for your campaigns. Each objective represents a specific target outcome you want to achieve with your marketing efforts. When creating a campaign, you select a Primary Objective that clearly states the campaign's main goal.
+![Campaign Objectives](/img/campaign-images/campaignobjectives.png)
 
 
-## Selecting an Objective When Creating a Campaign
+## Using Objectives in Campaigns
 
-When creating a campaign, you must select a **Primary Objective**:
+When creating a campaign:
 
-1. Go to [Create Campaign](/documentation/create-campaign) → **Step 1: Definition**
-2. In the "Primary Objective" field, select from your available options
+1. Go to [**Create Campaign → Step 1: Definition**](/documentation/campaigns/create-campaign)
+2. Select **Primary Objective** from the dropdown
 3. Choose the objective that best matches your campaign goal
 4. Continue with campaign configuration
 
-<!-- The selected objective helps:
+The selected objective helps:
 - Clarify campaign intent for your team
 - Organize campaigns by business goal
-- Track performance by objective type
-- Analyze which objectives deliver best results -->
+
+
+### Edit an Objective
+
+1. Click on any objective in the list
+2. Update the name or description
+3. Click **Save**
+
+### Delete an Objective
+
+1. Click on the objective you want to delete
+2. Click **Delete**
+3. Confirm the deletion
+
+

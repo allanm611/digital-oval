@@ -867,12 +867,19 @@ function OfferCategoriesPage() {
       setTogglingCategoryId(category.id);
       const newActiveStatus = !category.is_active;
 
+      // Optimistic update - update local state immediately
+      setCategories((prev) =>
+        prev.map((cat) =>
+          cat.id === category.id ? { ...cat, is_active: newActiveStatus } : cat
+        )
+      );
+
       if (newActiveStatus) {
         await offerCategoryService.activateCategory(category.id, {});
       } else {
         await offerCategoryService.deactivateCategory(category.id, {});
       }
-      await Promise.all([loadCategories(true), loadStats()]);
+
       success(
         newActiveStatus
           ? t.offerCatalogs.activateSuccess
@@ -883,6 +890,8 @@ function OfferCategoriesPage() {
       );
     } catch (err) {
       console.error("Failed to toggle category status:", err);
+      // Revert optimistic update on error by reloading
+      await Promise.all([loadCategories(true), loadStats()]);
       // Display backend error message and bypass silent mode for important errors
       const errorMessage = extractBackendError(err, "Failed to update category");
       showError(errorMessage, "", true);

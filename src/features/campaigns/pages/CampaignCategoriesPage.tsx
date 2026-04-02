@@ -526,10 +526,17 @@ export default function CampaignCategoriesPage() {
         setTogglingCategoryId(category.id);
         const newActiveStatus = !category.is_active;
 
+        // Optimistic update - update local state immediately
+        setCampaignCategories((prev) =>
+          prev.map((cat) =>
+            cat.id === category.id ? { ...cat, is_active: newActiveStatus } : cat
+          )
+        );
+
         await campaignService.updateCampaignCategory(category.id, {
           is_active: newActiveStatus,
         });
-        await loadCategories(true);
+
         showToast(
           newActiveStatus ? "Category Activated" : "Category Deactivated",
           `"${category.name}" has been ${
@@ -538,10 +545,12 @@ export default function CampaignCategoriesPage() {
         );
       } catch (err) {
         console.error("Failed to toggle category status:", err);
+        // Revert optimistic update on error by reloading
+        await loadCategories(true);
         // Display backend error message and bypass silent mode for important errors
         const errorMessage =
           err instanceof Error ? err.message : "Failed to update category";
-        showError("Deactivation Failed", errorMessage, true);
+        showError("Toggle Failed", errorMessage, true);
       } finally {
         setTogglingCategoryId(null);
       }
