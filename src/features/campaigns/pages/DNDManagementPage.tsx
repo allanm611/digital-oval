@@ -1,8 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
-import { navigateBackOrFallback } from "../../../shared/utils/navigation";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { COMMUNICATION_CHANNELS } from "../types/communicationPolicyConfig";
 
 export default function DNDManagementPage() {
@@ -15,27 +14,17 @@ export default function DNDManagementPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center space-x-2 sm:space-x-4">
-          <button
-            onClick={() =>
-              navigateBackOrFallback(navigate, "/dashboard/configuration")
-            }
-            className={`p-2 text-gray-600 hover:text-gray-800 ${tw.rounded} transition-colors`}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div>
-            <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
-              {t.dndManagement.title}
-            </h1>
-            <p className={`${tw.textSecondary} mt-2 text-sm`}>
-              {t.dndManagement.subtitle}
-            </p>
-          </div>
-        </div>
-      </div>
+      {/* Breadcrumb */}
+      <BackButton
+        fallbackTo="/dashboard/configuration"
+        showBreadcrumb={true}
+        currentLabel="DND Management"
+      />
+
+      {/* Description */}
+      <p className={`text-sm ${tw.textSecondary}`}>
+        {t.dndManagement.subtitle}
+      </p>
 
       {/* Channel Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

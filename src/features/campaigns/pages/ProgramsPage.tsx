@@ -354,8 +354,14 @@ export default function ProgramsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-        <BackButton fallbackTo="/dashboard/configuration" showBreadcrumb={true} currentLabel={t.programs.title} />
+      {/* Breadcrumb */}
+      <BackButton fallbackTo="/dashboard/configuration" showBreadcrumb={true} currentLabel={t.programs.title} />
+
+      {/* Description and Create Button */}
+      <div className="flex items-start justify-between gap-4">
+        <p className={`text-sm ${tw.textSecondary}`}>
+          Manage marketing programs and initiatives. Define program details, budgets, timelines, and track spending to optimize your marketing efforts.
+        </p>
         <div className="flex items-center gap-3">
           <CreateButton onClick={handleCreateProgram} />
         </div>

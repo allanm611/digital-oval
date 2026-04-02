@@ -255,9 +255,14 @@ export default function DNDChannelPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <BackButton fallbackTo="/dashboard/dnd-management" showBreadcrumb={true} currentLabel="DND Management" />
+      {/* Breadcrumb */}
+      <BackButton fallbackTo="/dashboard/dnd-management" showBreadcrumb={true} currentLabel="DND Management" />
+
+      {/* Description and Actions */}
+      <div className="flex items-start justify-between gap-4">
+        <p className={`text-sm ${tw.textSecondary}`}>
+          Manage Do Not Disturb lists for {channelInfo?.label || 'this channel'}. Add or remove customers who should not receive messages on this channel.
+        </p>
         <div className="flex flex-wrap items-center gap-2 w-auto">
           {channelValue === "SMS" && (
             <>

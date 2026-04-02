@@ -65,18 +65,19 @@ export default function SMSRoutesList() {
 
   return (
     <div className="space-y-6">
-      {/* Header with Back Button and Create Button */}
-      <div className="flex items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-4">
-          <BackButton fallbackTo="/dashboard/configuration" />
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900">SMS Routes</h2>
-            <p className={`text-sm ${tw.textSecondary} mt-1`}>
-              Manage SMS gateway routes for message delivery. Routes determine which gateway
-              provider is used to send SMS messages.
-            </p>
-          </div>
-        </div>
+      {/* Breadcrumb */}
+      <BackButton
+        fallbackTo="/dashboard/configuration"
+        showBreadcrumb={true}
+        currentLabel="SMS Routes"
+      />
+
+      {/* Description and Create Button */}
+      <div className="flex items-start justify-between gap-4">
+        <p className={`text-sm ${tw.textSecondary}`}>
+          Manage SMS gateway routes for message delivery. Routes determine which gateway
+          provider is used to send SMS messages.
+        </p>
         <button
           onClick={() => navigate("/dashboard/sms-routes/create")}
           disabled={loading}

@@ -546,20 +546,23 @@ export default function GenericConfigurationPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        {showBackButton && (
-          <BackButton fallbackTo={config.backPath} showBreadcrumb={true} currentLabel={config.title} />
-        )}
-        {!showBackButton && (
-          <div>
-            <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
-              {config.title}
-            </h1>
-            <p className={`${tw.textSecondary} mt-2 text-sm`}>
-              {config.subtitle}
-            </p>
-          </div>
-        )}
+      {/* Breadcrumb */}
+      {showBackButton && (
+        <BackButton fallbackTo={config.backPath} showBreadcrumb={true} currentLabel={config.title} />
+      )}
+      {!showBackButton && (
+        <div>
+          <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
+            {config.title}
+          </h1>
+        </div>
+      )}
+
+      {/* Description and Create Button */}
+      <div className="flex items-start justify-between gap-4">
+        <p className={`text-sm ${tw.textSecondary}`}>
+          {config.subtitle}
+        </p>
         <div className="flex items-center gap-3 w-auto ml-auto">
           <CreateButton onClick={handleCreateItem} />
         </div>

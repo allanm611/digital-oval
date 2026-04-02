@@ -2,14 +2,6 @@ import { createPortal } from "react-dom";
 import { X, Clock } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 
-interface ExecutionHistory {
-  id: number;
-  startTime: string;
-  endTime: string;
-  durationMs: number;
-  status: "completed" | "running" | "failed";
-}
-
 interface ExecutionTimeModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -17,43 +9,6 @@ interface ExecutionTimeModalProps {
   totalExecutionTimeMs: number;
 }
 
-const DUMMY_EXECUTION_HISTORY: ExecutionHistory[] = [
-  {
-    id: 1,
-    startTime: "2024-03-20 10:30:00 AM",
-    endTime: "2024-03-20 02:45:30 PM",
-    durationMs: 15330000,
-    status: "completed",
-  },
-  {
-    id: 2,
-    startTime: "2024-03-19 09:15:00 AM",
-    endTime: "2024-03-19 01:22:45 PM",
-    durationMs: 14565000,
-    status: "completed",
-  },
-  {
-    id: 3,
-    startTime: "2024-03-18 11:00:00 AM",
-    endTime: "2024-03-18 03:55:20 PM",
-    durationMs: 17720000,
-    status: "completed",
-  },
-  {
-    id: 4,
-    startTime: "2024-03-17 08:45:00 AM",
-    endTime: "2024-03-17 02:30:15 PM",
-    durationMs: 20415000,
-    status: "completed",
-  },
-  {
-    id: 5,
-    startTime: "2024-03-16 02:00:00 PM",
-    endTime: "2024-03-16 06:18:45 PM",
-    durationMs: 15325000,
-    status: "completed",
-  },
-];
 
 const formatDuration = (ms: number) => {
   const totalSeconds = Math.floor(ms / 1000);
@@ -67,19 +22,6 @@ const formatDuration = (ms: number) => {
     return `${minutes}m ${seconds}s`;
   } else {
     return `${seconds}s`;
-  }
-};
-
-const getStatusColor = (status: string, colorToken: any) => {
-  switch (status) {
-    case "completed":
-      return colorToken.status.success;
-    case "running":
-      return colorToken.status.info;
-    case "failed":
-      return colorToken.status.danger;
-    default:
-      return colorToken.text.muted;
   }
 };
 
@@ -117,61 +59,20 @@ export default function ExecutionTimeModal({
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-6 py-4">
-          <div className="mb-6">
-            <h3 className="text-sm font-semibold text-black mb-4">Execution History</h3>
-            <div className="space-y-3">
-              {DUMMY_EXECUTION_HISTORY.map((execution, index) => (
-                <div
-                  key={execution.id}
-                  className="border border-gray-200 rounded-lg p-4"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-sm font-medium text-gray-600">
-                          Run {DUMMY_EXECUTION_HISTORY.length - index}
-                        </span>
-                        <span
-                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium text-white"
-                          style={{ backgroundColor: color.primary.accent }}
-                        >
-                          {execution.status.charAt(0).toUpperCase() +
-                            execution.status.slice(1)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-gray-50 rounded p-3">
-                    <div>
-                      <label className="text-xs font-medium text-gray-600 block mb-1">
-                        Start Time
-                      </label>
-                      <p className="text-sm text-black">
-                        {execution.startTime}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-gray-600 block mb-1">
-                        End Time
-                      </label>
-                      <p className="text-sm text-black">
-                        {execution.endTime}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-gray-600 block mb-1">
-                        Duration
-                      </label>
-                      <p className="text-sm font-semibold text-black">
-                        {formatDuration(execution.durationMs)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
+          {totalExecutionTimeMs === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500">No executions yet</p>
             </div>
-          </div>
+          ) : (
+            <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
+              <label className="text-sm font-medium text-gray-600 block mb-3">
+                Total Execution Time
+              </label>
+              <p className="text-4xl font-bold" style={{ color: color.primary.accent }}>
+                {formatDuration(totalExecutionTimeMs)}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Footer */}

@@ -1,6 +1,12 @@
 import { createPortal } from "react-dom";
 import { X, Calendar, Clock } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
+import type { CreativeChannel } from "../../offers/types/offerCreative";
+
+interface ChannelStat {
+  channel: CreativeChannel;
+  creativeCount: number;
+}
 
 interface ScheduledModalProps {
   isOpen: boolean;
@@ -8,6 +14,7 @@ interface ScheduledModalProps {
   campaignName: string;
   startDate: string | null;
   endDate: string | null;
+  channelStats?: ChannelStat[];
 }
 
 const formatDate = (dateString: string | null) => {
@@ -32,6 +39,7 @@ export default function ScheduledModal({
   campaignName,
   startDate,
   endDate,
+  channelStats = [],
 }: ScheduledModalProps) {
   if (!isOpen) return null;
 
@@ -93,6 +101,25 @@ export default function ScheduledModal({
                   <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 flex items-center gap-3">
                     <Clock className="w-5 h-5" style={{ color: color.primary.accent }} />
                     <p className="text-sm font-semibold text-black">{formattedEndDate}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Scheduled Channels */}
+              {channelStats.length > 0 && (
+                <div>
+                  <label className="text-sm font-medium text-gray-600 block mb-2">
+                    Scheduled Channels
+                  </label>
+                  <div className="space-y-2">
+                    {channelStats.map((stat, index) => (
+                      <div
+                        key={`${stat.channel}-${index}`}
+                        className="bg-gray-50 rounded-lg p-3 border border-gray-200"
+                      >
+                        <p className="text-sm font-medium text-black">{stat.channel}</p>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

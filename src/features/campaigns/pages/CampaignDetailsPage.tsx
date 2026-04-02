@@ -37,7 +37,9 @@ import {
   type CampaignActionParams,
 } from "../utils/campaignActions";
 import { offerService } from "../../offers/services/offerService";
+import { offerCreativeService } from "../../offers/services/offerCreativeService";
 import { segmentService } from "../../segments/services/segmentService";
+import type { CreativeChannel } from "../../offers/types/offerCreative";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
@@ -62,6 +64,12 @@ import {
 } from "../types/campaignFlow";
 import { Offer } from "../../offers/types/offer";
 import { SegmentType } from "../../segments/types/segment";
+
+interface ChannelStat {
+  channel: CreativeChannel;
+  creativeCount: number;
+  description?: string;
+}
 
 export default function CampaignDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -130,6 +138,7 @@ export default function CampaignDetailsPage() {
     broadcasts_completed: number;
     execution_time_ms: number;
   } | null>(null);
+  const [campaignChannelStats, setCampaignChannelStats] = useState<ChannelStat[]>([]);
 
   // Stat card modal states
   const [showBroadcastsModal, setShowBroadcastsModal] = useState(false);
@@ -386,36 +395,81 @@ export default function CampaignDetailsPage() {
 
       if (offerIds.size === 0) {
         setOffers([]);
+        setCampaignChannelStats([]);
         return;
       }
 
-      // Fetch each offer by ID
-      const offerPromises = Array.from(offerIds).map(async (offerId) => {
+      // Fetch each offer AND its channels in parallel
+      const offerAndChannelPromises = Array.from(offerIds).map(async (offerId) => {
         try {
-          const offerResponse = await offerService.getOfferById(offerId, true);
-          // Handle both direct Offer and { success: true, data: Offer } response formats
+          const [offerResponse, channelsResponse] = await Promise.all([
+            offerService.getOfferById(offerId, true),
+            offerCreativeService.getChannelsByOffer(offerId, true),
+          ]);
+
+          // Handle offer response
+          let offer: Offer | null = null;
           if (offerResponse && typeof offerResponse === "object") {
             if ("data" in offerResponse && offerResponse.data) {
-              return offerResponse.data as Offer;
+              offer = offerResponse.data as Offer;
             } else if ("id" in offerResponse) {
-              return offerResponse as unknown as Offer;
+              offer = offerResponse as unknown as Offer;
             }
           }
-          return null;
+
+          // Handle channels response - extract channels and total count
+          let channelStats: Array<{ channel: CreativeChannel; total: number }> = [];
+          if (
+            channelsResponse &&
+            "data" in channelsResponse &&
+            channelsResponse.data &&
+            "channels" in channelsResponse.data &&
+            Array.isArray(channelsResponse.data.channels)
+          ) {
+            const channels = channelsResponse.data.channels;
+            const total = channelsResponse.data.total || 1;
+            channelStats = channels.map((channel) => ({
+              channel,
+              total,
+            }));
+          }
+
+          return { offer, channelStats };
         } catch (error) {
           console.error(`Failed to fetch offer ${offerId}:`, error);
-          return null;
+          return { offer: null, channelStats: [] };
         }
       });
 
-      const fetchedOffers = await Promise.all(offerPromises);
-      const validOffers = fetchedOffers.filter(
-        (offer): offer is Offer => offer !== null,
-      );
+      const results = await Promise.all(offerAndChannelPromises);
+
+      // Extract offers
+      const validOffers = results
+        .map((r) => r.offer)
+        .filter((offer): offer is Offer => offer !== null);
       setOffers(validOffers);
+
+      // Aggregate channels and their total creative counts
+      const channelMap = new Map<CreativeChannel, number>();
+      results.forEach((result) => {
+        result.channelStats.forEach((stat) => {
+          channelMap.set(stat.channel, (channelMap.get(stat.channel) || 0) + stat.total);
+        });
+      });
+
+      // Convert to ChannelStat array with descriptions
+      const stats: ChannelStat[] = Array.from(channelMap.entries()).map(
+        ([channel, total]) => ({
+          channel,
+          creativeCount: total,
+          description: `${total} creative${total !== 1 ? 's' : ''} created for this channel`,
+        })
+      );
+      setCampaignChannelStats(stats);
     } catch (error) {
       console.error("Failed to fetch offers from flows:", error);
       setOffers([]);
+      setCampaignChannelStats([]);
     } finally {
       setIsLoadingOffers(false);
     }
@@ -1121,6 +1175,9 @@ export default function CampaignDetailsPage() {
           <p className="mt-2 text-3xl font-bold text-gray-900">
             {(executionMetrics?.total_messages_sent || 0).toLocaleString()}
           </p>
+          <p className="text-xs text-gray-500 mt-2">
+            Total messages delivered successfully
+          </p>
         </div>
 
         {/* Messages Failed Card */}
@@ -1134,6 +1191,9 @@ export default function CampaignDetailsPage() {
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
             {(executionMetrics?.total_messages_failed || 0).toLocaleString()}
+          </p>
+          <p className="text-xs text-gray-500 mt-2">
+            Messages that failed to deliver
           </p>
         </div>
 
@@ -1162,6 +1222,9 @@ export default function CampaignDetailsPage() {
               : "0.0"}
             %
           </p>
+          <p className="text-xs text-gray-500 mt-2">
+            Delivery success rate
+          </p>
         </div>
 
         {/* Broadcasts Card */}
@@ -1180,6 +1243,9 @@ export default function CampaignDetailsPage() {
             {executionMetrics?.broadcasts_completed || 0} /
             {executionMetrics?.total_broadcasts || 0}
           </p>
+          <p className="text-xs text-gray-500 mt-2">
+            Completed vs total broadcasts
+          </p>
         </div>
 
         {/* Execution Time Card */}
@@ -1196,6 +1262,9 @@ export default function CampaignDetailsPage() {
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
             {((executionMetrics?.execution_time_ms || 0) / 1000).toFixed(2)}s
+          </p>
+          <p className="text-xs text-gray-500 mt-2">
+            Time taken to execute the campaign
           </p>
         </div>
       </div>
@@ -2963,16 +3032,19 @@ export default function CampaignDetailsPage() {
             campaignName={campaign.name}
             startDate={campaign?.start_date || null}
             endDate={campaign?.end_date || null}
+            channelStats={campaignChannelStats}
           />
           <BroadcastsModal
             isOpen={showBroadcastsModal}
             onClose={() => setShowBroadcastsModal(false)}
             campaignName={campaign.name}
+            channelStats={campaignChannelStats}
           />
           <FailedModal
             isOpen={showFailedModal}
             onClose={() => setShowFailedModal(false)}
             campaignName={campaign.name}
+            channelStats={campaignChannelStats}
           />
           <ExecutionTimeModal
             isOpen={showExecutionTimeModal}
@@ -3001,6 +3073,7 @@ export default function CampaignDetailsPage() {
                   )
                 : 0
             }
+            channelStats={campaignChannelStats}
           />
         </>
       )}

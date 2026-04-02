@@ -203,18 +203,22 @@ export default function CommunicationPolicyPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <BackButton fallbackTo="/dashboard/configuration" showBreadcrumb={true} currentLabel={t.communicationPolicy.title} />
-        <div className="flex items-center gap-3 w-auto">
-          <button
-            onClick={handleCreatePolicy}
-            className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white w-auto`}
-            style={{ backgroundColor: color.primary.action }}
-          >
-            <Plus className="w-4 h-4" />
-            {t.communicationPolicy.createPolicy}
-          </button>
-        </div>
+      {/* Breadcrumb */}
+      <BackButton fallbackTo="/dashboard/configuration" showBreadcrumb={true} currentLabel={t.communicationPolicy.title} />
+
+      {/* Description and Create Button */}
+      <div className="flex items-start justify-between gap-4">
+        <p className={`text-sm ${tw.textSecondary}`}>
+          Configure communication policies to control how and when messages are sent to customers. Define time windows, frequency limits, DND rules, and VIP list handling.
+        </p>
+        <button
+          onClick={handleCreatePolicy}
+          className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white w-auto`}
+          style={{ backgroundColor: color.primary.action }}
+        >
+          <Plus className="w-4 h-4" />
+          {t.communicationPolicy.createPolicy}
+        </button>
       </div>
 
       <div className={tw.surfaceBackground}>

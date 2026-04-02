@@ -1,12 +1,11 @@
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
+import type { CreativeChannel } from "../../offers/types/offerCreative";
 
-interface ChannelDelivery {
-  channel: string;
-  delivered: number;
-  total: number;
-  successRate: number;
+interface ChannelStat {
+  channel: CreativeChannel;
+  creativeCount: number;
 }
 
 interface SuccessRateModalProps {
@@ -16,28 +15,8 @@ interface SuccessRateModalProps {
   totalDelivered: number;
   totalMessages: number;
   successRate: number;
+  channelStats?: ChannelStat[];
 }
-
-const DUMMY_CHANNEL_DELIVERY: ChannelDelivery[] = [
-  {
-    channel: "Email",
-    delivered: 4658,
-    total: 5000,
-    successRate: 93.2,
-  },
-  {
-    channel: "SMS",
-    delivered: 3485,
-    total: 3500,
-    successRate: 99.6,
-  },
-  {
-    channel: "Push Notification",
-    delivered: 4077,
-    total: 4200,
-    successRate: 97.1,
-  },
-];
 
 export default function SuccessRateModal({
   isOpen,
@@ -46,6 +25,7 @@ export default function SuccessRateModal({
   totalDelivered,
   totalMessages,
   successRate,
+  channelStats = [],
 }: SuccessRateModalProps) {
   if (!isOpen) return null;
 
@@ -82,52 +62,56 @@ export default function SuccessRateModal({
               Success Rate by Channel
             </h3>
             <div className="space-y-4">
-              {DUMMY_CHANNEL_DELIVERY.map((channel) => (
-                <div
-                  key={channel.channel}
-                  className="border border-gray-200 rounded-lg p-4"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <h4 className="text-sm font-medium text-black">
-                        {channel.channel}
-                      </h4>
+              {channelStats.length === 0 ? (
+                <p className="text-gray-500 text-center py-4">No channels configured for this campaign</p>
+              ) : (
+                channelStats.map((stat, index) => (
+                  <div
+                    key={`${stat.channel}-${index}`}
+                    className="border border-gray-200 rounded-lg p-4"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <h4 className="text-sm font-medium text-black">
+                          {stat.channel}
+                        </h4>
+                      </div>
+                      <span className="text-sm font-semibold" style={{ color: color.primary.accent }}>
+                        0.0%
+                      </span>
                     </div>
-                    <span className="text-sm font-semibold" style={{ color: color.primary.accent }}>
-                      {channel.successRate.toFixed(1)}%
-                    </span>
-                  </div>
 
-                  <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
-                    <div
-                      className="h-2 rounded-full transition-all"
-                      style={{
-                        width: `${channel.successRate}%`,
-                        backgroundColor: color.primary.accent,
-                      }}
-                    />
-                  </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
+                      <div
+                        className="h-2 rounded-full transition-all"
+                        style={{
+                          width: '0%',
+                          backgroundColor: color.primary.accent,
+                        }}
+                      />
+                    </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-gray-50 rounded p-2">
-                      <label className="text-xs font-medium text-gray-600 block">
-                        Delivered
-                      </label>
-                      <p className="text-sm font-semibold" style={{ color: color.primary.accent }}>
-                        {channel.delivered.toLocaleString()}
-                      </p>
-                    </div>
-                    <div className="bg-gray-50 rounded p-2">
-                      <label className="text-xs font-medium text-gray-600 block">
-                        Total
-                      </label>
-                      <p className="text-sm font-semibold text-black">
-                        {channel.total.toLocaleString()}
-                      </p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-gray-50 rounded p-2">
+                        <label className="text-xs font-medium text-gray-600 block">
+                          Delivered
+                        </label>
+                        <p className="text-sm font-semibold" style={{ color: color.primary.accent }}>
+                          0
+                        </p>
+                      </div>
+                      <div className="bg-gray-50 rounded p-2">
+                        <label className="text-xs font-medium text-gray-600 block">
+                          Total
+                        </label>
+                        <p className="text-sm font-semibold text-black">
+                          —
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>

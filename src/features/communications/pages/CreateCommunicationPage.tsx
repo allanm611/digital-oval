@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Send, CheckCircle, XCircle } from "lucide-react";
+import { Send, CheckCircle, XCircle } from "lucide-react";
 
-import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import { tw, color } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import BackButton from "../../../shared/components/ui/BackButton";
 import ChannelSelector from "../components/ChannelSelector";
 import MessageEditor from "../components/MessageEditor";
 import PreviewPanel from "../components/PreviewPanel";
@@ -291,21 +291,18 @@ export default function CreateCommunicationPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
+        {/* Breadcrumb */}
         <div className="mb-6">
-          <button
-            onClick={() =>
-              navigateBackOrFallback(navigate, "/dashboard/quick-lists")
-            }
-            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm font-medium">Back to QuickLists</span>
-          </button>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Send Communication
-          </h1>
-          <p className={`${tw.textMuted} mt-2`}>
+          <BackButton
+            fallbackTo="/dashboard/quick-lists"
+            showBreadcrumb={true}
+            currentLabel="Send Communication"
+          />
+        </div>
+
+        {/* Description */}
+        <div className="mb-6">
+          <p className={`text-sm ${tw.textSecondary}`}>
             Sending to:{" "}
             <span className="font-semibold text-gray-700">
               {quicklist.name}

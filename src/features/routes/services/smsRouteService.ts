@@ -24,71 +24,47 @@ const hardcodedSMSRoutes: SMSRoute[] = [
 export const smsRouteService = {
   // Get all SMS routes
   getAllRoutes: async (): Promise<SMSRoute[]> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(hardcodedSMSRoutes);
-      }, 500);
-    });
+    return hardcodedSMSRoutes;
   },
 
   // Get a single SMS route by ID
   getRouteById: async (id: number): Promise<SMSRoute | null> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const route = hardcodedSMSRoutes.find((r) => r.id === id);
-        resolve(route || null);
-      }, 300);
-    });
+    return hardcodedSMSRoutes.find((r) => r.id === id) || null;
   },
 
   // Create a new SMS route
   createRoute: async (data: CreateSMSRouteRequest): Promise<SMSRoute> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const newRoute: SMSRoute = {
-          id: Math.max(...hardcodedSMSRoutes.map((r) => r.id), 0) + 1,
-          ...data,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-        hardcodedSMSRoutes.push(newRoute);
-        resolve(newRoute);
-      }, 500);
-    });
+    const newRoute: SMSRoute = {
+      id: Math.max(...hardcodedSMSRoutes.map((r) => r.id), 0) + 1,
+      ...data,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    hardcodedSMSRoutes.push(newRoute);
+    return newRoute;
   },
 
   // Update an SMS route
   updateRoute: async (data: UpdateSMSRouteRequest): Promise<SMSRoute> => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const index = hardcodedSMSRoutes.findIndex((r) => r.id === data.id);
-        if (index === -1) {
-          reject(new Error("Route not found"));
-          return;
-        }
-        const updated: SMSRoute = {
-          ...hardcodedSMSRoutes[index],
-          ...data,
-          updated_at: new Date().toISOString(),
-        };
-        hardcodedSMSRoutes[index] = updated;
-        resolve(updated);
-      }, 500);
-    });
+    const index = hardcodedSMSRoutes.findIndex((r) => r.id === data.id);
+    if (index === -1) {
+      throw new Error("Route not found");
+    }
+    const updated: SMSRoute = {
+      ...hardcodedSMSRoutes[index],
+      ...data,
+      updated_at: new Date().toISOString(),
+    };
+    hardcodedSMSRoutes[index] = updated;
+    return updated;
   },
 
   // Delete an SMS route
   deleteRoute: async (id: number): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const index = hardcodedSMSRoutes.findIndex((r) => r.id === id);
-        if (index === -1) {
-          reject(new Error("Route not found"));
-          return;
-        }
-        hardcodedSMSRoutes.splice(index, 1);
-        resolve();
-      }, 500);
-    });
+    const index = hardcodedSMSRoutes.findIndex((r) => r.id === id);
+    if (index === -1) {
+      throw new Error("Route not found");
+    }
+    hardcodedSMSRoutes.splice(index, 1);
   },
 };

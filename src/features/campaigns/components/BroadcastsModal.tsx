@@ -1,80 +1,25 @@
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
+import type { CreativeChannel } from "../../offers/types/offerCreative";
 
-interface Broadcast {
-  id: number;
-  name: string;
-  status: "pending" | "running" | "completed" | "failed";
-  scheduledTime: string;
-  completionPercentage: number;
-  totalRecipients: number;
+interface ChannelStat {
+  channel: CreativeChannel;
+  creativeCount: number;
 }
 
 interface BroadcastsModalProps {
   isOpen: boolean;
   onClose: () => void;
   campaignName: string;
+  channelStats?: ChannelStat[];
 }
-
-const DUMMY_BROADCASTS: Broadcast[] = [
-  {
-    id: 1,
-    name: "Email Broadcast",
-    status: "completed",
-    scheduledTime: "2024-03-20 10:30 AM",
-    completionPercentage: 100,
-    totalRecipients: 5000,
-  },
-  {
-    id: 2,
-    name: "SMS Broadcast",
-    status: "completed",
-    scheduledTime: "2024-03-20 11:00 AM",
-    completionPercentage: 100,
-    totalRecipients: 3500,
-  },
-  {
-    id: 3,
-    name: "Push Notification",
-    status: "running",
-    scheduledTime: "2024-03-20 11:30 AM",
-    completionPercentage: 65,
-    totalRecipients: 4200,
-  },
-  {
-    id: 4,
-    name: "Email Broadcast 2",
-    status: "pending",
-    scheduledTime: "2024-03-21 10:00 AM",
-    completionPercentage: 0,
-    totalRecipients: 5000,
-  },
-];
-
-const getStatusColor = (status: string, colorToken: any) => {
-  switch (status) {
-    case "completed":
-      return colorToken.status.success;
-    case "running":
-      return colorToken.status.info;
-    case "pending":
-      return colorToken.status.warning;
-    case "failed":
-      return colorToken.status.danger;
-    default:
-      return colorToken.text.muted;
-  }
-};
-
-const getStatusLabel = (status: string) => {
-  return status.charAt(0).toUpperCase() + status.slice(1);
-};
 
 export default function BroadcastsModal({
   isOpen,
   onClose,
   campaignName,
+  channelStats = [],
 }: BroadcastsModalProps) {
   if (!isOpen) return null;
 
@@ -91,7 +36,7 @@ export default function BroadcastsModal({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
-            <h2 className="text-lg font-semibold text-black">Broadcasts</h2>
+            <h2 className="text-lg font-semibold text-black">Broadcasts by Channel</h2>
             <p className="text-sm text-gray-600 mt-1">{campaignName}</p>
           </div>
           <button
@@ -104,58 +49,40 @@ export default function BroadcastsModal({
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-6 py-4">
-          {DUMMY_BROADCASTS.length === 0 ? (
+          {channelStats.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-gray-500">No broadcasts for this campaign</p>
+              <p className="text-gray-500">No channels configured for this campaign</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {DUMMY_BROADCASTS.map((broadcast) => (
+              {channelStats.map((stat, index) => (
                 <div
-                  key={broadcast.id}
+                  key={`${stat.channel}-${index}`}
                   className="border border-gray-200 rounded-lg p-4"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <h3 className="text-sm font-medium text-black">
-                        {broadcast.name}
+                        {stat.channel}
                       </h3>
-                      <p className="text-xs text-gray-600 mt-1">
-                        Scheduled: {broadcast.scheduledTime}
-                      </p>
                     </div>
-                    <span
-                      className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium text-white"
-                      style={{ backgroundColor: getStatusColor(broadcast.status, color) }}
-                    >
-                      {getStatusLabel(broadcast.status)}
-                    </span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-xs font-medium text-gray-600 block mb-1">
-                        Progress
+                        Sent
                       </label>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className="h-2 rounded-full transition-all"
-                          style={{
-                            width: `${broadcast.completionPercentage}%`,
-                            backgroundColor: getStatusColor(broadcast.status, color),
-                          }}
-                        />
-                      </div>
-                      <p className="text-xs text-gray-600 mt-1">
-                        {broadcast.completionPercentage}% Complete
+                      <p className="text-sm font-semibold text-black">
+                        0
                       </p>
                     </div>
                     <div>
                       <label className="text-xs font-medium text-gray-600 block mb-1">
-                        Recipients
+                        Total Targeted
                       </label>
                       <p className="text-sm font-semibold text-black">
-                        {broadcast.totalRecipients.toLocaleString()}
+                        —
                       </p>
                     </div>
                   </div>
