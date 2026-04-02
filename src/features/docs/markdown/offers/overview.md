@@ -22,7 +22,7 @@ To create a new offer, see the [Create Offer](/documentation/offers/create-offer
 To view, manage, and track individual offers, see [View Offer Details](/documentation/offers/view-offer-details).
 
 ### Monitoring Performance
-To track offer performance and redemption metrics, see [Offer Reports](/documentation/offers/offer-reports).
+To track offer performance and redemption metrics, see [Offer Reports](/documentation/reports/offer-reports).
 
 ### Offer Catalogs
 To organize offers into catalogs, see [Offer Catalog](/documentation/offers/offer-catalog).
@@ -37,20 +37,11 @@ To organize offers into catalogs, see [Offer Catalog](/documentation/offers/offe
 - **Expired** - Offer end date passed
 
 
-## Tips & Best Practices
-
-1. **Clear Offer Names** - Use descriptive names
-2. **Set Realistic Limits** - Define budget and quantity limits
-3. **Monitor Redemption** - Track offer performance regularly
-4. **Archive Old Offers** - Keep your list organized
-5. **Test Offers** - Verify impact before full rollout
-
-
 ## Quick Start
 
 **New to offers?**
 
 1. Go to [Create Offer](/documentation/offers/create-offer) to set up a new promotional offer
 2. [View Offer Details](/documentation/offers/view-offer-details) to manage and track your offers
-3. Check [Offer Reports](/documentation/offers/offer-reports) to monitor performance
+3. Check [Offer Reports](/documentation/reports/offer-reports) to monitor performance
 4. Organize offers using [Offer Catalogs](/documentation/offers/offer-catalog)

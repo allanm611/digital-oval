@@ -60,17 +60,17 @@ Your system comes with pre-configured channels:
 ![Communication Channels List](/img/configuration/communicationchannelslist.png)
 
 **Create a new channel**
-- [Create Communication Channel](/documentation/create-communication-channel)
+- [Create Communication Channel](/documentation/configuration/create-communication-channel)
 - Add new SMS, Email, USSD, or Push channels
 - Configure channel-specific settings
 
 **Edit a channel**
-- [Edit Communication Channel](/documentation/edit-communication-channel)
+- [Edit Communication Channel](/documentation/configuration/edit-communication-channel)
 - Update channel name, description, or status
 - Modify configuration settings
 
 **View channel details**
-- [View Communication Channel](/documentation/view-communication-channel)
+- [View Communication Channel](/documentation/configuration/view-communication-channel)
 - See complete channel configuration
 - Review associated routes and settings
 

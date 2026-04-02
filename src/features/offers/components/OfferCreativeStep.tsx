@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import {
   Plus,
   Trash2,
@@ -27,6 +27,8 @@ import { offerCreativeService } from "../services/offerCreativeService";
 import { useConfigurationData } from "../../../shared/services/configurationDataService";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { TypeConfigurationItem } from "../../../shared/components/TypeConfigurationPage";
+import { senderIdService, SenderId } from "../../configurations/services/senderIdService";
+import { creativeTemplateService, CreativeTemplate } from "../../configurations/services/creativeTemplateService";
 import {
   SMSSmartphonePreview,
   EmailLaptopPreview,
@@ -479,13 +481,56 @@ export default function OfferCreativeStep({
   validationError,
 }: OfferCreativeStepProps) {
   const { t } = useLanguage();
-  // Load creative templates from configuration
-  const { data: templates } = useConfigurationData("creativeTemplates");
-  // Load sender IDs and SMS routes from configuration
-  const { data: senderIds } = useConfigurationData("senderIds");
+
+  // Fetch creative templates from backend
+  const [templates, setTemplates] = useState<CreativeTemplate[]>([]);
+  const [templatesLoading, setTemplatesLoading] = useState(true);
+
+  // Fetch sender IDs from backend
+  const [senderIds, setSenderIds] = useState<SenderId[]>([]);
+  const [senderIdsLoading, setSenderIdsLoading] = useState(true);
+
+  // Load SMS routes and languages from configuration
   const { data: smsRoutes } = useConfigurationData("smsRoutes");
-  // Load languages from configuration
   const { data: languages } = useConfigurationData("languages");
+
+  // Fetch creative templates on component mount
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      try {
+        setTemplatesLoading(true);
+        const response = await creativeTemplateService.getCreativeTemplates();
+        // Extract data from ApiResponse wrapper
+        const templateData = response.data || [];
+        setTemplates(Array.isArray(templateData) ? templateData : []);
+      } catch (error) {
+        console.error("Failed to fetch creative templates:", error);
+        setTemplates([]);
+      } finally {
+        setTemplatesLoading(false);
+      }
+    };
+    fetchTemplates();
+  }, []);
+
+  // Fetch sender IDs on component mount
+  useEffect(() => {
+    const fetchSenderIds = async () => {
+      try {
+        setSenderIdsLoading(true);
+        const response = await senderIdService.getSenderIds();
+        // Extract data from ApiResponse wrapper
+        const senderIdData = response.data || [];
+        setSenderIds(Array.isArray(senderIdData) ? senderIdData : []);
+      } catch (error) {
+        console.error("Failed to fetch sender IDs:", error);
+        setSenderIds([]);
+      } finally {
+        setSenderIdsLoading(false);
+      }
+    };
+    fetchSenderIds();
+  }, []);
   // Initialize selectedCreative from creatives if available, otherwise null
   const [selectedCreative, setSelectedCreative] = useState<string | null>(
     () => {
@@ -602,17 +647,16 @@ export default function OfferCreativeStep({
   };
 
   // Filter templates by channel and locale
-  // Templates use metadataValue for channel, and locale field for language matching
   const getTemplatesForChannelAndLocale = (
     channel: CreativeChannel,
     locale: Locale,
   ) => {
-    return (templates as TypeConfigurationItem[]).filter((template) => {
-      if (!template.isActive) return false;
+    return templates.filter((template) => {
+      if (!template.is_active) return false;
 
-      // Check if template matches channel
+      // Check if template matches channel (compare with creative channel)
       const matchesChannel =
-        template.metadataValue?.toLowerCase() === channel.toLowerCase();
+        template.channel?.toLowerCase() === channel.toLowerCase();
 
       // Check if template has locale field
       // If template doesn't have locale specified, show it for all locales (backward compatibility)
@@ -637,9 +681,7 @@ export default function OfferCreativeStep({
   const handleTemplateSelect = (templateId: number | null) => {
     if (!selectedCreativeData || !templateId) return;
 
-    const template = templates.find((t) => t.id === templateId) as
-      | TypeConfigurationItem
-      | undefined;
+    const template = templates.find((t) => t.id === templateId);
     if (!template) return;
 
     // Update selected template
@@ -651,11 +693,11 @@ export default function OfferCreativeStep({
     // Get template variables (default values)
     const templateVariables = template.variables || {};
 
-    // Populate creative fields with template content (from config)
+    // Populate creative fields with template content
     const updates: Partial<LocalOfferCreative> = {
       // Set channel if template has a specific channel
       channel:
-        (template.metadataValue as CreativeChannel) ||
+        (template.channel as CreativeChannel) ||
         selectedCreativeData.channel,
     };
 
@@ -664,15 +706,15 @@ export default function OfferCreativeStep({
     if (template.title) {
       updates.title = replaceVariables(template.title, templateVariables);
     }
-    if (template.text_body) {
+    if (template.body_text) {
       updates.text_body = replaceVariables(
-        template.text_body,
+        template.body_text,
         templateVariables,
       );
     }
-    if (template.html_body) {
+    if (template.body_html) {
       updates.html_body = replaceVariables(
-        template.html_body,
+        template.body_html,
         templateVariables,
       );
     }
@@ -1178,12 +1220,8 @@ export default function OfferCreativeStep({
                           }
                           options={[
                             { label: t.offers.senderId.defaultPlaceholder, value: "" },
-                            ...((senderIds as TypeConfigurationItem[]) || [])
-                              .filter(
-                                (senderId) =>
-                                  senderId.isActive &&
-                                  senderId.metadataValue === "active",
-                              )
+                            ...(senderIds || [])
+                              .filter((senderId) => senderId.is_active)
                               .map((senderId) => ({
                                 label: senderId.name,
                                 value: senderId.name,
@@ -1192,6 +1230,7 @@ export default function OfferCreativeStep({
                           placeholder={t.offers.senderId.defaultPlaceholder}
                           className="w-full"
                           zIndex={zIndex.popover}
+                          disabled={senderIdsLoading}
                         />
                       </div>
                     )}

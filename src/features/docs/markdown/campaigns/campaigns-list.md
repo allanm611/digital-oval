@@ -44,12 +44,12 @@ Click the **Filters** button to filter by:
 ## Page-Level Actions
 
 At the top of the Campaign List page, you'll find:
-- **Create Campaign** button - [Create a new campaign](/documentation/create-campaign) (requires "create" permission)
-- **Analytics** button - [View campaign analytics](/documentation/campaign-reports)
+- **Create Campaign** button - [Create a new campaign](/documentation/campaigns/create-campaign) (requires "create" permission)
+- **Analytics** button - [View campaign analytics](/documentation/reports/campaign-reports)
 
 ## Quick Actions
 
-Click the **More** button (three dots) on each campaign row to access actions. You can also click the **Eye icon** to [view campaign details](/documentation/view-campaign-details). The available actions depend on your campaign's current status and approval status.
+Click the **More** button (three dots) on each campaign row to access actions. You can also click the **Eye icon** to [view campaign details](/documentation/campaigns/view-campaign-details). The available actions depend on your campaign's current status and approval status.
 
 ![Action Buttons](/img/campaign-images/campaignlist-actionbuttons.png)
 
@@ -75,8 +75,9 @@ The actions available for each campaign vary based on its **Status** and **Appro
 
 #### For All Campaigns (Any Status)
 These actions are always available regardless of campaign status:
-- **[Edit Campaign](/documentation/view-campaign-details)** - Modify campaign details at any point in the campaign lifecycle
+- **[Edit Campaign](/documentation/campaigns/view-campaign-details)** - Modify campaign details at any point in the campaign lifecycle
 - **Archive Campaign** - Archive the campaign when you no longer need it
+- **Unarchive Campaign** - Restore an archived campaign back to active use (only visible for archived campaigns)
 - **Delete Campaign** - Permanently delete the campaign (requires "Delete" permission)
 
 ### Campaign Status Reference

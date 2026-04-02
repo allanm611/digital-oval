@@ -4,6 +4,7 @@
 
 The campaign creation process is a guided workflow that walks you through all the necessary steps to set up a complete campaign. You'll configure campaign details, select your target audience, set up offer configuration, schedule execution, and preview before launch.
 
+**Note:** The same 5-step workflow is used for editing existing campaigns. When editing a campaign, all fields are pre-filled with the current values, and you can modify any step based on your permissions and campaign status. The workflow remains identical whether you're creating a new campaign or editing an existing one.
 
 ## Campaign Creation Flow
 
@@ -390,6 +391,6 @@ Once you've created your campaign:
 1. **Approval Process** - Campaign goes to approval queue
 2. **Approver Review** - Assigned approvers review and approve/reject
 3. **Ready to Execute** - Once approved, you can run the campaign
-4. **Monitor Performance** - Track results on the [Campaign Reports](/documentation/campaign-reports) page -->
+4. **Monitor Performance** - Track results on the [Campaign Reports](/documentation/reports/campaign-reports) page -->
 
 

@@ -65,6 +65,6 @@ Export data for further analysis in CSV or PDF format.
 
 ## Related Pages
 
-- [Create Offer](/documentation/create-offer)
-- [View Offer Details](/documentation/view-offer-details)
+- [Create Offer](/documentation/offers/create-offer)
+- [View Offer Details](/documentation/offers/view-offer-details)
 - [Campaign Reports](/campaigns/campaign-reports)

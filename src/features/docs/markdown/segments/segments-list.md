@@ -68,7 +68,7 @@ The segments are displayed in a table with the following information:
 
 Each segment row has action buttons with the following options:
 
-**View** - Opens the [Segment Details](/documentation/view-segment-details) page
+**View** - Opens the [Segment Details](/documentation/segments/view-segment-details) page
 
 **Edit** - Allows you to modify segment criteria and configuration
 

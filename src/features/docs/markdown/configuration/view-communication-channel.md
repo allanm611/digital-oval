@@ -123,7 +123,7 @@ Shows the current configuration status:
 ### Edit Channel
 - Click **Edit** button to modify channel details
 - Update name, description, or status
-- See [Edit Communication Channel](/documentation/edit-communication-channel)
+- See [Edit Communication Channel](/documentation/configuration/edit-communication-channel)
 
 ### Configure Routes/Settings
 - For SMS: Configure SMS routes

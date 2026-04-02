@@ -1,4 +1,5 @@
 import { buildApiUrl, getAuthHeaders } from "../../../shared/services/api";
+import { ApiResponse } from "../../../shared/types/api";
 
 export interface SenderId {
   id: number;
@@ -46,30 +47,30 @@ class SenderIdService {
     return response.json();
   }
 
-  async getSenderIds(): Promise<SenderId[]> {
-    return this.request<SenderId[]>("");
+  async getSenderIds(): Promise<ApiResponse<SenderId[]>> {
+    return this.request<ApiResponse<SenderId[]>>("");
   }
 
-  async getSenderIdById(id: number): Promise<SenderId> {
-    return this.request<SenderId>(`/${id}`);
+  async getSenderIdById(id: number): Promise<ApiResponse<SenderId>> {
+    return this.request<ApiResponse<SenderId>>(`/${id}`);
   }
 
-  async createSenderId(data: CreateSenderIdRequest): Promise<SenderId> {
-    return this.request<SenderId>("", {
+  async createSenderId(data: CreateSenderIdRequest): Promise<ApiResponse<SenderId>> {
+    return this.request<ApiResponse<SenderId>>("", {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
-  async updateSenderId(id: number, data: UpdateSenderIdRequest): Promise<SenderId> {
-    return this.request<SenderId>(`/${id}`, {
+  async updateSenderId(id: number, data: UpdateSenderIdRequest): Promise<ApiResponse<SenderId>> {
+    return this.request<ApiResponse<SenderId>>(`/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
     });
   }
 
-  async deleteSenderId(id: number): Promise<void> {
-    return this.request<void>(`/${id}`, {
+  async deleteSenderId(id: number): Promise<ApiResponse<{ message: string }>> {
+    return this.request<ApiResponse<{ message: string }>>(`/${id}`, {
       method: "DELETE",
     });
   }

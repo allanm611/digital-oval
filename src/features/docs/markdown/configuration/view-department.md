@@ -56,7 +56,7 @@ View detailed information about a Department including its name, description, as
 ### Edit Department
 - Click **Edit** button to modify
 - Update name or description
-- See [Edit Department](/documentation/edit-department)
+- See [Edit Department](/documentation/configuration/edit-department)
 
 ### Delete Department
 - Click **Delete** button to remove

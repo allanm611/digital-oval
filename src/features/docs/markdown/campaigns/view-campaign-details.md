@@ -93,7 +93,7 @@ Comprehensive campaign details displayed in an organized grid:
 Each campaign has an action menu (three dots) with the following options:
 
 ### Edit Campaign
-See [Edit Campaign](/documentation/edit-campaign) for comprehensive information about editing campaigns.
+See [Edit Campaign](/documentation/campaigns/edit-campaign) for comprehensive information about editing campaigns.
 
 
 ### Pause Campaign
@@ -162,6 +162,14 @@ See [Edit Campaign](/documentation/edit-campaign) for comprehensive information 
 **Status Change:** Any status → Archived
 
 **Note:** Archived campaigns can be viewed by filtering.
+
+
+### Unarchive Campaign
+**What it does:** Restore an archived campaign back to its previous active state.
+
+**When to use:** When you need to reactivate a previously archived campaign.
+
+**Status Change:** Archived → Active (or previous status)
 
 
 ### Delete Campaign
@@ -270,17 +278,17 @@ On the campaign details page, approval information is displayed in:
 
 To edit a campaign, click the **three dots menu (⋯)** and select **Edit Campaign**. You'll be guided through the same 5-step campaign creation flow where you can modify any aspect of your campaign.
 
-For detailed information about editing campaigns, field restrictions, and edit workflows, see [Edit Campaign](/documentation/edit-campaign).
+For detailed information about editing campaigns, field restrictions, and edit workflows, see [Edit Campaign](/documentation/campaigns/edit-campaign).
 
 
 ## Related Pages
 
-- Learn how to [Create Campaign](/documentation/create-campaign) - Complete 5-step campaign creation process
-- Learn how to [Edit Campaign](/documentation/edit-campaign) - Modify campaign details and configuration
-- View campaign performance on [Campaign Reports](/documentation/campaign-reports) - Detailed performance metrics and reports
-- Understand campaign [objectives](/documentation/campaign-objectives) - Campaign goal types and strategies
-- View all campaigns on [Campaign List](/documentation/campaigns-list) - Browse, search, and manage campaigns
-- Learn about campaign [types and configurations](/documentation/campaign-types) - Different campaign type structures
+- Learn how to [Create Campaign](/documentation/campaigns/create-campaign) - Complete 5-step campaign creation process
+- Learn how to [Edit Campaign](/documentation/campaigns/edit-campaign) - Modify campaign details and configuration
+- View campaign performance on [Campaign Reports](/documentation/reports/campaign-reports) - Detailed performance metrics and reports
+- Understand campaign [objectives](/documentation/campaigns/campaign-objectives) - Campaign goal types and strategies
+- View all campaigns on [Campaign List](/documentation/campaigns/campaigns-list) - Browse, search, and manage campaigns
+- Learn about campaign [types and configurations](/documentation/campaigns/campaign-types) - Different campaign type structures
 
 
 ## Tips & Best Practices

@@ -78,6 +78,6 @@ Export data for further analysis.
 
 ## Related Pages
 
-- [Create Segment](/documentation/create-segment)
-- [View Segment Details](/documentation/view-segment-details)
+- [Create Segment](/documentation/segments/create-segment)
+- [View Segment Details](/documentation/segments/view-segment-details)
 - [Campaign Reports](/campaigns/campaign-reports)

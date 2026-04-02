@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ChevronDown, Search } from "lucide-react";
 import StepFlowLayout from "../../../../shared/components/ui/StepFlowLayout";
 import { CreateOfferRequest } from "../../../types/offer";
+import { useBackendOfferTypeData } from "../../../../shared/hooks/useBackendOfferTypeData";
 
 import { tw } from '../../../shared/utils/utils';
 interface OfferDefinitionStepProps {
@@ -15,29 +16,6 @@ interface OfferDefinitionStepProps {
   onCancel?: () => void;
 }
 
-const offerTypes = [
-  {
-    value: "data_bundle",
-    label: "Data Bundle",
-    description: "Data packages and bundles",
-  },
-  {
-    value: "voice_bundle",
-    label: "Voice Bundle",
-    description: "Voice call packages",
-  },
-  {
-    value: "sms_bundle",
-    label: "SMS Bundle",
-    description: "SMS text packages",
-  },
-  {
-    value: "combo_bundle",
-    label: "Combo Bundle",
-    description: "Combined data, voice, and SMS packages",
-  },
-];
-
 export default function OfferDefinitionStep({
   currentStep,
   totalSteps,
@@ -50,6 +28,7 @@ export default function OfferDefinitionStep({
 }: OfferDefinitionStepProps) {
   const [typeSearchTerm, setTypeSearchTerm] = useState("");
   const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
+  const { data: offerTypes, loading: offerTypesLoading } = useBackendOfferTypeData();
 
   const isFormValid =
     formData.name?.trim() && formData.type && formData.description?.trim();
@@ -101,13 +80,14 @@ export default function OfferDefinitionStep({
                 type="button"
                 onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
                 className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-1 focus:ring-[#588157] focus:border-[#588157] bg-white text-sm text-left flex items-center justify-between`}
+                disabled={offerTypesLoading}
               >
                 <span
                   className={formData.type ? "text-gray-900" : "text-gray-500"}
                 >
                   {formData.type
-                    ? offerTypes.find((t) => t.value === formData.type)?.label
-                    : "Select type"}
+                    ? offerTypes.find((t) => t.id.toString() === formData.type.toString())?.name
+                    : offerTypesLoading ? "Loading..." : "Select type"}
                 </span>
                 <ChevronDown
                   className={`w-4 h-4 text-gray-400 transition-transform ${
@@ -134,28 +114,31 @@ export default function OfferDefinitionStep({
                     {offerTypes
                       .filter(
                         (type) =>
-                          type.label
+                          type.name
                             .toLowerCase()
                             .includes(typeSearchTerm.toLowerCase()) ||
-                          type.description
-                            .toLowerCase()
-                            .includes(typeSearchTerm.toLowerCase())
+                          (type.description &&
+                            type.description
+                              .toLowerCase()
+                              .includes(typeSearchTerm.toLowerCase()))
                       )
                       .map((type) => (
                         <button
-                          key={type.value}
+                          key={type.id}
                           type="button"
                           onClick={() => {
-                            setFormData({ ...formData, type: type.value });
+                            setFormData({ ...formData, type: type.id.toString() });
                             setIsTypeDropdownOpen(false);
                             setTypeSearchTerm("");
                           }}
                           className="w-full text-left px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
                         >
-                          <div className="font-medium">{type.label}</div>
-                          <div className="text-gray-500 text-xs">
-                            {type.description}
-                          </div>
+                          <div className="font-medium">{type.name}</div>
+                          {type.description && (
+                            <div className="text-gray-500 text-xs">
+                              {type.description}
+                            </div>
+                          )}
                         </button>
                       ))}
                   </div>

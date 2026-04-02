@@ -93,8 +93,8 @@ Create a new Department to represent an organizational unit within your company.
 ## Next Steps
 
 After creating a department:
-1. [View department details](/documentation/view-department)
-2. [Edit department](/documentation/edit-department) if needed
+1. [View department details](/documentation/configuration/view-department)
+2. [Edit department](/documentation/configuration/edit-department) if needed
 3. Assign team members to department
 4. Create department-specific campaigns
 5. Configure department permissions

@@ -410,7 +410,7 @@ Access LOB analytics to:
 
 ## Related Documentation
 
-- [Using LOB in Campaigns](/documentation/campaigns)
-- [Campaign Management](/documentation/campaigns-list)
-- [LOB Analytics](/documentation/reports)
+- [Using LOB in Campaigns](/documentation/campaigns/campaigns-list)
+- [Campaign Management](/documentation/campaigns/campaigns-list)
+- [LOB Analytics](/documentation/reports/overall-dashboard)
 

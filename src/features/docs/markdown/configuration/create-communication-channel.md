@@ -192,8 +192,8 @@ After creating a channel:
 ## Next Steps
 
 After creating a channel:
-1. [View the channel details](/documentation/view-communication-channel) to confirm creation
-2. [Edit the channel](/documentation/edit-communication-channel) to fine-tune settings if needed
+1. [View the channel details](/documentation/configuration/view-communication-channel) to confirm creation
+2. [Edit the channel](/documentation/configuration/edit-communication-channel) to fine-tune settings if needed
 3. Configure channel-specific settings (routes, sender IDs, etc.)
 4. Test the channel with pilot campaigns
 5. Use the channel in production campaigns

@@ -379,7 +379,7 @@ This week's exclusive offer: {{offer_name}}
 
 ## Related Documentation
 
-- [Message Templates](/documentation/creative-templates)
-- [Campaign Creation](/documentation/create-campaign)
-- [Manual Communications](/documentation/manual-communications)
+- [Message Templates](/documentation/configuration/creative-templates)
+- [Campaign Creation](/documentation/campaigns/create-campaign)
+- [Manual Communications](/documentation/manual-actions/manual-communications)
 

@@ -56,7 +56,7 @@ View detailed information about a Campaign Objective. This page displays the obj
 ### Edit Objective
 - Click **Edit** button to modify details
 - Update name or description
-- See [Edit Campaign Objective](/documentation/edit-campaign-objective)
+- See [Edit Campaign Objective](/documentation/configuration/edit-campaign-objective)
 
 ### Delete Objective
 - Click **Delete** button to remove

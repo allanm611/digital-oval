@@ -37,7 +37,7 @@ The following fields can be modified:
 
 ## Editing a Segment
 
-1. Click the **Edit** button on the [Segment List](/documentation/segments-list) or [Segment Details](/documentation/view-segment-details) page
+1. Click the **Edit** button on the [Segment List](/documentation/segments/segments-list) or [Segment Details](/documentation/segments/view-segment-details) page
 2. Modify the desired fields
 3. Update conditions if needed
 4. Click **Save Segment** to apply the changes
@@ -47,7 +47,7 @@ The following fields can be modified:
 ## Next Steps
 
 After editing a segment, you can:
-- View the updated segment details on the [Segment Details](/documentation/view-segment-details) page
-- Return to the [Segment List](/documentation/segments-list) to manage other segments
+- View the updated segment details on the [Segment Details](/documentation/segments/view-segment-details) page
+- Return to the [Segment List](/documentation/segments/segments-list) to manage other segments
 - Recompute the segment to refresh membership with the new criteria
 

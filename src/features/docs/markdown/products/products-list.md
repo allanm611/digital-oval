@@ -67,7 +67,7 @@ The products are displayed in a table with the following columns:
 
 Each product row has action buttons with the following options:
 
-**View** - Opens the [Product Details](/documentation/view-product-details) page
+**View** - Opens the [Product Details](/documentation/products/view-product-details) page
 
 **Edit** - Allows you to modify product information
 

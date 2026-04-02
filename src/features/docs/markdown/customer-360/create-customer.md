@@ -661,8 +661,8 @@ The system validates:
 ## Next Steps
 
 After creating customers:
-- [View Customer Details](/documentation/view-customer-details) - View and manage profiles
-- [Customer Reports](/documentation/customer-reports) - Track customer metrics
+- [View Customer Details](/documentation/customer-360/view-customer-details) - View and manage profiles
+- [Customer Reports](/documentation/reports/customer-profile-reports) - Track customer metrics
 - Create Segments - Organize customers for campaigns
 - Launch Campaigns - Send targeted communications
 

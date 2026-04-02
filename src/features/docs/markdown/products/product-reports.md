@@ -66,6 +66,6 @@ Export data for further analysis.
 
 ## Related Pages
 
-- [Create Product](/documentation/create-product)
-- [View Product Details](/documentation/view-product-details)
+- [Create Product](/documentation/products/create-product)
+- [View Product Details](/documentation/products/view-product-details)
 - [Campaign Reports](/campaigns/campaign-reports)

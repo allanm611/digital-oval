@@ -4,7 +4,7 @@
 
 The Offer List page displays all offers in your system with summary statistics, search capabilities, filtering options, and management tools for each offer.
 
-**[Insert screenshot of offer list page]**
+![Offer List](/img/offer-images/offerlist.png)
 
 
 ## Summary Statistics
@@ -42,6 +42,8 @@ Use the **Search** field to find offers by:
 **Advanced Filters**
 - Click the **Filters** button to access additional filtering options
 
+![Offer List Filters](/img/offer-images/offerslistfilter.png)
+
 
 ## Offers Table
 
@@ -62,41 +64,86 @@ The offers are displayed in a table with the following columns:
 
 ## Action Buttons
 
-Each offer row has an actions menu with available buttons based on the offer's status:
+Each offer row has an actions menu with available buttons based on the offer's current status and approval state. Different combinations of buttons appear depending on where the offer is in its lifecycle.
 
-**View** - Opens the [Offer Details](/documentation/view-offer-details) page
+### Available Actions by Status
 
-**Edit** - Allows you to modify offer configuration (available based on status and permissions)
+**Draft Status**
+- **Edit** - Modify offer details, products, creatives, tracking, rewards
+- **Submit for Approval** - Send offer to approvers for review (moves to Pending Approval)
+- **Delete** - Remove draft offer permanently
 
-**Pause** - Temporarily disables the offer from being used in campaigns
-- Available when: offer status is Active
+**Pending Approval Status**
+- **View** - View offer details (read-only)
+- **Approve** - Approve the offer (requires approval permissions, moves to Approved)
+- **Reject** - Reject with feedback (returns to Draft with rejection reason)
 
-**Resume/Activate** - Re-enables a paused offer
-- Available when: offer status is Paused or approved but not yet active
+**Approved Status**
+- **Edit** - Modify offer details
+- **Activate** - Make offer available for use in campaigns (moves to Active)
+- **Archive** - Move to archived state without activating
 
-**Submit for Approval** - Submit draft offer for review
-- Available when: offer status is Draft
+**Active Status**
+- **Edit** - Modify offer details
+- **Pause** - Temporarily disable from new campaigns (moves to Paused)
+- **Archive** - Move to archived state
 
-**Approve** - Approve a pending offer
-- Available when: approval status is Pending and you have approval permissions
+**Paused Status**
+- **Resume** - Re-enable offer for campaigns (moves back to Active)
+- **Archive** - Move to archived state
 
-**Archive** - Move offer to archived state
-- Available when: offer is no longer needed
+**Expired Status**
+- **View** - View offer details
+- **Archive** - Move to archived state
 
-**Delete** - Permanently remove the offer
-- Available when: offer is in Draft status or has no campaign associations
+**Archived Status**
+- **View** - View offer details (read-only)
+- **Unarchive** - Restore archived offer back to Approved or Active status
 
+---
 
-## Pagination
+## Offer Status & Approval Flow
 
-Use the pagination controls at the bottom to navigate through offers if there are more than the displayed page size.
+Offers progress through defined statuses and approval states:
 
+### Status Workflow
 
-## Tips
+**Draft**
+- Initial state when offer is created
+- Can be edited freely
+- Must be submitted for approval before activation
+- Can be deleted
 
-- Use the search feature to quickly find offers by name
-- Filter by status to focus on specific offer types (e.g., only Active offers)
-- Check the Category filter to view offers organized by category
-- Review expired offers and archive them to keep your list organized
-- Use the Advanced Filters for more specific searches
+**Pending Approval**
+- Offer submitted for review
+- Cannot be edited until approval decision
+- Approvers review and approve/reject
+- Cannot be used in campaigns
+
+**Approved**
+- Approval decision made (approved)
+- Ready to activate
+- Cannot be edited in this state
+- Must be activated to use in campaigns
+
+**Active**
+- Offer is available for use in campaigns
+- Can be paused or archived
+- Can be edited (if permissions allow)
+
+**Paused**
+- Temporarily disabled
+- Cannot be assigned to new campaigns
+- Can be resumed to Active state
+- Can be archived
+
+**Expired**
+- Offer end date has passed
+- Cannot be used in new campaigns
+- Can be archived for record-keeping
+
+**Archived**
+- Inactive and preserved for historical records
+- Not available for use
+- Read-only access
 

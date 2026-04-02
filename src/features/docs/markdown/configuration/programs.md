@@ -334,7 +334,7 @@ Access program analytics to:
 
 ## Related Documentation
 
-- [Using Programs in Campaigns](/documentation/campaigns)
-- [Campaign Management](/documentation/campaigns-list)
-- [Program Analytics](/documentation/reports)
+- [Using Programs in Campaigns](/documentation/campaigns/campaigns-list)
+- [Campaign Management](/documentation/campaigns/campaigns-list)
+- [Program Analytics](/documentation/reports/overall-dashboard)
 

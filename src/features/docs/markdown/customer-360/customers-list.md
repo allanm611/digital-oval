@@ -142,7 +142,7 @@ Click the **Delete** (trash icon) button to remove the customer record.
    - Other attributes
 4\. Click **Save**
 
-See [Create Customer](/documentation/create-customer) for detailed guide.
+See [Create Customer](/documentation/customer-360/create-customer) for detailed guide.
 
 ### Bulk Upload
 

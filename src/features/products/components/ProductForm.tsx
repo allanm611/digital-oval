@@ -15,6 +15,9 @@ import { TypeConfigurationItem } from "../../../shared/components/TypeConfigurat
 import { tw, color, zIndex } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useConfigurationData } from "../../../shared/services/configurationDataService";
+import { useBackendProductTypeData } from "../../../shared/hooks/useBackendProductTypeData";
+import { useBackendComboTypeData } from "../../../shared/hooks/useBackendComboTypeData";
+import { ComboType } from "../services/comboTypeService";
 
 interface ProductFormProps {
   formData: CreateProductRequest | UpdateProductRequest;
@@ -51,9 +54,9 @@ export default function ProductForm({
   onCancel,
 }: ProductFormProps) {
   const { t } = useLanguage();
-  // Get product types from configuration
-  const { data: productTypes } = useConfigurationData("productTypes");
-  const { data: comboTypes } = useConfigurationData("comboTypes");
+  // Fetch product types and combo types from backend
+  const { data: productTypes, loading: productTypesLoading } = useBackendProductTypeData();
+  const { data: comboTypes, loading: comboTypesLoading } = useBackendComboTypeData();
 
   // Error state
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -149,7 +152,7 @@ export default function ProductForm({
   // Get selected combo type details (move before useEffect that uses it)
   const selectedComboType = comboData.combo_type_id
     ? (comboTypes.find((ct) => ct.id === comboData.combo_type_id) as
-        | TypeConfigurationItem
+        | ComboType
         | undefined)
     : null;
 
@@ -673,11 +676,12 @@ export default function ProductForm({
               </label>
               <HeadlessSelect
                 options={productTypes
-                  .filter((pt) => pt.isActive !== false)
+                  .filter((pt) => pt.is_active !== false)
                   .map((pt) => ({
                     value: String(pt.id),
                     label: pt.name,
                   }))}
+                disabled={productTypesLoading}
                 value={
                   formData.product_type_id
                     ? String(formData.product_type_id)
@@ -741,7 +745,7 @@ export default function ProductForm({
                     options={[
                       { value: "", label: "Select a combo type" },
                       ...comboTypes
-                        .filter((ct) => ct.isActive !== false)
+                        .filter((ct) => ct.is_active !== false)
                         .map((ct) => ({
                           value: String(ct.id),
                           label: ct.name,

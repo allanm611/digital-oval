@@ -108,7 +108,7 @@ Click the **View** button or reward name to:
 - Check per-customer results
 - See notification history
 
-See [View Manual Reward](/documentation/view-manual-reward)
+See [View Manual Reward](/documentation/manual-actions/view-manual-reward)
 
 ### Edit Reward
 Click the **Edit** button to:
@@ -119,7 +119,7 @@ Click the **Edit** button to:
 
 **Note:** Can only edit scheduled rewards that haven't been applied
 
-See [Edit Manual Reward](/documentation/edit-manual-reward)
+See [Edit Manual Reward](/documentation/manual-actions/edit-manual-reward)
 
 ### Delete Reward
 Click the **Delete** button to:

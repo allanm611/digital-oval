@@ -82,6 +82,7 @@ const sidebars: SidebarsConfig = {
           ],
         },
         'offers/offer-catalog',
+        'offers/offer-types',
       ],
     },
     {

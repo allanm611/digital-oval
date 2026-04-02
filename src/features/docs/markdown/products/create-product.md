@@ -57,8 +57,8 @@ The Create Product form guides you through setting up a new product that can be 
 ## Next Steps
 
 After creating a product, you can:
-- View the product details on the [Product List](/documentation/products-list)
-- Edit the product using [Edit Product](/documentation/product-edit)
-- View detailed information on the [Product Details](/documentation/view-product-details) page
+- View the product details on the [Product List](/documentation/products/products-list)
+- Edit the product using [Edit Product](/documentation/products/product-edit)
+- View detailed information on the [Product Details](/documentation/products/view-product-details) page
 
 
