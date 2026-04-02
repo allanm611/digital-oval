@@ -497,31 +497,6 @@ export default function TargetAudienceStep({
         )}
       </div>
 
-      {/* Actions */}
-      <div className="sticky bottom-12 z-40 bg-white flex items-center justify-end space-x-3 py-4">
-          <button
-            type="button"
-            onClick={handleNext}
-            disabled={isSubmitting || !isFormValid || (inputMethod === "manual" && manualInputError !== "")}
-            className="px-4 py-2 rounded-md transition-colors text-sm font-medium text-white flex items-center justify-center"
-            style={{
-              backgroundColor:
-                isSubmitting || !isFormValid || (inputMethod === "manual" && manualInputError !== "")
-                  ? color.text.muted
-                  : color.primary.action,
-              cursor: isSubmitting || !isFormValid || (inputMethod === "manual" && manualInputError !== "") ? "not-allowed" : "pointer",
-            }}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                Processing...
-              </>
-            ) : (
-              "Next: Define Communication"
-            )}
-          </button>
-      </div>
 
       {/* QuickList Picker Modal */}
       <QuickListPickerModal

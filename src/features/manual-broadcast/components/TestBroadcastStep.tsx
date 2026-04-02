@@ -388,44 +388,6 @@ export default function TestBroadcastStep({
           </p>
         )}
       </div>
-
-      {/* Footer */}
-      <div
-        className="sticky bottom-12 z-40 bg-white p-4 sm:p-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3"
-      >
-        <button
-          onClick={onPrevious}
-          disabled={isTesting}
-          className="w-full sm:w-auto px-6 py-2.5 rounded-md transition-all text-sm font-semibold disabled:opacity-50 whitespace-nowrap"
-          style={{
-            backgroundColor: color.surface.cards,
-            border: `1px solid ${color.border.default}`,
-            color: color.text.primary,
-          }}
-        >
-          {t.manualBroadcast.previous}
-        </button>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-          <button
-            onClick={handleSkipTest}
-            disabled={isTesting}
-            className="w-full sm:w-auto px-6 py-2.5 rounded-md transition-all text-sm font-medium disabled:opacity-50 whitespace-nowrap"
-            style={{
-              color: color.text.secondary,
-            }}
-          >
-            {t.manualBroadcast.skipTest}
-          </button>
-          <button
-            onClick={handleNext}
-            disabled={isTesting}
-            className="w-full sm:w-auto px-6 py-2.5 text-white rounded-md transition-all text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-            style={{ backgroundColor: color.primary.action }}
-          >
-            {t.manualBroadcast.nextSchedule}
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

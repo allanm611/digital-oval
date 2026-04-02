@@ -54,8 +54,6 @@ export function DocsHeader() {
                     <div className={styles.versionItemSubtitle}>Current Release</div>
                     <div className={styles.versionItemDate}>{releaseDate}</div>
                   </div>
-                  <div className={styles.versionDivider}></div>
-                  <div className={styles.versionNote}>First Release of Sentra CVM Documentation</div>
                 </div>
               )}
             </div>

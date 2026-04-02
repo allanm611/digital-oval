@@ -322,10 +322,10 @@ export default function CreateCampaignPage() {
           if (segmentsResponse?.success && segmentsResponse.data?.length > 0) {
             const validSegments: CampaignSegment[] = segmentsResponse.data
               .map((segment: any) => {
-                if (!segment?.id) return null;
+                if (!segment?.segment_id) return null;
                 return {
-                  id: String(segment.id),
-                  name: segment.name || "",
+                  id: String(segment.segment_id),
+                  name: segment.segment_name || "",
                   customer_count: segment.customer_count || 0,
                   criteria: {},
                   created_at: segment.created_at || new Date().toISOString(),
@@ -338,7 +338,7 @@ export default function CreateCampaignPage() {
           if (offersResponse?.success && offersResponse.data?.length > 0) {
             const validOffers: CampaignOffer[] = offersResponse.data
               .map((offer: any) => {
-                if (!offer?.id) return null;
+                if (!offer?.offer_id) return null;
                 let validityPeriod = 30;
                 if (offer.valid_from && offer.valid_to) {
                   const from = new Date(offer.valid_from);
@@ -365,8 +365,8 @@ export default function CreateCampaignPage() {
                   rewardValue = String(offer.bonus_value);
                 }
                 return {
-                  id: String(offer.id),
-                  name: offer.name || "",
+                  id: String(offer.offer_id),
+                  name: offer.offer_name || "",
                   offer_type: offer.offer_type || "General",
                   reward_type: rewardType,
                   reward_value: rewardValue,
@@ -1451,7 +1451,7 @@ export default function CreateCampaignPage() {
             <BackButton
               fallbackTo="/dashboard/campaigns"
               showBreadcrumb={true}
-              currentLabel="Create Campaign"
+              currentLabel={isEditMode ? "Edit Campaign" : "Create Campaign"}
             />
             {currentStep !== 5 && (
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center md:justify-end">

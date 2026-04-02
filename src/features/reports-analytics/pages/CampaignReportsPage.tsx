@@ -344,6 +344,10 @@ const generateCampaignRows = (): CampaignRow[] => {
       const cgConversions = Math.floor((delivered * controlGroup / sent) * (0.04 + Math.random() * 0.06)); // CG has lower conversion rate
       const messagesGenerated = sent * (2 + Math.floor(Math.random() * 2));
 
+      // Calculate conversion percentages for both groups
+      const tgConversionPercentage = delivered > 0 ? (conversions / delivered) * 100 : 0;
+      const cgConversionPercentage = delivered > 0 ? (cgConversions / delivered) * 100 : 0;
+
       rows.push({
         id: `camp-${String(1000 + baseIdx)}`,
         name: campaignNames[baseIdx % campaignNames.length],
@@ -357,6 +361,8 @@ const generateCampaignRows = (): CampaignRow[] => {
         conversions,
         cgConversions,
         messagesGenerated,
+        tgConversionPercentage,
+        cgConversionPercentage,
         lastRunDate: runDate.toISOString().split("T")[0],
       });
     }
@@ -634,22 +640,33 @@ export default function CampaignReportsPage() {
 
   // Convert real campaigns to table row format with mixed real and dummy data
   const campaignTableRows = useMemo(() => {
-    return campaigns.map((campaign) => ({
-      id: `campaign-${campaign.id}`,
-      name: campaign.name,
-      segmentCount: campaign.segments?.length ?? 0,
-      offerCount: campaign.offers?.length ?? 0,
-      campaign: campaign, // Store full campaign object for modal
-      // Dummy data for columns without backend data
-      targetGroup: Math.floor(Math.random() * 50000) + 10000,
-      controlGroup: Math.floor(Math.random() * 10000) + 1000,
-      messagesGenerated: Math.floor(Math.random() * 100000) + 50000,
-      sent: Math.floor(Math.random() * 95000) + 45000,
-      delivered: Math.floor(Math.random() * 90000) + 40000,
-      conversions: Math.floor(Math.random() * 15000) + 5000,
-      lastRunDate: campaign.created_at ? new Date(campaign.created_at).toLocaleDateString() : "—",
-      lastRunDateMS: campaign.created_at ? new Date(campaign.created_at).getTime() : Date.now(),
-    }));
+    return campaigns.map((campaign) => {
+      const delivered = Math.floor(Math.random() * 90000) + 40000;
+      const conversions = Math.floor(delivered * (0.06 + Math.random() * 0.08));
+      const cgConversions = Math.floor(delivered * (0.04 + Math.random() * 0.06));
+      const tgConversionPercentage = delivered > 0 ? (conversions / delivered) * 100 : 0;
+      const cgConversionPercentage = delivered > 0 ? (cgConversions / delivered) * 100 : 0;
+
+      return {
+        id: `campaign-${campaign.id}`,
+        name: campaign.name,
+        segmentCount: Array.isArray(campaign.segments) ? campaign.segments.length : 0,
+        offerCount: Array.isArray(campaign.offers) ? campaign.offers.length : 0,
+        campaign: campaign, // Store full campaign object for modal
+        // Dummy data for columns without backend data
+        targetGroup: Math.floor(Math.random() * 50000) + 10000,
+        controlGroup: Math.floor(Math.random() * 10000) + 1000,
+        messagesGenerated: Math.floor(Math.random() * 100000) + 50000,
+        sent: Math.floor(Math.random() * 95000) + 45000,
+        delivered,
+        conversions,
+        cgConversions,
+        tgConversionPercentage,
+        cgConversionPercentage,
+        lastRunDate: campaign.created_at ? new Date(campaign.created_at).toLocaleDateString() : "—",
+        lastRunDateMS: campaign.created_at ? new Date(campaign.created_at).getTime() : Date.now(),
+      };
+    });
   }, [campaigns]);
 
   const filteredRows = useMemo(() => {
@@ -1226,16 +1243,17 @@ export default function CampaignReportsPage() {
                 <tr className="text-left text-sm font-medium uppercase tracking-wide">
                   {[
                     "Campaign Name",
-                    "Segment Count",
-                    "Offer Count",
+                    // "Segment Count",
+                    // "Offer Count",
                     "Target Group",
                     "Control Group",
                     "Messages Generated",
                     "Sent",
                     "Delivered",
-                    "TG Conversions",
-                    "CG Conversions",
-                    "Percentage",
+                    "Target Group Conversions",
+                    "Control Group Conversions",
+                    "Target Group %",
+                    "Control Group %",
                     "Last Run",
                   ].map((header, idx, arr) => (
                     <th
@@ -1266,7 +1284,7 @@ export default function CampaignReportsPage() {
                     >
                       <div className="text-gray-900">{entry.name}</div>
                     </td>
-                    <td
+                    {/* <td
                       className="px-6 py-4 cursor-pointer"
                       style={{ backgroundColor: colors.surface.tablebodybg }}
                       onClick={() => {
@@ -1289,7 +1307,7 @@ export default function CampaignReportsPage() {
                       }}
                     >
                       <span className="text-sm font-medium">{entry.offerCount ?? 0}</span>
-                    </td>
+                    </td> */}
                     <td
                       className="px-6 py-4"
                       style={{ backgroundColor: colors.surface.tablebodybg }}
@@ -1320,25 +1338,31 @@ export default function CampaignReportsPage() {
                       className="px-6 py-4"
                       style={{ backgroundColor: colors.surface.tablebodybg }}
                     >
-                      {entry.delivered.toLocaleString("en-US")}
+                      {(entry.delivered ?? 0).toLocaleString("en-US")}
                     </td>
                     <td
                       className="px-6 py-4"
                       style={{ backgroundColor: colors.surface.tablebodybg }}
                     >
-                      {entry.conversions.toLocaleString("en-US")}
+                      {(entry.conversions ?? 0).toLocaleString("en-US")}
                     </td>
                     <td
                       className="px-6 py-4"
                       style={{ backgroundColor: colors.surface.tablebodybg }}
                     >
-                      {entry.cgConversions.toLocaleString("en-US")}
+                      {(entry.cgConversions ?? 0).toLocaleString("en-US")}
                     </td>
                     <td
                       className="px-6 py-4"
                       style={{ backgroundColor: colors.surface.tablebodybg }}
                     >
-                      {entry.delivered > 0 ? ((entry.conversions / entry.delivered) * 100).toFixed(2) : 0}%
+                      {((entry.tgConversionPercentage ?? 0).toFixed(2))}%
+                    </td>
+                    <td
+                      className="px-6 py-4"
+                      style={{ backgroundColor: colors.surface.tablebodybg }}
+                    >
+                      {((entry.cgConversionPercentage ?? 0).toFixed(2))}%
                     </td>
                     <td
                       className="px-6 py-4"

@@ -638,6 +638,29 @@ export default function CreateManualBroadcastPage() {
 
           {/* Step Content */}
           <div className="py-4">{renderStep()}</div>
+
+          {/* Bottom Navigation */}
+          <div className="sticky bottom-12 bg-white py-4 shadow-sm mt-8">
+            <div className="flex justify-between items-center">
+              {currentStep > 1 && (
+                <button
+                  onClick={handlePrevious}
+                  className={`inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-all duration-200`}
+                >
+                  Previous
+                </button>
+              )}
+              <div className="flex-1" />
+              <button
+                onClick={currentStep === STEPS.length ? handleSubmit : handleNext}
+                disabled={!isStepValid(currentStep)}
+                className={`inline-flex items-center px-5 py-2 text-sm font-medium ${tw.rounded} text-white disabled:opacity-50 disabled:cursor-not-allowed`}
+                style={{ backgroundColor: color.primary.action }}
+              >
+                {currentStep === STEPS.length ? "Send Broadcast" : "Next"}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

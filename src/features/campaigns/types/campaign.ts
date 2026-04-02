@@ -54,6 +54,18 @@ export interface BackendCampaignType {
   tags: string[];
   attribution_model_id: number | null;
   suppression_list_ids: number[] | null;
+  offers?: Array<{
+    offer_id: number;
+    offer_name: string;
+    flow_count?: string | number;
+  }>;
+  segments?: Array<{
+    id: string | number;
+    segment_id: number;
+    segment_name: string;
+    include_exclude?: "include" | "exclude";
+    is_primary?: boolean;
+  }>;
 }
 
 export interface GetCampaignsResponse {

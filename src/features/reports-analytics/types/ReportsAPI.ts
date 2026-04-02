@@ -306,6 +306,8 @@ export interface CampaignRow {
   conversions: number; // TG conversions (treatment group)
   cgConversions: number; // CG conversions (control group)
   messagesGenerated: number;
+  tgConversionPercentage?: number; // Target group conversion rate percentage
+  cgConversionPercentage?: number; // Control group conversion rate percentage
   lastRunDate: string; // ISO 8601 format: YYYY-MM-DD
 }
 

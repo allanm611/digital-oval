@@ -371,25 +371,6 @@ export default function SelectCustomersStep({
         )}
       </div>
 
-      {/* Footer */}
-      <div className="p-6 flex items-center justify-end">
-        <button
-          type="button"
-          onClick={handleNext}
-          disabled={isSubmitting || !isFormValid}
-          className={`px-6 py-2.5 text-white ${tw.rounded} transition-all text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
-          style={{ backgroundColor: color.primary.action }}
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
-              Processing...
-            </>
-          ) : (
-            t.manualRewards.nextDefineReward
-          )}
-        </button>
-      </div>
 
       {/* QuickList Picker Modal */}
       <QuickListPickerModal

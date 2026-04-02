@@ -1177,34 +1177,6 @@ export default function DefineCommunicationStep({
 
       </div>
 
-      {/* Footer */}
-      <div
-        className="sticky bottom-12 z-40 bg-white p-5 flex items-center justify-between"
-      >
-        <button
-          onClick={onPrevious}
-          className="px-6 py-2.5 rounded-md text-sm font-medium transition-all"
-          style={{
-            backgroundColor: color.surface.cards,
-            border: `1px solid ${color.border.default}`,
-            color: color.text.primary,
-          }}
-        >
-          {t.manualBroadcast.previous}
-        </button>
-        <button
-          onClick={handleNext}
-          disabled={
-            !messageBody.trim() ||
-            (selectedChannel === "EMAIL" && !messageTitle.trim())
-          }
-          className="px-6 py-2.5 text-white rounded-md text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          style={{ backgroundColor: color.primary.action }}
-        >
-          {t.manualBroadcast.nextSchedule}
-        </button>
-      </div>
-
       {/* Communication Policy Modals */}
       <CommunicationPolicyModal
         isOpen={isCustomizationModalOpen}

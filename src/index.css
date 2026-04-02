@@ -3259,8 +3259,10 @@ Satoshi
   }
 }
 
-/* Global Checkbox Styling - Accent Color */
-input[type="checkbox"] {
+/* Global Checkbox and Radio Styling - Accent Color Indicator */
+input[type="checkbox"],
+input[type="radio"] {
   accent-color: #00BBCC;
   cursor: pointer;
+  background-color: white;
 }

@@ -431,31 +431,6 @@ export default function DefineRewardStep({
         )}
       </div>
 
-      {/* Footer */}
-      <div
-        className="p-4 sm:p-6 border-t flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3"
-        style={{ borderColor: color.border.default }}
-      >
-        <button
-          onClick={onPrevious}
-          className={`w-full sm:w-auto px-6 py-2.5 ${tw.rounded} transition-all text-sm font-semibold whitespace-nowrap`}
-          style={{
-            backgroundColor: color.surface.cards,
-            border: `1px solid ${color.border.default}`,
-            color: color.text.primary,
-          }}
-        >
-          {t.manualRewards.previous}
-        </button>
-        <button
-          onClick={handleNext}
-          disabled={!rewardValue.trim()}
-          className={`w-full sm:w-auto px-6 py-2.5 text-white ${tw.rounded} transition-all text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
-          style={{ backgroundColor: color.primary.action }}
-        >
-          {t.manualRewards.nextPreview}
-        </button>
-      </div>
     </div>
   );
 }

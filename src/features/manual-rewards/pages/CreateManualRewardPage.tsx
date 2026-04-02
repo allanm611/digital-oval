@@ -112,6 +112,24 @@ export default function CreateManualRewardPage() {
     return stepId <= currentStep;
   };
 
+  const isCurrentStepValid = (): boolean => {
+    switch (currentStep) {
+      case 1: // Select Customers - validate in component
+        return !!(rewardData.audienceFile || rewardData.quicklistId || rewardData.audienceName);
+      case 2: // Define Reward
+        return !!(rewardData.rewardValue && rewardData.rewardValue.trim());
+      case 3: // Preview
+        return true;
+      case 4: // Apply
+        if (rewardData.applyType === "later") {
+          return !!(rewardData.applyDate && rewardData.applyTime);
+        }
+        return true;
+      default:
+        return true;
+    }
+  };
+
   const handleSubmit = async () => {
     try {
       // TODO: Save manual reward to database
@@ -198,6 +216,29 @@ export default function CreateManualRewardPage() {
 
           {/* Step Content */}
           <div className="py-4">{renderStep()}</div>
+
+          {/* Bottom Navigation */}
+          <div className="sticky bottom-12 bg-white py-4 shadow-sm mt-8">
+            <div className="flex justify-between items-center">
+              {currentStep > 1 && (
+                <button
+                  onClick={handlePrevious}
+                  className={`inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-all duration-200`}
+                >
+                  Previous
+                </button>
+              )}
+              <div className="flex-1" />
+              <button
+                onClick={currentStep === STEPS.length ? handleSubmit : handleNext}
+                disabled={!isCurrentStepValid()}
+                className={`inline-flex items-center px-5 py-2 text-sm font-medium ${tw.rounded} text-white disabled:opacity-50 disabled:cursor-not-allowed`}
+                style={{ backgroundColor: color.primary.action }}
+              >
+                {currentStep === STEPS.length ? "Submit" : "Next"}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
