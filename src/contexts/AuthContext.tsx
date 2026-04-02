@@ -94,35 +94,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setPermissions(userPermissions);
     localStorage.setItem("auth_permissions", JSON.stringify(userPermissions));
 
-    // Fetch the actual role from the backend
-    let userRole = "User"; // Default fallback
+    // Default role for immediate display
+    let userRole = "User";
 
     if (response.user) {
-      try {
-        // Get all roles
-        const rolesResponse = await roleService.listRoles({
-          limit: 100,
-          offset: 0,
-        });
-        const mappedRoles: Record<number, { name: string }> = {};
-        rolesResponse.roles.forEach((role: any) => {
-          mappedRoles[role.id] = { name: role.name };
-        });
-
-        // Get full user info to find their primary role
-        const userResponse = await userService.getUserById(response.user.id);
-        if (userResponse.success && userResponse.data) {
-          const fullUser = userResponse.data as { primary_role_id?: number; role_id?: number };
-          const primaryRoleId = fullUser.primary_role_id ?? fullUser.role_id;
-          if (primaryRoleId && mappedRoles[primaryRoleId]) {
-            userRole = mappedRoles[primaryRoleId].name;
-          }
-        }
-      } catch (error) {
-        // If fetching role fails, fall back to default
-        console.warn("Failed to fetch user role, using default", error);
-      }
-
+      // Create user object with default role for immediate display
       const user: User = {
         user_id: response.user.id,
         first_name: response.user.first_name,
@@ -136,11 +112,39 @@ export function AuthProvider({ children }: AuthProviderProps) {
         created_on: new Date().toISOString(),
         updated_on: new Date().toISOString(),
       };
+
       setUser(user);
       localStorage.setItem("auth_user", JSON.stringify(user));
+
+      // Fetch actual role in background (non-blocking)
+      userService.getUserById(response.user.id)
+        .then((userResponse) => {
+          if (userResponse.success && userResponse.data) {
+            const fullUser = userResponse.data as { primary_role_id?: number; role_id?: number };
+            const primaryRoleId = fullUser.primary_role_id ?? fullUser.role_id;
+
+            if (primaryRoleId) {
+              return roleService.getRoleById(primaryRoleId, { skipCache: true });
+            }
+          }
+          return null;
+        })
+        .then((roleResponse) => {
+          if (roleResponse) {
+            // Update user with actual role
+            const updatedUser = {
+              ...user,
+              role: roleResponse.name,
+            };
+            setUser(updatedUser);
+            localStorage.setItem("auth_user", JSON.stringify(updatedUser));
+          }
+        })
+        .catch((error) => {
+          console.warn("Failed to fetch user role in background", error);
+        });
     } else {
       // If no user data in response, login is incomplete
-      // Don't create a user object - auth is not complete
       throw new Error("Login successful but user data missing");
     }
 

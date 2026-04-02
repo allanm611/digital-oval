@@ -753,65 +753,66 @@ export default function SegmentManagementPage() {
     return segment.size_estimate ?? 0;
   };
 
+  const [computeDialogSegmentId, setComputeDialogSegmentId] = useState<number | null>(null);
+
   const handleComputeSegment = async (segment: Segment) => {
     setShowActionMenu(null);
-    setComputingSegmentId(segment.id);
+    setComputeDialogSegmentId(segment.id);
     setShowComputeDialog(true);
     setComputeLocation(null);
     setComputeProgress(0);
   };
 
-  const executeCompute = async (location: "frontend" | "background") => {
-    if (!computingSegmentId) return;
-
-    setComputeLocation(location);
-
-    // If background, close dialog immediately
-    if (location === "background") {
-      setShowComputeDialog(false);
-    }
-
-    // Simulate 2-minute computation (120 seconds)\n    // const COMPUTE_DURATION = 120000;\n    // const PROGRESS_INTERVAL = 1000;\n    // const startTime = Date.now();
-
-    // COMMENTED OUT: Mock computation timer + localStorage persistence — testing real backend
-    // localStorage.setItem(
-    //   "segmentComputeState",
-    //   JSON.stringify({ segmentId: computingSegmentId, location, startTime })
-    // );
-
-    // TODO: Replace with real backend compute call
-    // For now, just reset states immediately since mock is disabled
-    setComputingSegmentId(null);
+  const closeComputeDialog = () => {
+    setShowComputeDialog(false);
+    setComputeDialogSegmentId(null);
     setComputeLocation(null);
     setComputeProgress(0);
-    setShowComputeDialog(false);
+  };
 
-    // const progressInterval = setInterval(() => {
-    //   const elapsed = Date.now() - startTime;
-    //   const progress = Math.min((elapsed / COMPUTE_DURATION) * 100, 100);
-    //   setComputeProgress(progress);
-    //   if (elapsed >= COMPUTE_DURATION) {
-    //     clearInterval(progressInterval);
-    //     const mockCustomerCount = Math.floor(Math.random() * 7) + 4;
-    //     setSegments((prev) =>
-    //       prev.map((s) =>
-    //         s.id === computingSegmentId
-    //           ? { ...s, size_estimate: mockCustomerCount, last_computed_at: new Date().toISOString() }
-    //           : s,
-    //       ),
-    //     );
-    //     const segment = segments.find((s) => s.id === computingSegmentId);
-    //     success(
-    //       "Segment computed",
-    //       `Segment "${segment?.name}" has been computed successfully. Target: ${mockCustomerCount} customers`,
-    //     );
-    //     setComputingSegmentId(null);
-    //     setComputeLocation(null);
-    //     setComputeProgress(0);
-    //     setShowComputeDialog(false);
-    //     localStorage.removeItem("segmentComputeState");
-    //   }
-    // }, PROGRESS_INTERVAL);
+  const executeCompute = async (location: "frontend" | "background") => {
+    const targetId = computeDialogSegmentId;
+    if (!targetId) return;
+
+    const segmentName = segments.find((s) => s.id === targetId)?.name || "Segment";
+
+    // Now actually mark the row as computing
+    setComputingSegmentId(targetId);
+    setComputeLocation(location);
+
+    // If background, close dialog immediately and run in background
+    if (location === "background") {
+      setShowComputeDialog(false);
+      setComputeDialogSegmentId(null);
+      showInfo("Computing", `"${segmentName}" is computing in the background.`);
+    }
+
+    try {
+      const response = await segmentService.refreshSegment(Number(targetId), { force: true });
+      const data = (response as any)?.data || {};
+      const total = data.total ?? 0;
+      // Update just this one row instead of reloading the whole table
+      setSegments((prev) =>
+        prev.map((s) =>
+          s.id === targetId
+            ? { ...s, size_estimate: total, last_computed_at: new Date().toISOString() }
+            : s,
+        ),
+      );
+      success(
+        "Segment computed",
+        `"${segmentName}" — ${total} customers found.`,
+      );
+    } catch (err: unknown) {
+      const message = (err as Error).message || "Failed to compute segment";
+      showError("Compute failed", message);
+    } finally {
+      setComputingSegmentId(null);
+      setComputeLocation(null);
+      setComputeProgress(0);
+      setShowComputeDialog(false);
+      setComputeDialogSegmentId(null);
+    }
   };
 
   // Bulk selection handlers
@@ -2290,7 +2291,7 @@ export default function SegmentManagementPage() {
           <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4 relative">
             {/* Close Button */}
             <button
-              onClick={() => setShowComputeDialog(false)}
+              onClick={closeComputeDialog}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
             >
               <X className="w-5 h-5" />
@@ -2300,53 +2301,39 @@ export default function SegmentManagementPage() {
               Compute Segment
             </h3>
             <p className="text-sm text-gray-600 mb-6">
-              This may take up to 2 minutes to compute the target audience size.
+              How would you like to track the computation progress?
             </p>
 
             {computeLocation ? (
               <div className="space-y-4">
-                {/* Progress Display */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div
-                      className="w-4 h-4 border-2 border-gray-300 rounded-full animate-spin"
-                      style={{ borderTopColor: color.primary.accent }}
-                    />
-                    <span className="text-sm text-gray-600">
-                      Computing segment...
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="h-2 rounded-full transition-all duration-300"
-                      style={{
-                        width: `${computeProgress}%`,
-                        backgroundColor: color.primary.accent,
-                      }}
-                    />
-                  </div>
-                  <p className="text-xs text-gray-500 text-right">
-                    {Math.round(computeProgress)}% complete
-                  </p>
+                {/* Computing in progress */}
+                <div className="flex items-center gap-3 py-4">
+                  <div
+                    className="w-5 h-5 border-2 border-gray-300 rounded-full animate-spin"
+                    style={{ borderTopColor: color.primary.accent }}
+                  />
+                  <span className="text-sm text-gray-600">
+                    Computing segment size...
+                  </span>
                 </div>
               </div>
             ) : (
               <div className="flex gap-3">
                 <button
                   onClick={() => executeCompute("frontend")}
-                  className={`flex-1 px-4 py-2 ${tw.button} text-white rounded-lg font-medium transition-colors`}
+                  className={`flex-1 px-4 py-2.5 ${tw.button} text-white rounded-lg font-medium transition-colors`}
                 >
-                  Watch Progress
+                  Compute
                 </button>
                 <button
                   onClick={() => executeCompute("background")}
-                  className={`flex-1 ${tw.borderedButton}`}
+                  className={`flex-1 px-4 py-2.5 ${tw.borderedButton}`}
                   style={{
                     borderColor: color.primary.action,
                     color: color.primary.action,
                   }}
                 >
-                  Background
+                  Compute & Close
                 </button>
               </div>
             )}
