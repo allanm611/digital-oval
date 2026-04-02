@@ -69,13 +69,13 @@ Action buttons at the top display based on the product's status:
 - Activate the product to make it available for use
 
 **Deactivate** (when Active)
-- Temporarily disable the product from being used
+- Temporarily disable the product from being used in new campaigns and offers. The product remains in the system but is not available for selection when creating new offers or campaigns. Already-active campaigns using this product continue to run.
 
 **Edit**
 - Modify product details and configuration
 
 **Delete**
-- Permanently remove the product
+- Permanently remove the product from the system
 
 
 

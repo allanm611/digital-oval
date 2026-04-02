@@ -93,8 +93,6 @@ When Combo type is selected:
 
 ![Product Category Dropdown](/img/product-images/createproductimage2-productcategorydrodpodown.png)
 
----
-
 ## Creating a Product
 
 1. Fill in all required fields marked with *
@@ -118,8 +116,6 @@ The product creation form is also used for editing existing products. When you e
 - You can modify any field based on your edit permissions
 - The same wizard steps and validations apply
 - Click **Save** to apply your changes
-
----
 
 ## Next Steps
 

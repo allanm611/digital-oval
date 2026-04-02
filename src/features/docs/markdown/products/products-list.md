@@ -72,9 +72,9 @@ Each product row has action buttons with the following options:
 **Edit** - Allows you to modify product information
 
 **Activate/Deactivate** - Toggle the product status
-- Play icon: Product is inactive, click to activate
-- Pause icon: Product is active, click to deactivate
+- Play icon: Product is inactive, click to activate and make available for use
+- Pause icon: Product is active, click to deactivate and prevent use in new campaigns/offers
 
-**Delete** - Permanently remove the product with confirmation
+**Delete** - Permanently remove the product from the system with confirmation
 
 
