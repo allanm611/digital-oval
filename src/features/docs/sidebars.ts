@@ -101,11 +101,10 @@ const sidebars: SidebarsConfig = {
             },
             'products/create-product',
             'products/view-product-details',
-            'products/product-edit',
-            'products/product-reports',
           ],
         },
         'products/product-catalog',
+        'products/product-types',
       ],
     },
     {

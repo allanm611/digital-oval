@@ -4,7 +4,7 @@
 
 The Product List page displays all products in your system with summary statistics, search capabilities, filtering options, and management tools for each product.
 
-**[Insert screenshot of product list page]**
+![Products List Page](/img/product-images/productslistpage.png)
 
 
 ## Summary Statistics
@@ -76,11 +76,5 @@ Each product row has action buttons with the following options:
 - Pause icon: Product is active, click to deactivate
 
 **Delete** - Permanently remove the product with confirmation
-
-
-## Pagination
-
-Use the pagination controls at the bottom to navigate through products if there are more than the displayed page size.
-
 
 

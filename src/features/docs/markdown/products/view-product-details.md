@@ -4,7 +4,7 @@
 
 The Product Details page displays complete information about a specific product including its configuration, pricing, validity period, and available management actions.
 
-**[Insert screenshot of product details page]**
+![Product Details Page](/img/product-images/productdetailpage.png)
 
 
 ## Product Overview

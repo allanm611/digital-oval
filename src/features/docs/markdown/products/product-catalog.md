@@ -4,7 +4,7 @@
 
 Product Catalogs organize products into categories for easier management and organization. Catalogs help you group related products together and manage them as a collection.
 
-**[Insert screenshot of product catalogs page]**
+![Product Catalogs List](/img/product-images/productcatalogslist.png)
 
 
 ## Summary Statistics
@@ -74,10 +74,14 @@ Click the **View Products** button on any catalog card to open the View Products
 - Product status badge (Active, Inactive)
 - Option to remove products from the catalog individually
 
+![View Products in Catalog](/img/product-images/viewpdtsinacatalog.png)
+
 
 ## Add Products to Catalog
 
 Click the **Add Products** action button within the View Products modal to open the Add Products to Catalog modal.
+
+![Assign Products to Catalog](/img/product-images/assignproductstocatalog.png)
 
 **Search and Filters:**
 - **Search** - Find products by name or description

@@ -4,35 +4,32 @@
 
 The Products section is where you create and manage product inventory that forms the basis of offers and campaigns. Define products that will be included in promotional offers and assigned to customer segments.
 
----
+## Key Features
 
-## What You Can Do
+- **Product Management** - Create and manage product inventory
+- **Product Types** - Organize products by type (Standard, Combo)
+- **Product Catalogs** - Organize products into catalogs
+- **Search & Filter** - Quickly find products
 
-### [Product List](/documentation/products/products-list)
+## Getting Started
 
-Browse all products in your system with summary statistics, search capabilities, and filtering options. View key metrics like active products, pricing, and top sellers. Manage individual products with quick actions for viewing, editing, and toggling status.
+### Viewing Products
+To browse all products in your system, see [Product List](/documentation/products/products-list) for a complete overview with search, filtering, and management tools.
 
-### [Create Product](/documentation/products/create-product)
+### Creating a Product
+To add new products to your catalog, see [Create Product](/documentation/products/create-product) for step-by-step instructions on defining products with pricing and other attributes.
 
-Add new products to your catalog. Define product name, category, pricing, and other details that will be used in offers and campaigns.
+### Managing Products
+To modify product information and configuration, see [Product Edit](/documentation/products/product-edit) for updating pricing, categories, and other product attributes.
 
-### [Edit Product](/documentation/products/product-edit)
+### Viewing Product Details
+To access detailed product information and settings, see [View Product Details](/documentation/products/view-product-details) to manage product usage and review associated offers.
 
-Modify product information and configuration at any time. Update pricing, categories, and other product attributes.
+### Product Catalogs
+To organize products into catalogs, see [Product Catalog](/documentation/products/product-catalog) for managing product categories and groupings.
 
-### [View Product Details](/documentation/products/view-product-details)
-
-Access detailed product information including pricing, category, creation date, and associated offers. Manage product settings and review product usage across campaigns.
-
-### [Product Catalog](/documentation/products/product-catalog)
-
-Understand how products are organized into catalogs. Manage product categories and groupings for better organization.
-
-### [Product Reports](/documentation/products/product-reports)
-
-Track product performance metrics. Monitor which products are used most frequently in campaigns and offers, and analyze their impact.
-
----
+<!-- ### Product Reports
+To track product performance metrics, see [Product Reports](/documentation/products/product-reports) to monitor which products are used in campaigns and analyze their impact. -->
 
 ## Quick Start
 

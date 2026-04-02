@@ -86,6 +86,8 @@ Each creative displays:
   - **Preview** - See how the creative will appear to customers
   - **Save Creative** - Save the new creative to the offer
 
+![Add Creative Modal](/img/offer-images/offercreativesaddmodal.png)
+
 **Edit Creative**
 - Click the **Edit** button (pencil icon) on any creative
 - Opens the edit modal with pre-filled content
