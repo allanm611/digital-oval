@@ -14,10 +14,6 @@ My Profile is your personal account page where you can view and edit your profil
 - Click on **"My Profile"** option
 - Your profile page loads
 
-**Route:** `/dashboard/user-settings/my-profile`
-
----
-
 ## Profile Information
 
 ![My Profile Page](/img/usersettings/profilepage.png)
@@ -37,40 +33,40 @@ At the top of the page:
 
 Click **Edit Profile** to modify these fields:
 
-1. **First Name** (Required)
+1. **First Name** 
    - Your first name
    - Shown in your profile header
    - Example: "John"
 
-2. **Last Name** (Required)
+2. **Last Name** 
    - Your family name
    - Shown in your profile header
    - Example: "Smith"
 
-3. **Middle Name** (Optional)
+3. **Middle Name**
    - Your middle name
    - Shown in profile details
    - Example: "Michael"
 
-4. **Preferred Name** (Optional)
+4. **Preferred Name**
    - Name you prefer to be called
    - Alternative to first/last name
    - Example: "Johnny"
 
-5. **Phone Number** (Optional)
+5. **Phone Number**
    - Your contact phone number
    - Example: "+254712345678"
 
-6. **Department** (Optional)
+6. **Department**
    - Your department or team
    - Used for organizational purposes
    - Example: "Marketing"
 
-7. **Job Title** (Optional)
+7. **Job Title**
    - Your position in the organization
    - Example: "Campaign Manager"
 
-8. **Time Zone** (Optional)
+8. **Time Zone**
    - Your local time zone
    - Used for displaying timestamps
    - Example: "Africa/Nairobi"
@@ -89,68 +85,11 @@ These details are set by administrators and cannot be changed:
 - **Account Created** - When your account was created
 - **Last Updated** - When your profile was last modified
 
----
-
-## Editing Your Profile
-
-### How to Edit
-
-1. Click the **Edit Profile** button in the top right
-2. All editable fields become input fields
-3. Modify the fields you want to change
-4. Click **Save Changes** to save
-5. A confirmation message appears
-6. Click **Cancel** to discard changes without saving
-
 ### Important Notes
 
 - **Email cannot be changed** - Contact your administrator if you need to update your email
-- **Required fields** - First Name and Last Name must be filled in
+- **Required fields** - First Name and Last Name must always be filled in to avoid errors
 - **Optional fields** - Department, Job Title, Phone Number, Timezone, Middle Name, and Preferred Name are optional
 - **Changes save immediately** - Once you click Save Changes, updates are applied to your account
 
----
-
-## Best Practices
-
-### Keep Information Current
-
-- Update your phone number if it changes
-- Update your timezone if you relocate
-- Update job title and department if your role changes
-- This helps others contact you and ensures accuracy in reports
-
-### Profile Visibility
-
-Your profile information is visible to:
-- Administrators (all information)
-- Your team members (basic information)
-- System-wide activity logs (your name and actions)
-
----
-
-## Troubleshooting
-
-### Cannot Save Changes
-
-**Issue:** Save button is disabled or not responding
-- Solution: Ensure First Name and Last Name are filled in
-- Check for any error messages on the form
-- Try refreshing the page and editing again
-
-### Fields Reset After Saving
-
-**Issue:** Changes don't appear to save
-- Solution: Refresh the page to see updated information
-- Wait a few seconds after clicking Save
-- Check if confirmation message appeared
-
-### Cannot Edit Certain Fields
-
-**Issue:** Some fields appear locked or read-only
-- Solution: Email, Username, and Status cannot be edited by users
-- Contact your administrator to change email or account status
-- Role and Data Access Level can only be changed by administrators
-
----
 

@@ -44,6 +44,7 @@ import {
   Box,
   Download,
   Zap,
+  BookOpen,
 } from "lucide-react";
 import logo from "../../../assets/Effortel_logo.svg";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
@@ -688,6 +689,13 @@ export default function Sidebar({
   );
 
   const secondaryNavigation = [
+    {
+      name: "Documentation",
+      href: "/documentation",
+      icon: BookOpen,
+      type: "single",
+      entity: "users" as const,
+    },
     {
       name: t.sidebar.secondary.myProfile,
       href: "/dashboard/profile",

@@ -4,20 +4,33 @@
 
 The Notifications page allows you to view, filter, and manage all notifications you've received. You can search for specific notifications, filter by type or priority, and bulk manage multiple notifications at once.
 
-**Note:** For notification preferences and settings (like Do Not Disturb, notification types, channels, and sounds), see [Settings](/documentation/user-settings/settings).
+**Note:** For notification preferences and settings (like Do Not Disturb, notification types, channels, and sounds), go to **Settings** in the sidebar. See [Settings](/documentation/user-settings/settings).
 
 ## Accessing Notifications
 
-**Step 1: Open User Menu**
-- Click your **profile icon** in the top-right corner
-- A dropdown menu appears
+### From the Header Notification Dropdown
 
-**Step 2: Navigate to Notifications**
-- Click on **"Settings"** option
-- Scroll to **"Notifications"** section
-- OR navigate directly to: `/dashboard/user-settings/notifications`
+![Notification Dropdown](/img/usersettings/notificationsdropdown.png)
 
----
+**Step 1: Open Notification Center**
+- Click the **bell icon** in the top-right header
+- A dropdown appears showing your most recent notifications
+- **Badge count** on the bell shows number of unread notifications
+
+**Notification Dropdown Details:**
+- Shows your **5 most recent notifications** in the dropdown
+- Each notification displays:
+  - **Title** - Notification subject
+  - **Type** - Category icon/label (campaigns, offers, segments, etc.)
+  - **Timestamp** - When you received it
+  - **Read status** - Unread notifications appear highlighted
+- Click any notification to open it and mark as read
+- Unread badge count updates automatically as you read notifications
+
+**Step 2: View All Notifications**
+- Click **"View all notifications"** button at the bottom of the dropdown
+- Takes you to the full Notifications page with all your notifications, filters, and bulk actions
+- This is useful when you have more than 5 recent notifications and need to find a specific one
 
 ## Notification Center
 
@@ -41,8 +54,6 @@ Each notification in the list shows:
 - **Priority** - Urgency level (low, medium, high, urgent)
 - **Timestamp** - When you received it
 - **Read Status** - Whether you've seen it
-
----
 
 ## Filtering Notifications
 
@@ -79,8 +90,6 @@ You can filter notifications by multiple criteria:
 ### Clear Filters
 
 Click "Clear Filters" to reset all filters and see all notifications again.
-
----
 
 ## Managing Notifications
 
@@ -119,8 +128,6 @@ Click "Clear Filters" to reset all filters and see all notifications again.
 - Selects all visible (filtered) notifications
 - Deselect All to uncheck all
 
----
-
 ## Bulk Actions
 
 When you have notifications selected, a bulk actions bar appears:
@@ -131,95 +138,9 @@ When you have notifications selected, a bulk actions bar appears:
 - **Mark As Read** - Mark selected as read
 - **Delete** - Delete selected notifications
 
----
-
 ## Notification Details
 
 ### Navigation to Items
 
 When you click on certain notifications, you may be taken to the related item:
-
-**Non-Navigable Types:**
-- Detail page notifications for campaigns, offers, and segments remain in Notifications
-- You can still read the notification without leaving the page
-
-**Navigable Types:**
-- Other notification types may navigate to related pages
-- Page navigation depends on notification action URL
-
----
-
-## Pagination
-
-Notifications are displayed in pages:
-
-**Default:**
-- 20 notifications per page
-- Previous/Next buttons at bottom
-- Jump to specific page if available
-
-**Navigation:**
-1. View first 20 notifications
-2. Click Next to load more
-3. Click Previous to go back
-
----
-
-## Best Practices
-
-### Regular Cleanup
-
-- Archive or delete old notifications regularly
-- Keep your notification list manageable
-- Delete notifications you no longer need reference to
-
-### Stay Informed
-
-- Check notifications frequently
-- Mark important notifications separately (by noting them elsewhere)
-- Use filters to find specific notifications quickly
-
-### Use Search
-
-- Search for specific keywords (campaign name, offer name, etc.)
-- Search helps quickly locate old notifications
-- Filter by priority for urgent items
-
----
-
-## Troubleshooting
-
-### Notifications Not Loading
-
-**Issue:** Notifications page loads but shows nothing
-- Solution: Check internet connection
-- Refresh the page
-- Try navigating away and back
-- Clear browser cache
-
-### Cannot Delete Notifications
-
-**Issue:** Delete button doesn't work or shows error
-- Solution: Refresh the page
-- Try deleting a single notification first
-- Check if you have permissions to delete
-- Try again after a moment
-
-### Notifications Keep Appearing
-
-**Issue:** Deleted notifications reappear
-- Solution: Refresh the page to reload list
-- Clear browser cache
-- Ensure deletions completed successfully
-- Check for duplicate notifications
-
-### Cannot Find Specific Notification
-
-**Issue:** Can't locate a notification you remember
-- Solution: Use search with keywords
-- Try filtering by type or priority
-- Check pagination - may be on another page
-- Notifications may have been auto-archived if very old
-
----
 

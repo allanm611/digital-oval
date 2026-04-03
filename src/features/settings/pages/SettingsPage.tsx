@@ -489,17 +489,8 @@ export default function SettingsPage() {
           </p>
         </div>
 
-        {/* Save, Cancel, and Documentation Link */}
+        {/* Save and Cancel */}
         <div className="flex flex-row items-center gap-2 md:gap-3 w-full md:w-auto overflow-x-auto whitespace-nowrap">
-          <Link
-            to="/documentation"
-            className={`px-5 py-2.5 text-base font-medium ${tw.rounded} hover:opacity-80 transition-all duration-200 flex-shrink-0 whitespace-nowrap`}
-            style={{ color: colors.primary.accent }}
-            title="View Documentation"
-          >
-            Documentation
-          </Link>
-
           <PermissionGate permission="system.settings.manage">
             <>
               <button

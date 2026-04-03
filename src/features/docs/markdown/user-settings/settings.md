@@ -4,41 +4,7 @@
 
 Settings is where you configure your personal preferences for the platform. These settings control language, timezone, date and currency formats, theme, Do Not Disturb hours, and communication defaults. Settings are saved locally on your device and apply only to your current browser.
 
-**Note:** Settings are device-specific. If you use multiple devices or browsers, you'll need to configure settings on each separately.
-
-## Accessing Settings
-
-**Step 1: Open User Menu**
-- Click your **profile icon** in the top-right corner
-- A dropdown menu appears
-
-**Step 2: Navigate to Settings**
-- Click on **"Settings"** option
-- Settings page loads
-
-**Route:** `/dashboard/user-settings/settings`
-
----
-
-## Theme
-
-### Theme Selection
-
-![Display Theme Setting](/img/usersettings/themesetting.png)
-
-Choose how the interface appears:
-
-**Available Options:**
-- **Light Mode** - Standard light background (default)
-- **Dark Mode** - Dark background with light text
-
-**How to Change:**
-1. Go to Settings
-2. Find the Theme dropdown
-3. Select Light Mode or Dark Mode
-4. Changes apply immediately
-
----
+<!-- **Note:** Settings are device-specific. If you use multiple devices or browsers, you'll need to configure settings on each separately. -->
 
 ## Language & Localization
 
@@ -59,7 +25,6 @@ Select the language for the user interface:
 2. Find "Language" dropdown
 3. Select desired language
 4. Click Save Settings
-5. Interface updates (may require page refresh)
 
 ### Regional Format
 
@@ -78,20 +43,16 @@ Configure how dates and numbers display:
 **Timezone:**
 - Select your local timezone
 - Used for displaying timestamps
-- Affects scheduled task times
-- Examples: Africa/Nairobi, Europe/London, America/New_York
+<!-- - Affects scheduled task times -->
 
 **Currency:**
 - All currencies from currency-codes library
-- Examples: KES, USD, EUR, GBP
 
 **Number Format:**
 - 1,234.56 (comma thousands, period decimal)
 - 1 234,56 (space thousands, comma decimal)
 - 1.234,56 (period thousands, comma decimal)
 - 1'234.56 (apostrophe thousands, period decimal)
-
----
 
 ## Communication Preferences
 
@@ -123,10 +84,28 @@ Configure defaults for sending communications:
 - Effortel SMS Gateway
 
 **Character Set (for SMS):**
-- GSM-7 (Standard SMS) - Default
-- UTF-8 (Unicode)
-- ASCII (English only)
-- UCS-2 (Full Unicode)
+
+Choose the encoding that best fits your message content:
+
+- **GSM-7 (Standard SMS)** - Default
+  - Example: "Hello! Your code is 12345. Valid 24 hours."
+  - Best for: English-only messages, lowest cost
+  - 160 characters per message
+
+- **UTF-8 (Unicode)**
+  - Example: "Café réouvert! 🎉 Venez maintenant."
+  - Best for: Accents, emoji, multilingual content
+  - 70 characters per message
+
+- **ASCII (English only)**
+  - Example: "Login now at example.com"
+  - Best for: Very basic English text only
+  - Limited character support
+
+- **UCS-2 (Full Unicode)**
+  - Example: "مرحبا بك! 你好! Привет!"
+  - Best for: Multiple languages, Arabic, Chinese, Russian
+  - 70 characters per message
 
 **Notification Sound:**
 - None (Silent)
@@ -138,7 +117,6 @@ Configure defaults for sending communications:
 - Pop
 - Ping
 
----
 
 ## Do Not Disturb (DND)
 
@@ -146,29 +124,36 @@ Configure defaults for sending communications:
 
 ### Enable Do Not Disturb
 
-Configure when notifications should be queued instead of delivered immediately:
+Set quiet hours when you don't want to be bothered with notifications. Notifications received during DND hours are held and delivered as a batch when your DND period ends.
 
 **Enable DND:**
 - Toggle to enable/disable Do Not Disturb
+- When enabled, notifications are silenced during your set hours
 
 **DND Hours:**
 - Set start time (e.g., 21:00 for 9 PM)
 - Set end time (e.g., 08:00 for 8 AM)
+- Notifications won't notify you during this window
 
 **DND Days:**
-- Weekdays (Mon-Fri)
-- Weekends (Sat-Sun)
-- Daily (all days)
-- Custom Days
+- **Weekdays** (Mon-Fri) — Apply DND only on weekdays
+- **Weekends** (Sat-Sun) — Apply DND only on weekends
+- **Daily** (all days) — Apply DND every day
+- **Custom Days** — Select specific days for DND
 
 **What Happens During DND:**
-- Notifications are queued (not sent immediately)
-- All notifications sent as batch when DND ends
-- Critical system alerts may still be delivered
+- You don't receive notification alerts or sounds during these hours
+- Notifications are collected and queued in the background
+- When DND ends, all queued notifications are delivered as a batch
+- Critical system alerts may still be delivered immediately
+
+**Example:**
+- DND enabled 21:00 (9 PM) to 08:00 (8 AM) daily
+- At 10:45 PM: Campaign notification arrives → queued, no alert
+- At 10:50 PM: Segment update notification arrives → queued, no alert
+- At 08:00 AM: DND ends → all queued notifications delivered at once
 
 **Default:** DND enabled from 21:00 to 08:00 daily
-
----
 
 ## Notification Types & Channels
 
@@ -202,65 +187,20 @@ Select which channels to use for notifications:
 
 **Default:** SMS and Email
 
----
+## Theme
 
-## Saving Settings
+### Theme Selection
 
-### Automatic Saving
+![Display Theme Setting](/img/usersettings/themesetting.png)
 
-Most settings save automatically when you change them. A confirmation message appears when changes are saved successfully.
+Choose how the interface appears:
 
-### Manual Save
+**Available Options:**
+- **Light Mode** - Standard light background (default)
+- **Dark Mode** - Dark background with light text
 
-If changes are not saving automatically:
-1. Make your changes
-2. Click "Save Settings" button at bottom of page
-3. Wait for confirmation message
-4. Settings are now saved locally
-
----
-
-## Troubleshooting
-
-### Settings Not Saving
-
-**Issue:** Changes don't persist after saving
-- Solution: Check for error messages on the page
-- Clear your browser cache and try again
-- Refresh the page and make changes again
-- Try a different browser
-
-### Settings Appear to Reset
-
-**Issue:** Settings changed back to defaults
-- Solution: Settings are stored in your browser's local storage
-- Clearing browser cache will reset settings
-- Reconfigure settings after clearing cache
-- Try not clearing cache to preserve settings
-
-### Theme Not Changing
-
-**Issue:** Dark mode not activating or changes not visible
-- Solution: Refresh the page after changing theme
-- Close and reopen the Settings page
-- Check if your browser supports dark mode
-- Disable browser extensions that might override theme
-
-### Language Not Updating
-
-**Issue:** Interface still shows previous language
-- Solution: Refresh the page after changing language
-- Close and reopen the app
-- Clear browser cache if language persists
-- Wait a moment for interface to update
-
-### Different Settings on Different Devices
-
-**Issue:** Settings are different when using another device
-- Solution: Settings are device-specific, not synced across devices
-- Configure settings separately on each device
-- Each browser/device maintains its own settings
-- This is expected behavior
-
----
-
+**How to Change:**
+1. Go to Settings
+2. Find the Theme dropdown
+3. Select Light Mode or Dark Mode
+<!-- 4. Changes apply immediately -->
