@@ -12,10 +12,10 @@ This guide walks you through creating and executing a one-time manual communicat
 3. Follow the 3-step wizard
 
 ### Editing an Existing Communication
-The editing flow is identical to creating - you'll follow the same 3 steps. The only difference is:
-- **All fields are pre-filled** with current settings
+Editing a communication follows **the exact same 3-step process** as creating. The only difference is:
+- **All fields are pre-filled** with your current settings
 - You modify only what you need to change
-<!-- - Changes apply before execution time -->
+- Changes take effect at the new execution time
 
 <!-- **Note:** Only scheduled communications that haven't started sending can be edited.
 - Cannot edit: Completed, Pending, or Failed communications
@@ -49,8 +49,8 @@ Choose ONE of two options:
 #### Option B: Manual Input
 1. Click **Manual Input** option
 2. Enter recipient identifiers (one per line):
-   - Email addresses: john@example.com
-   - Phone numbers: +254712345678 (include country code)
+   - Email addresses: mariam@example.com
+   - Phone numbers: 254712345678 (include country code)
 3. System validates in real-time
 4. Shows total valid recipients
 
@@ -60,8 +60,6 @@ Before proceeding to Step 2:
 - **List Type:** Must be selected
 - **Input Method:** Must be selected (Upload File OR Manual Input)
 - **Recipients:** At least one valid recipient required
-
----
 
 ## Step 2: Define Communication & Test
 
@@ -102,7 +100,7 @@ Make messages personal by inserting customer data like `{{first_name}}` or `{{ac
 
 For detailed list of available variables, see [Variable Configuration](/documentation/configuration/variable-configuration).
 
-### Communication Policy
+### [Communication Policies](/documentation/configuration/communication-policies)
 
 Policies control when and how often messages are sent (timing rules, DND compliance, frequency limits).
 
@@ -111,9 +109,7 @@ Policies control when and how often messages are sent (timing rules, DND complia
 2. Choose applicable policy
 3. Note: Some customers may be filtered out based on policy rules
 
-For more details, see [Communication Policies](/documentation/configuration/communication-policies).
-
-### SMS Route (SMS Channel Only)
+### [SMS Routes Configuration](/documentation/configuration/sms-routes) (SMS Channel Only)
 
 Select which SMS gateway/provider to use. Different routes may have different delivery speeds and coverage.
 
@@ -122,16 +118,12 @@ Select which SMS gateway/provider to use. Different routes may have different de
 2. Choose from available providers
 3. Confirm selection
 
-For more details, see [SMS Routes Configuration](/documentation/configuration/sms-routes).
-
----
-
 ### Test Your Message
 
-Before sending to all customers, test with a few contacts:
+Before sending to all customers, test with a few contacts from your seedlist:
 
 #### Send Test Message
-1. **Add Test Recipients:** Enter test phone numbers or email addresses
+1. **Select Test Recipients:** Choose test contacts from your configured [Seed List](/documentation/configuration/seed-list-management)
 2. **Click Send Test:** Messages sent immediately to test contacts
 <!-- 3. **Review Results:** Check status, message preview, variable substitution, and any errors
 
@@ -147,25 +139,46 @@ Before sending to all customers, test with a few contacts:
 
 Once satisfied with test results, click **Next** to proceed to Step 3.
 
----
-
 ## Step 3: Schedule & Execute
 
-![Step 3 - Schedule Execution](/img/manual-actions/step4-reward.png)
+![Schedule Execution Part 1](/img/manual-actions/manualcommunciationscheduleimage1.png)
 
-Set when your message will be sent.
+![Schedule Execution Part 2](/img/manual-actions/manualcommunciationscheduleimage2.png)
 
-### Execution Timing
+Configure detailed scheduling for your message execution.
 
-**Option A: Send Now**
-- Message sent immediately to all recipients
-- Execution begins within 1-2 minutes
-- Results available in minutes
+### Broadcast Schedule Range
 
-**Option B: Schedule for Later**
-- Select date and time for execution
-- Message queued until scheduled time
-- Auto-executes at specified time
+**Start Options:**
+- **Start Date/Time:** Specify exact date and time for message delivery
+- **Starts when previous broadcast is aborted:** Message begins when another broadcast is canceled
+
+**End Options:**
+- **Never:** Message continues indefinitely (default)
+- **At:** Message stops at a specified date and time
+
+**Time Zone:**
+- Select your local time zone for all scheduling
+- Options include Sudan (GMT+02:00), UTC, Eastern, Central, Paris, and more
+
+### Recurrence Pattern and Delivery
+
+**Recurrence Configuration:**
+- **Pattern:** Choose Weeks, Days, or Months
+- **Interval:** Set how often message repeats (every 1, 2, 3+ periods)
+- **Days Selection:** Pick specific days of the week for delivery
+- **Default Start Time:** Set the preferred time messages begin each period
+
+**Additional Options:**
+- **Set specific start time for days:** Override default time on specific days
+- **Start delivery on completion:** Message begins after another broadcast finishes
+
+### Target Render Time
+
+Choose when the message content is generated:
+- **Pre-Render:** Content generated before delivery starts (consistent message)
+- **Real Time:** Content generated at delivery time (dynamic/personalized)
+- **Broadcast Schedule:** Content rendered based on broadcast timing rules
 
 ### Final Review
 
@@ -173,9 +186,8 @@ Before confirming, review all settings:
 - **Audience:** Number of recipients and source
 - **Message:** Content, channel, variables
 - **Settings:** Policy and SMS route (if applicable)
-- **Execution:** Time to send
+- **Schedule:** Start/end times, recurrence, time zone
 
----
 
 ## After Creation
 
@@ -194,4 +206,4 @@ You'll see:
    - Delivery metrics
    - Failed contacts
    - Channel breakdown
-   <!-- - Variable substitution details -->
+`

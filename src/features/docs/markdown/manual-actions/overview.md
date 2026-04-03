@@ -4,8 +4,6 @@
 
 Manual Actions displays both manual communications and manual rewards.
 
----
-
 ## What You Can Do
 
 ### Manual Communications
@@ -16,7 +14,6 @@ Send one-time messages directly to customer segments using Email, SMS, WhatsApp,
 - Send urgent notifications or announcements
 - Communicate with specific customer segments
 - Test message content and delivery
-- Handle ad-hoc customer communications
 - Execute targeted promotional messages
 
 **Key Features:**
@@ -32,7 +29,6 @@ Send one-time messages directly to customer segments using Email, SMS, WhatsApp,
 - [Create Manual Communication](/documentation/manual-actions/create-manual-communication) - Step-by-step guide
 - [Manual Communications List](/documentation/manual-actions/manual-communications-list) - View all communications
 - [View Communication Details](/documentation/manual-actions/view-manual-communication) - See details and results
-- [Edit Communication](/documentation/manual-actions/edit-manual-communication) - Modify existing communications
 
 ### Manual Rewards
 
@@ -65,22 +61,17 @@ Apply one-time rewards directly to customer segments without campaign setup.
 - [Create Manual Reward](/documentation/manual-actions/create-manual-reward) - Step-by-step guide
 - [Manual Rewards List](/documentation/manual-actions/manual-rewards-list) - View all rewards
 - [View Reward Details](/documentation/manual-actions/view-manual-reward) - See details and status
-- [Edit Reward](/documentation/manual-actions/edit-manual-reward) - Modify existing rewards
-
----
 
 ## Quick Start
 
 **New to Manual Actions?**
 
-1. Go to **Manual Actions** from the main menu
+1. Go to **Manual Actions** from the sidebar
 2. Choose either **Manual Communications** or **Manual Rewards**
 3. Follow the step-by-step guides to create your first message or reward
 4. Select your target audience (upload file or choose quicklist)
 5. Configure your content (message or reward details)
 6. Review and send immediately or schedule for later
-
----
 
 ## Common Scenarios
 
@@ -97,10 +88,3 @@ Apply one-time rewards directly to customer segments without campaign setup.
 3. Choose reward type (discount, cashback, points)
 4. Set amount/value
 5. Apply reward and optionally notify customers
-
-### Win-back Campaign
-1. Go to Manual Communications
-2. Upload file with inactive customers
-3. Create personalized message
-4. Schedule for specific date/time
-5. Track response rates

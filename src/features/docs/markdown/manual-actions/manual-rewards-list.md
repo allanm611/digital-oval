@@ -111,15 +111,13 @@ Click the **View** button or reward name to:
 See [View Manual Reward](/documentation/manual-actions/view-manual-reward)
 
 ### Edit Reward
-Click the **Edit** button to:
-- Modify reward parameters (for scheduled rewards)
-- Update audience
-- Change communication policy
-- Adjust application time
+Click the **Edit** button to modify a scheduled reward before it's applied:
+- The edit form follows the same 4-step process as creating a new reward
+- All fields are pre-filled with your current settings
+- Change only what you need to update
+- For detailed instructions, see [Create Manual Reward](/documentation/manual-actions/create-manual-reward)
 
 **Note:** Can only edit scheduled rewards that haven't been applied
-
-See [Edit Manual Reward](/documentation/manual-actions/edit-manual-reward)
 
 ### Delete Reward
 Click the **Delete** button to:
@@ -157,13 +155,6 @@ For failed rewards:
 - Success rate trend
 - Peak reward periods
 
-## Pagination
-
-The list is paginated for performance:
-- **Rows per page:** Select from dropdown (15, 25, 50, 100)
-- **Page navigation:** First, Previous, Next, Last buttons
-- **Total count:** Shows total rewards matching filters
-
 ## Export & Reporting
 
 ### Export Data
@@ -171,62 +162,3 @@ Export reward list with filters applied:
 - **Format options:** CSV, Excel, PDF
 - **Includes:** All visible columns
 - **Export what's visible:** Respects current filters and search
-
-### Detailed Reports
-For each reward, access comprehensive reports:
-- Per-customer application status
-- Failed customer list with reasons
-- Notification delivery status
-- Application timeline and metrics
-
-## Best Practices
-
-### Organization
-- Use descriptive reward names
-- Include date or campaign name in description
-- Add business reason in notes
-
-### Monitoring
-- Regularly review scheduled rewards
-- Check failed applications promptly
-- Monitor customer response/redemption
-- Track reward impact on loyalty
-
-### Quality Control
-- Verify audience before application
-- Test with small segment first
-- Review sample of applied rewards
-- Validate notification delivery
-
-### Budgeting
-- Track reward costs
-- Monitor cumulative spend
-- Stay within budget limits
-- Plan for future campaigns
-
-## Common Tasks
-
-### Finding a Specific Reward
-1. Use search box with reward name
-2. Or use date filter for recent rewards
-3. Use type filter for specific reward types
-4. Combine filters for precise results
-
-### Checking Application Status
-1. View list and locate reward
-2. Status column shows current state
-3. Click to view detailed progress
-4. Contact support if stuck in pending
-
-### Analyzing Success Rate
-1. View reward details
-2. Check applied vs. total recipients
-3. Review failure reasons
-4. Identify patterns and improvements
-
-### Bulk Operations
-- Select multiple rewards (checkbox)
-- Delete multiple at once
-- Export multiple together
-- Batch retry failed applications
-

@@ -107,6 +107,7 @@ export default function DefineRewardStep({
     setRewardType(type);
     // Reset value when changing type
     setRewardValue("");
+    onUpdate({ rewardType: type, rewardValue: "" });
   };
 
   const handleNext = () => {
@@ -235,7 +236,10 @@ export default function DefineRewardStep({
             <input
               type="number"
               value={rewardValue}
-              onChange={(e) => setRewardValue(e.target.value)}
+              onChange={(e) => {
+                setRewardValue(e.target.value);
+                onUpdate({ rewardValue: e.target.value });
+              }}
               className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none focus:ring-2`}
               style={{
                 borderColor: color.border.default,
@@ -285,7 +289,10 @@ export default function DefineRewardStep({
                 label: track,
               }))}
               value={bundleTrack}
-              onChange={(value) => setBundleTrack(value as string)}
+              onChange={(value) => {
+                setBundleTrack(value as string);
+                onUpdate({ bundleTrack: value as string });
+              }}
               placeholder={t.manualRewards.bundleTrackPlaceholder}
               zIndex={zIndex.popover}
             />
@@ -341,6 +348,7 @@ export default function DefineRewardStep({
                   type="button"
                   onClick={() => {
                     setSelectedPolicy(null);
+                    onUpdate({ selectedCommunicationPolicyId: undefined });
                     setIsPolicyDropdownOpen(false);
                   }}
                   className="w-full text-left px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none border-b"
@@ -361,6 +369,7 @@ export default function DefineRewardStep({
                       type="button"
                       onClick={() => {
                         setSelectedPolicy(policy);
+                        onUpdate({ selectedCommunicationPolicyId: policy.id });
                         setIsPolicyDropdownOpen(false);
                       }}
                       className="w-full text-left px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none border-b last:border-b-0"
@@ -400,7 +409,10 @@ export default function DefineRewardStep({
           </label>
           <textarea
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => {
+              setDescription(e.target.value);
+              onUpdate({ description: e.target.value });
+            }}
             className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none focus:ring-2`}
             style={{
               borderColor: color.border.default,

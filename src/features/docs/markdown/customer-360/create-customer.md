@@ -6,7 +6,115 @@ Add new customers to your system to build your customer database and enable targ
 
 ---
 
-## Three Ways to Add Customers
+## Method 2: Bulk CSV Entry
+
+### How to Use Bulk CSV
+
+**Step 1: Format Your Data**
+
+Prepare your customer data as comma-separated values. Include a header row with column names:
+
+```
+FirstName,LastName,Phone,Email,AlternatePhone,Gender,AlternateEmail
+John,Doe,256712345678,john@email.com,256712345679,Male,johndoe@email.com
+Jane,Smith,256712345680,jane@email.com,,Female,
+```
+
+**Supported Columns:**
+- **FirstName** - Customer first name (required)
+- **LastName** - Customer last name (required)
+- **Phone/MSISDN/Mobile** - Primary phone number (required)
+- **Email** - Email address (optional)
+- **AlternatePhone/AltPhone** - Additional phone number (optional)
+- **AlternateEmail/AltEmail** - Secondary email (optional)
+- **Gender** - Male or Female (optional)
+
+**Step 2: Paste Data**
+
+1. Click **Create Customer** button
+2. Click the **Bulk** tab
+3. Paste your CSV data into the text area
+
+**Step 3: Review Validation**
+
+The system automatically:
+- Detects column positions
+- Validates required fields
+- Checks phone number formats
+- Shows valid/invalid count
+- Displays errors for invalid rows
+
+**Example Results:**
+- 10 valid customers (ready to import)
+- 2 invalid customers (shows error reasons)
+
+**Step 4: Submit Import**
+
+If validation passes, click **Import** to add all valid customers to your system.
+
+---
+
+## Method 3: Import File
+
+### How to Upload File
+
+**Step 1: Prepare File**
+
+Create an Excel (.xlsx) or CSV file with customer data. First row must be headers:
+
+| FirstName | LastName | Phone | Email | Gender |
+|-----------|----------|-------|-------|--------|
+| John | Doe | 256712345678 | john@email.com | Male |
+| Jane | Smith | 256712345680 | jane@email.com | Female |
+
+**Step 2: Upload File**
+
+1. Click **Create Customer** button
+2. Click the **Import** tab
+3. Click **Choose File** and select your CSV/Excel file
+4. System auto-detects column mappings
+
+**Step 3: Configure Column Mapping**
+
+If auto-detection isn't correct:
+- Select correct columns from dropdowns
+- Assign FirstName, LastName, Phone columns (required)
+- Optional: Map Email, AlternatePhone, Gender, etc.
+
+**Step 4: Review Preview**
+
+See a preview of data that will be imported:
+- Valid records ready to import
+- Invalid records with error reasons
+- Fix mapping if needed
+
+**Step 5: Confirm Import**
+
+Click **Confirm Import** to add customers to your system
+
+---
+
+## Validation Rules
+
+### Phone Number Format
+
+Phone numbers must include a country code:
+- **Valid:** 256712345678, +256712345678 (Uganda)
+- **Valid:** 254712345678, +254712345678 (Kenya)
+- **Invalid:** 712345678 (no country code)
+
+### Bulk Validation Feedback
+
+During bulk/import preview you'll see:
+- ✅ Valid customers (ready to import)
+- ❌ Invalid customers with specific error messages
+- Row numbers for easy reference
+
+### Common Validation Errors
+
+- "Missing required fields" - FirstName, LastName, or Phone is blank
+- "Phone number must begin with country code" - No country code in phone
+- "Gender must be Male or Female" - Invalid gender value
 
 ### Method 1: Single Manual Entry (One at a Time)
 
@@ -28,21 +136,21 @@ Add new customers to your system to build your customer database and enable targ
 - Regular scheduled imports
 - Large dataset uploads
 
-**Process:** Prepare CSV file → Upload → System validates → Confirm import
-**Time:** ~5-10 minutes to upload 1,000 customers
+**Process:** Open bulk tab → Paste CSV data → Review validation → Submit import
+**Time:** ~5-10 minutes to import 1,000 customers
 **Best For:** High volume, batch imports
 
-### Method 3: API/Integration Import (Automated Sync)
+### Method 3: Import File (Upload Excel/CSV)
 
 **When to Use:**
-- Real-time customer data sync
-- Continuous integration with external systems
-- Automated data feeds
-- Enterprise integration needs
+- Upload pre-formatted Excel or CSV files
+- Use file picker for easier file selection
+- Auto-detect column mapping
+- Preview data before importing
 
-**Process:** System automatically syncs customer data from connected sources
-**Time:** Automated, runs on schedule or real-time
-**Best For:** Ongoing automation, continuous data flow
+**Process:** Open import tab → Select file → Set column mappings → Confirm import
+**Time:** ~5 minutes per file
+**Best For:** File-based imports with automatic mapping detection
 
 ---
 
@@ -118,7 +226,7 @@ Additional information to enhance customer profiles:
 ### Demographic Information
 
 **Gender**
-- Options: Male, Female, Other, Prefer Not to Say
+- Options: Male, Female
 - Used for personalization
 - Optional
 
@@ -131,6 +239,12 @@ Additional information to enhance customer profiles:
 - Numeric age value
 - Used for demographic segmentation
 - Auto-calculated if DOB provided
+- Optional
+
+**Language Preference**
+- Options: English (en), Swahili (sw), French (fr)
+- Used for notification language
+- Defaults to English if not specified
 - Optional
 
 ### Geographic Information
@@ -147,6 +261,56 @@ Additional information to enhance customer profiles:
 **Region/State/Province**
 - Regional division
 - Optional
+
+**Postal Code**
+- Zip/postal code
+- Optional
+
+**Country Code**
+- ISO country code selector
+- Lists all countries worldwide
+- Optional
+
+---
+
+## Additional Customer Settings
+
+### Customer Tier
+
+Classify your customer by value tier:
+- **Regular** - Standard tier
+- **VIP** - High-value customer
+- **Gold** - Premium customer
+- **Platinum** - Top-tier customer
+
+Used for segmentation and targeted campaigns.
+
+### Preferred Communication Channel
+
+Set the customer's preferred way to receive communications:
+- **Normal SMS** - Standard text messages
+- **Flash SMS** - Urgent text messages (system notification delivery)
+- **Email** - Email messages
+- **WhatsApp** - WhatsApp messaging
+- **Push** - Push notifications
+- **USSD** - USSD menu system
+- **Interactive USSD** - Two-way USSD communication
+- **In-App** - In-app notifications
+- **IVR** - Interactive voice response (phone system)
+- **OBD** - Out-band delivery
+- **Short Code** - SMS via short code
+
+Defaults to Normal SMS if not specified.
+
+### Timezone
+
+Set the customer's timezone for message delivery timing:
+- **Africa/Kampala** - Uganda time
+- **Africa/Nairobi** - Kenya time
+- **Africa/Dar es Salaam** - Tanzania time
+- **Africa/Kigali** - Rwanda time
+
+Defaults to Africa/Kampala if not specified.
 
 **Postal/Zip Code**
 - Postal or ZIP code

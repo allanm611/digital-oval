@@ -12,14 +12,12 @@ This guide walks you through creating and applying a one-time reward to a specif
 3. Follow the 4-step wizard
 
 ### Editing an Existing Reward
-The editing flow is identical to creating - you'll follow the same 4 steps. The only difference is:
-- **All fields are pre-filled** with current settings
+Editing a reward follows **the exact same 4-step process** as creating. The only difference is:
+- **All fields are pre-filled** with your current settings
 - You modify only what you need to change
-- Changes apply before execution time
+- Changes take effect at the new application time
 
-**Note:** Only scheduled rewards that haven't started applying can be edited.
-
----
+**Note:** Only scheduled rewards that haven't started applying can be edited. Applied, pending, and failed rewards cannot be modified.
 
 ## Step 1: Select Customers
 
@@ -49,8 +47,8 @@ Choose ONE of two options:
 #### Option B: Manual Input
 1. Click **Manual Input** option
 2. Enter recipient identifiers (one per line):
-   - Email addresses: john@example.com
-   - Phone numbers: +254712345678 (include country code)
+   - Email addresses: mariam@example.com
+   - Phone numbers: 254712345678 (include country code)
 3. System validates in real-time
 4. Shows total valid recipients
 
@@ -60,8 +58,6 @@ Before proceeding to Step 2:
 - **Reward Type:** Must be selected
 - **Input Method:** Must be selected (Upload File OR Manual Input)
 - **Recipients:** At least one valid recipient required
-
----
 
 ## Step 2: Define Reward
 
@@ -101,16 +97,12 @@ Choose which type of reward to apply:
 - Additional details about the reward
 - Notes for reference
 
-### Communication Policy
+### [Communication Policies](/documentation/configuration/communication-policies)
 
 Apply policies that control when and how customers are notified:
 - Timing rules (don't send between 9 PM and 8 AM)
 - Frequency limits
 - DND (Do Not Disturb) compliance
-
-For detailed policy options, see [Communication Policies](/documentation/configuration/communication-policies).
-
----
 
 ## Step 3: Preview Reward
 
@@ -138,47 +130,62 @@ Review all settings before applying the reward.
 - **If everything looks good:** Click **Next** to proceed to Step 4
 - **If changes needed:** Go back to Step 2 to modify settings
 
----
-
 ## Step 4: Apply Reward
 
-![Step 4 - Apply Reward](/img/manual-actions/step4-reward.png)
+![Apply Reward Schedule Part 1](/img/manual-actions/manualrewardsscheduleimage1.png)
 
-Set when the reward will be applied and confirm.
+![Apply Reward Schedule Part 2](/img/manual-actions/manualrewardsscheduleimage2.png)
 
-### Execution Timing
+Configure detailed scheduling for when your reward will be applied.
 
-**Option A: Apply Now**
-- Reward applied immediately to all recipients
-- Notifications sent right away (if enabled)
-- Results available within minutes
+### Broadcast Schedule Range
 
-**Option B: Schedule for Later**
-- Select date and time for reward application
-- Reward queued until scheduled time
-- Auto-applies at specified time
+**Start Options:**
+- **Start Date/Time:** Specify exact date and time for reward application
+- **Starts when previous broadcast is aborted:** Reward begins when another broadcast is canceled
 
-### Final Review
+**End Options:**
+- **Never:** Reward continues indefinitely (default)
+- **At:** Reward stops at a specified date and time
 
-Before confirming, review all settings:
+**Time Zone:**
+- Select your local time zone for all scheduling
+- Options include Sudan (GMT+02:00), UTC, Eastern, Central, Paris, and more
+
+### Recurrence Pattern and Delivery
+
+**Recurrence Configuration:**
+- **Pattern:** Choose Weeks, Days, or Months
+- **Interval:** Set how often reward is applied (every 1, 2, 3+ periods)
+- **Days Selection:** Pick specific days of the week for reward application
+- **Default Start Time:** Set the preferred time rewards begin each period
+
+**Additional Options:**
+- **Set specific start time for days:** Override default time on specific days
+- **Start delivery on completion:** Reward begins after another broadcast finishes
+
+### Target Render Time
+
+Choose when the reward is generated:
+- **Pre-Render:** Reward generated before application starts
+- **Real Time:** Reward generated at application time (personalized rewards)
+- **Broadcast Schedule:** Reward rendered based on broadcast timing rules
+
+### Summary Section
+
+Review your complete reward configuration:
 - **Audience:** Number of recipients
 - **Reward:** Type and value
-- **Execution:** Time to apply
-- **Notifications:** Policy and message
+- **Schedule:** Start/end times, recurrence, time zone
 
-### Apply Reward
+The summary displays all key details before final submission.
 
-**For Immediate Application:**
-1. Click **Apply Now**
-2. Confirm in dialog
-3. System shows reward ID and confirmation
+### Apply the Reward
 
-**For Scheduled Application:**
-1. Click **Schedule**
-2. Confirm in dialog
-3. System shows scheduled date/time and reward ID
-
----
+1. Configure your scheduling preferences (date, time, recurrence, timezone)
+2. Review the summary section with all reward details
+3. Click **Submit** to apply the reward
+4. System shows reward ID and confirmation message
 
 ## After Creation
 

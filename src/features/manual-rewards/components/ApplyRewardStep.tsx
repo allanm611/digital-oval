@@ -46,6 +46,9 @@ export default function ApplyRewardStep({
         applyTime: undefined,
       });
     }
+
+    // Always ensure the parent data is up to date
+    setIsSubmitting(false);
   };
 
   const handleApplyReward = async () => {

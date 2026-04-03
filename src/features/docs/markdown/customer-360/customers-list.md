@@ -41,11 +41,19 @@ Use the search box to find customers by:
 
 ### Filter by Field Type
 
-Use the dropdown filter to narrow results by customer attribute type:
-- **All** - Show all customers
-- **Text Fields** - Name, email, address
-- **Numeric Fields** - Age, customer ID
-- **Status Fields** - Active, VIP, Test Account
+Use the dropdown filters to narrow results by customer attribute:
+
+**Channel Filter**
+- Filter customers by their preferred communication channel
+- Options: All, Normal SMS, Flash SMS, Email, WhatsApp, Push, USSD, Interactive USSD, In-App, IVR, OBD, Short Code
+- Combines with search for targeted results
+
+**Customer Type Filter**
+- Filter customers by subscriber type (prepaid, postpaid, etc.)
+- Options: All types, or specific customer type
+- Works alongside other search and filter criteria
+
+Applying filters automatically updates the results to show only matching customers.
 
 ### Pagination
 
@@ -54,6 +62,28 @@ Navigate through customer records:
 - **Navigation:** Previous/Next buttons
 - **Page Indicator:** Shows current page and total customers
 - **Jump to Page:** Click page numbers to jump directly
+
+---
+
+## Statistics Cards
+
+The page displays key metrics at the top:
+
+**Unique Customers**
+- Total number of unique customers in your system
+- Shows total subscriptions as helper text
+
+**Active Subscriptions**
+- Number of currently active customer subscriptions
+- Displays percentage of total subscriptions
+
+**Pending Activations**
+- Number of subscriptions awaiting activation
+- Shows percentage of total
+
+**Average Tenure**
+- Average number of days customers have been active
+- Calculated from activation date
 
 ---
 
@@ -98,6 +128,49 @@ Click the **Edit** (pencil icon) button to update customer information.
 **Editable Fields:**
 - Name (first, last)
 - Email addresses
+- Phone numbers
+- Demographics (gender, date of birth)
+- Contact information (city, address, region, postal code)
+- Customer tier
+- Preferred communication channel
+- Language preference
+- Timezone
+
+### Delete Customer
+
+Click the **Delete** (trash icon) button to remove a customer from the system.
+
+**Process:**
+1. Click delete button on customer row
+2. Confirm deletion in modal dialog
+3. Customer is permanently removed from system
+
+### Export Customer List
+
+Click the **Download CSV** button (top right) to export the current customer list.
+
+**Downloads:**
+- Subscription ID
+- Phone (MSISDN)
+- Customer Name
+- Customer Type
+- Status
+- Preferred Channel
+- SIM Type
+- Activation Date
+
+---
+
+## Creating New Customers
+
+Click the **Create Customer** button (top right) to add new customers to your system.
+
+**Three Methods Available:**
+1. **Single Entry** - Add one customer at a time with full form
+2. **Bulk CSV** - Paste CSV data to add multiple customers at once
+3. **Import File** - Upload Excel/CSV file with auto-detection
+
+See [Create Customer](/documentation/customer-360/create-customer) for detailed instructions.
 - Phone numbers
 - Customer tier
 - Status

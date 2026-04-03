@@ -112,10 +112,29 @@ export default function CreateManualRewardPage() {
     return stepId <= currentStep;
   };
 
+  const validateManualInput = (input: string): boolean => {
+    if (!input.trim()) return false;
+    const lines = input.split("\n").filter((line) => line.trim());
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^[\d+\-() \s]{5,}$/;
+    return lines.some((line) => emailRegex.test(line) || phoneRegex.test(line));
+  };
+
   const isCurrentStepValid = (): boolean => {
     switch (currentStep) {
-      case 1: // Select Customers - validate in component
-        return !!(rewardData.audienceFile || rewardData.quicklistId || rewardData.audienceName);
+      case 1: // Select Customers - must have audience name, type, input method, and valid input
+        if (!rewardData.audienceName || !rewardData.uploadType || !rewardData.inputMethod) {
+          return false;
+        }
+        // For file method, must have quicklist selected
+        if (rewardData.inputMethod === "file") {
+          return !!rewardData.quicklistId;
+        }
+        // For manual method, must have valid manual input (emails or phone numbers)
+        if (rewardData.inputMethod === "manual") {
+          return !!rewardData.audienceFileText && validateManualInput(rewardData.audienceFileText);
+        }
+        return false;
       case 2: // Define Reward
         return !!(rewardData.rewardValue && rewardData.rewardValue.trim());
       case 3: // Preview

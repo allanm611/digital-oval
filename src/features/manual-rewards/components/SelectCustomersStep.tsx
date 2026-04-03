@@ -69,6 +69,10 @@ export default function SelectCustomersStep({
 
   const handleSelectQuickList = (quicklist: QuickListItem) => {
     setSelectedQuickList(quicklist);
+    onUpdate({
+      quicklistId: quicklist.id,
+      rowCount: quicklist.row_count
+    });
     setError("");
     setShowPickerModal(false);
   };
@@ -87,6 +91,10 @@ export default function SelectCustomersStep({
         };
         setSelectedQuickList(newQuickList);
         setIsQuickListCreated(true);
+        onUpdate({
+          quicklistId: newQuickList.id,
+          rowCount: newQuickList.row_count
+        });
         setShowCreateModal(false);
         setError("");
       }
@@ -180,6 +188,7 @@ export default function SelectCustomersStep({
             value={listName}
             onChange={(e) => {
               setListName(e.target.value);
+              onUpdate({ audienceName: e.target.value });
               setError("");
             }}
             className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none focus:ring-2`}
@@ -203,6 +212,7 @@ export default function SelectCustomersStep({
             value={listType}
             onChange={(value) => {
               setListType(value as string);
+              onUpdate({ uploadType: value as string });
               setError("");
             }}
             placeholder="Select list type"
@@ -226,6 +236,7 @@ export default function SelectCustomersStep({
             value={inputMethod}
             onChange={(value) => {
               setInputMethod(value as "" | "file" | "manual");
+              onUpdate({ inputMethod: value as "file" | "manual" });
               setError("");
             }}
             placeholder={t.manualRewards.inputMethodLabel}
@@ -310,6 +321,14 @@ export default function SelectCustomersStep({
               value={manualInput}
               onChange={(e) => {
                 setManualInput(e.target.value);
+                // Count recipients
+                const recipientLines = e.target.value
+                  .split("\n")
+                  .filter((line) => line.trim());
+                onUpdate({
+                  audienceFileText: e.target.value,
+                  rowCount: recipientLines.length
+                });
                 setError("");
               }}
               className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none focus:ring-2 font-mono`}

@@ -219,7 +219,6 @@ const sidebars: SidebarsConfig = {
             },
             'manual-actions/create-manual-reward',
             'manual-actions/view-manual-reward',
-            'manual-actions/edit-manual-reward',
           ],
         },
         {
