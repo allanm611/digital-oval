@@ -243,7 +243,7 @@ export default function CustomerSearchResultsPage() {
       const matchesSearch =
         eventSearchTerm.trim() === "" ||
         event.title.toLowerCase().includes(eventSearchTerm.toLowerCase()) ||
-        event.description.toLowerCase().includes(eventSearchTerm.toLowerCase());
+        (event.description && event.description.toLowerCase().includes(eventSearchTerm.toLowerCase()));
 
       const matchesType =
         eventTypeFilter === "all" || event.type === eventTypeFilter;

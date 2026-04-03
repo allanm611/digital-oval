@@ -20,7 +20,7 @@ export default function KPIsPage() {
     return allKPIs.filter((kpi) => {
       const matchesSearch =
         kpi.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        kpi.description.toLowerCase().includes(searchTerm.toLowerCase());
+        (kpi.description && kpi.description.toLowerCase().includes(searchTerm.toLowerCase()));
 
       const matchesCategory = categoryFilter === "all" || kpi.category === categoryFilter;
 

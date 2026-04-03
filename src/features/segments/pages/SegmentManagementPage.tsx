@@ -1428,6 +1428,7 @@ export default function SegmentManagementPage() {
               Refresh All
             </button>
 
+            {/* Batch Compute Button - Disabled
             {selectedSegmentIds.size >= 2 && (
               <button
                 onClick={handleBatchCompute}
@@ -1439,6 +1440,7 @@ export default function SegmentManagementPage() {
                 {isBatchComputing ? "Computing..." : "Batch Compute"}
               </button>
             )}
+            */}
 
             {selectedSegmentIds.size === 2 && (
               <button

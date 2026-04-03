@@ -4,8 +4,6 @@
 
 Segments are dynamic or static groups of customers that share common characteristics or behaviors. Build customer segments based on profile attributes, behaviors, and historical data to enable precise audience targeting and personalization for your campaigns and offers.
 
----
-
 ## What You Can Do
 
 ### [Segment List](/documentation/segments/segments-list)
@@ -28,11 +26,9 @@ Modify segment criteria and configuration. Update targeting rules and conditions
 
 Understand how segments are organized and categorized. Manage segment groupings for better organization and reusability.
 
-### [Segment Reports](/documentation/segments/segment-reports)
+<!-- ### [Segment Reports](/documentation/segments/segment-reports)
 
-Track segment performance metrics. Monitor segment member count, refresh frequency, and usage across campaigns.
-
----
+Track segment performance metrics. Monitor segment member count, refresh frequency, and usage across campaigns. -->
 
 ## Quick Start
 

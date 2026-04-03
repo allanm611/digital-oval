@@ -73,7 +73,7 @@ export default function UsageMetricsPage() {
     return metrics.filter((metric) => {
       const matchesSearch =
         metric.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        metric.description.toLowerCase().includes(searchTerm.toLowerCase());
+        (metric.description && metric.description.toLowerCase().includes(searchTerm.toLowerCase()));
       const matchesCategory =
         categoryFilter === "all" || metric.category === categoryFilter;
       return matchesSearch && matchesCategory;

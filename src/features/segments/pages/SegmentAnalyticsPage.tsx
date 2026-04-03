@@ -41,7 +41,7 @@ const CustomTooltip: React.FC<ChartTooltipProps> = ({
   }
 
   return (
-    <div className={`${tw.rounded}  bg-white p-3 shadow-lg`}>
+    <div className={`${tw.rounded} p-3 shadow-lg`} style={{ backgroundColor: "transparent", border: "none" }}>
       <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
       {payload.map((entry, idx) => (
         <div
@@ -79,7 +79,7 @@ export default function SegmentAnalyticsPage(): JSX.Element {
     null,
   );
   const [creationTrend, setCreationTrend] = useState<
-    Array<{ name: string; count: number }>
+    Array<{ name: string; count: number; static_count: number; dynamic_count: number }>
   >([]);
   const [typeDistribution, setTypeDistribution] = useState<
     Array<{ name: string; value: number }>
@@ -123,15 +123,17 @@ export default function SegmentAnalyticsPage(): JSX.Element {
         setHealthSummary(healthRes.data);
       }
 
-      // Process creation trend - returns array of {date/name, count}
+      // Process creation trend - returns array of {date, segments_created, static_count, dynamic_count}
       if (trendRes.success && trendRes.data) {
         const trend = Array.isArray(trendRes.data)
           ? trendRes.data
           : [trendRes.data];
         setCreationTrend(
           trend.map((item: any) => ({
-            name: item.date || item.name || "Unknown",
-            count: parseInt(item.count) || parseInt(item.value) || 0,
+            name: item.date ? new Date(item.date).toLocaleDateString() : "Unknown",
+            count: Number(item.segments_created) || 0,
+            static_count: Number(item.static_count) || 0,
+            dynamic_count: Number(item.dynamic_count) || 0,
           })),
         );
       }
@@ -142,7 +144,7 @@ export default function SegmentAnalyticsPage(): JSX.Element {
         setTypeDistribution(
           types.map((item: any) => ({
             name: item.type || item.name || "Unknown",
-            value: parseInt(item.count) || 0,
+            value: Number(item.count) || 0,
           })),
         );
       }
@@ -155,12 +157,12 @@ export default function SegmentAnalyticsPage(): JSX.Element {
         setCategoryDistribution(
           categories.map((cat: any) => ({
             name: cat.category_name || cat.name || "Unknown",
-            count: parseInt(cat.count) || 0,
+            count: Number(cat.count) || 0,
           })),
         );
       }
 
-      // Process largest segments - returns [{name, member_count/size}, ...]
+      // Process largest segments - returns [{id, name, code, type, size_estimate}, ...]
       if (largestRes.success && largestRes.data) {
         const largest = Array.isArray(largestRes.data)
           ? largestRes.data
@@ -168,7 +170,7 @@ export default function SegmentAnalyticsPage(): JSX.Element {
         setLargestSegments(
           largest.map((seg: any) => ({
             name: seg.name || "Unknown",
-            size: parseInt(seg.member_count) || parseInt(seg.size) || 0,
+            size: Number(seg.size_estimate) || 0,
           })),
         );
       }
@@ -197,7 +199,7 @@ export default function SegmentAnalyticsPage(): JSX.Element {
         );
       }
 
-      // Process most used segments - returns [{name, usage_count}, ...]
+      // Process most used segments - returns [{id, name, code, type, size_estimate, usage_count}, ...]
       if (mostUsedRes.success && mostUsedRes.data) {
         const mostUsed = Array.isArray(mostUsedRes.data)
           ? mostUsedRes.data
@@ -205,7 +207,7 @@ export default function SegmentAnalyticsPage(): JSX.Element {
         setMostUsedSegments(
           mostUsed.map((seg: any) => ({
             name: seg.name || "Unknown",
-            usage_count: parseInt(seg.usage_count) || parseInt(seg.count) || 0,
+            usage_count: Number(seg.usage_count) || 0,
           })),
         );
       }
@@ -391,13 +393,30 @@ export default function SegmentAnalyticsPage(): JSX.Element {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ stroke: "transparent", strokeWidth: 0 }} />
                   <Line
                     type="monotone"
                     dataKey="count"
+                    name="Total Segments"
                     stroke={color.primary.accent}
                     strokeWidth={2}
                     dot={{ fill: color.primary.accent, r: 4 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="static_count"
+                    name="Static Segments"
+                    stroke="#3B82F6"
+                    strokeWidth={2}
+                    dot={{ fill: "#3B82F6", r: 4 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="dynamic_count"
+                    name="Dynamic Segments"
+                    stroke="#10B981"
+                    strokeWidth={2}
+                    dot={{ fill: "#10B981", r: 4 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -423,7 +442,7 @@ export default function SegmentAnalyticsPage(): JSX.Element {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis type="number" />
                   <YAxis dataKey="name" type="category" width={90} />
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} />
                   <Bar
                     dataKey="size"
                     fill={color.primary.accent}
@@ -461,6 +480,8 @@ export default function SegmentAnalyticsPage(): JSX.Element {
                     <Bar
                       dataKey="usage_count"
                       radius={[0, 8, 8, 0]}
+                      fill={color.primary.accent}
+                      label={{ position: "insideBottomRight", offset: 5, fontSize: 12, fontWeight: "bold", fill: "white" }}
                     >
                       {mostUsedSegments.map((entry, index) => (
                         <Cell

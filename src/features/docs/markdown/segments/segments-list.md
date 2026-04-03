@@ -4,7 +4,7 @@
 
 The Segment List page displays all segments in your system with summary statistics, search capabilities, filtering options, and management tools for each segment.
 
-**[Insert screenshot of segment list page]**
+![Segment List Page](/img/segments-img/segmentslist.png)
 
 
 ## Summary Statistics
@@ -25,6 +25,8 @@ Use the **Search** field to find segments by:
 - Segment name
 
 ### Advanced Filters
+
+![Segment Filters](/img/segments-img/segmentslistfilter.png)
 
 Click the **Filters** button to access filtering options:
 
@@ -74,9 +76,41 @@ Each segment row has action buttons with the following options:
 
 **Delete** - Permanently remove the segment
 
-**Compute** - Calculate or refresh segment membership
+### Compute Segment
 
-**Duplicate** - Create a copy of the segment
+**Compute** - Calculate or refresh segment membership for a segment
+
+![Compute Segments Modal](/img/segments-img/computesegmentsmodal.png)
+
+When you click **Compute**, a modal appears asking how you'd like to track the computation. Choose one of the following options:
+
+**Compute** (Primary button)
+- Computes the segment size while keeping the modal open
+- Shows a loading spinner and progress message: "Computing segment size..."
+- The modal closes automatically once computation completes
+- Use this when you want to wait and see the result immediately
+- Good for small to medium segments
+
+**Compute & Close** (Secondary button)
+- Starts the computation in the background
+- Closes the modal immediately without waiting
+- Computation continues while you work on other tasks
+- Use this for large segments or when you don't need to wait
+- Recommended when computing multiple segments
+
+**What Computation Does:**
+- Evaluates all segment conditions to determine which customers qualify
+- Updates the total member count to reflect current data
+- Processes the segment query against the latest customer database
+- May take several seconds for large segments (100K+ members)
+
+**When to Compute:**
+- After creating a new segment to calculate initial member count
+- After modifying segment criteria to see updated results
+- After importing new customer data to refresh segment membership
+- Periodically for dynamic segments to ensure membership is current
+
+**Duplicate** - Create a copy of the segment with all conditions and settings
 
 **Refresh** - Update segment member list
 
@@ -93,21 +127,17 @@ Click **Select Segments** to enter bulk selection mode. In this mode, you can:
 
 ### Bulk Operations
 
+![Batch Refresh Segments](/img/segments-img/segmentslistbatchrefresh.png)
+
 When segments are selected, the following bulk actions become available:
 
 **Refresh All**
 - Refresh member lists for all selected segments
-
+<!-- 
 **Batch Compute** (2+ segments selected)
 - Calculate membership for multiple segments at once
 
 **Compare** (exactly 2 segments selected)
 - Compare overlap between two segments to see how many customers appear in both
-
-
-## Pagination
-
-Use the pagination controls at the bottom to navigate through segments if there are more than the displayed page size.
-
-
+ -->
 

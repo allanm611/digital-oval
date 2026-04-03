@@ -60,7 +60,7 @@ export default function SMSRoutesList() {
   const filteredRoutes = routes.filter(
     (route) =>
       route.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      route.description.toLowerCase().includes(searchTerm.toLowerCase())
+      (route.description && route.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (

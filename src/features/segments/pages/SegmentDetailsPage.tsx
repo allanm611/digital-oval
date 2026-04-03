@@ -130,9 +130,13 @@ export default function SegmentDetailsPage() {
 
   // Phase 3 - New sections
   const [segmentHierarchy, setSegmentHierarchy] = useState<{
-    parent_id?: number;
-    parent_name?: string;
+    id?: string | number;
+    name?: string;
+    parent_segment?: string | number | null;
+    level?: number;
+    path?: (string | number)[];
   } | null>(null);
+  const [parentSegmentName, setParentSegmentName] = useState<string | null>(null);
   const [childSegments, setChildSegments] = useState<
     Array<{ id: number; name: string }>
   >([]);
@@ -261,7 +265,7 @@ export default function SegmentDetailsPage() {
   const loadCategoryName = useCallback(
     async (categoryId: number | string) => {
       try {
-        const response = await segmentService.getSegmentCategories();
+        const response = await segmentService.getSegmentCategories(undefined, true);
         const categories = response.data || [];
 
         // Handle both string and number IDs
@@ -283,7 +287,7 @@ export default function SegmentDetailsPage() {
     try {
       setIsLoading(true);
 
-      const response = await segmentService.getSegmentById(Number(id));
+      const response = await segmentService.getSegmentById(Number(id), true);
 
       // Extract data from response (backend wraps it in data object)
       const segmentData =
@@ -392,10 +396,31 @@ export default function SegmentDetailsPage() {
     setIsLoadingHierarchy(true);
     try {
       const [hierarchyRes, childrenRes] = await Promise.all([
-        segmentService.getSegmentHierarchy(Number(id)),
-        segmentService.getSegmentChildren(Number(id)),
+        segmentService.getSegmentHierarchy(Number(id), true),
+        segmentService.getSegmentChildren(Number(id), true),
       ]);
-      setSegmentHierarchy(hierarchyRes.data || null);
+      // Extract first element from hierarchy array
+      const hierarchyData = Array.isArray(hierarchyRes.data)
+        ? hierarchyRes.data[0]
+        : hierarchyRes.data;
+      setSegmentHierarchy(hierarchyData || null);
+
+      // Fetch parent segment name if parent exists
+      if (hierarchyData?.parent_segment) {
+        try {
+          const parentRes = await segmentService.getSegmentById(
+            Number(hierarchyData.parent_segment),
+            true
+          );
+          const parentData = (parentRes as { data?: Segment }).data || (parentRes as Segment);
+          setParentSegmentName((parentData as Segment)?.name || null);
+        } catch {
+          setParentSegmentName(null);
+        }
+      } else {
+        setParentSegmentName(null);
+      }
+
       const children = Array.isArray(childrenRes.data)
         ? childrenRes.data
         : childrenRes.data
@@ -405,6 +430,7 @@ export default function SegmentDetailsPage() {
     } catch (err) {
       console.warn("Failed to load hierarchy:", err);
       setSegmentHierarchy(null);
+      setParentSegmentName(null);
       setChildSegments([]);
     } finally {
       setIsLoadingHierarchy(false);
@@ -416,8 +442,8 @@ export default function SegmentDetailsPage() {
     setIsLoadingAnalytics(true);
     try {
       const [trendRes, metricsRes] = await Promise.all([
-        segmentService.getSegmentGrowthTrend(Number(id)),
-        segmentService.getSegmentPerformanceMetrics(Number(id)),
+        segmentService.getSegmentGrowthTrend(Number(id), true),
+        segmentService.getSegmentPerformanceMetrics(Number(id), true),
       ]);
       const trend = Array.isArray(trendRes.data)
         ? trendRes.data
@@ -900,19 +926,20 @@ export default function SegmentDetailsPage() {
 
   // Phase 4 - Load parent segments for advanced edit
   const loadParentSegments = useCallback(async () => {
-    if (!id) return;
+    if (!id || !segment) return;
 
     setIsLoadingParents(true);
     try {
-      const response = await segmentService.getParentSegments();
+      const response = await segmentService.getParentSegments(true);
       const parents = Array.isArray(response.data)
         ? response.data
         : response.data
           ? [response.data]
           : [];
-      // Filter out current segment from parent list
+      // Filter out current segment from parent list (check both ID and name)
       const filteredParents = parents.filter(
-        (p: { id: number }) => p.id !== Number(id),
+        (p: { id: number; name: string }) =>
+          p.id !== Number(id) && p.name !== segment.name,
       );
       setParentSegments(filteredParents);
     } catch (err) {
@@ -921,7 +948,7 @@ export default function SegmentDetailsPage() {
     } finally {
       setIsLoadingParents(false);
     }
-  }, [id]);
+  }, [id, segment]);
 
   // Phase 4 - Update Query
   const handleUpdateQuery = async () => {
@@ -984,17 +1011,20 @@ export default function SegmentDetailsPage() {
     try {
       const response = await campaignFlowService.getCampaignFlowsBySegment(
         Number(id),
+        true,
       );
       if (response && response.success && Array.isArray(response.data)) {
         // Transform API response to display format
         const flows = response.data.map((flow: any) => ({
           campaign_id: flow.campaign_id,
-          campaign_name: flow.campaign_name || `Campaign #${flow.campaign_id}`,
+          campaign_name: flow.campaign_name || flow.name || `Campaign ${flow.campaign_id}`,
           segment_id: flow.segment_id,
           offer_id: flow.offer_id,
-          offer_name: flow.offer_name || `Offer${flow.offer_id}`,
+          offer_name: flow.offer_name || flow.title || `Offer ${flow.offer_id}`,
           flow_type: flow.flow_type,
           wait_interval_hours: flow.wait_interval_hours,
+          step_order: flow.step_order,
+          bucket_allocation: flow.bucket_allocation,
         }));
         setCampaignFlows(flows);
       } else {
@@ -1243,7 +1273,7 @@ export default function SegmentDetailsPage() {
               <p className="text-xl font-bold text-gray-900">
                 {mockCustomerCount !== null
                   ? mockCustomerCount.toLocaleString()
-                  : "-"}
+                  : "0"}
               </p>
             )}
           </div>
@@ -1535,7 +1565,7 @@ export default function SegmentDetailsPage() {
       </div>
 
       {/* Criteria/Definition Section */}
-      {(segment.criteria || segment.definition) && (
+      {(segment.definition || segment.segment_query_payload) && (
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}
         >
@@ -1544,7 +1574,25 @@ export default function SegmentDetailsPage() {
           </h3>
 
           {/* Display criteria conditions in a user-friendly way */}
-          {segment.criteria &&
+          {segment.definition?.layer_filters?.groups &&
+          Array.isArray(segment.definition.layer_filters.groups) ? (
+            <div className="space-y-4">
+              <div className="bg-gray-50 p-4 rounded border border-gray-200">
+                <p className="text-sm font-semibold text-gray-700 mb-2">Query Filters:</p>
+                <pre className="text-xs text-gray-600 overflow-auto max-h-48 bg-white p-2 rounded">
+                  {JSON.stringify(segment.definition.layer_filters, null, 2)}
+                </pre>
+              </div>
+              {segment.query && (
+                <div className="bg-gray-50 p-4 rounded border border-gray-200">
+                  <p className="text-sm font-semibold text-gray-700 mb-2">Generated SQL:</p>
+                  <pre className="text-xs text-gray-600 overflow-auto max-h-48 bg-white p-2 rounded font-mono">
+                    {segment.query}
+                  </pre>
+                </div>
+              )}
+            </div>
+          ) : segment.criteria &&
           "conditions" in segment.criteria &&
           Array.isArray(
             (segment.criteria as Record<string, unknown>).conditions,
@@ -1703,19 +1751,32 @@ export default function SegmentDetailsPage() {
               Segment Hierarchy
             </h3>
             <div className="space-y-4">
-              {segmentHierarchy?.parent_id && (
+              {segmentHierarchy?.parent_segment && (
                 <div>
                   <label
                     className={`text-sm font-medium ${tw.textMuted} block mb-2`}
                   >
                     Parent Segment
                   </label>
-                  <p
-                    className={`text-sm ${tw.textPrimary} px-4 py-2 bg-gray-50 ${tw.rounded}`}
-                  >
-                    {segmentHierarchy.parent_name ||
-                      `ID: ${segmentHierarchy.parent_id}`}
-                  </p>
+                  {parentSegmentName ? (
+                    <button
+                      onClick={() =>
+                        navigate(
+                          `/dashboard/segments/${segmentHierarchy.parent_segment}`
+                        )
+                      }
+                      className={`text-sm px-4 py-2 bg-gray-50 ${tw.rounded} border border-transparent hover:opacity-80 transition-colors font-medium`}
+                      style={{ color: color.primary.accent }}
+                    >
+                      {parentSegmentName}
+                    </button>
+                  ) : (
+                    <p
+                      className={`text-sm ${tw.textPrimary} px-4 py-2 bg-gray-50 ${tw.rounded}`}
+                    >
+                      ID: {segmentHierarchy.parent_segment}
+                    </p>
+                  )}
                 </div>
               )}
               {childSegments.length > 0 && (
@@ -1737,7 +1798,7 @@ export default function SegmentDetailsPage() {
                   </div>
                 </div>
               )}
-              {!segmentHierarchy?.parent_id && childSegments.length === 0 && (
+              {!segmentHierarchy?.parent_segment && childSegments.length === 0 && (
                 <p className={`text-sm ${tw.textSecondary}`}>
                   No parent or child segments
                 </p>
@@ -1759,7 +1820,11 @@ export default function SegmentDetailsPage() {
               onClick={() => {
                 setShowAdvancedEdit(true);
                 setEditQuery(segment?.query || "");
-                setEditParentId(segment?.parent_id || null);
+                setEditParentId(
+                  segmentHierarchy?.parent_segment
+                    ? Number(segmentHierarchy.parent_segment)
+                    : null
+                );
                 loadParentSegments();
               }}
               className={`text-sm font-medium px-3 py-1.5 ${tw.rounded} border border-gray-200 hover:bg-gray-50 transition-colors`}
@@ -1826,6 +1891,12 @@ export default function SegmentDetailsPage() {
                     }}
                     options={[
                       { label: "No parent segment", value: "" },
+                      // Include current parent if it exists (but exclude if it's the current segment)
+                      ...(segmentHierarchy?.parent_segment &&
+                        parentSegmentName &&
+                        Number(segmentHierarchy.parent_segment) !== Number(id)
+                        ? [{ label: parentSegmentName, value: String(segmentHierarchy.parent_segment) }]
+                        : []),
                       ...parentSegments.map((parent) => ({
                         label: parent.name,
                         value: String(parent.id),
@@ -1864,9 +1935,21 @@ export default function SegmentDetailsPage() {
             <div>
               <span className="font-medium text-gray-700">Parent Segment:</span>
               <p className="text-gray-600 mt-1">
-                {segment?.parent_id
-                  ? `ID: ${segment.parent_id}`
-                  : "No parent segment assigned"}
+                {segmentHierarchy?.parent_segment && parentSegmentName ? (
+                  <button
+                    onClick={() =>
+                      navigate(
+                        `/dashboard/segments/${segmentHierarchy.parent_segment}`
+                      )
+                    }
+                    className="hover:opacity-80 transition-colors font-medium"
+                    style={{ color: color.primary.accent }}
+                  >
+                    {parentSegmentName}
+                  </button>
+                ) : (
+                  "No parent segment assigned"
+                )}
               </p>
             </div>
           </div>
@@ -1960,7 +2043,7 @@ export default function SegmentDetailsPage() {
 
       {/* Campaigns Using This Segment */}
       {campaignFlows.length > 0 || isLoadingCampaignFlows ? (
-        <div className={`${tw.rounded} border border-gray-200 p-6 shadow-sm`}>
+        <div className={`${tw.rounded} p-6`}>
           <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
             Used in Campaigns ({campaignFlows.length})
           </h3>

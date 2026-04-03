@@ -1071,7 +1071,7 @@ function ControlGroupConfigModal({
   const filteredControlGroups = availableControlGroups.filter(
     (group) =>
       group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      group.description.toLowerCase().includes(searchTerm.toLowerCase()),
+      (group.description && group.description.toLowerCase().includes(searchTerm.toLowerCase())),
   );
 
   const handleSave = () => {

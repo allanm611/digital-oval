@@ -77,7 +77,7 @@ export default function CascadingVariableSelector({
     return hoveredSourceFields.filter(
       (field) =>
         field.name.toLowerCase().includes(query) ||
-        field.description.toLowerCase().includes(query),
+        (field.description && field.description.toLowerCase().includes(query)),
     );
   }, [hoveredSourceFields, searchQuery]);
 

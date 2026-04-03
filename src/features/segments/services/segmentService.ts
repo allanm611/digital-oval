@@ -925,9 +925,10 @@ class SegmentService {
    * GET /segments/parents - Get parent segments
    */
   async getParentSegments(
+    skipCache: boolean = true,
     filters?: GetSegmentsQuery,
   ): Promise<PaginatedResponse<SegmentType>> {
-    const queryString = this.buildQueryParams(filters || {});
+    const queryString = this.buildQueryParams({ ...filters, skipCache });
     const response = await this.request<PaginatedResponse<SegmentType>>(
       `/parents${queryString}`,
     );
@@ -966,8 +967,9 @@ class SegmentService {
    */
   async getMostUsedSegments(
     limit: number = 10,
+    skipCache: boolean = true,
   ): Promise<ApiSuccessResponse<SegmentType[]>> {
-    const queryString = this.buildQueryParams({ limit });
+    const queryString = this.buildQueryParams({ limit, skipCache });
     const response = await this.request<ApiSuccessResponse<SegmentType[]>>(
       `/most-used${queryString}`,
     );
@@ -1165,8 +1167,9 @@ class SegmentService {
   async getSegmentChildren(
     id: number,
     filters?: GetSegmentsQuery,
+    skipCache: boolean = true,
   ): Promise<PaginatedResponse<SegmentType>> {
-    const queryString = this.buildQueryParams(filters || {});
+    const queryString = this.buildQueryParams({ ...(filters || {}), skipCache });
     const response = await this.request<PaginatedResponse<SegmentType>>(
       `/${id}/children${queryString}`,
     );
@@ -1186,9 +1189,11 @@ class SegmentService {
    */
   async getSegmentHierarchy(
     id: number,
+    skipCache: boolean = true,
   ): Promise<ApiSuccessResponse<SegmentHierarchyResponse>> {
+    const queryString = this.buildQueryParams({ skipCache });
     return this.request<ApiSuccessResponse<SegmentHierarchyResponse>>(
-      `/${id}/hierarchy`,
+      `/${id}/hierarchy${queryString}`,
     );
   }
 
@@ -1197,10 +1202,11 @@ class SegmentService {
    */
   async getSegmentGrowthTrend(
     id: number,
+    skipCache: boolean = true,
     period?: string,
     days?: number,
   ): Promise<ApiSuccessResponse<GrowthTrendResponse>> {
-    const queryString = this.buildQueryParams({ period, days });
+    const queryString = this.buildQueryParams({ skipCache, period, days });
     return this.request<ApiSuccessResponse<GrowthTrendResponse>>(
       `/${id}/growth-trend${queryString}`,
     );
@@ -1211,9 +1217,11 @@ class SegmentService {
    */
   async getSegmentPerformanceMetrics(
     id: number,
+    skipCache: boolean = true,
   ): Promise<ApiSuccessResponse<PerformanceMetricsResponse>> {
+    const queryString = this.buildQueryParams({ skipCache });
     return this.request<ApiSuccessResponse<PerformanceMetricsResponse>>(
-      `/${id}/performance-metrics`,
+      `/${id}/performance-metrics${queryString}`,
     );
   }
 
@@ -1361,7 +1369,7 @@ class SegmentService {
   ): Promise<ApiSuccessResponse<SegmentType>> {
     return this.request<ApiSuccessResponse<SegmentType>>(`/${id}/parent`, {
       method: "PATCH",
-      body: JSON.stringify({ parent_segment: parentId }),
+      body: JSON.stringify({ parentId }),
     });
   }
 

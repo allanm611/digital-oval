@@ -4,8 +4,6 @@
 
 Analytics provides comprehensive reporting and insights into your customer engagement platform's performance. Track campaign effectiveness, customer behavior, delivery metrics, and business KPIs to measure success and optimize your strategies.
 
----
-
 ## What You Can Do
 
 ### [Overall Dashboard Performance](/documentation/analytics/overall-dashboard-performance)
@@ -32,7 +30,6 @@ Monitor delivery performance across channels. Track SMS delivery success, email 
 
 Understand key performance indicators and business metrics available in the system. Learn how to measure and interpret platform performance.
 
----
 
 ## Quick Start
 

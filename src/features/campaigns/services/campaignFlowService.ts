@@ -170,11 +170,12 @@ class CampaignFlowService {
   /** Get all campaign flows by segment ID */
   async getCampaignFlowsBySegment(
     segmentId: number,
+    skipCache: boolean = true,
     activeOnly?: boolean,
     limit?: number,
     offset?: number
   ): Promise<GetCampaignFlowsResponse> {
-    const query = buildQueryString({ activeOnly, limit, offset });
+    const query = buildQueryString({ skipCache, activeOnly, limit, offset });
     const url = `${BASE_URL}/segment/${segmentId}${query}`;
 
     const response = await fetch(url, {

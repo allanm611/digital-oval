@@ -44,7 +44,7 @@ export default function KPIPickerModal({
       kpi.category === selectedCategory &&
       (selectedSubcategory === "all" || kpi.subcategory === selectedSubcategory) &&
       (kpi.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        kpi.description.toLowerCase().includes(searchTerm.toLowerCase()))
+        (kpi.description && kpi.description.toLowerCase().includes(searchTerm.toLowerCase())))
   );
 
   if (!isOpen) return null;
