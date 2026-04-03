@@ -2,26 +2,25 @@
 
 ## Overview
 
-The Segment List page displays all segments in your system with summary statistics, search capabilities, filtering options, and management tools for each segment.
+The Segment List page displays all segments in the system with summary statistics, search capabilities, filtering options, and management tools for each segment.
 
 ![Segment List Page](/img/segments-img/segmentslist.png)
-
 
 ## Summary Statistics
 
 The Segment List page displays key metrics at the top in four stat cards:
 
-- **Total Segments** - Total number of segments in your system (includes "+X this week" count)
+- **Total Segments** - Total number of segments in the system (includes "+X this week" count)
 - **Active Segments** - Number of currently active segments
 - **Stale Segments** - Number of segments that need refresh
 - **Top Segment** - Name of the largest segment with member count
-
 
 ## Search and Filtering
 
 ### Search
 
 Use the **Search** field to find segments by:
+
 - Segment name
 
 ### Advanced Filters
@@ -31,6 +30,7 @@ Use the **Search** field to find segments by:
 Click the **Filters** button to access filtering options:
 
 **Filter Tabs:**
+
 - All - Show all segments
 - Active - Show only active segments
 - Empty - Show segments with no members
@@ -39,6 +39,7 @@ Click the **Filters** button to access filtering options:
 - Most Used - Show most frequently used segments
 
 **Type Filter:**
+
 - Static
 - Dynamic
 - Predictive
@@ -48,10 +49,10 @@ Click the **Filters** button to access filtering options:
 - Transactional
 
 **Visibility Filter:**
+
 - All
 - Public
 - Private
-
 
 ## Segments Table
 
@@ -64,7 +65,6 @@ The segments are displayed in a table with the following information:
 - **Last Refresh** - When the segment was last refreshed
 - **Created** - Date the segment was created
 - **Actions** - Available management actions
-
 
 ## Action Buttons
 
@@ -85,6 +85,7 @@ Each segment row has action buttons with the following options:
 When you click **Compute**, a modal appears asking how you'd like to track the computation. Choose one of the following options:
 
 **Compute** (Primary button)
+
 - Computes the segment size while keeping the modal open
 - Shows a loading spinner and progress message: "Computing segment size..."
 - The modal closes automatically once computation completes
@@ -92,6 +93,7 @@ When you click **Compute**, a modal appears asking how you'd like to track the c
 - Good for small to medium segments
 
 **Compute & Close** (Secondary button)
+
 - Starts the computation in the background
 - Closes the modal immediately without waiting
 - Computation continues while you work on other tasks
@@ -99,12 +101,14 @@ When you click **Compute**, a modal appears asking how you'd like to track the c
 - Recommended when computing multiple segments
 
 **What Computation Does:**
+
 - Evaluates all segment conditions to determine which customers qualify
 - Updates the total member count to reflect current data
 - Processes the segment query against the latest customer database
 - May take several seconds for large segments (100K+ members)
 
 **When to Compute:**
+
 - After creating a new segment to calculate initial member count
 - After modifying segment criteria to see updated results
 - After importing new customer data to refresh segment membership
@@ -113,7 +117,6 @@ When you click **Compute**, a modal appears asking how you'd like to track the c
 **Duplicate** - Create a copy of the segment with all conditions and settings
 
 **Refresh** - Update segment member list
-
 
 ## Bulk Actions
 
@@ -132,12 +135,13 @@ Click **Select Segments** to enter bulk selection mode. In this mode, you can:
 When segments are selected, the following bulk actions become available:
 
 **Refresh All**
+
 - Refresh member lists for all selected segments
 <!-- 
 **Batch Compute** (2+ segments selected)
 - Calculate membership for multiple segments at once
 
 **Compare** (exactly 2 segments selected)
-- Compare overlap between two segments to see how many customers appear in both
- -->
 
+- Compare overlap between two segments to see how many customers appear in both
+  -->

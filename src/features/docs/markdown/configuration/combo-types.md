@@ -2,73 +2,29 @@
 
 ## Overview
 
-Combo Types is a configuration page used to define and manage different types of product combinations.
+Combo Types is used to define reusable bundle templates that combine data, voice, and SMS into one offer unit. The page is designed for product and commercial teams that need to shape bundle structures before those bundles are used in products and offers.
 
-The page lets you:
-
-- View combo types in a table
-- Search combo types by name or description
-- Create a combo type in a modal
-- Edit a combo type in a modal
-- Delete a combo type
-
----
+![Combo Types List](/img/configuration/combotypeslist.png)
 
 ## Accessing Combo Types
 
-**Navigation:** Dashboard -> Configuration -> Combo Types
+**Navigation:** Configuration -> Combo Types
 
 From the main Configuration page, Combo Types appears under **Product Configuration**.
 
----
-
 ## Combo Types List Page
 
-The Combo Types page includes:
-
-### Header
-
-- Page title: **Combo Types**
-- Page description: **Define and manage different types of product combinations**
-- **Create** button
-
-### Search
-
-- A search input with the placeholder **Search combo types by name or description...**
-- Search filters the list by:
-  - Combo type name
-  - Description
-
-### Table Columns
-
-The list table shows these columns:
-
-- **Combo Type Name**
-- **Description**
-- **Status**
-- **Actions**
-
-### Status Display
-
-Each row shows one of these statuses:
-
-- **Active**
-- **Inactive**
-
-### Row Actions
-
-Each row provides:
-
-- **Edit** button
-- **Delete** button
-
----
+The list view gives you a quick operating snapshot of each combo type, including name, description, status, and actions. Search is available for fast narrowing by name or description, and row actions let you edit or delete without leaving the page.
 
 ## Creating a Combo Type
 
 Click **Create** to open the combo type modal.
 
 **Modal title:** Create New Combo Type
+
+![Create Combo Type Form - Part 1](/img/configuration/createcombotypeimage1.png)
+
+![Create Combo Type Form - Part 2](/img/configuration/createcombotypeimage2.png)
 
 ### Basic Fields
 
@@ -92,7 +48,7 @@ Available resource buttons:
 - **+ Voice**
 - **+ SMS**
 
-Only one resource block per type can be added at a time.
+Only one block per resource type can be added in the same combo type.
 
 Each resource block shows:
 
@@ -122,14 +78,12 @@ When shared validity is disabled:
 
 ### Price
 
-The modal includes a **Combo Price** number input.
+The modal includes a **Combo Price** numeric input used as the final bundle price.
 
 ### Modal Actions
 
 - **Cancel** closes the modal without saving
 - **Save** submits the combo type
-
----
 
 ## Editing a Combo Type
 
@@ -146,8 +100,6 @@ The edit modal uses the same sections as create:
 - Validity Hours or per-resource Hours
 - Combo Price
 
----
-
 ## Deleting a Combo Type
 
 Click the **Delete** button in the Actions column.
@@ -157,9 +109,7 @@ A confirmation modal appears with:
 - Title: **Delete Combo Type**
 - A confirmation message that the action cannot be undone
 
-If deletion succeeds, the app shows a success message.
-
----
+If deletion succeeds, the app shows a success message and refreshes the list.
 
 ## Validation and Save Behavior
 
@@ -170,8 +120,6 @@ The modal validates these fields:
 - Description length is limited by the form configuration
 
 If saving fails, the page shows an error message.
-
----
 
 ## Empty State
 

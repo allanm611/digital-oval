@@ -2,9 +2,12 @@
 
 Offer Tracking Sources define how offer performance is measured and tracked. Each tracking source captures different types of data to understand how customers interact with your offers, helping you measure effectiveness and make data-driven decisions about your promotional strategies.
 
+![Offer Tracking Sources List](/img/configuration/offertrackingsourceslist.png)
+
 ## What are Tracking Sources?
 
 Tracking Sources allow you to:
+
 - **Measure Offer Performance** - Track how customers interact with and respond to offers
 - **Capture Metrics** - Define what data to collect from offer interactions
 - **Understand Impact** - Use the tracked data to measure offer effectiveness
@@ -33,19 +36,28 @@ Navigate to **Configuration → Offer Tracking Sources** to manage all tracking 
 ### Viewing Tracking Sources List
 
 The tracking sources list displays all configured sources with:
+
 - **Name** - Tracking source identifier
 - **Description** - Details about what this source tracks
 - **Type** - The category of tracking (Recharge, Usage, Engagement, etc.)
 - **Data Source** - Where the data comes from (CDR File, Usage Logs, Delivery Logs, Redemption Database, Subscriber Activity, Custom API)
 
 You can:
+
 - **Search** - Find tracking sources by name or description
 
 ### Create Tracking Source
 
 Click the **Create** button to add a new tracking source.
 
+![Create Offer Tracking Source](/img/configuration/createoffertrackingimage1.png)
+
+![Tracking Type Dropdown](/img/configuration/createoffertrackingtypedropdown.png)
+
+![Tracking Source Dropdown](/img/configuration/createoffertrackingimagedropdownsource.png)
+
 **Required Fields:**
+
 - **Tracking Source Name** - The name of the tracking source (max 120 characters)
 - **Type** - Select the type of tracking:
   - Recharge
@@ -63,6 +75,7 @@ Click the **Create** button to add a new tracking source.
   - Custom API
 
 **Optional Fields:**
+
 - **Description** - Explain what this tracking source measures (max 600 characters)
 
 Click **Save** to create the tracking source.
@@ -70,6 +83,7 @@ Click **Save** to create the tracking source.
 ### Edit Tracking Source
 
 Click **Edit** on any tracking source to update:
+
 - Tracking Source Name
 - Description
 - Type

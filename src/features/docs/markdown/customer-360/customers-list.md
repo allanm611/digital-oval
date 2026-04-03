@@ -2,7 +2,7 @@
 
 ## Overview
 
-View all customers in your system in a unified table. Search, filter, and manage customer data with action buttons for viewing, editing, and deleting customer records.
+View all customers in the system in a unified table. Search, filter, and manage customer data with action buttons for viewing, editing, and deleting customer records.
 
 ## Customer List View
 
@@ -46,7 +46,6 @@ The customer list table shows:
 - **Created** - Account creation date
 - **Last Updated** - Most recent profile update
 
-
 ## Action Buttons
 
 ### [View Customer Details](/documentation/customer-360/view-customer-details)
@@ -54,6 +53,7 @@ The customer list table shows:
 Click the **View** (eye icon) to open the customer's complete profile.
 
 **Includes:**
+
 - Customer information (name, contact, address, account details)
 - [Events tab](/documentation/customer-360/view-customer-details) - Communication history
 - Subscribed Lists tab - List subscriptions
@@ -69,6 +69,7 @@ Click the **Edit** (pencil icon) to update customer information.
 ![Edit Customer Form Part 2](/img/customer360-images/editcustomerimage2.png)
 
 **Editable Fields:**
+
 - First name, last name
 - Email and alternate email
 - Phone numbers
@@ -80,6 +81,7 @@ Click the **Edit** (pencil icon) to update customer information.
 - Custom attributes
 
 **Steps:**
+
 1. Click **Edit** button
 2. Update desired fields
 3. Click **Save**
@@ -90,6 +92,7 @@ Click the **Edit** (pencil icon) to update customer information.
 Click the **Delete** (trash icon) to permanently remove the customer record.
 
 **Warning:** This action is irreversible and will delete all customer data including:
+
 - Profile information
 - Segment memberships
 - Communication history
@@ -100,6 +103,7 @@ Confirmation is required before deletion.
 ## Creating Customers
 
 To add new customers, see [Create Customer](/documentation/customer-360/create-customer) guide which covers:
+
 - Single manual entry
 - Bulk CSV import
 - File upload with column mapping

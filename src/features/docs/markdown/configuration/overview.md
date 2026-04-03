@@ -4,7 +4,6 @@
 
 Configuration settings control platform behavior, business rules, and system-wide parameters. Define departments, communication channels, campaign types, catalogs, and other organizational settings that shape how campaigns and offers work across your organization.
 
----
 
 ## What You Can Configure
 
@@ -70,13 +69,6 @@ Organize products into categories. Create product catalogs for grouping and orga
 
 Organize segments into catalogs. Create segment categories for better organization.
 
-### User & Access Management
-
-#### [User Management](/documentation/configuration/user-management)
-
-Create and manage user accounts. Set up users with appropriate permissions and roles.
-
----
 
 ## Quick Start
 
@@ -86,4 +78,4 @@ Create and manage user accounts. Set up users with appropriate permissions and r
 2. Configure [Communication Channels](/documentation/configuration/communication-channels) for outreach
 3. Define [Campaign Objectives](/documentation/configuration/campaign-objectives) for your organization
 4. Create [Catalogs](/documentation/configuration/campaign-catalog) to organize campaigns and offers
-5. Set up [User Management](/documentation/configuration/user-management) with appropriate access levels
+5. Review configuration coverage and validate setup before launching campaigns

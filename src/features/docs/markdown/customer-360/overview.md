@@ -12,7 +12,7 @@ Browse all your customers in one place. Search and filter customers by name, pho
 
 ### [Create Customer](/documentation/customer-360/create-customer)
 
-Add new customers to your system through three methods: single manual entry, bulk CSV import, or integration with external data sources. Build your customer database to enable targeted campaigns and communications.
+Add new customers to the system through three methods: single manual entry, bulk CSV import, or integration with external data sources. Build your customer database to enable targeted campaigns and communications.
 
 ### [View Customer Details](/documentation/customer-360/view-customer-details)
 
@@ -21,7 +21,6 @@ View comprehensive customer profiles including contact information, demographic 
 ### [Customer Identity](/documentation/customer-360/customer-identity)
 
 Understand and manage customer segmentation fields. Learn what data is available for targeting, how fields are mapped, and how to use customer attributes to build segments and create targeted campaigns.
-
 
 ## Quick Start
 

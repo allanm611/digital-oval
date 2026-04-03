@@ -6,23 +6,22 @@ Offer Catalogs organize offers into categories for easier management and organiz
 
 ![Offer Catalogs List](/img/configuration/offercataloglist.png)
 
-
 ## Summary Statistics
 
 The Offer Catalogs page displays key metrics at the top in five stat cards:
 
-- **Total Categories** - Total number of offer catalogs in your system
+- **Total Categories** - Total number of offer catalogs in the system
 - **Active** - Number of currently active catalogs
 - **Inactive** - Number of inactive catalogs
 - **With Offers** - Number of catalogs that contain offers
 - **Unused** - Number of catalogs that have no offers assigned
-
 
 ## Catalog Cards
 
 Catalogs are displayed as cards in a grid or list view with the following information:
 
 **Grid View:**
+
 - Catalog name
 - Description (if provided)
 - Number of offers in the catalog (with active count)
@@ -30,12 +29,12 @@ Catalogs are displayed as cards in a grid or list view with the following inform
 - Action buttons (View Offers, Toggle Active, Edit, Delete)
 
 **List View:**
+
 - Catalog name and description
 - Number of offers with active count
 - Performance metrics in a side-by-side layout
 - View Offers link
 - Action buttons (Toggle Active, Edit, Delete)
-
 
 ## Catalog Actions
 
@@ -43,7 +42,7 @@ Catalogs are displayed as cards in a grid or list view with the following inform
 
 Click the **Create** button to open the create catalog modal:
 
-- **Catalog Name*** (required) - Descriptive name for your catalog
+- **Catalog Name\*** (required) - Descriptive name for your catalog
 - **Description** (optional) - Additional details about the catalog
 
 ![Create Offer Catalog](/img/configuration/createoffercatalog.png)
@@ -66,7 +65,6 @@ Click the power icon on any catalog card to enable or disable it:
 
 Click the **Delete** button (trash icon) to permanently remove a catalog. You will be asked to confirm the deletion.
 
-
 ## View Offers in Catalog
 
 Click the **View Offers** button on any catalog card to open the View Offers modal. This modal displays:
@@ -78,7 +76,6 @@ Click the **View Offers** button on any catalog card to open the View Offers mod
 
 ![View Offers in Catalog](/img/configuration/viewoffersinacatalog.png)
 
-
 ## Add Offers to Catalog
 
 Click the **Add Offers** action button within the View Offers modal to open the Add Offers to Catalog modal.
@@ -86,26 +83,29 @@ Click the **Add Offers** action button within the View Offers modal to open the 
 ![Assign Offers to Catalog](/img/configuration/assignofferstoacatalog.png)
 
 **Search and Filters:**
+
 - **Search** - Find offers by name or description
 - **Status Filter** - Filter by offer status (All Statuses, Active, Draft, Paused, Expired, Archived)
 - **Type Filter** - Filter by offer type (All Types, Data, Voice, SMS, Combo, Voucher, Loyalty, Discount, Bundle, Bonus, Other)
 
 **Offer Selection:**
+
 - Click the checkbox next to any offer to select it
 - Click **Select All** to select all available offers at once
 - The selection counter shows how many offers you've selected
 
 **Assignment:**
+
 - Click the **Assign Selected** button to add the selected offers to this catalog
 - Already assigned offers appear dimmed and cannot be selected again
 - A success message appears when offers are assigned
-
 
 ## Search and Filters
 
 ### Search
 
 Use the **Search** field to find catalogs by:
+
 - Catalog name
 - Catalog description
 
@@ -121,9 +121,9 @@ Click the **Filters** button to access filtering options:
 ### View Mode
 
 Toggle between:
+
 - **Grid View** - Cards displayed in a grid layout
 - **List View** - Catalogs displayed in a list with full details
-
 
 ## Managing Catalog Contents
 
@@ -132,4 +132,3 @@ Each catalog card shows the total number of offers, including the count of activ
 - See all offers in that catalog
 - Remove offers individually (if they are not the primary category)
 - Add more offers using the Add Offers modal
-

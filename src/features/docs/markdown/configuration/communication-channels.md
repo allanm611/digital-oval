@@ -1,6 +1,6 @@
 # Communication Channels Overview
 
-Communication Channels are the foundation of your messaging infrastructure. They represent the different methods available for sending messages to customers SMS, Email, USSD, and Push Notifications.
+Communication Channels are the foundation of the messaging infrastructure. They represent the different methods available for sending messages to customers SMS, Email, USSD, and Push Notifications.
 
 ## What are Communication Channels?
 

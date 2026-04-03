@@ -2,9 +2,12 @@
 
 Control Groups are customer segments that do not receive a campaign message, used as a baseline to measure the true impact of your campaigns.
 
+![Control Groups List](/img/configuration/controlgroupslist.png)
+
 ## What are Control Groups?
 
 Control Groups allow you to:
+
 - **Create Baseline Audiences** - Define customer groups that receive no message
 - **Measure Campaign Impact** - Compare treatment group results against control group baseline
 - **Track Metrics** - Monitor member count and generation schedules
@@ -16,6 +19,7 @@ Navigate to **Configuration → Control Groups** to manage all control groups.
 ### View Control Groups List
 
 The control groups list displays all configured groups with:
+
 - **Name** - Control group identifier
 - **Status** - Active, Inactive, or Expired badge
 - **Generation Time** - When the group was created
@@ -25,6 +29,7 @@ The control groups list displays all configured groups with:
 - **Recurrence** - One-time, Daily, Weekly, or Monthly
 
 You can:
+
 - **Search** - Find control groups by name or description
 - **Filter by Status** - Show all, active, inactive, or expired groups
 
@@ -32,7 +37,16 @@ You can:
 
 Click the **Create Control Group** button to add a new control group.
 
+![Create Control Group - Step 1](/img/configuration/createcontrolgroupstep1.png)
+
+![Create Control Group - Step 1 Saved Segments](/img/configuration/createcontrolgroupstep1savedsegemnts.png)
+
+![Create Control Group - Step 2](/img/configuration/createcontrolgroupstep2.png)
+
+![Create Control Group - Step 3](/img/configuration/createcontrolgroupstep3.png)
+
 **Step 1: Customer Base**
+
 - **Name** (required) - Enter the control group name
 - **Customer Base** (required) - Select source:
   - Active Subscribers - Current active customers only
@@ -44,9 +58,11 @@ Click the **Create Control Group** button to add a new control group.
     - Example: Create conditions to include only customers from a specific segment or with certain profile attributes
 
 **Step 2: Metrics**
+
 - **Percentage** (required) - Set the percentage of audience (1-100%)
 
 **Step 3: Scheduling**
+
 - **Recurrence** (required) - Select generation frequency:
   - One-time - Generate once, no repeat
   - Daily - Regenerate every day
@@ -58,6 +74,7 @@ Click **Save** to create the control group.
 ### Edit Control Group
 
 Click **Edit** on any control group to update:
+
 - Name
 - Customer Base
 - Percentage
@@ -72,6 +89,7 @@ Click **Delete** to remove a control group. The control group will be permanentl
 ## Control Group Status
 
 Control groups can have the following statuses:
+
 - **Active** - Control group is currently in use
 - **Inactive** - Control group exists but is not in use
 - **Expired** - Control group has passed its end date

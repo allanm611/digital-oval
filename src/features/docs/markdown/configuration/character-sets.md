@@ -1,366 +1,66 @@
 # Character Sets
 
-## Overview
+Character Sets defines the encoding profiles used when composing message content. This page helps teams control how text is interpreted across channels, especially where character limits and encoding compatibility matter.
 
-Character Sets is an offer configuration page used to manage character encoding records available in the app.
+![Character Sets List](/img/configuration/charactersetslistimage.png)
 
-The page lets you:
+## Open The Page
 
-- View existing character sets in a table
-- Search character sets by name or description
-- Create a new character set
-- Edit an existing character set
-- Delete a character set
+Go to `Configuration -> Character Sets`.
 
----
+## What You Can Do
 
-## Accessing Character Sets
+- view existing character set records
+- search by name or description
+- create a new character set
+- edit an existing character set
+- delete a character set
 
-**Navigation:** Dashboard -> Configuration -> Character Sets
+## Character Sets List
 
-From the main Configuration page, Character Sets appears under **Offer Configuration**.
+The list shows each character set with message type, character set type, status, and actions.
 
----
+This makes it easier to verify what is active before mapping languages and creative content.
 
-## Character Sets List Page
+## Create A Character Set
 
-The Character Sets page includes:
+Click **Create** to open the form.
 
-### Header
+![Create Character Set](/img/configuration/createcharactersetimage.png)
 
-- Page title: **Character Sets**
-- Page description explaining that the page manages character encoding sets for language support and text display
-- **Create** button
+<!-- ![Create Character Set - Name and Description](/img/configuration/createcharactersetname-decsriptionimage.png) -->
 
-### Search
+![Create Character Set - Configuration](/img/configuration/createcharactersetconfigurationtillbottomimage.png)
 
-- A search input with the placeholder **Search character sets...**
-- Search filters the list by:
-  - Character set name
-  - Description
+Main inputs include:
 
-### Table Columns
+- **Name** (required)
+- **Description** (optional)
+- **Message Type** (required)
+- **Character Set Type** (required)
+- **Character Set Size**
+- **Standard Characters** (required)
+- optional character groups for double/triple/quad-size handling
+- **Active** toggle
 
-The list table shows these columns:
+Save to create the record.
 
-- **Character Set Name**
-- **Message Type**
-- **Character Set Type**
-- **Status**
-- **Actions**
+## Edit A Character Set
 
-### Status Display
+Use **Edit** from the row action to update the same form fields.
 
-Each row shows status as:
+## Delete A Character Set
 
-- **Active**
-- **Inactive**
+Use **Delete** from the actions column and confirm in the modal.
 
-### Row Actions
+If deletion succeeds, the record is removed from the list.
 
-Each row provides:
+## Validation Behavior
 
-- **Edit** button
-- **Delete** button
+The form validates required inputs before save, especially Name and Standard Characters.
 
----
+If Character Set Size is not provided, the form defaults to `160` during submit.
 
-## Creating a Character Set
+## Why This Page Matters
 
-Click **Create** to open the Character Set form page.
-
-**Page label:** Create Character Set
-
-### Basic Information
-
-**Name**
-
-- Required
-- Text input
-- Placeholder: `e.g., GSM Default`
-
-**Description**
-
-- Optional
-- Multi-line text area
-- Placeholder: `Describe this character set`
-
-### Configuration
-
-**Message Type**
-
-- Required select field
-- Options:
-  - SMS
-  - Flash SMS
-  - Unicode
-  - Binary
-  - USSD
-
-**Character Set Type**
-
-- Required select field
-- Options:
-  - GSM7
-  - UCS2
-  - UTF8
-  - ISO-8859-1
-
-**Character Set Size**
-
-- Number input
-- Placeholder: `e.g., 160`
-
-### Character Strings
-
-**Standard Characters**
-
-- Required
-- Multi-line text area
-- Uses monospace styling
-- Placeholder contains an example character string
-
-**Double Characters**
-
-- Optional
-- Multi-line text area
-- Placeholder: `Characters that take 2 positions`
-
-**Triple Characters**
-
-- Optional
-- Multi-line text area
-- Placeholder: `Characters that take 3 positions`
-
-**Quad Characters**
-
-- Optional
-- Multi-line text area
-- Placeholder: `Characters that take 4 positions`
-
-### Active Status
-
-- Checkbox labeled **Active**
-- Checked by default when creating a new character set
-
-### Form Actions
-
-- **Cancel** returns to the Character Sets list
-- **Save** submits the form
-
----
-
-## Editing a Character Set
-
-Click the **Edit** button in the list to open the Character Set form page.
-
-**Page label:** Edit Character Set
-
-The edit page uses the same fields as the create page:
-
-- Name
-- Description
-- Message Type
-- Character Set Type
-- Character Set Size
-- Standard Characters
-- Double Characters
-- Triple Characters
-- Quad Characters
-- Active
-
----
-
-## Deleting a Character Set
-
-Click the **Delete** button in the Actions column.
-
-A confirmation modal appears with:
-
-- Title: **Delete Character Set**
-- A message warning that deleting the item may affect languages using that character set
-
-If deletion succeeds, the app shows a success message.
-
----
-
-## Validation and Save Behavior
-
-The form enforces these checks before saving:
-
-- **Name** is required
-- **Standard Characters** is required
-
-If **Character Set Size** is empty or not a valid number, the form submits `160` as the default size.
-
-If save fails, the page shows an error message.
-
----
-
-## Empty State
-
-If there are no character sets and no search term is entered, the page shows an empty state with a prompt to create the first character set.
-
-If a search returns no results, the page shows a no-results message.
-
-- Optimize selection over time
-
----
-
-## Common Use Cases
-
-### Use Case 1: English-Only Campaigns
-
-**Scenario:** Company serving English-only market
-
-**Character Sets Used:**
-
-- `GSM7` - Standard English encoding
-
-**Configuration:**
-
-- All campaigns use GSM-7
-- 160 characters per message
-- Standard punctuation and symbols
-- Lowest cost
-
-**Example Message:**
-
-- "Welcome to XYZ Bank! Your account is ready. Login now: example.com/login" (82 chars)
-
-### Use Case 2: Multilingual Global Company
-
-**Scenario:** International company serving multiple language markets
-
-**Character Sets Used:**
-
-- `GSM7` - English markets
-- `UNICODE` - All non-Latin markets
-- `LATIN1` - European accented languages
-
-**Configuration per Market:**
-
-- English (US, UK): GSM-7
-- Spanish (Spain, Mexico): Latin-1
-- French (France, Canada): Latin-1
-- Chinese (Mainland, Taiwan): Unicode
-- Arabic (Saudi, UAE): Unicode
-- Russian: Unicode
-
-**Benefit:** Optimal encoding per market
-
-### Use Case 3: Emoji-Heavy Campaigns
-
-**Scenario:** Brand using emoji for youth market
-
-**Character Sets Used:**
-
-- `UNICODE` - Only option for emoji
-
-**Configuration:**
-
-- All campaigns with emoji use Unicode
-- Limited to 70 characters
-- Emoji count as 1-2 characters
-- Higher cost but necessary
-
-**Example Message:**
-
-- "🎉 You won! 💰 Claim your $50 gift card 🎁 Expires in 48hrs ⏰" (about 40 chars, 1 SMS)
-
-### Use Case 4: Accented European Languages
-
-**Scenario:** E-commerce company in European markets
-
-**Character Sets Used:**
-
-- `LATIN1` - European languages with accents
-
-**Configuration:**
-
-- French: "Bienvenue! Vérifiez votre compte maintenant."
-- Spanish: "¡Bienvenido! Verifique su cuenta ahora."
-- German: "Willkommen! Überprüfen Sie jetzt Ihr Konto."
-- All 160 chars per message with Latin-1
-
-**Benefit:** Accented characters work, keep 160 char limit
-
----
-
-## Troubleshooting
-
-### Cannot Create Character Set
-
-**Error: "Code already exists"**
-
-- Cause: Duplicate code
-- Solution: Use unique code
-- Check: Search for existing code
-
-**Error: "Invalid encoding type"**
-
-- Cause: Unrecognized encoding designation
-- Solution: Use standard encoding (UTF-16, GSM-7, ISO-8859-1)
-- Check: Consult encoding standards
-
-**Error: "Characters per message invalid"**
-
-- Cause: Non-numeric or invalid value
-- Solution: Enter valid number (typically 70-160)
-- Check: Verify value is positive integer
-
-### Character Set Not Appearing in Campaigns
-
-**Issue: Cannot select character set for campaign**
-
-- Cause: Character set status is Inactive
-- Solution: Activate character set
-- Check: Go to edit, set status to Active
-
-**Issue: System shows wrong character set**
-
-- Cause: Character set auto-detected incorrectly
-- Solution: Manually select correct character set
-- Check: Remove unsupported characters
-
-### Message Length Issues
-
-**Issue: Message longer than expected**
-
-- Cause: Unicode used instead of GSM-7
-- Solution: Switch to GSM-7 if possible
-- Check: Remove non-GSM-7 characters
-
-**Issue: Message split into multiple SMS unexpectedly**
-
-- Cause: Selected character set has shorter limit
-- Solution: Shorten message or change character set
-- Check: Verify character count
-
-**Issue: Special characters showing as garbage**
-
-- Cause: Wrong character set selected
-- Solution: Choose character set supporting characters
-- Check: Use Unicode for special characters/emoji
-
-### Character Display Issues
-
-**Issue: Accented characters not displaying**
-
-- Cause: GSM-7 selected (doesn't support all accents)
-- Solution: Switch to Latin-1 or Unicode
-- Check: Verify character support
-
-**Issue: Arabic text not displaying properly**
-
-- Cause: Character set selected (must be Unicode)
-- Solution: Switch to Unicode encoding
-- Check: Verify RTL text handling
-
-**Issue: Emoji showing as question marks**
-
-- Cause: GSM-7 or Latin-1 selected
-- Solution: Switch to Unicode
-- Check: Only Unicode supports emoji
-
----
+Character set configuration has direct impact on message rendering and payload sizing. Keeping these records accurate helps avoid delivery issues caused by unexpected encoding behavior.

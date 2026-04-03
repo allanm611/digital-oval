@@ -16,7 +16,6 @@ Get up and running quickly with these essential guides:
 - **[Customer 360](/documentation/customer-360/customers-list)** - Explore unified customer profiles
 - **[Reports & Analytics](/documentation/reports/overall-dashboard)** - Monitor key metrics
 
-
 ## Documentation Structure
 
 This documentation is organized by feature and function:
@@ -29,10 +28,10 @@ This documentation is organized by feature and function:
 
 Each section contains detailed guides, best practices, and step-by-step instructions.
 
-
 ## Core Features
 
 ### Campaign Management
+
 Manage all aspects of customer campaigns from creation to execution.
 
 - [All Campaigns](/documentation/campaigns/campaigns-list) - View and manage your campaigns
@@ -41,29 +40,34 @@ Manage all aspects of customer campaigns from creation to execution.
 - [Campaign Types](/documentation/campaigns/campaign-types) - Understand different campaign types
 
 ### Offer Management
+
 Manage and organize offers for targeted customer campaigns.
 
 - [All Offers](/documentation/offers/offer-list) - Manage your offers
 - [Offer Catalog](/documentation/offers/offer-catalog) - Browse offer categories
 
 ### Product Management
+
 Organize and manage your product catalog.
 
 - [All Products](/documentation/products/products-list) - View products
 
 ### Segment Management
+
 Build and manage customer segments for targeted campaigns.
 
 - [All Segments](/documentation/segments/segments-list) - View segments
 - [Segment Catalog](/documentation/segments/segment-catalog) - Browse segment categories
 
 ### Customer 360 Profile
+
 View comprehensive, unified customer profiles.
 
 - [Customers](/documentation/customer-360/customers-list) - Browse customer profiles
 - [Customer Identity](/documentation/customer-360/customer-identity) - Manage customer identities
 
 ### Reports & Analytics
+
 Monitor performance and gain insights into your campaigns.
 
 - [Overall Dashboard Performance](/documentation/reports/overall-dashboard) - System overview
@@ -74,12 +78,14 @@ Monitor performance and gain insights into your campaigns.
 - [Email Delivery Reports](/documentation/reports/delivery-email-reports) - Email campaign metrics
 
 ### Manual Actions
+
 Execute manual customer actions and communications.
 
 - [Manual Rewards](/documentation/manual-actions/manual-rewards-list) - Manage manual rewards
 - [Manual Communications](/documentation/manual-actions/manual-communications-list) - Send manual communications
 
 ### Job Management
+
 Manage scheduled jobs and workflows.
 
 - [Scheduled Jobs](/documentation/jobs/scheduled-jobs) - View scheduled tasks
@@ -90,6 +96,7 @@ Manage scheduled jobs and workflows.
 - [Job Dependencies](/documentation/jobs/job-dependencies) - Manage job dependencies
 
 ### Infrastructure
+
 Configure system infrastructure and connections.
 
 - [Servers](/documentation/infrastructure/servers) - Manage servers
@@ -98,6 +105,7 @@ Configure system infrastructure and connections.
 - [KPIs](/documentation/infrastructure/kpis) - Define key performance indicators
 
 ### System Configuration
+
 Configure and customize the platform to your needs.
 
 - [Line of Business](/documentation/configuration/line-of-business) - Manage business units
@@ -116,23 +124,21 @@ Configure and customize the platform to your needs.
 - [Languages](/documentation/configuration/languages) - Supported languages
 - [Character Sets](/documentation/configuration/character-sets) - Character encoding
 - [Combo Types](/documentation/configuration/combo-types) - Product combinations
-- [Product Categories](/documentation/configuration/product-categories) - Categorize products
 - [Offer Tracking Sources](/documentation/configuration/offer-tracking-sources) - Track offer sources
-- [Settings](/documentation/configuration/settings-list) - General system settings
-- [User Management](/documentation/configuration/user-management-list) - Configure users
 
 ### User Settings
+
 Manage your personal account settings.
 
 - [My Profile](/documentation/user-settings/my-profile) - View your profile
 - [Settings](/documentation/user-settings/settings) - Account preferences
 
 ### Access Control
+
 Manage user permissions and security.
 
 - [All Users](/documentation/users/users-list) - Manage platform users
 - [Access Control](/documentation/users/access-control) - Set user permissions
-
 
 ## Tips for Success
 
@@ -141,7 +147,6 @@ Manage user permissions and security.
 3. **Set Up Offers** - Design offers to match your business goals
 4. **Monitor Analytics** - Track performance and optimize continuously
 5. **Configure Settings** - Customize the platform to your workflow
-
 
 ## Need Help?
 

@@ -2,10 +2,9 @@
 
 ## Overview
 
-View detailed information about a specific customer identity field. Customer identity fields are the unique fields used to uniquely identify customers in your system. Each field includes metadata, data type information, validation rules, and supported operators for use in segmentation and filtering.
+View detailed information about a specific customer identity field. Customer identity fields are the unique fields used to uniquely identify customers in the system. Each field includes metadata, data type information, validation rules, and supported operators for use in segmentation and filtering.
 
 ![Field Details Page](/img/customer360-images/customeridentitydetailpage.png)
-
 
 ## Field Overview Section
 

@@ -1,60 +1,53 @@
-# Job Types Overview
+# Job Types
 
-Job Types are categories used to classify and organize scheduled jobs. Each job type helps you group and identify jobs by function or purpose.
+Job Types help you classify scheduled jobs in a way that is easy to search and maintain later. Instead of treating every scheduled job as a one-off entry, you define reusable categories and assign jobs to the right one.
 
-## What are Job Types?
+![Job Types List](/img/configuration/jobtypeslistimage.png)
 
-Job Types allow you to:
-- **Categorize Jobs** - Group jobs by function or purpose
-- **Organize Scheduling** - Group related jobs together
-- **Track Job Usage** - Monitor which jobs use each type
+## Open The Page
 
-## Managing Job Types
+Go to `Configuration -> Job Types`.
 
-Navigate to **Configuration → Job Types** to manage all job types.
+## What You Manage Here
 
-### View Job Types List
+On this page, teams typically:
 
-The job types list displays all configured types with:
-- **Name** - Job type identifier
-- **Code** - Unique system code identifier
-- **Description** - Additional details about the type
-- **Created Date** - When the job type was created
+- keep the list of job types clean and searchable
+- add new job types when new automation patterns are introduced
+- update naming and descriptions so operations teams can understand each type quickly
 
-You can:
-- **Search** - Find job types by name, code, or description
-- **View Usage Statistics** - See how many jobs use each type
+## List View
 
-### Create Job Type
+The list shows each job type with key details like name, code, description, and created date.
 
-Click the **Create Job Type** button to add a new job type.
+You can search by name, code, or description.
 
-**Required Fields:**
-- **Name** - The name of the job type (max 255 characters)
-- **Code** - Unique system identifier (max 100 characters)
-  - Must start with a lowercase letter (a-z)
-  - Can only contain lowercase letters, numbers (0-9), and underscores (_)
-  - No spaces or special characters
-  - Example: `data_import`, `report_generation`, `daily_cleanup`
+## Create A Job Type
 
-**Optional Fields:**
-- **Description** - Explain the purpose of this job type (max 500 characters)
+Click **Create Job Type**.
 
-Click **Save** to create the job type.
+![Create Job Type](/img/configuration/createjobtypeimage.png)
 
-### Edit Job Type
+Common inputs:
 
-Click **Edit** on any job type to update:
-- Name
-- Code
-- Description
+- **Name** (required)
+- **Code** (required, lowercase letters/numbers/underscores)
+- **Description** (optional)
 
-Click **Save** to apply changes.
+Save to create the type.
 
-### Delete Job Type
+## Edit A Job Type
 
-Click **Delete** to remove a job type. The job type will be permanently removed from the system.
+Click **Edit** from the row action.
 
-## Using Job Types
+![Edit Job Type](/img/configuration/editjobtypeimage.png)
 
-When creating a scheduled job, you select a job type to categorize and organize the job.
+You can update name, code, and description, then save.
+
+## Delete A Job Type
+
+Click **Delete** to remove a job type from the list.
+
+## Why This Matters
+
+Well-maintained job types make scheduling pages easier to operate, improve reporting readability, and reduce confusion when multiple teams manage automations.

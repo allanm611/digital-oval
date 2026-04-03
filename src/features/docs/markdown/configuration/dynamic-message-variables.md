@@ -2,9 +2,11 @@
 
 ## Overview
 
-Dynamic Message Variables is a configuration page used to manage which variable categories and fields are active for message variable usage in the app.
+Dynamic Message Variables is a configuration page used to manage which variable categories and fields are active for message variable usage in the system.
 
 In the Configuration page, this item is labeled **Dynamic Modal Generator**.
+
+![Dynamic Modal Generator List](/img/configuration/dynamicmodalgeneratorlist.png)
 
 The page lets you:
 
@@ -15,15 +17,30 @@ The page lets you:
 - Open a category to view its fields
 - Activate or deactivate individual fields
 
----
+## Where These Variables Are Used
+
+Dynamic variables configured here are reused in places that support **Insert Variable** functionality, including:
+
+- Manual Communications
+- Offer Creatives
+- Rewards-related content areas
+
+This page controls what appears in those variable pickers.
+
+## Activation Rules (Visibility)
+
+The active/deactivated state directly controls variable visibility in the insert-variable UI:
+
+- If a **category is active**, its active child fields can be selected where variables are inserted.
+- If a **category is deactivated**, that category does not appear and its child fields do not appear.
+- If a **field is deactivated**, that field does not appear even if the parent category is active.
+- For a field to appear, both the **parent category** and the **field itself** must be active.
 
 ## Accessing Dynamic Message Variables
 
-**Navigation:** Dashboard -> Configuration -> Dynamic Modal Generator
+**Navigation:** Configuration -> Dynamic Modal Generator
 
 The page route opens the Dynamic Message Variables screen.
-
----
 
 ## Main Page Layout
 
@@ -47,8 +64,6 @@ The page includes:
 - A dropdown filter
 - Default option: **All Categories**
 - Other options are populated from the available categories loaded into the page
-
----
 
 ## Category Cards
 
@@ -76,11 +91,13 @@ When a category is deactivated:
 
 - The page also deactivates all fields in that category
 
----
+This behavior is helpful when a full group of placeholders should be hidden quickly without deleting field definitions.
 
 ## Fields Modal
 
 Click **View Fields** on a category card to open a modal.
+
+![Dynamic Modal Generator Fields Example](/img/configuration/dynamicmodalgeneratormodalexample .png)
 
 The modal title is:
 
@@ -124,8 +141,6 @@ The modal can be closed using:
 - The **X** button in the header
 - The **Close** button in the footer
 
----
-
 ## Empty State
 
 If no categories match the search or filter, the page shows an empty state.
@@ -134,8 +149,6 @@ Messages shown are:
 
 - **No categories found** when a search term is present
 - **No categories available** when there are no categories to display
-
----
 
 ## Notes on Page Behavior
 

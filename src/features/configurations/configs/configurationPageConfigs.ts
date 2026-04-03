@@ -19,7 +19,7 @@ import {
   TypeConfigurationItem,
   TypeConfigurationPageConfig,
 } from "../components/TypeConfigurationPage";
-import { GATEWAY_KEY_OPTIONS } from "./ts";
+import { GATEWAY_KEY_OPTIONS, CHARACTER_SET_TYPE_OPTIONS } from "./ts";
 
 // Hardcoded objectives data
 const hardcodedObjectives: ConfigurationItem[] = [
@@ -150,9 +150,26 @@ const hardcodedTrackingSources: ConfigurationItem[] = [
     isActive: true,
     type: "recharge",
     dataSource: "cdr_file",
-    parameters: ["amount", "datetime", "subscriber_id", "channel", "payment_method"],
-    displayMetrics: ["conversions", "conversion_rate", "avg_recharge_amount", "revenue_generated"],
-    conditions: ["equals", "greater_than", "less_than", "contains", "is_any_of"],
+    parameters: [
+      "amount",
+      "datetime",
+      "subscriber_id",
+      "channel",
+      "payment_method",
+    ],
+    displayMetrics: [
+      "conversions",
+      "conversion_rate",
+      "avg_recharge_amount",
+      "revenue_generated",
+    ],
+    conditions: [
+      "equals",
+      "greater_than",
+      "less_than",
+      "contains",
+      "is_any_of",
+    ],
     lookbackPeriod: "24h",
     created_at: "2025-02-01T09:00:00Z",
     updated_at: "2025-02-06T15:00:00Z",
@@ -165,9 +182,27 @@ const hardcodedTrackingSources: ConfigurationItem[] = [
     isActive: true,
     type: "usage_metric",
     dataSource: "usage_logs",
-    parameters: ["data_volume_mb", "voice_minutes", "sms_count", "datetime", "subscriber_id", "service_type"],
-    displayMetrics: ["active_users", "activation_rate", "avg_usage", "revenue_from_usage"],
-    conditions: ["equals", "greater_than", "less_than", "contains", "is_any_of"],
+    parameters: [
+      "data_volume_mb",
+      "voice_minutes",
+      "sms_count",
+      "datetime",
+      "subscriber_id",
+      "service_type",
+    ],
+    displayMetrics: [
+      "active_users",
+      "activation_rate",
+      "avg_usage",
+      "revenue_from_usage",
+    ],
+    conditions: [
+      "equals",
+      "greater_than",
+      "less_than",
+      "contains",
+      "is_any_of",
+    ],
     lookbackPeriod: "7d",
     created_at: "2025-02-02T11:15:00Z",
     updated_at: "2025-02-06T15:00:00Z",
@@ -180,9 +215,27 @@ const hardcodedTrackingSources: ConfigurationItem[] = [
     isActive: true,
     type: "engagement",
     dataSource: "delivery_logs",
-    parameters: ["delivered", "opened", "clicked", "datetime", "subscriber_id", "channel"],
-    displayMetrics: ["delivery_rate", "open_rate", "click_through_rate", "engagement_score"],
-    conditions: ["equals", "greater_than", "less_than", "contains", "is_any_of"],
+    parameters: [
+      "delivered",
+      "opened",
+      "clicked",
+      "datetime",
+      "subscriber_id",
+      "channel",
+    ],
+    displayMetrics: [
+      "delivery_rate",
+      "open_rate",
+      "click_through_rate",
+      "engagement_score",
+    ],
+    conditions: [
+      "equals",
+      "greater_than",
+      "less_than",
+      "contains",
+      "is_any_of",
+    ],
     lookbackPeriod: "24h",
     created_at: "2025-02-03T12:40:00Z",
     updated_at: "2025-02-06T15:00:00Z",
@@ -190,14 +243,30 @@ const hardcodedTrackingSources: ConfigurationItem[] = [
   {
     id: 4,
     name: "Redemption Tracking",
-    description:
-      "Track offer redemption rates and discount utilization",
+    description: "Track offer redemption rates and discount utilization",
     isActive: true,
     type: "redemption",
     dataSource: "redemption_db",
-    parameters: ["redeemed", "redemption_date", "discount_applied", "subscriber_id", "redemption_channel"],
-    displayMetrics: ["redemption_count", "redemption_rate", "avg_discount_used", "cost_per_redemption"],
-    conditions: ["equals", "greater_than", "less_than", "contains", "is_any_of"],
+    parameters: [
+      "redeemed",
+      "redemption_date",
+      "discount_applied",
+      "subscriber_id",
+      "redemption_channel",
+    ],
+    displayMetrics: [
+      "redemption_count",
+      "redemption_rate",
+      "avg_discount_used",
+      "cost_per_redemption",
+    ],
+    conditions: [
+      "equals",
+      "greater_than",
+      "less_than",
+      "contains",
+      "is_any_of",
+    ],
     lookbackPeriod: "30d",
     created_at: "2025-02-04T13:20:00Z",
     updated_at: "2025-02-06T15:00:00Z",
@@ -209,9 +278,25 @@ const hardcodedTrackingSources: ConfigurationItem[] = [
     isActive: true,
     type: "churn_prevention",
     dataSource: "subscriber_activity",
-    parameters: ["last_activity_date", "days_inactive", "subscriber_status", "retention_period"],
-    displayMetrics: ["customers_retained", "retention_rate", "churn_prevention_score", "ltv_impact"],
-    conditions: ["equals", "greater_than", "less_than", "contains", "is_any_of"],
+    parameters: [
+      "last_activity_date",
+      "days_inactive",
+      "subscriber_status",
+      "retention_period",
+    ],
+    displayMetrics: [
+      "customers_retained",
+      "retention_rate",
+      "churn_prevention_score",
+      "ltv_impact",
+    ],
+    conditions: [
+      "equals",
+      "greater_than",
+      "less_than",
+      "contains",
+      "is_any_of",
+    ],
     lookbackPeriod: "90d",
     created_at: "2025-02-05T08:10:00Z",
     updated_at: "2025-02-06T15:00:00Z",
@@ -226,7 +311,13 @@ const hardcodedTrackingSources: ConfigurationItem[] = [
     dataSource: "custom_api",
     parameters: [],
     displayMetrics: [],
-    conditions: ["equals", "greater_than", "less_than", "contains", "is_any_of"],
+    conditions: [
+      "equals",
+      "greater_than",
+      "less_than",
+      "contains",
+      "is_any_of",
+    ],
     lookbackPeriod: "24h",
     created_at: "2025-02-06T10:30:00Z",
     updated_at: "2025-02-06T15:00:00Z",
@@ -2120,7 +2211,7 @@ export const offerTypesConfig: TypeConfigurationPageConfig = {
   // Page configuration
   title: "Offer Types",
   subtitle:
-    "Define and manage different types of offers available in your system",
+    "Define and manage different types of offers available in the system",
   entityName: "offer type",
   entityNamePlural: "offer types",
   configType: "offerTypes",
@@ -2172,7 +2263,7 @@ export const campaignTypesConfig: TypeConfigurationPageConfig = {
   // Page configuration
   title: "Campaign Types",
   subtitle:
-    "Define and manage different types of campaigns available in your system",
+    "Define and manage different types of campaigns available in the system",
   entityName: "campaign type",
   entityNamePlural: "campaign types",
   configType: "campaignTypes",
@@ -2224,7 +2315,7 @@ export const segmentTypesConfig: TypeConfigurationPageConfig = {
   // Page configuration
   title: "Segment Types",
   subtitle:
-    "Define and manage different types of segments available in your system",
+    "Define and manage different types of segments available in the system",
   entityName: "segment type",
   entityNamePlural: "segment types",
   configType: "segmentTypes",
@@ -2757,13 +2848,12 @@ export const languagesConfig: TypeConfigurationPageConfig = {
       placeholder: "Select a country",
     },
     {
-      label: "Character Set",
+      label: "Character Set Type",
       type: "select",
       fieldKey: "characterSet",
       required: true,
-      options: [], // Will be populated dynamically from characterSets config
-      placeholder: "Select a character set",
-      dynamicOptions: "characterSets", // Flag to load from service
+      options: CHARACTER_SET_TYPE_OPTIONS,
+      placeholder: "Select character set type",
     },
     // {
     //   label: "Whatsapp Language Code",

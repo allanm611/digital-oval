@@ -4,7 +4,7 @@
 
 Access Control is the administrative workspace for defining how access is structured across the application. Instead of managing permissions user by user, this page works at the access-model level: create roles, define reusable permission records, and then attach those permissions to the right roles.
 
-In the app, the page appears under **User Management → Access Control** and is organised into three tabs:
+in the system, the page appears under **User Management → Access Control** and is organised into three tabs:
 
 - **Roles Management**
 - **Permissions**
@@ -40,4 +40,3 @@ Use Access Control when you need to introduce a new role, clean up old role defi
 - [Permissions](/documentation/users/permissions)
 - [Assign Permissions](/documentation/users/assign-permissions)
 - [Users List](/documentation/users/users-list)
-

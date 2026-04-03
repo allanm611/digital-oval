@@ -14,7 +14,7 @@ Learn about the main landing page you see after logging in. Understand the dashb
 
 ### [Global Search](/documentation/getting-started/global-search)
 
-Master the platform-wide search feature that helps you quickly find campaigns, offers, products, segments, users, and configurations from anywhere in the app. Discover how to use the search dropdown, access the results page, and filter by type.
+Master the platform-wide search feature that helps you quickly find campaigns, offers, products, segments, users, and configurations from anywhere in the system. Discover how to use the search dropdown, access the results page, and filter by type.
 
 ---
 
@@ -27,10 +27,10 @@ Master the platform-wide search feature that helps you quickly find campaigns, o
 3. Use the sidebar navigation to explore different modules
 4. Refer to module-specific documentation as you work with campaigns, offers, products, and segments
 
-
 ## Next Steps
 
 Once you're comfortable with the basics:
+
 - Explore [Campaign Management](/documentation/campaigns/overview) to create and manage campaigns
 - Dive into [Customer 360](/documentation/customer-360/overview) to understand your customer data
 - Check out [Reports](/documentation/reports/overview) to track performance

@@ -2,8 +2,7 @@
 
 ## Overview
 
-Customer identity fields are the unique fields used to uniquely identify customers in your system. View all configured identity fields in a searchable, filterable list.
-
+Customer identity fields are the unique fields used to uniquely identify customers in the system. View all configured identity fields in a searchable, filterable list.
 
 ## Field List
 
@@ -21,7 +20,6 @@ The page shows a table with the following columns:
 
 **Actions** - Click **View** (eye icon) to see field details
 
-
 The page displays all customer identity fields in a searchable, filterable list.
 
 ![Customer Identity List](/img/customer360-images/customeridentitylistpage.png)
@@ -31,6 +29,7 @@ The page displays all customer identity fields in a searchable, filterable list.
 ### Search Box
 
 Find fields by typing:
+
 - Field name (system identifier)
 - Field value (display label)
 - Description keywords
@@ -41,6 +40,7 @@ Results update as you type.
 ### Filter by Field Type
 
 Dropdown to filter by data type:
+
 - All Field Types (default)
 - String, Integer, Date, Boolean, etc.
 
@@ -49,6 +49,7 @@ Filter updates list automatically.
 ## Viewing Field Details
 
 Click the **View** button or field ID to open the field details page with:
+
 - Field metadata (name, type, description, source)
 - Type information (PostgreSQL type, precision)
 - Validation configuration

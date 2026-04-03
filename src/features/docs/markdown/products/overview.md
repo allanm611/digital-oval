@@ -14,18 +14,23 @@ The Products section is where you create and manage product inventory that forms
 ## Getting Started
 
 ### Viewing Products
-To browse all products in your system, see [Product List](/documentation/products/products-list) for a complete overview with search, filtering, and management tools.
+
+To browse all products in the system, see [Product List](/documentation/products/products-list) for a complete overview with search, filtering, and management tools.
 
 ### Creating a Product
+
 To add new products to your catalog, see [Create Product](/documentation/products/create-product) for step-by-step instructions on defining products with pricing and other attributes.
 
 ### Managing Products
+
 To modify product information and configuration, see [Product Edit](/documentation/products/product-edit) for updating pricing, categories, and other product attributes.
 
 ### Viewing Product Details
+
 To access detailed product information and settings, see [View Product Details](/documentation/products/view-product-details) to manage product usage and review associated offers.
 
 ### Product Catalogs
+
 To organize products into catalogs, see [Product Catalog](/documentation/products/product-catalog) for managing product categories and groupings.
 
 <!-- ### Product Reports

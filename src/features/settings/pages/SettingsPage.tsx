@@ -154,13 +154,25 @@ const dndDays = [
 
 // Notification Types
 const notificationTypes = [
-  { id: "campaigns", label: "Campaigns", description: "Campaign updates and status" },
+  {
+    id: "campaigns",
+    label: "Campaigns",
+    description: "Campaign updates and status",
+  },
   { id: "offers", label: "Offers", description: "Offer changes and approvals" },
-  { id: "segments", label: "Segments", description: "Segment creation and updates" },
+  {
+    id: "segments",
+    label: "Segments",
+    description: "Segment creation and updates",
+  },
   { id: "products", label: "Products", description: "Product changes" },
   { id: "jobs", label: "Jobs", description: "Job execution and workflows" },
   { id: "users", label: "Users", description: "User management" },
-  { id: "system", label: "System", description: "System alerts and maintenance" },
+  {
+    id: "system",
+    label: "System",
+    description: "System alerts and maintenance",
+  },
 ];
 
 // Notification Channels
@@ -408,11 +420,11 @@ export default function SettingsPage() {
       localStorage.setItem("appSettings", JSON.stringify(settings));
       localStorage.setItem(
         "enabledNotificationTypes",
-        JSON.stringify(Array.from(enabledNotificationTypes))
+        JSON.stringify(Array.from(enabledNotificationTypes)),
       );
       localStorage.setItem(
         "preferredNotificationChannels",
-        JSON.stringify(preferredNotificationChannels)
+        JSON.stringify(preferredNotificationChannels),
       );
       // Update language if it changed
       setLanguageSettings(settings.language);
@@ -485,7 +497,7 @@ export default function SettingsPage() {
             {t.settings.title}
           </h1>
           <p className={`${tw.textSecondary} mt-2 text-sm`}>
-            Manage your system preferences and regional settings
+            Manage the system preferences and regional settings
           </p>
         </div>
 
@@ -1043,7 +1055,7 @@ export default function SettingsPage() {
                     ]);
                   } else {
                     setPreferredNotificationChannels(
-                      preferredNotificationChannels.filter((c) => c !== value)
+                      preferredNotificationChannels.filter((c) => c !== value),
                     );
                   }
                 }}
@@ -1063,8 +1075,8 @@ export default function SettingsPage() {
                         onClick={() => {
                           setPreferredNotificationChannels(
                             preferredNotificationChannels.filter(
-                              (c) => c !== ch
-                            )
+                              (c) => c !== ch,
+                            ),
                           );
                         }}
                         className="font-bold hover:opacity-80"

@@ -2,9 +2,12 @@
 
 DND (Do Not Disturb) Management allows you to manage customer opt-outs across multiple communication channels. You can add customers to DND lists for specific message types to exclude them from receiving those messages.
 
+![DND Management Channels](/img/configuration/dndmanagementpage.png)
+
 ## What is DND Management?
 
 DND Management allows you to:
+
 - **Manage Opt-Outs** - Add customers to Do Not Disturb lists
 - **Track Preferences** - Monitor which customers have opted out
 - **Support Multiple Channels** - Manage DND across SMS, Email, USSD, and Push Notifications
@@ -30,6 +33,7 @@ Click any channel card to manage the DND list for that specific channel.
 When you click on a channel, you can manage customers for that channel with the following message types:
 
 **DND Message Types:**
+
 - **Promotional** - Special offers, discounts, promotional campaigns
 - **Transactional** - Order confirmations, receipts, transaction-related communications
 - **Marketing** - Marketing campaigns and brand communications
@@ -39,6 +43,7 @@ When you click on a channel, you can manage customers for that channel with the 
 ### Viewing DND List for a Channel
 
 The DND list displays:
+
 - **Customer Name** - Name of the customer
 - **Contact Info** - Email (for Email channel) or Phone (for SMS/USSD/Push)
 - **DND Type** - Message type they opted out of (Promotional, Transactional, Marketing, Service, Other)
@@ -47,15 +52,29 @@ The DND list displays:
 - **Added By** - User who added them
 
 You can:
+
 - **Search** - Find customers by name, email, or phone
 - **Filter by Type** - Filter by DND message type (Promotional, Transactional, etc.)
 - **Filter by Status** - Show active, removed, or all DND entries
+
+![SMS DND List](/img/configuration/smsdndmanagentlist.png)
+
+![Email DND List](/img/configuration/emaildndmanagenetlist.png)
+
+![USSD DND List](/img/configuration/dndlistpageussd.png)
+
+![App Notification DND List](/img/configuration/dndlistpageappnotficaiton.png)
 
 ### Adding Customer to DND
 
 Click the **Add Customer** button to add a customer to DND.
 
+![Add Member To SMS DND](/img/configuration/addmembertosmsdndimage1.png)
+
+![Add Member To SMS DND Modal](/img/configuration/addmemberstosmsdndmodal.png)
+
 **Required Fields:**
+
 - **Customer** - Search and select a customer by name, email, or phone
 - **DND Type** - Select which message type to opt them out of:
   - Promotional
@@ -65,6 +84,7 @@ Click the **Add Customer** button to add a customer to DND.
   - Other
 
 Click **Add** to add the customer to DND. The system automatically:
+
 - Sets status to Active
 - Records the current date and time
 - Records the user who added them
@@ -74,6 +94,7 @@ Click **Add** to add the customer to DND. The system automatically:
 Click **Remove** on any DND entry to remove a customer from that DND list.
 
 The system will:
+
 - Change status from Active to Removed
 - Record the removal date and time
 - Record the user who removed them

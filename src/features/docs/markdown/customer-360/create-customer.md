@@ -2,7 +2,8 @@
 
 ## Overview
 
-Add new customers to your system. Choose the method that fits your workflow:
+Add new customers to the system. Choose the method that fits your workflow:
+
 - **Single Entry** - Add one customer at a time
 - **Bulk CSV** - Paste or upload multiple customers
 - **File Import** - Upload Excel/CSV with automatic column detection
@@ -20,30 +21,37 @@ Navigate to **Customer 360 → Customers → Create Customer**
 ### Required Fields
 
 **Phone Number (MSISDN)**
+
 - Format: +27712345678 or 0712345678
 - System normalizes automatically
 - Must be unique
 
 **First Name**
+
 - Max 255 characters
 - Letters, spaces, hyphens, apostrophes
 
 **Last Name**
+
 - Max 255 characters
 - Letters, spaces, hyphens, apostrophes
 
 ### Optional Fields
 
 **Contact Information**
+
 - Email, alternate email, alternate phone numbers
 
 **Demographics**
+
 - Gender, date of birth, language preference
 
 **Geographic**
+
 - Address, city, region, postal code, country code
 
 **Account Settings**
+
 - Customer tier, preferred communication channel, timezone
 
 ### Save Options
@@ -77,7 +85,6 @@ Jane,Doe,+254712345679,jane@example.com,KE,Africa/Nairobi
 
 **Optional columns:** email, country_code, timezone, language_preference, gender, date_of_birth, city, region, postal_code, customer_tier, preferred_channel
 
-
 ## Method 3: File Import
 
 Upload Excel or CSV files with automatic column detection.
@@ -105,6 +112,7 @@ If mapping is incorrect, you'll see an error and have an option to go back and f
 ## Next Steps
 
 After creating customers:
+
 - [View Customer Details](/documentation/customer-360/view-customer-details) — Access full customer profiles
 - [Customer Identity](/documentation/customer-360/customer-identity) — View unique identity fields
 - Create Segments — Organize customers for campaigns

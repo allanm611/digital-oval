@@ -4,25 +4,24 @@
 
 Segment Catalogs organize segments into categories for easier management and organization. Catalogs help you group related segments together and manage them as a collection.
 
-**[Insert screenshot of segment catalogs page]**
-
+![Segment Catalogs List](/img/segments-img/segmentcatalogslist.png)
 
 ## Summary Statistics
 
 The Segment Catalogs page displays key metrics at the top in five stat cards:
 
-- **Total Categories** - Total number of segment catalogs in your system
+- **Total Categories** - Total number of segment catalogs in the system
 - **Active** - Number of currently active catalogs
 - **Inactive** - Number of inactive catalogs
 - **With Segments** - Number of catalogs that contain segments
 - **Unused** - Number of catalogs that have no segments assigned
-
 
 ## Catalog Cards
 
 Catalogs are displayed as cards in a grid or list view with the following information:
 
 **Grid View:**
+
 - Catalog name
 - Description (if provided)
 - Number of segments in the catalog (with active count)
@@ -30,20 +29,22 @@ Catalogs are displayed as cards in a grid or list view with the following inform
 - Action buttons (View Segments, Toggle Active, Edit, Delete)
 
 **List View:**
+
 - Catalog name and description
 - Number of segments with active count
 - Performance metrics in a side-by-side layout
 - View Segments link
 - Action buttons (Toggle Active, Edit, Delete)
 
-
 ## Catalog Actions
 
 ### Create Catalog
 
+![Create Segment Catalog Modal](/img/segments-img/createsegmentcatalog.png)
+
 Click the **Create** button to open the create catalog modal:
 
-- **Catalog Name*** (required) - Descriptive name for your catalog
+- **Catalog Name\*** (required) - Descriptive name for your catalog
 - **Description** (optional) - Additional details about the catalog
 
 ### Edit Catalog
@@ -64,8 +65,9 @@ Click the power icon on any catalog card to enable or disable it:
 
 Click the **Delete** button (trash icon) to permanently remove a catalog. You will be asked to confirm the deletion.
 
-
 ## View Segments in Catalog
+
+![View Segments in Catalog Modal](/img/segments-img/viewsegmentsincatalogmodal.png)
 
 Click the **View Segments** button on any catalog card to open the View Segments modal. This modal displays:
 
@@ -74,32 +76,36 @@ Click the **View Segments** button on any catalog card to open the View Segments
 - Segment status badge (Active, Inactive, etc.)
 - Option to remove segments from the catalog individually
 
-
 ## Add Segments to Catalog
+
+![Assign Segments to Catalog Modal](/img/segments-img/assignsegmentstosegmentcatalog.png)
 
 Click the **Add Segments** action button within the View Segments modal to open the Add Segments to Catalog modal.
 
 **Search and Filters:**
+
 - **Search** - Find segments by name or description
 - **Type Filter** - Filter by segment type (Static, Dynamic, Predictive, etc.)
 - **Status Filter** - Filter by segment status (All Statuses, Active, Inactive)
 
 **Segment Selection:**
+
 - Click the checkbox next to any segment to select it
 - Click **Select All** to select all available segments at once
 - The selection counter shows how many segments you've selected
 
 **Assignment:**
+
 - Click the **Assign Selected** button to add the selected segments to this catalog
 - Already assigned segments appear dimmed and cannot be selected again
 - A success message appears when segments are assigned
-
 
 ## Search and Filters
 
 ### Search
 
 Use the **Search** field to find catalogs by:
+
 - Catalog name
 - Catalog description
 
@@ -115,6 +121,7 @@ Click the **Filters** button to access filtering options:
 ### View Mode
 
 Toggle between:
+
 - **Grid View** - Cards displayed in a grid layout
 - **List View** - Catalogs displayed in a list with full details
 

@@ -1,91 +1,49 @@
-# Creative Templates Overview
+# Creative Templates
 
-Creative Templates are reusable message templates that define the content structure for offers across multiple communication channels (SMS, Email, Push, InApp, Web, IVR, USSD, WhatsApp). They support multiple languages and dynamic variable placeholders for personalization.
+Creative Templates are reusable content definitions used when teams build offer creatives. They help keep messaging consistent while still allowing channel-specific and language-specific content.
 
-## What are Creative Templates?
+![Creative Templates List](/img/configuration/creativetemplatelistimage.png)
 
-Creative Templates allow you to:
-- **Define Reusable Content** - Create templates that can be used across multiple offers
-- **Multi-Channel Support** - Create different versions of templates for different channels
-- **Personalization** - Use dynamic variables (like {{customer_name}}) for personalized messages
-- **Consistency** - Maintain consistent branding and messaging across campaigns
+## Open The Page
 
-## Supported Channels
+Go to `Configuration -> Creative Templates`.
 
-Creative Templates support the following communication channels:
+## Why Teams Use This Page
 
-- **SMS** - Text message delivery (160 characters standard)
-- **Email** - Email messages with subject line and HTML/plain text
-- **Push** - Mobile push notifications
-- **InApp** - In-app messages within mobile or web applications
-- **Web** - Web-based messages and notifications
-- **IVR** - Interactive Voice Response systems
-- **USSD** - Unstructured Supplementary Service Data
-- **WhatsApp** - WhatsApp business messaging
+This page is mainly for content governance. Teams maintain template records so campaign builders do not have to start from scratch every time.
 
-## Supported Languages
+Typical uses:
 
-Creative Templates support multiple languages and locales for global audiences. Examples include:
-- English (en), English - United States (en-US), English - United Kingdom (en-GB)
-- French (fr), French - Canada (fr-CA), French - France (fr-FR)
-- Spanish (es), Spanish - Spain (es-ES), Spanish - Mexico (es-MX)
-- Swahili (sw), Swahili - Uganda (sw-UG), Swahili - Kenya (sw-KE)
+- standardize naming and template structure
+- keep descriptions clear for cross-team handover
+- provide a reusable base during offer creative setup
 
-## Managing Creative Templates
+## List View
 
-Navigate to **Configuration → Creative Templates** to manage all creative templates.
+The list shows each template with name, description, and status. Search helps when the catalog grows.
 
-### Viewing Creative Templates List
+## Create A Creative Template
 
-The creative templates list displays all configured templates with:
-- **Template Name** - Name of the template
-- **Description** - Details about the template's purpose
-- **Status** - Active or Inactive
+Click **Create** to open the form.
 
-You can:
-- **Search** - Find templates by name or description
+![Create Creative Template - Name and Description](/img/configuration/createcreativetemplatename-decsriptionimage.png)
 
-### Create Creative Template
+![Create Creative Template - Template Configuration](/img/configuration/createcreativetemplate-templateconfigsection.png)
 
-Click the **Create** button to add a new creative template.
+![Create Creative Template - Template Content](/img/configuration/createcreativetemplate-templatecontentsection.png)
 
-**Required Fields:**
-- **Template Name** - The name of the template (max 120 characters)
+Common fields include template name, description, channel/locale, and content sections.
 
-**Optional Fields:**
-- **Description** - Explain the template's purpose and usage (max 600 characters)
+Save to create the template record.
 
-Click **Save** to create the template.
+## Edit A Creative Template
 
-Once created, you can use this template as a base for creating creatives in your offers.
+Use **Edit** on a row when you need to revise template details.
 
-### Edit Creative Template
+## Delete A Creative Template
 
-Click **Edit** on any template to update:
-- Template Name
-- Description
-- Status
+Use **Delete** when a template is no longer needed in the configuration list.
 
-Click **Save** to apply changes.
+## Practical Note
 
-### Delete Creative Template
-
-Click **Delete** to remove a template. Existing creatives created from this template will not be deleted, only the template definition is removed.
-
-## Using Templates in Offers
-
-When creating an offer, you can:
-1. Create creatives for different channels (SMS, Email, Push, etc.)
-2. For each channel, provide content in one or more languages
-3. Use dynamic variables like {{customer_name}} for personalization
-4. Reference creative templates you've created here for consistency
-
-Creative templates help you reuse common messaging structures and maintain consistency across multiple offers.
-
-## Template Variables
-
-You can use dynamic variables in templates with the following syntax:
-- `{{variable_name}}` - Will be replaced with actual value when sent to customers
-- Example: `Hello {{customer_name}}, your offer of {{discount_percent}}% off expires soon!`
-
-Variables are populated when creatives are used in actual campaign communications.
+This page stores reusable template records. Offer teams then reference these records while building actual creatives in offer flows.

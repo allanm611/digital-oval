@@ -30,7 +30,6 @@ Offer Types are categories used to classify and organize promotional offers. Eac
 - "Unlimited Data Weekend Package"
 - "International Roaming 1GB"
 
----
 
 ### Voice Offers
 
@@ -48,7 +47,6 @@ Offer Types are categories used to classify and organize promotional offers. Eac
 - "Unlimited Voice Calls National"
 - "International Calling Package 100 Minutes"
 
----
 
 ### SMS Offers
 
@@ -66,7 +64,6 @@ Offer Types are categories used to classify and organize promotional offers. Eac
 - "Unlimited SMS National"
 - "International SMS Add-on 50 Messages"
 
----
 
 ### Combo Offers
 
@@ -84,7 +81,6 @@ Offer Types are categories used to classify and organize promotional offers. Eac
 - "Unlimited Data Voice SMS Super Bundle"
 - "Family Combo 3GB + 1000 Minutes Each"
 
----
 
 ### Voucher Offers
 
@@ -102,7 +98,6 @@ Offer Types are categories used to classify and organize promotional offers. Eac
 - "50 Bonus Minutes Voucher"
 - "Double Data Voucher"
 
----
 
 ### Loyalty Offers
 
@@ -120,7 +115,6 @@ Offer Types are categories used to classify and organize promotional offers. Eac
 - "Gold Member Anniversary Gift"
 - "Spend Reward 20% Bonus"
 
----
 
 ### Discount Offers
 
@@ -138,7 +132,6 @@ Offer Types are categories used to classify and organize promotional offers. Eac
 - "$5 Off Voice Packages"
 - "Flash Sale 50% Discount"
 
----
 
 ### Bundle Offers
 
@@ -156,7 +149,6 @@ Offer Types are categories used to classify and organize promotional offers. Eac
 - "Phone + Accessories Bundle"
 - "Service Bundle Professional Package"
 
----
 
 ### Bonus Offers
 
@@ -174,7 +166,6 @@ Offer Types are categories used to classify and organize promotional offers. Eac
 - "Double Minutes First Month"
 - "Complimentary Premium Features"
 
----
 
 ### Other Offers
 
@@ -192,4 +183,3 @@ Offer Types are categories used to classify and organize promotional offers. Eac
 - "Corporate Special Offer"
 - "Beta Program Access"
 
----

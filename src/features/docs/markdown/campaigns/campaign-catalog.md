@@ -2,24 +2,22 @@
 
 ## Overview
 
-Campaign Catalogs are organizational structures that group and organize campaigns by category. The Campaign Catalog page displays all catalogs in your system, with summary statistics and management tools for each catalog.
+Campaign Catalogs are organizational structures that group and organize campaigns by category. The Campaign Catalog page displays all catalogs in the system, with summary statistics and management tools for each catalog.
 
 <!-- **Note:** Campaign Catalogs are configured in the system configuration. For detailed information on creating and managing catalogs, see [Campaign Catalogs Configuration](/documentation/configuration/campaign-catalog). -->
 
 ![Campaign Catalogs List](/img/configuration/campaigncatalogslist.png)
 
-
 ## Summary Statistics
 
 The Campaign Catalog page displays key metrics at the top:
 
-- **Total Catalogs** - Total number of catalogs in your system
+- **Total Catalogs** - Total number of catalogs in the system
 - **Active Catalogs** - Number of catalogs currently active
 - **Inactive Catalogs** - Number of deactivated catalogs
 - **Catalogs with Campaigns** - Number of catalogs that have campaigns assigned
 - **Unused Catalogs** - Catalogs with no campaigns
 - **Most Popular Catalog** - The catalog with the most campaigns assigned
-
 
 ## Catalog Cards
 
@@ -29,7 +27,6 @@ Each catalog is displayed as a card showing:
 - **Description** - Brief description of the catalog's purpose
 - **Campaign Count** - Number of campaigns in this catalog
 - **Status** - Whether the catalog is active or inactive
-
 
 ## Catalog Actions
 
@@ -68,7 +65,6 @@ Click the **Power** button (activate/deactivate) on any catalog card:
 - **Activated** - Catalog is available for use
 - **Deactivated** - Catalog is disabled but catalogs are preserved
 
-
 ## View Campaigns in Catalog
 
 Click the **View Campaigns** button on any catalog card to open a modal showing all campaigns assigned to this catalog.
@@ -80,15 +76,18 @@ Click the **View Campaigns** button on any catalog card to open a modal showing 
 The modal displays:
 
 **Header**
+
 - Title showing catalog name (e.g., "Campaigns in Finance")
 - Count of campaigns in this catalog
 
 **Search and Filters**
+
 - **Search** field to find campaigns by name or description
 - **Status filter** dropdown with options: All Statuses, Active, Draft, Pending Approval, Approved, Paused, Completed, Cancelled
 
 **Campaign List**
 Each campaign shows:
+
 - Campaign name
 - Description
 - Status badge (color-coded based on campaign status)
@@ -102,22 +101,23 @@ If no campaigns are assigned to the catalog, a message appears suggesting to cre
 
 In the View Campaigns modal, click the **Remove** button next to a campaign to unassign it from the catalog. The campaign itself is not deleted, only its association with the catalog is removed.
 
-
 ## Add Campaigns to Catalog
 
 In the View Campaigns modal, click the **Add campaigns to this catalog** button at the bottom to assign campaigns to the catalog.
 
 ### Assign Campaigns Modal
 
-When you click "Add campaigns to this catalog", an assignment modal opens displaying all available campaigns in your system.
+When you click "Add campaigns to this catalog", an assignment modal opens displaying all available campaigns in the system.
 
 ![Assign Campaigns to Catalog](/img/configuration/assigncampaignstocatalog.png)
 
 **Header**
+
 - Title showing "Assign Campaigns to [catalog name]"
 - Instructions to select campaigns to assign
 
 **Search and Filters**
+
 - **Search** field to find campaigns by name or description
 - **Status filter** dropdown with options: All Statuses, Active, Draft, Pending Approval, Approved, Paused, Completed, Cancelled
 
@@ -145,6 +145,7 @@ Displays all campaigns in a table with the following columns:
 If no campaigns are available, a message appears.
 
 **Selection and Assignment**
+
 - At the top right, a counter shows "X campaigns selected"
 - The **Assign Selected** button becomes active only when you have selected at least one campaign
 - Click **Assign Selected** to add the selected campaigns to this catalog
@@ -153,15 +154,13 @@ If no campaigns are available, a message appears.
 **Removing Campaigns from Catalog**
 In the Assign Campaigns modal, campaigns already in the catalog show a **Remove** button in the Actions column. Click this button to unassign the campaign from the catalog (without deleting the campaign itself).
 
-
 ## Search and Filter
 
 Use the **Search** field to find catalogs by:
+
 - Catalog name
 - Catalog description
-
 
 ## View Modes
 
 Switch between **Grid** and **List** views using the view toggle buttons at the top right.
-

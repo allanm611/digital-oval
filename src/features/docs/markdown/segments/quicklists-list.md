@@ -2,16 +2,15 @@
 
 ## Overview
 
-The QuickList List page displays all QuickLists in your system with summary statistics, search capabilities, filtering options, and management tools for each QuickList.
+The QuickList List page displays all QuickLists in the system with summary statistics, search capabilities, filtering options, and management tools for each QuickList.
 
 ![QuickList List Page](/img/segments-img/quicklistslists.png)
-
 
 ## Summary Statistics
 
 The QuickList List page displays key metrics at the top in stat cards:
 
-- **Total QuickLists** - Total number of QuickLists in your system
+- **Total QuickLists** - Total number of QuickLists in the system
 - **Active** - Number of currently active QuickLists
 - **Inactive** - Number of inactive QuickLists
 - **Total Members** - Combined count of all customers across all lists
@@ -22,6 +21,7 @@ The QuickList List page displays key metrics at the top in stat cards:
 ### Search
 
 Use the **Search** field to find QuickLists by:
+
 - QuickList name
 - QuickList description
 
@@ -43,7 +43,6 @@ The QuickLists are displayed in a table with the following columns:
 
 **Actions** - Available management actions
 
-
 ## Action Buttons
 
 Each QuickList row has action buttons with the following options:
@@ -59,6 +58,7 @@ Each QuickList row has action buttons with the following options:
 ## Next Steps
 
 After viewing the QuickList List:
+
 1. Click on a QuickList to view its [Details](/documentation/segments/view-quicklist)
 2. Create a new [QuickList](/documentation/segments/create-quicklist)
 3. Use QuickLists in [Segment conditions](/documentation/segments/create-segment) for targeting

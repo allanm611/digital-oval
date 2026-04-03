@@ -16,7 +16,6 @@ In practice, this usually means one of the following:
 - the user is signed in with a different account than expected
 - the role assignment was recently changed and the session needs to be refreshed
 
-
 ## Resolving Unauthorized Access
 
 If access is expected, use this sequence:
@@ -25,11 +24,9 @@ If access is expected, use this sequence:
 2. Retry after signing out and signing back in.
 3. If access is still blocked, ask an administrator to review your role and permission assignment.
 
-
 ## Navigation
 
 Use **Back to Dashboard** to return to pages that are currently allowed for your account.
-
 
 ## Role And Permission Context
 
@@ -44,4 +41,3 @@ Access in this platform is role-based. Roles are assigned to users, and each rol
 - [Access Control](/documentation/users/access-control)
 - [Role Management](/documentation/users/role-management)
 - [Assign Permissions](/documentation/users/assign-permissions)
-

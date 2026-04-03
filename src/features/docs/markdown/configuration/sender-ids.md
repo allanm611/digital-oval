@@ -2,74 +2,29 @@
 
 ## Overview
 
-Sender IDs is a configuration page used to manage SMS sender ID records in the app.
+Sender IDs define the name or label shown to subscribers as the SMS sender. This page is where teams manage approved sender identities for branding, routing, and compliance.
 
-The page lets you:
-
-- View sender IDs in a table
-- Search sender IDs by name or description
-- Create a sender ID
-- Edit a sender ID
-- Delete a sender ID
-
----
+![Sender IDs List](/img/configuration/senderidlist.png)
 
 ## Accessing Sender IDs
 
-**Navigation:** Dashboard -> Configuration -> Sender IDs
+**Navigation:** Configuration -> Sender IDs
 
 From the main Configuration page, Sender IDs appears under **Offer Configuration**.
 
----
-
 ## Sender IDs List Page
 
-The Sender IDs page includes:
-
-### Header
-
-- Page title: **Sender IDs**
-- Page description explaining that the page manages SMS sender IDs for branding and compliance
-- **Create** button
-
-### Search
-
-- A search input with the placeholder **Search sender IDs...**
-- Search filters the list by:
-  - Sender ID name
-  - Description
-
-### Table Columns
-
-The list table shows these columns:
-
-- **Sender ID**
-- **Description**
-- **Status**
-- **Gateway**
-- **Actions**
-
-### Status Display
-
-Each row shows one of these statuses:
-
-- **Active**
-- **Inactive**
-
-### Row Actions
-
-Each row provides:
-
-- **Edit** button
-- **Delete** button
-
----
+The list view shows each sender ID with description, status, gateway mapping, and row actions. Search helps quickly locate a specific sender ID when the catalog grows.
 
 ## Creating a Sender ID
 
 Click **Create** to open the sender ID modal.
 
 **Modal title:** Create New Sender ID
+
+![Create Sender ID](/img/configuration/createsenderid.png)
+
+![Sender ID Example](/img/configuration/senderid.png)
 
 ### Fields
 
@@ -89,7 +44,7 @@ Click **Create** to open the sender ID modal.
 - Select field
 - Placeholder: `Select gateway`
 
-Available gateway options in the app are:
+Available gateway options in the system are:
 
 - Internal
 - Mocana
@@ -101,8 +56,6 @@ Available gateway options in the app are:
 
 - **Cancel** closes the modal without saving
 - **Save** submits the sender ID
-
----
 
 ## Editing a Sender ID
 
@@ -116,8 +69,6 @@ The edit modal uses the same visible fields as the create modal:
 - Description
 - Gateway
 
----
-
 ## Deleting a Sender ID
 
 Click the **Delete** button in the Actions column.
@@ -127,9 +78,7 @@ A confirmation modal appears with:
 - Title: **Delete Sender ID**
 - A message warning that deleting the item may affect existing SMS creatives
 
-If deletion succeeds, the app shows a success message.
-
----
+If deletion succeeds, the app shows a success message and removes the record from the visible list.
 
 ## Validation and Save Behavior
 
@@ -139,8 +88,6 @@ The modal validates these fields:
 - **Gateway** is required
 
 If saving fails, the page shows an error message.
-
----
 
 ## Empty State
 

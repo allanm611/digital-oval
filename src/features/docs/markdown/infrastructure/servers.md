@@ -13,7 +13,7 @@ This module provides:
 
 ## Access Paths
 
-Main routes in the app:
+Main routes in the system:
 
 - `Dashboard > Servers` for the list page
 - `Dashboard > Servers > Add Server` for create
