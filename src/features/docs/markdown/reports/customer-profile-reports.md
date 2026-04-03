@@ -1,10 +1,14 @@
 # Customer Profile Reports
 
-> **Important:** The screenshots in this documentation display dummy/sample data for demonstration purposes. Each report includes a Data Mode toggle that allows you to switch between viewing dummy data and real production data. Use the toggle button at the top-right of the reports page to switch between modes. Real data will display your actual customer metrics and segmentation information.
-
 ## Overview
 
 Customer Profile Reports provide deep insights into your customer base, including segmentation, lifetime value, engagement metrics, and lifecycle trends. Analyze customer behavior patterns, identify high-value segments, and understand churn and retention dynamics.
+
+## Data Mode
+
+**Toggle Data Mode:**
+- Switch between live data and sample/test data
+- "Data Mode" toggle in top-right corner
 
 ## Accessing Customer Profile Reports
 
@@ -12,10 +16,6 @@ Customer Profile Reports provide deep insights into your customer base, includin
 - Click **Reports** in the main navigation
 - Select **Customer Profile Reports** option
 - Reports page loads with customer analytics
-
-**Route:** `/dashboard/reports/customer-profile`
-
----
 
 ## Key Metrics Overview
 
@@ -27,7 +27,6 @@ Six key metrics provide a quick snapshot of your customer health:
 
 **What it shows:**
 - Total number of active customers in your base
-- Example: "1,284,200"
 - Trend comparison to previous period
 
 **Why it matters:**
@@ -35,13 +34,10 @@ Six key metrics provide a quick snapshot of your customer health:
 - Foundation metric for all other calculations
 - Key business health indicator
 
----
-
 ### 2. Average Customer Lifetime Value (CLV)
 
 **What it shows:**
 - Average revenue expected from a customer over lifetime
-- Example: "KSh 1,540"
 - Trend vs previous quarter
 
 **Why it matters:**
@@ -54,13 +50,10 @@ Six key metrics provide a quick snapshot of your customer health:
 - Compare against customer acquisition cost
 - Track trends to see if customers becoming more valuable
 
----
-
 ### 3. Average Transaction Value
 
 **What it shows:**
 - Average revenue per transaction/purchase
-- Example: "KSh 128"
 - Trend vs previous period
 
 **Why it matters:**
@@ -68,18 +61,10 @@ Six key metrics provide a quick snapshot of your customer health:
 - Helps with inventory and fulfillment planning
 - Guides pricing strategy
 
-**How to use:**
-- Increasing = customers buying more expensive items
-- Decreasing = shift to lower-price products
-- Use for upsell/cross-sell targeting
-
----
-
 ### 4. Purchase Frequency
 
 **What it shows:**
 - How often customers buy on average (per year)
-- Example: "3.4 / yr"
 - Year-over-year trend
 
 **Why it matters:**
@@ -87,18 +72,10 @@ Six key metrics provide a quick snapshot of your customer health:
 - Predicts revenue stability
 - Identifies habits and cycles
 
-**How to use:**
-- Higher frequency = better retention
-- Seasonal products = lower frequency expected
-- Target low-frequency segments for engagement
-
----
-
 ### 5. Engagement Score
 
 **What it shows:**
 - Composite score (0-100) of customer engagement
-- Example: "72 / 100"
 - Trend vs last 30 days
 
 **Why it matters:**
@@ -106,32 +83,16 @@ Six key metrics provide a quick snapshot of your customer health:
 - Predicts likelihood of future purchases
 - Identifies at-risk vs high-engagement customers
 
-**Score Interpretation:**
-- 80-100 = Highly engaged, active customers
-- 60-80 = Good engagement, stable base
-- 40-60 = Declining engagement, at-risk
-- 0-40 = Dormant, churn risk
-
----
-
 ### 6. Churn Rate
 
 **What it shows:**
 - Percentage of customers becoming inactive
-- Example: "8.3%"
 - Trend vs previous quarter
 
 **Why it matters:**
 - Critical retention metric
 - Indicates customer satisfaction
 - Drives acquisition need
-
-**How to use:**
-- Rising churn = investigate satisfaction issues
-- Industry benchmark varies by sector (2-10% typical)
-- Focus retention efforts on high-churn segments
-
----
 
 ## Customer Detail Table
 
@@ -174,11 +135,7 @@ View and analyze individual customer records:
 - Export format: CSV
 - Use for external analysis or CRM sync
 
----
-
 ## Customer Segmentation
-
-Customers are automatically segmented based on:
 
 **RFM Analysis (Recency, Frequency, Monetary):**
 
@@ -198,8 +155,6 @@ Customers are automatically segmented based on:
 - **Churned** - Inactive, likely lost
 - **Reactivated** - Returned after dormancy/churn
 
----
-
 ## Time Range Selection
 
 **Quick Range Options:**
@@ -211,8 +166,6 @@ Customers are automatically segmented based on:
 - Set specific start and end dates
 - Supports up to 2 years of historical data
 - Click "Run" to apply
-
----
 
 ## Analysis Charts
 
@@ -238,8 +191,6 @@ Two complementary charts for understanding customer value:
 - If value concentrated in few customers: focus on retention of top tier
 - If value spread across many: maintain broad customer base
 - Compare month-over-month to see if distribution changing
-
----
 
 ### Lifecycle Distribution
 
@@ -267,8 +218,6 @@ Track how customers move through different lifecycle stages over time:
 - Set goals for lifecycle stage distribution
 - Plan interventions for at-risk and dormant customers
 
----
-
 ### Cohort Retention
 
 **Cohort Analysis Shows:**
@@ -282,75 +231,4 @@ Track how customers move through different lifecycle stages over time:
 - Measure impact of onboarding improvements
 - Compare retention across seasons
 - Forecast long-term customer value
-
----
-
-## Best Practices
-
-### Regular Analysis
-
-- Review weekly for trends
-- Compare month-over-month performance
-- Track segmentation changes over quarters
-- Monitor churn indicators early
-
-### Customer Targeting
-
-- Use CLV to prioritize customer retention spend
-- Target at-risk customers with special offers
-- Invest more in champions and loyalists
-- Create win-back campaigns for churned customers
-
-### Optimization
-
-- Test engagement strategies on potential loyalists
-- A/B test offers for different lifecycle stages
-- Monitor frequency as sign of satisfaction
-- Use churn predictors to intervene early
-
-### Data Quality
-
-- Verify customer data accuracy regularly
-- Ensure transactions properly recorded
-- Check for duplicate records
-- Validate email/contact information
-
----
-
-## Interpreting Trends
-
-### Positive Signals
-
-- Rising active customer count
-- Increasing CLV (customers spending more)
-- Higher purchase frequency
-- Increasing engagement scores
-- Falling churn rate
-
-### Warning Signs
-
-- Falling active customer count
-- Declining CLV (customers spending less)
-- Lower purchase frequency
-- Falling engagement scores
-- Rising churn rate
-- Increasing at-risk segment
-
----
-
-## Common Questions
-
-**Q: Why did my CLV increase but customer count decreased?**
-A: Likely lost lower-value customers while retaining higher-value ones. This can be positive (better customer quality) or negative (losing volume). Investigate churn reasons.
-
-**Q: How should I interpret engagement score?**
-A: Combines email opens, clicks, purchases, and channel engagement. Score 70+ is healthy. Below 60 warrants re-engagement campaigns.
-
-**Q: What's a good churn rate?**
-A: Varies by industry (2-5% for SaaS, 10-15% for e-commerce typical). Compare against your industry and track trends over time.
-
-**Q: Should I focus on acquiring new customers or retaining existing?**
-A: Retention usually 5-7x cheaper. Focus on retaining at-risk customers first, then acquire new high-fit customers.
-
----
 

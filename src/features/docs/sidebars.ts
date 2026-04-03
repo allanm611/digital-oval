@@ -241,7 +241,7 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Reports & Analytics',
       items: [
-        'analytics/overview',
+        'reports/overview',
         'reports/overall-dashboard',
         'reports/customer-profile-reports',
         'reports/campaign-reports',

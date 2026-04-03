@@ -227,5 +227,5 @@ Shows all campaigns that currently have mappings with this segment:
 
 **Campaign Table Columns**
 - **Campaign Name** - Name of the campaign using this segment
-- **Flow Type** - Type of campaign flow (e.g., Journey, Blast, Workflow)
+- **Campaign Type** - Type of campaign type 
 - **Last Modified** - When the campaign was last updated

@@ -1,10 +1,14 @@
 # Overall Dashboard
 
-> **Important:** The screenshots in this documentation display dummy/sample data for demonstration purposes. Each report includes a Data Mode toggle that allows you to switch between viewing dummy data and real production data. Use the toggle button at the top-right of the dashboard to switch between modes. Real data will display your actual campaign metrics and customer information.
-
 ## Overview
 
 The Overall Dashboard provides a comprehensive view of all communication performance across your entire platform. View key metrics, channel performance, delivery rates, and trends across all campaigns, offers, and customer communications in one centralized location.
+
+## Data Mode
+
+**Toggle Data Mode:**
+- Switch between live data and sample/test data
+- "Data Mode" toggle in top-right corner
 
 ## Accessing the Overall Dashboard
 
@@ -13,9 +17,6 @@ The Overall Dashboard provides a comprehensive view of all communication perform
 - Select **Overall Dashboard** option
 - Dashboard loads with performance metrics
 
-**Route:** `/dashboard/overall-performance`
-
----
 
 ## Dashboard Sections
 
@@ -31,9 +32,7 @@ At the top of the dashboard:
 **Custom Range:**
 - Set custom start and end dates
 - Click "Run" to apply custom date range
-- Supports up to 2 years of historical data
-
----
+- Suppots up to 2 years of historical data
 
 ## Channel Performance Snapshot
 
@@ -48,30 +47,23 @@ Quick overview of your selected channel's key metrics:
 **Key Metrics Displayed:**
 
 - **[Channel] Sent** - Total messages sent through this channel
-  - Example: "SMS Sent: 86,900"
   - Shows total message volume
 
 - **Delivered** - Messages successfully delivered to recipients
-  - Example: "82,000"
   - Indicates successful delivery count
 
 - **Delivery Rate** - Percentage of sent messages delivered
-  - Example: "94.4%"
   - Higher is better (aim for 90%+)
 
 - **Fulfilled** - Messages that resulted in intended action
-  - Example: "77,080"
   - Varies by campaign type
 
 - **Converted** - Messages that led to conversions/sales
-  - Example: "6,561"
   - Key success metric
 
 - **Conversion Rate** - Percentage converting to desired action
-  - Example: "8.5%"
   - Tracks campaign effectiveness
 
----
 
 ## Performance by Channel
 
@@ -110,8 +102,6 @@ Compare performance across SMS, Email, Push, and Social channels:
 3. Compare rates (lines) vs volume (bars)
 4. Identify best-performing channels
 
----
-
 ## SMS Delivery Performance
 
 ![SMS Delivery Performance](/img/reports/smsdeliveryoverolldash.png)
@@ -143,7 +133,6 @@ Detailed tracking of SMS delivery metrics over time:
 - Monitor conversion trends
 - Spot delivery issues on specific days
 
----
 
 ## Performance Trends Over Time
 
@@ -181,16 +170,6 @@ Track overall business metrics and trends across your selected time period:
 - Plan future campaigns based on historical data
 - Track improvements over time
 
----
-
-## Data Mode
-
-**Toggle Data Mode:**
-- Switch between live data and sample/test data
-- "Data Mode" toggle in top-right corner
-- Use sample data for testing and training
-
----
 
 ## Date Range Management
 
@@ -212,8 +191,6 @@ Track overall business metrics and trends across your selected time period:
 - Maximum 2 years of historical data available
 - End date cannot be in the future
 - Custom dates override quick range selection
-
----
 
 ## Interpreting Dashboard Metrics
 
@@ -245,45 +222,5 @@ Track overall business metrics and trends across your selected time period:
   - Use to compare channels and campaigns
   - Track growth over time
 
----
 
-## Best Practices
-
-### Regular Monitoring
-
-- Check dashboard daily for critical campaigns
-- Review weekly trends for patterns
-- Compare month-over-month performance
-- Track seasonal variations
-
-### Channel Optimization
-
-- Compare channel performance regularly
-- Identify top and bottom performers
-- A/B test between channels
-- Allocate budget to best channels
-
-### Troubleshooting
-
-- Sudden delivery drop? Check SMS routes and email configuration
-- Low conversion rate? Review message content and audience targeting
-- High cost per conversion? Adjust audience targeting or offer value
-
-### Performance Goals
-
-- Set target delivery rates (aim for 95%+)
-- Define conversion targets based on industry
-- Track revenue growth month-over-month
-- Monitor CTR for content quality
-
----
-
-## Limitations
-
-- Data updates with a slight delay (typically 5-15 minutes)
-- Historical data retained for 2 years
-- Custom ranges work best with 7-90 days of data
-- Sample data mode may not reflect real-time conditions
-
----
 
