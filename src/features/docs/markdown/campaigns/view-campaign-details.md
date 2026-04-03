@@ -54,10 +54,10 @@ Comprehensive campaign details displayed in an organized grid:
 - **Status** - Current state (Draft, Active, Paused, Completed, Archived)
 - **Approval Status** - Review state (Pending, Approved, Rejected)
 - **Description** - Campaign purpose and details
-- **Objective** - Goal (see [Campaign Objectives](./documentation/configuration/campaign-objectives))
+- **Objective** - Goal (see [Campaign Objectives](/documentation/configuration/campaign-objectives))
 
 **Audience & Targeting:**
-- **Category** - Campaign category/catalog (see [Campaign Catalogs](./documentation/configuration/campaign-catalogs))
+- **Category** - Campaign category/catalog (see [Campaign Catalogs](/documentation/configuration/campaign-catalog))
 - **Segments** - Number and names of target segments
 - **Total Audience Size** - Sum of all segment members
 

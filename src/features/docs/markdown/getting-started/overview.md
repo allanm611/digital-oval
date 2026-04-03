@@ -33,5 +33,5 @@ Master the platform-wide search feature that helps you quickly find campaigns, o
 Once you're comfortable with the basics:
 - Explore [Campaign Management](/documentation/campaigns/overview) to create and manage campaigns
 - Dive into [Customer 360](/documentation/customer-360/overview) to understand your customer data
-- Check out [Analytics](/documentation/analytics/overview) to track performance
+- Check out [Reports](/documentation/reports/overview) to track performance
 - Build [Segments](/documentation/segments/overview) to target specific customer groups

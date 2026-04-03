@@ -98,9 +98,9 @@ Make messages personal by inserting customer data like `{{first_name}}` or `{{ac
 2. Browse and select customer field
 3. Variable is inserted as `{{field_name}}`
 
-For detailed list of available variables, see [Variable Configuration](/documentation/configuration/variable-configuration).
+For detailed list of available variables, see [Variable Configuration](/documentation/configuration/dynamic-message-variables).
 
-### [Communication Policies](/documentation/configuration/communication-policies)
+### [Communication Policies](/documentation/configuration/campaign-communication-policy-list)
 
 Policies control when and how often messages are sent (timing rules, DND compliance, frequency limits).
 

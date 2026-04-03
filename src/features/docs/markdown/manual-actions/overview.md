@@ -25,7 +25,7 @@ Send one-time messages directly to customer segments using Email, SMS, WhatsApp,
 - Track delivery and performance
 
 **Getting Started:**
-- [Manual Communications](/documentation/manual-actions/manual-communications) - Overview of sending messages
+- [Manual Communications](/documentation/manual-actions/manual-communications-list) - Overview of sending messages
 - [Create Manual Communication](/documentation/manual-actions/create-manual-communication) - Step-by-step guide
 - [Manual Communications List](/documentation/manual-actions/manual-communications-list) - View all communications
 - [View Communication Details](/documentation/manual-actions/view-manual-communication) - See details and results
@@ -57,7 +57,7 @@ Apply one-time rewards directly to customer segments without campaign setup.
 - Handle large customer segments efficiently
 
 **Getting Started:**
-- [Manual Rewards](/documentation/manual-actions/manual-rewards) - Overview of applying rewards
+- [Manual Rewards](/documentation/manual-actions/manual-rewards-list) - Overview of applying rewards
 - [Create Manual Reward](/documentation/manual-actions/create-manual-reward) - Step-by-step guide
 - [Manual Rewards List](/documentation/manual-actions/manual-rewards-list) - View all rewards
 - [View Reward Details](/documentation/manual-actions/view-manual-reward) - See details and status

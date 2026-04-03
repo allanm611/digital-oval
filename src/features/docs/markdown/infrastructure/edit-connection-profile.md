@@ -21,7 +21,7 @@ Or from Connection Profile Details page:
 
 ## Form Fields
 
-All fields are the same as [Create Connection Profile](/documentation/create-connection-profile.md) with the following notes:
+All fields are the same as [Create Connection Profile](/documentation/infrastructure/create-connection-profile) with the following notes:
 
 ### Required Fields
 - Profile Name*
@@ -307,7 +307,7 @@ After successful save:
 4. Use "Push Health" to test if health checks enabled
 
 ### Confirming Changes
-- Visit [Connection Profile Details](/documentation/view-connection-profile.md) page
+- Visit [Connection Profile Details](/documentation/infrastructure/view-connection-profile) page
 - Verify all updated values
 - Check health status indicators
 

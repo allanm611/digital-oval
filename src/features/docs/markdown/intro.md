@@ -14,7 +14,7 @@ Get up and running quickly with these essential guides:
 - **[Authentication](/documentation/authentication/login)** - Log in and manage your account
 - **[Campaigns](/documentation/campaigns/campaigns-list)** - Create and launch your first campaign
 - **[Customer 360](/documentation/customer-360/customers-list)** - Explore unified customer profiles
-- **[Reports & Analytics](/documentation/analytics/overall-dashboard-performance)** - Monitor key metrics
+- **[Reports & Analytics](/documentation/reports/overall-dashboard)** - Monitor key metrics
 
 
 ## Documentation Structure
@@ -43,7 +43,7 @@ Manage all aspects of customer campaigns from creation to execution.
 ### Offer Management
 Manage and organize offers for targeted customer campaigns.
 
-- [All Offers](/documentation/offers/offers-list) - Manage your offers
+- [All Offers](/documentation/offers/offer-list) - Manage your offers
 - [Offer Catalog](/documentation/offers/offer-catalog) - Browse offer categories
 
 ### Product Management
@@ -66,12 +66,12 @@ View comprehensive, unified customer profiles.
 ### Reports & Analytics
 Monitor performance and gain insights into your campaigns.
 
-- [Overall Dashboard Performance](/documentation/analytics/overall-dashboard-performance) - System overview
-- [Campaign Reports](/documentation/analytics/campaign-reports) - Campaign performance metrics
-- [Offer Reports](/documentation/analytics/offer-reports) - Offer performance analysis
-- [Customer Profile Reports](/documentation/analytics/customer-profile-reports) - Customer analytics
-- [SMS Delivery Reports](/documentation/analytics/delivery-sms-reports) - SMS campaign metrics
-- [Email Delivery Reports](/documentation/analytics/delivery-email-reports) - Email campaign metrics
+- [Overall Dashboard Performance](/documentation/reports/overall-dashboard) - System overview
+- [Campaign Reports](/documentation/reports/campaign-reports) - Campaign performance metrics
+- [Offer Reports](/documentation/reports/offer-reports) - Offer performance analysis
+- [Customer Profile Reports](/documentation/reports/customer-profile-reports) - Customer analytics
+- [SMS Delivery Reports](/documentation/reports/sms-delivery-reports) - SMS campaign metrics
+- [Email Delivery Reports](/documentation/reports/delivery-email-reports) - Email campaign metrics
 
 ### Manual Actions
 Execute manual customer actions and communications.
@@ -100,24 +100,24 @@ Configure system infrastructure and connections.
 ### System Configuration
 Configure and customize the platform to your needs.
 
-- [Line of Business](/documentation/configuration/line-of-business-list) - Manage business units
+- [Line of Business](/documentation/configuration/line-of-business) - Manage business units
 - [Campaign Communication Policy](/documentation/configuration/campaign-communication-policy-list) - Set communication rules
-- [Communication Channels](/documentation/configuration/communication-channels-list) - Configure channels
-- [Routes](/documentation/configuration/routes-list) - Manage delivery routes
-- [Departments](/documentation/configuration/departments-list) - Organize by department
-- [Control Groups](/documentation/configuration/control-groups-list) - Set up control groups
-- [DND Management](/documentation/configuration/dnd-management-list) - Do Not Disturb lists
-- [VIP List Management](/documentation/configuration/vip-list-management-list) - VIP customer lists
-- [Seed List Management](/documentation/configuration/seed-list-management-list) - Seed lists
-- [Creative Templates](/documentation/configuration/creative-templates-list) - Message templates
-- [Reward Types](/documentation/configuration/reward-types-list) - Define rewards
-- [Sender IDs](/documentation/configuration/sender-ids-list) - Configure sender identities
-- [SMS Routes](/documentation/configuration/sms-routes-list) - SMS delivery routes
-- [Languages](/documentation/configuration/languages-list) - Supported languages
-- [Character Sets](/documentation/configuration/character-sets-list) - Character encoding
-- [Combo Types](/documentation/configuration/combo-types-list) - Product combinations
-- [Product Categories](/documentation/configuration/product-categories-list) - Categorize products
-- [Offer Tracking Sources](/documentation/configuration/offer-tracking-sources-list) - Track offer sources
+- [Communication Channels](/documentation/configuration/communication-channels) - Configure channels
+- [Routes](/documentation/configuration/routes) - Manage delivery routes
+- [Departments](/documentation/configuration/departments) - Organize by department
+- [Control Groups](/documentation/configuration/control-groups) - Set up control groups
+- [DND Management](/documentation/configuration/dnd-management) - Do Not Disturb lists
+- [VIP List Management](/documentation/configuration/vip-list-management) - VIP customer lists
+- [Seed List Management](/documentation/configuration/seed-list-management) - Seed lists
+- [Creative Templates](/documentation/configuration/creative-templates) - Message templates
+- [Reward Types](/documentation/configuration/reward-types) - Define rewards
+- [Sender IDs](/documentation/configuration/sender-ids) - Configure sender identities
+- [SMS Routes](/documentation/configuration/sms-routes) - SMS delivery routes
+- [Languages](/documentation/configuration/languages) - Supported languages
+- [Character Sets](/documentation/configuration/character-sets) - Character encoding
+- [Combo Types](/documentation/configuration/combo-types) - Product combinations
+- [Product Categories](/documentation/configuration/product-categories) - Categorize products
+- [Offer Tracking Sources](/documentation/configuration/offer-tracking-sources) - Track offer sources
 - [Settings](/documentation/configuration/settings-list) - General system settings
 - [User Management](/documentation/configuration/user-management-list) - Configure users
 

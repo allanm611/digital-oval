@@ -95,23 +95,23 @@ Automatic failover sequence:
 
 **All Routes**
 - Navigate to **Configuration → Routes**
-- [See Communication Routes List](/documentation/configuration/routes-list)
+- [See Communication Routes List](/documentation/configuration/routes)
 
 ![SMS Routes List](/img/configuration/routeslist.png)
 
 **Specific Route Details**
 - Click route name to view configuration
-- [View Route Details](/documentation/configuration/view-route)
+- [View Route Details](/documentation/configuration/routes)
 
 ### Managing Routes
 
 **Create New Route**
-- [Create Communication Route](/documentation/configuration/create-route)
+- [Create Communication Route](/documentation/configuration/routes)
 - Connect new provider to channel
 - Configure credentials and settings
 
 **Edit Route**
-- [Edit Communication Route](/documentation/configuration/edit-route)
+- [Edit Communication Route](/documentation/configuration/routes)
 - Update provider credentials
 - Adjust configuration
 - Change priority/status

@@ -4,8 +4,6 @@
 
 Global Search is a powerful app-wide search feature that lets you quickly find any item across the entire platform—campaigns, offers, products, segments, users, configurations, and more—from anywhere in the application. Search results are categorized by type and you can drill down using filters on the search results page.
 
----
-
 ## Opening Global Search
 
 **Search Icon** - Click the search icon in the top navigation bar
@@ -13,8 +11,6 @@ Global Search is a powerful app-wide search feature that lets you quickly find a
 The search modal will open with a search input field ready for your query.
 
 ![Global Search Dropdown](/img/getstarted/search.png)
-
----
 
 ## Live Search Dropdown
 
@@ -59,8 +55,6 @@ As you type, the dropdown shows matching results organized by category:
 **Direct Navigation** - Click any result to navigate directly to that item's detail page
 
 **View All Results** - Click **"View Results"** button at the bottom to see the full search results page with advanced filtering options
-
----
 
 ## Search Results Page
 

@@ -21,7 +21,7 @@ Or from Server Details page:
 
 ## Form Fields
 
-All fields are the same as [Create Server](/documentation/create-server.md) with the following notes:
+All fields are the same as [Create Server](/documentation/infrastructure/create-server) with the following notes:
 
 ### Required Fields
 - Server Name*
@@ -172,7 +172,7 @@ After successful save:
 4. Use "Push Health" to test
 
 ### Confirming Changes
-- Visit [Server Details](/documentation/view-server.md) page
+- Visit [Server Details](/documentation/infrastructure/view-server) page
 - Verify all updated values
 - Check health status indicators
 
