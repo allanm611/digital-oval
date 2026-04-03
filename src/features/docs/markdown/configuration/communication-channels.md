@@ -1,6 +1,6 @@
 # Communication Channels Overview
 
-Communication Channels are the foundation of your messaging infrastructure. They represent the different methods available for sending messages to customers—SMS, Email, USSD, and Push Notifications.
+Communication Channels are the foundation of your messaging infrastructure. They represent the different methods available for sending messages to customers SMS, Email, USSD, and Push Notifications.
 
 ## What are Communication Channels?
 
@@ -11,8 +11,6 @@ Communication Channels define:
 - **Availability** for use in campaigns and communications
 
 ## Default Communication Channels
-
-Your system comes with pre-configured channels:
 
 ### SMS Channels
 - **SMS - Normal:** Standard text message delivery
@@ -35,7 +33,7 @@ Your system comes with pre-configured channels:
 - Edit existing channel configuration
 - Activate or deactivate channels
 - Delete unused channels
-
+<!-- 
 ### Configuration
 - Set channel name and description
 - Define channel type and purpose
@@ -46,104 +44,121 @@ Your system comes with pre-configured channels:
 - Link SMS routes to SMS channels
 - Configure SMTP for email delivery
 - Set up USSD gateway connections
-- Configure FCM/APNS for push notifications
+- Configure FCM/APNS for push notifications -->
 
-## Common Tasks
 
-### Managing Channels
+## Communication Channels List
 
-**View all channels**
-- Navigate to **Configuration → Communication Channels**
-- See list of all configured channels
-- Check status and descriptions
+Navigate to **Configuration → Communication Channels** to manage all communication channels.
 
 ![Communication Channels List](/img/configuration/communicationchannelslist.png)
 
-**Create a new channel**
-- [Create Communication Channel](/documentation/configuration/create-communication-channel)
-- Add new SMS, Email, USSD, or Push channels
-- Configure channel-specific settings
+The list displays all configured channels with options to:
+- View complete configuration
+- Edit channel settings
+- Activate or deactivate channels
+- Delete unused channels
 
-**Edit a channel**
-- [Edit Communication Channel](/documentation/configuration/edit-communication-channel)
-- Update channel name, description, or status
-- Modify configuration settings
+## Creating a Communication Channel
 
-**View channel details**
-- [View Communication Channel](/documentation/configuration/view-communication-channel)
-- See complete channel configuration
-- Review associated routes and settings
+### Steps
 
-## Channel Dependencies
+1. Click **Create Channel** button
+2. Enter **Channel Name** - Unique identifier for the channel
+3. Enter **Description** - Explain the channel's purpose
+4. Select **Channel Type** from dropdown:
+   - SMS (Normal)
+   - SMS (Flash)
+   - Email
+   - USSD (Push)
+   - USSD (Interactive)
+   - Push Notification
 
-Before deleting or deactivating channels, understand:
+<!-- 5. Configure **Channel-Specific Settings**: -->
 
-### Campaigns Using Channel
-- Active campaigns may be using this channel
-- Pending messages continue delivery even if deactivated
-- Disabling a channel affects new campaign creation
+<!-- #### SMS Channel Configuration
+- **Gateway Provider** - Select SMS provider (e.g., Twilio, Amazon SNS)
+- **Provider Credentials** - Enter API key/account details
+- **Sender ID** - Set default sender name/number
+- **Rate Limiting** - Configure message sending rate
 
-### Communication Policies
-- Policies may reference specific channels
-- Changing channel availability affects policy enforcement
-- Review policies before major channel changes
+#### Email Channel Configuration
+- **SMTP Server** - Email service provider details
+- **SMTP Host** - Server address
+- **SMTP Port** - Port number (usually 587 or 465)
+- **Authentication** - Username and password
+- **From Email** - Default sender email address
+- **SSL/TLS** - Enable secure connection
 
-### Routes and Configuration
-- SMS channels linked to SMS routes
-- Email channels dependent on SMTP configuration
-- USSD channels require gateway setup
-- Push channels need FCM/APNS credentials
+#### USSD Channel Configuration
+- **USSD Gateway Provider** - Select provider
+- **Provider Credentials** - API keys and authentication
+- **Service Code** - USSD service code
+- **Menu Configuration** - Default menu settings
 
-## Best Practices
+#### Push Notification Configuration
+- **FCM/APNS Provider** - Select Firebase or Apple Push
+- **Server Key/Certificate** - Provider credentials
+- **App Configuration** - App ID and settings
 
-### Channel Setup
-- Create channels for each communication method you use
-- Use clear, descriptive channel names
-- Document the purpose of each channel
-- Test new channels before production use
+6. Set **Status** - Active or Inactive
+7. Click **Save** to create the channel
 
-### Redundancy & Failover
-- Consider backup channels for critical communications
-- Configure multiple SMS routes for reliability
-- Monitor channel health and delivery rates
-- Have rollback plans for channel changes
+![Create Communication Channel](/img/configuration/create-communication-channel.png)
 
-### Performance
-- Monitor delivery metrics by channel
-- Optimize routes for better performance
-- Review and archive inactive channels
-- Test channels regularly
+--- -->
 
-### Compliance
-- Ensure channels comply with regulations
-- Maintain audit logs for all channel activity
-- Document customer preferences by channel
-- Respect DND (Do Not Disturb) settings
+## Editing a Communication Channel
 
-## Channel Selection for Campaigns
+Click **Edit**  to modify:
 
-When creating campaigns:
-- Choose the appropriate channel based on message type
-- Consider customer preferences and opt-in status
-- Verify channel is active and properly configured
-- Test delivery before sending to large audiences
+1. **Channel Name** - Update the channel identifier
+2. **Description** - Modify channel purpose
+<!-- 3. **Channel-Specific Settings**:
+   - Update provider credentials (if needed)
+   - Modify sender ID or email settings
+   - Adjust rate limiting or configuration
+4. **Status** - Enable or disable the channel -->
+3. Click **Save** to apply changes
 
-## Troubleshooting
+![Edit Communication Channel](/img/configuration/editcommunicationchannel.png)
 
-### Channel Not Available
-- Verify channel status is Active
-- Check if channel is linked to routes/configuration
-- Review channel permissions and access
+<!-- **Note:** 
+- Changes apply to future communications only
+- Already-scheduled messages are not affected
+- Cannot change channel type after creation
 
-### Message Delivery Issues
-- Check channel configuration
-- Verify routes and gateway credentials
-- Review delivery logs and error messages
-- Test with sample message
+--- -->
 
-### High Failure Rates
-- Monitor channel health metrics
-- Check gateway status and connectivity
-- Review customer data quality
-- Adjust routing or configuration
+## Deleting a Communication Channel
+
+Click **Delete** (trash icon) to remove a channel:
+<!-- 
+**Warning:** Cannot delete a channel that is:
+- Currently in use by active campaigns
+- Referenced by SMS routes
+- Set as default channel for any channel type
+
+**Resolution:**
+1. Reassign all campaigns and routes to different channels
+2. Remove channel from any default assignments
+3. Then delete the channel
+
+--- -->
+<!-- 
+## Channel Activation/Deactivation
+
+Toggle the **Status** switch to:
+- **Activate**: Make channel available for campaigns
+- **Deactivate**: Temporarily disable without deleting
+
+--- -->
+
+## Next Steps
+
+After configuring communication channels:
+- [Configure SMS Routes](/documentation/configuration/sms-routes) — Set up SMS delivery
+- [Campaign Communication Policy](/documentation/configuration/campaign-communication-policy-list) — Define frequency and compliance policies
+- [Configure Sender IDs](/documentation/configuration/sender-ids) — Set up sender identities
+- [Create Campaign](/documentation/campaigns/create-campaign) — Use channels in campaigns
 

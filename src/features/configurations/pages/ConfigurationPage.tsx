@@ -227,8 +227,8 @@ export default function ConfigurationPage() {
       },
       {
         id: "product-catalogs",
-        name: "Product Categories",
-        description: "Manage product categories and catalogs",
+        name: "Product Catalogs",
+        description: "Manage product catalogs",
         type: "product",
         category: "Product Configuration",
         status: "active",

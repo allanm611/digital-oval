@@ -423,6 +423,7 @@ const sidebars: SidebarsConfig = {
       items: [
         'configuration/overview',
         'configuration/communication-channels',
+        'configuration/campaign-communication-policy-list',
         'configuration/routes',
         'configuration/campaign-objectives',
         'configuration/departments',

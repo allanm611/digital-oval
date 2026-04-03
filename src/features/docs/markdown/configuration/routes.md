@@ -1,226 +1,130 @@
-# Communication Routes Overview
+# Communication Routes
 
-Communication Routes are the backbone of your message delivery infrastructure. They establish connections between your messaging channels and external gateway providers that actually send messages to customers.
+## Overview
 
-## What are Communication Routes?
+Communication Routes establish the connection between your messaging channels (SMS, Email, USSD, Push) and external gateway providers that actually deliver messages to customers. Each route maps a channel to a specific provider with credentials and configuration.
 
-Routes connect your application to real-world message delivery systems:
-- **Channels** → represent internal messaging methods (SMS, Email, USSD, Push)
-- **Routes** → deliver messages through external providers
-- **Providers** → actually send messages to customer devices
+## Routes List
 
-## How Routes Work
+Navigate to **Configuration → Routes** to manage all communication routes.
 
-### The Delivery Pipeline
+![Routes List](/img/configuration/routeslist.png)
 
-1. **User sends a message** through a campaign
-2. **Route is selected** based on channel and policy
-3. **Message formatted** for provider requirements
-4. **Provider receives** message via Route credentials
-5. **Provider delivers** message to customer device
-6. **Delivery report** sent back through Route
-7. **Status updated** in system
+The routes list displays all configured routes with:
+- **Route Name** - Unique identifier for the route
+- **Channel** - Communication channel (SMS, Email, USSD, Push)
+- **Provider** - External gateway provider (Effortel, Twilio, etc.)
+- **Priority** - Route priority in failover sequence (1 = highest)
+- **Status** - Active or Inactive badge
+- **Actions** - Edit or Delete buttons
 
-### Route Structure
+<!-- ## How Routes Work
 
-```
-Campaign
-    ↓
-Channel Selection (SMS, Email, USSD, Push)
-    ↓
-Route Selection (based on priority, load)
-    ↓
-Provider (Effortel, Twilio, AWS, Firebase, etc.)
-    ↓
-Customer Device
-```
+The delivery pipeline:
 
-## Default Routes
+1. A campaign sends a message through a communication channel
+2. The system selects a route based on channel and policy
+3. Message is formatted according to the provider's requirements
+4. Provider receives the message via the route's credentials
+5. Provider delivers the message to the customer
+6. Delivery status is reported back through the route
+7. System updates the message status (delivered, failed, bounced, etc.) -->
 
-Your system comes with pre-configured routes:
-
-### SMS Routes
-- **Effortel SMS Gateway** - Primary SMS delivery
-- Handles SMS - Normal and SMS - Flash messages
-- Provider: Effortel
-- Status: Active
-
-### Available Providers by Channel
-
-**SMS:**
-- Effortel, Twilio, AWS SNS, Vonage, Plivo, Bandwidth
-
-**Email:**
-- AWS SES, SendGrid, Mailgun, SMTP, Postmark
-
-**USSD:**
-- MainProvider, Zenith, Huawei, Mavenir
-
-**Push:**
-- Firebase (FCM), Apple (APNS)
-
-## Key Concepts
-
-### Primary vs. Backup Routes
+## Route Priorities & Failover
 
 **Primary Route (Priority 1)**
 - Handles all messages by default
 - Highest priority in failover sequence
-- Must be reliable and well-monitored
+- Used for normal message delivery
+- Should be your most reliable provider
 
 **Backup Routes (Priority 2+)**
-- Used only if primary fails
-- Lower cost options
-- Overflow routes for high volume
+- Used only if primary route fails
+- Automatic failover to next highest priority
+- Ensures message delivery reliability
+- Can be lower-cost or overflow routes
 
-### Load Balancing
+<!-- Example failover sequence:
+1. Try Primary Route (Priority 1) - if fails
+2. Try Secondary Route (Priority 2) - if fails
+3. Try Tertiary Route (Priority 3) - etc. -->
 
-Distribute traffic across multiple routes:
-- **Spread load** across providers
-- **Reduce costs** using cheaper providers
-- **Improve reliability** with failover
-- **Optimize performance** by region
+## Creating a Communication Route
 
-### Failover & Redundancy
+### Steps
 
-Automatic failover sequence:
-1. Try Primary Route (Priority 1)
-2. If fails, try Secondary Route (Priority 2)
-3. Continue through chain
-4. All message delivery guaranteed
+1. Click **Create Route** button in the top right
 
-## Common Tasks
+![Create Route Button](/img/configuration/routeslist.png)
 
-### Viewing Routes
+2. **Enter Route Information:**
+   - **Route Name** - Unique identifier (e.g., "Effortel SMS Primary", "Twilio Backup")
+   - **Channel** - Select which channel this route handles (SMS, Email, USSD, Push)
+   - **Provider** - Select the gateway provider 
 
-**All Routes**
-- Navigate to **Configuration → Routes**
-- [See Communication Routes List](/documentation/configuration/routes)
+![Create Communication Route Part 1](/img/configuration/createcommunicationrouteimage1.png)
 
-![SMS Routes List](/img/configuration/routeslist.png)
+<!-- 3. **Configure Provider Credentials:**
+   - Provider-specific fields based on selected provider
+   - **API Key / Account ID** - Authentication credentials
+   - **API Secret / Password** - Secure credentials
+   - **Endpoint URL** - Provider API endpoint (if required)
+   - Additional provider-specific settings -->
 
-**Specific Route Details**
-- Click route name to view configuration
-- [View Route Details](/documentation/configuration/routes)
+![Create Communication Route Part 2](/img/configuration/createcommunicationrouteimage2.png)
 
-### Managing Routes
+<!-- 4. **Set Route Priority:**
+   - **Priority** - Numeric priority (1 = highest, 2 = secondary failover, etc.)
+   - Lower numbers take precedence in failover
+   - Assign priorities based on provider reliability -->
 
-**Create New Route**
-- [Create Communication Route](/documentation/configuration/routes)
-- Connect new provider to channel
-- Configure credentials and settings
+<!-- 5. **Set Route Status:**
+   - Check **Active** to enable the route immediately
+   - Uncheck to keep it inactive until testing is complete -->
 
-**Edit Route**
-- [Edit Communication Route](/documentation/configuration/routes)
-- Update provider credentials
-- Adjust configuration
-- Change priority/status
+3. Click **Create** to save the route
 
-**Delete Route**
-- Remove route from system
-- Requires no active campaigns
-- Permanent action
+<!-- ![Create Route Form](/img/configuration/createroute.png) -->
 
-## Route Dependencies
+## Editing a Route
 
-### Campaigns
-- Each campaign uses routes for message delivery
-- Route availability affects campaign execution
-- Load balancing distributes message volume
+To modify an existing route:
 
-### Policies
-- Communication policies select routes
-- Policies enforce delivery rules
-- Routes enforce provider limits
+1. Click **Edit** (pencil icon) on the route row
+2. The edit modal opens with current route configuration
+3. Modify any fields:
+   - Route Name
+   - Provider credentials
+   <!-- - Priority
+   - Active status -->
+4. Click **Save** to apply changes
 
-### Providers
-- Provider credentials stored in routes
-- Shared with other systems/apps
-- Changes affect all campaigns
+![Edit Communication Route](/img/configuration/editcommunicationroute.png)
 
-## Best Practices
+<!-- **Note:** Changes apply immediately. If the route is actively being used, the system will use updated credentials for new messages. -->
 
-### Configuration
-- Create routes with clear, descriptive names
-- Document the purpose of each route
-- Set appropriate priority levels
-- Configure backup routes
+## Deleting a Route
 
-### Credentials & Security
-- Store credentials securely
-- Rotate credentials regularly
-- Use dedicated provider accounts
-- Implement access controls
+To remove a route:
 
-### Monitoring
-- Monitor delivery metrics per route
-- Track provider performance
-- Review error logs regularly
-- Alert on failures
+1. Click **Delete** (trash icon) on the route row
+2. Confirm deletion in the modal
 
-### Redundancy
-- Configure multiple routes per channel
-- Test failover regularly
-- Monitor all routes actively
-- Have recovery procedures
+<!-- **Warning:** Cannot delete a route that is currently active or assigned to campaigns. You must:
+1. Make the route Inactive first
+2. Remove it from any active campaigns or campaign policies
+3. Then delete the route
 
-### Provider Management
-- Monitor provider status pages
-- Stay updated on API changes
-- Maintain support contacts
-- Plan for provider changes
+If a primary route is deleted, failover routes will automatically become the primary. -->
 
-## Troubleshooting Routes
+<!-- ## Route Management Best Practices
 
-### Route Not Delivering
-
-**Check:**
-1. Is route Active?
-2. Are credentials valid?
-3. Is provider available?
-4. Are rate limits exceeded?
-
-**Fix:**
-1. Verify route status
-2. Test provider connection
-3. Check credentials
-4. Review error logs
-
-### High Failure Rate
-
-**Check:**
-1. Provider status page
-2. Rate limit usage
-3. Message format/content
-4. Customer data quality
-
-**Fix:**
-1. Contact provider support
-2. Adjust rate limits
-3. Validate message format
-4. Clean data
-
-### Slow Delivery
-
-**Check:**
-1. Provider latency
-2. Route load/capacity
-3. Network issues
-4. Provider queue depth
-
-**Fix:**
-1. Check provider performance
-2. Load balance to other routes
-3. Optimize network
-4. Contact provider
-
-## SMS Routes (Special Case)
-
-SMS Routes have special configuration:
-- **Sender ID Setup** - Who SMS appears to be from
-- **Delivery Reports** - Track SMS delivery status
-- **Character Encoding** - Handle special characters
-- **Long Messages** - Concatenate messages over 160 chars
-
-See [SMS Routes](/documentation/configuration/sms-routes) for SMS-specific details.
+1. **Prioritize Reliability** - Assign Priority 1 to your most reliable provider
+2. **Test Credentials** - Verify provider credentials work before activating
+3. **Monitor Provider Status** - Keep inactive routes for emergency backup
+4. **Region-Specific Routes** - Create separate routes for different regions if needed
+5. **Rate Limiting** - Understand provider rate limits and set accordingly
+6. **Cost Optimization** - Use backup routes with lower-cost providers for failover
+7. **Failover Coverage** - Always have at least one backup route per critical channel
+8. **Documentation** - Keep notes about provider SLAs and support contacts -->
 

@@ -2,133 +2,93 @@
 
 ## Overview
 
-DND (Do Not Disturb) Management allows you to manage customer communication preferences across multiple channels. It enables customers and administrators to opt-out of specific types of communications (marketing, promotional, transactional, service) on specific channels (SMS, Email, USSD, App Notifications). This ensures compliance with customer preferences and improves engagement by respecting opt-out preferences.
+DND (Do Not Disturb) Management allows you to manage customer communication preferences and opt-outs across multiple channels. Respect customer choices by maintaining Do Not Disturb lists for SMS, Email, USSD, and Push Notifications. This ensures regulatory compliance, protects customer relationships, and improves campaign effectiveness by excluding customers who have opted out.
 
 ## Purpose & Benefits
 
-### Why Use DND Management?
-
 **Respect Customer Preferences**
-- Honor customer opt-out preferences
-- Control what types of messages customers receive
-- Allow customers to manage their own preferences
-- Reduce unwanted communications
+- Honor customer opt-out requests
+- Prevent unwanted communications
+- Maintain customer trust
+- Reduce complaints and bounce rates
 
 **Regulatory Compliance**
 - Meet GDPR and privacy regulations
-- Document customer preferences
-- Maintain audit trails of opt-in/opt-out
-- Respect local messaging regulations
+- Maintain audit trails of opt-in/opt-out actions
+- Document customer preferences with timestamps
+- Respect local messaging laws
 
-**Improve Customer Experience**
-- Deliver only relevant messages
-- Reduce message fatigue
-- Increase engagement rates
-- Build customer trust
+**Improve Campaign Performance**
+- Automatically filter opted-out customers
+- Reduce invalid delivery attempts
+- Improve email deliverability and SMS success rates
+- Focus campaigns on engaged customers
+- Increase overall campaign ROI
 
-**Campaign Effectiveness**
-- Filter out opted-out customers before sending
-- Reduce bounces and complaints
-- Focus messages on engaged customers
-- Improve campaign ROI
+**Operational Efficiency**
+- Centralized opt-out management across all channels
+- Quick customer lookup and preference management
+- Audit trail showing who made changes and when
+- Soft-delete records for compliance history
 
-### Key Benefits
+## DND Management Overview
 
-- **Preference Control:** Fine-grained channel and message type control
-- **Compliance:** Regulatory adherence and audit trails
-- **Efficiency:** Automatically exclude opted-out customers from campaigns
-- **Trust:** Demonstrate respect for customer preferences
-- **Performance:** Improve open rates, click rates, and ROI by excluding unengaged customers
+Navigate to **Configuration → DND Management** to manage all Do Not Disturb lists.
 
----
+The DND Management page displays communication channels as interactive cards:
 
-## DND Channels
+- **SMS** - Text message opt-outs
+- **Email** - Email communication opt-outs
+- **USSD** - Interactive messaging opt-outs
+- **Push** - Mobile app notification opt-outs
 
-DND Management supports four communication channels:
+Click any channel card to access and manage the DND list for that specific channel.
+
+## Supported Channels
 
 ### SMS (Short Message Service)
 
-**Description:** Text message communication via phone numbers
-
-**Use For:**
-- SMS campaigns and promotions
-- SMS notifications and alerts
-- SMS marketing messages
-- Time-sensitive communications
-
-**DND Categories Available:**
-- Promotional
-- Transactional
-- Marketing
-- Service
-- Other
+**Description:** Text message communication
 
 **Managed By:** Phone numbers (MSISDN format)
 
----
+**Use Cases:**
+- Customers who send "STOP" to opt out of SMS
+- Regional SMS regulations
+- Customer-initiated SMS blocking
 
 ### Email
 
-**Description:** Email message communication
-
-**Use For:**
-- Email campaigns
-- Email newsletters
-- Email notifications
-- Email promotions
-
-**DND Categories Available:**
-- Promotional
-- Transactional
-- Marketing
-- Service
-- Other
+**Description:** Email communication
 
 **Managed By:** Email addresses
 
----
+**Use Cases:**
+- Customers clicking unsubscribe links
+- Email provider spam complaints
+- Customer opt-out requests
 
 ### USSD (Unstructured Supplementary Service Data)
 
-**Description:** Interactive menu-based mobile communication
-
-**Use For:**
-- USSD menu interactions
-- USSD notifications
-- USSD balance queries
-- USSD service messages
-
-**DND Categories Available:**
-- Promotional
-- Transactional
-- Marketing
-- Service
-- Other
+**Description:** Interactive menu-based mobile messaging
 
 **Managed By:** Phone numbers (MSISDN format)
 
----
+**Use Cases:**
+- USSD menu navigation opt-outs
+- Regional USSD regulations
+- Customer preference updates
 
-### App Notifications
+### Push Notifications
 
-**Description:** In-app push notifications
+**Description:** Mobile app notifications via FCM/APNS
 
-**Use For:**
-- In-app notifications
-- App-based promotions
-- App engagement messages
-- App service alerts
+**Managed By:** Customer/User IDs
 
-**DND Categories Available:**
-- Promotional
-- Transactional
-- Marketing
-- Service
-- Other
-
-**Managed By:** User/Customer IDs (within app)
-
----
+**Use Cases:**
+- In-app notification opt-outs
+- Push notification permissions
+- App engagement preferences
 
 ## DND Categories
 

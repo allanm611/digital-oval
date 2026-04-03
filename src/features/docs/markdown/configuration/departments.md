@@ -1,6 +1,6 @@
 # Departments Overview
 
-Departments represent organizational units within your company. They help structure your team, organize campaigns, assign responsibilities, and track performance across different business functions.
+Departments represent organizational units within your company. They help structure your team, organize campaigns and  assign responsibilities.
 
 ## What are Departments?
 
