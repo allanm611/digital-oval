@@ -4,7 +4,7 @@
  * Serves docs from /documentation/* routes
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { Link as LinkIcon } from 'lucide-react';
@@ -29,6 +29,11 @@ export function DocsPage() {
 
   // Extract slug from URL path (e.g., /documentation/authentication/login → authentication/login)
   const slug = location.pathname.replace(/^\/documentation\/?/, '') || 'intro';
+
+  // Scroll to top when navigation slug changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [slug]);
 
   // Convert Docusaurus sidebar config to React component format
   const SIDEBAR_ITEMS = useMemo(() => {

@@ -4,10 +4,6 @@
 
 View all customers in your system in a unified table. Search, filter, and manage customer data with action buttons for viewing, editing, and deleting customer records.
 
-**Navigation:** Dashboard → Customer 360 → Customers
-
----
-
 ## Customer List View
 
 ![Customer List](/img/customer360-images/customer360list.png)
