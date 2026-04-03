@@ -2,831 +2,110 @@
 
 ## Overview
 
-Add new customers to your system to build your customer database and enable targeted campaigns and communications. There are three ways to add customers depending on your volume and data source.
-
----
-
-## Method 2: Bulk CSV Entry
-
-### How to Use Bulk CSV
-
-**Step 1: Format Your Data**
-
-Prepare your customer data as comma-separated values. Include a header row with column names:
-
-```
-FirstName,LastName,Phone,Email,AlternatePhone,Gender,AlternateEmail
-John,Doe,256712345678,john@email.com,256712345679,Male,johndoe@email.com
-Jane,Smith,256712345680,jane@email.com,,Female,
-```
-
-**Supported Columns:**
-- **FirstName** - Customer first name (required)
-- **LastName** - Customer last name (required)
-- **Phone/MSISDN/Mobile** - Primary phone number (required)
-- **Email** - Email address (optional)
-- **AlternatePhone/AltPhone** - Additional phone number (optional)
-- **AlternateEmail/AltEmail** - Secondary email (optional)
-- **Gender** - Male or Female (optional)
-
-**Step 2: Paste Data**
-
-1. Click **Create Customer** button
-2. Click the **Bulk** tab
-3. Paste your CSV data into the text area
-
-**Step 3: Review Validation**
-
-The system automatically:
-- Detects column positions
-- Validates required fields
-- Checks phone number formats
-- Shows valid/invalid count
-- Displays errors for invalid rows
-
-**Example Results:**
-- 10 valid customers (ready to import)
-- 2 invalid customers (shows error reasons)
-
-**Step 4: Submit Import**
-
-If validation passes, click **Import** to add all valid customers to your system.
-
----
-
-## Method 3: Import File
-
-### How to Upload File
-
-**Step 1: Prepare File**
-
-Create an Excel (.xlsx) or CSV file with customer data. First row must be headers:
-
-| FirstName | LastName | Phone | Email | Gender |
-|-----------|----------|-------|-------|--------|
-| John | Doe | 256712345678 | john@email.com | Male |
-| Jane | Smith | 256712345680 | jane@email.com | Female |
-
-**Step 2: Upload File**
-
-1. Click **Create Customer** button
-2. Click the **Import** tab
-3. Click **Choose File** and select your CSV/Excel file
-4. System auto-detects column mappings
-
-**Step 3: Configure Column Mapping**
-
-If auto-detection isn't correct:
-- Select correct columns from dropdowns
-- Assign FirstName, LastName, Phone columns (required)
-- Optional: Map Email, AlternatePhone, Gender, etc.
-
-**Step 4: Review Preview**
-
-See a preview of data that will be imported:
-- Valid records ready to import
-- Invalid records with error reasons
-- Fix mapping if needed
-
-**Step 5: Confirm Import**
-
-Click **Confirm Import** to add customers to your system
-
----
-
-## Validation Rules
-
-### Phone Number Format
-
-Phone numbers must include a country code:
-- **Valid:** 256712345678, +256712345678 (Uganda)
-- **Valid:** 254712345678, +254712345678 (Kenya)
-- **Invalid:** 712345678 (no country code)
-
-### Bulk Validation Feedback
-
-During bulk/import preview you'll see:
-- ✅ Valid customers (ready to import)
-- ❌ Invalid customers with specific error messages
-- Row numbers for easy reference
-
-### Common Validation Errors
-
-- "Missing required fields" - FirstName, LastName, or Phone is blank
-- "Phone number must begin with country code" - No country code in phone
-- "Gender must be Male or Female" - Invalid gender value
-
-### Method 1: Single Manual Entry (One at a Time)
-
-**When to Use:**
-- Adding one or two customers
-- Testing the system
-- Adding individual customer requests
-- Quick manual additions
-
-**Process:** Fill form with customer details → Click Save
-**Time:** ~2 minutes per customer
-**Best For:** Low volume, immediate needs
-
-### Method 2: Bulk CSV Upload (Multiple Customers at Once)
-
-**When to Use:**
-- Importing 10+ customers
-- Migrating from legacy system
-- Regular scheduled imports
-- Large dataset uploads
-
-**Process:** Open bulk tab → Paste CSV data → Review validation → Submit import
-**Time:** ~5-10 minutes to import 1,000 customers
-**Best For:** High volume, batch imports
-
-### Method 3: Import File (Upload Excel/CSV)
-
-**When to Use:**
-- Upload pre-formatted Excel or CSV files
-- Use file picker for easier file selection
-- Auto-detect column mapping
-- Preview data before importing
-
-**Process:** Open import tab → Select file → Set column mappings → Confirm import
-**Time:** ~5 minutes per file
-**Best For:** File-based imports with automatic mapping detection
-
----
+Add new customers to your system. Choose the method that fits your workflow:
+- **Single Entry** - Add one customer at a time
+- **Bulk CSV** - Paste or upload multiple customers
+- **File Import** - Upload Excel/CSV with automatic column detection
 
 ## Method 1: Single Manual Entry
 
-### Accessing Create Customer
+### How to Start
 
-**Navigation:** Dashboard → Customer 360 → Customers → Create Customer
+Navigate to **Customer 360 → Customers → Create Customer**
 
-**Also Accessible From:**
-- Customers list page - Click **Create Customer** button
-- Modal dialog or dedicated page
+![Single Entry Form Part 1](/img/customer360-images/addcustomermanuallyimage1.png)
 
----
+![Single Entry Form Part 2](/img/customer360-images/addcustomermanuallyimage2.png)
 
-## Required Fields
+### Required Fields
 
-These fields must be completed to create a customer:
+**Phone Number (MSISDN)**
+- Format: +27712345678 or 0712345678
+- System normalizes automatically
+- Must be unique
 
-### Phone Number (MSISDN)
+**First Name**
+- Max 255 characters
+- Letters, spaces, hyphens, apostrophes
 
-- **Field Name:** MSISDN (Mobile Station Integrated Services Digital Network)
-- **Format:** Country code + local number (e.g., +27712345678 or 0712345678)
-- **Requirements:**
-  - Must be a valid phone number
-  - Format depends on your region/country
-  - System will normalize the format
-- **Example:** "+27712345678" or "0712345678" for South Africa
+**Last Name**
+- Max 255 characters
+- Letters, spaces, hyphens, apostrophes
 
-### First Name
+### Optional Fields
 
-- **Field Name:** First Name
-- **Requirements:**
-  - Cannot be empty
-  - Max 255 characters
-  - Supports letters, spaces, hyphens, apostrophes
-- **Example:** "John"
+**Contact Information**
+- Email, alternate email, alternate phone numbers
 
-### Last Name
+**Demographics**
+- Gender, date of birth, language preference
 
-- **Field Name:** Last Name
-- **Requirements:**
-  - Cannot be empty
-  - Max 255 characters
-  - Supports letters, spaces, hyphens, apostrophes
-- **Example:** "Smith"
+**Geographic**
+- Address, city, region, postal code, country code
 
----
+**Account Settings**
+- Customer tier, preferred communication channel, timezone
 
-## Optional Fields
+### Save Options
 
-Additional information to enhance customer profiles:
+**Save** - Creates customer and returns to list
 
-### Contact Information
+**Cancel** - Discards without saving
 
-**Email Address**
-- Primary email for communications
-- Format: valid email address (example@domain.com)
-- Used for email campaigns and notifications
-- Optional but recommended
+## Method 2: Bulk CSV Entry
 
-**Alternate Email**
-- Secondary email address
-- Useful for backup contact
-- Optional
+Paste comma-separated customer data to import multiple customers.
 
-**Alternate Phone Numbers**
-- Additional phone numbers for the customer
-- Supports multiple entries
-- Format same as primary MSISDN
-- Optional
+![Bulk CSV Entry](/img/customer360-images/addcustomerbulkimage.png)
 
-### Demographic Information
+### Steps
 
-**Gender**
-- Options: Male, Female
-- Used for personalization
-- Optional
+1. Click **Create Customer** → **Bulk** tab
+2. Paste CSV data into text area
+3. System validates automatically
+4. Click **Import** to add all valid customers
 
-**Date of Birth**
-- Format: YYYY-MM-DD
-- Used to calculate age and for segmentation
-- Optional
+### CSV Format
 
-**Age**
-- Numeric age value
-- Used for demographic segmentation
-- Auto-calculated if DOB provided
-- Optional
-
-**Language Preference**
-- Options: English (en), Swahili (sw), French (fr)
-- Used for notification language
-- Defaults to English if not specified
-- Optional
-
-### Geographic Information
-
-**Physical Address**
-- Street address, apartment number, etc.
-- Max 500 characters
-- Optional
-
-**City**
-- City/municipality name
-- Optional
-
-**Region/State/Province**
-- Regional division
-- Optional
-
-**Postal Code**
-- Zip/postal code
-- Optional
-
-**Country Code**
-- ISO country code selector
-- Lists all countries worldwide
-- Optional
-
----
-
-## Additional Customer Settings
-
-### Customer Tier
-
-Classify your customer by value tier:
-- **Regular** - Standard tier
-- **VIP** - High-value customer
-- **Gold** - Premium customer
-- **Platinum** - Top-tier customer
-
-Used for segmentation and targeted campaigns.
-
-### Preferred Communication Channel
-
-Set the customer's preferred way to receive communications:
-- **Normal SMS** - Standard text messages
-- **Flash SMS** - Urgent text messages (system notification delivery)
-- **Email** - Email messages
-- **WhatsApp** - WhatsApp messaging
-- **Push** - Push notifications
-- **USSD** - USSD menu system
-- **Interactive USSD** - Two-way USSD communication
-- **In-App** - In-app notifications
-- **IVR** - Interactive voice response (phone system)
-- **OBD** - Out-band delivery
-- **Short Code** - SMS via short code
-
-Defaults to Normal SMS if not specified.
-
-### Timezone
-
-Set the customer's timezone for message delivery timing:
-- **Africa/Kampala** - Uganda time
-- **Africa/Nairobi** - Kenya time
-- **Africa/Dar es Salaam** - Tanzania time
-- **Africa/Kigali** - Rwanda time
-
-Defaults to Africa/Kampala if not specified.
-
-**Postal/Zip Code**
-- Postal or ZIP code
-- Optional
-
-**Country Code**
-- ISO country code (e.g., US, ZA, GB)
-- Used for localization and compliance
-- Optional
-
-### Account & Preferences
-
-**Language Preference**
-- Preferred language for communications
-- Options: English, French, Spanish, German, Chinese, Japanese, Russian
-- Used for message localization
-- Default: English
-- Optional
-
-**Timezone**
-- Customer's local timezone
-- Used for scheduling communications
-- Format: IANA timezone (e.g., America/New_York, Africa/Johannesburg)
-- Optional
-
-**Customer Tier**
-- Classification for customer value: Platinum, Gold, Silver, Bronze, Standard
-- Used for segmentation and targeting
-- Optional
-
-**Preferred Communication Channel**
-- Primary channel for communications
-- Options:
-  - Normal SMS
-  - Flash SMS
-  - Email
-  - WhatsApp
-  - Push Notification
-  - USSD
-  - Interactive USSD
-  - In-App
-  - IVR
-  - OBD
-  - Short Code
-- Optional
-
-### Custom Attributes
-
-- **Dynamic Fields:** Your organization may have custom fields
-- **Flexible Storage:** Any key-value data
-- **Examples:** LoyaltyProgram, CustomerSegment, BusinessUnit
-- Optional
-
----
-
-## Customer Creation Steps
-
-### Step 1: Open Create Customer Form
-
-1\. Navigate to Customer 360 → Customers
-2\. Click **Create Customer** button (top-right)
-3\. Form opens (modal or dedicated page)
-
-### Step 2: Enter Required Information
-
-Fill in the three mandatory fields:
-
-1\. **Phone Number (MSISDN)**
-   - Enter customer's mobile phone number
-   - Format: with or without country code
-   - System will validate and normalize
-
-2\. **First Name**
-   - Enter customer's first name
-   - Supports letters, spaces, hyphens, apostrophes
-
-3\. **Last Name**
-   - Enter customer's surname/family name
-   - Supports letters, spaces, hyphens, apostrophes
-
-### Step 3: Add Optional Information (Recommended)
-
-Enhance customer profile with additional data:
-
-1\. **Email Address**
-   - Primary email for email campaigns
-   - Recommended for better reach
-
-2\. **Contact Information**
-   - Alternate emails
-   - Additional phone numbers
-   - Physical address details
-
-3\. **Demographics**
-   - Gender
-   - Date of birth
-   - Language preference
-
-4\. **Geographic Details**
-   - City, region, postal code
-   - Country code
-   - Timezone
-
-5\. **Account Preferences**
-   - Customer tier
-   - Preferred channel
-   - Custom attributes
-
-### Step 4: Review & Validate
-
-Before saving, review:
-- All required fields are filled
-- Phone number is in correct format
-- Email addresses are valid (if provided)
-- No obvious data entry errors
-
-### Step 5: Save Customer
-
-**Options:**
-
-**Save**
-- Creates customer
-- Returns to customer list
-- Shows success confirmation
-
-**Save & Add Another**
-- Creates customer
-- Clears form for next entry
-- Useful for bulk manual entry
-
-**Cancel**
-- Discards form
-- Returns to customer list
-- No customer created
-
----
-
-## Bulk Customer Upload
-
-### When to Use Bulk Upload
-
-Use bulk upload when:
-- Importing customers from external source
-- Migrating data from legacy system
-- Creating many customers at once (100+)
-- Regular scheduled imports
-
-### Bulk Upload Process
-
-**Step 1: Prepare CSV File**
-1\. Download template from system
-2\. Fill in customer data
-3\. Ensure correct format
-
-**Step 2: Upload File**
-1\. Click **Bulk Import** button
-2\. Select CSV file from computer
-3\. Click **Upload**
-
-**Step 3: Review & Confirm**
-1\. System validates file
-2\. Shows preview of data
-3\. Displays any errors
-4\. Click **Confirm Import**
-
-**Step 4: Monitor Progress**
-1\. System processes file
-2\. Shows progress indicator
-3\. Reports success/failure count
-4\. Provides error details
-
-### Method 2: Bulk CSV Upload
-
-## CSV Format & Field Mapping
-
-The CSV file maps column names to customer attributes. Each column in your CSV becomes a customer field in the system.
-
-### Required Columns (Must Be Present)
-
-**msisdn** → Phone Number
-- Format: Country code + number OR local number
-- Example: `+27712345678` or `0712345678`
-- Notes: Unique identifier, required for every row
-
-**first_name** → First Name
-- Format: Text (letters, spaces, hyphens)
-- Example: `John`
-- Notes: Max 255 characters
-
-**last_name** → Last Name
-- Format: Text (letters, spaces, hyphens)
-- Example: `Smith`
-- Notes: Max 255 characters
-
-**Note:** If any of these three required columns are missing or empty in a row, that row will fail validation.
-
-### Optional Columns (Recommended)
-
-**email** → Email Address
-- Format: Valid email format
-- Example: `john@example.com`
-- Notes: Used for email campaigns
-
-**alternate_email** → Alternate Email
-- Format: Valid email format
-- Example: `john.work@company.com`
-- Notes: Secondary email backup
-
-**country_code** → Country
-- Format: ISO 2-letter code
-- Example: `ZA`, `US`, `GB`
-- Notes: Localization and compliance
-
-**timezone** → Timezone
-- Format: IANA format
-- Example: `Africa/Johannesburg`
-- Notes: Used for message scheduling
-
-**language_preference** → Language
-- Format: Language code
-- Example: `en`, `es`, `fr`
-- Notes: Message localization
-
-**gender** → Gender
-- Format: M/F/O/Unspecified
-- Example: `M`
-- Notes: Demographic segmentation
-
-**date_of_birth** → Date of Birth
-- Format: YYYY-MM-DD
-- Example: `1990-05-15`
-- Notes: Age calculation and targeting
-
-**city** → City
-- Format: Text
-- Example: `Johannesburg`
-- Notes: Geographic targeting
-
-**region** → Region/State/Province
-- Format: Text
-- Example: `Gauteng`
-- Notes: Geographic segmentation
-
-**postal_code** → Postal Code
-- Format: Text
-- Example: `2000`
-- Notes: Location-based targeting
-
-**physical_address** → Street Address
-- Format: Text
-- Example: `123 Main St`
-- Notes: Customer location
-
-**customer_tier** → Customer Tier
-- Format: Predefined value
-- Example: `Gold`, `Silver`, `Bronze`
-- Notes: Value-based segmentation
-
-**preferred_channel** → Preferred Channel
-- Format: Channel code
-- Example: `SMS`, `Email`, `WhatsApp`
-- Notes: Communication preference
-
-### Optional Columns (Custom/System-Specific)
-
-Any additional columns in your CSV can be custom attributes:
-- `loyalty_program_id` - Loyalty membership ID
-- `acquisition_source` - How customer was acquired
-- `vip_status` - VIP flag (yes/no)
-- `account_manager` - Assigned account manager
-- Any organization-specific fields
-
-### CSV File Structure & Examples
-
-**Basic Example (Minimum Required Fields):**
 ```
-msisdn,first_name,last_name
-+27712345678,John,Smith
-+27712345679,Jane,Doe
-+27712345680,Bob,Johnson
+first_name,last_name,msisdn,email,country_code,timezone
+John,Smith,+254712345678,john@example.com,KE,Africa/Nairobi
+Jane,Doe,+254712345679,jane@example.com,KE,Africa/Nairobi
 ```
 
-**Complete Example (All Common Fields):**
-```
-msisdn,first_name,last_name,email,country_code,timezone,language_preference,gender,date_of_birth,city,region,customer_tier,preferred_channel
-+27712345678,John,Smith,john@example.com,ZA,Africa/Johannesburg,en,M,1990-05-15,Johannesburg,Gauteng,Gold,SMS
-+27712345679,Jane,Doe,jane@example.com,ZA,Africa/Johannesburg,en,F,1985-03-22,Cape Town,Western Cape,Silver,Email
-+27712345680,Bob,Johnson,bob@example.com,US,America/New_York,en,M,1992-07-10,New York,NY,Standard,Email
-```
+**Required columns:** first_name, last_name, msisdn
 
-**With Custom Attributes:**
-```
-msisdn,first_name,last_name,email,customer_tier,loyalty_program_id,vip_status,acquisition_source
-+27712345678,John,Smith,john@example.com,Gold,LP123456,yes,Referral
-+27712345679,Jane,Doe,jane@example.com,Silver,LP123457,no,Organic
-```
+**Optional columns:** email, country_code, timezone, language_preference, gender, date_of_birth, city, region, postal_code, customer_tier, preferred_channel
 
-### Field Mapping Rules
 
-**Phone Number (msisdn):**
-- Can include country code: `+27712345678` (preferred)
-- Can be local format: `0712345678`
-- System auto-detects and normalizes format
-- Must be 10-15 digits (excluding country code symbols)
+## Method 3: File Import
 
-**Names (first_name, last_name):**
-- Supports: Letters (a-z, A-Z), spaces, hyphens, apostrophes
-- No special characters or numbers
-- Examples: O'Brien, Mary-Jane, José
+Upload Excel or CSV files with automatic column detection.
 
-**Email (email, alternate_email):**
-- Format: user@domain.extension
-- Example: john.smith@example.com
-- System validates format before import
-- Optional but recommended
+### Steps
 
-**Date Fields (date_of_birth):**
-- Format: YYYY-MM-DD (ISO format, required)
-- Example: 1990-05-15 (May 15, 1990)
-- Must be valid date (no Feb 30th)
-- Must be before today's date
+1. Click **Create Customer** → **Import** tab
+2. Click **Choose File** and select your file
+3. Map your file columns to the three required fields displayed: first name, last name, and phone number
 
-**Country Code:**
-- Format: ISO 2-letter code
-- Examples: ZA (South Africa), US (USA), GB (United Kingdom), CA (Canada)
-- Used for localization and compliance
-- Optional but recommended
+![Column Mapping](/img/customer360-images/addcustomerimportimage1.png)
 
-**Timezone:**
-- Format: IANA timezone identifier
-- Examples: Africa/Johannesburg, America/New_York, Europe/London
-- Used for scheduling messages at correct local time
-- Optional but important
+If mapping is incorrect, you'll see an error and have an option to go back and fix it :
 
-**Language Preference:**
-- Format: 2-letter language code
-- Examples: en (English), es (Spanish), fr (French), sw (Swahili)
-- Used for message localization
-- Optional
+![Column Mapping Error](/img/customer360-images/addcustomerimportinvalidmappingimageerror.png)
 
-**Customer Tier:**
-- Use predefined values: Platinum, Gold, Silver, Bronze, Standard
-- System validates against configured tiers
-- Used for VIP/value-based segmentation
-- Optional but helps with targeting
+4. Review preview of data to import
 
-**Preferred Channel:**
-- Valid values: SMS, Email, WhatsApp, Push, USSD, IVR, InApp
-- System uses this to route communications
-- Respects customer preference for delivery
-- Optional but improves engagement
+![File Import Preview](/img/customer360-images/addcustomerimportvalidmappingimage.png)
 
-**File Requirements:**
-- Format: CSV (Comma-Separated Values)
-- Encoding: UTF-8
-- Max File Size: 100 MB
-- Max Records: 1,000,000 per upload
-- Headers: First row must contain column names
+![File Import Valid Preview](/img/customer360-images/addcustomerimportvalidmappingimage.png)
 
-### Bulk Upload Validation
-
-The system validates:
-
-**Phone Numbers**
-- Format and validity
-- Duplicates within file
-- Duplicates in system
-
-**Email Addresses**
-- Format validation
-- Optional but checked if provided
-
-**Required Fields**
-- MSISDN present
-- First and last names present
-
-**Data Types**
-- Dates in correct format (YYYY-MM-DD)
-- Numbers are numeric
-- Timezone values are valid
-
-### Bulk Upload Error Handling
-
-**File Errors:**
-- Invalid CSV format
-- Missing required columns
-- Unsupported encoding
-
-**Row Errors:**
-- Invalid phone number
-- Missing required field
-- Duplicate MSISDN in file
-
-**System Errors:**
-- Duplicate phone in system
-- System capacity issues
-- Permission errors
-
-**Recovery:**
-1\. Review error report
-2\. Fix data in CSV
-3\. Re-upload corrected file
-4\. System skips already-imported records
-
----
-
-## Data Validation
-
-### Phone Number (MSISDN)
-
-- Must be a valid phone number
-- Format normalized automatically
-- Supports multiple formats:
-  - International: +27712345678
-  - Local: 0712345678
-  - With spaces: +27 71 234 5678
-- System verifies against known formats
-
-### Email Address
-
-- Must be valid email format
-- Checks: user@domain.extension
-- Optional but validated if provided
-- Used for email campaigns
-
-### Date of Birth
-
-- Format: YYYY-MM-DD (ISO format)
-- Example: 1990-05-15
-- System validates date is valid and reasonable
-
-### Timezone
-
-- IANA timezone format
-- Examples: America/New_York, Africa/Johannesburg, Europe/London
-- Used for scheduling communications
-
----
-
-## Best Practices
-
-### Data Quality
-
-1\. **Phone Number Format** - Use consistent format for your region
-2\. **Name Capitalization** - Use proper capitalization (John Smith, not JOHN SMITH or john smith)
-3\. **Email Validation** - Verify email addresses are correct
-4\. **Complete Profiles** - Add optional fields for better targeting
-5\. **Avoid Duplicates** - Check system before creating customer
-
-### Privacy & Compliance
-
-1\. **Get Consent** - Ensure customer opted-in
-2\. **Privacy Policy** - Follow data protection regulations
-3\. **DND Hours** - Respect Do Not Disturb settings
-4\. **Secure Data** - Use secure upload for sensitive information
-5\. **Verify Identity** - Confirm customer identity before storing data
-
-### Segmentation & Targeting
-
-1\. **Set Tier Appropriately** - Use correct customer classification
-2\. **Add Demographic Data** - Helps with personalization
-3\. **Timezone Matters** - Ensures communications at right time
-4\. **Language Preference** - Enables localized messages
-5\. **Preferred Channel** - Respects customer communication choice
-
----
-
-## Common Errors & Solutions
-
-### Error: "Invalid phone number format"
-
-**Cause:** Phone number doesn't match expected format
-
-**Solution:**
-- Check country code is included
-- Remove any non-numeric characters (except +)
-- Use format: +CC_NUMBER (e.g., +27712345678)
-- Or local format: 0XXXXXXXXX
-
-### Error: "Customer already exists"
-
-**Cause:** Phone number already in system
-
-**Solution:**
-- Verify MSISDN is unique
-- Check existing customer records
-- Update existing customer instead of creating new
-- Check for formatting differences (spaces, hyphens)
-
-### Error: "Invalid email format"
-
-**Cause:** Email address doesn't meet validation rules
-
-**Solution:**
-- Correct email spelling
-- Ensure format: user@domain.com
-- Leave blank if email unavailable
-- Check for spaces or special characters
-
-### Error: "Invalid date format"
-
-**Cause:** Date of birth in wrong format
-
-**Solution:**
-- Use format: YYYY-MM-DD
-- Example: 1990-05-15
-- Verify date is valid and reasonable
-- Leave blank if unsure
-
----
+5. Click **Confirm Import** to add customers
 
 ## Next Steps
 
 After creating customers:
-- [View Customer Details](/documentation/customer-360/view-customer-details) - View and manage profiles
-- [Customer Reports](/documentation/reports/customer-profile-reports) - Track customer metrics
-- Create Segments - Organize customers for campaigns
-- Launch Campaigns - Send targeted communications
-
+- [View Customer Details](/documentation/customer-360/view-customer-details) — Access full customer profiles
+- [Customer Identity](/documentation/customer-360/customer-identity) — View unique identity fields
+- Create Segments — Organize customers for campaigns
+- Launch Campaigns — Send targeted communications

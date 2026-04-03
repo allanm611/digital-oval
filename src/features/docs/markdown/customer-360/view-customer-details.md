@@ -86,9 +86,9 @@ The profile section displays core customer data:
 - **Last Activity** - Most recent interaction
 - **KYC Verified** - Know Your Customer verification status
 
-### Notification Channels
+### Notification Channel Support
 
-Customer can receive communications through multiple channels:
+Customer supports multiple notification channels:
 
 **SMS** - Text messages (High-priority, immediate delivery)
 
@@ -98,56 +98,205 @@ Customer can receive communications through multiple channels:
 
 **WhatsApp** - WhatsApp messaging (Personal, interactive messages)
 
+**Push** - Mobile push notifications (App-based notifications)
+
+**USSD** - USSD menu (Feature phone interactions)
+
+**Interactive USSD** - Menu-based USSD (Feature phone menus)
+
+**In-App** - In-application messages (Mobile/web app notifications)
+
+**IVR** - Voice calls (Voice-based communications)
+
+---
+
+## Segments & Tags
+
+### Customer Segments
+
+View segments customer belongs to:
+
+**Segment List**
+- Click on segment name to view segment details
+- Shows segment criteria and size
+- See when customer was added to segment
+- Option to remove from segment
+
+**Add to New Segment**
+1\. Click **Add to Segment**
+2\. Search for segment
+3\. Select segment(s) to add
+4\. Click **Confirm**
+5\. Customer added immediately
+
+**Remove from Segment**
+1\. Find segment in list
+2\. Click **Remove** or delete icon
+3\. Confirm action
+4\. Customer removed from segment
+
+### Custom Tags
+
+Apply custom tags for organization:
+
+- **Add Tag** - Create or apply custom tag
+- **Remove Tag** - Delete tag from customer
+- **Tag Colors** - Visual organization
+- **Filtered Search** - Find customers by tag
+
+---
+
+## Campaign Participation History
+
+### Campaign History Table
+
+View all campaigns customer has participated in:
+
+**Columns:**
+- **Campaign Name** - Name of campaign
+- **Campaign Type** - Type of campaign (Broadcast, A/B Test, etc.)
+- **Send Date** - When message was sent
+- **Channel** - Delivery channel used (SMS, Email, etc.)
+- **Status** - Sent, Delivered, Failed
+- **Engagement** - Customer interaction (Opened, Clicked, etc.)
+
+### Campaign Details
+
+For each campaign, see:
+- **Sent Date/Time** - When message was delivered
+- **Channel Used** - Which channel delivered message
+- **Message Content** - If available (truncated)
+- **Delivery Status** - Sent, Delivered, Failed, Undelivered
+- **Engagement Metrics:**
+  - Opened (for email)
+  - Clicked (for links)
+  - Converted (if applicable)
+  - Bounced (if failed)
+- **Offer Received** - Offers included in campaign
+- **Result/Outcome** - Action customer took
+
+### Filter Campaign History
+
+- **By Date Range** - Filter campaigns by date
+- **By Channel** - Filter by SMS, Email, Push, etc.
+- **By Status** - Sent, Delivered, Failed, etc.
+- **By Campaign Type** - Broadcast, Test, Triggered, etc.
+
+---
+
+## Communication History
+
+### Message Timeline
+
+Chronological view of all communications sent to customer:
+
+**Information:**
+- **Date/Time** - When message was sent
+- **Type** - Campaign, Manual, Triggered, Alert
+- **Channel** - How it was sent (SMS, Email, etc.)
+- **Subject/Preview** - Message content preview
+- **Status** - Sent, Delivered, Read, Failed
+- **Engagement** - If customer interacted
+
+**View Message Content**
+- Click on message to see full content
+- View actual message sent to customer
+- See dynamic variables used
+- View links and offers
+
 ---
 
 ## Action Buttons
 
 ### Edit Customer
 
-Modify customer information and settings from the detail view.
+Modify customer information and preferences.
 
-**Editable Fields:**
-- **Name** - First and last name
-- **Email** - Primary and alternate email addresses
-- **Phone Numbers** - Primary and alternate phone numbers
-- **Customer Tier** - Regular, VIP, Gold, Platinum
-- **Contact Information:**
-  - City
-  - Region
-  - Postal Code
-  - Physical Address
-  - Country Code
-- **Preferences:**
-  - Language Preference (English, Swahili, French)
-  - Preferred Channel (SMS, Email, WhatsApp, Push, USSD, IVR, etc.)
-  - Timezone
-- **Demographics:**
-  - Gender
-  - Date of Birth
+**What Can Be Edited:**
+- Name (First, Last)
+- Email (Primary, Alternate)
+- Phone Numbers
+- Customer Tier
+- Account Status
+- Language Preference
+- Timezone
+- Custom Attributes
+- Preferences (Channel, DND, opt-in status)
 
-**Steps to Edit:**
-1. Click the **Edit** button on customer profile
-2. Edit modal opens with pre-filled customer data
-3. Modify fields as needed
-4. Click **Save** to submit changes
-5. Success message confirms update
+**Steps:**
+1\. Click **Edit** button
+2\. Modify fields as needed
+3\. Review changes
+4\. Click **Save**
+5\. Confirmation appears
 
-### Delete Customer
+### Send Communication
 
-Remove a customer from your system permanently.
+Send direct message to customer right now.
+
+**Channel Options:**
+- **Email** - Send email message
+- **SMS** - Send text message
+- **Flash SMS** - Send urgent SMS
+- **WhatsApp** - Send WhatsApp message
+- **Push** - Send push notification
 
 **Process:**
-1. Click the **Delete** button
-2. Confirmation modal appears asking to confirm deletion
-3. Click **Confirm** to proceed with deletion
-4. Customer is permanently removed from all lists
-5. Success message appears
+1\. Click **Send Message**
+2\. Select channel
+3\. Compose message (or select template)
+4\. Add variables if needed
+5\. Click **Send**
+6\. Confirmation shows delivery status
 
-**Important:** Deletion is permanent and cannot be undone. Customer data, interaction history, and segment memberships are all removed.
+### Add to Segment
 
-### Navigation
+Add customer to segment for targeting.
 
-Use the back button or click on breadcrumb to return to the customer list, or navigate to another customer from the comparison view.
+**Process:**
+1\. Click **Add to Segment**
+2\. Search for segment
+3\. Select one or more segments
+4\. Click **Add**
+5\. Customer immediately added
+
+### View Campaigns
+
+See detailed view of campaigns customer participated in.
+
+**Shows:**
+- Full campaign history
+- Detailed engagement metrics
+- Message content
+- Offers sent
+- Links and conversions
+
+### Export Customer Data
+
+Download customer profile as CSV or JSON.
+
+**Includes:**
+- Profile information
+- Contact details
+- Preferences
+- Communication history
+- Campaign participation
+- Segment membership
+- Custom attributes
+
+**Format Options:**
+- CSV (for spreadsheet)
+- JSON (for systems integration)
+
+### Add Note
+
+Add internal notes about the customer (not visible to customer).
+
+**For:**
+- Service notes
+- Reasons for status changes
+- Internal comments
+- Follow-up reminders
 
 ### Delete Customer
 

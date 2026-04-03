@@ -159,7 +159,6 @@ const sidebars: SidebarsConfig = {
             },
             'customer-360/create-customer',
             'customer-360/view-customer-details',
-            'customer-360/customer-reports',
           ],
         },
         {
