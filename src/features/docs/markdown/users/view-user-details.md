@@ -2,90 +2,70 @@
 
 ## Overview
 
-User Details shows one user record with three tabs:
+The User Details page brings everything known about one account into a single view. It is the page you use when the list view is no longer enough and you need to understand the person’s profile, access footprint, and reporting relationships together.
 
-- Overview
-- Permissions
-- Reports
+The page is organised into three tabs:
+
+- **Overview** for profile and account state
+- **Permissions** for access visibility
+- **Reports** for reporting lines and team structure
 
 ## Accessing User Details
 
-From Users List:
+Open the page from the users list by clicking the row’s **View** action.
 
-1. Go to User Management → Users
-2. Click **View** button (eye icon) next to user name
-3. User details page opens with tabs
+At the top of the page, the back button returns you to the previous list context and a status badge keeps the account state visible while you move across tabs.
 
-## Header Area
+## Overview Tab
 
-At the top of the page:
+The **Overview** tab is the profile summary for the selected user. It is meant to answer the practical questions first: who the user is, where they sit in the organisation, and whether the account can currently be used.
 
-- A back button returns to the users list (or previous list context)
-- A status chip shows the current account status
+![User Details Overview Tab](/img/usermanagement-images/userdetailsoverviewtab.png)
 
-## Tab 1: Overview
+The content is arranged into information blocks that cover:
 
-Overview contains two columns of information blocks.
+- personal identity details such as full name, username, email, and phone number when available
+- work context such as department, role, job title, and data access level when available
+- security and access indicators such as current status, MFA state, login eligibility, and PII access when present
+- activity timing such as created date, updated date, and last login
 
-Personal Information includes:
+This tab is the fastest place to validate whether the account is configured correctly before making a deeper access decision.
 
-- Full Name
-- Username
-- Email
-- Phone Number (when available)
+## Permissions Tab
 
-Work Information includes:
+The **Permissions** tab explains what the user can do in the system and how that access is structured.
 
-- Department (when available)
-- Role
-- Job Title (shown when different from role name)
-- Data Access Level (when available)
+![User Details Permissions Tab](/img/usermanagement-images/userdetailspermissionstabimage1.png)
 
-Security & Access includes:
+![User Permissions Summary And Categories](/img/usermanagement-images/userdetailspermissionstabimage2.png)
 
-- Status
-- MFA Enabled/Disabled
-- Can Login (when response is available)
-- PII Access (when available)
+![User Assigned Roles](/img/usermanagement-images/userdetailspermissionstabimage3.png)
 
-Activity Timeline includes:
+When permission data is available, the page combines a summary layer with a detailed layer:
 
-- Created date
-- Updated date
-- Last Login (when available)
+- summary cards show the overall permission footprint, including total permissions, sensitive permissions, MFA-required permissions, and role count
+- grouped categories make it easier to understand which parts of the platform the user can access
+- the full permission list shows the permission name, code, description, and status
+- assigned role chips show the role context behind the user’s access
 
-## Tab 2: Permissions
+This tab is useful when you are validating why a user has access, preparing a role cleanup, or confirming the result of a role change.
 
-Permissions tab loads user permissions, permission summary, and assigned roles.
+## Reports Tab
 
-When data exists, it shows:
+The **Reports** tab focuses on organisational relationships. It shows who reports to the selected user and where the user sits in the wider reporting chain.
 
-- Summary cards
-  - Total Permissions
-  - Sensitive Permissions
-  - MFA Required
-  - Total Roles
-- Permissions by Category (derived from permission code prefix)
-- All Permissions list
-  - Permission name
-  - Code
-  - Description
-  - Status indicator
-- Assigned Roles chips
+![User Details Reports Tab](/img/usermanagement-images/userdetailsreportstab.png)
 
-If permission data is missing, the tab shows an empty-state message.
+The page can show:
 
-## Tab 3: Reports
+- **Direct Reports** for immediate team members
+- **All Reports** for the wider reporting tree beneath the user
+- **Manager Chain** for the managers above the user
 
-Reports tab shows reporting relationships for the selected user.
+Each related person is navigable, so the reports view also acts as a quick route into another user’s details page.
 
-Sections shown when data exists:
+## Related Documentation
 
-- Direct Reports
-- All Reports (includes direct and indirect)
-- Manager Chain
-
-Each row/card is clickable and opens that related user's details page.
-
-If there are no direct reports and no manager chain, an empty-state message is shown.
-
+- [Users List](/documentation/users/users-list)
+- [Create User](/documentation/users/create-user)
+- [Access Control](/documentation/users/access-control)

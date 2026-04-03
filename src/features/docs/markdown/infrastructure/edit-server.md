@@ -1,40 +1,46 @@
----
-title: Edit Server
----
-
 # Edit Server
 
 ## Overview
 
-Modify existing server configuration. The edit form contains the same fields as [Create Server](/documentation/infrastructure/create-server).
-
----
+Edit Server updates an existing server using the same form structure as Create Server.
 
 ## Accessing Edit
 
-**From Servers List:**
+From Servers List:
+
 1. Click the menu icon on the server
 2. Select **Edit**
 
-**From Server Details:**
+From Server Details:
+
 1. Click **Edit** button
 
----
+## Form Fields
 
-## Fields
+Edit page includes the same sections as create:
 
-All fields match the Create Server form. See [Create Server](/documentation/infrastructure/create-server) for field descriptions.
+- Basic Information
+- Connection Settings
+- Health Checks
+- Circuit Breaker
+- Advanced Settings
+- TLS and Authentication
 
-Required fields:
+Validated required fields:
+
 - Server Name
 - Server Code
 - Protocol
 - Host
-- Environment
-
----
 
 ## Save
 
-Click **Save** to apply changes. You'll be redirected to the server details page.
+Click **Update Server** to save changes.
 
+On success, the app navigates to that server's details page.
+
+## Related Topics
+
+- [Create Server](/documentation/infrastructure/create-server)
+- [Servers List](/documentation/infrastructure/servers-list)
+- [View Server Details](/documentation/infrastructure/view-server)

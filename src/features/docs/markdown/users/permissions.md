@@ -2,80 +2,74 @@
 
 ## Overview
 
-Permissions is the second tab on the Access Control page.
+The Permissions tab is where the individual access records are maintained. If roles describe broad responsibility, permissions describe the exact actions a role is allowed to perform. This tab is where those action records are created, reviewed, and updated.
 
-Use it to view, create, edit, activate, and deactivate permission records.
-
-## Access Path
-
-1. Open Dashboard.
-2. Go to Access Control.
-3. Select the **Permissions** tab.
+![Permissions Management List](/img/usermanagement-images/permissionsmanagementlist.png)
 
 ## Permissions Table
 
-The table shows:
+The table is designed to make permission records easy to scan and compare. Each row shows:
 
-- Permission Name
-- Code
-- Action
-- Sensitive
-- Requires MFA
-- Status
-- Actions
+- permission name
+- code
+- action
+- whether the permission is marked as sensitive
+- whether MFA is required
+- active or inactive status
+- row actions
 
-Status is displayed as **Active** or **Inactive**.
+That combination makes it possible to review both the functional meaning of a permission and its security expectations from one place.
 
-## Search And Filter
+## Search And Filtering
 
-The tab supports:
+The toolbar supports two quick narrowing tools:
 
-- Search (`Search permissions...`) by permission name or code
-- Action filter (`All Actions`)
+- **Search permissions...** for matching by permission name or code
+- **All Actions** for filtering by action type such as create, read, update, delete, execute, or manage
 
-When search/filter changes, pagination resets to page 1.
+This is especially useful once the permission catalogue grows and several permissions share a similar resource name.
 
 ## Row Actions
 
-Each permission row provides:
+Each permission record can be managed directly from the table:
 
-- **Edit**
-- **Deactivate** (for active records)
-- **Reactivate** (for inactive records)
+- **Edit** opens the permission form with the current values loaded
+- **Deactivate** switches an active permission off
+- **Reactivate** switches an inactive permission back on
+
+The status toggle is useful when a permission should remain part of the catalogue but should not currently be used for assignment.
 
 ## Create Or Edit Permission
 
-Use **Create Permission** to open the modal.
+The **Create Permission** button opens the permission form, which is also reused for edit.
 
-Permission modal fields:
+![Create Permission Form](/img/usermanagement-images/createpermission.png)
 
-- Permission Name (required)
-- Code (required)
-- Description (optional)
-- Action (required)
-- Resource Type ID (optional)
-- Mark as Sensitive (checkbox)
-- Requires MFA Authentication (checkbox)
-- Requires Justification (checkbox)
+The form defines both the access meaning and the security expectations of the permission:
 
-On edit, **Code** is read-only.
+- **Permission Name** for the human-readable label
+- **Code** for the system identifier
+- **Description** for context
+- **Action** for the operation type
+- **Resource Type ID** when a specific resource type needs to be referenced
+- **Mark as Sensitive** to flag high-risk access
+- **Requires MFA Authentication** when stronger sign-in should be enforced
+- **Requires Justification** when the action should require explanation
+
+When editing an existing permission, the code remains read-only so the permission identifier is not changed after creation.
 
 ## Validation
 
-- Permission name is required.
-- Permission code is required.
-- Code must use dot notation.
-- Action must be valid.
+Before save, the form validates the core rules of the permission model:
 
-Duplicate name/code responses are shown as field errors.
+- permission name is required
+- permission code is required
+- code must use dot notation
+- action must match a valid supported action
 
-## Empty State
+If duplicate names or codes already exist, the form shows those as field-level errors so the administrator can correct them immediately.
 
-If no permissions match current filters, the page shows:
-
-- `No permissions found matching the selected filters`
-
-## Related Topics
+## Related Documentation
 
 - [Access Control](/documentation/users/access-control)
 - [Role Management](/documentation/users/role-management)

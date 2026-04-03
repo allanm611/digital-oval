@@ -1,106 +1,68 @@
----
-title: Connection Profiles List
----
-
 # Connection Profiles List
 
 ## Overview
 
-Displays all configured connections to external data sources. Search, filter, and manage connection profiles.
-
----
+This page lists connection profiles and provides filtering, stats, and management actions.
 
 ## Statistics Cards
 
-- **Total Profiles** - Count of all profiles
-- **Active Profiles** - Enabled profiles
-- **Profiles with PII** - Contains personal data
-- **Health Enabled** - Profiles with health checks
+- Total Profiles
+- Active Profiles
+- Profiles with PII
+- Health Enabled
 
----
+## Search And Filters
 
-## Filtering Profiles
+Top controls include:
 
-### Search
-- Search by profile name or code
-- Real-time results
+- Search by profile name/code/type
+- Optional server ID filter
+- Filters panel
 
-### Connection Type
-- Database
-- API
-- SFTP
-- FTP
-- S3
-- Azure Blob
-- Kafka
-- Webhook
+Filter fields:
 
-### Environment
-- development
-- staging
-- production
-
-### Classification
-- public
-- internal
-- confidential
-- restricted
-
-### Status
-- Active
-- Inactive
-- Expired
-
-### PII
-- With PII
-- Without PII
-
-### Health Check
-- Enabled
-- Disabled
-
----
-
-## Profile List
-
-Each entry shows:
-- Profile Name, Code
 - Connection Type
-- Environment, Status
-- Classification, PII indicator
-- Health Status
+- Environment
+- Classification
+- Status (`active`, `inactive`, `expired`)
+- PII (`with`, `without`)
+- Health (`enabled`, `disabled`)
 
----
+## Table Columns
+
+The list table displays:
+
+- Profile
+- Code
+- Type
+- Environment
+- Classification
+- Status
+- PII
+- Health
+- Actions
 
 ## Actions
 
-### Individual Profile Actions
+Per-row actions include:
 
-**View Details**
-- Open profile details
+- View
+- Edit
+- Activate/deactivate
 
-**Edit**
-- Modify profile settings
+Selection mode supports bulk actions for selected rows.
 
-**Test Connection**
-- Verify connectivity
+Bulk actions:
 
-**Deactivate/Activate**
-- Toggle status
-
-**Delete**
-- Remove profile
-
-### Bulk Actions
-
-- **Activate Multiple**
-- **Deactivate Multiple**
-- **Delete Multiple**
-
----
+- Bulk activate selected
+- Auto-deactivate expired profiles
 
 ## Pagination
 
-- 20 profiles per page
-- Navigate between pages
+List view supports pagination (page and page-size controls).
 
+## Related Topics
+
+- [Connection Profiles](/documentation/infrastructure/connection-profiles)
+- [Create Connection Profile](/documentation/infrastructure/create-connection-profile)
+- [View Connection Profile Details](/documentation/infrastructure/view-connection-profile)

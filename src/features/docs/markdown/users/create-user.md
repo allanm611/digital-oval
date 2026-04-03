@@ -1,116 +1,60 @@
-# Create User or Edit User
+# Create User Or Edit User
 
 ## Overview
 
-Create new user accounts or edit existing user information. New users are assigned a role and department. When editing, only basic information can be modified.
+User creation and user editing both happen in the same modal workflow. The form is designed for quick account administration: create a new user from the users page, assign the user to a role, optionally place them in a department, and save without leaving the list view.
 
-## Accessing Create User
+## Create User
 
-**Navigation:** AllUsers → User Management → Users → Click **Create User** button (top-right)
+Open the user form from **User Management → Users → Add User**. The page opens a modal rather than navigating away, which makes it easy to create an account and then return straight to the list.
 
-A modal dialog opens with the user creation form.
+![Add User Form](/img/usermanagement-images/adduserimage.png)
 
+For a new user, the modal collects the account identity first and then the access assignment.
 
-## Create User - Required Fields
+### Core Identity Fields
 
-These fields must be completed to create a new user account:
+- **First Name** and **Last Name** are required.
+- **Email** is required and becomes the permanent email address for the account.
+- **Username** is optional in the form. If it is left empty, the system derives it from the email address before creating the user.
+- **Password** is required when creating a user and must be at least 8 characters long.
 
-### Username
+### Access And Organisation Fields
 
-- **Required:** Yes
-- **Format:** Unique identifier for system login
-- **Note:** Cannot be changed after creation
+- **Role** is required. This is the primary access assignment for the user and is selected from the available roles loaded into the dropdown.
+- **Department** is optional and is used for organisation and filtering.
 
-### Email Address
+When the form is submitted, the password is hashed before the create request is sent, then the account is created and the list refreshes.
 
-- **Required:** Yes
-- **Format:** Valid email address
-- **System Uses:** User login credential
-- **Note:** Must be unique across system
+## Edit User
 
-### First Name
+Editing uses the same modal, but it opens with the existing values already filled in.
 
-- **Required:** Yes
-- **Format:** Text (up to 100 characters)
-- **Example:** "John"
+![Edit User Form](/img/usermanagement-images/edituserimage.png)
 
-### Last Name
+The edit flow is intentionally narrower than the create flow. It is meant for maintaining account details and role placement without recreating the whole account record.
 
-- **Required:** Yes
-- **Format:** Text (up to 100 characters)
-- **Example:** "Smith"
+### What You Can Update
 
-### Password
+- First name
+- Last name
+- Role
+- Department
 
-- **Required:** Yes (for new users only)
-- **Format:** Strong password
-- **Requirements:**
-  - Minimum 12 characters
-  - At least 1 uppercase letter
-  - At least 1 lowercase letter
-  - At least 1 number
-  - At least 1 special character (!@#$%^&*)
-- **Security:** Never share password via email or chat
+### What Stays Fixed
 
-### Primary Role
+- **Email** remains read-only after creation.
+- **Username** is not edited in the update flow.
+- **Password** is not changed from this modal.
 
-- **Required:** Yes
-- **Format:** Select from available roles
-- **System Uses:** Determines user permissions
-- **Note:** Can be changed later by editing user
+If the selected role changes during edit, the user record is updated first and the new primary role is then assigned as part of the same save flow.
 
+## When To Use This Page
 
-## Create User - Optional Fields
+Use the create flow when a staff member, admin, or operator needs a brand-new account. Use the edit flow when the person already exists and you only need to correct profile details or move them to a different role or department.
 
-### Department
+## Related Documentation
 
-- **Required:** No
-- **Format:** Text field
-- **System Uses:** Organizational grouping, filtering
-- **Example:** "Marketing", "Engineering", "Sales"
-
----
-
-## Edit User - Editable Fields
-
-When editing an existing user, only these fields can be modified:
-
-- **First Name**
-- **Last Name**
-- **Department**
-- **Primary Role** (can be changed)
-
-### Non-Editable Fields (Cannot Change)
-
-- **Username** - System identifier, cannot be changed
-- **Email Address** - Not editable in user modal
-- **Password** - Change separately if needed
-
-
-## Editing an Existing User: Step-by-Step
-
-### Step 1: Open User List
-
-1. Navigate to User Management → Users
-2. Find the user to edit
-3. Click **View** button to open user details
-
-### Step 2: Click Edit
-
-1. Click **Edit** button (pencil icon)
-2. Modal opens with user's current information
-
-### Step 3: Modify Allowed Fields
-
-You can edit:
-- **First Name**
-- **Last Name**
-- **Department**
-- **Primary Role**
-
-### Step 4: Save Changes
-
-1. Click **Save** button
-2. Changes applied immediately
-3. User permissions update if role was changed
-
+- [Users List](/documentation/users/users-list)
+- [View User Details](/documentation/users/view-user-details)
+- [Access Control](/documentation/users/access-control)

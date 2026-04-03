@@ -1,25 +1,41 @@
----
-title: View KPI Details
----
-
 # View KPI Details
 
 ## Overview
 
-View details about a Key Performance Indicator.
+KPI details pages are implemented for:
 
----
+- Revenue metrics
+- Usage metrics
+- System events
 
-## KPI Information
+## Revenue And Usage Metric Details
 
-Displays:
-- KPI Name
-- Category (System Event, Usage Metric, or Revenue Metric)
-- Timestamp
+Revenue and usage details pages include:
 
----
+- Header with back action
+- Primary metric overview card
+- Basic Information section
+- Data Source Information section
+- Supported Operators section
 
-## Actions
+Available actions:
 
-**Back to List**
-- Return to KPIs list
+- Edit
+- Delete
+
+Delete uses a confirmation modal.
+
+## System Event Details
+
+System event details is read-only and includes:
+
+- Event overview
+- Event details (code, category, source, frequency)
+- Source table
+- Supported operators (when present)
+
+## Related Topics
+
+- [KPI List](/documentation/infrastructure/kpis-list)
+- [Create KPI](/documentation/infrastructure/create-kpi)
+- [Edit KPI](/documentation/infrastructure/edit-kpi)

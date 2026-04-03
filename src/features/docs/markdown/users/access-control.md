@@ -2,43 +2,42 @@
 
 ## Overview
 
-Access Control is the main page for managing role and permission setup in the system.
+Access Control is the administrative workspace for defining how access is structured across the application. Instead of managing permissions user by user, this page works at the access-model level: create roles, define reusable permission records, and then attach those permissions to the right roles.
 
-In the app, this page is available at `User Management > Access Control` and includes three tabs:
-- **Role Management**
+In the app, the page appears under **User Management → Access Control** and is organised into three tabs:
+
+- **Roles Management**
 - **Permissions**
 - **Assign Permissions**
 
-## Access Control Model
+## How The Page Works
 
-The page uses a role-and-permission model:
-- Roles define grouped access behavior
-- Permissions define specific actions
-- Permissions are assigned to roles
-- Role access is managed from the Access Control tabs
+The page follows a simple access pattern:
 
-## Tabs
+- roles group together a set of responsibilities or access levels
+- permissions describe individual actions such as create, read, update, delete, execute, or manage
+- permissions are attached to roles rather than assigned directly here to individual users
 
-Use the following pages for full tab details:
+That structure keeps access easier to reason about. Most administrative work follows a sequence: define a role, define or review the permissions available in the system, then assign the correct permissions to that role.
 
-1. [Role Management](/documentation/users/role-management)
-2. [Permissions](/documentation/users/permissions)
-3. [Assign Permissions](/documentation/users/assign-permissions)
+## Tab Structure
 
-## What Each Tab Covers
+Each tab serves a different part of that workflow:
 
-- **Role Management**
-Manages role records, including role information and role status controls.
+- **Roles Management** is where role records are created, edited, cloned, activated, deactivated, and deleted.
+- **Permissions** is where permission records are maintained and their action/security settings are controlled.
+- **Assign Permissions** is where a role is selected and its permission set is built or cleaned up.
 
-- **Permissions**
-Manages permission records and permission status controls.
+Together, the three tabs form one workflow rather than three unrelated screens.
 
-- **Assign Permissions**
-Manages which permissions are linked to a selected role.
+## When To Use This Page
 
-## Related Topics
+Use Access Control when you need to introduce a new role, clean up old role definitions, add new permission records for new product capabilities, or adjust which permissions belong to a role. If the task is about one person’s account profile, the users pages are the better place to start. If the task is about how access is modeled across many users, this page is the right one.
 
+## Related Documentation
+
+- [Role Management](/documentation/users/role-management)
+- [Permissions](/documentation/users/permissions)
+- [Assign Permissions](/documentation/users/assign-permissions)
 - [Users List](/documentation/users/users-list)
-- [Create User](/documentation/users/create-user)
-- [View User Details](/documentation/users/view-user-details)
 

@@ -1,13 +1,33 @@
----
-title: Edit KPI
----
-
 # Edit KPI
 
 ## Overview
 
-This feature is not yet implemented. KPI editing will be available in a future update.
+KPI edit is implemented for:
 
----
+- Revenue Metrics
+- Usage Metrics
 
-To modify KPIs, please contact your system administrator.
+The edit form is the same structure as create, pre-filled with the selected metric values.
+
+## Open Edit
+
+You can open edit from a metric list row action or from the metric details page.
+
+## Validation
+
+Before save, forms validate required fields including operator selection.
+
+If validation fails, inline messages are shown and submission is blocked.
+
+## Save Behavior
+
+On successful update:
+
+- Success toast is shown
+- User is redirected to the relevant list page
+
+## Related Topics
+
+- [Create KPI](/documentation/infrastructure/create-kpi)
+- [View KPI Details](/documentation/infrastructure/view-kpi)
+- [KPI List](/documentation/infrastructure/kpis-list)

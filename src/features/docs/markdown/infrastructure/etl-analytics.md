@@ -1,51 +1,52 @@
----
-title: ETL Analytics
----
-
 # ETL Analytics
 
 ## Overview
 
-Monitor file processing performance and data quality metrics.
+ETL Analytics provides monitoring dashboards for both file registry processing and task queue behavior.
 
----
+The page loads baseline ETL stats first, then loads extended monitoring datasets.
 
-## Key Metrics
+## Main Data Groups
 
-### File Statistics
-- **Total Files** - Count of all files
-- **Completed Files** - Successfully processed
-- **Pending Files** - Awaiting processing
-- **Failed Files** - Processing errors
-- **Processing Files** - Currently processing
+### File Registry Monitoring
 
-### Data Volume
-- **Total Rows Parsed** - Records extracted
-- **Total Rows Inserted** - Successfully stored
-- **Total Rows Failed** - Failed insertions
-- **Insertion Rate** - Percentage successful
-- **Failure Rate** - Percentage failed
+Analytics includes file-registry monitoring datasets such as:
 
-### Performance
-- **Total Data Size** - Combined file size
-- **Average File Size** - Mean file size
-- **Average Processing Duration** - Mean process time
-- **Average Fetch Duration** - Mean download time
-- **Average Fetch Attempts** - Mean retry count
+- Registry statistics
+- Row metrics
+- Retry analysis
+- Fetch duration analytics
+- Processing duration analytics
+- Processing status distribution
+- Format distribution
+- Checksum usage
+- Data size analytics
+- Error message distribution
+- Time trends
 
----
+### Task Queue Monitoring
 
-## Analytics Sections
+Analytics also includes task-queue monitoring datasets such as:
 
-### File Category Distribution
-- Breakdown by category (CDR, TDR)
-- Percentage and count per category
-- Processing metrics by category
+- Task queue statistics
+- Status distribution
+- Type distribution
+- Priority distribution
+- Duration analytics
+- File correlation
+- Job correlation
+- Time trends
 
-### Processing Status Distribution
-- Files by status (Pending, Processing, Completed, Failed, Skipped)
-- Visual breakdown of pipeline state
+## Trend Granularity
 
-### Processing Duration Analytics
-- Distribution of processing times
-- Performance trends
+Trend data can be requested by granularity:
+
+- Day
+- Week
+- Month
+
+## Related Topics
+
+- [ETL](/documentation/infrastructure/etl)
+- [File Registry](/documentation/infrastructure/etl-file-registry)
+- [Fetch Controls](/documentation/infrastructure/etl-fetch-controls)

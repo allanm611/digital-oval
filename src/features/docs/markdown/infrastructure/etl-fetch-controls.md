@@ -1,70 +1,44 @@
----
-title: ETL Fetch Controls
----
-
 # ETL Fetch Controls
 
 ## Overview
 
-Trigger data file fetches from remote sources. Choose from immediate, by-time, or by-range modes.
+ETL Fetch Controls is available at `/dashboard/etl/fetch` and also inside the File Registry fetch modal.
 
----
+It supports three fetch modes.
 
-## Fetch Mode: Immediate
+## Modes
 
-Fetch files immediately for a specific job.
+### Immediate
 
-### Parameters
+Immediate mode requires Job ID and optionally allows Force Reprocess.
 
-**Job ID***
-- Numeric ID of the job
+### By Time
 
-**Force Reprocess**
-- Reprocess already processed files (optional)
+By Time mode uses:
 
----
+- Category (CDR or TDR)
+- Month
+- Day
+- Hour
 
-## Fetch Mode: By Time
+### By Range
 
-Fetch files for a specific date and time.
+By Range mode uses:
 
-### Parameters
+- Job ID
+- Start time (month/day/hour)
+- End time (month/day/hour)
 
-**File Category***
-- CDR or TDR
+## Validation
 
-**Month***
-- Month (1-12)
+Immediate and By Range require Job ID before submission.
 
-**Day***
-- Day of month (1-31)
+## Results
 
-**Hour***
-- Hour (0-23)
+On success, the UI shows a toast with response details such as execution id or number of scheduled hourly jobs.
 
----
+## Related Topics
 
-## Fetch Mode: By Range
-
-Fetch files within a date range.
-
-### Parameters
-
-**Job ID***
-- Numeric ID of the job
-
-**Start Date***
-- Month, Day, Hour
-
-**End Date***
-- Month, Day, Hour
-
----
-
-## Result
-
-After triggering a fetch:
-- Execution ID assigned
-- Files processed count
-- Rows inserted count
-- Processing duration
+- [ETL](/documentation/infrastructure/etl)
+- [File Registry](/documentation/infrastructure/etl-file-registry)
+- [ETL Analytics](/documentation/infrastructure/etl-analytics)

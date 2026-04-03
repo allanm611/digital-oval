@@ -1,158 +1,86 @@
----
-title: Create Connection Profile
----
-
 # Create Connection Profile
 
 ## Overview
 
-Add a new connection to an external data source with connection details, performance settings, and health monitoring.
-
----
+Create Connection Profile adds a new profile from the connection profile form.
 
 ## Basic Information
 
-### Profile Name*
-- Display name for the profile
+Required fields in basic section:
 
-### Profile Code*
-- Unique identifier
+- Profile Name
+- Profile Code
+- Connection Type
+- Environment
+- Data Load Method
 
----
+Optional basic fields:
 
-## Connection Settings
-
-### Connection Type*
-- Database
-- API
-- SFTP
-- FTP
-- S3
-- Azure Blob
-- Kafka
-- Webhook
-
-### Load Strategy*
-- full
-- incremental
-- delta
-- cdc
-- merge
-- append
-- upsert
-
-### Environment*
-- development
-- staging
-- production
-- uat
-
-### Server
-- Select the server for this connection
-
----
-
-## Database Settings
-
-### Database Type
-- Database system type (optional)
-
-### Database Name
-- Name of the database (optional)
-
-### Sync Column Name
-- Column name for incremental sync (optional)
-
-### Sync Column Type
-- Data type of sync column (optional)
-
----
+- Server
+- Database Name (database type)
+- Database Type (database type)
 
 ## Performance Settings
 
-### Batch Size*
-**Default:** 1000
-- Records per batch
+Performance fields include:
 
-### Parallel Threads*
-**Default:** 4
-- Parallel execution threads
-
-### Min Pool Size*
-**Default:** 2
-- Minimum connections in pool
-
-### Max Pool Size*
-**Default:** 10
-- Maximum connections in pool
-
-### Connection Timeout (seconds)*
-**Default:** 30
-
-### Idle Timeout (seconds)*
-**Default:** 600
-
----
+- Records Per Batch
+- Number of Parallel Tasks
+- Minimum Connections
+- Maximum Connections
+- Connection Wait Time (seconds)
+- Idle Disconnect Time (seconds)
 
 ## Reliability Settings
 
-### Max Retries*
-**Default:** 3
+Reliability fields include:
 
-### Retry Backoff Multiplier*
-**Default:** 2
+- Max Retries
+- Retry Backoff Multiplier
+- Circuit Breaker Threshold
 
-### Circuit Breaker Threshold*
-**Default:** 5
+## Data Governance
 
----
+Governance fields include:
 
-## Data Classification & Compliance
+- Data Classification
+- Contains PII
+- GDPR Applicable
 
-### Data Classification*
-- public
-- internal
-- confidential
-- restricted
+## Validity Window
 
-### Contains PII
-- Toggle to indicate personal data
+Validity fields include:
 
-### GDPR Applicable
-- Toggle for GDPR compliance
+- Valid From
+- Valid To (optional)
 
----
+## Health Check
 
-## Validity Period
+Health section includes:
 
-### Valid From*
-- Profile activation date
+- Health Check Enabled toggle
+- Health Check Query (required when health checks are enabled)
 
-### Valid To
-- Profile expiration date (optional)
+## Additional Fields
 
----
+Additional fields include:
 
-## Health Check Configuration
+- Encryption Key Version
+- Metadata (JSON)
 
-### Health Check Enabled
-- Enable/disable health checks
+Database sync fields are shown for database-related setup:
 
-### Health Check Query
-- SQL query or API endpoint (if enabled)
-
----
-
-## Additional Settings
-
-### Encryption Key Version
-- Optional key version
-
-### Metadata
-- Optional JSON metadata
-
----
+- Sync Column Name
+- Sync Column Type
 
 ## Save
 
-Click **Save** to create the profile. You'll be redirected to the profile details page.
+Click Save to create the profile.
+
+On success, the app returns to the connection profiles list.
+
+## Related Topics
+
+- [Connection Profiles List](/documentation/infrastructure/connection-profiles-list)
+- [Edit Connection Profile](/documentation/infrastructure/edit-connection-profile)
+- [View Connection Profile Details](/documentation/infrastructure/view-connection-profile)

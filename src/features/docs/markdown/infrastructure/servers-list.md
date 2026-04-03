@@ -1,111 +1,86 @@
----
-title: Servers List
----
-
 # Servers List
 
 ## Overview
 
-The Servers List displays all servers configured in your system. From this page, you can search servers, filter by various criteria, manage individual servers, and perform bulk actions.
-
----
+Servers List is the main page for browsing and managing server records.
 
 ## Statistics Cards
 
-At the top of the page, you'll see summary cards:
-- **Total Servers** - Count of all servers
-- **Active Servers** - Number of enabled servers
-- **Health Enabled** - Servers with health checks enabled
-- **Health Failing** - Servers with failing health checks
+At the top of the page, the app shows:
 
----
+- **Total Servers**
+- **Health Coverage**
+- **Protocol Mix**
+- **Region Coverage**
 
-## Filtering Servers
+## Search, Dataset Scope, And Filters
 
-### Available Filters
+The top controls include:
 
-**Environment**
-- dev
-- qa
-- uat
-- prod
+- Search by server name or code
+- Dataset scope:
+  - All servers
+  - Health on
+  - Failing
+  - Due
+- Filters drawer
 
-**Protocol**
-- HTTP
-- HTTPS
-- FTP
-- FTPS
-- SFTP
-- TCP
-- SMTP
-- SMTPS
+Filters include:
 
-**Region**
-- Filter by region (if configured)
+- Environment
+- Protocol
+- Region
+- Status (`active`, `inactive`, `deprecated`)
+- Server Type
 
-**Status**
-- Active - Server is enabled
-- Inactive - Server is disabled
+## Table Columns
 
-**Server Type**
-- Filter by custom server type (if configured)
+The list table displays:
 
----
+- Server
+- Code
+- Environment
+- Endpoint
+- Health
+- Status
+- Actions
 
-## Server List
+Health cell behavior:
 
-Each server entry displays:
-- **Server Name** - Display name
-- **Code** - Unique identifier
-- **Environment** - Deployment environment
-- **Protocol** - Communication protocol
-- **Host** - Hostname/IP address
-- **Port** - Port number
-- **Status** - Active/Inactive
-- **Health Status** - If health checks enabled
+- `disabled` when health checks are off
+- `null` when enabled but no status exists
+- Backend status text when available
 
----
+Status can show active/inactive and deprecated badge.
 
 ## Actions
 
-### Individual Server Actions
+Per row, the page provides:
 
-Click the menu icon on any server:
+- View details
+- Edit
+- Enable or disable health checks
+- Deprecate or restore
 
-**View**
-- Open server details page
+## Selection Mode And Bulk Actions
 
-**Edit**
-- Modify server settings
+Selection mode allows choosing multiple visible rows.
 
-**Activate/Deactivate**
-- Toggle server operational status
+Bulk actions available:
 
-**Health Check**
-- Enable/disable health monitoring
+- Activate selected
+- Deactivate selected
 
-**Circuit Breaker**
-- Toggle circuit breaker protection
+## Empty State
 
-**Archive**
-- Mark server as archived
+If no rows match current filters, the page shows an empty-state message.
 
-### Bulk Actions
+## Pagination
 
-Select multiple servers using checkboxes:
-- **Activate Multiple** - Enable several servers at once
-- **Deactivate Multiple** - Disable several servers at once
+Servers List paginates results and supports page navigation and page-size controls.
 
----
+## Related Topics
 
-## Search and Pagination
-
-**Search**
-- Type server name or code
-- Results filter in real-time
-
-**Pagination**
-- Display 15 servers per page
-- Navigate between pages
-- View total count
-
+- [Servers](/documentation/infrastructure/servers)
+- [Create Server](/documentation/infrastructure/create-server)
+- [View Server Details](/documentation/infrastructure/view-server)

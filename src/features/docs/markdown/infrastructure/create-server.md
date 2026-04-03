@@ -1,136 +1,78 @@
----
-title: Create Server
----
-
 # Create Server
 
 ## Overview
 
-Add a new server to your infrastructure with connection details, health monitoring, and circuit breaker settings.
-
----
+Create Server adds a new server record from the server form page.
 
 ## Basic Information
 
-### Server Name*
-**Required:** Yes
-- Display name for the server
-- Example: "Production API Server"
+Required fields:
 
-### Server Code*
-**Required:** Yes
-- Unique identifier for the server
-- Used in configurations
+- Name
+- Code
+- Protocol
+- Host
 
----
+Optional fields in this section:
+
+- Environment
+- Region
+- Port
+- Base Path
+- Server Type
 
 ## Connection Settings
 
-### Protocol*
-**Required:** Yes
-- HTTP
-- HTTPS
-- FTP
-- FTPS
-- SFTP
-- TCP
-- SMTP
-- SMTPS
+Connection settings include:
 
-### Host*
-**Required:** Yes
-- Hostname or IP address
-- Example: api.example.com or 192.168.1.1
+- Timeout (seconds)
+- Max Retries
 
-### Port
-- Port number the server listens on
-- Example: 80, 443, 8080
+## Health Checks
 
-### Base Path
-- Optional path prefix for requests
-- Example: /api/v1
+Health check section supports:
 
----
+- Enable/disable toggle
+- Health Check URL
+- Interval (seconds)
 
-## Environment & Classification
+## Circuit Breaker
 
-### Environment*
-**Required:** Yes
-- dev
-- qa
-- uat
-- prod
+Circuit breaker section supports:
 
-### Region
-- Geographic region or location (optional)
+- Enable/disable toggle
+- Failure Threshold
 
-### Server Type
-- Custom server classification (optional)
+## Advanced Settings
 
----
+Advanced settings include:
 
-## Reliability Settings
+- Metadata (JSON text)
 
-### Timeout (seconds)
-**Default:** 30
-- Request timeout in seconds
+## TLS And Authentication
 
-### Max Retries
-**Default:** 3
-- Maximum retry attempts
+This section includes:
 
-### Circuit Breaker Enabled
-**Default:** Enabled
-- Enable/disable circuit breaker protection
-
-### Circuit Breaker Threshold
-**Default:** 5
-- Number of failures before opening circuit
-
----
-
-## Health Check Configuration
-
-### Health Check Enabled
-**Default:** Enabled
-- Toggle health monitoring on/off
-
-### Health Check URL
-- Endpoint for health checks
-- Example: /health or /status
-
-### Health Check Interval (seconds)
-**Default:** 300
-- How often to check health
-
----
-
-## Security
-
-### TLS Enabled
-**Default:** Disabled
-- Enable TLS/SSL encryption
-
-### Authentication Type
-- Type of auth (optional)
-- Example: Basic, Bearer, API Key
-
----
-
-## Metadata
-
-**Optional:** JSON metadata for custom configuration
-
-```json
-{
-  "team": "backend",
-  "cost_center": "ops-123"
-}
-```
-
----
+- TLS enable toggle
+- Authentication Type
 
 ## Save
 
-Click **Save** to create the server. You'll be redirected to the Servers List.
+Click **Create Server** to save.
 
+On success, the app returns to the servers list.
+
+## Validation
+
+Create mode validates required fields:
+
+- Name
+- Code
+- Host
+- Protocol
+
+## Related Topics
+
+- [Servers List](/documentation/infrastructure/servers-list)
+- [Edit Server](/documentation/infrastructure/edit-server)
+- [View Server Details](/documentation/infrastructure/view-server)

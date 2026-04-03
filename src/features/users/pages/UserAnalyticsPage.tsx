@@ -522,7 +522,7 @@ export default function UserAnalyticsPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <BackButton showBreadcrumb={true} currentLabel="User Analytics" />
+      <BackButton showBreadcrumb={true} currentLabel="User Analytics" fallbackTo="/dashboard/user-management" />
 
       {isLoading ? (
         <div className="flex items-center justify-center py-16">

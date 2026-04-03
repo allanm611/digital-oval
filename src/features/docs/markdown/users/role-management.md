@@ -2,115 +2,88 @@
 
 ## Overview
 
-Role Management is the first tab on the Access Control page.
+Role Management is the first tab on the Access Control page and the starting point for shaping the access hierarchy. It is used to define what kinds of user roles exist in the system, how they relate to one another, and whether each role is currently active for use.
 
-Use it to create, edit, clone, activate/deactivate, and delete roles.
+![Roles Management Page](/img/usermanagement-images/rolesmanagementpage.png)
 
+## What The Tab Shows
 
-## Access Path
+The main table lists role records with the information an administrator usually needs before taking action:
 
-1. Open the dashboard.
-2. Go to **Access Control**.
-3. Select the **Roles Management** tab.
+- role name
+- role code
+- role level
+- data access level
+- current user count
+- active or inactive status
+- row actions
 
-
-## Roles Table
-
-The tab displays roles in a table with these columns:
-
-- **Role Name**
-- **Code**
-- **Level**
-- **Data Access**
-- **Users**
-- **Status**
-- **Actions**
-
-Status is shown as **Active** or **Inactive**.
-
+This makes the page useful both for designing new access structures and for auditing the current role catalogue.
 
 ## Search And Filters
 
-You can narrow the roles list using:
+The toolbar above the table helps narrow the role list quickly:
 
-- **Search roles...** (matches role name or code)
-- **All Levels / Level filter**
-- **All Data Access / Data access filter**
+- **Search roles...** matches by role name or code
+- **All Levels** filters by role level
+- **All Data Access** filters by data access level
 
-When filters change, pagination resets to the first page.
+These controls are intended for finding the role you want to work on without leaving the tab or loading a separate details page.
 
----
+## Row Actions
 
-## Actions In The Roles Tab
+Each role row includes the operational actions used most often in access administration:
 
-Each role row provides these actions:
-
-- **Edit**
-- **Clone**
-- **Deactivate / Reactivate**
-- **Delete**
+- **Edit** to update the role definition
+- **Clone** to copy the role into a new starting point
+- **Deactivate** or **Reactivate** to change availability
+- **Delete** to remove the role
 
 ### Clone Role
 
-Clone opens a modal with:
+Cloning is useful when a new role should start from an existing structure. The copy dialog asks for a new role name, role code, and description, then creates a separate role record based on the selected one.
 
-- **Role Name**
-- **Role Code**
-- **Description**
+### Deactivate Or Reactivate
 
-Saving creates a new role from the selected role.
+If a role is active, deactivation opens a confirmation dialog that requires a reason and optionally allows child roles to be deactivated as well. If a role is already inactive, it can be reactivated directly from the row action. Active system roles and default roles are protected from direct deactivation.
 
-### Deactivate Role
+### Delete
 
-Deactivating a role opens a confirmation modal that requires:
-
-- **Deactivation Reason** (required)
-- **Deactivate child roles too** (optional checkbox)
-
-System and default roles cannot be deactivated while active.
-
-### Reactivate Role
-
-Inactive roles can be reactivated from the row action.
-
-### Delete Role
-
-Delete opens a confirmation dialog and removes the selected role after confirmation.
+Delete removes the role after confirmation. This is intended for cleanup when a role should no longer exist at all rather than just being made inactive.
 
 ## Create Or Edit Role
 
-Use **Create Role** to open the role form.
+The **Create Role** button opens the main role form. The same form is reused for editing.
 
-Role form fields:
+![Create Role Form](/img/usermanagement-images/createrole.png)
 
-- **Role Name** (required)
-- **Code** (required)
-- **Description** (optional)
-- **Role Level**
-- **Data Access Level** (optional)
-- **Parent Role** (optional)
-- **Max Users** (optional)
-- **Set as Default** (checkbox)
-- **Tags** (enter and add)
+![Edit Role Form](/img/usermanagement-images/editrole.png)
 
-On edit, **Code** is read-only.
+The form captures the structural parts of a role:
 
-### Validation
+- **Role Name** and **Code** as the core identifiers
+- **Description** for context
+- **Role Level** to position the role in the access hierarchy
+- **Data Access Level** when data scope matters
+- **Parent Role** for hierarchical relationships
+- **Max Users** when the role should be limited
+- **Set as Default** for default assignment behavior
+- **Tags** for categorisation or internal organisation
 
-- Role name is required.
-- Role code is required.
-- Parent role must exist if selected.
-- Max users must be greater than 0 when provided.
+When editing an existing role, the code stays read-only so the role’s identity remains stable.
 
-Duplicate role name/code responses are shown as field errors.
+## Validation And Errors
 
-## Empty State
+The form validates the required pieces of the role definition before save:
 
-If no roles match the current search/filter, the page shows:
+- role name is required
+- role code is required
+- the selected parent role must exist
+- max users must be greater than 0 when provided
 
-- `No roles found matching the selected filters`
+If the backend returns duplicate name or code errors, those are shown back in the form as field-level validation messages.
 
-## Related Topics
+## Related Documentation
 
 - [Access Control](/documentation/users/access-control)
 - [Permissions](/documentation/users/permissions)

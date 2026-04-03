@@ -1,45 +1,71 @@
----
-title: View Server Details
----
-
 # View Server Details
 
 ## Overview
 
-View complete configuration and status for a specific server.
+Server Details shows server identity, endpoint/configuration, health state, and operational controls.
 
----
+## Access Path
 
-## Server Information
+1. Open Servers List.
+2. Select a server name or use the view action.
 
-Displays all server details:
-- Name, Code
-- Status (Active/Inactive)
-- Environment, Region, Server Type
-- Protocol, Host, Port, Base Path
-- Timeout, Max Retries
-- Health Check settings and status
-- Circuit Breaker settings
-- TLS and Authentication settings
-- Metadata
-- Created/Updated timestamps
+## Header Actions
 
----
+Top actions include:
 
-## Actions
+- Activate or Deactivate
+- Edit
+- More menu
 
-### Edit
-- Modify server settings
+More menu provides:
 
-### Activate/Deactivate
-- Toggle server operational status
+- Enable or disable health checks
+- Deprecate or restore server
+- Enable or disable circuit breaker
+- Reset health check (when health checks are enabled)
+- Push health result (when health checks are enabled)
 
-### Health Check
-- Enable/disable health monitoring
+## Summary Area
 
-### Circuit Breaker
-- Toggle circuit breaker protection
+The summary section displays:
 
-### Archive
-- Mark server as archived
+- Server name and code
+- Active/Inactive status badge
+- Deprecated badge (when applicable)
+- Environment and Region
+- Protocol and TLS
+- Computed endpoint
 
+## Connection & Limits
+
+Connection and limits section includes:
+
+- Host
+- Port
+- Timeout
+- Max retries
+- Circuit breaker state
+- Circuit threshold
+- Base path
+- Authentication type
+
+## Health Monitoring
+
+Health monitoring section includes:
+
+- Health checks enabled/disabled
+- Health URL
+- Interval (seconds)
+- Last status
+- Last checked time
+- Consecutive failures
+
+## Metadata
+
+When metadata exists, the page renders metadata entries in a dedicated section.
+
+## Related Topics
+
+- [Servers List](/documentation/infrastructure/servers-list)
+- [Create Server](/documentation/infrastructure/create-server)
+- [Edit Server](/documentation/infrastructure/edit-server)

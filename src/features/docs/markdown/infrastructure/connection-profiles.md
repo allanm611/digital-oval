@@ -1,104 +1,57 @@
----
-title: Connection Profiles
----
-
-
 # Connection Profiles
 
 ## Overview
 
-Connection Profiles manage secure connections to external data sources including databases, APIs, and file systems. Each profile defines connection parameters, performance settings, security policies, and health monitoring for reliable data integration.
+Connection Profiles manage data-source connection settings used by the platform.
 
-## Key Features
+Profiles include connectivity, performance, governance, and validity settings.
 
-### Connection Management
-- Create and manage multiple connection profiles
-- Support for databases, APIs, files, and custom sources
-- Secure credential storage with encryption
-- Connection pooling and performance optimization
+## Access Paths
 
-### Load Strategies
-- **Full Load** - Complete data synchronization
-- **Incremental Load** - Only new/changed data
-- Configurable batch sizes and parallelization
+Main routes:
 
-### Performance Optimization
-- Connection pooling (min/max connections)
-- Batch processing for bulk data
-- Parallel thread configuration
-- Timeout and retry settings
-- Circuit breaker protection
+- `Dashboard > Connection Profiles` list page
+- `Dashboard > Connection Profiles > New` create form
+- `Dashboard > Connection Profiles > Edit` update form
+- `Dashboard > Connection Profiles > Details` details page
 
-### Data Security & Compliance
-- Data classification (public/internal/confidential/restricted)
-- PII (Personally Identifiable Information) detection
-- GDPR compliance tracking
-- Encryption key management
-- Valid date ranges
+## Main Pages
 
-### Health Monitoring
-- Automated health checks
-- Custom health check queries
-- Connection status monitoring
+Use these pages for complete workflows:
 
-## Connection Types
+- [Connection Profiles List](/documentation/infrastructure/connection-profiles-list)
+- [Create Connection Profile](/documentation/infrastructure/create-connection-profile)
+- [Edit Connection Profile](/documentation/infrastructure/edit-connection-profile)
+- [View Connection Profile Details](/documentation/infrastructure/view-connection-profile)
 
-### Database
-- SQL databases (MySQL, PostgreSQL, etc.)
-- NoSQL databases
-- Data warehouses
-- Connection pooling and query optimization
+## What You Can Configure
 
-### API
-- REST/SOAP endpoints
-- Authentication configuration
-- Rate limiting and throttling
-- Request/response mapping
+Profiles can include:
 
-### File
-- FTP/SFTP connections
-- Cloud storage (S3, Azure, GCS)
-- Local file systems
-- File format handling
+- Basic identity fields (name, code, type, environment)
+- Load strategy
+- Server linkage
+- Performance settings (batch, threads, pool, timeouts)
+- Retry and circuit breaker thresholds
+- Data governance fields (classification, PII, GDPR)
+- Validity window
+- Health check settings
+- Optional encryption key version and metadata
 
-## Reliability Features
+## Operational Actions
 
-### Retry Logic
-- Configurable retry attempts
-- Exponential backoff multiplier
-- Automatic failure recovery
+From list/details pages, actions include:
 
-### Circuit Breaker
-- Prevent cascading failures
-- Configurable failure threshold
-- Automatic recovery
+- Activate/deactivate profile
+- Edit profile
+- Mark profile used
+- Update health status
+- Adjust validity period
+- Bulk activation
+- Auto-deactivate expired profiles
 
-### Connection Pooling
-- Minimize connection overhead
-- Configure pool size
-- Idle timeout handling
+## Related Topics
 
-## Data Security
-
-### Encryption
-- TLS for data in transit
-- Encrypted credential storage
-- Encryption key versioning
-
-### Compliance
-- GDPR applicability tracking
-- Data classification
-- PII identification
-- Audit logging
-
-## Available Actions
-
-- **View Details** - See profile configuration
-- **Create Profile** - Add new connection
-- **Edit Profile** - Modify settings
-- **Test Connection** - Verify connectivity
-- **View Health** - Monitor connection status
-- **View Reports** - Analytics and usage metrics
-- **Deactivate** - Disable profile temporarily
-- **Delete** - Remove profile
-
+- [Servers](/documentation/infrastructure/servers)
+- [Data Connectors](/documentation/infrastructure/data-connectors)
+- [ETL](/documentation/infrastructure/etl)

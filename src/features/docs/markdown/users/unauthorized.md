@@ -2,36 +2,46 @@
 
 ## Overview
 
-The Unauthorized Access page is displayed when a user attempts to access a page or feature that they do not have permission to view.
+The Unauthorized Access page appears when a logged-in user opens a route or feature that is blocked by permission rules. It is a guard page, meaning the system has identified the request but the current account does not have the required access scope for that operation.
 
+![Unauthorized Access](/img/usermanagement-images/unauthorizedaccessimage.png)
 
-## Error Message
+## What The Message Means
 
 **Message:** "You don't have the permissions to view this page"
 
-This indicates that:
-- Your user account does not have the required permissions for this page
-- The resource you're trying to access is restricted to other user roles or groups
+In practice, this usually means one of the following:
+
+- the current role does not include the required permission code
+- the user is signed in with a different account than expected
+- the role assignment was recently changed and the session needs to be refreshed
 
 
 ## Resolving Unauthorized Access
 
-If you need access to this page:
+If access is expected, use this sequence:
 
-1. **Contact Your Administrator** - Request that your user role or permissions be updated
-2. **Verify Your Account** - Ensure you're logged in with the correct account
-3. **Logout** - If you are really sure you have the permissions first logout then log in again.
+1. Confirm you are signed in with the intended account.
+2. Retry after signing out and signing back in.
+3. If access is still blocked, ask an administrator to review your role and permission assignment.
 
 
 ## Navigation
 
-Click the **Back to Dashboard** button to return to the main dashboard where you can access allowed pages and features.
+Use **Back to Dashboard** to return to pages that are currently allowed for your account.
 
 
-## User Roles & Permissions
+## Role And Permission Context
 
-Different user roles have access to different features in the  platform. If you believe you should have access to a page, contact your administrator to:
-- Review your user role
-- Add you to the appropriate user group
-- Grant specific permissions for the page
+Access in this platform is role-based. Roles are assigned to users, and each role carries a defined set of permission codes. If you should be able to open a page but receive this screen, an administrator should verify:
+
+- your current primary role
+- whether the required permission is attached to that role
+- whether recent role-permission changes have been applied to your session
+
+## Related Documentation
+
+- [Access Control](/documentation/users/access-control)
+- [Role Management](/documentation/users/role-management)
+- [Assign Permissions](/documentation/users/assign-permissions)
 

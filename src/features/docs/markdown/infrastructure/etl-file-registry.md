@@ -1,74 +1,64 @@
----
-title: ETL File Registry
----
-
 # ETL File Registry
 
 ## Overview
 
-View and manage all imported files. Search, filter, upload, and monitor processing.
+ETL File Registry is the main ETL operations page at `/dashboard/etl`.
 
----
+It combines monitoring, filtering, fetch-trigger entry points, and file upload.
 
-## Statistics Cards
+## Top Actions
 
-- **Total Files** - Count of all files
-- **Completed Files** - Successfully processed
-- **Pending Files** - Waiting for processing
-- **Failed Files** - Processing errors
+Header actions include:
 
----
+- Fetch Controls dropdown (opens a modal in immediate, by-time, or by-range mode)
+- Upload button (shown through permission gate for `etl.create`)
+- Analytics button (navigates to ETL analytics)
 
-## Filtering Files
+## Stats Cards
 
-### Search
-- Search by file name
-- Real-time results
+The page summarizes file counts for:
 
-### Category Filter
-- CDR
-- TDR
+- Total CDR Files
+- Total TDR Files
+- Completed CDR
+- Completed TDR
 
-### Status Filter
-- Pending
-- Processing
-- Completed
-- Failed
-- Skipped
+## Filters
 
----
+The file list supports:
 
-## File List
+- Search by file name/category/status
+- Status filter (all, pending, processing, completed, failed)
+- Category filter (all, CDR, TDR)
 
-Each entry shows:
-- File Name
-- Category, Status
-- File Size
-- Rows Parsed, Inserted, Failed
-- Processing Duration
-- Last Updated
-- Action menu
+## File Table
 
----
+Rows show key fields including:
 
-## Actions
+- File name
+- File category
+- Processing status
+- Total rows
+- Rows inserted versus parsed, with failed row count when present
+- Data size
+- Last updated date
 
-### Individual File Actions
+## Upload Flow
 
-**View Details**
-- Open file details
+Upload modal supports `.cdr` and `.tdr` files, with:
 
-**Reprocess**
-- Reprocess failed file
+- File type validation
+- Category selection
+- Preview table from parsed file rows
 
----
-
-## Upload Files
-
-Upload new data files to the system.
-
----
+On successful upload, a success toast is shown and registry data refreshes.
 
 ## Pagination
 
-Navigate between pages of files.
+The registry list uses paginated API data and page navigation controls.
+
+## Related Topics
+
+- [ETL](/documentation/infrastructure/etl)
+- [Fetch Controls](/documentation/infrastructure/etl-fetch-controls)
+- [ETL Analytics](/documentation/infrastructure/etl-analytics)

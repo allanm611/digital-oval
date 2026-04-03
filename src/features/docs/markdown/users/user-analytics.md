@@ -2,28 +2,22 @@
 
 ## Overview
 
-User Analytics provides summary cards, distribution charts, and focused user tables.
+User Analytics is the reporting view for the user-management module. Instead of focusing on one account at a time, it shows the overall shape of the user base, highlights security and lifecycle issues, and surfaces the groups that usually need follow-up.
 
 ## Accessing User Analytics
 
-Navigation:
+Open the page from **User Management → Analytics** or by clicking the **Analytics** action in the user-management header.
 
-1. Open Dashboard.
-2. Go to User Management.
-3. Open the Analytics view.
+## Summary And Monitoring Cards
 
-## Summary Cards
-
-The page shows top summary cards for:
+The page starts with summary cards that show the headline user counts used most often in operations:
 
 - Total Users
 - Active Users
 - Pending Activation
 - Locked Users
 
-## Security And Activity Cards
-
-The page also shows counts for:
+It then expands into security and activity monitoring cards for:
 
 - MFA Enabled
 - MFA Disabled
@@ -32,38 +26,45 @@ The page also shows counts for:
 - Recent Users
 - Inactive Users
 
+These cards help you spot operational pressure points quickly, such as a buildup of pending requests, a spike in locked accounts, or a cluster of users who still do not have MFA enabled.
+
+![User Analytics Stat Cards](/img/usermanagement-images/useranalyticsstatcards.png)
+
 ## Distribution Charts
 
-The page includes these pie charts:
+The middle section turns the aggregate counts into charts so it is easier to see how users are distributed across the organisation.
 
-- Users by Status
-- Users by Department
-- Users by Role
+The charts cover:
 
-Status chart includes categories returned by backend counts (for example active, inactive, pending activation, suspended).
+- users by status
+- users by department
+- users by role
 
-Charts are rendered from backend aggregate endpoints and sorted by highest count.
+The status chart shows how the overall user population is split across states such as active, inactive, pending activation, or suspended. The department and role charts make it easier to see where the user base is concentrated and whether access assignment is balanced as expected.
 
-## User Tables
+![Users by Status Pie Chart](/img/usermanagement-images/useranalyticsusersbysttauspiechart.png)
 
-When data exists, the page shows focused user tables for:
+![Users by Department and by Role](/img/usermanagement-images/useranalyticsuserbydepartment&usersbyroleimage.png)
 
-- MFA Disabled Users
-- Users With Expiring Passwords
-- Users With Expired Access
-- Recent Users
-- Inactive Users
+## Focus Tables
 
-These tables include role resolution and a row action to open user details.
+Below the charts, the page provides investigation tables for the user groups that usually require action. Depending on the returned data, this section can include:
 
-## Data Source Behavior
+- MFA disabled users
+- users with expiring passwords
+- users with expired access
+- recent users
+- inactive users
 
-Analytics data is loaded from user and role services, including:
+Each table resolves role information and includes a row action that opens the selected user’s details page, which makes the analytics page a practical starting point for follow-up work rather than just a passive dashboard.
 
-- User list and summary totals
-- Status, department, and role count endpoints
-- Role lookup for role names
-- Security/activity reporting endpoints used by the tables
+![MFA Disabled Users Table](/img/usermanagement-images/useranalyticsmfadisbaledusers.png)
+
+![Inactive Users Table](/img/usermanagement-images/useranalyticsinactiveusers.png)
+
+## Data Sources
+
+The analytics page is built from the user and role reporting services. It combines overall user counts, status counts, department counts, role counts, onboarding-request totals, and the security-oriented user lists used by the tables.
 
 ## Related Documentation
 

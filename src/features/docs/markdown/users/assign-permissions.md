@@ -2,65 +2,62 @@
 
 ## Overview
 
-Assign Permissions is the third tab on the Access Control page.
+Assign Permissions is the tab where the access model becomes concrete. After roles and permissions have been defined, this screen is used to decide exactly which permissions belong to a selected role.
 
-Use it to assign or remove permissions for a selected role.
+This is a role-first workflow: choose one role, review the available permission catalogue, and then add or remove permissions until the role has the correct access profile.
 
-## Access Path
+## Select A Role
 
-1. Open Dashboard.
-2. Go to Access Control.
-3. Select the **Assign Permissions** tab.
+The first step is to choose the role you want to work on from the **Select Role** dropdown.
 
-## Select Role
+![Assign Permissions Select Role Dropdown](/img/usermanagement-images/assignpermissionsselectroledropdownimage.png)
 
-At the top of the tab:
+Once a role is selected, a badge shows the current assignment summary in the form `assigned / total permissions`. This gives immediate context before any edits are made.
 
-- Use **Select Role** dropdown.
-- After selection, a badge shows `assigned/total` permissions for that role.
+## Permission List For The Selected Role
 
-## Permissions Table For Selected Role
+After a role is selected, the tab shows the permission catalogue with a search field above it. The search matches permission name, code, or action, which makes it practical to narrow the list before assigning or removing anything.
 
-The table includes:
+![Assign Permissions Table](/img/usermanagement-images/assignpermissionstable.png)
 
-- Permission Name
-- Code
-- Action
-- Sensitive
-- Assign/Unassign controls
+The table shows the permission name, code, action, sensitive flag, and the current assignment control for that row. The row action changes depending on whether the permission is already assigned to the role.
 
-A search box filters permissions by name, code, or action.
+## Per-Permission Assignment
 
-If no role is selected, the tab shows a prompt to select a role.
+For one-off changes, the row-level controls are the simplest path:
 
-## Per-Permission Actions
+- **Assign** adds the selected permission to the role
+- **Unassign** removes the permission from the role
 
-For each permission row:
-
-- **Assign** adds the permission to the selected role.
-- **Unassign** removes the permission from the selected role.
+This is useful when you are making a small adjustment or validating one permission at a time.
 
 ## Selection Mode And Bulk Actions
 
-The page supports multi-select mode:
+For larger access changes, the page supports selection mode. Click **Select Multiple** in the page header to enter bulk-selection mode.
 
-- Click **Select Multiple** in the page header to enter selection mode.
-- Checkboxes appear in the permissions table.
-- A bulk toolbar appears when items are selected.
+When selection mode is active:
 
-Bulk actions:
+- checkboxes appear in the table
+- visible permissions can be selected individually or through the header checkbox
+- a bulk toolbar appears when there is an active selection
 
-- **Assign Selected**: assigns selected unassigned permissions
-- **Remove Selected**: removes selected assigned permissions
+![Assign Permissions Bulk Operations](/img/usermanagement-images/assignpermissionsbulkoperationimage.png)
 
-Selection mode also supports select-all behavior for visible permissions.
+The toolbar is context-aware:
 
-## Notes
+- if the visible selection contains unassigned permissions, you can use **Assign Selected**
+- if the visible selection contains assigned permissions, you can use **Remove Selected**
+- if both states are present across the visible set, both actions can appear
 
-- The tab works at role-permission level, not user edit forms.
-- Role assignment to users is documented under user creation/edit flows.
+This makes the bulk workflow useful for both initial setup and cleanup work.
 
-## Related Topics
+## Save Feedback And Result
+
+When permissions are assigned successfully, the page updates the local role assignment state and shows a success message so the administrator can confirm the change immediately.
+
+![Assign Permission to Role Success](/img/usermanagement-images/assignpermissiontorolesuccessimage.png)
+
+## Related Documentation
 
 - [Access Control](/documentation/users/access-control)
 - [Role Management](/documentation/users/role-management)

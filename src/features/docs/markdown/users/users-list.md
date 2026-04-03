@@ -2,152 +2,106 @@
 
 ## Overview
 
-View all system users in a searchable, filterable table. Manage user accounts, toggle status, delete users, and perform batch operations.
+The Users page is the operational view for day-to-day account administration. It combines headline user statistics, a tabbed workspace for active users and onboarding requests, and the actions needed to create accounts, review pending requests, open analytics, and make updates in bulk.
 
+![Users Management List](/img/usermanagement-images/usermanagementlistimage.png)
 
-## Accessing Users List
+## Page Layout
 
+At the top of the page, four summary cards show the current state of the user base: total users, active users, pending activation requests, and locked users. These numbers give a quick health check before you move into the table below.
 
-The Users List displays all user accounts with options to search, filter, and manage each user.
+Below the summary cards, the page is split into three navigation tabs:
 
+- **Users** for the main account table
+- **Pending Requests** for onboarding requests that still need processing
+- **Analytics** for the reporting view
 
-## Search & Filter
+The main actions in the header are:
 
-### Search Users
+- **Select Users** to enter multi-select mode on the users table
+- **Analytics** to open the reporting page
+- **Add User** to open the create-user modal
 
-Use the search box to find users by:
-- **Name** - First name or last name
-- **Email** - Email address
-- **Username** - System login username
+## Users Tab
 
-**How It Works:**
-1. Type search term in search box
-2. Results update as you type
-3. Shows matching users only
-4. Clear search to see full list
+The **Users** tab shows the main account table. Each row represents one user account and includes the user name, email, department, resolved role name, current status, creation date, and row-level actions.
 
+Use this tab when you need to inspect the current user base, narrow the list, export the current result set, or take action on one or more accounts.
 
-### Filter Options
+### Search And Filters
 
-**By Status**
-- Active - User can access system
-- Inactive - User access disabled (Deactivated)
-- Suspended - Temporarily blocked
-- Locked - Account locked
-- Pending Activation - Awaiting activation
-- Deleted - User removed
-- All - Show all statuses
+The search field matches the visible user list by first name, last name, or email. The toolbar also includes:
 
-**By Department**
-- Filter by department assignment
-- See all users in specific department
-- All - Show all departments
+- A **Status** dropdown for filtering the table by account state
+- A **CSV export** action for downloading the current filtered result
+- A **Filters** button that opens the additional filter options, including department and role
 
-**By Role**
-- Filter by assigned role
-- Show users with that role
-- All - Show all roles
+Filtering updates the visible table and resets pagination to the first page so the filtered result is shown immediately.
 
-## User Status Definitions
+### User Statuses
 
-**Active**
-- User can log in and access system
-- Fully functional account
+The status column is used to understand whether an account is currently usable or needs attention:
 
-**Inactive**
-- User cannot log in
-- Access is disabled
-- Can be reactivated by toggling status
+- **Active** means the user can sign in and operate normally.
+- **Pending Activation** means the account exists but is still awaiting completion or approval in the onboarding flow.
+- **Suspended** means access has been paused.
+- **Locked** means the account is blocked until it is unlocked.
+- **Deactivated** means the account is present but login is disabled.
+- **Deleted** means the record has been removed from normal use.
 
-**Suspended**
-- Temporarily blocked
-- Cannot access system
+### Row Actions
 
-**Locked**
-- Account locked
-- Cannot access system until unlocked
+Each user row exposes the actions needed for direct account handling:
 
-**Pending Activation**
-- User account created but not yet activated
+- **View** opens the user details page, where profile information, permissions, and reporting relationships are shown together.
+- **Status toggle** activates or deactivates the account from the list view.
+- **Delete** removes the user after confirmation.
 
-**Deleted**
-- User removed from system
-- Cannot be reactivated
+These actions are intended for individual account maintenance when you are working one record at a time.
 
+## Pending Requests Tab
 
-## Action Buttons
+The **Pending Requests** tab is the queue for account requests that are moving through onboarding. It brings submitted, under-review, and pending-approval requests into one working table so the reviewer can see who requested access, which role was requested, the current request status, and when the request was raised.
 
-### View User
+![Pending Users Tab](/img/usermanagement-images/usermanagementpendingliststab.png)
 
-Click the **View** button (eye icon) to open user details page.
+The request table includes these columns:
 
-**Shows:**
-- User information (name, email, username, department, role)
-- Account details (status, creation date, last login)
-- Summary of user data
+- **User**
+- **Email**
+- **Requested Role**
+- **Status**
+- **Requested**
+- **Actions**
 
+The action buttons change with the request stage:
 
-### Toggle Status
+- Submitted requests can be moved into review.
+- Requests under review can be forwarded for approval.
+- Requests pending approval can be approved or rejected.
+- Approved requests can be used to create the actual user account.
 
-Click the **Status** button to change user account status.
-
-**Options:**
-- **Activate** - Enable user access (if Inactive)
-- **Deactivate** - Disable user access
-- **Suspend** - Temporarily block access
-- **Unsuspend** - Restore from suspension
-- **Lock/Unlock** - Lock or unlock account
-
-**Confirmation:** Required to confirm status change
-
-
-### Delete User
-
-Click the **Delete** button (trash icon) to remove user account.
-
-**Warning:** Permanent action, cannot be undone. User will be unable to access the system.
-
+This keeps the onboarding flow in one place instead of splitting it across separate pages.
 
 ## Bulk Operations
 
-### Select Multiple Users
+When you click **Select Users**, the users table enters selection mode and checkboxes appear in the list. You can select individual rows or use the header checkbox to select all currently visible users.
 
-**To select users:**
-1. Click checkbox next to user name
-2. Or click "Select All" checkbox in header to select all visible users
+Once one or more users are selected, the bulk action bar appears.
 
-**Actions on Selected:**
-- **Bulk Deactivate** - Deactivate multiple users at once
-- **Bulk Update Department** - Change department for multiple users
+![Users List Bulk Operations](/img/usermanagement-images/usermanagementlistbulkoperation.png)
 
-**Confirmation:** Required for all bulk operations with count of affected users
+From this bar you can:
 
-1. Use search box at top
-2. Enter first name, last name, email, or username
-3. Click on user to view details
-### Change User Status
+- choose a department and apply **Update Department** to every selected user
+- run **Deactivate** to disable all selected accounts in one operation
+- clear the current selection without leaving the page
 
-1. Find user in list
-2. Click **Status** button
-3. Select new status (Activate/Deactivate/Suspend/etc.)
-4. Confirm action
+Bulk actions are useful when a team move, access cleanup, or temporary offboarding affects several accounts at once.
 
-### Deactivate Multiple Users
+## Related Documentation
 
-1. Select users by clicking checkboxes
-2. Click **Bulk Deactivate** button
-3. Review count of affected users
-4. Confirm action
-
-### Update Department for Multiple Users
-
-1. Select users by clicking checkboxes
-2. Click **Bulk Update Department** button
-3. Select new department
-4. Confirm action
-
-### Delete a User
-
-1. Find user in list
-2. Click **Delete** button (trash icon)
-3. Confirm deletion (permanent action)
+- [Create User](/documentation/users/create-user)
+- [View User Details](/documentation/users/view-user-details)
+- [User Analytics](/documentation/users/user-analytics)
+- [Access Control](/documentation/users/access-control)

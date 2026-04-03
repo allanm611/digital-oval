@@ -1,62 +1,58 @@
----
-title: Servers
----
-
-
 # Servers
 
 ## Overview
 
-The Servers section allows you to manage and monitor all servers used by the Sentra CVM platform. Each server can be configured with specific settings, health checks, and circuit breaker policies to ensure optimal performance and reliability.
+Servers are managed from the Servers module in Infrastructure.
 
-## Key Features
+This module provides:
 
-### Server Management
-- Create and manage multiple servers
-- Configure server properties (protocol, host, port, environment)
-- Monitor server health status
-- Activate or deactivate servers as needed
+- Server list and filtering
+- Server creation and editing
+- Server details and operational actions
+- Health check and circuit breaker controls
 
-### Health Monitoring
-- Enable health checks on servers
-- Configure health check URLs and intervals
-- Monitor real-time health status
-- View health check history
+## Access Paths
 
-### Circuit Breaker Protection
-- Enable circuit breaker protection
-- Configure failure thresholds
-- Automatic failure handling
+Main routes in the app:
 
-### Server Filtering
-Filter servers by:
-- Health status (enabled, failing, due for check)
-- Environment (development, staging, production)
-- Protocol (HTTP, HTTPS, etc.)
-- Region
-- Status (active, inactive)
+- `Dashboard > Servers` for the list page
+- `Dashboard > Servers > Add Server` for create
+- `Dashboard > Servers > Edit Server` for update
+- `Dashboard > Servers > Server Details` for details and actions
 
-## Server States
+## Main Pages
 
-### Active
-Server is operational and ready to handle requests.
+Use these pages for detailed instructions:
 
-### Inactive
-Server is deactivated and will not process requests.
+- [Servers List](/documentation/infrastructure/servers-list)
+- [Create Server](/documentation/infrastructure/create-server)
+- [Edit Server](/documentation/infrastructure/edit-server)
+- [View Server Details](/documentation/infrastructure/view-server)
 
-### Health Check Status
-- **Enabled** - Health check is active and monitoring
-- **Failing** - Health check indicates server issues
-- **Due** - Health check is due to run
+## What You Can Manage
 
-## Available Actions
+Server records include:
 
-- **View Details** - See complete server information
-- **Create Server** - Add a new server
-- **Edit Server** - Modify server configuration
-- **Activate** - Enable server operations
-- **Deactivate** - Disable server operations
-- **Health Check** - Toggle health monitoring
-- **Test Health** - Run an immediate health check
-- **Circuit Breaker** - Toggle circuit breaker protection
+- Identity and endpoint fields (name, code, protocol, host, port, base path)
+- Classification fields (environment, region, server type)
+- Connection limits (timeout, max retries)
+- Health checks
+- Circuit breaker
+- TLS and authentication type
+- Optional metadata
 
+Operational actions include:
+
+- Activate or deactivate server
+- Enable or disable health checks
+- Deprecate or restore server
+- Enable or disable circuit breaker
+- Reset health check
+- Push manual health result
+
+## Related Topics
+
+- [Connection Profiles](/documentation/infrastructure/connection-profiles)
+- [Data Connectors](/documentation/infrastructure/data-connectors)
+- [KPIs](/documentation/infrastructure/kpis)
+- [ETL](/documentation/infrastructure/etl)
