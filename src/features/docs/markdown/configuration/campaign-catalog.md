@@ -4,6 +4,8 @@
 
 Campaign Catalogs are organizational structures that group and organize campaigns by category. The Campaign Catalog page displays all catalogs in your system, with summary statistics and management tools for each catalog.
 
+<!-- **Note:** Campaign Catalogs are configured in the system configuration. For detailed information on creating and managing catalogs, see [Campaign Catalogs Configuration](/documentation/configuration/campaign-catalog). -->
+
 ![Campaign Catalogs List](/img/configuration/campaigncatalogslist.png)
 
 
@@ -158,6 +160,8 @@ Use the **Search** field to find catalogs by:
 - Catalog name
 - Catalog description
 
+
 ## View Modes
 
 Switch between **Grid** and **List** views using the view toggle buttons at the top right.
+

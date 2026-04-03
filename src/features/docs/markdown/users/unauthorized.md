@@ -20,6 +20,7 @@ If you need access to this page:
 
 1. **Contact Your Administrator** - Request that your user role or permissions be updated
 2. **Verify Your Account** - Ensure you're logged in with the correct account
+3. **Logout** - If you are really sure you have the permissions first logout then log in again.
 
 
 ## Navigation
@@ -29,7 +30,7 @@ Click the **Back to Dashboard** button to return to the main dashboard where you
 
 ## User Roles & Permissions
 
-Different user roles have access to different features in the Sentra CVM platform. If you believe you should have access to a page, contact your administrator to:
+Different user roles have access to different features in the  platform. If you believe you should have access to a page, contact your administrator to:
 - Review your user role
 - Add you to the appropriate user group
 - Grant specific permissions for the page

@@ -1,518 +1,86 @@
-# DND Management
+# DND Management Overview
 
-## Overview
+DND (Do Not Disturb) Management allows you to manage customer opt-outs across multiple communication channels. You can add customers to DND lists for specific message types to exclude them from receiving those messages.
 
-DND (Do Not Disturb) Management allows you to manage customer communication preferences and opt-outs across multiple channels. Respect customer choices by maintaining Do Not Disturb lists for SMS, Email, USSD, and Push Notifications. This ensures regulatory compliance, protects customer relationships, and improves campaign effectiveness by excluding customers who have opted out.
+## What is DND Management?
 
-## Purpose & Benefits
+DND Management allows you to:
+- **Manage Opt-Outs** - Add customers to Do Not Disturb lists
+- **Track Preferences** - Monitor which customers have opted out
+- **Support Multiple Channels** - Manage DND across SMS, Email, USSD, and Push Notifications
+- **Track by Message Type** - Exclude customers from specific message categories
 
-**Respect Customer Preferences**
-- Honor customer opt-out requests
-- Prevent unwanted communications
-- Maintain customer trust
-- Reduce complaints and bounce rates
-
-**Regulatory Compliance**
-- Meet GDPR and privacy regulations
-- Maintain audit trails of opt-in/opt-out actions
-- Document customer preferences with timestamps
-- Respect local messaging laws
-
-**Improve Campaign Performance**
-- Automatically filter opted-out customers
-- Reduce invalid delivery attempts
-- Improve email deliverability and SMS success rates
-- Focus campaigns on engaged customers
-- Increase overall campaign ROI
-
-**Operational Efficiency**
-- Centralized opt-out management across all channels
-- Quick customer lookup and preference management
-- Audit trail showing who made changes and when
-- Soft-delete records for compliance history
-
-## DND Management Overview
+## Managing DND Lists
 
 Navigate to **Configuration → DND Management** to manage all Do Not Disturb lists.
 
-The DND Management page displays communication channels as interactive cards:
+### View DND Management
+
+The DND Management page displays four communication channels as interactive cards:
 
 - **SMS** - Text message opt-outs
 - **Email** - Email communication opt-outs
 - **USSD** - Interactive messaging opt-outs
 - **Push** - Mobile app notification opt-outs
 
-Click any channel card to access and manage the DND list for that specific channel.
-
-## Supported Channels
-
-### SMS (Short Message Service)
-
-**Description:** Text message communication
-
-**Managed By:** Phone numbers (MSISDN format)
-
-**Use Cases:**
-- Customers who send "STOP" to opt out of SMS
-- Regional SMS regulations
-- Customer-initiated SMS blocking
-
-### Email
-
-**Description:** Email communication
-
-**Managed By:** Email addresses
-
-**Use Cases:**
-- Customers clicking unsubscribe links
-- Email provider spam complaints
-- Customer opt-out requests
-
-### USSD (Unstructured Supplementary Service Data)
-
-**Description:** Interactive menu-based mobile messaging
-
-**Managed By:** Phone numbers (MSISDN format)
-
-**Use Cases:**
-- USSD menu navigation opt-outs
-- Regional USSD regulations
-- Customer preference updates
-
-### Push Notifications
-
-**Description:** Mobile app notifications via FCM/APNS
-
-**Managed By:** Customer/User IDs
-
-**Use Cases:**
-- In-app notification opt-outs
-- Push notification permissions
-- App engagement preferences
-
-## DND Categories
-
-DND is organized into five message type categories:
-
-### Promotional Messages
-
-**Description:** Special offers, discounts, and promotional campaigns
-
-**Examples:**
-- Flash sales
-- Seasonal promotions
-- Discount codes
-- Limited-time offers
-- Clearance announcements
-
-**Use Case:** Customers can opt-out of promotional content while still receiving service messages
-
----
-
-### Transactional Messages
-
-**Description:** Order confirmations, receipts, and transaction-related communications
-
-**Examples:**
-- Order confirmation
-- Payment receipt
-- Delivery notification
-- Transaction status update
-- Invoice
-
-**Use Case:** Critical business communications that should rarely be opted out of
-
----
-
-### Marketing Messages
-
-**Description:** Marketing campaigns and brand communications
-
-**Examples:**
-- Newsletter
-- Product recommendations
-- Brand announcements
-- Campaign invitations
-- Marketing automation
-
-**Use Case:** Customers can opt-out of marketing while keeping promotional and transactional messages
-
----
-
-### Service Messages
-
-**Description:** Service updates, maintenance notifications, and account information
-
-**Examples:**
-- Account updates
-- Password resets
-- Security alerts
-- Service status
-- System maintenance notice
-
-**Use Case:** Important account and service information
-
----
-
-### Other Communications
-
-**Description:** Miscellaneous communications that don't fit other categories
-
-**Examples:**
-- Feedback requests
-- Surveys
-- General notifications
-- Announcements
-- Other communications
-
-**Use Case:** Catch-all category for non-standard communications
-
----
-
-## DND Status Tracking
-
-### Active Status
-
-Indicates a customer is currently in the DND list for a specific message type on a specific channel.
-
-**Details Tracked:**
-- Added Date: When the customer was added to DND
-- Added By: User who added the customer
-- Current Status: Active
-
-**Behavior:** Messages of this type will not be sent to this customer on this channel
-
----
-
-### Removed Status
-
-Indicates a customer was previously in DND but has been removed (soft delete).
-
-**Details Tracked:**
-- Added Date: When originally added to DND
-- Added By: User who added the customer
-- Removed Date: When removed from DND
-- Removed By: User who removed the customer
-- Previous Status: Removed
-
-**Behavior:** Customer is no longer in DND for this message type on this channel
-
-**Note:** Removed records are kept for audit and historical purposes
-
----
-
-## Managing DND Lists
-
-### Accessing DND Management
-
-**Navigation:**
-1. Go to Configuration menu
-2. Select "DND Management"
-3. Choose desired communication channel (SMS, Email, USSD, App)
-4. View and manage DND list for that channel
-
-**Route:** `/dashboard/dnd-management`
-
-### View Communication Policies
-
-Navigate to **Configuration → Communication Policies** to manage DND and other communication policies.
-
-![Communication Policies List](/img/configuration/communicaitonpolicylist.png)
-
-### Create Policy
-
-Click the **Create** button to add a new policy.
-
-![Create Policy](/img/configuration/createpolicy.png)
-
-**Policy Types:**
-
-**DND Policy:**
-
-![DND Policy Configuration](/img/configuration/createpolicy-dnd.png)
-
-**Maximum Frequency Policy:**
-
-![Maximum Frequency Policy](/img/configuration/createpolicy-maximum.png)
-
-**VIP Policy:**
-
-![VIP Policy Configuration](/img/configuration/createpolicy-vip.png)
-
-**Policy Type Dropdown:**
-
-![Policy Type Selection](/img/configuration/createpolicy-policydropdown.png)
-
----
-
-### Channel-Specific Management
-
-Once you select a channel, you can:
-
-**Add Customers to DND**
-- Search for customer by name, email, or phone
-- Select specific DND category (message type)
-- Set status to active immediately
-- System logs who added and when
-
-**Remove Customers from DND**
-- Search in active DND list
-- Select customer and message type
-- Mark as removed (soft delete)
-- System logs removal details
-
-**View DND List**
-- See all active DND entries
-- Filter by DND type
-- Search by customer details
-- View metadata (added/removed dates and users)
-
-**Track Changes**
-- See who added each entry
-- View removal history
-- Audit trail of all changes
-- Timestamps for compliance
-
----
+Click any channel card to manage the DND list for that specific channel.
+
+## Managing DND by Channel
+
+When you click on a channel, you can manage customers for that channel with the following message types:
+
+**DND Message Types:**
+- **Promotional** - Special offers, discounts, promotional campaigns
+- **Transactional** - Order confirmations, receipts, transaction-related communications
+- **Marketing** - Marketing campaigns and brand communications
+- **Service** - Service updates, maintenance notifications, account information
+- **Other** - Miscellaneous communications that don't fit other categories
+
+### Viewing DND List for a Channel
+
+The DND list displays:
+- **Customer Name** - Name of the customer
+- **Contact Info** - Email (for Email channel) or Phone (for SMS/USSD/Push)
+- **DND Type** - Message type they opted out of (Promotional, Transactional, Marketing, Service, Other)
+- **Status** - Active (currently in DND) or Removed (previously removed from DND)
+- **Added Date** - When they were added to DND
+- **Added By** - User who added them
+
+You can:
+- **Search** - Find customers by name, email, or phone
+- **Filter by Type** - Filter by DND message type (Promotional, Transactional, etc.)
+- **Filter by Status** - Show active, removed, or all DND entries
 
 ### Adding Customer to DND
 
-#### SMS/USSD DND (Phone-Based)
+Click the **Add Customer** button to add a customer to DND.
 
-**Step 1: Search Customer**
-- Enter customer name, email, or phone number
-- System searches customer database
-- Select matching customer from results
-- Debounced search for performance
-
-**Step 2: Select DND Category**
-- Choose message type to opt-out of:
+**Required Fields:**
+- **Customer** - Search and select a customer by name, email, or phone
+- **DND Type** - Select which message type to opt them out of:
   - Promotional
   - Transactional
   - Marketing
   - Service
   - Other
-- Select "Add to DND"
-- System records addition
 
-#### Email DND
-
-**Step 1: Search Customer**
-- Enter customer name, email, or phone number
-- System searches customer database
-- Select matching customer from results
-
-**Step 2: Add to DND**
-- Email DND doesn't distinguish by category
-- Add entire email to DND
-- System records addition
-
----
+Click **Add** to add the customer to DND. The system automatically:
+- Sets status to Active
+- Records the current date and time
+- Records the user who added them
 
 ### Removing Customer from DND
 
-**Step 1: Locate Customer in DND List**
-- Search by customer details
-- Filter by DND type if needed
-- View list of active DND entries
+Click **Remove** on any DND entry to remove a customer from that DND list.
 
-**Step 2: Select Customer & Category**
-- Choose customer to remove
-- Confirm category to remove (SMS/USSD only)
+The system will:
+- Change status from Active to Removed
+- Record the removal date and time
+- Record the user who removed them
+- Keep the historical record for audit purposes
 
-**Step 3: Confirm Removal**
-- Confirm removal action
-- System soft-deletes the record
-- Records removal details (date, user)
+## DND Status Tracking
 
-**Note:** Removed records are kept for audit purposes but customer is no longer in active DND
+**Active Status** - Customer is currently in the DND list for this message type on this channel. They will not receive messages of this type.
 
----
-
-## Integration with Campaigns
-
-### Campaign Execution Flow
-
-When a campaign is prepared to send messages:
-
-**1. Message Preparation**
-- System prepares message list for sending
-- Identifies message category (promotional, transactional, etc.)
-- Identifies target channel (SMS, Email, etc.)
-
-**2. DND Filtering**
-- System checks recipient list against DND data
-- For each recipient:
-  - Is customer in DND for this message type on this channel?
-  - Yes → Exclude from send
-  - No → Include in send
-
-**3. Final Send**
-- Only non-DND customers receive message
-- Campaign reports show exclusions
-- Audit trail records DND filtering
-
-### Campaign Reporting
-
-**Exclusion Tracking:**
-- Number of messages excluded due to DND
-- Percentage of audience excluded
-- DND exclusions per channel
-- DND exclusions by type
-
-**Performance Impact:**
-- Reduced bounces (excluded invalid addresses)
-- Better engagement (only engaged customers)
-- Compliance assurance (respects preferences)
-
----
-
-## Best Practices
-
-### DND Management
-
-**Regular Maintenance**
-- Periodically review DND lists
-- Remove entries for inactive customers
-- Clean up old removed records
-- Archive historical data
-
-**Accuracy**
-- Verify customer details before adding to DND
-- Use correct channel and category
-- Document reasons for additions
-- Maintain audit trail
-
-**Customer Communication**
-- Notify customers of DND addition
-- Confirm email/SMS preferences
-- Provide easy preference management
-- Allow customer-initiated changes
-
-### Campaign Considerations
-
-**Pre-Campaign Review**
-- Check estimated DND exclusions
-- Review impact on reach
-- Document exclusion rates
-- Plan messaging strategy
-
-**Message Categorization**
-- Correctly categorize all messages
-- Use appropriate category for message type
-- Maintain consistency across campaigns
-- Train team on categorization
-
-**Compliance**
-- Respect all DND preferences
-- Don't attempt workarounds
-- Maintain audit trail
-- Document compliance measures
-- Review regularly for violations
-
-### Customer Experience
-
-**Preference Management**
-- Make DND easy to manage
-- Offer customer self-service options
-- Provide clear opt-in/opt-out
-- Confirm preference changes
-
-**Relevant Messaging**
-- Focus on engaged customers
-- Reduce message frequency
-- Personalize remaining messages
-- Honor all preferences
-
----
-
-## Common Scenarios
-
-### Scenario 1: Customer Wants to Stop Marketing Emails
-
-**Process:**
-1. Customer indicates preference not to receive marketing
-2. Administrator searches for customer email
-3. Adds email to Email DND for "Marketing" category
-4. Next marketing email campaign automatically excludes this customer
-5. Transactional and service emails continue to be sent
-
-**Result:** Customer receives only transactional and service emails, not marketing
-
----
-
-### Scenario 2: Opting Out of All SMS Promotional
-
-**Process:**
-1. Customer sends "STOP" SMS or opts out via app
-2. Administrator or automation adds phone to SMS DND for "Promotional" category
-3. All future promotional SMS are excluded
-4. Transactional SMS (order confirmations, etc.) continue
-
-**Result:** Customer receives only non-promotional SMS messages
-
----
-
-### Scenario 3: Channel-Specific Preferences
-
-**Process:**
-1. Customer wants SMS but not Email for promotional offers
-2. Add email to Email DND for "Promotional"
-3. Keep phone OUT of SMS DND
-4. Promotional campaigns send SMS to customer, exclude from Email
-5. Customer receives promotional SMS but not promotional Email
-
-**Result:** Respects channel-specific customer preferences
-
----
-
-### Scenario 4: Service Messages Exception
-
-**Process:**
-1. Customer is in DND for transactional messages
-2. Critical service update needs to be sent
-3. Evaluate: Is this truly transactional? Should it be an exception?
-4. If exception approved: Send to customer despite DND
-5. Document exception and reason in audit log
-
-**Result:** Critical messages can be sent while maintaining DND compliance
-
----
-
-## Troubleshooting
-
-### Cannot Find Customer to Add to DND
-
-**Issue:** Customer doesn't appear in search results
-- **Cause:** Customer not in system, incorrect name/email/phone, typo
-- **Solution:** Verify customer details in customer database first
-- **Check:** Make sure customer record exists and is active
-- **Alternative:** Add DND by exact email or phone if customer exists but search fails
-
-### Customer Not Appearing in Active DND List
-
-**Issue:** Added customer doesn't show in DND list
-- **Cause:** May be in "removed" status, different channel, different category
-- **Solution:** Check filters and status selection
-- **Check:** Make sure viewing correct channel (SMS, Email, etc.)
-- **Filter:** Try searching with fewer filters to locate customer
-
-### Messages Still Being Sent Despite DND
-
-**Issue:** Campaign sent message to customer in DND
-- **Cause:** Campaign used wrong category, wrong channel, or bypassed DND check
-- **Solution:** Verify campaign message categorization
-- **Investigation:** Check if DND was active at time of sending
-- **Prevention:** Enable DND filtering validation in campaign setup
-- **Review:** Audit campaign configuration and DND records
-
-### Removed Records Taking Up Space
-
-**Issue:** Too many removed DND records in system
-- **Cause:** Removed records kept for audit trail
-- **Solution:** Archive or bulk-delete very old removed records
-- **Policy:** Define retention policy for removed records
-- **Automation:** Consider automated archival of old records
-
----
-
+**Removed Status** - Customer was previously in DND but has been removed. They are no longer in the DND list. Historical records are kept for compliance purposes.

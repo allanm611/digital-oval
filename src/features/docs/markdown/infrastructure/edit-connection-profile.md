@@ -2,52 +2,41 @@
 title: Edit Connection Profile
 ---
 
-
 # Edit Connection Profile
 
 ## Overview
 
-The Edit Connection Profile form allows you to modify existing profile configuration. You can update connection settings, performance tuning, reliability settings, compliance parameters, and health check configuration.
+Modify existing connection profile settings. The edit form contains the same fields as [Create Connection Profile](/documentation/infrastructure/create-connection-profile).
 
-## Accessing Edit Form
+---
 
-1. Navigate to **Infrastructure > Connection Profiles**
-2. Find the profile you want to edit
-3. Click on the profile row or click the menu icon (⋮)
-4. Select **Edit**
+## Accessing Edit
 
-Or from Connection Profile Details page:
-1. Click **Edit** button in the top-right corner
+**From Connection Profiles List:**
+1. Click the menu icon on the profile
+2. Select **Edit**
 
-## Form Fields
+**From Profile Details:**
+1. Click **Edit** button
 
-All fields are the same as [Create Connection Profile](/documentation/infrastructure/create-connection-profile) with the following notes:
+---
 
-### Required Fields
-- Profile Name*
-- Profile Code*
-- Connection Type*
-- Server*
-- Load Strategy*
-- Environment*
-- Batch Size*
-- Parallel Threads*
-- Min Pool Size*
-- Max Pool Size*
-- Connection Timeout*
-- Idle Timeout*
-- Max Retries*
-- Retry Backoff Multiplier*
-- Circuit Breaker Threshold*
-- Data Classification*
-- Valid From*
+## Fields
 
-### Optional Fields
-- Database Type (if Database connection)
-- Database Name (if Database connection)
-- Sync Column Name (if Incremental Load)
-- Sync Column Type (if Incremental Load)
-- Valid To
+All fields match the Create Connection Profile form. See [Create Connection Profile](/documentation/infrastructure/create-connection-profile) for field descriptions.
+
+Required fields:
+- Profile Name
+- Profile Code
+- Connection Type
+- Load Strategy
+- Environment
+
+---
+
+## Save
+
+Click **Save** to apply changes. You'll be redirected to the profile details page.
 - Health Check Query (required if health checks enabled)
 - Encryption Key Version
 - Metadata
