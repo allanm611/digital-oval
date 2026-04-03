@@ -1,86 +1,29 @@
 # Servers List
 
-## Overview
+Servers List is the working page for day-to-day server operations.
 
-Servers List is the main page for browsing and managing server records.
+## What You See In The Table
 
-## Statistics Cards
+- **Server**: display name
+- **Code**: internal identifier
+- **Environment**: deployment context
+- **Endpoint**: computed from protocol, host, port, and base path
+- **Health**: health state badge (healthy/unhealthy/disabled)
+- **Status**: active/inactive/deprecated
 
-At the top of the page, the app shows:
+## Search And Filters
 
-- **Total Servers**
-- **Health Coverage**
-- **Protocol Mix**
-- **Region Coverage**
+Use search for name/code lookup. Use filters to narrow by scope, environment, protocol, region, status, and server type.
 
-## Search, Dataset Scope, And Filters
+## Actions On The List
 
-The top controls include:
+- **Create**: add a new server
+- **View**: open full details
+- **Edit**: update configuration
+- **Activate / Deactivate**: change operational availability
+- **Deprecate / Restore**: lifecycle control for old endpoints
+- **Health Toggle**: enable or disable health checks
 
-- Search by server name or code
-- Dataset scope:
-  - All servers
-  - Health on
-  - Failing
-  - Due
-- Filters drawer
+## Bulk Operations
 
-Filters include:
-
-- Environment
-- Protocol
-- Region
-- Status (`active`, `inactive`, `deprecated`)
-- Server Type
-
-## Table Columns
-
-The list table displays:
-
-- Server
-- Code
-- Environment
-- Endpoint
-- Health
-- Status
-- Actions
-
-Health cell behavior:
-
-- `disabled` when health checks are off
-- `null` when enabled but no status exists
-- Backend status text when available
-
-Status can show active/inactive and deprecated badge.
-
-## Actions
-
-Per row, the page provides:
-
-- View details
-- Edit
-- Enable or disable health checks
-- Deprecate or restore
-
-## Selection Mode And Bulk Actions
-
-Selection mode allows choosing multiple visible rows.
-
-Bulk actions available:
-
-- Activate selected
-- Deactivate selected
-
-## Empty State
-
-If no rows match current filters, the page shows an empty-state message.
-
-## Pagination
-
-Servers List paginates results and supports page navigation and page-size controls.
-
-## Related Topics
-
-- [Servers](/documentation/infrastructure/servers)
-- [Create Server](/documentation/infrastructure/create-server)
-- [View Server Details](/documentation/infrastructure/view-server)
+When selection mode is enabled, you can select multiple servers and run bulk activate/deactivate actions.

@@ -1,64 +1,28 @@
 # ETL File Registry
 
-## Overview
+ETL File Registry is the operations page for tracking ingested files and their processing lifecycle.
 
-ETL File Registry is the main ETL operations page at `/dashboard/etl`.
+## What You See In The Table
 
-It combines monitoring, filtering, fetch-trigger entry points, and file upload.
+- **File Name**: source file identifier
+- **Category**: file type (for example CDR/TDR)
+- **Status**: pending, processing, completed, failed
+- **Record Count**: ingestion volume for the file
+- **Upload Date / Last Modified**: processing timeline context
 
-## Top Actions
+## Search And Filters
 
-Header actions include:
+- search by file name
+- filter by status
+- filter by category
+- paginate results for larger volumes
 
-- Fetch Controls dropdown (opens a modal in immediate, by-time, or by-range mode)
-- Upload button (shown through permission gate for `etl.create`)
-- Analytics button (navigates to ETL analytics)
+## Main Actions
 
-## Stats Cards
+- **Upload File**: add new ETL input files
+- **Fetch actions**: open controls for manual fetch workflows
+- **View/Download actions**: inspect or retrieve file-related data where available
 
-The page summarizes file counts for:
+## Why This Page Matters
 
-- Total CDR Files
-- Total TDR Files
-- Completed CDR
-- Completed TDR
-
-## Filters
-
-The file list supports:
-
-- Search by file name/category/status
-- Status filter (all, pending, processing, completed, failed)
-- Category filter (all, CDR, TDR)
-
-## File Table
-
-Rows show key fields including:
-
-- File name
-- File category
-- Processing status
-- Total rows
-- Rows inserted versus parsed, with failed row count when present
-- Data size
-- Last updated date
-
-## Upload Flow
-
-Upload modal supports `.cdr` and `.tdr` files, with:
-
-- File type validation
-- Category selection
-- Preview table from parsed file rows
-
-On successful upload, a success toast is shown and registry data refreshes.
-
-## Pagination
-
-The registry list uses paginated API data and page navigation controls.
-
-## Related Topics
-
-- [ETL](/documentation/infrastructure/etl)
-- [Fetch Controls](/documentation/infrastructure/etl-fetch-controls)
-- [ETL Analytics](/documentation/infrastructure/etl-analytics)
+This page is the first stop for checking whether files entered the pipeline correctly and where failures happened.

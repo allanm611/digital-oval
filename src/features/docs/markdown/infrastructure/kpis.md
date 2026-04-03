@@ -1,52 +1,32 @@
 # KPIs
 
-## Overview
+The KPI section is the metric-configuration area inside Infrastructure. It organizes metric setup by category so teams can manage definitions without mixing business and technical concerns.
 
-The KPIs area opens as a hub page with four navigation cards:
+## Open The Module
 
-- All KPIs
-- Revenue Metrics
-- Usage Metrics
-- System Events
+Go to `Dashboard -> Infrastructure -> KPIs`.
 
-Each card routes to its own page under `/dashboard/kpis`.
+## KPI Areas In The Hub
 
-## KPI Areas
+- **All KPIs**: unified metric list across categories
+- **Revenue Metrics**: revenue-focused definitions
+- **Usage Metrics**: usage-focused definitions
+- **System Events**: event-oriented monitoring metrics
 
-### All KPIs
+## Core Field Meaning
 
-All KPIs is a consolidated read-only list generated from KPI definitions used by the app.
+- **Name**: metric label shown in list and details pages.
+- **Description**: context for how the metric is intended to be used.
+- **Field Type**: value data type (for example numeric/decimal).
+- **Category**: business grouping (revenue or usage subtypes).
+- **Operators**: supported condition logic for this metric.
+- **Source Table**: data source table used by the metric.
+- **Data Source**: source mode (for example Live or DB).
+- **Frequency**: refresh cadence such as Per Min, D-1, or Monthly.
 
-### Revenue Metrics
+## Related Pages
 
-Revenue Metrics includes full CRUD-style management in the UI:
-
-- List with search and category filter
-- Create form
-- Details page
-- Edit form
-- Delete action
-
-### Usage Metrics
-
-Usage Metrics mirrors Revenue Metrics behavior:
-
-- List with search and category filter
-- Create form
-- Details page
-- Edit form
-- Delete action
-
-### System Events
-
-System Events is a read-only list and details flow:
-
-- List with search and category filter
-- Details page
-
-## Related Topics
-
-- [KPI List](/documentation/infrastructure/kpis-list)
-- [Create KPI](/documentation/infrastructure/create-kpi)
-- [View KPI Details](/documentation/infrastructure/view-kpi)
-- [Edit KPI](/documentation/infrastructure/edit-kpi)
+- `KPI List`
+- `Create KPI`
+- `View KPI`
+- `Edit KPI`

@@ -1,33 +1,22 @@
 # Edit KPI
 
-## Overview
+Edit KPI opens an existing metric definition and lets you adjust configuration without creating a new record.
 
-KPI edit is implemented for:
+## Commonly Updated Fields
 
-- Revenue Metrics
-- Usage Metrics
+- name and description clarity
+- category alignment
+- operators used by rules
+- source table and source mode
+- frequency and optional unit
 
-The edit form is the same structure as create, pre-filled with the selected metric values.
+## Field Meaning Reminder
 
-## Open Edit
-
-You can open edit from a metric list row action or from the metric details page.
-
-## Validation
-
-Before save, forms validate required fields including operator selection.
-
-If validation fails, inline messages are shown and submission is blocked.
+- **Category** should match the business intent of the metric.
+- **Operators** should only include conditions teams actually need.
+- **Source Table / Data Source** should reflect where the metric is computed.
+- **Frequency** should match reporting and refresh expectations.
 
 ## Save Behavior
 
-On successful update:
-
-- Success toast is shown
-- User is redirected to the relevant list page
-
-## Related Topics
-
-- [Create KPI](/documentation/infrastructure/create-kpi)
-- [View KPI Details](/documentation/infrastructure/view-kpi)
-- [KPI List](/documentation/infrastructure/kpis-list)
+Changes are validated, then applied to the existing KPI definition.

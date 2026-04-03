@@ -1,25 +1,24 @@
----
-title: View Data Connector
----
-
 # View Data Connector
 
-## Overview
+Data Connector Details shows one connector record in read mode, including its main configuration and related profile context.
 
-View complete configuration for a data connector.
+## Typical Sections
 
----
+- overview (identity, type, status)
+- configuration details
+- associated profiles or related linkage
+- metadata and timestamps
 
-## Connector Information
+## Key Fields Explained
 
-Displays all connector details based on its type (TCP, WebSocket, Kafka, JDBC, SMS Inbox, API, Files, Digital Tags).
-
----
+- **Connector Type**: integration category that controls expected configuration shape.
+- **Status**: whether this connector is currently active for operations.
+- **Configuration values**: technical fields used to establish source connectivity.
 
 ## Actions
 
-### Edit
-- Modify connector settings
+Common actions from details include:
 
-### View Details
-- Already on this page
+- **Edit** connector
+- **Test Connection** where available
+- **Delete** connector where permitted

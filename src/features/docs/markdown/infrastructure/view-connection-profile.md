@@ -1,52 +1,24 @@
 # View Connection Profile Details
 
-## Overview
+Connection Profile Details gives a full read view of one profile, including technical, governance, and lifecycle settings.
 
-Connection Profile Details shows profile configuration and exposes operational actions.
+## What The Page Shows
 
-## What The Page Displays
+- profile identity (name, code, type)
+- environment and classification context
+- compliance indicators (PII/GDPR)
+- performance and connection settings
+- validity period and status
+- metadata and timestamps
 
-Main details area shows:
+## Key Fields Explained
 
-- Basic Information (profile code, status, connection type, environment, load strategy, server id if set, database name if set, last used)
-- Performance Settings (batch size, parallel threads, pool sizes, connection timeout, idle timeout)
+- **Connection Type**: integration category used by this profile.
+- **Data Classification**: governance level for the profile's data.
+- **PII / GDPR flags**: compliance state indicators.
+- **Valid From / Valid To**: profile validity window.
+- **Health fields**: monitoring enablement and checks.
 
-Sidebar shows:
+## Actions
 
-- Data Governance (classification, PII flag, GDPR flag)
-- Health Check card (only when health checks are enabled)
-- Validity Period (valid from and optional valid to)
-
-## Top Actions
-
-Available actions:
-
-- Activate or Deactivate
-- Edit
-- More menu
-
-More menu includes:
-
-- Mark Used
-- Update Health
-- Adjust Validity
-
-## Modals
-
-### Update Health
-
-Lets you set health status to healthy or unhealthy and save.
-
-### Adjust Validity Window
-
-Lets you update valid from and optional valid to dates.
-
-## Not Found State
-
-If the profile does not exist, the page shows Connection Profile Not Found and a back action to the list.
-
-## Related Topics
-
-- [Connection Profiles List](/documentation/infrastructure/connection-profiles-list)
-- [Edit Connection Profile](/documentation/infrastructure/edit-connection-profile)
-- [Create Connection Profile](/documentation/infrastructure/create-connection-profile)
+Depending on permissions and state, users can open edit, toggle active state, or run operational checks from this page.

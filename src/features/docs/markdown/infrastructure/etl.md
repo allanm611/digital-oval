@@ -1,39 +1,24 @@
 # ETL
 
-## Overview
+ETL documentation covers file-ingestion operations and monitoring pages used by operations teams.
 
-ETL in this app focuses on file ingestion operations and monitoring.
+## Open The Module
 
-The ETL documentation section maps to these pages:
+Go to `Dashboard -> Infrastructure -> ETL`.
 
-- File Registry
-- Fetch Controls
-- Analytics
+## ETL Pages
 
-## File Categories
+- `ETL File Registry`: manage file intake and processing state
+- `ETL Fetch Controls`: trigger fetch jobs in different modes
+- `ETL Analytics`: monitor ETL performance indicators
 
-The ETL UI works with CDR and TDR categories.
+## Core Concepts
 
-## Core Flows
+- **File Category**: file family such as CDR/TDR.
+- **Processing Status**: lifecycle state like pending, processing, completed, failed.
+- **Fetch Modes**: immediate, by time window, or by range.
+- **Job ID**: execution context used for targeted fetch operations.
 
-### File Registry
+## Why This Matters
 
-File Registry is the operational page for listing, filtering, and uploading files.
-
-### Fetch Controls
-
-Fetch Controls triggers ETL fetch jobs in three modes:
-
-- Immediate
-- By Time
-- By Range
-
-### Analytics
-
-Analytics provides charts and monitoring metrics for file registry and task queue data.
-
-## Related Topics
-
-- [File Registry](/documentation/infrastructure/etl-file-registry)
-- [Fetch Controls](/documentation/infrastructure/etl-fetch-controls)
-- [ETL Analytics](/documentation/infrastructure/etl-analytics)
+ETL pages help teams control ingestion quality and recover quickly when pipelines need manual intervention.

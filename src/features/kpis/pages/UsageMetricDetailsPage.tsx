@@ -95,13 +95,12 @@ export default function UsageMetricDetailsPage() {
         <div className="flex items-center space-x-2 sm:space-x-4">
           <BackButton fallbackTo="/dashboard/kpis/usage-metrics" />
           <div>
-            <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>Usage Metric Details</h1>
-            <p className={`${tw.textSecondary} mt-2 text-sm`}>
-              View and manage usage metric configuration
-            </p>
+            
           </div>
         </div>
-
+{/* <p className={`${tw.textSecondary} mt-2 text-sm`}>
+              View and manage usage metric configuration
+            </p> */}
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-3">
           <button

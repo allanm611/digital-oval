@@ -1,41 +1,23 @@
 # View KPI Details
 
-## Overview
+KPI Details shows the full definition of a metric in read mode.
 
-KPI details pages are implemented for:
+## What You See
 
-- Revenue metrics
-- Usage metrics
-- System events
+- identity fields (name, description)
+- category and field type
+- operators configured for rule logic
+- source table and data source settings
+- frequency and optional unit
+- metadata/timestamps where available
 
-## Revenue And Usage Metric Details
+## What The Fields Tell You
 
-Revenue and usage details pages include:
+- **Category + Field Type** define how the KPI should be interpreted.
+- **Operators** define how this KPI can be used in conditions.
+- **Source Table + Data Source** tell you where data is coming from.
+- **Frequency** tells you how often metric values are expected to refresh.
 
-- Header with back action
-- Primary metric overview card
-- Basic Information section
-- Data Source Information section
-- Supported Operators section
+## Actions
 
-Available actions:
-
-- Edit
-- Delete
-
-Delete uses a confirmation modal.
-
-## System Event Details
-
-System event details is read-only and includes:
-
-- Event overview
-- Event details (code, category, source, frequency)
-- Source table
-- Supported operators (when present)
-
-## Related Topics
-
-- [KPI List](/documentation/infrastructure/kpis-list)
-- [Create KPI](/documentation/infrastructure/create-kpi)
-- [Edit KPI](/documentation/infrastructure/edit-kpi)
+The details page is typically the launch point for **Edit** and **Delete** operations.

@@ -1,86 +1,48 @@
 # Create Connection Profile
 
-## Overview
+Create Connection Profile is used to register a new source-connection configuration.
 
-Create Connection Profile adds a new profile from the connection profile form.
+## Required Fields
 
-## Basic Information
+- **Profile Name**
+- **Profile Code**
+- **Connection Type**
+- **Environment**
+- **Data Classification**
+- **Valid From** date
 
-Required fields in basic section:
+## Field Groups And Meaning
 
-- Profile Name
-- Profile Code
-- Connection Type
-- Environment
-- Data Load Method
+### Basic Information
 
-Optional basic fields:
+- **Profile Name / Code**: identifies the profile in list and operations screens.
+- **Connection Type**: sets integration pattern and expected connection behavior.
+- **Environment**: controls deployment context.
 
-- Server
-- Database Name (database type)
-- Database Type (database type)
+### Governance And Compliance
 
-## Performance Settings
+- **Data Classification**: required governance tier.
+- **Contains PII**: indicates presence of personal data.
+- **GDPR Applicable**: flags regulatory handling expectations.
 
-Performance fields include:
+### Validity
 
-- Records Per Batch
-- Number of Parallel Tasks
-- Minimum Connections
-- Maximum Connections
-- Connection Wait Time (seconds)
-- Idle Disconnect Time (seconds)
+- **Valid From / Valid To**: period in which profile is considered operationally valid.
 
-## Reliability Settings
+### Performance And Reliability
 
-Reliability fields include:
+- **Batch Size / Parallel Threads**: throughput tuning.
+- **Pool Size (Min/Max)**: connection pool bounds.
+- **Connection / Idle Timeouts**: request lifecycle limits.
+- **Retries / Backoff / Circuit Threshold**: failure recovery behavior.
 
-- Max Retries
-- Retry Backoff Multiplier
-- Circuit Breaker Threshold
+### Optional Technical Fields
 
-## Data Governance
+- **Server ID, Database fields, Sync column fields**: source-specific linkage.
+- **Health Check Query/Toggle**: monitoring configuration.
+- **Encryption Key Version**: encryption metadata.
+- **Metadata**: additional context.
 
-Governance fields include:
+## Save Behavior
 
-- Data Classification
-- Contains PII
-- GDPR Applicable
-
-## Validity Window
-
-Validity fields include:
-
-- Valid From
-- Valid To (optional)
-
-## Health Check
-
-Health section includes:
-
-- Health Check Enabled toggle
-- Health Check Query (required when health checks are enabled)
-
-## Additional Fields
-
-Additional fields include:
-
-- Encryption Key Version
-- Metadata (JSON)
-
-Database sync fields are shown for database-related setup:
-
-- Sync Column Name
-- Sync Column Type
-
-## Save
-
-Click Save to create the profile.
-
-On success, the app returns to the connection profiles list.
-
-## Related Topics
-
-- [Connection Profiles List](/documentation/infrastructure/connection-profiles-list)
-- [Edit Connection Profile](/documentation/infrastructure/edit-connection-profile)
-- [View Connection Profile Details](/documentation/infrastructure/view-connection-profile)
+Save is blocked until required fields are complete.

@@ -1,50 +1,30 @@
 # KPI List
 
-## Overview
+KPI List is the consolidated page for browsing configured KPI definitions across categories.
 
-KPI List documents the All KPIs page at `/dashboard/kpis/all`.
+## What You See
 
-It provides a unified table across KPI categories with client-side search, category filtering, and pagination.
+Common list elements include:
 
-## Statistics Cards
+- KPI identity (name and description)
+- KPI category/type labeling
+- searchable and filterable rows
+- pagination for larger datasets
 
-The page shows four summary cards:
+## Top Summary Cards
 
-- Total KPIs
-- System Events
-- Usage Metrics
-- Revenue Metrics
+The page surfaces quick counts such as:
+
+- total KPI definitions
+- revenue metric count
+- usage metric count
+- system event count
 
 ## Search And Filter
 
-The toolbar includes:
+- **Search** helps find KPIs by name or description.
+- **Category filters** narrow the list to relevant metric groups.
 
-- Search input for KPI name and description
-- Category selector with All Categories and discovered categories
+## Why This Page Matters
 
-Changing search or category resets pagination to page 1.
-
-## Table Content
-
-Each row shows:
-
-- KPI Name
-- Category
-- Type
-- Description
-- Source
-
-Desktop and mobile layouts are both implemented.
-
-## Actions
-
-The row action in this page is a view icon button.
-
-## Pagination
-
-The page paginates with 10 rows per page and previous/next controls.
-
-## Related Topics
-
-- [KPIs](/documentation/infrastructure/kpis)
-- [View KPI Details](/documentation/infrastructure/view-kpi)
+This is the best entry point when auditing existing metrics before creating new ones or adjusting definitions.

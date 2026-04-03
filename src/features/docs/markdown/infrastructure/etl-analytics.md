@@ -1,52 +1,24 @@
 # ETL Analytics
 
-## Overview
+ETL Analytics is the monitoring page for ETL health, throughput, and outcome trends.
 
-ETL Analytics provides monitoring dashboards for both file registry processing and task queue behavior.
+## What The Page Focuses On
 
-The page loads baseline ETL stats first, then loads extended monitoring datasets.
+- baseline ETL processing metrics
+- status distribution (success, pending, failed)
+- operational trend indicators over time
+- queue and processing behavior visibility
 
-## Main Data Groups
+## How Teams Use It
 
-### File Registry Monitoring
+- check pipeline health before/after fetch operations
+- identify unusual failure spikes
+- compare current processing behavior with recent trends
+- support incident triage with a quick operational view
 
-Analytics includes file-registry monitoring datasets such as:
+## Key Metric Meaning
 
-- Registry statistics
-- Row metrics
-- Retry analysis
-- Fetch duration analytics
-- Processing duration analytics
-- Processing status distribution
-- Format distribution
-- Checksum usage
-- Data size analytics
-- Error message distribution
-- Time trends
-
-### Task Queue Monitoring
-
-Analytics also includes task-queue monitoring datasets such as:
-
-- Task queue statistics
-- Status distribution
-- Type distribution
-- Priority distribution
-- Duration analytics
-- File correlation
-- Job correlation
-- Time trends
-
-## Trend Granularity
-
-Trend data can be requested by granularity:
-
-- Day
-- Week
-- Month
-
-## Related Topics
-
-- [ETL](/documentation/infrastructure/etl)
-- [File Registry](/documentation/infrastructure/etl-file-registry)
-- [Fetch Controls](/documentation/infrastructure/etl-fetch-controls)
+- **Throughput metrics**: how much data/files are processed in a period.
+- **Failure metrics**: where and how often processing breaks.
+- **Pending/Queue metrics**: work waiting to be processed.
+- **Completion metrics**: successful ETL outcomes in scope.

@@ -1,57 +1,29 @@
 # Connection Profiles
 
-## Overview
+Connection Profiles define how the platform connects to source systems and how those connections are governed over time.
 
-Connection Profiles manage data-source connection settings used by the platform.
+## Open The Module
 
-Profiles include connectivity, performance, governance, and validity settings.
+Go to `Dashboard -> Infrastructure -> Connection Profiles`.
 
-## Access Paths
+## Why Teams Use Connection Profiles
 
-Main routes:
+A profile combines technical connectivity with governance controls. It is where teams set environment context, performance parameters, validity dates, and data-protection flags in one record.
 
-- `Dashboard > Connection Profiles` list page
-- `Dashboard > Connection Profiles > New` create form
-- `Dashboard > Connection Profiles > Edit` update form
-- `Dashboard > Connection Profiles > Details` details page
+## Core Field Meaning
+
+- **Profile Name / Profile Code**: human label and stable identifier.
+- **Connection Type**: indicates whether the profile is database, API, file, or another source style.
+- **Environment**: operational scope (development, staging, production).
+- **Data Classification**: risk/governance class for handled data.
+- **PII / GDPR Flags**: compliance indicators for data handling.
+- **Validity Window**: active dates for when this profile should be used.
+- **Performance Fields**: batch size, thread count, pool size, retry/timeouts.
+- **Health Check Fields**: whether and how connection health is evaluated.
 
 ## Main Pages
 
-Use these pages for complete workflows:
-
-- [Connection Profiles List](/documentation/infrastructure/connection-profiles-list)
-- [Create Connection Profile](/documentation/infrastructure/create-connection-profile)
-- [Edit Connection Profile](/documentation/infrastructure/edit-connection-profile)
-- [View Connection Profile Details](/documentation/infrastructure/view-connection-profile)
-
-## What You Can Configure
-
-Profiles can include:
-
-- Basic identity fields (name, code, type, environment)
-- Load strategy
-- Server linkage
-- Performance settings (batch, threads, pool, timeouts)
-- Retry and circuit breaker thresholds
-- Data governance fields (classification, PII, GDPR)
-- Validity window
-- Health check settings
-- Optional encryption key version and metadata
-
-## Operational Actions
-
-From list/details pages, actions include:
-
-- Activate/deactivate profile
-- Edit profile
-- Mark profile used
-- Update health status
-- Adjust validity period
-- Bulk activation
-- Auto-deactivate expired profiles
-
-## Related Topics
-
-- [Servers](/documentation/infrastructure/servers)
-- [Data Connectors](/documentation/infrastructure/data-connectors)
-- [ETL](/documentation/infrastructure/etl)
+- `Connection Profiles List`
+- `Create Connection Profile`
+- `View Connection Profile`
+- `Edit Connection Profile`

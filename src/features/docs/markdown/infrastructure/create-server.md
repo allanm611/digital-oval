@@ -1,78 +1,32 @@
 # Create Server
 
-## Overview
+Create Server adds a new server endpoint used by infrastructure-dependent flows.
 
-Create Server adds a new server record from the server form page.
+## Required Fields
 
-## Basic Information
+- **Name**: clear server label
+- **Code**: unique internal code
+- **Protocol**: request protocol (for endpoint construction)
+- **Host**: domain or IP address
 
-Required fields:
+## Optional Fields And What They Do
 
-- Name
-- Code
-- Protocol
-- Host
+- **Environment**: tags the server by deployment stage
+- **Region**: identifies geographic location
+- **Port**: overrides default protocol port
+- **Base Path**: appends path segment to endpoint
+- **Server Type**: classifies endpoint role
+- **Timeout Seconds**: max request wait time
+- **Max Retries**: retry attempts before failure
+- **Health Check Enabled**: turns monitoring on/off
+- **Health Check URL**: endpoint checked for health status
+- **Health Check Interval Seconds**: monitoring frequency
+- **Circuit Breaker Enabled**: enables fail-protection mode
+- **Circuit Breaker Threshold**: failures before circuit opens
+- **TLS Enabled**: transport security flag
+- **Authentication Type**: auth scheme reference
+- **Metadata**: additional JSON-like context for operations
 
-Optional fields in this section:
+## Save Behavior
 
-- Environment
-- Region
-- Port
-- Base Path
-- Server Type
-
-## Connection Settings
-
-Connection settings include:
-
-- Timeout (seconds)
-- Max Retries
-
-## Health Checks
-
-Health check section supports:
-
-- Enable/disable toggle
-- Health Check URL
-- Interval (seconds)
-
-## Circuit Breaker
-
-Circuit breaker section supports:
-
-- Enable/disable toggle
-- Failure Threshold
-
-## Advanced Settings
-
-Advanced settings include:
-
-- Metadata (JSON text)
-
-## TLS And Authentication
-
-This section includes:
-
-- TLS enable toggle
-- Authentication Type
-
-## Save
-
-Click **Create Server** to save.
-
-On success, the app returns to the servers list.
-
-## Validation
-
-Create mode validates required fields:
-
-- Name
-- Code
-- Host
-- Protocol
-
-## Related Topics
-
-- [Servers List](/documentation/infrastructure/servers-list)
-- [Edit Server](/documentation/infrastructure/edit-server)
-- [View Server Details](/documentation/infrastructure/view-server)
+If required fields are missing, save is blocked until fixed. On success, the server appears in Servers List.

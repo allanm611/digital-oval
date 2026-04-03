@@ -1,68 +1,30 @@
 # Connection Profiles List
 
-## Overview
+Connection Profiles List is the operations page for browsing and maintaining profile records.
 
-This page lists connection profiles and provides filtering, stats, and management actions.
+## Table Fields And What They Mean
 
-## Statistics Cards
-
-- Total Profiles
-- Active Profiles
-- Profiles with PII
-- Health Enabled
+- **Profile Name**: primary profile label
+- **Profile Code**: unique identifier used across operations
+- **Connection Type**: source integration type
+- **Environment**: deployment context for this profile
+- **Data Classification**: governance classification level
+- **PII**: whether profile data includes personally identifiable information
+- **Health Check**: whether profile monitoring is enabled
+- **Status**: active/inactive/expired style lifecycle state
 
 ## Search And Filters
 
-Top controls include:
-
-- Search by profile name/code/type
-- Optional server ID filter
-- Filters panel
-
-Filter fields:
-
-- Connection Type
-- Environment
-- Classification
-- Status (`active`, `inactive`, `expired`)
-- PII (`with`, `without`)
-- Health (`enabled`, `disabled`)
-
-## Table Columns
-
-The list table displays:
-
-- Profile
-- Code
-- Type
-- Environment
-- Classification
-- Status
-- PII
-- Health
-- Actions
+Use search for name/code lookup. Use filters to narrow by connection type, environment, classification, status, PII, and health-check state.
 
 ## Actions
 
-Per-row actions include:
+- **Create**: add a new profile
+- **View**: open full profile details
+- **Edit**: update profile settings
+- **Activate / Deactivate**: lifecycle toggle
+- **Health/Validity actions**: operational updates where exposed
 
-- View
-- Edit
-- Activate/deactivate
+## Bulk Operations
 
-Selection mode supports bulk actions for selected rows.
-
-Bulk actions:
-
-- Bulk activate selected
-- Auto-deactivate expired profiles
-
-## Pagination
-
-List view supports pagination (page and page-size controls).
-
-## Related Topics
-
-- [Connection Profiles](/documentation/infrastructure/connection-profiles)
-- [Create Connection Profile](/documentation/infrastructure/create-connection-profile)
-- [View Connection Profile Details](/documentation/infrastructure/view-connection-profile)
+Where selection mode is available, profiles can be activated or managed in batch.

@@ -1,70 +1,29 @@
----
-title: Data Connectors List
----
-
 # Data Connectors List
 
-## Overview
+Data Connectors List is the operational page for browsing connector records.
 
-View and manage all data connectors. Search, filter, and perform actions on connectors.
+## What You See In The List
 
----
+- connector identity (icon, name)
+- connector type (for example database, API, file)
+- status (active/inactive)
+- last-updated context
+- action menu per connector
 
-## Filtering Connectors
+## Search And Filters
 
-### Search
-- Search by connector name
-- Real-time results
-
-### Type Filter
-- tcp
-- websocket
-- kafka
-- jdbc
-- sms_inbox
-- api
-- files
-- digital_tags
-
-### Status Filter
-- Active
-- Inactive
-
----
-
-## Connector List
-
-Each entry displays:
-- Connector name
-- Type, Status
-- Action menu
-
----
+Use search for quick name lookup. Use filters for connector type and status.
 
 ## Actions
 
-### Individual Connector Actions
+Typical actions include:
 
-**View**
-- Open connector details
+- **Create**: open connector form
+- **View**: open connector details
+- **Edit**: update connector settings
+- other actions (clone/export/import/delete) appear where available
 
-**Edit**
-- Modify connector settings
+## Field Meaning Reminder
 
-**Clone**
-- Coming soon
-
-**Export**
-- Coming soon
-
-**Import**
-- Coming soon
-
-**Delete**
-- Coming soon
-
----
-
-## Pagination
-
-Navigate between pages of connectors.
+- **Type** tells teams what kind of integration this connector supports.
+- **Status** indicates whether it should be used in active flows.

@@ -1,29 +1,19 @@
----
-title: Edit Data Connector
----
-
 # Edit Data Connector
 
-## Overview
+Edit Data Connector opens an existing connector record for updates.
 
-Modify existing data connector settings. The edit form contains the same fields as [Create Data Connector](/documentation/infrastructure/create-data-connector).
+## What Teams Usually Edit
 
----
+- name and description clarity
+- active/inactive state
+- connector-type configuration values
 
-## Accessing Edit
+## Field Meaning Reminder
 
-**From Data Connectors List:**
-1. Click the menu icon on the connector
-2. Select **Edit**
+- **Name** should remain clear and stable for operations teams.
+- **Type-specific fields** should reflect actual integration settings.
+- **Status** should match whether the connector is approved for current use.
 
----
+## Save Behavior
 
-## Fields
-
-All fields match the Create Data Connector form. See [Create Data Connector](/documentation/infrastructure/create-data-connector) for field descriptions.
-
----
-
-## Save
-
-Click **Save** to apply changes. You'll be redirected to the connector details page.
+Changes are validated and then applied to the existing connector.

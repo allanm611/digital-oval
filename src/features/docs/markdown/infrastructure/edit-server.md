@@ -1,46 +1,22 @@
 # Edit Server
 
-## Overview
+Edit Server uses the same structure as Create Server, but pre-fills existing values.
 
-Edit Server updates an existing server using the same form structure as Create Server.
+## What You Usually Update
 
-## Accessing Edit
+- endpoint properties (protocol, host, port, base path)
+- environment or region tagging
+- timeout/retry tuning
+- health check and circuit-breaker settings
+- security/authentication flags
+- server status context fields
 
-From Servers List:
+## Field Meaning Reminder
 
-1. Click the menu icon on the server
-2. Select **Edit**
+- **Timeout + Retries** tune reliability and failure handling.
+- **Health Check settings** control if and how the server is monitored.
+- **Circuit Breaker settings** protect dependent flows during repeated failures.
 
-From Server Details:
+## Save Behavior
 
-1. Click **Edit** button
-
-## Form Fields
-
-Edit page includes the same sections as create:
-
-- Basic Information
-- Connection Settings
-- Health Checks
-- Circuit Breaker
-- Advanced Settings
-- TLS and Authentication
-
-Validated required fields:
-
-- Server Name
-- Server Code
-- Protocol
-- Host
-
-## Save
-
-Click **Update Server** to save changes.
-
-On success, the app navigates to that server's details page.
-
-## Related Topics
-
-- [Create Server](/documentation/infrastructure/create-server)
-- [Servers List](/documentation/infrastructure/servers-list)
-- [View Server Details](/documentation/infrastructure/view-server)
+Changes apply to the current server record after successful validation and save.

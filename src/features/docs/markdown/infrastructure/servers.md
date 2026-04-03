@@ -1,58 +1,28 @@
 # Servers
 
-## Overview
+Servers in Infrastructure represent outbound or integration endpoints the platform depends on. Teams use this module to register endpoints, control health checks, and manage server lifecycle status.
 
-Servers are managed from the Servers module in Infrastructure.
+## Open The Module
 
-This module provides:
+Go to `Dashboard -> Infrastructure -> Servers`.
 
-- Server list and filtering
-- Server creation and editing
-- Server details and operational actions
-- Health check and circuit breaker controls
+## Why It Matters
 
-## Access Paths
-
-Main routes in the system:
-
-- `Dashboard > Servers` for the list page
-- `Dashboard > Servers > Add Server` for create
-- `Dashboard > Servers > Edit Server` for update
-- `Dashboard > Servers > Server Details` for details and actions
+A server record is more than a host name. It combines endpoint identity, retry/timeouts, health monitoring, and security flags so operations teams can manage reliability in one place.
 
 ## Main Pages
 
-Use these pages for detailed instructions:
+- `Servers List`: browse and filter all servers
+- `Create Server`: add a new server record
+- `View Server`: inspect configuration and health metadata
+- `Edit Server`: update existing configuration
 
-- [Servers List](/documentation/infrastructure/servers-list)
-- [Create Server](/documentation/infrastructure/create-server)
-- [Edit Server](/documentation/infrastructure/edit-server)
-- [View Server Details](/documentation/infrastructure/view-server)
+## Core Field Meaning
 
-## What You Can Manage
-
-Server records include:
-
-- Identity and endpoint fields (name, code, protocol, host, port, base path)
-- Classification fields (environment, region, server type)
-- Connection limits (timeout, max retries)
-- Health checks
-- Circuit breaker
-- TLS and authentication type
-- Optional metadata
-
-Operational actions include:
-
-- Activate or deactivate server
-- Enable or disable health checks
-- Deprecate or restore server
-- Enable or disable circuit breaker
-- Reset health check
-- Push manual health result
-
-## Related Topics
-
-- [Connection Profiles](/documentation/infrastructure/connection-profiles)
-- [Data Connectors](/documentation/infrastructure/data-connectors)
-- [KPIs](/documentation/infrastructure/kpis)
-- [ETL](/documentation/infrastructure/etl)
+- **Name**: Human-friendly label used across operations screens.
+- **Code**: Stable internal identifier for references and filtering.
+- **Protocol + Host + Port + Base Path**: Builds the final endpoint.
+- **Environment**: Deployment context, like dev/staging/production.
+- **Health Check Settings**: Controls whether the platform monitors service availability.
+- **Timeout / Retries**: Defines request resilience behavior.
+- **Status**: Operational state such as active, inactive, or deprecated.
