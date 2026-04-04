@@ -11,6 +11,8 @@ The frontend uses one form page for both create and edit:
 
 - **Name**
 
+![Create job workflow form](/img/jobmanagement-images/createworkflowimage.png)
+
 ![Create job workflow form - part 1](/img/jobmanagement-images/createjobworkflowimage1.png)
 
 ## Optional Fields

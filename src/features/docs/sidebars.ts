@@ -386,7 +386,6 @@ const sidebars: SidebarsConfig = {
               label: "Scheduled Job List",
             },
             "jobs/create-scheduled-job",
-            "jobs/edit-scheduled-job",
             "jobs/view-scheduled-job",
             "jobs/scheduled-jobs-analytics",
           ],
@@ -402,16 +401,6 @@ const sidebars: SidebarsConfig = {
             },
             "jobs/view-job-execution",
             "jobs/job-executions-analytics",
-          ],
-        },
-        {
-          type: "category",
-          label: "Step Executions",
-          items: [
-            "jobs/step-executions",
-            "jobs/step-executions-list",
-            "jobs/view-step-execution",
-            "jobs/step-executions-analytics",
           ],
         },
         {

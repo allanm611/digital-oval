@@ -26,6 +26,8 @@ Search by name/description and filter by workflow status and type.
 
 ![Job workflows bulk operations](/img/jobmanagement-images/jobworkflowsbulkoperations.png)
 
+![Job workflows list bulk operations page](/img/jobmanagement-images/workflowlistbbuulkoperation.png)
+
 ## Related Pages
 
 - [Job Management Overview](/documentation/jobs/overview)

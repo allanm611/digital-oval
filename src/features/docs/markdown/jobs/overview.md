@@ -22,7 +22,7 @@ This area keeps operations predictable. You can control execution behavior, moni
 - Define reusable categories in **Job Types**.
 - Create orchestration patterns in **Job Workflows** and **Job Workflow Steps**.
 - Configure runtime jobs in **Scheduled Jobs**.
-- Track outcomes in **Job Executions** and **Step Executions**.
+- Track outcomes in **Job Executions**.
 - Use dependency rules to prevent downstream jobs from running before prerequisites are satisfied.
 
 ## Related Pages
