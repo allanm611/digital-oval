@@ -10,6 +10,8 @@ Job Execution Details is the deep-dive page for one execution record.
 - resource/data metrics (memory, CPU, rows)
 - step-progress information
 
+![Job execution details execution and system info](/img/jobmanagement-images/jobexecutionsdetailexecutionandsysteinfoimage.png)
+
 ## Key Fields Explained
 
 - **Error Code / Error Step ID**: points to where failure occurred.
@@ -17,6 +19,17 @@ Job Execution Details is the deep-dive page for one execution record.
 - **Peak Memory / CPU**: runtime resource profile.
 - **Steps Completed / Failed**: workflow progression status.
 
+![Job execution details peak execution times](/img/jobmanagement-images/jobexecutiondetailspeakexecutiontimes.png)
+
+![Job execution details job analytics and insights graph](/img/jobmanagement-images/jobexecutiondetailjobanalyticsandisnightsgraph.png)
+
 ## Actions
 
 Depending on state and permissions: **Abort**, **Retry**, and **Archive** actions may be available.
+
+## Related Pages
+
+- [Job Management Overview](/documentation/jobs/overview)
+- [Scheduled Jobs](/documentation/jobs/scheduled-jobs)
+- [Job Executions](/documentation/jobs/job-executions)
+- [Job Workflows](/documentation/jobs/job-workflows)

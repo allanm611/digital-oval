@@ -18,6 +18,8 @@ Job Workflow Steps List is the operational table for step definitions.
 
 Search by name/code and filter by step type, job, or failure behavior.
 
+![Job workflow steps list page](/img/jobmanagement-images/jobworkflowstepslistpage.png)
+
 ## Actions
 
 - Create
@@ -25,3 +27,12 @@ Search by name/code and filter by step type, job, or failure behavior.
 - Edit
 - Delete
 - clone/validate/execute actions where enabled
+
+![Job workflow steps bulk operations](/img/jobmanagement-images/jobworkflowstepsbulkoperationsimage.png)
+
+## Related Pages
+
+- [Job Management Overview](/documentation/jobs/overview)
+- [Scheduled Jobs](/documentation/jobs/scheduled-jobs)
+- [Job Executions](/documentation/jobs/job-executions)
+- [Job Workflows](/documentation/jobs/job-workflows)

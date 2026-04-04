@@ -22,3 +22,10 @@ Go to `Jobs -> Scheduled Jobs`.
 - **Max Concurrent Executions**: parallel run cap.
 - **Execution Timeout**: max allowed run time.
 - **Status**: active, paused, draft, or archived lifecycle.
+
+## Related Pages
+
+- [Scheduled Jobs List](/documentation/jobs/scheduled-jobs-list)
+- [Create Scheduled Job](/documentation/jobs/create-scheduled-job)
+- [View Scheduled Job](/documentation/jobs/view-scheduled-job)
+- [Scheduled Jobs Analytics](/documentation/jobs/scheduled-jobs-analytics)

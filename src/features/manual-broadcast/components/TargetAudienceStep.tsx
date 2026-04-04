@@ -48,27 +48,16 @@ export default function TargetAudienceStep({
 
   // Sync local state with data prop whenever component mounts or data changes
   useEffect(() => {
-    console.log("[TargetAudienceStep] useEffect triggered with data:", {
-      audienceName: data.audienceName,
-      inputMethod: data.inputMethod,
-      uploadType: data.uploadType,
-      quicklistId: data.quicklistId,
-      audienceFileText: data.audienceFileText ? `[${data.audienceFileText.length} chars]` : undefined,
-    });
-
     setListName(data.audienceName || "");
     setListType(data.uploadType || "");
     setInputMethod((data.inputMethod as "file" | "manual") || "");
     setManualInput(data.audienceFileText || "");
-
-    console.log("[TargetAudienceStep] Setting manual input to:", data.audienceFileText);
 
     // Restore selected quicklist if they had selected one
     if (data.inputMethod === "file" && data.quicklistId) {
       // Only update if selectedQuickList doesn't already match the quicklistId
       // This prevents clearing the selected quicklist when parent re-renders
       if (!selectedQuickList || selectedQuickList.id !== data.quicklistId) {
-        console.log("[TargetAudienceStep] Restoring quicklist:", data.quicklistId);
         // Use pre-fetched quicklist data if available (from edit mode)
         if (data.quicklist) {
           setSelectedQuickList({
@@ -90,7 +79,6 @@ export default function TargetAudienceStep({
         }
       }
     } else if (data.inputMethod !== "file") {
-      console.log("[TargetAudienceStep] Clearing quicklist (inputMethod:", data.inputMethod, ")");
       setSelectedQuickList(null);
     }
   }, [data.inputMethod, data.quicklistId, data.uploadType, data.rowCount]);

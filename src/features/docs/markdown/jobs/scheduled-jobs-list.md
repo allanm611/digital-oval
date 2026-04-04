@@ -17,6 +17,8 @@ Scheduled Jobs List is where teams monitor and operate job definitions.
 
 Use search for name/code lookup, and use filters for status, job type, owner, schedule type, tags, tenant, connection profile, and active-only view.
 
+![Scheduled Jobs list page](/img/jobmanagement-images/scheduledjobslistpage.png)
+
 ## Actions
 
 - **Create**
@@ -26,3 +28,23 @@ Use search for name/code lookup, and use filters for status, job type, owner, sc
 - **Execute Now**
 - **Pause / Resume**
 - batch operations when selection mode is enabled
+
+![Scheduled Jobs bulk operation page](/img/jobmanagement-images/scheduledjobsbulkoperationpage.png)
+
+## Create Action Behavior
+
+When you click **Create**, the app first opens a modal to choose job intent:
+
+- **Campaign** job
+- **ETL** job
+
+After selection, you are taken to the scheduled job form, where campaign mode shows additional campaign/segment/channel fields while ETL mode stays on the base job configuration fields.
+
+![Select job type modal for scheduled job create](/img/jobmanagement-images/selectwhichjobtorunmodalscheduledjobscreate.png)
+
+## Related Pages
+
+- [Job Management Overview](/documentation/jobs/overview)
+- [Scheduled Jobs](/documentation/jobs/scheduled-jobs)
+- [Job Executions](/documentation/jobs/job-executions)
+- [Job Workflows](/documentation/jobs/job-workflows)

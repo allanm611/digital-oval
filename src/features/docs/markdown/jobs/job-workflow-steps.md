@@ -13,6 +13,8 @@ Go to `Jobs -> Job Workflow Steps`.
 - failure policy and skip/condition logic
 - validation queries and expected row count checks
 
+![Job workflow steps list page](/img/jobmanagement-images/jobworkflowstepslistpage.png)
+
 ## Core Field Meaning
 
 - **Step Order**: execution position in flow.
@@ -20,3 +22,20 @@ Go to `Jobs -> Job Workflow Steps`.
 - **On Failure Action**: what happens when step fails.
 - **Is Critical**: marks step importance for workflow success.
 - **Is Parallel / Parallel Group**: controls parallel execution grouping.
+
+![Job workflow step details](/img/jobmanagement-images/jobworkflowdetailsimage1.png)
+
+## Create And Edit Behavior
+
+The app uses one page for both creating and editing steps:
+
+- Create route: `/dashboard/job-workflow-steps/create`
+- Edit route: `/dashboard/job-workflow-steps/:id/edit`
+
+This form also supports batch create mode using query params in the frontend.
+
+## Related Pages
+
+- [Job Workflow Steps List](/documentation/jobs/job-workflow-steps-list)
+- [Create Job Workflow Step](/documentation/jobs/create-job-workflow-step)
+- [View Job Workflow Step](/documentation/jobs/view-job-workflow-step)
