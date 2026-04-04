@@ -2,8 +2,13 @@
 
 KPI Details shows the full definition of a metric in read mode.
 
-![Revenue Metric Details](/img/infrastructure/viewrevenuemetricdetails.png)
-![Usage Metric Details](/img/infrastructure/viewusagemetricdetails.png)
+![Revenue Metric Details](/img/infrastructure/kpisrevenuemtericsdetailspage.png)
+![Revenue Metric - Basic Information](/img/infrastructure/revenuemetricsdetailbasicinfo.png)
+![Revenue Metric - Data Sources](/img/infrastructure/revenuemetricsdetaildatasources.png)
+![Usage Metric - Basic Information](/img/infrastructure/usagemetricdetailpagebasicinfo.png)
+![Usage Metric - Data Source and Operators](/img/infrastructure/usagemetricdetaildatasourceand%20operators.png)
+![System Events - Basic Information](/img/infrastructure/systemeventsdetailbasicinfo.png)
+![System Events - Source Info and Operators](/img/infrastructure/systemeventsdetailsourceinfoandopearators.png)
 
 ## What You See
 
@@ -24,3 +29,9 @@ KPI Details shows the full definition of a metric in read mode.
 ## Actions
 
 The details page is typically the launch point for **Edit** and **Delete** operations.
+
+## Related Pages
+
+- [KPI List](/documentation/infrastructure/kpis-list)
+- [Create KPI](/documentation/infrastructure/create-kpi)
+- [Edit KPI](/documentation/infrastructure/edit-kpi)

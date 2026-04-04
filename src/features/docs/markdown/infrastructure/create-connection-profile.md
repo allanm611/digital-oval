@@ -2,7 +2,9 @@
 
 Create Connection Profile is used to register a new source-connection configuration.
 
-![Create Connection Profile - Basic Information](/img/infrastructure/createconnectionprofilebasicinformation.png)
+The app uses the same form for both **Create** and **Edit**. So this page is the single field guide for both.
+
+![Create Connection Profile - Basic Information](/img/infrastructure/createconnectionprofilebasicinfo.png)
 
 ## Required Fields
 
@@ -27,7 +29,7 @@ Create Connection Profile is used to register a new source-connection configurat
 - **Contains PII**: indicates presence of personal data.
 - **GDPR Applicable**: flags regulatory handling expectations.
 
-![Create Connection Profile - Classification and Metadata](/img/infrastructure/createconnectionprofileclassificationandmetadata.png)
+![Create Connection Profile - Classification and Metadata](/img/infrastructure/createconnecitonprofiledatagovernnace.png)
 
 ### Validity
 
@@ -40,7 +42,8 @@ Create Connection Profile is used to register a new source-connection configurat
 - **Connection / Idle Timeouts**: request lifecycle limits.
 - **Retries / Backoff / Circuit Threshold**: failure recovery behavior.
 
-![Create Connection Profile - Performance and Reliability](/img/infrastructure/createconnectionprofileperformanceandreliability.png)
+![Create Connection Profile - Performance and Reliability](/img/infrastructure/createconnectionprofileperfomancesettings.png)
+![Create Connection Profile - Health Checks and Advanced](/img/infrastructure/createconnecitonprofilehealthchecksandadvanced.png)
 
 ### Optional Technical Fields
 
@@ -52,3 +55,9 @@ Create Connection Profile is used to register a new source-connection configurat
 ## Save Behavior
 
 Save is blocked until required fields are complete.
+
+## Create Vs Edit (What Changes)
+
+- **Same fields**: both flows use the same sections and inputs.
+- **Edit is pre-filled**: existing values are loaded first.
+- **Save outcome**: create adds a new profile; edit updates the existing profile.

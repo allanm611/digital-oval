@@ -1,24 +1,11 @@
 # Edit Server
 
-Edit Server uses the same structure as Create Server, but pre-fills existing values.
+Edit Server uses the exact same form as Create Server.
 
-![Edit Server Page](/img/infrastructure/editserverpage.png)
+![Edit Server Page](/img/infrastructure/addserverbasicinfoimage1.png)
 
-## What You Usually Update
+## Practical Note
 
-- endpoint properties (protocol, host, port, base path)
-- environment or region tagging
-- timeout/retry tuning
-- health check and circuit-breaker settings
-- security/authentication flags
-- server status context fields
+You do not need a separate field guide for Edit. Use [Create Server](/documentation/infrastructure/create-server) for field-by-field meaning.
 
-## Field Meaning Reminder
-
-- **Timeout + Retries** tune reliability and failure handling.
-- **Health Check settings** control if and how the server is monitored.
-- **Circuit Breaker settings** protect dependent flows during repeated failures.
-
-## Save Behavior
-
-Changes apply to the current server record after successful validation and save.
+In Edit mode, values are pre-filled and saving updates the existing server, then returns to that server's details page.

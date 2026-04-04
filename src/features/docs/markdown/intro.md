@@ -100,9 +100,10 @@ Manage scheduled jobs and workflows.
 Configure system infrastructure and connections.
 
 - [Servers](/documentation/infrastructure/servers) - Manage servers
-- [Connection Profiles](/documentation/infrastructure/connection-profiles) - Configure connections
+- [Connection Profiles](/documentation/infrastructure/connectionprofilesoverview) - Configure connections
 - [Data Connectors](/documentation/infrastructure/data-connectors) - Set up data sources
-- [KPIs](/documentation/infrastructure/kpis) - Define key performance indicators
+- [KPIs](/documentation/infrastructure/kpisoverview) - Define key performance indicators
+- [ETL](/documentation/infrastructure/etloverview) - Monitor and control ingestion
 
 ### System Configuration
 

@@ -26,8 +26,14 @@ ETL File Registry is the operations page for tracking ingested files and their p
 - **View/Download actions**: inspect or retrieve file-related data where available
 
 ![ETL Upload Modal](/img/infrastructure/etluplaodmodal.png)
-![ETL Bulk Operations](/img/infrastructure/etllistpagebulkoperationsdropdown.png)
+![ETL Fetch Controls Dropdown](/img/infrastructure/etllistpagefetchcontrolsdropdown.png)
 
 ## Why This Page Matters
 
 This page is the first stop for checking whether files entered the pipeline correctly and where failures happened.
+
+## Related Pages
+
+- [ETL Overview](/documentation/infrastructure/etloverview)
+- [ETL Fetch Controls](/documentation/infrastructure/etl-fetch-controls)
+- [ETL Analytics](/documentation/infrastructure/etl-analytics)

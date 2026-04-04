@@ -2,7 +2,7 @@
 
 ETL Analytics is the monitoring page for ETL health, throughput, and outcome trends.
 
-![ETL Analytics Overview](/img/infrastructure/etlanalyticspage.png)
+![ETL Analytics Overview](/img/infrastructure/etlanalyticsstatcards.png)
 
 ## What The Page Focuses On
 
@@ -11,10 +11,10 @@ ETL Analytics is the monitoring page for ETL health, throughput, and outcome tre
 - operational trend indicators over time
 - queue and processing behavior visibility
 
-![ETL Analytics Metrics Section](/img/infrastructure/etlanalyticsmetricssection.png)
-![ETL Analytics Charts Section](/img/infrastructure/etlanalyticschartssection.png)
+![ETL Analytics File Count by Status](/img/infrastructure/etlanalyticsfilecountbystatus.png)
+![ETL Analytics Pie Chart](/img/infrastructure/etlanalyticspiechartimage.png)
 
-## How Teams Use It
+## How To Use It
 
 - check pipeline health before/after fetch operations
 - identify unusual failure spikes
@@ -27,3 +27,9 @@ ETL Analytics is the monitoring page for ETL health, throughput, and outcome tre
 - **Failure metrics**: where and how often processing breaks.
 - **Pending/Queue metrics**: work waiting to be processed.
 - **Completion metrics**: successful ETL outcomes in scope.
+
+## Related Pages
+
+- [ETL Overview](/documentation/infrastructure/etloverview)
+- [ETL File Registry](/documentation/infrastructure/etl-file-registry)
+- [ETL Fetch Controls](/documentation/infrastructure/etl-fetch-controls)

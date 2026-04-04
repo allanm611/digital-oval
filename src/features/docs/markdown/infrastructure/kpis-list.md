@@ -1,8 +1,8 @@
-# KPI List
+# All KPIs List
 
-KPI List is the consolidated page for browsing configured KPI definitions across categories.
+All KPIs List is the consolidated page for browsing configured KPI definitions across categories.
 
-![KPI List Page](/img/infrastructure/allkpispage.png)
+![KPI List Page](/img/infrastructure/allkpislistimage.png)
 
 ## What You See
 
@@ -22,17 +22,24 @@ The page surfaces quick counts such as:
 - usage metric count
 - system event count
 
-![KPI Cards Section](/img/infrastructure/allkpiskpicardssection.png)
+![KPI Cards Section](/img/infrastructure/allkpisimage.png)
 
 ## Search And Filter
 
 - **Search** helps find KPIs by name or description.
 - **Category filters** narrow the list to relevant metric groups.
 
-![Revenue Metrics Table](/img/infrastructure/revenuemetricsmetricssection.png)
-![Usage Metrics Table](/img/infrastructure/usagemetricsmetricssection.png)
-![System Events Table](/img/infrastructure/systemeventsmetricssection.png)
+![Revenue Metrics Table](/img/infrastructure/revenuemetricslistpage.png)
+![Usage Metrics Table](/img/infrastructure/usagemetricslistpage.png)
+![System Events Table](/img/infrastructure/systemeventsallpage.png)
 
 ## Why This Page Matters
 
 This is the best entry point when auditing existing metrics before creating new ones or adjusting definitions.
+
+## Next Steps
+
+- [Revenue Metrics List](/documentation/infrastructure/revenue-metrics-list)
+- [Usage Metrics List](/documentation/infrastructure/usage-metrics-list)
+- [System Events List](/documentation/infrastructure/system-events-list)
+- [Back to KPI Overview](/documentation/infrastructure/kpisoverview)

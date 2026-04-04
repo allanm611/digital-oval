@@ -25,5 +25,5 @@ Typical actions include:
 
 ## Field Meaning Reminder
 
-- **Type** tells teams what kind of integration this connector supports.
+- **Type** tells you what kind of integration this connector supports.
 - **Status** indicates whether it should be used in active flows.

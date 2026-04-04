@@ -23,4 +23,13 @@ Connection Profile Details gives a full read view of one profile, including tech
 
 ## Actions
 
-Depending on permissions and state, users can open edit, toggle active state, or run operational checks from this page.
+The details page has direct buttons and a **More** dropdown.
+
+- **Activate / Deactivate**: toggles whether the profile is active for use.
+- **Edit**: opens the profile form with existing values loaded.
+
+### More Dropdown Options
+
+- **Mark Used**: updates the profile usage marker/timestamp so operations can track recent usage.
+- **Update Health**: opens a modal to record the latest health result (`healthy` or `unhealthy`).
+- **Adjust Validity**: opens a modal to change `valid_from` and `valid_to` without leaving the details page.

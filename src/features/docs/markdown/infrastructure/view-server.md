@@ -2,16 +2,16 @@
 
 Server Details provides a read-focused view of one server configuration and its current operational state.
 
-![Server Details Page](/img/infrastructure/serverdetailspage.png)
-![Server Details - Basic and Endpoint Info](/img/infrastructure/serverdetailsbasicandendpointinformation.png)
-![Server Details - Reliability and Security](/img/infrastructure/serverdetailsreliabilityandsecurity.png)
-![Server Details - Operational and Metadata](/img/infrastructure/serverdetailsoperationalandmetadata.png)
+![Server Details - Basic Info and Header](/img/infrastructure/serverdetailsbasicinfoandheaderdropdownimage.png)
+![Server Details - Connection and Profiles](/img/infrastructure/serverdetailsconnectionandprofiles.png)
+![Server Details - Metadata](/img/infrastructure/serverdetailsmetadata.png)
 
 ## Typical Sections
 
 - identity and endpoint summary
 - health/status indicators
-- configuration and reliability settings
+- connection and limit settings
+- health monitoring details
 - metadata and timestamps
 
 ## Key Fields Explained
@@ -23,6 +23,9 @@ Server Details provides a read-focused view of one server configuration and its 
 
 ## Actions From Details
 
-- **Edit**: open update form
-- **Delete**: remove server record (when allowed)
-- **State actions**: activate/deactivate or lifecycle actions depending on context
+- **Edit**: open the shared create/edit form with current values
+- **Activate / Deactivate**: switch operational availability
+- **Deprecate / Restore**: lifecycle action for traffic control
+- **Enable / Disable Health Checks**: toggle monitoring
+- **Enable / Disable Circuit Breaker**: toggle failure protection
+- **Reset Health Check / Push Health Result**: operational health actions (when health checks are enabled)

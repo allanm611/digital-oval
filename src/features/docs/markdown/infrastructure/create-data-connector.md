@@ -9,7 +9,7 @@ Create Data Connector opens a form (or modal) used to register a new connector d
 
 ## Optional Fields
 
-- **Description**: operational context for teams
+- **Description**: operational context for the platform
 - **Active Status**: whether connector should be immediately available
 
 ## What The Fields Mean

@@ -1,12 +1,14 @@
 # KPIs
 
-The KPI section is the metric-configuration area inside Infrastructure. It organizes metric setup by category so teams can manage definitions without mixing business and technical concerns.
+The KPI section is the metric-configuration area inside Infrastructure.
+
+KPIs are performance indicators, and these same KPI categories are reused in other modules, especially **segment conditions**.
 
 ## Open The Module
 
 Go to `Dashboard -> Infrastructure -> KPIs`.
 
-![KPI Hub - All KPIs](/img/infrastructure/allkpispage.png)
+![KPI Hub - All KPIs](/img/infrastructure/allkpisimage.png)
 
 ## KPI Areas In The Hub
 
@@ -15,12 +17,10 @@ Go to `Dashboard -> Infrastructure -> KPIs`.
 - **Usage Metrics**: usage-focused definitions
 - **System Events**: event-oriented monitoring metrics
 
-![All KPIs Section](/img/infrastructure/allkpisallkpissection.png)
-![All KPIs Table](/img/infrastructure/allkpisallkpistable.png)
-![All KPIs Cards](/img/infrastructure/allkpiskpicardssection.png)
-![Revenue Metrics](/img/infrastructure/revenuemetricspage.png)
-![Usage Metrics](/img/infrastructure/usagemetricspage.png)
-![System Events](/img/infrastructure/systemeventspage.png)
+![All KPIs List](/img/infrastructure/allkpislistimage.png)
+![Revenue Metrics](/img/infrastructure/revenuemetricslistpage.png)
+![Usage Metrics](/img/infrastructure/usagemetricslistpage.png)
+![System Events](/img/infrastructure/systemeventsallpage.png)
 
 ## Core Field Meaning
 
@@ -35,7 +35,14 @@ Go to `Dashboard -> Infrastructure -> KPIs`.
 
 ## Related Pages
 
-- `KPI List`
-- `Create KPI`
-- `View KPI`
-- `Edit KPI`
+- [All KPIs](/documentation/infrastructure/kpis-list)
+- [Revenue Metrics List](/documentation/infrastructure/revenue-metrics-list)
+- [Usage Metrics List](/documentation/infrastructure/usage-metrics-list)
+- [System Events List](/documentation/infrastructure/system-events-list)
+
+## Next Steps
+
+- [Open KPI List](/documentation/infrastructure/kpis-list)
+- [Create Revenue Metric](/documentation/infrastructure/create-revenue-metric)
+- [Create Usage Metric](/documentation/infrastructure/create-usage-metric)
+- [Create System Event](/documentation/infrastructure/create-system-event)

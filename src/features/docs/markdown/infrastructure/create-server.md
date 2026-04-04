@@ -2,6 +2,8 @@
 
 Create Server adds a new server endpoint used by infrastructure-dependent flows.
 
+The app uses the same form for both **Create** and **Edit**. So if you understand this page, you also understand the edit experience.
+
 ![Create Server - Basic Information](/img/infrastructure/addserverbasicinfoimage1.png)
 
 ## Required Fields
@@ -31,8 +33,15 @@ Create Server adds a new server endpoint used by infrastructure-dependent flows.
 
 ![Create Server - Connection Settings and Health Checks](/img/infrastructure/addserverconnectionsettingsandhealthchecks.png)
 ![Create Server - Circuit Breaker](/img/infrastructure/addservercircuitbreaker.png)
-![Create Server - Advanced and TLS](/img/infrastructure/adserveradvancedand tls.png)
+![Create Server - Advanced and TLS](/img/infrastructure/adserveradvancedandtls.png)
 
 ## Save Behavior
 
 If required fields are missing, save is blocked until fixed. On success, the server appears in Servers List.
+
+## Create Vs Edit (What Actually Changes)
+
+- **Same form fields**: create and edit use the same sections and inputs.
+- **Edit is pre-filled**: when editing, existing values are loaded into the form first.
+- **Button text differs**: create shows `Create Server`, edit shows `Update Server`.
+- **After save**: create returns to the list, while edit returns to that server's details page.

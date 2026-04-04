@@ -262,12 +262,16 @@ const sidebars: SidebarsConfig = {
           items: [
             {
               type: "doc",
+              id: "infrastructure/servers",
+              label: "Overview",
+            },
+            {
+              type: "doc",
               id: "infrastructure/servers-list",
               label: "Server List",
             },
             "infrastructure/create-server",
             "infrastructure/view-server",
-            "infrastructure/edit-server",
           ],
         },
         {
@@ -276,12 +280,16 @@ const sidebars: SidebarsConfig = {
           items: [
             {
               type: "doc",
+              id: "infrastructure/connectionprofilesoverview",
+              label: "Overview",
+            },
+            {
+              type: "doc",
               id: "infrastructure/connection-profiles-list",
               label: "Connection Profile List",
             },
             "infrastructure/create-connection-profile",
             "infrastructure/view-connection-profile",
-            "infrastructure/edit-connection-profile",
           ],
         },
         // {
@@ -304,19 +312,52 @@ const sidebars: SidebarsConfig = {
           items: [
             {
               type: "doc",
-              id: "infrastructure/kpis-list",
-              label: "KPI List",
+              id: "infrastructure/kpisoverview",
+              label: "Overview",
             },
-            "infrastructure/create-kpi",
-            "infrastructure/view-kpi",
-            "infrastructure/edit-kpi",
+            {
+              type: "doc",
+              id: "infrastructure/kpis-list",
+              label: "All KPIs",
+            },
+            {
+              type: "category",
+              label: "Revenue Metrics",
+              items: [
+                "infrastructure/revenue-metrics-list",
+                "infrastructure/create-revenue-metric",
+                "infrastructure/view-revenue-metric",
+              ],
+            },
+            {
+              type: "category",
+              label: "Usage Metrics",
+              items: [
+                "infrastructure/usage-metrics-list",
+                "infrastructure/create-usage-metric",
+                "infrastructure/view-usage-metric",
+              ],
+            },
+            {
+              type: "category",
+              label: "System Events",
+              items: [
+                "infrastructure/system-events-list",
+                "infrastructure/create-system-event",
+                "infrastructure/view-system-event",
+              ],
+            },
           ],
         },
         {
           type: "category",
           label: "ETL",
           items: [
-            "infrastructure/etl",
+            {
+              type: "doc",
+              id: "infrastructure/etloverview",
+              label: "Overview",
+            },
             {
               type: "doc",
               id: "infrastructure/etl-file-registry",

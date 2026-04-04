@@ -37,3 +37,9 @@ Use this for a bounded interval.
 ## Validation Notes
 
 Required fields must be completed before a fetch can start. For range mode, start and end values should represent a valid chronological window.
+
+## Related Pages
+
+- [ETL Overview](/documentation/infrastructure/etloverview)
+- [ETL File Registry](/documentation/infrastructure/etl-file-registry)
+- [ETL Analytics](/documentation/infrastructure/etl-analytics)

@@ -129,15 +129,7 @@ function SidebarSubitem({ item }: { item: SidebarItem }) {
       {hasChildren && expanded && (
         <div className={styles.nestedItems}>
           {item.items!.map((nested, idx) => (
-            <Link
-              key={idx}
-              to={`/documentation${nested.path}`}
-              className={`${styles.nestedLink} ${
-                location.pathname === `/documentation${nested.path}` ? styles.active : ''
-              }`}
-            >
-              {nested.label}
-            </Link>
+            <SidebarSubitem key={idx} item={nested} />
           ))}
         </div>
       )}

@@ -1,16 +1,16 @@
 # Servers
 
-Servers in Infrastructure represent outbound or integration endpoints the platform depends on. Teams use this module to register endpoints, control health checks, and manage server lifecycle status.
+Servers in Infrastructure represent outbound or integration endpoints the platform depends on. Use this module to register endpoints, control health checks, and manage server lifecycle status.
 
 ## Open The Module
 
-Go to `Dashboard -> Infrastructure -> Servers`.
+Go to `Infrastructure -> Servers`.
 
 ![Servers Registry Page](/img/infrastructure/serversregistrypage.png)
 
 ## Why It Matters
 
-A server record is more than a host name. It combines endpoint identity, retry/timeouts, health monitoring, and security flags so operations teams can manage reliability in one place.
+A server record is more than a host name. It combines endpoint identity, retry/timeouts, health monitoring, and security flags so reliability can be managed in one place.
 
 ## Main Pages
 

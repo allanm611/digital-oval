@@ -2,8 +2,8 @@
 
 Edit KPI opens an existing metric definition and lets you adjust configuration without creating a new record.
 
-![Edit Revenue Metric](/img/infrastructure/editrevenuemetricspage.png)
-![Edit Usage Metric](/img/infrastructure/editusagemetricspage.png)
+![Revenue Metric Form Reference](/img/infrastructure/createrevenuemetricbasicinfoand%20config.png)
+![Revenue Metric Operators Reference](/img/infrastructure/createrevenuemtricoperatorssection.png)
 
 ## Commonly Updated Fields
 
@@ -16,10 +16,16 @@ Edit KPI opens an existing metric definition and lets you adjust configuration w
 ## Field Meaning Reminder
 
 - **Category** should match the business intent of the metric.
-- **Operators** should only include conditions teams actually need.
+- **Operators** should only include conditions you actually need.
 - **Source Table / Data Source** should reflect where the metric is computed.
 - **Frequency** should match reporting and refresh expectations.
 
 ## Save Behavior
 
 Changes are validated, then applied to the existing KPI definition.
+
+## Next Steps
+
+- [Back to KPI List](/documentation/infrastructure/kpis-list)
+- [Open KPI Details](/documentation/infrastructure/view-kpi)
+- [KPI Overview](/documentation/infrastructure/kpisoverview)

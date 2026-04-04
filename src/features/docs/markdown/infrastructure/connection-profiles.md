@@ -8,9 +8,9 @@ Go to `Dashboard -> Infrastructure -> Connection Profiles`.
 
 ![Connection Profiles List Page](/img/infrastructure/connectionprofileslistpage.png)
 
-## Why Teams Use Connection Profiles
+## Uses
 
-A profile combines technical connectivity with governance controls. It is where teams set environment context, performance parameters, validity dates, and data-protection flags in one record.
+A profile combines technical connectivity with governance controls. It is where environment context, performance parameters, validity dates, and data-protection flags are set in one record.
 
 ## Core Field Meaning
 
@@ -28,10 +28,9 @@ A profile combines technical connectivity with governance controls. It is where 
 - `Connection Profiles List`
 - `Create Connection Profile`
 - `View Connection Profile`
-- `Edit Connection Profile`
 
 ## Quick Visual Tour
 
-![Connection Profiles Analytics Overview](/img/infrastructure/connectionprofileanalyticspage.png)
-![Connection Profiles Analytics Cards](/img/infrastructure/connectionprofilesanalyticscardsection.png)
-![Connection Profiles Analytics Charts](/img/infrastructure/connectionprofilesanalyticschartssection.png)
+![Connection Profiles Analytics Overview](/img/infrastructure/connectionprofileslistpage.png)
+![Connection Profiles Analytics Cards](/img/infrastructure/connectionprofilesanalytiscsstatcards.png)
+![Connection Profiles Analytics Charts](/img/infrastructure/connectionprofileanalyticspiecharts.png)

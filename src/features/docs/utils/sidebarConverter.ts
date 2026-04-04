@@ -25,7 +25,6 @@ export interface SidebarItem {
 export function convertDocusaurusSidebar(items: (string | DocusaurusItem)[]): SidebarItem[] {
   return items.map(item => {
     if (typeof item === 'string') {
-      // Simple string reference like 'intro' or 'authentication/login'
       const label = item.split('/').pop() || item;
       return {
         label: formatLabel(label),

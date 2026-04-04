@@ -1,9 +1,9 @@
 # Create KPI
 
-KPI creation is done through category-specific forms (mainly Revenue Metrics and Usage Metrics), but both follow the same structure.
+KPI creation is done through category-specific forms (Revenue Metrics, Usage Metrics, and System Events).
 
-![Create Revenue Metric](/img/infrastructure/createrevenuemetricspage.png)
-![Create Usage Metric](/img/infrastructure/createusagemetricspage.png)
+![Create Revenue Metric - Basic Info and Config](/img/infrastructure/createrevenuemetricbasicinfoand%20config.png)
+![Create Revenue Metric - Operators Section](/img/infrastructure/createrevenuemtricoperatorssection.png)
 
 ## Required Fields
 
@@ -29,3 +29,9 @@ KPI creation is done through category-specific forms (mainly Revenue Metrics and
 ## Save Behavior
 
 The form validates required fields before save. After creation, the KPI appears in the relevant list and can be opened in details.
+
+## Next Steps
+
+- [View KPI List](/documentation/infrastructure/kpis-list)
+- [Open KPI Details](/documentation/infrastructure/view-kpi)
+- [Edit KPI](/documentation/infrastructure/edit-kpi)

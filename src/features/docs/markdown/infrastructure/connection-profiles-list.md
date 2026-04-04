@@ -20,7 +20,7 @@ Connection Profiles List is the operations page for browsing and maintaining pro
 Use search for name/code lookup. Use filters to narrow by connection type, environment, classification, status, PII, and health-check state.
 
 ![Connection Profiles Filters](/img/infrastructure/filterconnectionprofiles.png)
-![Connection Profiles Filter Panel](/img/infrastructure/filterconnectionprofilesdropdown.png)
+![Connection Profiles Filter Panel](/img/infrastructure/filterconnectionprofilesimage2.png)
 
 ## Actions
 
