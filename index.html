@@ -8,6 +8,18 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Ensure compatibility for runtimes that do not implement Object.hasOwn.
+      if (typeof Object.hasOwn !== "function") {
+        Object.defineProperty(Object, "hasOwn", {
+          value: function (obj, prop) {
+            return Object.prototype.hasOwnProperty.call(obj, prop);
+          },
+          configurable: true,
+          writable: true,
+        });
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
