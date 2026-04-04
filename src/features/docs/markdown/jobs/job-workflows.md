@@ -1,47 +1,20 @@
----
-title: Job Workflows
----
-
 # Job Workflows
 
-## Overview
+Job Workflows manages workflow-level records that group and organize job orchestration definitions.
 
-Job Workflows are sequences of steps executed in order. Create workflows to organize and manage step execution for jobs.
+## Open The Page
 
----
+Go to `Dashboard -> Jobs -> Job Workflows`.
 
-## Statuses
+## What You Manage Here
 
-- **Active** - Workflow is operational
-- **Inactive** - Workflow is not operational
+- workflow identity and description
+- workflow type
+- active/inactive lifecycle state
 
----
+## Core Field Meaning
 
-## Filters
-
-- **Status** - Filter by workflow status (active, inactive)
-- **Search** - Search by workflow name
-- **Workflow Type** - Filter by workflow type
-
----
-
-## Statistics
-
-- **Total Workflows** - Total number of workflows
-- **Active Workflows** - Number of active workflows
-- **Inactive Workflows** - Number of inactive workflows
-
----
-
-## Actions
-
-**Individual Workflow Actions:**
-- **View** - See workflow details
-- **Edit** - Modify workflow settings
-- **Clone** - Duplicate workflow
-- **Delete** - Remove workflow
-- **View Analytics** - Performance metrics
-
-**Batch Actions:**
-- **Delete** - Delete multiple workflows
-
+- **Name**: workflow label used in operations.
+- **Description**: intent and context for the workflow.
+- **Workflow Type**: classification for orchestration purpose.
+- **Status**: active lifecycle state.

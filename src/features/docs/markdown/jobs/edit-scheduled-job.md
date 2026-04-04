@@ -1,30 +1,20 @@
----
-title: Edit Scheduled Job
----
-
 # Edit Scheduled Job
 
-## Overview
+Edit Scheduled Job uses the same structure as create, but pre-fills current values.
 
-Modify an existing scheduled job.
+## What Teams Usually Update
 
----
+- schedule type and timing fields
+- execution controls (priority, timeout, concurrency)
+- owner/tenant metadata
+- notifications and tags
 
-## Editable Fields
+## Field Meaning Reminder
 
-- **Name** - Job display name
-- **Type** - Job type
-- **Description** - Job description
+- **Schedule fields** define when execution is attempted.
+- **Execution controls** protect platform stability.
+- **Status** determines whether the job can actively run.
 
----
+## Save Behavior
 
-## Non-Editable Fields
-
-- **Code** - Cannot be changed after creation
-
----
-
-## Actions
-
-- **Save** - Update job
-- **Cancel** - Discard changes
+Changes are validated and applied to the existing job definition.

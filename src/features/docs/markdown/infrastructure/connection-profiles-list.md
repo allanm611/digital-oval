@@ -2,6 +2,8 @@
 
 Connection Profiles List is the operations page for browsing and maintaining profile records.
 
+![Connection Profiles Table](/img/infrastructure/connectionprofileslistpage.png)
+
 ## Table Fields And What They Mean
 
 - **Profile Name**: primary profile label
@@ -17,6 +19,9 @@ Connection Profiles List is the operations page for browsing and maintaining pro
 
 Use search for name/code lookup. Use filters to narrow by connection type, environment, classification, status, PII, and health-check state.
 
+![Connection Profiles Filters](/img/infrastructure/filterconnectionprofiles.png)
+![Connection Profiles Filter Panel](/img/infrastructure/filterconnectionprofilesdropdown.png)
+
 ## Actions
 
 - **Create**: add a new profile
@@ -28,3 +33,5 @@ Use search for name/code lookup. Use filters to narrow by connection type, envir
 ## Bulk Operations
 
 Where selection mode is available, profiles can be activated or managed in batch.
+
+![Connection Profiles Bulk Operations](/img/infrastructure/connectionprofileslistbulkoperations.png)

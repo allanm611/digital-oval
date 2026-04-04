@@ -2,6 +2,9 @@
 
 KPI creation is done through category-specific forms (mainly Revenue Metrics and Usage Metrics), but both follow the same structure.
 
+![Create Revenue Metric](/img/infrastructure/createrevenuemetricspage.png)
+![Create Usage Metric](/img/infrastructure/createusagemetricspage.png)
+
 ## Required Fields
 
 - **Name**

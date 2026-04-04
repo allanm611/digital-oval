@@ -1,45 +1,22 @@
----
-title: Create Job Dependency
----
-
 # Create Job Dependency
 
-## Overview
+Create Job Dependency adds a new dependency rule between two jobs.
 
-Create a dependency relationship between two jobs.
+## Required Fields
 
----
+- **Job ID**
+- **Depends On Job ID** (must be different from Job ID)
 
-## Form Fields
+## Optional / Config Fields
 
-**Job*** 
-- The job that has the dependency
+- **Dependency Type**
+- **Wait For Status**
+- **Max Wait Minutes**
+- **Lookback Days**
+- **Active** toggle
 
-**Depends On Job***
-- The job that must complete first
+## Validation Notes
 
-**Dependency Type** (Blocking only)
-- Blocking - Parent must succeed
-
-**Wait For Status** (Success only)
-- Success - Job must succeed before dependent job runs
-
-**Max Wait Minutes** (optional, 0-1440)
-- Maximum time to wait for parent job
-
-**Lookback Days** (default: 0)
-- How far back to look for parent job executions
-- 0 = today only
-- >0 = look back N days
-
-**Is Active** (toggle)
-- Whether dependency is currently enforced
-
----
-
-## Validation
-
-- Both jobs must exist and be different
-- No circular dependencies allowed
-- Max wait must be between 0-1440 minutes
-
+- both job IDs are required
+- a job cannot depend on itself
+- max wait and lookback values must stay within allowed numeric limits

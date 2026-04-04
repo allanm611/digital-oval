@@ -2,6 +2,9 @@
 
 Edit KPI opens an existing metric definition and lets you adjust configuration without creating a new record.
 
+![Edit Revenue Metric](/img/infrastructure/editrevenuemetricspage.png)
+![Edit Usage Metric](/img/infrastructure/editusagemetricspage.png)
+
 ## Commonly Updated Fields
 
 - name and description clarity

@@ -2,6 +2,8 @@
 
 Edit Connection Profile uses the same structure as create, but pre-fills current values.
 
+![Edit Connection Profile](/img/infrastructure/editconnectionprofilepage.png)
+
 ## What Teams Usually Edit
 
 - connection and environment context

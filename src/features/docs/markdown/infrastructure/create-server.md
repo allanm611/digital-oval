@@ -2,6 +2,8 @@
 
 Create Server adds a new server endpoint used by infrastructure-dependent flows.
 
+![Create Server - Basic Information](/img/infrastructure/addserverbasicinfoimage1.png)
+
 ## Required Fields
 
 - **Name**: clear server label
@@ -26,6 +28,10 @@ Create Server adds a new server endpoint used by infrastructure-dependent flows.
 - **TLS Enabled**: transport security flag
 - **Authentication Type**: auth scheme reference
 - **Metadata**: additional JSON-like context for operations
+
+![Create Server - Connection Settings and Health Checks](/img/infrastructure/addserverconnectionsettingsandhealthchecks.png)
+![Create Server - Circuit Breaker](/img/infrastructure/addservercircuitbreaker.png)
+![Create Server - Advanced and TLS](/img/infrastructure/adserveradvancedand tls.png)
 
 ## Save Behavior
 

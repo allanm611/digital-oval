@@ -1,39 +1,25 @@
----
-title: Job Dependencies List
----
-
 # Job Dependencies List
 
-## Overview
+Job Dependencies List is the table view for dependency records.
 
-View and manage all job dependency relationships.
+## Table Fields
 
----
-
-## Statistics Cards
-
-- **Total Dependencies** - Count of all dependencies
-- **Active Dependencies** - Currently enforced dependencies
-- **Unsatisfied Dependencies** - Dependencies waiting for parent job
-
----
+- Job ID
+- Depends On Job ID
+- Dependency Type
+- Wait For Status
+- Max Wait Minutes
+- Lookback Days
+- Active State
 
 ## Filters
 
-- **Search** - Search by job name
-- **Status** - Filter by status (all, active, inactive)
-
----
+Search and filter options are available for dependency type, wait status, and active-only views.
 
 ## Actions
 
-**Individual Dependency Actions:**
-- **View** - See dependency details
-- **Edit** - Modify dependency settings
-- **Delete** - Remove dependency
-
-**Batch Actions:**
-- **Activate** - Activate multiple dependencies
-- **Deactivate** - Deactivate multiple dependencies
-- **Delete** - Delete multiple dependencies
-
+- Create
+- View
+- Edit
+- Delete
+- critical-path and analytics actions where available

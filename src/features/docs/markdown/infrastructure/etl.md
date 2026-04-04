@@ -6,11 +6,15 @@ ETL documentation covers file-ingestion operations and monitoring pages used by 
 
 Go to `Dashboard -> Infrastructure -> ETL`.
 
+![ETL List Page](/img/infrastructure/ETLlistpage.png)
+
 ## ETL Pages
 
 - `ETL File Registry`: manage file intake and processing state
 - `ETL Fetch Controls`: trigger fetch jobs in different modes
 - `ETL Analytics`: monitor ETL performance indicators
+
+![ETL Analytics Page](/img/infrastructure/etlanalyticspage.png)
 
 ## Core Concepts
 

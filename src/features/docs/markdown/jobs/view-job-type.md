@@ -1,25 +1,14 @@
----
-title: View Job Type Details
----
+# View Job Type
 
-# View Job Type Details
+Job Type details show the configured values for one type record.
 
-## Overview
+## What You See
 
-View details about a job type.
-
----
-
-## Information
-
-- **Name** - Display name
-- **Code** - Unique identifier
-- **Description** - Purpose and usage
-
----
+- Name
+- Code
+- Description
+- timestamps/metadata where available
 
 ## Actions
 
-- **Edit** - Modify type settings
-- **Delete** - Remove type (only if not in use)
-
+From this context, users typically proceed to **Edit** or **Delete** depending on permissions.

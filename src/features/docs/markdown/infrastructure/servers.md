@@ -6,6 +6,8 @@ Servers in Infrastructure represent outbound or integration endpoints the platfo
 
 Go to `Dashboard -> Infrastructure -> Servers`.
 
+![Servers Registry Page](/img/infrastructure/serversregistrypage.png)
+
 ## Why It Matters
 
 A server record is more than a host name. It combines endpoint identity, retry/timeouts, health monitoring, and security flags so operations teams can manage reliability in one place.

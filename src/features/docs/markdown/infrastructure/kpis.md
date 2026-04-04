@@ -6,12 +6,21 @@ The KPI section is the metric-configuration area inside Infrastructure. It organ
 
 Go to `Dashboard -> Infrastructure -> KPIs`.
 
+![KPI Hub - All KPIs](/img/infrastructure/allkpispage.png)
+
 ## KPI Areas In The Hub
 
 - **All KPIs**: unified metric list across categories
 - **Revenue Metrics**: revenue-focused definitions
 - **Usage Metrics**: usage-focused definitions
 - **System Events**: event-oriented monitoring metrics
+
+![All KPIs Section](/img/infrastructure/allkpisallkpissection.png)
+![All KPIs Table](/img/infrastructure/allkpisallkpistable.png)
+![All KPIs Cards](/img/infrastructure/allkpiskpicardssection.png)
+![Revenue Metrics](/img/infrastructure/revenuemetricspage.png)
+![Usage Metrics](/img/infrastructure/usagemetricspage.png)
+![System Events](/img/infrastructure/systemeventspage.png)
 
 ## Core Field Meaning
 

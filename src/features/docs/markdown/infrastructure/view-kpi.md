@@ -2,6 +2,9 @@
 
 KPI Details shows the full definition of a metric in read mode.
 
+![Revenue Metric Details](/img/infrastructure/viewrevenuemetricdetails.png)
+![Usage Metric Details](/img/infrastructure/viewusagemetricdetails.png)
+
 ## What You See
 
 - identity fields (name, description)

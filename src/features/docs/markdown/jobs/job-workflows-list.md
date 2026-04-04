@@ -1,40 +1,23 @@
----
-title: Job Workflows List
----
-
 # Job Workflows List
 
-## Overview
+Job Workflows List is the table view for workflow records.
 
-View and manage all job workflows.
+## Table Fields
 
----
-
-## Statistics Cards
-
-- **Total Workflows** - Count of all workflows
-- **Active Workflows** - Currently enabled workflows
-- **Inactive Workflows** - Disabled workflows
-
----
+- Name
+- Description
+- Type
+- Status
+- Created / Updated context
 
 ## Filters
 
-- **Search** - Search by workflow name
-- **Status** - Filter by status (all, active, inactive)
-- **Workflow Type** - Filter by workflow type
-
----
+Search by name/description and filter by workflow status and type.
 
 ## Actions
 
-**Individual Workflow Actions:**
-- **View** - See workflow details
-- **Edit** - Modify workflow settings
-- **Clone** - Duplicate workflow
-- **Delete** - Remove workflow
-- **View Analytics** - Performance metrics
-
-**Batch Actions:**
-- **Delete** - Delete multiple workflows
-
+- Create
+- View
+- Edit
+- Delete
+- clone/activate/deactivate actions where available

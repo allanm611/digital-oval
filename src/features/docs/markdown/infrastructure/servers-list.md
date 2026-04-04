@@ -2,6 +2,8 @@
 
 Servers List is the working page for day-to-day server operations.
 
+![Servers List Table](/img/infrastructure/serversregistrypage.png)
+
 ## What You See In The Table
 
 - **Server**: display name
@@ -15,6 +17,9 @@ Servers List is the working page for day-to-day server operations.
 
 Use search for name/code lookup. Use filters to narrow by scope, environment, protocol, region, status, and server type.
 
+![Servers Filters](/img/infrastructure/serverspagefilters.png)
+![Servers Health Filters](/img/infrastructure/serverspagehealthfilters.png)
+
 ## Actions On The List
 
 - **Create**: add a new server
@@ -27,3 +32,5 @@ Use search for name/code lookup. Use filters to narrow by scope, environment, pr
 ## Bulk Operations
 
 When selection mode is enabled, you can select multiple servers and run bulk activate/deactivate actions.
+
+![Servers Bulk Operations](/img/infrastructure/serversregistrybulkoperations.png)

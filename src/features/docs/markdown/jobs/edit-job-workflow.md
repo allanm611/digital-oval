@@ -1,42 +1,13 @@
----
-title: Edit Job Workflow
----
-
 # Edit Job Workflow
 
-## Overview
+Edit Job Workflow uses the same fields as create, with existing values prefilled.
 
-Modify an existing job workflow.
+## Common Updates
 
----
+- naming/description clarity
+- workflow type
+- active state
 
-## Editable Fields
+## Save Behavior
 
-- **Name** - Workflow display name
-- **Workflow Type** - Category type
-- **Description** - Workflow purpose
-- **Status** - Active or Inactive
-
----
-
-## Non-Editable Fields
-
-- **Code** - Cannot be changed after creation
-
----
-
-## Managing Steps
-
-From workflow details:
-- Add new steps
-- Edit existing steps
-- Remove steps
-- Reorder steps
-- Configure step dependencies
-
----
-
-## Actions
-
-- **Save** - Update workflow
-- **Cancel** - Discard changes
+Changes are validated and saved to the existing workflow record.

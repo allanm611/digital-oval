@@ -2,6 +2,8 @@
 
 Edit Server uses the same structure as Create Server, but pre-fills existing values.
 
+![Edit Server Page](/img/infrastructure/editserverpage.png)
+
 ## What You Usually Update
 
 - endpoint properties (protocol, host, port, base path)

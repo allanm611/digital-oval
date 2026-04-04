@@ -1,32 +1,20 @@
----
-title: Create Job Type
----
-
 # Create Job Type
 
-## Overview
+Create Job Type opens a form/modal for adding a new type record.
 
-Add a new job type category.
+## Required Fields
 
----
+- **Name**
+- **Code**
 
-## Form Fields
+## Field Meaning
 
-**Name*** (max 255 characters)
-- Display name of the job type
+- **Name** should be readable by operations and business teams.
+- **Code** should remain stable for references and filters.
+- **Description** can clarify intended usage.
 
-**Code*** (max 100 characters)
-- Unique identifier (lowercase snake_case)
-- Must be unique
-- Must start with letter, contain only letters, numbers, underscores
+## Validation Notes
 
-**Description**
-- Optional description of type purpose
-
----
-
-## Actions
-
-- **Save** - Create new job type
-- **Cancel** - Return to type list
-
+- name and code are required
+- code format uses lowercase letters, numbers, and underscores
+- code must be unique

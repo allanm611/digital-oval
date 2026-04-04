@@ -1,28 +1,21 @@
----
-title: Job Types List
----
-
 # Job Types List
 
-## Overview
+Job Types List displays all configured job type records.
 
-View and manage all job type categories.
+## Table Fields
 
----
-
-## Filters
-
-- **Search** - Search by type name or code
-
----
+- **Name**
+- **Code**
+- **Description**
+- **Created/Updated context**
 
 ## Actions
 
-**Individual Job Type Actions:**
-- **View** - See type details
-- **Edit** - Modify type settings
-- **Delete** - Remove type (only if not in use)
+- **Create** new job type
+- **View** details where available
+- **Edit** existing type
+- **Delete** with confirmation
 
-**Create:**
-- **Create Type** - Add new job type
+## Validation Highlights
 
+Code is constrained to lowercase snake_case style and must be unique.

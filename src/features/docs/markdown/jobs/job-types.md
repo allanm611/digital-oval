@@ -1,34 +1,17 @@
----
-title: Job Types
----
-
 # Job Types
 
-## Overview
+Job Types defines reusable categories for scheduled jobs.
 
-Job Types are categories for organizing jobs. Create and manage job types to categorize and filter jobs.
+## Open The Page
 
----
+Go to `Dashboard -> Jobs -> Job Types`.
 
-## Job Type Fields
+## Why This Page Matters
 
-- **Name** - Display name (max 255 characters)
-- **Code** - Unique identifier (lowercase snake_case, max 100 characters)
-- **Description** - Purpose and usage
+Consistent job typing makes filtering, reporting, and ownership handoff easier across teams.
 
----
+## Core Field Meaning
 
-## Actions
-
-**Individual Job Type Actions:**
-- **View** - See type details
-- **Edit** - Modify type settings
-- **Delete** - Remove type
-
----
-
-## Validation
-
-- Code must be unique
-- Code format: lowercase snake_case, start with letter, contain only letters, numbers, or underscores
-
+- **Name**: business-friendly job type label.
+- **Code**: stable machine-friendly identifier.
+- **Description**: practical context for when to use this type.

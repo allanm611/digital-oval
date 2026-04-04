@@ -1,37 +1,14 @@
----
-title: View Job Workflow Details
----
+# View Job Workflow
 
-# View Job Workflow Details
+Workflow Details shows one workflow record in read mode.
 
-## Overview
+## What You See
 
-View details about a job workflow.
-
----
-
-## Information
-
-- **Name** - Workflow display name
-- **Code** - Unique workflow identifier
-- **Status** - Active or Inactive
-- **Workflow Type** - Category type
-- **Description** - Workflow purpose
-
----
-
-## Workflow Steps
-
-View all steps in this workflow with:
-- Step order
-- Step name and type
-- Execution configuration
-
----
+- workflow identity and metadata
+- workflow status
+- type and description context
+- created/updated details
 
 ## Actions
 
-- **Edit** - Modify workflow
-- **Clone** - Duplicate workflow
-- **Delete** - Remove workflow
-- **View Analytics** - Performance metrics
+From details, users usually continue with **Edit**, **Delete**, **Activate/Deactivate**, or clone-related actions where enabled.

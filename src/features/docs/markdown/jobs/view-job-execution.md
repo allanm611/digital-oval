@@ -1,32 +1,22 @@
----
-title: View Job Execution Details
----
+# View Job Execution
 
-# View Job Execution Details
+Job Execution Details is the deep-dive page for one execution record.
 
-## Overview
+## What You See
 
-View details about a job execution.
+- execution identity and status
+- start/end timing and total duration
+- error messages and error context fields
+- resource/data metrics (memory, CPU, rows)
+- step-progress information
 
----
+## Key Fields Explained
 
-## Information
-
-- **Execution ID** - Unique execution identifier
-- **Job Name** - Name of the executed job
-- **Status** - Execution status (Pending, Queued, Running, Success, Failure, Aborted, Timeout, Cancelled)
-- **Started At** - Date and time execution began
-- **Completed At** - Date and time execution finished
-- **Duration** - Total execution time
-- **Trace ID** - Distributed tracing identifier
-- **Correlation ID** - Request correlation identifier
-- **SLA Breached** - Whether SLA was exceeded
-
----
+- **Error Code / Error Step ID**: points to where failure occurred.
+- **Rows Read/Processed/Inserted/Updated/Deleted**: data movement footprint.
+- **Peak Memory / CPU**: runtime resource profile.
+- **Steps Completed / Failed**: workflow progression status.
 
 ## Actions
 
-**Admin or with feature flag enabled:**
-- **Abort** - Stop running execution
-- **Retry** - Rerun failed execution
-- **Archive** - Mark execution for cleanup
+Depending on state and permissions: **Abort**, **Retry**, and **Archive** actions may be available.

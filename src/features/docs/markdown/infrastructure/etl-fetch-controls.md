@@ -2,6 +2,8 @@
 
 ETL Fetch Controls is the manual trigger page for running fetch jobs in controlled modes.
 
+![ETL Fetch Controls Dropdown](/img/infrastructure/etllistpagefetchcontrolsdropdown.png)
+
 ## Fetch Modes
 
 ### Immediate Fetch

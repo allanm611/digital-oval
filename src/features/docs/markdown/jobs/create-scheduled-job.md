@@ -1,33 +1,30 @@
----
-title: Create Scheduled Job
----
-
 # Create Scheduled Job
 
-## Overview
+Create Scheduled Job is used to add a new job definition and its execution rules.
 
-Create a new scheduled job.
+## Required Fields
 
----
+- **Name**
+- **Code**
+- **Description**
+- **Job Type**
 
-## Form Fields
+## Schedule Fields And Meaning
 
-**Name*** (max 255 characters)
-- Display name for the job
+- **Schedule Type**: selects run model (manual/cron/interval/event/dependency).
+- **Cron Expression**: required when schedule type is cron.
+- **Interval Seconds**: required for interval mode, minimum constrained.
+- **Execution Window**: optional run-time boundaries.
 
-**Code*** (max 100 characters)
-- Unique identifier (cannot be changed after creation)
-- Lowercase snake_case
+## Execution And Control Fields
 
-**Type*** 
-- Job type (required)
+- **Priority**: relative order (typically lower urgency vs higher urgency settings based on team policy).
+- **Max Concurrent Executions**: caps overlapping runs.
+- **Execution Timeout**: stops jobs that exceed allowed runtime.
+- **Technical Owner / Tenant / Client**: ownership and tenancy context.
+- **Notification Recipients**: who receives execution updates.
+- **Tags**: quick grouping labels.
 
-**Description**
-- Optional description
+## Validation Notes
 
----
-
-## Actions
-
-- **Save** - Create new job
-- **Cancel** - Return to job list
+Save is blocked until required fields are complete. Conditional fields (like cron or interval settings) must be provided when their schedule type is selected.

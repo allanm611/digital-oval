@@ -2,6 +2,11 @@
 
 Server Details provides a read-focused view of one server configuration and its current operational state.
 
+![Server Details Page](/img/infrastructure/serverdetailspage.png)
+![Server Details - Basic and Endpoint Info](/img/infrastructure/serverdetailsbasicandendpointinformation.png)
+![Server Details - Reliability and Security](/img/infrastructure/serverdetailsreliabilityandsecurity.png)
+![Server Details - Operational and Metadata](/img/infrastructure/serverdetailsoperationalandmetadata.png)
+
 ## Typical Sections
 
 - identity and endpoint summary

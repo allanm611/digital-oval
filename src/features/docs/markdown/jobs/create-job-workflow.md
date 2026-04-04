@@ -1,44 +1,19 @@
----
-title: Create Job Workflow
----
-
 # Create Job Workflow
 
-## Overview
+Create Job Workflow adds a new workflow record.
 
-Create a new job workflow.
+## Required Fields
 
----
+- **Name**
 
-## Form Fields
+## Optional Fields
 
-**Name*** (max 255 characters)
-- Display name for the workflow
+- **Description**
+- **Workflow Type**
+- **Is Active**
 
-**Code*** (max 100 characters)
-- Unique identifier (cannot be changed after creation)
-- Lowercase snake_case
+## Field Meaning
 
-**Workflow Type** (optional)
-- Category for the workflow
-
-**Description** (optional)
-- Explanation of workflow purpose
-
----
-
-## Actions
-
-- **Save** - Create workflow
-- **Cancel** - Return to workflow list
-
----
-
-## Next Steps
-
-After creating:
-1. Open workflow details
-2. Add workflow steps
-3. Configure step execution
-4. Test workflow
-5. Activate when ready
+- **Name** should clearly identify the orchestration purpose.
+- **Workflow Type** helps classify usage and filtering.
+- **Is Active** controls whether workflow is operationally enabled.

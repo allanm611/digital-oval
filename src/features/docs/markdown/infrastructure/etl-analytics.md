@@ -2,12 +2,17 @@
 
 ETL Analytics is the monitoring page for ETL health, throughput, and outcome trends.
 
+![ETL Analytics Overview](/img/infrastructure/etlanalyticspage.png)
+
 ## What The Page Focuses On
 
 - baseline ETL processing metrics
 - status distribution (success, pending, failed)
 - operational trend indicators over time
 - queue and processing behavior visibility
+
+![ETL Analytics Metrics Section](/img/infrastructure/etlanalyticsmetricssection.png)
+![ETL Analytics Charts Section](/img/infrastructure/etlanalyticschartssection.png)
 
 ## How Teams Use It
 
