@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { Users, Gift, Eye, Calendar } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw } from "../../../shared/utils/utils";
@@ -17,6 +17,9 @@ import SelectCustomersStep from "../components/SelectCustomersStep";
 import DefineRewardStep from "../components/DefineRewardStep";
 import PreviewRewardStep from "../components/PreviewRewardStep";
 import ApplyRewardStep from "../components/ApplyRewardStep";
+import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import { dummyManualRewards } from "../data/dummyManualRewards";
+import type { ManualReward } from "../types/manualReward";
 
 export interface ManualRewardData {
   // Step 1: Audience
@@ -35,20 +38,39 @@ export interface ManualRewardData {
   bundleTrack?: string;
   description?: string;
   selectedCommunicationPolicyId?: number;
+  seedTestContacts?: string[];
+  rewardValidation?: {
+    completed: boolean;
+    passed: number;
+    failed: number;
+    testedAt: string;
+  };
 
-  // Step 3: Preview
-  previewData?: Record<string, unknown>;
-
-  // Step 4: Apply
+  // Step 3: Apply
   applyType?: "now" | "later";
   applyDate?: string;
   applyTime?: string;
+
+  // Step 4: Preview
+  previewData?: Record<string, unknown>;
 }
 
 export default function CreateManualRewardPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { id: rewardId } = useParams<{ id: string }>();
+  const isEditMode = !!rewardId && location.pathname.includes("/edit");
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
+
+  // Check if we came from a returnTo state
+  const returnTo = (
+    location.state as {
+      returnTo?: {
+        pathname: string;
+      };
+    }
+  )?.returnTo;
 
   const STEPS: Step[] = [
     {
@@ -65,22 +87,41 @@ export default function CreateManualRewardPage() {
     },
     {
       id: 3,
-      name: t.manualRewards.preview,
-      description: t.manualRewards.previewDesc,
-      icon: Eye,
-    },
-    {
-      id: 4,
       name: t.manualRewards.apply,
       description: t.manualRewards.applyDesc,
       icon: Calendar,
     },
+    {
+      id: 4,
+      name: t.manualRewards.preview,
+      description: t.manualRewards.previewDesc,
+      icon: Eye,
+    },
   ];
   const [currentStep, setCurrentStep] = useState(1);
   const [rewardData, setRewardData] = useState<ManualRewardData>({});
+  const [isLoading, setIsLoading] = useState(isEditMode);
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Persist form data to localStorage
-  useFormDataPersistence("reward_form_data", rewardData, setRewardData, false);
+  // Load reward data in edit mode
+  useEffect(() => {
+    if (isEditMode && rewardId) {
+      const parsedId = Number(rewardId);
+      const reward = dummyManualRewards.find((r) => r.id === parsedId);
+      if (reward) {
+        setRewardData({
+          audienceName: reward.name,
+          rewardType: reward.rewardType,
+          rewardValue: reward.rewardValue.replace(/[^0-9.]/g, ""),
+          description: "",
+        });
+      }
+      setIsLoading(false);
+    }
+  }, [isEditMode, rewardId]);
+
+  // Persist form data to localStorage (only in create mode)
+  useFormDataPersistence("reward_form_data", rewardData, setRewardData, isEditMode);
 
   // Clear persisted form data when user exits the creation flow
   useFormCleanupOnExit("reward_form_data");
@@ -123,7 +164,11 @@ export default function CreateManualRewardPage() {
   const isCurrentStepValid = (): boolean => {
     switch (currentStep) {
       case 1: // Select Customers - must have audience name, type, input method, and valid input
-        if (!rewardData.audienceName || !rewardData.uploadType || !rewardData.inputMethod) {
+        if (
+          !rewardData.audienceName ||
+          !rewardData.uploadType ||
+          !rewardData.inputMethod
+        ) {
           return false;
         }
         // For file method, must have quicklist selected
@@ -132,17 +177,24 @@ export default function CreateManualRewardPage() {
         }
         // For manual method, must have valid manual input (emails or phone numbers)
         if (rewardData.inputMethod === "manual") {
-          return !!rewardData.audienceFileText && validateManualInput(rewardData.audienceFileText);
+          return (
+            !!rewardData.audienceFileText &&
+            validateManualInput(rewardData.audienceFileText)
+          );
         }
         return false;
       case 2: // Define Reward
-        return !!(rewardData.rewardValue && rewardData.rewardValue.trim());
-      case 3: // Preview
-        return true;
-      case 4: // Apply
+        return !!(
+          rewardData.rewardValue &&
+          rewardData.rewardValue.trim() &&
+          rewardData.rewardValidation?.completed
+        );
+      case 3: // Apply
         if (rewardData.applyType === "later") {
           return !!(rewardData.applyDate && rewardData.applyTime);
         }
+        return true;
+      case 4: // Preview
         return true;
       default:
         return true;
@@ -150,17 +202,29 @@ export default function CreateManualRewardPage() {
   };
 
   const handleSubmit = async () => {
+    setIsSaving(true);
     try {
       // TODO: Save manual reward to database
-      showToast(t.manualRewards.createdSuccess);
+      if (isEditMode) {
+        showToast(t.manualRewards.updatedSuccess || "Reward updated successfully");
+      } else {
+        showToast(t.manualRewards.createdSuccess);
+      }
 
       // Clear localStorage form data after successful creation
       clearPersistedFormData("reward_form_data");
 
-      navigate("/dashboard/manual-rewards");
+      // Navigate back to details or list
+      if (isEditMode && rewardId) {
+        navigate(`/dashboard/manual-rewards/${rewardId}`);
+      } else {
+        navigate("/dashboard/manual-rewards");
+      }
     } catch (err) {
-      console.error("Failed to create manual reward:", err);
-      showError(t.manualRewards.createFailed);
+      console.error(`Failed to ${isEditMode ? "update" : "create"} manual reward:`, err);
+      showError(isEditMode ? "Update failed" : t.manualRewards.createFailed);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -185,26 +249,36 @@ export default function CreateManualRewardPage() {
         );
       case 3:
         return (
-          <PreviewRewardStep
+          <ApplyRewardStep
             data={rewardData}
             onUpdate={updateRewardData}
-            onNext={handleNext}
             onPrevious={handlePrevious}
           />
         );
       case 4:
         return (
-          <ApplyRewardStep
-            data={rewardData}
-            onUpdate={updateRewardData}
-            onSubmit={handleSubmit}
-            onPrevious={handlePrevious}
-          />
+          <PreviewRewardStep data={rewardData} onPrevious={handlePrevious} />
         );
       default:
         return null;
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16">
+        <LoadingSpinner
+          variant="modern"
+          size="xl"
+          color="primary"
+          className="mb-4"
+        />
+        <p className={`${tw.textMuted} font-medium text-sm`}>
+          Loading reward details...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
@@ -216,9 +290,9 @@ export default function CreateManualRewardPage() {
           {/* Header */}
           <div className="flex items-center justify-between pb-3">
             <BackButton
-              fallbackTo="/dashboard/manual-rewards"
+              fallbackTo={returnTo?.pathname || "/dashboard/manual-broadcasts"}
               showBreadcrumb={true}
-              currentLabel="Create Manual Reward"
+              currentLabel={isEditMode ? "Edit Manual Reward" : "Create Manual Reward"}
             />
           </div>
 
@@ -249,12 +323,25 @@ export default function CreateManualRewardPage() {
               )}
               <div className="flex-1" />
               <button
-                onClick={currentStep === STEPS.length ? handleSubmit : handleNext}
-                disabled={!isCurrentStepValid()}
+                onClick={
+                  currentStep === STEPS.length ? handleSubmit : handleNext
+                }
+                disabled={!isCurrentStepValid() || isSaving}
                 className={`inline-flex items-center px-5 py-2 text-sm font-medium ${tw.rounded} text-white disabled:opacity-50 disabled:cursor-not-allowed`}
                 style={{ backgroundColor: color.primary.action }}
               >
-                {currentStep === STEPS.length ? "Submit" : "Next"}
+                {currentStep === STEPS.length ? (
+                  isSaving ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      {isEditMode ? "Updating..." : "Creating..."}
+                    </>
+                  ) : (
+                    isEditMode ? "Update Reward" : "Create Reward"
+                  )
+                ) : (
+                  "Next"
+                )}
               </button>
             </div>
           </div>

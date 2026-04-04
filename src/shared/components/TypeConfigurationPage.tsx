@@ -16,7 +16,11 @@ import { configurationDataService } from "../services/configurationDataService";
 import type { ConfigurationType } from "../services/configurationDataService";
 import type { ConfigurationItem } from "./GenericConfigurationPage";
 import { useBackendConfigurationData } from "../hooks/useBackendConfigurationData";
-import { MESSAGE_TYPE_OPTIONS, CHARACTER_SET_TYPE_OPTIONS, GATEWAY_KEY_OPTIONS } from "../../features/configurations/configs/ts";
+import {
+  MESSAGE_TYPE_OPTIONS,
+  CHARACTER_SET_TYPE_OPTIONS,
+  GATEWAY_KEY_OPTIONS,
+} from "../../features/configurations/configs/ts";
 import { CHANNEL_OPTIONS } from "../../features/configurations/services/creativeTemplateService";
 import { characterSetService } from "../../features/configurations/services/characterSetService";
 import { languageService } from "../../features/configurations/services/languageService";
@@ -59,8 +63,10 @@ export interface TypeConfigurationItem extends ConfigurationItem {
     unit: string;
     sharedValidity: boolean;
     sharedValidityHours: number;
+    price?: number;
   }>;
   sharedValidity?: boolean;
+  sharedPrice?: boolean;
   validityHours?: number;
   price?: number; // Price for combo type
   // Routes fields
@@ -189,9 +195,11 @@ function TypeConfigurationModal({
       unit: string;
       sharedValidity: boolean;
       sharedValidityHours: number;
+      price?: number;
     }>
   >([]);
   const [comboSharedValidity, setComboSharedValidity] = useState(true);
+  const [comboSharedPrice, setComboSharedPrice] = useState(true);
   const [comboValidityHours, setComboValidityHours] = useState<number>(720);
   const [comboPrice, setComboPrice] = useState<number | undefined>(undefined);
   const [characterSetOptions, setCharacterSetOptions] = useState<
@@ -285,7 +293,9 @@ function TypeConfigurationModal({
       );
       if (isCreativeTemplate) {
         setCode(item.code || "");
-        setPrimaryChannel((item as any).primaryChannel || (item as any).channel || "");
+        setPrimaryChannel(
+          (item as any).primaryChannel || (item as any).channel || "",
+        );
         setTitle(item.title || "");
         setTextBody((item as any).body_text || (item as any).text_body || "");
         setHtmlBody((item as any).body_html || (item as any).html_body || "");
@@ -302,23 +312,30 @@ function TypeConfigurationModal({
         config.customFields.forEach((field) => {
           // Try both camelCase (from form) and snake_case (from API)
           const camelCaseValue = (item as any)[field.fieldKey];
-          const snakeCaseKey = field.fieldKey.replace(/([A-Z])/g, '_$1').toLowerCase();
+          const snakeCaseKey = field.fieldKey
+            .replace(/([A-Z])/g, "_$1")
+            .toLowerCase();
           const snakeCaseValue = (item as any)[snakeCaseKey];
           const value = camelCaseValue ?? snakeCaseValue ?? "";
           fields[field.fieldKey] = String(value);
         });
         // For character sets, also load character string fields
         if (isCharacterSet) {
-          fields.standardChars = (item as any).standardChars ?? (item as any).standard_chars ?? "";
-          fields.doubleChars = (item as any).doubleChars ?? (item as any).double_chars ?? "";
-          fields.tripleChars = (item as any).tripleChars ?? (item as any).triple_chars ?? "";
-          fields.quadChars = (item as any).quadChars ?? (item as any).quad_chars ?? "";
+          fields.standardChars =
+            (item as any).standardChars ?? (item as any).standard_chars ?? "";
+          fields.doubleChars =
+            (item as any).doubleChars ?? (item as any).double_chars ?? "";
+          fields.tripleChars =
+            (item as any).tripleChars ?? (item as any).triple_chars ?? "";
+          fields.quadChars =
+            (item as any).quadChars ?? (item as any).quad_chars ?? "";
         }
         setCustomFields(fields);
       }
       if (isComboType) {
         setComboResources(item.comboResources || []);
         setComboSharedValidity(item.sharedValidity ?? true);
+        setComboSharedPrice(item.sharedPrice ?? true);
         setComboValidityHours(item.validityHours ?? 720);
         setComboPrice(item.price);
       }
@@ -356,6 +373,7 @@ function TypeConfigurationModal({
       if (isComboType) {
         setComboResources([]);
         setComboSharedValidity(true);
+        setComboSharedPrice(true);
         setComboValidityHours(720);
         setComboPrice(undefined);
       }
@@ -415,7 +433,10 @@ function TypeConfigurationModal({
     }
 
     // Sender IDs require a gateway enum value.
-    if (config.configType === "senderIds" && !String(metadataValue || "").trim()) {
+    if (
+      config.configType === "senderIds" &&
+      !String(metadataValue || "").trim()
+    ) {
       setError("Gateway is required for sender IDs");
       return;
     }
@@ -495,8 +516,9 @@ function TypeConfigurationModal({
     if (isComboType) {
       payload.comboResources = comboResources;
       payload.sharedValidity = comboSharedValidity;
+      payload.sharedPrice = comboSharedPrice;
       payload.validityHours = comboValidityHours;
-      payload.price = comboPrice;
+      payload.price = comboSharedPrice ? comboPrice : undefined;
     }
 
     if (
@@ -849,7 +871,11 @@ function TypeConfigurationModal({
                     },
                     ...(templateLocaleOptions.length > 0
                       ? templateLocaleOptions
-                      : (configurationDataService.getData("languages") as TypeConfigurationItem[])
+                      : (
+                          configurationDataService.getData(
+                            "languages",
+                          ) as TypeConfigurationItem[]
+                        )
                           .filter((lang) => lang.isActive)
                           .map((lang) => ({
                             value: String(lang.metadataValue || ""),
@@ -956,7 +982,13 @@ function TypeConfigurationModal({
                   <div
                     key={idx}
                     className={`grid gap-2 items-center bg-gray-50 p-3 rounded border border-gray-200 ${
-                      comboSharedValidity ? "grid-cols-3" : "grid-cols-4"
+                      comboSharedValidity
+                        ? comboSharedPrice
+                          ? "grid-cols-3"
+                          : "grid-cols-4"
+                        : comboSharedPrice
+                          ? "grid-cols-4"
+                          : "grid-cols-5"
                     }`}
                   >
                     <div className="col-span-1">
@@ -994,6 +1026,23 @@ function TypeConfigurationModal({
                         placeholder="Hours"
                       />
                     )}
+                    {!comboSharedPrice && (
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={resource.price ?? ""}
+                        onChange={(e) => {
+                          const updated = [...comboResources];
+                          updated[idx].price = e.target.value
+                            ? parseFloat(e.target.value)
+                            : undefined;
+                          setComboResources(updated);
+                        }}
+                        className="col-span-1 px-3 py-2 border border-gray-300 rounded text-sm"
+                        placeholder="Price"
+                      />
+                    )}
                     <button
                       type="button"
                       onClick={() => {
@@ -1024,6 +1073,7 @@ function TypeConfigurationModal({
                           unit: "data_mb",
                           sharedValidity: comboSharedValidity,
                           sharedValidityHours: comboValidityHours,
+                          price: comboSharedPrice ? undefined : 0,
                         },
                       ]);
                     }}
@@ -1066,6 +1116,7 @@ function TypeConfigurationModal({
                           unit: "onnet_minutes",
                           sharedValidity: comboSharedValidity,
                           sharedValidityHours: comboValidityHours,
+                          price: comboSharedPrice ? undefined : 0,
                         },
                       ]);
                     }}
@@ -1108,6 +1159,7 @@ function TypeConfigurationModal({
                           unit: "sms_count",
                           sharedValidity: comboSharedValidity,
                           sharedValidityHours: comboValidityHours,
+                          price: comboSharedPrice ? undefined : 0,
                         },
                       ]);
                     }}
@@ -1162,6 +1214,29 @@ function TypeConfigurationModal({
                   </span>
                 </label>
 
+                <label className="flex items-center gap-2 mb-3">
+                  <input
+                    type="checkbox"
+                    checked={comboSharedPrice}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setComboSharedPrice(checked);
+                      if (checked) {
+                        setComboResources(
+                          comboResources.map((r) => ({
+                            ...r,
+                            price: undefined,
+                          })),
+                        );
+                      }
+                    }}
+                    className="rounded"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    Shared Combo Price
+                  </span>
+                </label>
+
                 <div className="grid grid-cols-2 gap-3">
                   {comboSharedValidity && (
                     <div>
@@ -1187,26 +1262,28 @@ function TypeConfigurationModal({
                     </div>
                   )}
 
-                  <div className={comboSharedValidity ? "" : "col-span-2"}>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Combo Price <span className="text-red-600">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={comboPrice ?? ""}
-                      onChange={(e) =>
-                        setComboPrice(
-                          e.target.value
-                            ? parseFloat(e.target.value)
-                            : undefined,
-                        )
-                      }
-                      className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500`}
-                      placeholder="Enter price"
-                    />
-                  </div>
+                  {comboSharedPrice && (
+                    <div className={comboSharedValidity ? "" : "col-span-2"}>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Combo Price <span className="text-red-600">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={comboPrice ?? ""}
+                        onChange={(e) =>
+                          setComboPrice(
+                            e.target.value
+                              ? parseFloat(e.target.value)
+                              : undefined,
+                          )
+                        }
+                        className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500`}
+                        placeholder="Enter price"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </>
@@ -1360,7 +1437,11 @@ export default function TypeConfigurationPage({
 
   // Sync backend data to local items when using backend hook
   useEffect(() => {
-    if (useBackendConfig && backendConfig?.data && Array.isArray(backendConfig.data)) {
+    if (
+      useBackendConfig &&
+      backendConfig?.data &&
+      Array.isArray(backendConfig.data)
+    ) {
       setItems(normalizeItems(backendConfig.data as TypeConfigurationItem[]));
     }
   }, [useBackendConfig, backendConfig?.data?.length]);
@@ -1463,7 +1544,6 @@ export default function TypeConfigurationPage({
     }
   };
 
-
   const handleItemSaved = async (itemData: {
     name: string;
     description?: string;
@@ -1480,7 +1560,11 @@ export default function TypeConfigurationPage({
             ...itemData,
             isActive: itemData.isActive ?? editingItem.isActive,
           };
-          setItems(items.map(item => item.id === editingItem.id ? optimisticItem : item));
+          setItems(
+            items.map((item) =>
+              item.id === editingItem.id ? optimisticItem : item,
+            ),
+          );
 
           // Send API call in background
           try {
@@ -1488,7 +1572,11 @@ export default function TypeConfigurationPage({
             showToast(config.updateSuccessMessage);
           } catch (err) {
             // Revert on error
-            setItems(items.map(item => item.id === editingItem.id ? editingItem : item));
+            setItems(
+              items.map((item) =>
+                item.id === editingItem.id ? editingItem : item,
+              ),
+            );
             throw err;
           }
         } else {
@@ -1540,7 +1628,11 @@ export default function TypeConfigurationPage({
     <div className="space-y-6">
       {/* Breadcrumb */}
       {showBackButton && (
-        <BackButton fallbackTo={config.backPath} showBreadcrumb={true} currentLabel={config.title} />
+        <BackButton
+          fallbackTo={config.backPath}
+          showBreadcrumb={true}
+          currentLabel={config.title}
+        />
       )}
       {!showBackButton && (
         <div>
@@ -1552,9 +1644,7 @@ export default function TypeConfigurationPage({
 
       {/* Description and Create Button */}
       <div className="flex items-start justify-between gap-4">
-        <p className={`text-sm ${tw.textSecondary}`}>
-          {config.subtitle}
-        </p>
+        <p className={`text-sm ${tw.textSecondary}`}>{config.subtitle}</p>
         <div className="flex items-center gap-3 w-auto ml-auto">
           {!config.disableCreate && <CreateButton onClick={handleCreateItem} />}
         </div>
@@ -1583,14 +1673,17 @@ export default function TypeConfigurationPage({
             <div className="flex justify-center mb-4">
               <LoadingSpinner size="lg" variant="default" />
             </div>
-            <p className={`${tw.textMuted}`}>Loading {config.entityNamePlural}...</p>
+            <p className={`${tw.textMuted}`}>
+              Loading {config.entityNamePlural}...
+            </p>
           </div>
         ) : filteredItems.length === 0 ? (
           <div className="text-center py-12">
             <IconComponent className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             {searchTerm && (
               <p className={`${tw.textMuted} mb-6`}>
-                No {config.entityNamePlural} found. Try adjusting your search terms.
+                No {config.entityNamePlural} found. Try adjusting your search
+                terms.
               </p>
             )}
             {!searchTerm && !config.disableCreate && (
@@ -1626,8 +1719,8 @@ export default function TypeConfigurationPage({
                     {config.configType === "characterSets"
                       ? "Character Set Name"
                       : config.configType === "creativeTemplates"
-                      ? "Name"
-                      : config.entityName}
+                        ? "Name"
+                        : config.entityName}
                   </th>
                   {config.configType === "characterSets" ? (
                     <>
@@ -1765,7 +1858,9 @@ export default function TypeConfigurationPage({
                         borderBottomLeftRadius: "0.375rem",
                       }}
                     >
-                      <div className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
+                      <div
+                        className={`${tw.tableFirstColumn} ${tw.textPrimary}`}
+                      >
                         {item.name}
                       </div>
                     </td>
@@ -1818,7 +1913,9 @@ export default function TypeConfigurationPage({
                             backgroundColor: color.surface.tablebodybg,
                           }}
                         >
-                          <div className={`text-sm ${tw.textPrimary} font-mono`}>
+                          <div
+                            className={`text-sm ${tw.textPrimary} font-mono`}
+                          >
                             {String(
                               (item as unknown as Record<string, unknown>)
                                 .code || "—",
@@ -1834,7 +1931,10 @@ export default function TypeConfigurationPage({
                           <div className={`text-sm ${tw.textPrimary}`}>
                             {String(
                               (item as unknown as Record<string, unknown>)
-                                .primaryChannel || (item as unknown as Record<string, unknown>).channel || "—",
+                                .primaryChannel ||
+                                (item as unknown as Record<string, unknown>)
+                                  .channel ||
+                                "—",
                             )}
                           </div>
                         </td>

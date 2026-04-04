@@ -1,32 +1,31 @@
+import { useState } from "react";
 import SchedulingComponent from "../../../shared/components/SchedulingComponent";
 import type { SchedulingData } from "../../../shared/types/scheduling";
-import { AlertCircle, Gift, Send, Calendar } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { ManualRewardData } from "../pages/CreateManualRewardPage";
 import { useLanguage } from "../../../contexts/LanguageContext";
-import { useState } from "react";
 
 interface ApplyRewardStepProps {
   data: ManualRewardData;
   onUpdate: (data: Partial<ManualRewardData>) => void;
-  onSubmit: () => void;
   onPrevious: () => void;
 }
 
 export default function ApplyRewardStep({
   data,
   onUpdate,
-  onSubmit,
-  onPrevious,
+  onPrevious: _onPrevious,
 }: ApplyRewardStepProps) {
   const { t } = useLanguage();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   // Convert manual reward data to generic scheduling format
   const schedulingData: SchedulingData = {
     type: data.applyType === "now" ? "immediate" : "scheduled",
-    start_date: data.applyDate ? `${data.applyDate}T${data.applyTime || "00:00"}` : undefined,
+    start_date: data.applyDate
+      ? `${data.applyDate}T${data.applyTime || "00:00"}`
+      : undefined,
     time_zone: "(GMT+02:00) Sudan",
   };
 
@@ -45,38 +44,6 @@ export default function ApplyRewardStep({
         applyDate: undefined,
         applyTime: undefined,
       });
-    }
-
-    // Always ensure the parent data is up to date
-    setIsSubmitting(false);
-  };
-
-  const handleApplyReward = async () => {
-    // Validate before applying
-    if (data.applyType === "later") {
-      if (!data.applyDate || !data.applyTime) {
-        setError(t.manualRewards.errorSelectDate);
-        return;
-      }
-      // Check if scheduled time is in the future
-      const scheduledDateTime = new Date(`${data.applyDate}T${data.applyTime}`);
-      if (scheduledDateTime <= new Date()) {
-        setError(t.manualRewards.errorFutureDateTime);
-        return;
-      }
-    }
-
-    setError("");
-    setIsSubmitting(true);
-
-    try {
-      // Submit
-      await onSubmit();
-    } catch (err) {
-      console.error("Failed to submit:", err);
-      setError(t.manualRewards.errorCreateReward);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -158,13 +125,13 @@ export default function ApplyRewardStep({
               {data.applyType === "now"
                 ? t.manualRewards.summaryApplyNow
                 : data.applyDate && data.applyTime
-                ? t.manualRewards.summaryScheduled.replace(
-                    "{dateTime}",
-                    `${new Date(
-                      `${data.applyDate}T${data.applyTime}`
-                    ).toLocaleString()}`
-                  )
-                : t.manualRewards.summaryNotSet}
+                  ? t.manualRewards.summaryScheduled.replace(
+                      "{dateTime}",
+                      `${new Date(
+                        `${data.applyDate}T${data.applyTime}`,
+                      ).toLocaleString()}`,
+                    )
+                  : t.manualRewards.summaryNotSet}
             </span>
           </div>
         </div>
@@ -215,7 +182,6 @@ export default function ApplyRewardStep({
           </p>
         </div>
       </div>
-
     </div>
   );
 }

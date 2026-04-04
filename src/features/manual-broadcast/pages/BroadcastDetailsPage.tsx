@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  ArrowLeft,
   Mail,
   MessageSquare,
   Phone,
@@ -10,6 +9,7 @@ import {
   Clock,
 } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
+import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { communicationService } from "../../communications/services/communicationService";
 import {
@@ -129,22 +129,11 @@ export default function BroadcastDetailsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <button
-          onClick={() => navigate("/dashboard/manual-communications")}
-          className={`p-2 ${tw.rounded} hover:bg-gray-100 transition-colors`}
-        >
-          <ArrowLeft className="w-5 h-5 text-gray-600" />
-        </button>
-        <div>
-          <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
-            Broadcast Details
-          </h1>
-          <p className={`${tw.textSecondary} mt-1 text-sm`}>
-            Execution ID: {execution.execution_id || execution.id}
-          </p>
-        </div>
-      </div>
+      <BackButton
+        fallbackTo="/dashboard/manual-broadcasts"
+        showBreadcrumb={true}
+        currentLabel="Broadcast Details"
+      />
 
       {/* Overview Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

@@ -48,53 +48,52 @@ export default function TargetAudienceStep({
 
   // Sync local state with data prop whenever component mounts or data changes
   useEffect(() => {
+    console.log("[TargetAudienceStep] useEffect triggered with data:", {
+      audienceName: data.audienceName,
+      inputMethod: data.inputMethod,
+      uploadType: data.uploadType,
+      quicklistId: data.quicklistId,
+      audienceFileText: data.audienceFileText ? `[${data.audienceFileText.length} chars]` : undefined,
+    });
+
     setListName(data.audienceName || "");
     setListType(data.uploadType || "");
     setInputMethod((data.inputMethod as "file" | "manual") || "");
     setManualInput(data.audienceFileText || "");
 
+    console.log("[TargetAudienceStep] Setting manual input to:", data.audienceFileText);
+
     // Restore selected quicklist if they had selected one
     if (data.inputMethod === "file" && data.quicklistId) {
-      // Use pre-fetched quicklist data if available (from edit mode)
-      if (data.quicklist) {
-        setSelectedQuickList({
-          id: data.quicklist.id,
-          name: data.quicklist.name,
-          upload_type: data.quicklist.processing_status || "multi",
-          row_count: data.quicklist.rows_imported || 0,
-          created_at: data.quicklist.created_at,
-        });
-      } else {
-        // Otherwise try to fetch the actual quicklist details
-        quicklistService
-          .getQuickListById(data.quicklistId)
-          .then((response) => {
-            if (response.data) {
-              setSelectedQuickList({
-                id: response.data.id,
-                name: response.data.name,
-                upload_type: response.data.processing_status || "multi",
-                row_count: response.data.rows_imported || 0,
-                created_at: response.data.created_at,
-              });
-            }
-          })
-          .catch((err) => {
-            console.error("Failed to load quicklist details:", err);
-            // Fallback to minimal info we have
-            setSelectedQuickList({
-              id: data.quicklistId,
-              name: "QuickList",
-              upload_type: data.uploadType || "multi",
-              row_count: data.rowCount || 0,
-              created_at: new Date().toISOString(),
-            });
+      // Only update if selectedQuickList doesn't already match the quicklistId
+      // This prevents clearing the selected quicklist when parent re-renders
+      if (!selectedQuickList || selectedQuickList.id !== data.quicklistId) {
+        console.log("[TargetAudienceStep] Restoring quicklist:", data.quicklistId);
+        // Use pre-fetched quicklist data if available (from edit mode)
+        if (data.quicklist) {
+          setSelectedQuickList({
+            id: data.quicklist.id,
+            name: data.quicklist.name,
+            upload_type: data.quicklist.processing_status || "multi",
+            row_count: data.quicklist.rows_imported || 0,
+            created_at: data.quicklist.created_at,
           });
+        } else {
+          // Otherwise use the quicklist data we have from parent
+          setSelectedQuickList({
+            id: data.quicklistId,
+            name: data.quicklist?.name || "QuickList",
+            upload_type: data.uploadType || "multi",
+            row_count: data.rowCount || 0,
+            created_at: new Date().toISOString(),
+          });
+        }
       }
-    } else {
+    } else if (data.inputMethod !== "file") {
+      console.log("[TargetAudienceStep] Clearing quicklist (inputMethod:", data.inputMethod, ")");
       setSelectedQuickList(null);
     }
-  }, [data]);
+  }, [data.inputMethod, data.quicklistId, data.uploadType, data.rowCount]);
 
   const inputMethodOptions = [
     { value: "", label: "Select option" },
@@ -142,12 +141,17 @@ export default function TargetAudienceStep({
       : inputMethod === "file" && selectedQuickList);
 
   const handleSelectQuickList = (quicklist: QuickListItem) => {
+    console.log("[TargetAudienceStep] Quicklist selected:", quicklist.name, quicklist.id);
     setSelectedQuickList(quicklist);
     setError("");
     setShowPickerModal(false);
     // Immediately update parent state so selection is preserved when navigating
     // IMPORTANT: Clear the cached quicklist object so it doesn't restore the old one
+    console.log("[TargetAudienceStep] Calling onUpdate with quicklistId:", quicklist.id);
     onUpdate({
+      audienceName: listName, // Preserve broadcast name!
+      uploadType: listType, // Preserve list type!
+      inputMethod: "file",
       quicklistId: quicklist.id,
       rowCount: quicklist.row_count,
       quicklist: null, // Clear cached data to force fresh load
@@ -178,6 +182,9 @@ export default function TargetAudienceStep({
         // Immediately update parent state so selection is preserved when navigating
         // IMPORTANT: Clear the cached quicklist object so it doesn't restore an old one
         onUpdate({
+          audienceName: listName, // Preserve broadcast name!
+          uploadType: listType, // Preserve list type!
+          inputMethod: "file",
           quicklistId: quicklistId,
           rowCount: rowsImported,
           quicklist: null, // Clear cached data
@@ -190,6 +197,14 @@ export default function TargetAudienceStep({
   };
 
   const handleNext = async () => {
+    console.log("[TargetAudienceStep] handleNext called with:", {
+      isFormValid,
+      inputMethod,
+      listName,
+      manualInputLength: manualInput.length,
+      selectedQuickListId: selectedQuickList?.id,
+    });
+
     if (!isFormValid) {
       if (inputMethod === "file" && !selectedQuickList) {
         setError("Please select or create a quicklist");
@@ -202,6 +217,7 @@ export default function TargetAudienceStep({
       } else {
         setError("Please fill in all required fields");
       }
+      console.log("[TargetAudienceStep] Form validation failed");
       return;
     }
 
@@ -248,6 +264,10 @@ export default function TargetAudienceStep({
         updateData.rowCount = recipientLines.length;
       }
 
+      console.log("[TargetAudienceStep] Calling onUpdate with data:", {
+        ...updateData,
+        audienceFileText: updateData.audienceFileText ? `[${updateData.audienceFileText.length} chars]` : undefined,
+      });
       onUpdate(updateData);
 
       // Move to next step
@@ -422,25 +442,29 @@ export default function TargetAudienceStep({
             <textarea
               value={manualInput}
               onChange={(e) => {
-                // Allow letters, digits, newlines, @._+- and formatting chars (space, parentheses, dash) for emails and phone numbers
                 const value = e.target.value;
-                const filtered = value.replace(/[^a-zA-Z0-9\n@._+\-()\s]/g, "");
-                setManualInput(filtered);
+                console.log("[TargetAudienceStep] Manual input changed:", {
+                  length: value.length,
+                  value: value.substring(0, 50) + (value.length > 50 ? "..." : ""),
+                });
+                setManualInput(value);
                 setError("");
                 // Check for validation errors in real-time
-                setTimeout(() => {
-                  const lines = filtered.split("\n").filter((line) => line.trim());
-                  if (lines.length > 0) {
-                    const validation = validateContacts(lines);
-                    if (!validation.valid) {
-                      setManualInputError("Please enter valid emails or phone numbers (phone numbers must begin with country code)");
-                    } else {
-                      setManualInputError("");
-                    }
+                const lines = value.split("\n").filter((line) => line.trim());
+                if (lines.length > 0) {
+                  const validation = validateContacts(lines);
+                  console.log("[TargetAudienceStep] Validation result:", {
+                    lineCount: lines.length,
+                    isValid: validation.valid,
+                  });
+                  if (!validation.valid) {
+                    setManualInputError("Please enter valid emails or phone numbers (phone numbers must begin with country code)");
                   } else {
                     setManualInputError("");
                   }
-                }, 0);
+                } else {
+                  setManualInputError("");
+                }
               }}
               placeholder="Enter emails or phone numbers (one per line)&#10;Phone numbers must begin with country code&#10;&#10;Example:&#10;john@example.com&#10;jane@example.com&#10;254 764 555 247&#10;(254) 764-5524"
               rows={10}

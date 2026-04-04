@@ -5,9 +5,7 @@ import { ManualBroadcastData } from "../pages/CreateManualBroadcastPage";
 interface ScheduleStepProps {
   data: ManualBroadcastData;
   onUpdate: (data: Partial<ManualBroadcastData>) => void;
-  onSubmit: () => void;
   onPrevious: () => void;
-  isEditMode?: boolean;
 }
 
 /**
@@ -18,14 +16,14 @@ interface ScheduleStepProps {
 export default function ScheduleStep({
   data,
   onUpdate,
-  onSubmit,
-  onPrevious,
-  isEditMode = false,
+  onPrevious: _onPrevious,
 }: ScheduleStepProps) {
   // Convert manual broadcast data to generic scheduling format
   const schedulingData: SchedulingData = {
     type: data.scheduleType === "now" ? "immediate" : "scheduled",
-    start_date: data.scheduleDate ? `${data.scheduleDate}T${data.scheduleTime || "00:00"}` : undefined,
+    start_date: data.scheduleDate
+      ? `${data.scheduleDate}T${data.scheduleTime || "00:00"}`
+      : undefined,
     time_zone: "(GMT+02:00) Sudan",
   };
 
@@ -47,24 +45,6 @@ export default function ScheduleStep({
     }
   };
 
-  const handlePreviewSchedule = () => {
-    // Validate before preview
-    if (data.scheduleType === "later") {
-      if (!data.scheduleDate || !data.scheduleTime) {
-        console.warn("Please select date and time");
-        return;
-      }
-      // Check if scheduled time is in the future
-      const scheduledDateTime = new Date(`${data.scheduleDate}T${data.scheduleTime}`);
-      if (scheduledDateTime <= new Date()) {
-        console.warn("Scheduled time must be in the future");
-        return;
-      }
-    }
-    // Then submit
-    onSubmit();
-  };
-
   return (
     <div>
       <SchedulingComponent
@@ -74,7 +54,6 @@ export default function ScheduleStep({
         subtitle="Set when this broadcast will be sent to your audience"
         showPreviewButton={false}
       />
-
     </div>
   );
 }

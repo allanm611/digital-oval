@@ -14,6 +14,8 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import countries from "world-countries";
 import currencyCodes from "currency-codes";
 import { PermissionGate } from "../../auth/components/PermissionGate";
+import { characterSetService } from "../../configurations/services/characterSetService";
+import { senderIdService } from "../../configurations/services/senderIdService";
 
 // Get all countries from world-countries library, sorted alphabetically
 const countriesList = countries
@@ -112,14 +114,6 @@ const dateFormats = [
 
 const numberFormats = ["1,234.56", "1 234,56", "1.234,56", "1'234.56"];
 
-// Character Sets for SMS encoding
-const characterSets = [
-  { value: "gsm-7", label: "GSM-7 (Standard SMS)" },
-  { value: "utf-8", label: "UTF-8 (Unicode)" },
-  { value: "ascii", label: "ASCII (English only)" },
-  { value: "ucs-2", label: "UCS-2 (Full Unicode)" },
-];
-
 // Default communication channels
 const communicationChannels = [
   { value: "sms", label: "SMS" },
@@ -128,15 +122,6 @@ const communicationChannels = [
   { value: "push", label: "Push Notification" },
   { value: "ivr", label: "IVR" },
   { value: "voice", label: "Voice" },
-];
-
-// Default Sender IDs - Using actual hardcoded data from configurationPageConfigs
-const senderIds = [
-  { value: "Effortel", label: "Effortel" },
-  { value: "Equitel", label: "Equitel" },
-  { value: "EquitelKE", label: "EquitelKE" },
-  { value: "EquitelAlert", label: "EquitelAlert" },
-  { value: "EquitelPromo", label: "EquitelPromo" },
 ];
 
 // Routes - Using actual hardcoded data from configurationPageConfigs
@@ -252,10 +237,10 @@ export default function SettingsPage() {
           date_format: parsed.date_format || "YYYY-MM-DD",
           currency: parsed.currency || "KES",
           number_formatting: parsed.number_formatting || "1,234.56",
-          character_set: parsed.character_set || "gsm-7",
+          character_set: parsed.character_set || "",
           default_communication_channel:
             parsed.default_communication_channel || "sms",
-          default_sender_id: parsed.default_sender_id || "Effortel",
+          default_sender_id: parsed.default_sender_id || "",
           default_route: parsed.default_route || "Effortel SMS Gateway",
           dnd_enabled:
             parsed.dnd_enabled !== undefined ? parsed.dnd_enabled : true,
@@ -278,9 +263,9 @@ export default function SettingsPage() {
       date_format: "YYYY-MM-DD",
       currency: "KES",
       number_formatting: "1,234.56",
-      character_set: "gsm-7",
+      character_set: "",
       default_communication_channel: "sms",
-      default_sender_id: "Effortel",
+      default_sender_id: "",
       default_route: "Effortel SMS Gateway",
       dnd_enabled: true,
       dnd_start_time: "21:00",
@@ -294,6 +279,15 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState<SettingsType>(loadSettings());
   const [isSaving, setIsSaving] = useState(false);
   const [originalSettings] = useState<SettingsType>(loadSettings());
+  const [characterSetOptions, setCharacterSetOptions] = useState<
+    Array<{ value: string; label: string }>
+  >([]);
+  const [senderIdOptions, setSenderIdOptions] = useState<
+    Array<{ value: string; label: string }>
+  >([]);
+  const [characterSetDescriptions, setCharacterSetDescriptions] = useState<
+    Record<string, string>
+  >({});
 
   // Notification types enabled/disabled
   const [enabledNotificationTypes, setEnabledNotificationTypes] = useState<
@@ -341,6 +335,95 @@ export default function SettingsPage() {
       window.removeEventListener("storage", handleStorageChange);
     };
   }, [setLanguage]);
+
+  useEffect(() => {
+    const loadDynamicOptions = async () => {
+      try {
+        const [characterSetResponse, senderIdResponse] = await Promise.all([
+          characterSetService.getCharacterSets(),
+          senderIdService.getSenderIds(),
+        ]);
+
+        const characterSets = Array.isArray(characterSetResponse)
+          ? characterSetResponse
+          : (
+              characterSetResponse as {
+                success?: boolean;
+                data?: Array<{
+                  name?: string;
+                  description?: string;
+                  is_active?: boolean;
+                }>;
+              }
+            )?.data || [];
+
+        const activeCharacterSets = characterSets.filter(
+          (item) => item?.is_active ?? true,
+        );
+
+        const fetchedCharacterSetOptions = activeCharacterSets
+          .map((item) => ({
+            value: String(item?.name || "").trim(),
+            label: String(item?.name || "").trim(),
+          }))
+          .filter((item) => item.value);
+
+        const fetchedCharacterSetDescriptions = activeCharacterSets.reduce(
+          (acc, item) => {
+            const key = String(item?.name || "").trim();
+            if (key) {
+              acc[key] = String(item?.description || "").trim();
+            }
+            return acc;
+          },
+          {} as Record<string, string>,
+        );
+
+        setCharacterSetOptions(fetchedCharacterSetOptions);
+        setCharacterSetDescriptions(fetchedCharacterSetDescriptions);
+
+        const senderIds = Array.isArray(senderIdResponse)
+          ? senderIdResponse
+          : (
+              senderIdResponse as {
+                success?: boolean;
+                data?: Array<{ name?: string; is_active?: boolean }>;
+              }
+            )?.data || [];
+
+        const fetchedSenderIdOptions = senderIds
+          .filter((item) => item?.is_active ?? true)
+          .map((item) => ({
+            value: String(item?.name || "").trim(),
+            label: String(item?.name || "").trim(),
+          }))
+          .filter((item) => item.value);
+
+        setSenderIdOptions(fetchedSenderIdOptions);
+
+        setSettings((prev) => ({
+          ...prev,
+          character_set: fetchedCharacterSetOptions.some(
+            (option) => option.value === prev.character_set,
+          )
+            ? prev.character_set
+            : fetchedCharacterSetOptions[0]?.value || prev.character_set,
+          default_sender_id: fetchedSenderIdOptions.some(
+            (option) => option.value === prev.default_sender_id,
+          )
+            ? prev.default_sender_id
+            : fetchedSenderIdOptions[0]?.value || prev.default_sender_id,
+        }));
+      } catch (error) {
+        console.error("Failed to fetch character sets or sender IDs:", error);
+        setCharacterSetOptions([]);
+        setSenderIdOptions([]);
+        setCharacterSetDescriptions({});
+      }
+    };
+
+    loadDynamicOptions();
+  }, []);
 
   const handleCountryChange = (countryName: string) => {
     const selectedCountry = getCountryByName(countryName);
@@ -474,11 +557,7 @@ export default function SettingsPage() {
     label: format,
   }));
 
-  const characterSetOptions = characterSets;
-
   const communicationChannelOptions = communicationChannels;
-
-  const senderIdOptions = senderIds;
 
   const routeOptions = routes;
 
@@ -780,14 +859,8 @@ export default function SettingsPage() {
               placeholder="Select character set"
             />
             <p className="text-xs text-gray-500 mt-3">
-              {settings.character_set === "gsm-7" &&
-                "Standard SMS encoding, supports most languages with optimal message length."}
-              {settings.character_set === "utf-8" &&
-                "Full Unicode support for complex characters and multiple languages."}
-              {settings.character_set === "ascii" &&
-                "English-only encoding, most compact format."}
-              {settings.character_set === "ucs-2" &&
-                "Complete Unicode support for all international characters."}
+              {characterSetDescriptions[settings.character_set] ||
+                "SMS encoding used for message delivery."}
             </p>
           </div>
         </div>

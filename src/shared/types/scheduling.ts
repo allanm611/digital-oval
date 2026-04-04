@@ -8,6 +8,11 @@ export interface SchedulingData {
   time_zone?: string;
   start_date?: string;
   end_date?: string;
+  recurrence_pattern?: "daily" | "weekly" | "monthly";
+  recurrence_interval?: number;
+  monthly_rule?: "first_day" | "last_day" | "day_of_month";
+  monthly_day_of_month?: number;
+  selected_days?: number[];
   // Additional fields can be added as needed
   [key: string]: any;
 }

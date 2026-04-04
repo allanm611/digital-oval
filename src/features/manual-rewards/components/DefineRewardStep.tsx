@@ -1,5 +1,15 @@
 import { useState, useEffect, useRef } from "react";
-import { AlertCircle, Package, Coins, Percent, DollarSign, ChevronDown } from "lucide-react";
+import {
+  AlertCircle,
+  Package,
+  Coins,
+  Percent,
+  DollarSign,
+  ChevronDown,
+  FlaskConical,
+  CheckCircle,
+  XCircle,
+} from "lucide-react";
 import { color, tw, zIndex, components } from "../../../shared/utils/utils";
 import { ManualRewardData } from "../pages/CreateManualRewardPage";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -7,6 +17,11 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { communicationPolicyService } from "../../campaigns/services/communicationPolicyService";
 import type { CommunicationPolicyConfiguration } from "../../campaigns/types/communicationPolicyConfig";
 import { useClickOutside } from "../../../shared/hooks/useClickOutside";
+import { DUMMY_RECIPIENTS } from "../../campaigns/pages/SeedListManagementPage";
+import {
+  isValidCountryCodePhone,
+  isValidEmail,
+} from "../../../shared/utils/validation";
 
 interface DefineRewardStepProps {
   data: ManualRewardData;
@@ -16,6 +31,12 @@ interface DefineRewardStepProps {
 }
 
 type RewardType = "bundle" | "points" | "discount" | "cashback";
+
+interface RewardSeedTestResult {
+  contact: string;
+  status: "success" | "failed";
+  message: string;
+}
 
 const BUNDLE_TRACKS = [
   "R2TPersAdjustBalCount2",
@@ -31,14 +52,22 @@ export default function DefineRewardStep({
 }: DefineRewardStepProps) {
   const { t } = useLanguage();
   const [rewardType, setRewardType] = useState<RewardType>(
-    (data.rewardType as RewardType) || "bundle"
+    (data.rewardType as RewardType) || "bundle",
   );
   const [rewardValue, setRewardValue] = useState(data.rewardValue || "");
   const [bundleTrack, setBundleTrack] = useState(
-    data.bundleTrack || BUNDLE_TRACKS[0]
+    data.bundleTrack || BUNDLE_TRACKS[0],
   );
   const [description, setDescription] = useState(data.description || "");
   const [error, setError] = useState("");
+  const [isTesting, setIsTesting] = useState(false);
+  const [seedTestError, setSeedTestError] = useState("");
+  const [selectedSeedContacts, setSelectedSeedContacts] = useState<Set<string>>(
+    new Set(data.seedTestContacts || []),
+  );
+  const [seedTestResults, setSeedTestResults] = useState<
+    RewardSeedTestResult[]
+  >([]);
 
   // Communication Policy states
   const [communicationPolicies, setCommunicationPolicies] = useState<
@@ -103,11 +132,91 @@ export default function DefineRewardStep({
     },
   ];
 
+  const activeSeedRecipients = DUMMY_RECIPIENTS.filter(
+    (recipient) => recipient.status === "active",
+  );
+
+  const availableSeedContacts = activeSeedRecipients
+    .map(
+      (recipient) => recipient.customer_phone || recipient.customer_email || "",
+    )
+    .filter(Boolean);
+
+  const resetRewardValidation = () => {
+    setSeedTestResults([]);
+    setSeedTestError("");
+    onUpdate({ rewardValidation: undefined });
+  };
+
+  const toggleSeedContact = (contact: string) => {
+    const next = new Set(selectedSeedContacts);
+    if (next.has(contact)) {
+      next.delete(contact);
+    } else {
+      next.add(contact);
+    }
+    setSelectedSeedContacts(next);
+    onUpdate({ seedTestContacts: Array.from(next) });
+  };
+
+  const validateSeedContact = (contact: string): boolean => {
+    if (contact.includes("@")) {
+      return isValidEmail(contact);
+    }
+    return isValidCountryCodePhone(contact);
+  };
+
+  const handleRunSeedTest = async () => {
+    const contactsToTest = availableSeedContacts.filter((contact) =>
+      selectedSeedContacts.has(contact),
+    );
+
+    if (contactsToTest.length === 0) {
+      setSeedTestError("Select at least one seed-list recipient for testing");
+      return;
+    }
+
+    setIsTesting(true);
+    setSeedTestError("");
+    setSeedTestResults([]);
+
+    const results: RewardSeedTestResult[] = contactsToTest.map((contact) => {
+      const isValid = validateSeedContact(contact);
+      return {
+        contact,
+        status: isValid ? "success" : "failed",
+        message: isValid
+          ? "Test reward payload validated"
+          : "Invalid seed-list contact format",
+      };
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 450));
+
+    const passed = results.filter(
+      (result) => result.status === "success",
+    ).length;
+    const failed = results.length - passed;
+
+    setSeedTestResults(results);
+    onUpdate({
+      seedTestContacts: contactsToTest,
+      rewardValidation: {
+        completed: true,
+        passed,
+        failed,
+        testedAt: new Date().toISOString(),
+      },
+    });
+    setIsTesting(false);
+  };
+
   const handleRewardTypeSelect = (type: RewardType) => {
     setRewardType(type);
     // Reset value when changing type
     setRewardValue("");
     onUpdate({ rewardType: type, rewardValue: "" });
+    resetRewardValidation();
   };
 
   const handleNext = () => {
@@ -127,6 +236,11 @@ export default function DefineRewardStep({
     // For bundle type, validate bundle track
     if (rewardType === "bundle" && !bundleTrack) {
       setError(t.manualRewards.errorBundleTrackRequired);
+      return;
+    }
+
+    if (!data.rewardValidation?.completed) {
+      setError("Run seed-list testing before continuing");
       return;
     }
 
@@ -239,6 +353,7 @@ export default function DefineRewardStep({
               onChange={(e) => {
                 setRewardValue(e.target.value);
                 onUpdate({ rewardValue: e.target.value });
+                resetRewardValidation();
               }}
               className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none focus:ring-2`}
               style={{
@@ -249,10 +364,10 @@ export default function DefineRewardStep({
                 rewardType === "bundle"
                   ? t.manualRewards.rewardValuePlaceholderBundle
                   : rewardType === "points"
-                  ? t.manualRewards.rewardValuePlaceholderPoints
-                  : rewardType === "discount"
-                  ? t.manualRewards.rewardValuePlaceholderDiscount
-                  : t.manualRewards.rewardValuePlaceholderCashback
+                    ? t.manualRewards.rewardValuePlaceholderPoints
+                    : rewardType === "discount"
+                      ? t.manualRewards.rewardValuePlaceholderDiscount
+                      : t.manualRewards.rewardValuePlaceholderCashback
               }
               min="0"
               step="0.01"
@@ -268,10 +383,10 @@ export default function DefineRewardStep({
             {rewardType === "bundle"
               ? t.manualRewards.rewardValueHelperBundle
               : rewardType === "points"
-              ? t.manualRewards.rewardValueHelperPoints
-              : rewardType === "discount"
-              ? t.manualRewards.rewardValueHelperDiscount
-              : t.manualRewards.rewardValueHelperCashback}
+                ? t.manualRewards.rewardValueHelperPoints
+                : rewardType === "discount"
+                  ? t.manualRewards.rewardValueHelperDiscount
+                  : t.manualRewards.rewardValueHelperCashback}
           </p>
         </div>
 
@@ -292,6 +407,7 @@ export default function DefineRewardStep({
               onChange={(value) => {
                 setBundleTrack(value as string);
                 onUpdate({ bundleTrack: value as string });
+                resetRewardValidation();
               }}
               placeholder={t.manualRewards.bundleTrackPlaceholder}
               zIndex={zIndex.popover}
@@ -370,6 +486,7 @@ export default function DefineRewardStep({
                       onClick={() => {
                         setSelectedPolicy(policy);
                         onUpdate({ selectedCommunicationPolicyId: policy.id });
+                        resetRewardValidation();
                         setIsPolicyDropdownOpen(false);
                       }}
                       className="w-full text-left px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none border-b last:border-b-0"
@@ -381,7 +498,9 @@ export default function DefineRewardStep({
                             policy.isActive ? "bg-green-500" : "bg-gray-400"
                           }`}
                         ></div>
-                        <div className={`text-sm font-medium ${tw.textPrimary}`}>
+                        <div
+                          className={`text-sm font-medium ${tw.textPrimary}`}
+                        >
                           {policy.name}
                         </div>
                       </div>
@@ -397,7 +516,8 @@ export default function DefineRewardStep({
             )}
           </div>
           <p className={`mt-1 text-xs ${tw.textSecondary}`}>
-            Select a communication policy to control how this reward is delivered to recipients
+            Select a communication policy to control how this reward is
+            delivered to recipients
           </p>
         </div>
 
@@ -412,6 +532,7 @@ export default function DefineRewardStep({
             onChange={(e) => {
               setDescription(e.target.value);
               onUpdate({ description: e.target.value });
+              resetRewardValidation();
             }}
             className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none focus:ring-2`}
             style={{
@@ -421,6 +542,112 @@ export default function DefineRewardStep({
             placeholder={t.manualRewards.descriptionPlaceholder}
             rows={3}
           />
+        </div>
+
+        {/* Seed List Testing */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className={`block text-sm font-medium ${tw.textPrimary}`}>
+              Seed List Test
+            </label>
+            <span className={`text-xs ${tw.textMuted}`}>
+              {selectedSeedContacts.size} selected
+            </span>
+          </div>
+
+          <div
+            className={`p-3 ${tw.rounded} border max-h-40 overflow-y-auto`}
+            style={{ borderColor: color.border.default }}
+          >
+            {availableSeedContacts.length === 0 ? (
+              <p className={`text-sm ${tw.textMuted}`}>
+                No active seed-list recipients available.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {availableSeedContacts.map((contact) => (
+                  <label
+                    key={contact}
+                    className="flex items-center gap-2 text-sm text-gray-700"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedSeedContacts.has(contact)}
+                      onChange={() => toggleSeedContact(contact)}
+                    />
+                    <span>{contact}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={handleRunSeedTest}
+            disabled={isTesting || availableSeedContacts.length === 0}
+            className={`mt-3 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border ${tw.rounded} disabled:opacity-50`}
+            style={{
+              borderColor: color.border.default,
+              color: color.text.primary,
+              backgroundColor: "white",
+            }}
+          >
+            <FlaskConical className="w-4 h-4" />
+            {isTesting ? "Testing..." : "Run Seed-List Test"}
+          </button>
+
+          {seedTestError && (
+            <p className="mt-2 text-sm" style={{ color: color.status.danger }}>
+              {seedTestError}
+            </p>
+          )}
+
+          {data.rewardValidation?.completed && (
+            <p className={`mt-2 text-xs ${tw.textMuted}`}>
+              Last test: {data.rewardValidation.passed} passed,{" "}
+              {data.rewardValidation.failed} failed
+            </p>
+          )}
+
+          {seedTestResults.length > 0 && (
+            <div className="mt-3 space-y-2">
+              {seedTestResults.map((result) => (
+                <div
+                  key={`${result.contact}-${result.status}`}
+                  className={`p-2 ${tw.rounded} border flex items-center gap-2`}
+                  style={{
+                    borderColor:
+                      result.status === "success"
+                        ? `${color.status.success}40`
+                        : `${color.status.danger}40`,
+                    backgroundColor:
+                      result.status === "success"
+                        ? `${color.status.success}10`
+                        : `${color.status.danger}10`,
+                  }}
+                >
+                  {result.status === "success" ? (
+                    <CheckCircle
+                      className="w-4 h-4"
+                      style={{ color: color.status.success }}
+                    />
+                  ) : (
+                    <XCircle
+                      className="w-4 h-4"
+                      style={{ color: color.status.danger }}
+                    />
+                  )}
+                  <div className="text-xs">
+                    <div className={`font-medium ${tw.textPrimary}`}>
+                      {result.contact}
+                    </div>
+                    <div className={tw.textMuted}>{result.message}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Error Message */}
@@ -442,7 +669,6 @@ export default function DefineRewardStep({
           </div>
         )}
       </div>
-
     </div>
   );
 }

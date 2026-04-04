@@ -3,12 +3,12 @@ import { useNavigate } from "react-router-dom";
 import {
   Gift,
   Search,
+  Eye,
   Edit,
   Trash2,
   CheckCircle,
   Clock,
   Users,
-  ArrowLeft,
 } from "lucide-react";
 import { color, tw, components } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
@@ -16,90 +16,12 @@ import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import DateFormatter from "../../../shared/components/DateFormatter";
-import RegularModal from "../../../shared/components/ui/RegularModal";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import BackButton from "../../../shared/components/ui/BackButton";
 import Pagination from "../../../shared/components/ui/Pagination";
 import { PermissionGate } from "../../auth/components/PermissionGate";
-
-// Dummy data for manual rewards
-interface ManualReward {
-  id: number;
-  name: string;
-  rewardType: "bundle" | "points" | "discount" | "cashback";
-  rewardValue: string;
-  recipientCount: number;
-  status: "pending" | "applied" | "scheduled" | "failed";
-  appliedCount: number;
-  failedCount: number;
-  scheduledAt?: string;
-  createdAt: string;
-  createdBy: string;
-}
-
-const dummyManualRewards: ManualReward[] = [
-  {
-    id: 1,
-    name: "VIP Customer Bonus Q4",
-    rewardType: "bundle",
-    rewardValue: "500 MB",
-    recipientCount: 125,
-    status: "applied",
-    appliedCount: 123,
-    failedCount: 2,
-    createdAt: "2025-12-01T10:30:00Z",
-    createdBy: "Admin User",
-  },
-  {
-    id: 2,
-    name: "New Year Points Reward",
-    rewardType: "points",
-    rewardValue: "1000 Points",
-    recipientCount: 250,
-    status: "scheduled",
-    appliedCount: 0,
-    failedCount: 0,
-    scheduledAt: "2025-01-01T00:00:00Z",
-    createdAt: "2025-12-08T14:15:00Z",
-    createdBy: "Marketing Team",
-  },
-  {
-    id: 3,
-    name: "Holiday Discount Special",
-    rewardType: "discount",
-    rewardValue: "25%",
-    recipientCount: 350,
-    status: "applied",
-    appliedCount: 345,
-    failedCount: 5,
-    createdAt: "2025-11-25T09:00:00Z",
-    createdBy: "Sales Manager",
-  },
-  {
-    id: 4,
-    name: "Loyalty Cashback Reward",
-    rewardType: "cashback",
-    rewardValue: "KES 100",
-    recipientCount: 80,
-    status: "pending",
-    appliedCount: 0,
-    failedCount: 0,
-    createdAt: "2025-12-09T08:45:00Z",
-    createdBy: "Admin User",
-  },
-  {
-    id: 5,
-    name: "Weekend Data Bonus",
-    rewardType: "bundle",
-    rewardValue: "1 GB",
-    recipientCount: 200,
-    status: "failed",
-    appliedCount: 150,
-    failedCount: 50,
-    createdAt: "2025-12-05T16:20:00Z",
-    createdBy: "Support Team",
-  },
-];
+import { dummyManualRewards } from "../data/dummyManualRewards";
+import type { ManualReward } from "../types/manualReward";
 
 export default function ManualRewardsPage() {
   const navigate = useNavigate();
@@ -114,16 +36,6 @@ export default function ManualRewardsPage() {
   const [selectedStatus, setSelectedStatus] = useState<string>("");
   const [selectedType, setSelectedType] = useState<string>("");
 
-  // Edit modal state
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [rewardToEdit, setRewardToEdit] = useState<ManualReward | null>(null);
-  const [editFormData, setEditFormData] = useState({
-    name: "",
-    rewardType: "bundle" as ManualReward["rewardType"],
-    rewardValue: "",
-    description: "",
-  });
-  const [isSaving, setIsSaving] = useState(false);
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(20);
@@ -166,39 +78,11 @@ export default function ManualRewardsPage() {
     setRewardToDelete(null);
   };
 
-  const handleEdit = (reward: ManualReward) => {
-    setRewardToEdit(reward);
-    setEditFormData({
-      name: reward.name,
-      rewardType: reward.rewardType,
-      rewardValue: reward.rewardValue.replace(/[^0-9.]/g, ""), // Extract numeric value
-      description: "",
-    });
-    setShowEditModal(true);
+
+  const handleViewDetails = (rewardId: number) => {
+    navigate(`/dashboard/manual-rewards/${rewardId}`);
   };
 
-  const handleCloseEditModal = () => {
-    setShowEditModal(false);
-    setRewardToEdit(null);
-  };
-
-  const handleSaveEdit = async () => {
-    if (!rewardToEdit) return;
-
-    setIsSaving(true);
-    try {
-      // TODO: Implement actual update API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      showToast(`Reward "${editFormData.name}" updated successfully!`);
-      setShowEditModal(false);
-      setRewardToEdit(null);
-    } catch (err) {
-      console.error("Failed to update reward:", err);
-      showError("Failed to update reward", "Please try again later.");
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
   const getRewardTypeLabel = (type: ManualReward["rewardType"]) => {
     switch (type) {
@@ -278,10 +162,21 @@ export default function ManualRewardsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-        <BackButton fallbackTo="/dashboard" showBreadcrumb={true} currentLabel="Manual Rewards" />
+        <BackButton
+          fallbackTo="/dashboard/manual-broadcasts"
+          showBreadcrumb={true}
+          currentLabel="Manual Rewards"
+        />
         <div className="flex items-center gap-3">
           <PermissionGate permission="manual-rewards.create">
-            <CreateButton route="/dashboard/manual-rewards/create" />
+            <CreateButton
+              route="/dashboard/manual-rewards/create"
+              navigationState={{
+                returnTo: {
+                  pathname: "/dashboard/manual-rewards",
+                },
+              }}
+            />
           </PermissionGate>
         </div>
       </div>
@@ -434,7 +329,7 @@ export default function ManualRewardsPage() {
                       <div>
                         <button
                           type="button"
-                          onClick={() => handleEdit(reward)}
+                          onClick={() => handleViewDetails(reward.id)}
                           className={`font-semibold text-sm sm:text-base ${tw.textPrimary} truncate`}
                           title={reward.name}
                         >
@@ -479,9 +374,24 @@ export default function ManualRewardsPage() {
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       <div className="flex items-center justify-center space-x-2">
+                        <button
+                          onClick={() => handleViewDetails(reward.id)}
+                          className={`p-1 ${tw.rounded} text-gray-600 hover:text-gray-800 transition-colors cursor-pointer`}
+                          title="View details"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
                         <PermissionGate permission="manual-rewards.update">
                           <button
-                            onClick={() => handleEdit(reward)}
+                            onClick={() =>
+                              navigate(`/dashboard/manual-rewards/${reward.id}/edit`, {
+                                state: {
+                                  returnTo: {
+                                    pathname: "/dashboard/manual-rewards",
+                                  },
+                                },
+                              })
+                            }
                             className={`p-1 ${tw.rounded} text-gray-600 hover:text-gray-800 transition-colors cursor-pointer`}
                             title="Edit"
                           >
@@ -530,157 +440,6 @@ export default function ManualRewardsPage() {
         cancelText="Cancel"
       />
 
-      {/* Edit Reward Modal */}
-      <RegularModal
-        isOpen={showEditModal}
-        onClose={handleCloseEditModal}
-        title="Edit Manual Reward"
-        size="lg"
-      >
-        <div className="space-y-6">
-          {/* Reward Name */}
-          <div>
-            <label
-              className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-            >
-              {t.manualRewards.listNameLabel}
-            </label>
-            <input
-              type="text"
-              value={editFormData.name}
-              onChange={(e) =>
-                setEditFormData((prev) => ({ ...prev, name: e.target.value }))
-              }
-              className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none focus:ring-2`}
-              style={{
-                borderColor: color.border.default,
-                color: color.text.primary,
-              }}
-              placeholder={t.manualRewards.listNamePlaceholder}
-            />
-          </div>
-
-          {/* Reward Type */}
-          <div>
-            <label
-              className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-            >
-              {t.manualRewards.rewardTypeLabel}
-            </label>
-            <HeadlessSelect
-              options={[
-                { value: "bundle", label: t.manualRewards.rewardTypeBundle },
-                { value: "points", label: t.manualRewards.rewardTypePoints },
-                {
-                  value: "discount",
-                  label: t.manualRewards.rewardTypeDiscount,
-                },
-                {
-                  value: "cashback",
-                  label: t.manualRewards.rewardTypeCashback,
-                },
-              ]}
-              value={editFormData.rewardType}
-              onChange={(value) =>
-                setEditFormData((prev) => ({
-                  ...prev,
-                  rewardType: value as ManualReward["rewardType"],
-                }))
-              }
-              placeholder="Select reward type"
-            />
-          </div>
-
-          {/* Reward Value */}
-          <div>
-            <label
-              className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-            >
-              {t.manualRewards.rewardValueLabel}
-            </label>
-            <input
-              type="text"
-              value={editFormData.rewardValue}
-              onChange={(e) =>
-                setEditFormData((prev) => ({
-                  ...prev,
-                  rewardValue: e.target.value,
-                }))
-              }
-              className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none focus:ring-2`}
-              style={{
-                borderColor: color.border.default,
-                color: color.text.primary,
-              }}
-              placeholder={
-                editFormData.rewardType === "bundle"
-                  ? t.manualRewards.rewardValuePlaceholderBundle
-                  : editFormData.rewardType === "points"
-                    ? t.manualRewards.rewardValuePlaceholderPoints
-                    : editFormData.rewardType === "discount"
-                      ? t.manualRewards.rewardValuePlaceholderDiscount
-                      : t.manualRewards.rewardValuePlaceholderCashback
-              }
-            />
-          </div>
-
-          {/* Description */}
-          <div>
-            <label
-              className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-            >
-              {t.manualRewards.descriptionLabel}{" "}
-              <span className={tw.textMuted}>({t.manualRewards.optional})</span>
-            </label>
-            <textarea
-              value={editFormData.description}
-              onChange={(e) =>
-                setEditFormData((prev) => ({
-                  ...prev,
-                  description: e.target.value,
-                }))
-              }
-              className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none focus:ring-2`}
-              style={{
-                borderColor: color.border.default,
-                color: color.text.primary,
-              }}
-              placeholder={t.manualRewards.descriptionPlaceholder}
-              rows={3}
-            />
-          </div>
-
-          {/* Action Buttons */}
-          <div
-            className="flex justify-end gap-3 pt-4 border-t"
-            style={{ borderColor: color.border.default }}
-          >
-            <button
-              onClick={handleCloseEditModal}
-              disabled={isSaving}
-              className={`px-4 py-2 text-sm font-medium ${tw.rounded} border transition-colors`}
-              style={{
-                borderColor: color.border.default,
-                color: color.text.primary,
-              }}
-            >
-              {t.common.cancel}
-            </button>
-            <button
-              onClick={handleSaveEdit}
-              disabled={
-                isSaving ||
-                !editFormData.name.trim() ||
-                !editFormData.rewardValue.trim()
-              }
-              className={`px-4 py-2 text-sm font-medium text-white ${tw.rounded} transition-colors disabled:opacity-50`}
-              style={{ backgroundColor: color.primary.action }}
-            >
-              {isSaving ? t.common.loading : t.common.save}
-            </button>
-          </div>
-        </div>
-      </RegularModal>
     </div>
   );
 }

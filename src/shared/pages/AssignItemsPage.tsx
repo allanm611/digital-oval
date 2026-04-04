@@ -167,7 +167,13 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
               limit: 100,
               skipCache: true,
             });
-            itemsData = (response.data || []) as Offer[];
+            itemsData = ((response.data || []) as Offer[]).filter((offer) => {
+              const status = String(offer.status || "").toLowerCase();
+              const lifecycleStatus = String(
+                offer.lifecycle_status || "",
+              ).toLowerCase();
+              return status !== "archived" && lifecycleStatus !== "archived";
+            });
             break;
           case "products":
             response = await productService.getAllProducts({
@@ -222,7 +228,10 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
               offset += limit;
             }
 
-            itemsData = allCampaigns;
+            itemsData = allCampaigns.filter((campaign) => {
+              const status = String(campaign.status || "").toLowerCase();
+              return status !== "archived" && !campaign.deleted_at;
+            });
             break;
         }
 

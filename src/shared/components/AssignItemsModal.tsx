@@ -185,7 +185,9 @@ function AssignItemsModal({
               limit: 100,
               skipCache: true,
             });
-            itemsData = (response.data || []) as Offer[];
+            itemsData = (response.data || []).filter(
+              (offer: Offer) => offer.status !== "archived"
+            ) as Offer[];
             break;
           case "products":
             response = await productService.getAllProducts({
@@ -235,7 +237,10 @@ function AssignItemsModal({
               offset += limit;
             }
 
-            itemsData = allCampaigns;
+            // Filter out archived campaigns
+            itemsData = allCampaigns.filter(
+              (campaign: BackendCampaignType) => campaign.status !== "archived"
+            );
             break;
           }
         }

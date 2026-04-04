@@ -1,74 +1,60 @@
-import { AlertCircle, Users, Gift, Calendar, FlaskConical } from "lucide-react";
-import { color, tw } from "../../../shared/utils/utils";
-import { ManualRewardData } from "../pages/CreateManualRewardPage";
+import {
+  AlertCircle,
+  Calendar,
+  MessageSquare,
+  TestTube2,
+  Users,
+} from "lucide-react";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { color, tw } from "../../../shared/utils/utils";
+import { ManualBroadcastData } from "../pages/CreateManualBroadcastPage";
 
-interface PreviewRewardStepProps {
-  data: ManualRewardData;
-  onPrevious: () => void;
+interface BroadcastPreviewStepProps {
+  data: ManualBroadcastData;
+  isEditMode?: boolean;
 }
 
-export default function PreviewRewardStep({
+export default function BroadcastPreviewStep({
   data,
-  onPrevious: _onPrevious,
-}: PreviewRewardStepProps) {
+  isEditMode = false,
+}: BroadcastPreviewStepProps) {
   const { t } = useLanguage();
 
-  const getRewardTypeLabel = () => {
-    switch (data.rewardType) {
-      case "bundle":
-        return t.manualRewards.rewardTypeBundle;
-      case "points":
-        return t.manualRewards.rewardTypePoints;
-      case "discount":
-        return t.manualRewards.rewardTypeDiscount;
-      case "cashback":
-        return t.manualRewards.rewardTypeCashback;
-      default:
-        return "";
-    }
-  };
-
-  const getRewardValueDisplay = () => {
-    if (!data.rewardValue) return "";
-    if (data.rewardType === "discount") {
-      return `${data.rewardValue}%`;
-    }
-    return data.rewardValue;
-  };
-
   const getRecipientCount = (): number => {
-    // If quicklist is selected, use rowCount from quicklist
-    if (data.inputMethod === "file" && data.quicklistId && data.rowCount) {
+    if (data.quicklistId && data.rowCount) {
       return data.rowCount;
     }
 
-    // If manual input is selected, count the lines in audienceFileText
-    if (data.inputMethod === "manual" && data.audienceFileText) {
-      const recipientLines = data.audienceFileText
-        .split("\n")
-        .filter((line) => line.trim());
-      return recipientLines.length;
+    if (data.audienceFileText && data.inputMethod === "manual") {
+      return data.audienceFileText
+        .split(/\n|,/)
+        .map((line) => line.trim())
+        .filter(Boolean).length;
     }
 
-    // Fallback to rowCount if available
     return data.rowCount || 0;
   };
 
-  const getScheduleSummary = () => {
-    if (data.applyType === "now") {
-      return t.manualRewards.summaryApplyNow;
+  const getScheduleSummary = (): string => {
+    if (data.scheduleType === "now") {
+      return t.manualBroadcast.summarySendNow;
     }
 
-    if (data.applyDate && data.applyTime) {
-      return t.manualRewards.summaryScheduled.replace(
+    if (data.scheduleDate && data.scheduleTime) {
+      return t.manualBroadcast.summaryScheduled.replace(
         "{dateTime}",
-        new Date(`${data.applyDate}T${data.applyTime}`).toLocaleString(),
+        new Date(`${data.scheduleDate}T${data.scheduleTime}`).toLocaleString(),
       );
     }
 
-    return t.manualRewards.summaryNotSet;
+    return t.manualBroadcast.summaryNotSet;
   };
+
+  const testSuccessCount =
+    (data.testResults?.successCount as number | undefined) || 0;
+  const testFailedCount =
+    (data.testResults?.failedCount as number | undefined) || 0;
+  const testTotal = testSuccessCount + testFailedCount;
 
   return (
     <div
@@ -76,19 +62,17 @@ export default function PreviewRewardStep({
       style={{ borderColor: color.border.default }}
     >
       <div
-        className="p-4 sm:p-6 border-b"
+        className="p-5 border-b"
         style={{ borderColor: color.border.default }}
       >
-        <h2 className={`text-lg sm:text-xl font-semibold ${tw.textPrimary}`}>
-          {t.manualRewards.previewTitle}
-        </h2>
+        <h2 className={`text-xl font-semibold ${tw.textPrimary}`}>Preview</h2>
         <p className={`text-sm ${tw.textSecondary} mt-1`}>
-          {t.manualRewards.previewSubtitle}
+          Final review before {isEditMode ? "updating" : "sending"} this
+          broadcast.
         </p>
       </div>
 
-      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-        {/* Summary Card */}
+      <div className="p-5 space-y-5">
         <div
           className={`p-4 ${tw.rounded} border`}
           style={{
@@ -100,10 +84,10 @@ export default function PreviewRewardStep({
             className="text-sm font-semibold mb-4"
             style={{ color: color.primary.accent }}
           >
-            {t.manualRewards.rewardSummary}
+            {t.manualBroadcast.broadcastSummary}
           </h3>
+
           <div className="space-y-3">
-            {/* Audience */}
             <div className="flex items-start gap-3">
               <Users
                 className="w-5 h-5 flex-shrink-0 mt-0.5"
@@ -111,45 +95,40 @@ export default function PreviewRewardStep({
               />
               <div className="flex-1 min-w-0">
                 <p className={`text-xs ${tw.textSecondary}`}>
-                  {t.manualRewards.summaryAudience}
+                  {t.manualBroadcast.summaryAudience}
                 </p>
                 <p className={`text-sm font-medium ${tw.textPrimary} mt-0.5`}>
-                  {data.audienceName || t.manualRewards.summaryNotSet}
+                  {data.audienceName || t.manualBroadcast.summaryNotSet}
                 </p>
                 <p className={`text-xs ${tw.textMuted} mt-1`}>
-                  {getRecipientCount().toLocaleString()}{" "}
-                  {t.manualRewards.recipients}
+                  {getRecipientCount().toLocaleString()} recipients
                 </p>
               </div>
             </div>
 
-            {/* Reward */}
             <div className="flex items-start gap-3">
-              <Gift
+              <MessageSquare
                 className="w-5 h-5 flex-shrink-0 mt-0.5"
                 style={{ color: color.text.muted }}
               />
               <div className="flex-1 min-w-0">
                 <p className={`text-xs ${tw.textSecondary}`}>
-                  {t.manualRewards.summaryReward}
+                  {t.manualBroadcast.summaryChannel}
                 </p>
                 <p className={`text-sm font-medium ${tw.textPrimary} mt-0.5`}>
-                  {getRewardTypeLabel()}: {getRewardValueDisplay()}
+                  {data.channel || t.manualBroadcast.summaryNotSet}
                 </p>
-                {data.bundleTrack && (
+                {data.messageTitle && (
                   <p className={`text-xs ${tw.textMuted} mt-1`}>
-                    {t.manualRewards.bundleTrack}: {data.bundleTrack}
+                    Subject: {data.messageTitle}
                   </p>
                 )}
-                {data.description && (
-                  <p className={`text-xs ${tw.textMuted} mt-1`}>
-                    {data.description}
-                  </p>
-                )}
+                <p className={`text-xs ${tw.textMuted} mt-1 line-clamp-3`}>
+                  {data.messageBody || "No message body"}
+                </p>
               </div>
             </div>
 
-            {/* Schedule */}
             <div className="flex items-start gap-3">
               <Calendar
                 className="w-5 h-5 flex-shrink-0 mt-0.5"
@@ -157,7 +136,7 @@ export default function PreviewRewardStep({
               />
               <div className="flex-1 min-w-0">
                 <p className={`text-xs ${tw.textSecondary}`}>
-                  {t.manualRewards.summarySchedule}
+                  {t.manualBroadcast.summarySchedule}
                 </p>
                 <p className={`text-sm font-medium ${tw.textPrimary} mt-0.5`}>
                   {getScheduleSummary()}
@@ -165,25 +144,24 @@ export default function PreviewRewardStep({
               </div>
             </div>
 
-            {/* Communication Policy / Seed List */}
             <div className="flex items-start gap-3">
-              <FlaskConical
+              <TestTube2
                 className="w-5 h-5 flex-shrink-0 mt-0.5"
                 style={{ color: color.text.muted }}
               />
               <div className="flex-1 min-w-0">
                 <p className={`text-xs ${tw.textSecondary}`}>
-                  {t.manualRewards.communicationPolicy || "Communication Policy"}
+                  {t.manualBroadcast.communicationPolicy ||
+                    "Communication Policy"}
                 </p>
                 <p className={`text-sm font-medium ${tw.textPrimary} mt-0.5`}>
                   {data.selectedCommunicationPolicyId
                     ? `Policy ${data.selectedCommunicationPolicyId}`
                     : "Not selected"}
                 </p>
-                {data.rewardValidation?.completed && (
+                {testTotal > 0 && (
                   <p className={`text-xs ${tw.textMuted} mt-1`}>
-                    Test: {data.rewardValidation.passed} passed,{" "}
-                    {data.rewardValidation.failed} failed
+                    Test: {testSuccessCount} passed, {testFailedCount} failed
                   </p>
                 )}
               </div>
@@ -191,7 +169,6 @@ export default function PreviewRewardStep({
           </div>
         </div>
 
-        {/* Warning Message */}
         <div
           className={`p-3 ${tw.rounded} flex items-start space-x-2`}
           style={{
@@ -208,10 +185,12 @@ export default function PreviewRewardStep({
               className="text-sm font-medium"
               style={{ color: color.status.warning }}
             >
-              {t.manualRewards.warningTitle}
+              {t.manualBroadcast.warningTitle}
             </p>
             <p className={`text-sm ${tw.textMuted} mt-1`}>
-              {t.manualRewards.warningBody}
+              {data.scheduleType === "now"
+                ? t.manualBroadcast.warningBodyNow
+                : t.manualBroadcast.warningBodyScheduled}
             </p>
           </div>
         </div>

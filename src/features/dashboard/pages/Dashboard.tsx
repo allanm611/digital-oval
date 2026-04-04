@@ -9,16 +9,24 @@ const DashboardHome = lazy(
 );
 
 const CampaignPages = {
-  CampaignsPage: lazy(() => import("../../campaigns/pages/CampaignsPageWrapper")),
+  CampaignsPage: lazy(
+    () => import("../../campaigns/pages/CampaignsPageWrapper"),
+  ),
   CampaignsAnalyticsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../campaigns/pages/CampaignsAnalyticsPage"
       ),
   ),
-  CampaignDetailsPage: lazy(() => import("../../campaigns/pages/CampaignDetailsPageWrapper")),
-  CreateCampaignPage: lazy(() => import("../../campaigns/pages/CreateCampaignPageWrapper")),
-  CampaignFlowDetailsPage: lazy(() => import("../../campaigns/pages/CampaignFlowDetailsPage")),
+  CampaignDetailsPage: lazy(
+    () => import("../../campaigns/pages/CampaignDetailsPageWrapper"),
+  ),
+  CreateCampaignPage: lazy(
+    () => import("../../campaigns/pages/CreateCampaignPageWrapper"),
+  ),
+  CampaignFlowDetailsPage: lazy(
+    () => import("../../campaigns/pages/CampaignFlowDetailsPage"),
+  ),
   CampaignCategoriesPage: lazy(
     () =>
       import(
@@ -125,7 +133,9 @@ const CampaignPages = {
 
 const OfferPages = {
   OffersPage: lazy(() => import("../../offers/pages/OffersPageWrapper")),
-  OfferDetailsPage: lazy(() => import("../../offers/pages/OfferDetailsPageWrapper")),
+  OfferDetailsPage: lazy(
+    () => import("../../offers/pages/OfferDetailsPageWrapper"),
+  ),
   OfferLifecycleHistoryPage: lazy(
     () =>
       import(
@@ -146,7 +156,9 @@ const OfferPages = {
     () =>
       import(/* webpackPrefetch: true */ "../../offers/pages/OfferTypesPage"),
   ),
-  OfferCategoriesPage: lazy(() => import("../../offers/pages/OfferCategoriesPageWrapper")),
+  OfferCategoriesPage: lazy(
+    () => import("../../offers/pages/OfferCategoriesPageWrapper"),
+  ),
   TrackingSourcesPage: lazy(
     () =>
       import(
@@ -213,8 +225,12 @@ const ProductPages = {
         /* webpackPrefetch: true */ "../../products/pages/EditProductPage"
       ),
   ),
-  ProductDetailsPage: lazy(() => import("../../products/pages/ProductDetailsPageWrapper")),
-  ProductCategoriesPage: lazy(() => import("../../products/pages/ProductCategoriesPageWrapper")),
+  ProductDetailsPage: lazy(
+    () => import("../../products/pages/ProductDetailsPageWrapper"),
+  ),
+  ProductCategoriesPage: lazy(
+    () => import("../../products/pages/ProductCategoriesPageWrapper"),
+  ),
   ProductTypesPage: lazy(
     () =>
       import(
@@ -231,21 +247,35 @@ const ProductPages = {
         /* webpackPrefetch: true */ "../../control-groups/pages/ControlGroupsPage"
       ),
   ),
+  CreateControlGroupPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../control-groups/pages/CreateControlGroupPage"
+      ),
+  ),
 };
 
 // Segment Pages - All routes preloaded for instant access
 
 const SegmentPages = {
-  SegmentManagementPage: lazy(() => import("../../segments/pages/SegmentManagementPageWrapper")),
-  SegmentAnalyticsPage: lazy(() => import("../../segments/pages/SegmentAnalyticsPage")),
-  SegmentDetailsPage: lazy(() => import("../../segments/pages/SegmentDetailsPageWrapper")),
+  SegmentManagementPage: lazy(
+    () => import("../../segments/pages/SegmentManagementPageWrapper"),
+  ),
+  SegmentAnalyticsPage: lazy(
+    () => import("../../segments/pages/SegmentAnalyticsPage"),
+  ),
+  SegmentDetailsPage: lazy(
+    () => import("../../segments/pages/SegmentDetailsPageWrapper"),
+  ),
   EditSegmentPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../segments/pages/EditSegmentPage"
       ),
   ),
-  SegmentCategoriesPage: lazy(() => import("../../segments/pages/SegmentCategoriesPageWrapper")),
+  SegmentCategoriesPage: lazy(
+    () => import("../../segments/pages/SegmentCategoriesPageWrapper"),
+  ),
   SegmentListPage: lazy(
     () =>
       import(
@@ -266,8 +296,12 @@ const JobPages = {
   JobTypesPage: lazy(
     () => import(/* webpackPrefetch: true */ "../../jobs/pages/JobTypesPage"),
   ),
-  ScheduledJobsPage: lazy(() => import("../../jobs/pages/ScheduledJobsPageWrapper")),
-  ScheduledJobDetailsPage: lazy(() => import("../../jobs/pages/ScheduledJobDetailsPageWrapper")),
+  ScheduledJobsPage: lazy(
+    () => import("../../jobs/pages/ScheduledJobsPageWrapper"),
+  ),
+  ScheduledJobDetailsPage: lazy(
+    () => import("../../jobs/pages/ScheduledJobDetailsPageWrapper"),
+  ),
   CreateScheduledJobPage: lazy(
     () =>
       import(
@@ -298,7 +332,9 @@ const JobPages = {
         /* webpackPrefetch: true */ "../../jobs/pages/JobWorkflowStepsPage"
       ),
   ),
-  JobWorkflowStepDetailsPage: lazy(() => import("../../jobs/pages/JobWorkflowStepDetailsPageWrapper")),
+  JobWorkflowStepDetailsPage: lazy(
+    () => import("../../jobs/pages/JobWorkflowStepDetailsPageWrapper"),
+  ),
   CreateJobWorkflowStepPage: lazy(
     () =>
       import(
@@ -314,7 +350,9 @@ const JobPages = {
   WorkflowsPage: lazy(
     () => import(/* webpackPrefetch: true */ "../../jobs/pages/WorkflowsPage"),
   ),
-  WorkflowDetailsPage: lazy(() => import("../../jobs/pages/WorkflowDetailsPageWrapper")),
+  WorkflowDetailsPage: lazy(
+    () => import("../../jobs/pages/WorkflowDetailsPageWrapper"),
+  ),
   CreateWorkflowPage: lazy(
     () =>
       import(/* webpackPrefetch: true */ "../../jobs/pages/CreateWorkflowPage"),
@@ -325,8 +363,12 @@ const JobPages = {
         /* webpackPrefetch: true */ "../../jobs/pages/WorkflowsAnalyticsPage"
       ),
   ),
-  JobExecutionsPage: lazy(() => import("../../jobs/pages/JobExecutionsPageWrapper")),
-  JobExecutionDetailsPage: lazy(() => import("../../jobs/pages/JobExecutionDetailsPageWrapper")),
+  JobExecutionsPage: lazy(
+    () => import("../../jobs/pages/JobExecutionsPageWrapper"),
+  ),
+  JobExecutionDetailsPage: lazy(
+    () => import("../../jobs/pages/JobExecutionDetailsPageWrapper"),
+  ),
   JobExecutionsAnalyticsPage: lazy(
     () =>
       import(
@@ -337,7 +379,9 @@ const JobPages = {
     () =>
       import(/* webpackPrefetch: true */ "../../jobs/pages/StepExecutionsPage"),
   ),
-  StepExecutionDetailsPage: lazy(() => import("../../jobs/pages/StepExecutionDetailsPageWrapper")),
+  StepExecutionDetailsPage: lazy(
+    () => import("../../jobs/pages/StepExecutionDetailsPageWrapper"),
+  ),
   StepExecutionsAnalyticsPage: lazy(
     () =>
       import(
@@ -406,7 +450,8 @@ const SettingsPages = {
     () => import(/* webpackPrefetch: true */ "../../settings/pages/RoutesPage"),
   ),
   SMSTestPage: lazy(
-    () => import(/* webpackPrefetch: true */ "../../settings/pages/SMSTestPage"),
+    () =>
+      import(/* webpackPrefetch: true */ "../../settings/pages/SMSTestPage"),
   ),
 };
 
@@ -501,7 +546,9 @@ const AnalyticsPages = {
         /* webpackPrefetch: true */ "../../reports-analytics/pages/CustomerProfileReportsPage"
       ),
   ),
-  CustomersPage: lazy(() => import("../../customers360/pages/CustomersPageWrapper")),
+  CustomersPage: lazy(
+    () => import("../../customers360/pages/CustomersPageWrapper"),
+  ),
   CustomerSearchResultsPage: lazy(
     () =>
       import(
@@ -594,6 +641,12 @@ const OtherPages = {
     () =>
       import(
         /* webpackPrefetch: true */ "../../manual-rewards/pages/ManualRewardsPage"
+      ),
+  ),
+  ManualRewardDetailsPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../manual-rewards/pages/ManualRewardDetailsPage"
       ),
   ),
   CustomerIdentityPage: lazy(
@@ -830,6 +883,10 @@ export default function Dashboard() {
             element={<ProductPages.ControlGroupsPage />}
           />
           <Route
+            path="/control-groups/create"
+            element={<ProductPages.CreateControlGroupPage />}
+          />
+          <Route
             path="/manual-broadcasts"
             element={<OtherPages.ManualBroadcastsHubPage />}
           />
@@ -862,6 +919,14 @@ export default function Dashboard() {
           <Route
             path="/manual-rewards/create"
             element={<OtherPages.CreateManualRewardPage />}
+          />
+          <Route
+            path="/manual-rewards/:id/edit"
+            element={<OtherPages.CreateManualRewardPage />}
+          />
+          <Route
+            path="/manual-rewards/:id"
+            element={<OtherPages.ManualRewardDetailsPage />}
           />
           <Route
             path="/quick-lists/:id"
@@ -930,10 +995,7 @@ export default function Dashboard() {
             path="/sms-routes/*"
             element={<SettingsPages.SMSRoutesPage />}
           />
-          <Route
-            path="/sms-test"
-            element={<SettingsPages.SMSTestPage />}
-          />
+          <Route path="/sms-test" element={<SettingsPages.SMSTestPage />} />
           <Route path="/routes" element={<SettingsPages.RoutesPage />} />
           <Route
             path="/customer-identity"

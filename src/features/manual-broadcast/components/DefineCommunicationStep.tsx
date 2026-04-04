@@ -248,6 +248,15 @@ export default function DefineCommunicationStep({
     return unsubscribe;
   }, []);
 
+  // Sync from parent data on mount/edit mode
+  useEffect(() => {
+    if (data.channel) setSelectedChannel(data.channel);
+    if (data.messageTitle) setMessageTitle(data.messageTitle);
+    if (data.messageBody) setMessageBody(data.messageBody);
+    if (data.isRichText !== undefined) setIsRichText(data.isRichText);
+    if (data.smsRoute) setSmsRoute(data.smsRoute);
+  }, []);
+
   // Sync selectedPolicy with parent data
   useEffect(() => {
     if (data.selectedCommunicationPolicyId) {
@@ -259,6 +268,22 @@ export default function DefineCommunicationStep({
       }
     }
   }, [data.selectedCommunicationPolicyId]);
+
+  // Sync communication fields to parent data (so Next button validation works)
+  useEffect(() => {
+    console.log("[DefineCommunicationStep] Syncing to parent:", {
+      channel: selectedChannel,
+      messageBodyLength: messageBody.length,
+      messageTitle: messageTitle.length > 0 ? `${messageTitle.length} chars` : "empty",
+    });
+    onUpdate({
+      channel: selectedChannel,
+      messageTitle: messageTitle,
+      messageBody: messageBody,
+      isRichText: isRichText,
+      smsRoute: selectedChannel === "SMS" ? smsRoute : undefined,
+    });
+  }, [selectedChannel, messageBody, messageTitle, isRichText, smsRoute]);
 
   const handleVariableSelect = (variable: TemplateVariable) => {
     // Validate input data

@@ -2,7 +2,10 @@ import { useState, useEffect } from "react";
 import { Calendar, AlertCircle } from "lucide-react";
 import { tw } from "../utils/utils";
 import HeadlessSelect from "./ui/HeadlessSelect";
-import type { SchedulingData, SchedulingComponentProps } from "../types/scheduling";
+import type {
+  SchedulingData,
+  SchedulingComponentProps,
+} from "../types/scheduling";
 
 const daysOfWeek = [
   { value: 0, label: "Sunday" },
@@ -24,11 +27,15 @@ export default function SchedulingComponent({
 }: SchedulingComponentProps) {
   const [endType, setEndType] = useState<"never" | "at">("never");
   const [startType, setStartType] = useState<"datetime" | "previous">(
-    "datetime"
+    "datetime",
   );
 
   const [recurrencePattern, setRecurrencePattern] = useState("Weeks");
   const [recurrenceInterval, setRecurrenceInterval] = useState(1);
+  const [monthlyRule, setMonthlyRule] = useState<
+    "first_day" | "last_day" | "day_of_month"
+  >("first_day");
+  const [monthlyDayOfMonth, setMonthlyDayOfMonth] = useState(1);
   const [defaultStartTime, setDefaultStartTime] = useState("08:00");
   const [selectedDays, setSelectedDays] = useState<number[]>([
     1, 2, 3, 4, 5, 6,
@@ -54,6 +61,32 @@ export default function SchedulingComponent({
     }
   }, []);
 
+  useEffect(() => {
+    const mappedPattern: "daily" | "weekly" | "monthly" =
+      recurrencePattern === "Days"
+        ? "daily"
+        : recurrencePattern === "Months"
+          ? "monthly"
+          : "weekly";
+
+    updateScheduling({
+      recurrence_pattern: mappedPattern,
+      recurrence_interval: recurrenceInterval,
+      selected_days: selectedDays,
+      monthly_rule: mappedPattern === "monthly" ? monthlyRule : undefined,
+      monthly_day_of_month:
+        mappedPattern === "monthly" && monthlyRule === "day_of_month"
+          ? monthlyDayOfMonth
+          : undefined,
+    });
+  }, [
+    recurrencePattern,
+    recurrenceInterval,
+    selectedDays,
+    monthlyRule,
+    monthlyDayOfMonth,
+  ]);
+
   const updateScheduling = (updates: Partial<SchedulingData>) => {
     const newScheduling = { ...scheduling, ...updates };
     onSchedulingChange(newScheduling);
@@ -61,7 +94,9 @@ export default function SchedulingComponent({
 
   const toggleDayOfWeek = (day: number) => {
     setSelectedDays((prev) =>
-      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day].sort()
+      prev.includes(day)
+        ? prev.filter((d) => d !== day)
+        : [...prev, day].sort(),
     );
   };
 
@@ -320,28 +355,76 @@ export default function SchedulingComponent({
             </div>
           </div>
 
-          {/* Days of Week */}
-          <div className="mb-6">
-            <div className="grid grid-cols-7 gap-2">
-              {daysOfWeek.map((day) => (
-                <label
-                  key={day.value}
-                  className="flex items-center justify-center"
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedDays.includes(day.value)}
-                    onChange={() => toggleDayOfWeek(day.value)}
-                    style={{ accentColor: "#00BBCC" }}
-                    className="w-4 h-4 border-gray-300 rounded focus:ring-2 focus:ring-[#00BBCC] mr-2"
-                  />
-                  <span className="text-sm font-medium text-gray-700">
-                    {day.label}
-                  </span>
+          {/* Monthly Rule - shown only for monthly recurrence */}
+          {recurrencePattern === "Months" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Monthly Rule
                 </label>
-              ))}
+                <HeadlessSelect
+                  value={monthlyRule}
+                  onChange={(value) =>
+                    setMonthlyRule(
+                      value as "first_day" | "last_day" | "day_of_month",
+                    )
+                  }
+                  options={[
+                    { label: "First day of month", value: "first_day" },
+                    { label: "Last day of month", value: "last_day" },
+                    { label: "Day of month", value: "day_of_month" },
+                  ]}
+                  placeholder="Select monthly rule"
+                  className="w-full"
+                />
+              </div>
+
+              {monthlyRule === "day_of_month" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Day Number
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="31"
+                    value={monthlyDayOfMonth}
+                    onChange={(e) =>
+                      setMonthlyDayOfMonth(
+                        Math.max(1, Math.min(31, Number(e.target.value) || 1)),
+                      )
+                    }
+                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#00BBCC] focus:border-transparent`}
+                  />
+                </div>
+              )}
             </div>
-          </div>
+          )}
+
+          {/* Days of Week */}
+          {recurrencePattern !== "Months" && (
+            <div className="mb-6">
+              <div className="grid grid-cols-7 gap-2">
+                {daysOfWeek.map((day) => (
+                  <label
+                    key={day.value}
+                    className="flex items-center justify-center"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedDays.includes(day.value)}
+                      onChange={() => toggleDayOfWeek(day.value)}
+                      style={{ accentColor: "#00BBCC" }}
+                      className="w-4 h-4 border-gray-300 rounded focus:ring-2 focus:ring-[#00BBCC] mr-2"
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      {day.label}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Time Zone Display */}
           <div className="mb-6">

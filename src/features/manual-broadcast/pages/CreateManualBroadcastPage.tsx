@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { ArrowLeft, Users, MessageSquare, Calendar } from "lucide-react";
+import { Users, MessageSquare, Calendar, Eye } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
+import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import {
   useFormDataPersistence,
@@ -16,6 +17,7 @@ import ProgressStepper, {
 import TargetAudienceStep from "../components/TargetAudienceStep";
 import DefineCommunicationStep from "../components/DefineCommunicationStep";
 import ScheduleStep from "../components/ScheduleStep";
+import BroadcastPreviewStep from "../components/BroadcastPreviewStep";
 import { communicationService } from "../../communications/services/communicationService";
 import { quicklistService } from "../../quicklists/services/quicklistService";
 import type { TemplateVariable, AudienceInputMethod } from "../types";
@@ -109,6 +111,12 @@ export default function CreateManualBroadcastPage() {
       description: t.manualBroadcast.scheduleDesc,
       icon: Calendar,
     },
+    {
+      id: 4,
+      name: "Preview",
+      description: "Final review before sending",
+      icon: Eye,
+    },
   ];
   const [currentStep, setCurrentStep] = useState(1);
   const [broadcastData, setBroadcastData] = useState<ManualBroadcastData>({});
@@ -122,7 +130,10 @@ export default function CreateManualBroadcastPage() {
           setIsLoading(true);
 
           // Get execution details for recipient list and broadcast info
-          const execResponse = await communicationService.getExecutionDetails(executionId, true);
+          const execResponse = await communicationService.getExecutionDetails(
+            executionId,
+            true,
+          );
 
           if (!execResponse?.success || !execResponse?.data?.execution) {
             showError("Failed to load broadcast details", "", true); // bypassSilentMode
@@ -134,7 +145,11 @@ export default function CreateManualBroadcastPage() {
           const logs = execResponse?.data?.recent_logs || [];
 
           // Extract channel from logs or execution with optional chaining
-          const channel = logs?.[0]?.channel || exec?.channels?.[0] || exec?.channel || "EMAIL";
+          const channel =
+            logs?.[0]?.channel ||
+            exec?.channels?.[0] ||
+            exec?.channel ||
+            "EMAIL";
 
           // Extract message template from execution with optional chaining
           const messageBody = exec?.message_template?.body || "";
@@ -144,35 +159,46 @@ export default function CreateManualBroadcastPage() {
           const recipientCount = exec?.total_recipients ?? 0;
 
           // Extract unique recipient identifiers from logs
-          const recipientList = logs
-            ?.map((log: any) => log?.recipient_identifier)
-            ?.filter((identifier: any) => !!identifier)
-            ?.filter((v: any, i: any, a: any) => a.indexOf(v) === i) // Remove duplicates
-            ?.join("\n") || "";
+          const recipientList =
+            logs
+              ?.map((log: any) => log?.recipient_identifier)
+              ?.filter((identifier: any) => !!identifier)
+              ?.filter((v: any, i: any, a: any) => a.indexOf(v) === i) // Remove duplicates
+              ?.join("\n") || "";
 
           // Prefill form data
           const prefillData: Partial<ManualBroadcastData> = {
             communicationId: exec?.communication_id,
-            audienceName: exec?.name || exec?.source_name || `Broadcast ${exec?.id || "Unknown"}`,
-            channel: (channel as "EMAIL" | "SMS" | "WHATSAPP" | "PUSH") || "EMAIL",
+            audienceName:
+              exec?.name ||
+              exec?.source_name ||
+              `Broadcast ${exec?.id || "Unknown"}`,
+            channel:
+              (channel as "EMAIL" | "SMS" | "WHATSAPP" | "PUSH") || "EMAIL",
             messageTitle: messageTitle,
             messageBody: messageBody,
             isRichText: exec?.message_template?.is_rich_text ?? false,
             scheduleType: "now",
             rowCount: recipientCount,
             audienceFileText: recipientList,
-            audienceDescription: recipientCount > 0 ? `Manual broadcast with ${recipientCount} recipient${recipientCount !== 1 ? "s" : ""}` : "",
+            audienceDescription:
+              recipientCount > 0
+                ? `Manual broadcast with ${recipientCount} recipient${recipientCount !== 1 ? "s" : ""}`
+                : "",
           };
 
           // Handle source type specific prefilling
           if (exec?.source_type === "quicklist" && exec?.source_id) {
             prefillData.inputMethod = "file"; // Set input method to file for quicklist
             prefillData.quicklistId = exec.source_id;
-            prefillData.audienceName = exec?.source_name || `Quicklist ${exec.source_id}`;
+            prefillData.audienceName =
+              exec?.source_name || `Quicklist ${exec.source_id}`;
 
             // Fetch full quicklist details for display in edit mode
             try {
-              const quicklistResponse = await quicklistService.getQuickListById(exec.source_id);
+              const quicklistResponse = await quicklistService.getQuickListById(
+                exec.source_id,
+              );
               if (quicklistResponse.success && "data" in quicklistResponse) {
                 prefillData.quicklist = quicklistResponse.data;
               }
@@ -182,7 +208,8 @@ export default function CreateManualBroadcastPage() {
             }
           } else if (exec?.source_type === "manual") {
             prefillData.inputMethod = "manual";
-            prefillData.audienceName = exec?.name || exec?.source_name || "Manual Audience";
+            prefillData.audienceName =
+              exec?.name || exec?.source_name || "Manual Audience";
           }
 
           setBroadcastData(prefillData);
@@ -240,7 +267,12 @@ export default function CreateManualBroadcastPage() {
           (broadcastData.channel !== "EMAIL" || broadcastData.messageTitle)
         );
       case 3: // Schedule
-        return !!(broadcastData.scheduleType && broadcastData.scheduleDate);
+        if (broadcastData.scheduleType === "later") {
+          return !!(broadcastData.scheduleDate && broadcastData.scheduleTime);
+        }
+        return !!broadcastData.scheduleType;
+      case 4: // Preview
+        return true;
       default:
         return true;
     }
@@ -338,10 +370,14 @@ export default function CreateManualBroadcastPage() {
         const updateResponse = await communicationService.updateCommunication(
           broadcastData.communicationId,
           {
-            name: broadcastData.audienceName || `Broadcast ${new Date().toLocaleDateString()}`,
+            name:
+              broadcastData.audienceName ||
+              `Broadcast ${new Date().toLocaleDateString()}`,
             description: `Manual broadcast update`,
             source_type: broadcastData.quicklistId ? "quicklist" : "manual",
-            ...(broadcastData.quicklistId ? { source_id: broadcastData.quicklistId } : {}),
+            ...(broadcastData.quicklistId
+              ? { source_id: broadcastData.quicklistId }
+              : {}),
             channels: broadcastData.channel ? [broadcastData.channel] : [],
             message_template: {
               ...(broadcastData.messageTitle &&
@@ -351,7 +387,7 @@ export default function CreateManualBroadcastPage() {
               body: broadcastData.messageBody || "",
             },
             created_by: user?.user_id,
-          }
+          },
         );
 
         if (!updateResponse.success) {
@@ -362,12 +398,15 @@ export default function CreateManualBroadcastPage() {
         const response = await communicationService.sendCommunication({
           communication_id: broadcastData.communicationId,
           source_type: broadcastData.quicklistId ? "quicklist" : "manual",
-          ...(broadcastData.quicklistId ? { source_id: broadcastData.quicklistId } : {}),
-          ...(broadcastData.audienceName ? { name: broadcastData.audienceName } : {}),
+          ...(broadcastData.quicklistId
+            ? { source_id: broadcastData.quicklistId }
+            : {}),
+          ...(broadcastData.audienceName
+            ? { name: broadcastData.audienceName }
+            : {}),
           channels: broadcastData.channel ? [broadcastData.channel] : [],
           message_template: {
-            ...(broadcastData.messageTitle &&
-            broadcastData.channel === "EMAIL"
+            ...(broadcastData.messageTitle && broadcastData.channel === "EMAIL"
               ? { title: broadcastData.messageTitle }
               : {}),
             body: broadcastData.messageBody || "",
@@ -382,7 +421,10 @@ export default function CreateManualBroadcastPage() {
           // Fetch updated communications list
           await communicationService.getCommunications();
 
-          showToast(t.manualBroadcast.updatedSuccess || "Broadcast updated successfully!");
+          showToast(
+            t.manualBroadcast.updatedSuccess ||
+              "Broadcast updated successfully!",
+          );
           clearPersistedFormData("broadcast_form_data");
           navigate("/dashboard/manual-communications");
           return;
@@ -410,21 +452,24 @@ export default function CreateManualBroadcastPage() {
       // Case 1: QuickList-based submission (selected or created quicklist)
       if (broadcastData.quicklistId) {
         // Step 1: Create communication definition
-        const createDefResponse = await communicationService.createCommunication({
-          name: broadcastData.audienceName || `Broadcast ${new Date().toLocaleDateString()}`,
-          description: `Manual broadcast to quicklist: ${broadcastData.audienceName || "Untitled"}`,
-          source_type: "quicklist",
-          source_id: broadcastData.quicklistId,
-          channels: broadcastData.channel ? [broadcastData.channel] : [],
-          message_template: {
-            ...(broadcastData.messageTitle &&
-            broadcastData.channel === "EMAIL"
-              ? { title: broadcastData.messageTitle }
-              : {}),
-            body: broadcastData.messageBody || "",
-          },
-          created_by: user?.user_id,
-        });
+        const createDefResponse =
+          await communicationService.createCommunication({
+            name:
+              broadcastData.audienceName ||
+              `Broadcast ${new Date().toLocaleDateString()}`,
+            description: `Manual broadcast to quicklist: ${broadcastData.audienceName || "Untitled"}`,
+            source_type: "quicklist",
+            source_id: broadcastData.quicklistId,
+            channels: broadcastData.channel ? [broadcastData.channel] : [],
+            message_template: {
+              ...(broadcastData.messageTitle &&
+              broadcastData.channel === "EMAIL"
+                ? { title: broadcastData.messageTitle }
+                : {}),
+              body: broadcastData.messageBody || "",
+            },
+            created_by: user?.user_id,
+          });
 
         if (!createDefResponse.success) {
           throw new Error("Failed to create communication definition");
@@ -437,11 +482,12 @@ export default function CreateManualBroadcastPage() {
           communication_id: communicationId,
           source_type: "quicklist",
           source_id: broadcastData.quicklistId,
-          ...(broadcastData.audienceName ? { name: broadcastData.audienceName } : {}),
+          ...(broadcastData.audienceName
+            ? { name: broadcastData.audienceName }
+            : {}),
           channels: broadcastData.channel ? [broadcastData.channel] : [],
           message_template: {
-            ...(broadcastData.messageTitle &&
-            broadcastData.channel === "EMAIL"
+            ...(broadcastData.messageTitle && broadcastData.channel === "EMAIL"
               ? { title: broadcastData.messageTitle }
               : {}),
             body: broadcastData.messageBody || "",
@@ -473,20 +519,23 @@ export default function CreateManualBroadcastPage() {
         }
 
         // Step 1: Create communication definition
-        const createDefResponse = await communicationService.createCommunication({
-          name: broadcastData.audienceName || `Manual Broadcast ${new Date().toLocaleDateString()}`,
-          description: `Manual broadcast with ${recipientList.length} recipients`,
-          source_type: "manual",
-          channels: broadcastData.channel ? [broadcastData.channel] : [],
-          message_template: {
-            ...(broadcastData.messageTitle &&
-            broadcastData.channel === "EMAIL"
-              ? { title: broadcastData.messageTitle }
-              : {}),
-            body: broadcastData.messageBody || "",
-          },
-          created_by: user?.user_id,
-        });
+        const createDefResponse =
+          await communicationService.createCommunication({
+            name:
+              broadcastData.audienceName ||
+              `Manual Broadcast ${new Date().toLocaleDateString()}`,
+            description: `Manual broadcast with ${recipientList.length} recipients`,
+            source_type: "manual",
+            channels: broadcastData.channel ? [broadcastData.channel] : [],
+            message_template: {
+              ...(broadcastData.messageTitle &&
+              broadcastData.channel === "EMAIL"
+                ? { title: broadcastData.messageTitle }
+                : {}),
+              body: broadcastData.messageBody || "",
+            },
+            created_by: user?.user_id,
+          });
 
         if (!createDefResponse.success) {
           throw new Error("Failed to create communication definition");
@@ -499,11 +548,12 @@ export default function CreateManualBroadcastPage() {
           communication_id: communicationId,
           source_type: "manual",
           recipient_list: recipientList,
-          ...(broadcastData.audienceName ? { name: broadcastData.audienceName } : {}),
+          ...(broadcastData.audienceName
+            ? { name: broadcastData.audienceName }
+            : {}),
           channels: broadcastData.channel ? [broadcastData.channel] : [],
           message_template: {
-            ...(broadcastData.messageTitle &&
-            broadcastData.channel === "EMAIL"
+            ...(broadcastData.messageTitle && broadcastData.channel === "EMAIL"
               ? { title: broadcastData.messageTitle }
               : {}),
             body: broadcastData.messageBody || "",
@@ -533,7 +583,9 @@ export default function CreateManualBroadcastPage() {
         errorMessage.toLowerCase().includes("504") ||
         errorMessage.toLowerCase().includes("503") ||
         errorMessage.toLowerCase().includes("gateway timeout") ||
-        errorMessage.toLowerCase().includes("service temporarily unavailable") ||
+        errorMessage
+          .toLowerCase()
+          .includes("service temporarily unavailable") ||
         errorMessage.toLowerCase().includes("gateway") ||
         errorMessage.toLowerCase().includes("timeout");
 
@@ -541,13 +593,13 @@ export default function CreateManualBroadcastPage() {
         showError(
           "Failed to create manual communication",
           "The request timed out. Please try again.",
-          true // bypassSilentMode
+          true, // bypassSilentMode
         );
       } else {
         showError(
           t.manualBroadcast.createFailed,
           errorMessage,
-          true // bypassSilentMode
+          true, // bypassSilentMode
         );
       }
     }
@@ -577,10 +629,12 @@ export default function CreateManualBroadcastPage() {
           <ScheduleStep
             data={broadcastData}
             onUpdate={updateBroadcastData}
-            onSubmit={handleSubmit}
             onPrevious={handlePrevious}
-            isEditMode={isEditMode}
           />
+        );
+      case 4:
+        return (
+          <BroadcastPreviewStep data={broadcastData} isEditMode={isEditMode} />
         );
       default:
         return null;
@@ -612,17 +666,11 @@ export default function CreateManualBroadcastPage() {
         <div className="px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="flex items-center justify-between pb-3">
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={navigateBack}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <h1 className={`text-lg font-semibold ${tw.textPrimary}`}>
-                {isEditMode ? t.manualBroadcast.editTitle || "Edit Broadcast" : t.manualBroadcast.title}
-              </h1>
-            </div>
+            <BackButton
+              fallbackTo={returnTo?.pathname || "/dashboard/manual-broadcasts"}
+              showBreadcrumb={true}
+              currentLabel={isEditMode ? "Edit Broadcast" : "Create Broadcast"}
+            />
           </div>
 
           {/* Sticky Progress Navigation */}
@@ -652,12 +700,18 @@ export default function CreateManualBroadcastPage() {
               )}
               <div className="flex-1" />
               <button
-                onClick={currentStep === STEPS.length ? handleSubmit : handleNext}
+                onClick={
+                  currentStep === STEPS.length ? handleSubmit : handleNext
+                }
                 disabled={!isStepValid(currentStep)}
                 className={`inline-flex items-center px-5 py-2 text-sm font-medium ${tw.rounded} text-white disabled:opacity-50 disabled:cursor-not-allowed`}
                 style={{ backgroundColor: color.primary.action }}
               >
-                {currentStep === STEPS.length ? "Send Broadcast" : "Next"}
+                {currentStep === STEPS.length
+                  ? isEditMode
+                    ? "Update Broadcast"
+                    : "Send Broadcast"
+                  : "Next"}
               </button>
             </div>
           </div>
