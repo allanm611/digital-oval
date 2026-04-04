@@ -4,7 +4,7 @@ Job Dependencies defines prerequisite relationships between jobs.
 
 ## Open The Page
 
-Go to `Dashboard -> Jobs -> Job Dependencies`.
+Go to `Jobs -> Job Dependencies`.
 
 ## What You Manage Here
 

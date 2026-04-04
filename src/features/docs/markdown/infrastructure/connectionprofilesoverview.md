@@ -8,8 +8,6 @@ After servers are set up, profiles add the operating rules around those connecti
 
 ## Uses
 
-Use this page to keep three things together:
-
 - Connectivity: source type, environment, and technical parameters.
 - Governance: data classification and compliance flags.
 - Reliability: retries, timeouts, pool settings, and health-check behavior.
@@ -26,6 +24,12 @@ A profile is a reusable connection definition for a source pattern, for example 
 - They can be activated/deactivated based on operational state.
 - Health settings can be adjusted as source reliability changes.
 - Performance tuning can be updated as data volumes grow.
+
+## Usage Examples
+
+- **API source onboarding**: create a profile with API type, production environment, and health checks to monitor reliability.
+- **Regulated data source**: enable PII/GDPR flags and set strict validity window to enforce governed usage.
+- **High-volume ingestion profile**: increase thread/batch settings gradually while monitoring source load and failure rate.
 
 ## Field Groups To Understand
 

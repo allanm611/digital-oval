@@ -6,7 +6,7 @@ KPIs are performance indicators, and these same KPI categories are reused in oth
 
 ## Open The Module
 
-Go to `Dashboard -> Infrastructure -> KPIs`.
+Go to `Infrastructure -> KPIs`.
 
 ![KPI Hub - All KPIs](/img/infrastructure/allkpisimage.png)
 
@@ -45,4 +45,3 @@ Go to `Dashboard -> Infrastructure -> KPIs`.
 - [Open KPI List](/documentation/infrastructure/kpis-list)
 - [Create Revenue Metric](/documentation/infrastructure/create-revenue-metric)
 - [Create Usage Metric](/documentation/infrastructure/create-usage-metric)
-- [Create System Event](/documentation/infrastructure/create-system-event)

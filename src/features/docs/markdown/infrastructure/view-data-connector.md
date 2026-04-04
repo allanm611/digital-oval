@@ -22,3 +22,9 @@ Common actions from details include:
 - **Edit** connector
 - **Test Connection** where available
 - **Delete** connector where permitted
+
+## Related Pages
+
+- [Data Connectors](/documentation/infrastructure/data-connectors)
+- [Data Connectors List](/documentation/infrastructure/data-connectors-list)
+- [Create Data Connector](/documentation/infrastructure/create-data-connector)

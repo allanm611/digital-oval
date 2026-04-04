@@ -24,7 +24,7 @@ Edit KPI opens an existing metric definition and lets you adjust configuration w
 
 Changes are validated, then applied to the existing KPI definition.
 
-## Next Steps
+## Related Pages
 
 - [Back to KPI List](/documentation/infrastructure/kpis-list)
 - [Open KPI Details](/documentation/infrastructure/view-kpi)

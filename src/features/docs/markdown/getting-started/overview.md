@@ -2,7 +2,7 @@
 
 ## Overview
 
-Getting Started guides help you learn the fundamentals of the Sentra CVM platform. Whether you're new to the system or need a quick refresher, these guides explain core features and how to navigate the application.
+Getting Started guides help you learn the fundamentals of the Sentra CVM platform. Whether you're new to the system or need a quick refresher, these guides explain core features and how to navigate the systemlication.
 
 ---
 

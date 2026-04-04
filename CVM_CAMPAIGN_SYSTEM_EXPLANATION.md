@@ -157,7 +157,7 @@ Information about the customer's devices and technology preferences:
 
 - Device-specific offers: "Get our iOS app exclusive deal"
 - Network-aware content: Optimize for 4G vs 3G users
-- App engagement: Target users who haven't opened the app recently
+- App engagement: Target users who haven't opened the system recently
 
 ---
 
@@ -647,23 +647,19 @@ Customer 360 data comes from multiple systems:
 #### How Campaign Manager Uses This:
 
 1. **Segmentation Decision:**
-
    - Jane matches: "Active customers with medium churn risk"
    - Segment: "At-Risk Loyal Customers"
 
 2. **Offer Selection:**
-
    - High lifetime value ($35,000) → Premium offer
    - Medium churn risk → Retention-focused offer
    - Result: "Win-Back Premium Offer" with 20% discount
 
 3. **Channel Selection:**
-
    - Preferred channel: SMS → Send via SMS
    - Preferred language: English → Use English creative
 
 4. **Message Personalization:**
-
    - Template: "Hi {{name}}, we miss you! Get {{amount}} OFF..."
    - Personalized: "Hi Jane Smith, we miss you! Get 20% OFF..."
 
@@ -678,25 +674,21 @@ Customer 360 data comes from multiple systems:
 ### Key Takeaways:
 
 1. **Customer 360 is Comprehensive**
-
    - Aggregates data from multiple sources
    - Provides complete customer context
    - Enables informed decision-making
 
 2. **Data Powers Personalization**
-
    - Every field can be used for personalization
    - Variables in messages come from Customer 360
    - Channel and timing based on preferences
 
 3. **Segmentation Relies on Customer 360**
-
    - Segment conditions query Customer 360 fields
    - Dynamic segments update as data changes
    - Enables precise targeting
 
 4. **Value Management Uses Customer 360**
-
    - Identify high-value customers
    - Spot at-risk customers early
    - Optimize customer experience
@@ -880,12 +872,10 @@ WHERE
 ### Segment Types:
 
 1. **Static Segment**: Fixed list of customers
-
    - Manually selected customers
    - Example: "Top 100 customers"
 
 2. **Dynamic Segment**: Conditions-based
-
    - Automatically updates as customers change
    - Example: "VIP customers in Nairobi"
 
@@ -1114,7 +1104,7 @@ function selectCreative(customer, offer) {
     (c) =>
       c.channel === customerChannel &&
       c.locale === customerLanguage &&
-      c.is_active === true
+      c.is_active === true,
   );
 
   // 4. Fallback if no exact match
@@ -1124,7 +1114,7 @@ function selectCreative(customer, offer) {
       (c) =>
         c.channel === customerChannel &&
         c.locale === "en" &&
-        c.is_active === true
+        c.is_active === true,
     );
   }
 
@@ -1200,7 +1190,7 @@ function replaceVariables(template, customer, offerVariables) {
   message = message.replace(/\{\{name\}\}/g, customer.name);
   message = message.replace(
     /\{\{account_balance\}\}/g,
-    customer.account_balance
+    customer.account_balance,
   );
   message = message.replace(/\{\{email\}\}/g, customer.email);
   // ... replace all customer fields
@@ -1217,7 +1207,7 @@ function replaceVariables(template, customer, offerVariables) {
 const finalMessage = replaceVariables(
   creative.text_body,
   customer,
-  creative.variables
+  creative.variables,
 );
 
 // Output: "Hi John Doe! Your balance is 1500.00. Get KES 500 OFF. Code: SUMMER2024"
@@ -1265,7 +1255,7 @@ const customerIds = await db.query(segmentQuery);
 for (const customerId of customerIds) {
   const customer = await db.query(
     `SELECT * FROM customers WHERE customer_id = ?`,
-    [customerId]
+    [customerId],
   );
   // Result: { customer_id: 123, name: "John Doe", email: "...", ... }
 
@@ -1276,7 +1266,7 @@ for (const customerId of customerIds) {
   const message = replaceVariables(
     creative.text_body,
     customer,
-    creative.variables
+    creative.variables,
   );
 
   // 5. Send Message
@@ -2558,25 +2548,21 @@ const executions = [
 ### Key Takeaways
 
 1. **Jobs are the Execution Engine**
-
    - Campaigns define WHAT to do
    - Jobs define HOW to do it
    - Jobs execute the campaign logic
 
 2. **Dependencies Ensure Order**
-
    - Jobs must run in the correct sequence
    - Dependencies prevent race conditions
    - Failed dependencies can block or allow continuation
 
 3. **Workflows Break Down Complexity**
-
    - Each job has multiple steps
    - Steps can run sequentially or in parallel
    - Steps can have their own dependencies and retry logic
 
 4. **Executions Track Everything**
-
    - Every job run is recorded
    - Metrics, errors, and performance are tracked
    - Historical data enables analysis and optimization
@@ -2858,8 +2844,8 @@ const customerIds = await db.query(`
 // JOB 2: Customer Profile Fetch
 const customers = await Promise.all(
   customerIds.map((id) =>
-    db.query(`SELECT * FROM customers WHERE customer_id = ?`, [id])
-  )
+    db.query(`SELECT * FROM customers WHERE customer_id = ?`, [id]),
+  ),
 );
 // Result: [
 //   { customer_id: 123, name: "John Doe", preferred_language: "en", ... },
@@ -2874,7 +2860,7 @@ const customers = await Promise.all(
 for (const customer of customers) {
   // Find matching creative
   const creative = offer.creatives.find(
-    (c) => c.channel === "SMS" && c.locale === customer.preferred_language
+    (c) => c.channel === "SMS" && c.locale === customer.preferred_language,
   );
 
   // Customer 123 (en) → Creative 101 (SMS, en)
@@ -2887,7 +2873,7 @@ for (const customer of customers) {
 const message1 = replaceVariables(
   "Hi {{name}}! Get {{amount}} OFF on {{product}}. Code: {{code}}.",
   { name: "John Doe" }, // from customer
-  { amount: "KES 500", product: "10GB Data Bundle", code: "SUMMER2024" } // from creative
+  { amount: "KES 500", product: "10GB Data Bundle", code: "SUMMER2024" }, // from creative
 );
 // Result: "Hi John Doe! Get KES 500 OFF on 10GB Data Bundle. Code: SUMMER2024."
 
@@ -2895,7 +2881,7 @@ const message1 = replaceVariables(
 const message2 = replaceVariables(
   "Hujambo {{name}}! Pata punguzo la {{amount}} kwenye {{product}}. Nambari: {{code}}.",
   { name: "Jane Smith" },
-  { amount: "KES 500", product: "Kifurushi cha Data 10GB", code: "SUMMER2024" }
+  { amount: "KES 500", product: "Kifurushi cha Data 10GB", code: "SUMMER2024" },
 );
 // Result: "Hujambo Jane Smith! Pata punguzo la KES 500 kwenye Kifurushi cha Data 10GB. Nambari: SUMMER2024."
 
@@ -3702,7 +3688,7 @@ const segmentQuery = `
 // Uses: Database Server (PROD-DB-01)
 const customerProfiles = await db.query(
   `SELECT * FROM customers WHERE customer_id IN (?)`,
-  [customerIds]
+  [customerIds],
 );
 // Executed on: db.production.example.com:5432
 
@@ -3993,7 +3979,7 @@ const batchSize = connectionProfile.batch_size; // 1000
 
 while (true) {
   const batch = await connectionPool.query(
-    `${sqlQuery} LIMIT ${batchSize} OFFSET ${offset}`
+    `${sqlQuery} LIMIT ${batchSize} OFFSET ${offset}`,
   );
 
   if (batch.length === 0) break;
@@ -4009,7 +3995,7 @@ while (true) {
     await Promise.all(
       Array(connectionProfile.parallel_threads)
         .fill(null)
-        .map(() => processBatch(customerIds.slice(-batchSize)))
+        .map(() => processBatch(customerIds.slice(-batchSize))),
     );
   }
 }
@@ -4075,25 +4061,21 @@ while (true) {
 #### Key Benefits of Infrastructure Management:
 
 1. **Centralized Configuration**
-
    - All server and connection settings in one place
    - Easy to update without changing code
    - Consistent configuration across environments
 
 2. **Health Monitoring**
-
    - Automatic health checks
    - Circuit breakers prevent cascading failures
    - Real-time status visibility
 
 3. **Performance Optimization**
-
    - Connection pooling reduces overhead
    - Batch processing improves efficiency
    - Parallel threads speed up data loading
 
 4. **Security & Compliance**
-
    - Encrypted connections (TLS)
    - Data classification tracking
    - GDPR compliance features
@@ -4386,25 +4368,21 @@ const segment = {
 ### Key Takeaways:
 
 1. **Segment Lists are Pre-Uploaded Customer Lists**
-
    - Upload CSV/Excel files with customer data
    - Reuse lists across multiple segments/campaigns
    - Quick way to target specific customers
 
 2. **Three List Types**
-
    - **Standard**: General purpose lists
    - **Seed**: Testing/preview audiences
    - **AND**: Combine with segment conditions
 
 3. **Can Combine with Segment Conditions**
-
    - Use list as starting point
    - Apply additional filters (city, tier, etc.)
    - Result: Intersection of list and conditions
 
 4. **Infrastructure Powers Everything**
-
    - Servers provide backend connectivity
    - Connection Profiles define data access
    - Both work together to execute campaigns

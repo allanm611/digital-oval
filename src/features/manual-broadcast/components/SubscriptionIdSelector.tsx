@@ -1,13 +1,13 @@
 /**
  * SubscriptionIdSelector Component
- * 
+ *
  * Displays a dropdown to select the Subscription ID field from uploaded file columns.
- * Uses HeadlessSelect for consistent styling with the rest of the application.
- * 
+ * Uses HeadlessSelect for consistent styling with the rest of the systemlication.
+ *
  * Requirements: 1.1, 1.2
- * - WHEN a user selects the file upload method THEN the Manual_Broadcast_System 
+ * - WHEN a user selects the file upload method THEN the Manual_Broadcast_System
  *   SHALL display a dropdown to select the Subscription ID field from the uploaded file columns
- * - WHEN a file is uploaded THEN the Manual_Broadcast_System SHALL parse the file headers 
+ * - WHEN a file is uploaded THEN the Manual_Broadcast_System SHALL parse the file headers
  *   and populate the Subscription ID field dropdown with available columns
  */
 
@@ -61,12 +61,15 @@ export default function SubscriptionIdSelector({
         {t.manualBroadcast.subscriptionIdHelper ||
           "Select the column that contains the unique identifier for each customer"}
       </p>
-      
+
       <HeadlessSelect
         options={options}
         value={selectedColumn || ""}
         onChange={handleChange}
-        placeholder={t.manualBroadcast.subscriptionIdPlaceholder || "Select Subscriber ID column..."}
+        placeholder={
+          t.manualBroadcast.subscriptionIdPlaceholder ||
+          "Select Subscriber ID column..."
+        }
         disabled={disabled || fileColumns.length === 0}
         error={error}
         zIndex={10100}
@@ -85,7 +88,6 @@ export default function SubscriptionIdSelector({
           </p>
         </div>
       )}
-
     </div>
   );
 }

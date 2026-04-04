@@ -30,14 +30,19 @@ The page surfaces quick counts such as:
 - **Category filters** narrow the list to relevant metric groups.
 
 ![Revenue Metrics Table](/img/infrastructure/revenuemetricslistpage.png)
+
+
 ![Usage Metrics Table](/img/infrastructure/usagemetricslistpage.png)
+
+
+
 ![System Events Table](/img/infrastructure/systemeventsallpage.png)
 
-## Why This Page Matters
+<!-- ## Why This Page Matters
 
-This is the best entry point when auditing existing metrics before creating new ones or adjusting definitions.
+This is the best entry point when auditing existing metrics before creating new ones or adjusting definitions. -->
 
-## Next Steps
+## Related Pages
 
 - [Revenue Metrics List](/documentation/infrastructure/revenue-metrics-list)
 - [Usage Metrics List](/documentation/infrastructure/usage-metrics-list)

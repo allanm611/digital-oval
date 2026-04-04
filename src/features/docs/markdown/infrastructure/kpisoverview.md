@@ -31,7 +31,7 @@ Use this module to:
 
 ![System Events List](/img/infrastructure/systemeventsallpage.png)
 
-## How KPI Records Are Used
+<!-- ## How KPI Records Are Used
 
 - Standardize naming and category conventions.
 - Restrict operators to the ones actually needed.
@@ -44,7 +44,7 @@ Use this module to:
 - Which category the KPI belongs to.
 - Which operators are valid for conditions.
 - Which source table and source mode provide the value.
-- How frequently values are expected to refresh.
+- How frequently values are expected to refresh. -->
 
 ## Related Pages
 

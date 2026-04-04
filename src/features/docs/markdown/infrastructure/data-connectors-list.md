@@ -27,3 +27,9 @@ Typical actions include:
 
 - **Type** tells you what kind of integration this connector supports.
 - **Status** indicates whether it should be used in active flows.
+
+## Related Pages
+
+- [Data Connectors](/documentation/infrastructure/data-connectors)
+- [Create Data Connector](/documentation/infrastructure/create-data-connector)
+- [View Data Connector](/documentation/infrastructure/view-data-connector)

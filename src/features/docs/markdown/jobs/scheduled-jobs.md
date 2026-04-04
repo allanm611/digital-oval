@@ -4,7 +4,7 @@ Scheduled Jobs is the operational hub for defining and managing recurring or tri
 
 ## Open The Page
 
-Go to `Dashboard -> Jobs -> Scheduled Jobs`.
+Go to `Jobs -> Scheduled Jobs`.
 
 ## What You Manage Here
 

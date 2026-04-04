@@ -10,14 +10,13 @@ ETL documentation covers file-ingestion operations and monitoring pages used by 
 
 ## Open The Module
 
-Go to `Dashboard -> Infrastructure -> ETL`.
+Go to `Infrastructure -> ETL`.
 
 ![ETL List Page](/img/infrastructure/ETLlistpage.png)
 
 ## ETL Pages
 
-- `ETL File Registry`: manage file intake and processing state
-- `ETL Fetch Controls`: trigger fetch jobs in different modes
+- `ETL File Registry`: manage file intake, processing state, and fetch actions
 - `ETL Analytics`: monitor ETL performance indicators
 
 ![ETL Analytics Stat Cards](/img/infrastructure/etlanalyticsstatcards.png)
@@ -29,6 +28,12 @@ Go to `Dashboard -> Infrastructure -> ETL`.
 - **Fetch Modes**: immediate, by time window, or by range.
 - **Job ID**: execution context used for targeted fetch operations.
 
+## Usage Examples
+
+- **Missed hourly ingest**: use fetch controls to rerun the missing time window instead of rerunning the whole day.
+- **Backlog recovery**: check File Registry for pending/failed files, process in batches, then verify improvements in Analytics.
+- **Post-release validation**: after ETL config changes, compare failure and throughput metrics before and after deployment.
+
 ## Why This Matters
 
 ETL pages help control ingestion quality and recover quickly when pipelines need manual intervention.
@@ -37,5 +42,4 @@ ETL pages help control ingestion quality and recover quickly when pipelines need
 
 - [ETL Overview](/documentation/infrastructure/etloverview)
 - [ETL File Registry](/documentation/infrastructure/etl-file-registry)
-- [ETL Fetch Controls](/documentation/infrastructure/etl-fetch-controls)
 - [ETL Analytics](/documentation/infrastructure/etl-analytics)

@@ -36,6 +36,12 @@ Use this module when you are adding a new service, replacing an old host, tuning
 
 If a managed server record exists, avoid putting ad-hoc endpoint values directly in jobs or runbooks. Centralizing it here makes troubleshooting much easier.
 
+## Usage Examples
+
+- **Add a new SMS gateway**: create a server with HTTPS endpoint, health checks, and retry policy before wiring it into campaigns.
+- **Handle partner outage**: deactivate the affected server to stop failing calls, then reactivate after health returns.
+- **Move to new host**: create new server record, validate health in staging/production, then deprecate the previous endpoint.
+
 ## Related Pages
 
 - [Servers List](/documentation/infrastructure/servers-list)

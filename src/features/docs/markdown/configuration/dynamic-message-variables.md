@@ -152,6 +152,6 @@ Messages shown are:
 
 ## Notes on Page Behavior
 
-- The page loads category and field data from the available message-variable field configuration source used by the app
+- The page loads category and field data from the available message-variable field configuration source used by the system
 - Search input is debounced before filtering results
 - Category and field activation changes are saved by the page after each toggle action

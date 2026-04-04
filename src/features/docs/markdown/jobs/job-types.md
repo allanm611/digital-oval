@@ -4,7 +4,7 @@ Job Types defines reusable categories for scheduled jobs.
 
 ## Open The Page
 
-Go to `Dashboard -> Jobs -> Job Types`.
+Go to `Jobs -> Job Types`.
 
 ## Why This Page Matters
 

@@ -2,7 +2,7 @@
 
 Create Server adds a new server endpoint used by infrastructure-dependent flows.
 
-The app uses the same form for both **Create** and **Edit**. So if you understand this page, you also understand the edit experience.
+the system uses the same form for both **Create** and **Edit**. In Edit mode , the form is prefilled with the informaiton of the selected server.
 
 ![Create Server - Basic Information](/img/infrastructure/addserverbasicinfoimage1.png)
 
@@ -31,6 +31,21 @@ The app uses the same form for both **Create** and **Edit**. So if you understan
 - **Authentication Type**: auth scheme reference
 - **Metadata**: additional JSON-like context for operations
 
+## Field Meaning In Practice
+
+- **Protocol + Host + Port + Base Path** work together to build the request target. Wrong values here create immediate connectivity failures.
+- **Environment** prevents accidental cross-environment calls (for example using staging endpoints in production flows).
+- **Timeout Seconds + Max Retries** define how long the platform waits and how aggressively it retries before failing.
+- **Health Check Enabled + Health Check URL + Interval** control automatic availability monitoring and how quickly failures are detected.
+- **Circuit Breaker settings** protect downstream systems by temporarily stopping repeated failing calls.
+- **TLS Enabled + Authentication Type** describe transport and access expectations for secure integration.
+
+<!-- ## Usage Examples
+
+- **External billing API**: use HTTPS, enable TLS, set conservative retries, and add a health endpoint for early outage detection.
+- **Internal low-latency service**: keep timeout low (for example 2-3 seconds) so upstream workflows fail fast and trigger fallback logic.
+- **Unstable legacy endpoint**: enable circuit breaker with a failure threshold so repeated errors do not cascade across jobs. -->
+
 ![Create Server - Connection Settings and Health Checks](/img/infrastructure/addserverconnectionsettingsandhealthchecks.png)
 ![Create Server - Circuit Breaker](/img/infrastructure/addservercircuitbreaker.png)
 ![Create Server - Advanced and TLS](/img/infrastructure/adserveradvancedandtls.png)
@@ -45,3 +60,9 @@ If required fields are missing, save is blocked until fixed. On success, the ser
 - **Edit is pre-filled**: when editing, existing values are loaded into the form first.
 - **Button text differs**: create shows `Create Server`, edit shows `Update Server`.
 - **After save**: create returns to the list, while edit returns to that server's details page.
+
+## Related Pages
+
+- [Servers Overview](/documentation/infrastructure/servers)
+- [Servers List](/documentation/infrastructure/servers-list)
+- [View Server](/documentation/infrastructure/view-server)

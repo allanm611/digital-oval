@@ -109,7 +109,7 @@ A confirmation modal appears with:
 - Title: **Delete Combo Type**
 - A confirmation message that the action cannot be undone
 
-If deletion succeeds, the app shows a success message and refreshes the list.
+If deletion succeeds, the system shows a success message and refreshes the list.
 
 ## Validation and Save Behavior
 

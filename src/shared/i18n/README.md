@@ -1,6 +1,6 @@
 # Internationalization (i18n) System
 
-This project includes a multi-language support system that allows the application to be displayed in different languages based on user preferences set in the Settings page.
+This project includes a multi-language support system that allows the systemlication to be displayed in different languages based on user preferences set in the Settings page.
 
 ## Supported Languages
 
@@ -107,7 +107,7 @@ Users can change the language in the Settings page. The change takes effect imme
 1. **Always use translation keys** instead of hardcoded strings
 2. **Add translations for all languages** when adding new features
 3. **Use descriptive key names** that indicate the context (e.g., `campaigns.budgetAllocated` not just `budget`)
-4. **Keep translations consistent** - use the same translation for the same concept across the app
+4. **Keep translations consistent** - use the same translation for the same concept across the system
 5. **Test in all languages** to ensure UI doesn't break with longer translations
 
 ## Example: Complete Component
@@ -133,4 +133,3 @@ export default function CampaignCard({ campaign }) {
   );
 }
 ```
-

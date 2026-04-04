@@ -4,7 +4,7 @@ Job Workflow Steps defines step-level execution logic inside jobs.
 
 ## Open The Page
 
-Go to `Dashboard -> Jobs -> Job Workflow Steps`.
+Go to `Jobs -> Job Workflow Steps`.
 
 ## What You Manage Here
 

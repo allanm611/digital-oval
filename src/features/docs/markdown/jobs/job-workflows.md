@@ -4,7 +4,7 @@ Job Workflows manages workflow-level records that group and organize job orchest
 
 ## Open The Page
 
-Go to `Dashboard -> Jobs -> Job Workflows`.
+Go to `Jobs -> Job Workflows`.
 
 ## What You Manage Here
 

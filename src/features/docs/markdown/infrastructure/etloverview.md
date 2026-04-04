@@ -15,7 +15,7 @@ In this module, you track incoming files, trigger controlled fetch/reprocess act
 ## What ETL Covers
 
 - File intake visibility through the registry.
-- Manual fetch execution in immediate/time/range modes.
+- Manual fetch execution in immediate/time/range modes from File Registry.
 - Analytics visibility for throughput, queue state, and failures.
 
 ## Operational Intent
@@ -37,11 +37,16 @@ Use these pages to:
 ## Typical Navigation
 
 - Start in File Registry to inspect backlog and status distribution.
-- Use Fetch Controls to trigger the exact reprocessing scope needed.
+- Use File Registry fetch controls to trigger the exact reprocessing scope needed.
 - Confirm result patterns in Analytics before closing an incident.
+
+## Usage Examples
+
+- **One failed hour in CDR pipeline**: use by-time fetch for that hour only, then verify completion in analytics.
+- **Weekend backlog**: process failed/pending files in controlled ranges, checking queue trend after each run.
+- **Schema fix deployed**: force reprocess affected job scope and watch failure metrics return to baseline.
 
 ## Related Pages
 
 - [ETL File Registry](/documentation/infrastructure/etl-file-registry)
-- [ETL Fetch Controls](/documentation/infrastructure/etl-fetch-controls)
 - [ETL Analytics](/documentation/infrastructure/etl-analytics)

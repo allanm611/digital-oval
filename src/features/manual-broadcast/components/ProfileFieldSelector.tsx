@@ -1,18 +1,25 @@
 /**
  * ProfileFieldSelector Component
- * 
+ *
  * Displays fields filtered by selected source with search/filter capability.
  * This is the second level of the hierarchical variable selector.
- * 
+ *
  * Requirements: 3.2, 3.4
- * - WHEN a user selects a Profile_Source THEN the Manual_Broadcast_System 
+ * - WHEN a user selects a Profile_Source THEN the Manual_Broadcast_System
  *   SHALL display the available Profile_Fields for that source
- * - WHEN displaying Profile_Fields THEN the Manual_Broadcast_System 
+ * - WHEN displaying Profile_Fields THEN the Manual_Broadcast_System
  *   SHALL show the field name and description for each available field
  */
 
 import { useState, useMemo } from "react";
-import { Search, FileText, Hash, Calendar, ToggleLeft, Clock } from "lucide-react";
+import {
+  Search,
+  FileText,
+  Hash,
+  Calendar,
+  ToggleLeft,
+  Clock,
+} from "lucide-react";
 import { tw } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import type { ProfileField } from "../types";
@@ -32,7 +39,7 @@ interface ProfileFieldSelectorProps {
 }
 
 /**
- * Returns the appropriate icon for a field type
+ * Returns the systemropriate icon for a field type
  */
 function getFieldTypeIcon(fieldType: string) {
   switch (fieldType.toLowerCase()) {
@@ -72,7 +79,7 @@ export default function ProfileFieldSelector({
       (field) =>
         field.name.toLowerCase().includes(query) ||
         field.description.toLowerCase().includes(query) ||
-        field.value.toLowerCase().includes(query)
+        field.value.toLowerCase().includes(query),
     );
   }, [fields, searchQuery]);
 
@@ -100,11 +107,13 @@ export default function ProfileFieldSelector({
       <p className={`text-xs font-medium ${tw.textSecondary} px-2`}>
         {t.manualBroadcast.selectField}
       </p>
-      
+
       {/* Search input */}
       <div className="px-2">
         <div className="relative">
-          <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${tw.textMuted}`} />
+          <Search
+            className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${tw.textMuted}`}
+          />
           <input
             type="text"
             value={searchQuery}
@@ -126,7 +135,7 @@ export default function ProfileFieldSelector({
         ) : (
           filteredFields.map((field) => {
             const IconComponent = getFieldTypeIcon(field.fieldType);
-            
+
             return (
               <button
                 key={field.id}
@@ -143,11 +152,15 @@ export default function ProfileFieldSelector({
                   />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className={`text-sm font-medium ${tw.textPrimary} truncate`}>
+                  <p
+                    className={`text-sm font-medium ${tw.textPrimary} truncate`}
+                  >
                     {field.name}
                   </p>
                   {field.description && (
-                    <p className={`text-xs ${tw.textMuted} line-clamp-2 mt-0.5`}>
+                    <p
+                      className={`text-xs ${tw.textMuted} line-clamp-2 mt-0.5`}
+                    >
                       {field.description}
                     </p>
                   )}

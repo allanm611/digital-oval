@@ -4,7 +4,7 @@ Job Executions tracks runtime attempts for jobs and is the main place to inspect
 
 ## Open The Page
 
-Go to `Dashboard -> Jobs -> Job Executions`.
+Go to `Jobs -> Job Executions`.
 
 ## What You Manage Here
 

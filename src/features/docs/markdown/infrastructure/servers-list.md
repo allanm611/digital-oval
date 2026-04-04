@@ -1,18 +1,15 @@
 # Servers List
 
-Servers List is the working page for day-to-day server operations.
-
 ## Overview
 
-This is the day-to-day working page for server records.
+This page lists all server records configured in the platform, including their endpoint identity, environment, lifecycle status, and health-check state.
 
-Use it to quickly see which endpoints are available, which ones are healthy, and which ones need action before they impact integrations.
-
-Use this page for three things:
+It is the main operations view for:
 
 - operational monitoring: quickly spot unhealthy or disabled records
 - configuration hygiene: find duplicates, stale endpoints, or wrong environments
 - controlled lifecycle updates: activate, deactivate, deprecate, or restore records safely
+
 
 ![Servers List Table](/img/infrastructure/serversregistrypage.png)
 
@@ -25,7 +22,17 @@ Use this page for three things:
 - **Health**: health state badge (healthy/unhealthy/disabled)
 - **Status**: active/inactive/deprecated
 
-Together, these columns help answer a simple question fast: "Can this endpoint be used safely right now?"
+## Status Meanings
+
+- **Active**: the server is operationally enabled and can be used by integrations.
+- **Inactive**: the server exists but is not available for normal operational use.
+- **Deprecated**: the server is being phased out; avoid new usage and migrate existing dependencies.
+
+## Health Status Meanings
+
+- **Healthy**: health checks are enabled and recent checks indicate the endpoint is reachable and responding as expected.
+- **Unhealthy**: health checks are enabled, and recent checks detected failures (for example timeout, connection error, or invalid health response).
+- **Disabled**: health checks are turned off for this server, so no automated health result is being produced.
 
 ## Search And Filters
 
@@ -52,3 +59,9 @@ Use **View** when investigating an issue and **Edit** when changing behavior. Tr
 When selection mode is enabled, you can select multiple servers and run bulk activate/deactivate actions.
 
 ![Servers Bulk Operations](/img/infrastructure/serversregistrybulkoperations.png)
+
+## Related Pages
+
+- [Servers Overview](/documentation/infrastructure/servers)
+- [Create Server](/documentation/infrastructure/create-server)
+- [View Server](/documentation/infrastructure/view-server)

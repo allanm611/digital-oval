@@ -30,7 +30,7 @@ KPI creation is done through category-specific forms (Revenue Metrics, Usage Met
 
 The form validates required fields before save. After creation, the KPI appears in the relevant list and can be opened in details.
 
-## Next Steps
+## Related Pages
 
 - [View KPI List](/documentation/infrastructure/kpis-list)
 - [Open KPI Details](/documentation/infrastructure/view-kpi)

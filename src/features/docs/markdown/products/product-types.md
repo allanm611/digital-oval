@@ -158,7 +158,7 @@ Product Types are categories used to classify and organize different kinds of pr
 
 When creating or editing a product:
 
-1. **Select Product Type** - Choose the appropriate type from the available options
+1. **Select Product Type** - Choose the systemropriate type from the available options
 2. **For Combo Products** - Select component resources (Data, Voice, SMS), manage shared properties, and set bundle pricing
 3. **For Other Types** - Configure standard properties like pricing, validity, and features
 4. **Save** - Product is now classified and ready to use in offers and campaigns

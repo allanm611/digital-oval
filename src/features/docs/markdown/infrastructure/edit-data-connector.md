@@ -17,3 +17,9 @@ Edit Data Connector opens an existing connector record for updates.
 ## Save Behavior
 
 Changes are validated and then applied to the existing connector.
+
+## Related Pages
+
+- [Data Connectors](/documentation/infrastructure/data-connectors)
+- [Data Connectors List](/documentation/infrastructure/data-connectors-list)
+- [View Data Connector](/documentation/infrastructure/view-data-connector)

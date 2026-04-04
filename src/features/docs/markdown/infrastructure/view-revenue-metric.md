@@ -14,6 +14,16 @@ Revenue Metric Details shows the full read view of a revenue KPI.
 - source table/data source mapping
 - refresh frequency and metadata
 
+## How To Interpret Each Field
+
+- **Name**: confirms the KPI users will select in rule/segment logic.
+- **Description**: confirms the KPI intent before you approve it for reuse.
+- **Field Type**: confirms whether condition operators are compatible with KPI values.
+- **Category**: confirms this KPI is grouped under the expected business bucket.
+- **Operators**: confirms exactly which condition logic users can apply.
+- **Source Table + Data Source**: confirms data lineage and ownership for troubleshooting.
+- **Frequency**: confirms expected data freshness for time-sensitive targeting.
+
 ## Related Pages
 
 - [Revenue Metrics List](/documentation/infrastructure/revenue-metrics-list)

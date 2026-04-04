@@ -78,7 +78,7 @@ A confirmation modal appears with:
 - Title: **Delete Sender ID**
 - A message warning that deleting the item may affect existing SMS creatives
 
-If deletion succeeds, the app shows a success message and removes the record from the visible list.
+If deletion succeeds, the system shows a success message and removes the record from the visible list.
 
 ## Validation and Save Behavior
 

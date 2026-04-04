@@ -4,7 +4,7 @@ Data Connectors is the infrastructure area for managing connector definitions us
 
 ## Open The Module
 
-Go to `Dashboard -> Infrastructure -> Data Connectors`.
+Go to `Infrastructure -> Data Connectors`.
 
 ## What Connector Records Usually Capture
 

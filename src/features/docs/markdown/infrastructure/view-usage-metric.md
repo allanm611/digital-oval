@@ -12,6 +12,15 @@ Usage Metric Details provides a read view of one usage KPI definition.
 - data source mapping
 - frequency and metadata
 
+## How To Read This Record
+
+- **Name + Description**: verify users will understand what this usage KPI represents.
+- **Field Type**: verify the metric supports expected condition logic.
+- **Category**: verify the KPI is grouped correctly in Usage Metrics.
+- **Operators**: verify segment builders can apply the needed checks.
+- **Source Table + Data Source**: verify where values come from before troubleshooting data issues.
+- **Frequency**: verify freshness expectations for campaigns using this KPI.
+
 ## Related Pages
 
 - [Usage Metrics List](/documentation/infrastructure/usage-metrics-list)

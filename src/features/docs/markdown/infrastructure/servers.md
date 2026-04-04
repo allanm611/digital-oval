@@ -28,3 +28,16 @@ A server record is more than a host name. It combines endpoint identity, retry/t
 - **Health Check Settings**: Controls whether the platform monitors service availability.
 - **Timeout / Retries**: Defines request resilience behavior.
 - **Status**: Operational state such as active, inactive, or deprecated.
+
+## Usage Examples
+
+- **Register a production endpoint**: set `Protocol=https`, `Host=api.partner.com`, `Port=443`, and `Base Path=/v1/messages`.
+- **Protect workflows from slow dependencies**: set a strict `Timeout Seconds` and controlled `Max Retries` so requests fail fast instead of hanging.
+- **Monitor a critical endpoint**: enable health checks with a lightweight `Health Check URL` and short interval.
+- **Retire an old endpoint safely**: mark the server as deprecated before full removal so users stop selecting it for new integrations.
+
+## Related Pages
+
+- [Servers List](/documentation/infrastructure/servers-list)
+- [Create Server](/documentation/infrastructure/create-server)
+- [View Server](/documentation/infrastructure/view-server)

@@ -3,10 +3,10 @@
  * Navigation sidebar with nested menu structure
  */
 
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { ChevronDown, ChevronRight } from 'lucide-react';
-import styles from './DocsSidebar.module.css';
+import React, { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { ChevronDown, ChevronRight } from "lucide-react";
+import styles from "./DocsSidebar.module.css";
 
 interface SidebarItem {
   label: string;
@@ -24,7 +24,7 @@ interface DocsSidebarProps {
 function isDescendantActive(item: SidebarItem, pathname: string): boolean {
   if (item.path && pathname === `/documentation${item.path}`) return true;
   if (item.items) {
-    return item.items.some(child => isDescendantActive(child, pathname));
+    return item.items.some((child) => isDescendantActive(child, pathname));
   }
   return false;
 }
@@ -42,8 +42,10 @@ export function DocsSidebar({ items }: DocsSidebarProps) {
 function SidebarSection({ item }: { item: SidebarItem }) {
   const location = useLocation();
   const hasChildren = item.items && item.items.length > 0;
-  const isActive = item.path && location.pathname === `/documentation${item.path}`;
-  const hasActiveDescendant = hasChildren && isDescendantActive(item, location.pathname);
+  const isActive =
+    item.path && location.pathname === `/documentation${item.path}`;
+  const hasActiveDescendant =
+    hasChildren && isDescendantActive(item, location.pathname);
 
   const [expanded, setExpanded] = useState(hasActiveDescendant);
 
@@ -59,7 +61,7 @@ function SidebarSection({ item }: { item: SidebarItem }) {
       {item.path ? (
         <Link
           to={`/documentation${item.path}`}
-          className={`${styles.sectionLabel} ${isActive ? styles.active : ''}`}
+          className={`${styles.sectionLabel} ${isActive ? styles.active : ""}`}
         >
           {item.label}
         </Link>
@@ -70,7 +72,9 @@ function SidebarSection({ item }: { item: SidebarItem }) {
         >
           <span className={styles.sectionLabel}>{item.label}</span>
           {hasChildren && (
-            <span className={`${styles.chevron} ${expanded ? styles.expanded : ''}`}>
+            <span
+              className={`${styles.chevron} ${expanded ? styles.expanded : ""}`}
+            >
               <ChevronDown size={16} />
             </span>
           )}
@@ -91,8 +95,10 @@ function SidebarSection({ item }: { item: SidebarItem }) {
 function SidebarSubitem({ item }: { item: SidebarItem }) {
   const location = useLocation();
   const hasChildren = item.items && item.items.length > 0;
-  const isActive = item.path && location.pathname === `/documentation${item.path}`;
-  const hasActiveDescendant = hasChildren && isDescendantActive(item, location.pathname);
+  const isActive =
+    item.path && location.pathname === `/documentation${item.path}`;
+  const hasActiveDescendant =
+    hasChildren && isDescendantActive(item, location.pathname);
 
   const [expanded, setExpanded] = useState(hasActiveDescendant);
 
@@ -108,7 +114,7 @@ function SidebarSubitem({ item }: { item: SidebarItem }) {
       {item.path ? (
         <Link
           to={`/documentation${item.path}`}
-          className={`${styles.subsectionLink} ${isActive ? styles.active : ''}`}
+          className={`${styles.subsectionLink} ${isActive ? styles.active : ""}`}
         >
           {item.label}
         </Link>
@@ -119,7 +125,9 @@ function SidebarSubitem({ item }: { item: SidebarItem }) {
         >
           <span>{item.label}</span>
           {hasChildren && (
-            <span className={`${styles.chevron} ${expanded ? styles.expanded : ''}`}>
+            <span
+              className={`${styles.chevron} ${expanded ? styles.expanded : ""}`}
+            >
               <ChevronRight size={14} />
             </span>
           )}

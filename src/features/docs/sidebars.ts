@@ -343,7 +343,6 @@ const sidebars: SidebarsConfig = {
               label: "System Events",
               items: [
                 "infrastructure/system-events-list",
-                "infrastructure/create-system-event",
                 "infrastructure/view-system-event",
               ],
             },
@@ -365,11 +364,6 @@ const sidebars: SidebarsConfig = {
             },
             {
               type: "doc",
-              id: "infrastructure/etl-fetch-controls",
-              label: "Fetch Controls",
-            },
-            {
-              type: "doc",
               id: "infrastructure/etl-analytics",
               label: "Analytics",
             },
@@ -377,91 +371,91 @@ const sidebars: SidebarsConfig = {
         },
       ],
     },
-    {
-      type: "category",
-      label: "Job Management",
-      items: [
-        "jobs/overview",
-        {
-          type: "category",
-          label: "Scheduled Jobs",
-          items: [
-            {
-              type: "doc",
-              id: "jobs/scheduled-jobs-list",
-              label: "Scheduled Job List",
-            },
-            "jobs/create-scheduled-job",
-            "jobs/view-scheduled-job",
-            "jobs/edit-scheduled-job",
-          ],
-        },
-        {
-          type: "category",
-          label: "Job Executions",
-          items: [
-            {
-              type: "doc",
-              id: "jobs/job-executions-list",
-              label: "Job Execution List",
-            },
-            "jobs/view-job-execution",
-          ],
-        },
-        {
-          type: "category",
-          label: "Job Types",
-          items: [
-            {
-              type: "doc",
-              id: "jobs/job-types-list",
-              label: "Job Type List",
-            },
-            "jobs/create-job-type",
-            "jobs/view-job-type",
-          ],
-        },
-        {
-          type: "category",
-          label: "Job Dependencies",
-          items: [
-            {
-              type: "doc",
-              id: "jobs/job-dependencies-list",
-              label: "Job Dependency List",
-            },
-            "jobs/create-job-dependency",
-            "jobs/view-job-dependency",
-          ],
-        },
-        {
-          type: "category",
-          label: "Job Workflow Steps",
-          items: [
-            {
-              type: "doc",
-              id: "jobs/job-workflow-steps-list",
-              label: "Job Workflow Step List",
-            },
-            "jobs/view-job-workflow-step",
-          ],
-        },
-        {
-          type: "category",
-          label: "Job Workflows",
-          items: [
-            {
-              type: "doc",
-              id: "jobs/job-workflows-list",
-              label: "Job Workflow List",
-            },
-            "jobs/create-job-workflow",
-            "jobs/view-job-workflow",
-            "jobs/edit-job-workflow",
-          ],
-        },
-      ],
-    },
+    // {
+    //   type: "category",
+    //   label: "Job Management",
+    //   items: [
+    //     "jobs/overview",
+    //     {
+    //       type: "category",
+    //       label: "Scheduled Jobs",
+    //       items: [
+    //         {
+    //           type: "doc",
+    //           id: "jobs/scheduled-jobs-list",
+    //           label: "Scheduled Job List",
+    //         },
+    //         "jobs/create-scheduled-job",
+    //         "jobs/view-scheduled-job",
+    //         "jobs/edit-scheduled-job",
+    //       ],
+    //     },
+    //     {
+    //       type: "category",
+    //       label: "Job Executions",
+    //       items: [
+    //         {
+    //           type: "doc",
+    //           id: "jobs/job-executions-list",
+    //           label: "Job Execution List",
+    //         },
+    //         "jobs/view-job-execution",
+    //       ],
+    //     },
+    //     {
+    //       type: "category",
+    //       label: "Job Types",
+    //       items: [
+    //         {
+    //           type: "doc",
+    //           id: "jobs/job-types-list",
+    //           label: "Job Type List",
+    //         },
+    //         "jobs/create-job-type",
+    //         "jobs/view-job-type",
+    //       ],
+    //     },
+    //     {
+    //       type: "category",
+    //       label: "Job Dependencies",
+    //       items: [
+    //         {
+    //           type: "doc",
+    //           id: "jobs/job-dependencies-list",
+    //           label: "Job Dependency List",
+    //         },
+    //         "jobs/create-job-dependency",
+    //         "jobs/view-job-dependency",
+    //       ],
+    //     },
+    //     {
+    //       type: "category",
+    //       label: "Job Workflow Steps",
+    //       items: [
+    //         {
+    //           type: "doc",
+    //           id: "jobs/job-workflow-steps-list",
+    //           label: "Job Workflow Step List",
+    //         },
+    //         "jobs/view-job-workflow-step",
+    //       ],
+    //     },
+    //     {
+    //       type: "category",
+    //       label: "Job Workflows",
+    //       items: [
+    //         {
+    //           type: "doc",
+    //           id: "jobs/job-workflows-list",
+    //           label: "Job Workflow List",
+    //         },
+    //         "jobs/create-job-workflow",
+    //         "jobs/view-job-workflow",
+    //         "jobs/edit-job-workflow",
+    //       ],
+    //     },
+    //   ],
+    // },
     {
       type: "category",
       label: "Configuration",

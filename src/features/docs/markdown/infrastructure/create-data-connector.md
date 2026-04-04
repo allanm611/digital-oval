@@ -21,3 +21,9 @@ Create Data Connector opens a form (or modal) used to register a new connector d
 ## Save Behavior
 
 Required values must be completed before save. After creation, the connector appears in Data Connectors List.
+
+## Related Pages
+
+- [Data Connectors](/documentation/infrastructure/data-connectors)
+- [Data Connectors List](/documentation/infrastructure/data-connectors-list)
+- [View Data Connector](/documentation/infrastructure/view-data-connector)
