@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { LucideIcon } from "lucide-react";
 
-import { tw } from '../../../shared/utils/utils';
+import { tw } from "../../../shared/utils/utils";
 interface AnimatedCardProps {
   children: React.ReactNode;
   className?: string;
@@ -47,7 +47,7 @@ export default function AnimatedCard({
 
   const variantClasses = {
     default: `
-      bg-white ${border ? "border border-secondary-200" : ""} 
+      ${tw.surfaceBackground} ${border ? `border ${tw.borderDefault}` : ""} 
       ${
         animateOnHover && hover === "lift"
           ? "hover:shadow-xl hover:-translate-y-2"
@@ -57,7 +57,7 @@ export default function AnimatedCard({
       ${animateOnHover && hover === "scale" ? "hover:scale-[1.03]" : ""}
     `,
     elevated: `
-      bg-white shadow-lg ${border ? "border border-secondary-100" : ""}
+      ${tw.surfaceBackground} shadow-lg ${border ? `border ${tw.borderDefault}` : ""}
       ${
         animateOnHover && hover === "lift"
           ? "hover:shadow-2xl hover:-translate-y-3"
@@ -67,18 +67,18 @@ export default function AnimatedCard({
       ${animateOnHover && hover === "scale" ? "hover:scale-[1.04]" : ""}
     `,
     glass: `
-      backdrop-blur-xl bg-white/70 border border-white/20 shadow-lg
+      backdrop-blur-xl bg-[var(--c-surface-background)]/70 border border-[var(--c-border-default)]/40 shadow-lg
       ${
         animateOnHover && hover === "lift"
-          ? "hover:bg-white/80 hover:-translate-y-2"
+          ? "hover:bg-[var(--c-surface-background)]/80 hover:-translate-y-2"
           : ""
       }
       ${animateOnHover && hover === "glow" ? "hover:shadow-glow" : ""}
       ${animateOnHover && hover === "scale" ? "hover:scale-[1.03]" : ""}
     `,
     gradient: `
-      bg-gradient-to-br from-white via-primary-50/50 to-accent-50/50 
-      border border-primary-100 shadow-md
+      bg-gradient-to-br from-[var(--c-surface-background)] via-[var(--c-interactive-hover)]/70 to-[var(--c-surface-cards)] 
+      border ${tw.borderDefault} shadow-md
       ${
         animateOnHover && hover === "lift"
           ? "hover:shadow-xl hover:-translate-y-2"
@@ -158,12 +158,12 @@ export default function AnimatedCard({
             )}
             <div>
               {title && (
-                <h3 className="text-xl font-bold text-secondary-900 mb-1">
+                <h3 className={`text-xl font-bold ${tw.textPrimary} mb-1`}>
                   {title}
                 </h3>
               )}
               {subtitle && (
-                <p className="text-secondary-600 text-sm">{subtitle}</p>
+                <p className={`${tw.textSecondary} text-sm`}>{subtitle}</p>
               )}
             </div>
           </div>
@@ -206,7 +206,9 @@ export default function AnimatedCard({
           ${isHovered ? "opacity-20" : "opacity-0"}
         `}
         >
-          <div className={`w-full h-full bg-white rounded-inherit`} />
+          <div
+            className={`w-full h-full ${tw.surfaceBackground} rounded-inherit`}
+          />
         </div>
       )}
     </div>

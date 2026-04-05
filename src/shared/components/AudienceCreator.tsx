@@ -583,9 +583,7 @@ export default function AudienceCreator({
                   >
                     File Preview ({filePreview.totalRows} total rows)
                   </label>
-                  <div
-                    className={`overflow-x-auto border border-gray-200 ${tw.rounded}`}
-                  >
+                  <div className={`overflow-x-auto border ${tw.borderDefault} ${tw.rounded}`}>
                     <table className="w-full">
                       <thead
                         style={{
@@ -613,7 +611,7 @@ export default function AudienceCreator({
                           filePreview.rows.map((row, rowIndex) => (
                             <tr
                               key={rowIndex}
-                              className="hover:bg-gray-50 transition-colors"
+                              className={`${tw.hover} transition-colors`}
                             >
                               {row.map((cell, cellIndex) => (
                                 <td
@@ -630,7 +628,7 @@ export default function AudienceCreator({
                           <tr>
                             <td
                               colSpan={filePreview.headers.length}
-                              className="px-4 py-8 text-center text-sm text-gray-500"
+                              className={`px-4 py-8 text-center text-sm ${tw.textMuted}`}
                             >
                               No data rows found in file
                             </td>
@@ -640,7 +638,7 @@ export default function AudienceCreator({
                     </table>
                   </div>
                   {filePreview.totalRows > 5 && (
-                    <p className="mt-2 text-xs text-gray-500">
+                    <p className={`mt-2 text-xs ${tw.textMuted}`}>
                       Showing first 5 rows. Total: {filePreview.totalRows} rows
                     </p>
                   )}

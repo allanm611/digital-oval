@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLanguage } from "../../../../contexts/LanguageContext";
 import SchedulingComponent from "../../../../shared/components/SchedulingComponent";
 import ScheduledModal from "../ScheduledModal";
 import type { SchedulingData } from "../../../../shared/types/scheduling";
@@ -18,6 +19,7 @@ export default function SchedulingStep({
   formData,
   setFormData,
 }: SchedulingStepProps) {
+  const { t } = useLanguage();
   const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   const handleSchedulingChange = (scheduling: SchedulingData) => {
@@ -39,8 +41,8 @@ export default function SchedulingStep({
       <SchedulingComponent
         scheduling={formData.scheduling || {}}
         onSchedulingChange={handleSchedulingChange}
-        title="Broadcast Schedule Range"
-        subtitle="Configure your campaign broadcast schedule and delivery settings"
+        title={t("campaigns.scheduling.title")}
+        subtitle={t("campaigns.scheduling.subtitle")}
         showPreviewButton={true}
         onPreviewSchedule={handlePreviewSchedule}
       />

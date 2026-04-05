@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import { LucideIcon, Eye, EyeOff } from "lucide-react";
 
-import { tw } from '../../../shared/utils/utils';
+import { tw } from "../../../shared/utils/utils";
 interface AnimatedInputProps {
   label?: string;
   placeholder?: string;
@@ -84,8 +84,8 @@ export default function AnimatedInput({
   const variantClasses = {
     default: `
       bg-secondary-50 border-secondary-300 text-secondary-900 placeholder-secondary-500
-      focus:bg-white 
-      hover:border-secondary-400 hover:bg-white
+      focus:bg-[var(--c-surface-background)]
+      hover:border-secondary-400 hover:bg-[var(--c-surface-background)]
       ${error ? "border-error-500 focus:border-error-500" : ""}
       ${success ? "border-success-500 focus:border-success-500" : ""}
     `,
@@ -125,8 +125,8 @@ export default function AnimatedInput({
                   ? error
                     ? "text-error-500"
                     : success
-                    ? "text-success-500"
-                    : "text-primary-500"
+                      ? "text-success-500"
+                      : "text-primary-500"
                   : "text-secondary-400"
               }`}
             />
@@ -158,7 +158,7 @@ export default function AnimatedInput({
               absolute left-4 transition-all duration-300 ease-smooth pointer-events-none
               ${
                 shouldFloatLabel
-                  ? "top-0 -translate-y-1/2 text-xs bg-white px-2 font-medium"
+                  ? "top-0 -translate-y-1/2 text-xs bg-[var(--c-surface-background)] px-2 font-medium"
                   : "top-1/2 -translate-y-1/2 text-base"
               }
               ${
@@ -166,8 +166,8 @@ export default function AnimatedInput({
                   ? error
                     ? "text-error-500"
                     : success
-                    ? "text-success-500"
-                    : "text-primary-500"
+                      ? "text-success-500"
+                      : "text-primary-500"
                   : "text-secondary-500"
               }
             `}
@@ -199,8 +199,8 @@ export default function AnimatedInput({
                     ? error
                       ? "text-error-500"
                       : success
-                      ? "text-success-500"
-                      : "text-primary-500"
+                        ? "text-success-500"
+                        : "text-primary-500"
                     : "text-secondary-400"
                 }`}
               />

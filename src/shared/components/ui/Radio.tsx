@@ -1,5 +1,5 @@
 import React from "react";
-import { color } from "../../utils/utils";
+import { color, tw } from "../../utils/utils";
 
 interface RadioProps extends Omit<
   React.InputHTMLAttributes<HTMLInputElement>,
@@ -25,7 +25,7 @@ export default function Radio({
       ref={inputRef}
       {...inputProps}
       type="radio"
-      className={`w-6 h-6 border border-gray-300 rounded-full bg-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed appearance-none ${className}`}
+      className={`w-6 h-6 border ${tw.borderDefault} rounded-full ${tw.surfaceBackground} cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed appearance-none ${className}`}
       style={{
         backgroundImage:
           checked !== undefined && checked
@@ -50,7 +50,9 @@ export default function Radio({
     >
       {input}
       {label && (
-        <span className="text-sm font-medium text-gray-700">{label}</span>
+        <span className={`text-sm font-medium ${tw.textSecondary}`}>
+          {label}
+        </span>
       )}
       {!label && children}
     </label>

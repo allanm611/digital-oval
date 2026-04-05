@@ -2,8 +2,8 @@
 export function PageHeaderSkeleton() {
   return (
     <div className="mb-8 space-y-3">
-      <div className="h-8 bg-gray-200 rounded w-1/3 animate-pulse"></div>
-      <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+      <div className="h-8 bg-[var(--c-interactive-hover)] rounded w-1/3 animate-pulse"></div>
+      <div className="h-4 bg-[var(--c-interactive-hover)] rounded w-1/2 animate-pulse"></div>
     </div>
   );
 }
@@ -13,8 +13,8 @@ export function FormSkeleton() {
     <div className="space-y-6">
       {[1, 2, 3, 4].map((i) => (
         <div key={i} className="space-y-2">
-          <div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div>
-          <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-4 bg-[var(--c-interactive-hover)] rounded w-24 animate-pulse"></div>
+          <div className="h-10 bg-[var(--c-interactive-hover)] rounded animate-pulse"></div>
         </div>
       ))}
     </div>
@@ -25,7 +25,7 @@ export function TableSkeleton() {
   return (
     <div className="space-y-3">
       {[1, 2, 3, 4, 5].map((i) => (
-        <div key={i} className="h-12 bg-gray-200 rounded animate-pulse"></div>
+        <div key={i} className="h-12 bg-[var(--c-interactive-hover)] rounded animate-pulse"></div>
       ))}
     </div>
   );
@@ -37,7 +37,7 @@ export function CardGridSkeleton({ count = 6 }: { count?: number }) {
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}
-          className="h-64 bg-gray-200 rounded-lg animate-pulse"
+          className="h-64 bg-[var(--c-interactive-hover)] rounded-lg animate-pulse"
         ></div>
       ))}
     </div>
@@ -51,8 +51,8 @@ export function StepperSkeleton({ steps = 5 }: { steps?: number }) {
       <div className="flex justify-between items-center">
         {Array.from({ length: steps }).map((_, i) => (
           <div key={i} className="flex items-center">
-            <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
-            {i < steps - 1 && <div className="w-12 h-1 bg-gray-200 mx-2 animate-pulse"></div>}
+            <div className="w-10 h-10 bg-[var(--c-interactive-hover)] rounded-full animate-pulse"></div>
+            {i < steps - 1 && <div className="w-12 h-1 bg-[var(--c-interactive-hover)] mx-2 animate-pulse"></div>}
           </div>
         ))}
       </div>
@@ -73,7 +73,7 @@ export function DetailPageSkeleton() {
         </div>
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-24 bg-gray-200 rounded animate-pulse"></div>
+            <div key={i} className="h-24 bg-[var(--c-interactive-hover)] rounded animate-pulse"></div>
           ))}
         </div>
       </div>
@@ -85,7 +85,7 @@ export function ListPageSkeleton() {
   return (
     <div className="space-y-6">
       <PageHeaderSkeleton />
-      <div className="h-10 bg-gray-200 rounded w-1/4 animate-pulse mb-4"></div>
+      <div className="h-10 bg-[var(--c-interactive-hover)] rounded w-1/4 animate-pulse mb-4"></div>
       <TableSkeleton />
     </div>
   );

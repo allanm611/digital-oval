@@ -22,28 +22,32 @@ export default function ErrorState({
   className = "",
 }: ErrorStateProps) {
   const Icon = icon ?? (
-    <div className="rounded-full bg-gray-200 p-2 text-gray-600">
+    <div
+      className={`rounded-full bg-[var(--c-interactive-hover)] p-2 ${tw.textSecondary}`}
+    >
       <AlertCircle className="h-5 w-5" />
     </div>
   );
 
   return (
     <div
-      className={`${tw.rounded} border border-gray-200 bg-white px-5 py-6 text-left shadow-sm ${className}`}
+      className={`${tw.rounded} border ${tw.borderDefault} ${tw.surfaceBackground} px-5 py-6 text-left shadow-sm ${className}`}
     >
       <div className="flex items-start gap-3">
         <div>{Icon}</div>
         <div className="flex-1">
-          <h3 className={`${tw.cardHeading} text-gray-900`}>{String(title)}</h3>
+          <h3 className={`${tw.cardHeading} ${tw.textPrimary}`}>
+            {String(title)}
+          </h3>
           {/* <p className={`${tw.textSecondary} mt-1 text-sm`}>{String(message)}</p> */}
           {children && (
-            <div className="mt-2 text-sm text-gray-600">{children}</div>
+            <div className={`mt-2 text-sm ${tw.textSecondary}`}>{children}</div>
           )}
           {onRetry && (
             <button
               type="button"
               onClick={onRetry}
-              className={`mt-4 inline-flex items-center gap-2 ${tw.rounded} border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50`}
+              className={`mt-4 inline-flex items-center gap-2 ${tw.rounded} border ${tw.borderDefault} px-4 py-2 text-sm font-semibold ${tw.textSecondary} transition hover:bg-[var(--c-interactive-hover)]`}
             >
               {actionLabel}
             </button>

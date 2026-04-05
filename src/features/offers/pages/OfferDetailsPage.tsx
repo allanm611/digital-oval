@@ -2648,7 +2648,7 @@ export default function OfferDetailsPage() {
                     >
                       <span
                         className="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold"
-                        style={{ color: "#000000" }}
+                        style={{ color: "var(--c-text-primary)" }}
                       >
                         {flow.step_order || idx + 1}
                       </span>

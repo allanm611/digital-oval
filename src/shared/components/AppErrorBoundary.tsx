@@ -78,25 +78,25 @@ export class AppErrorBoundary extends React.Component<
         this.state.error?.message?.includes("Provider");
 
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="min-h-screen flex items-center justify-center bg-[var(--c-surface-background)]">
           <div className="max-w-md w-full mx-4">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+            <div className={`${tw.surfaceBackground} rounded-lg shadow-sm border ${tw.borderDefault} p-8`}>
               <div className="flex justify-center mb-4">
                 <AlertTriangle className="h-12 w-12 text-red-500" />
               </div>
 
-              <h1 className="text-xl font-bold text-gray-900 text-center mb-2">
+              <h1 className={`text-xl font-bold ${tw.textPrimary} text-center mb-2`}>
                 Application Error
               </h1>
 
-              <p className="text-sm text-gray-600 text-center mb-6">
+              <p className={`text-sm ${tw.textSecondary} text-center mb-6`}>
                 {isProviderError
                   ? "A critical service initialization error occurred. We'll help you recover."
                   : "An unexpected error occurred. We're working on it."}
               </p>
 
-              <div className="bg-gray-50 rounded border border-gray-200 p-4 mb-6">
-                <p className="text-xs font-mono text-gray-700 break-words">
+              <div className={`bg-[var(--c-interactive-hover)] rounded border ${tw.borderDefault} p-4 mb-6`}>
+                <p className={`text-xs font-mono ${tw.textSecondary} break-words`}>
                   {this.state.error?.message || "Unknown error"}
                 </p>
               </div>
@@ -127,7 +127,7 @@ export class AppErrorBoundary extends React.Component<
                 </button>
               </div>
 
-              <p className="text-xs text-gray-500 text-center mt-4">
+              <p className={`text-xs ${tw.textMuted} text-center mt-4`}>
                 <span className="block mb-2">
                   "Try Again" keeps your login. "Clear Cache" removes temporary data if it's corrupted.
                 </span>

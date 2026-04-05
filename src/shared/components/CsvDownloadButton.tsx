@@ -1,6 +1,7 @@
 import React from "react";
 import { Download } from "lucide-react";
 import useCsvDownload from "../hooks/useCsvDownload";
+import { tw } from "../utils/utils";
 
 interface CsvDownloadButtonProps {
   headers: string[];
@@ -22,7 +23,7 @@ export const CsvDownloadButton: React.FC<CsvDownloadButtonProps> = ({
   rows,
   filename = "data.csv",
   label = "Download CSV",
-  className = "bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 text-sm rounded font-medium transition-colors disabled:cursor-not-allowed disabled:bg-gray-400",
+  className = `${tw.primaryAction} hover:opacity-90 px-4 py-2 text-sm ${tw.rounded} font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50`,
   disabled = !headers.length && !rows.length,
   // variant = "primary",
   // size = "md",

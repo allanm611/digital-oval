@@ -67,7 +67,7 @@ export default function Select({
   return (
     <div className={`relative ${className}`}>
       {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className={`block text-sm font-medium ${tw.textSecondary} mb-2`}>
           {label}
         </label>
       )}
@@ -75,25 +75,27 @@ export default function Select({
       <div ref={dropdownRef} className="relative">
         <div
           className={`
-            relative w-full px-3 py-2 border ${tw.rounded} bg-white cursor-pointer
+            relative w-full px-3 py-2 border ${tw.rounded} ${tw.surfaceBackground} cursor-pointer
             transition-all duration-200 focus-within:border-blue-500
             ${
-              error ? "border-red-300" : "border-gray-300 hover:border-gray-400"
+              error
+                ? "border-red-300"
+                : `${tw.borderDefault} hover:border-[var(--c-border-muted)]`
             }
-            ${disabled ? "bg-gray-50 cursor-not-allowed" : ""}
+            ${disabled ? "bg-[var(--c-interactive-disabled)] cursor-not-allowed" : ""}
           `}
           onClick={() => !disabled && setIsOpen(!isOpen)}
         >
           <div className="flex items-center justify-between">
             <span
               className={`text-sm ${
-                selectedOption ? "text-gray-900" : "text-gray-500"
+                selectedOption ? tw.textPrimary : tw.textMuted
               }`}
             >
               {selectedOption ? selectedOption.label : placeholder}
             </span>
             <ChevronDown
-              className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
+              className={`w-4 h-4 ${tw.textMuted} transition-transform duration-200 ${
                 isOpen ? "rotate-180" : ""
               }`}
             />
@@ -102,16 +104,16 @@ export default function Select({
 
         {isOpen && (
           <div
-            className={`absolute z-50 w-full mt-1 bg-white border border-gray-200 ${tw.rounded} shadow-lg max-h-60 overflow-hidden`}
+            className={`absolute z-50 w-full mt-1 ${tw.surfaceBackground} border ${tw.borderDefault} ${tw.rounded} shadow-lg max-h-60 overflow-hidden`}
           >
             {searchable && (
-              <div className="p-2 border-b border-gray-100">
+              <div className={`p-2 border-b ${tw.borderDefault}`}>
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search options..."
-                  className={`w-full px-3 py-2 text-sm border border-gray-200 ${tw.rounded} focus:outline-none `}
+                  className={`w-full px-3 py-2 text-sm border ${tw.borderDefault} ${tw.rounded} ${tw.surfaceBackground} ${tw.textPrimary} focus:outline-none`}
                 />
               </div>
             )}
@@ -129,7 +131,7 @@ export default function Select({
                         ${
                           isSelected
                             ? "bg-blue-50 text-blue-700"
-                            : "text-gray-700 hover:bg-gray-50"
+                            : `${tw.textSecondary} hover:bg-[var(--c-interactive-hover)]`
                         }
                       `}
                     >
@@ -141,7 +143,7 @@ export default function Select({
                   );
                 })
               ) : (
-                <div className="px-3 py-2 text-sm text-gray-500">
+                <div className={`px-3 py-2 text-sm ${tw.textMuted}`}>
                   No options found
                 </div>
               )}

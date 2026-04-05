@@ -48,7 +48,7 @@ export default function DeleteModal({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+          <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" />
         </Transition.Child>
 
         <div
@@ -66,9 +66,11 @@ export default function DeleteModal({
               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
               <Dialog.Panel
-                className={`relative transform overflow-hidden ${tw.rounded} bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg`}
+                className={`relative transform overflow-hidden ${tw.rounded} ${tw.surfaceBackground} ${tw.textPrimary} text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg`}
               >
-                <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                <div
+                  className={`${tw.surfaceBackground} px-4 pb-4 pt-5 sm:p-6 sm:pb-4`}
+                >
                   <div className="sm:flex sm:items-start">
                     <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
                       <ExclamationTriangleIcon
@@ -79,14 +81,18 @@ export default function DeleteModal({
                     <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
                       <Dialog.Title
                         as="h3"
-                        className="text-base font-semibold leading-6 text-gray-900"
+                        className={`text-base font-semibold leading-6 ${tw.textPrimary}`}
                       >
                         {title}
                       </Dialog.Title>
                       <div className="mt-2">
-                        <p className="text-sm text-gray-500">{description}</p>
+                        <p className={`text-sm ${tw.textMuted}`}>
+                          {description}
+                        </p>
                         {itemName && (
-                          <p className="mt-2 text-sm font-medium text-gray-900">
+                          <p
+                            className={`mt-2 text-sm font-medium ${tw.textPrimary}`}
+                          >
                             "{itemName}"
                           </p>
                         )}
@@ -94,7 +100,7 @@ export default function DeleteModal({
                     </div>
                   </div>
                 </div>
-                <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                <div className="bg-[var(--c-interactive-hover)] px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
                   <button
                     type="button"
                     className={`inline-flex w-full justify-center ${tw.rounded} bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed`}
@@ -105,7 +111,7 @@ export default function DeleteModal({
                   </button>
                   <button
                     type="button"
-                    className={`mt-3 inline-flex w-full justify-center ${tw.rounded} bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto`}
+                    className={`mt-3 inline-flex w-full justify-center ${tw.rounded} ${tw.surfaceBackground} px-3 py-2 text-sm font-semibold ${tw.textPrimary} shadow-sm ring-1 ring-inset ${tw.borderDefault} hover:bg-[var(--c-interactive-hover)] sm:mt-0 sm:w-auto`}
                     onClick={onClose}
                     disabled={isLoading}
                   >
@@ -118,6 +124,6 @@ export default function DeleteModal({
         </div>
       </Dialog>
     </Transition.Root>,
-    document.body
+    document.body,
   );
 }

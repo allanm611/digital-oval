@@ -2,7 +2,7 @@ import React from "react";
 import { LucideIcon } from "lucide-react";
 import { colors as color } from "../../utils/tokens";
 
-import { tw } from '../../../shared/utils/utils';
+import { tw } from "../../../shared/utils/utils";
 interface FormSectionProps {
   title: string;
   description?: string;
@@ -32,9 +32,11 @@ export default function FormSection({
           </div>
         )}
         <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-900 mb-1">{title}</h3>
+          <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-1`}>
+            {title}
+          </h3>
           {description && (
-            <p className="text-sm text-gray-600">{description}</p>
+            <p className={`text-sm ${tw.textSecondary}`}>{description}</p>
           )}
         </div>
       </div>

@@ -9,6 +9,7 @@ import { campaignService } from "../services/campaignService";
 import { campaignFlowService } from "../services/campaignFlowService";
 import { offerService } from "../../offers/services/offerService";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw, components } from "../../../shared/utils/utils";
 import React, { useCallback } from "react";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -34,18 +35,18 @@ interface SegmentMapping {
   channels: string[];
 }
 
-const AVAILABLE_CHANNELS = [
-  { code: "NORMAL_SMS", label: "Normal SMS" },
-  { code: "FLASH_SMS", label: "Flash SMS" },
-  { code: "USSD", label: "USSD" },
-  { code: "INTERACTIVE_USSD", label: "Interactive USSD" },
-  { code: "EMAIL", label: "Email" },
-  { code: "PUSH", label: "Push Notification" },
-  { code: "WHATSAPP", label: "WhatsApp" },
-  { code: "INAPP", label: "In-App" },
-  { code: "OBD", label: "OBD" },
-  { code: "IVR", label: "IVR" },
-  { code: "SHORT_CODE", label: "Short Code" },
+const CHANNEL_CODES = [
+  "NORMAL_SMS",
+  "FLASH_SMS",
+  "USSD",
+  "INTERACTIVE_USSD",
+  "EMAIL",
+  "PUSH",
+  "WHATSAPP",
+  "INAPP",
+  "OBD",
+  "IVR",
+  "SHORT_CODE",
 ];
 
 export default function RunCampaignModal({
@@ -58,17 +59,33 @@ export default function RunCampaignModal({
   onSuccess,
 }: RunCampaignModalProps) {
   const { showToast } = useToast();
+  const { t } = useLanguage();
   const [segments, setSegments] = useState<SegmentMapping[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
+
+  // Build available channels with translations
+  const AVAILABLE_CHANNELS = [
+    { code: "NORMAL_SMS", label: t("campaigns.channels.normalSMS") },
+    { code: "FLASH_SMS", label: t("campaigns.channels.flashSMS") },
+    { code: "USSD", label: t("campaigns.channels.ussd") },
+    { code: "INTERACTIVE_USSD", label: t("campaigns.channels.interactiveUSSD") },
+    { code: "EMAIL", label: t("campaigns.channels.email") },
+    { code: "PUSH", label: t("campaigns.channels.push") },
+    { code: "WHATSAPP", label: t("campaigns.channels.whatsapp") },
+    { code: "INAPP", label: t("campaigns.channels.inApp") },
+    { code: "OBD", label: t("campaigns.channels.obd") },
+    { code: "IVR", label: t("campaigns.channels.ivr") },
+    { code: "SHORT_CODE", label: t("campaigns.channels.shortCode") },
+  ];
 
   // Check if campaign is approved and active, then it can be run
   const isApproved = approvalStatus === "approved";
   const canRun = isApproved && isActive;
   const runDisabledReason = !isApproved
-    ? `Campaign is pending approval (status: ${approvalStatus})`
+    ? t("campaigns.run.pendingApprovalReason", { status: approvalStatus })
     : !isActive
-      ? "Campaign is not active. Please activate it first."
+      ? t("campaigns.run.notActiveReason")
       : null;
 
   const loadSegments = useCallback(async () => {
@@ -151,11 +168,11 @@ export default function RunCampaignModal({
 
       setSegments(segmentsWithOfferNames);
     } catch {
-      showToast("error", "Failed to load campaign segments");
+      showToast("error", t("campaigns.run.loadSegmentsError"));
     } finally {
       setIsLoading(false);
     }
-  }, [campaignId, showToast]);
+  }, [campaignId, showToast, t]);
 
   useEffect(() => {
     if (isOpen) {
@@ -193,7 +210,7 @@ export default function RunCampaignModal({
     );
 
     if (selectedSegments.length === 0) {
-      showToast("warning", "Please select at least one segment with a channel");
+      showToast("warning", t("campaigns.run.selectSegmentWarning"));
       return;
     }
 
@@ -226,12 +243,12 @@ export default function RunCampaignModal({
 
       const runResult = await campaignService.runCampaign(request);
 
-      showToast("success", `Campaign "${campaignName}" started successfully!`);
+      showToast("success", t("campaigns.run.startSuccess", { name: campaignName }));
       onSuccess?.(runResult?.data);
       onClose();
     } catch (error) {
       // Extract error message from backend response
-      let errorMessage = "Failed to run campaign. Please try again.";
+      let errorMessage = t("campaigns.run.runError");
 
       if (error instanceof Error) {
         // Filter out HTTP error messages
@@ -239,7 +256,7 @@ export default function RunCampaignModal({
           error.message.includes("HTTP error") ||
           error.message.includes("status:")
         ) {
-          errorMessage = "Failed to execute campaign. Please try again.";
+          errorMessage = t("campaigns.run.executionError");
         } else {
           // Try to parse JSON error message from the error string
           const match = error.message.match(/details: ({.*})/);
@@ -252,13 +269,13 @@ export default function RunCampaignModal({
                 backendMessage.includes("HTTP error") ||
                 backendMessage.includes("status:")
               ) {
-                errorMessage = "Failed to run campaign. Please try again.";
+                errorMessage = t("campaigns.run.runError");
               } else {
                 errorMessage = backendMessage || errorMessage;
               }
             } catch {
               // If parsing fails, use generic message
-              errorMessage = "Failed to run campaign. Please try again.";
+              errorMessage = t("campaigns.run.runError");
             }
           } else {
             // Use the error message if it doesn't contain HTTP errors

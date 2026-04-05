@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { CheckCircle, XCircle, AlertCircle, Info, X } from "lucide-react";
 
-import { tw } from '../../../shared/utils/utils';
+import { tw } from "../../../shared/utils/utils";
 export type ToastType = "success" | "error" | "warning" | "info";
 
 export interface Toast {
@@ -74,7 +74,9 @@ const ToastComponent = ({ toast, onRemove }: ToastProps) => {
         <div className="ml-3 flex-1">
           <p className="text-sm font-semibold">{String(toast.title)}</p>
           {toast.message && (
-            <p className="text-sm mt-1 opacity-90 break-words whitespace-pre-wrap">{String(toast.message)}</p>
+            <p className="text-sm mt-1 opacity-90 break-words whitespace-pre-wrap">
+              {String(toast.message)}
+            </p>
           )}
         </div>
         <button
@@ -82,7 +84,7 @@ const ToastComponent = ({ toast, onRemove }: ToastProps) => {
             setIsVisible(false);
             setTimeout(() => onRemove(toast.id), 300);
           }}
-          className="ml-4 flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
+          className="ml-4 flex-shrink-0 opacity-60 hover:opacity-90 transition-opacity"
         >
           <X className="w-4 h-4" />
         </button>

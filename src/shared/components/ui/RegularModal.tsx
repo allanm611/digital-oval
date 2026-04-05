@@ -70,18 +70,23 @@ export default function RegularModal({
               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
               <Dialog.Panel
-                className={`relative transform overflow-hidden flex flex-col ${tw.rounded} bg-white text-left shadow-xl transition-all w-full ${sizeClasses[size]}`}
-                style={{ zIndex: zIndex.modal + 1, maxHeight: "calc(100vh - 2rem)" }}
+                className={`relative transform overflow-hidden flex flex-col ${tw.rounded} ${tw.surfaceBackground} ${tw.textPrimary} text-left shadow-xl transition-all w-full ${sizeClasses[size]}`}
+                style={{
+                  zIndex: zIndex.modal + 1,
+                  maxHeight: "calc(100vh - 2rem)",
+                }}
               >
                 {/* Header */}
-                <div className="flex-shrink-0 flex items-center justify-between border-b border-gray-200 px-6 py-3 bg-white">
-                  <h2 className="text-lg font-semibold text-gray-900">
+                <div
+                  className={`flex-shrink-0 flex items-center justify-between border-b ${tw.borderDefault} px-6 py-3 ${tw.surfaceBackground}`}
+                >
+                  <h2 className={`text-lg font-semibold ${tw.textPrimary}`}>
                     {title}
                   </h2>
                   {showCloseButton && (
                     <button
                       type="button"
-                      className={`${tw.rounded} text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-white`}
+                      className={`${tw.rounded} ${tw.textMuted} hover:text-[var(--c-text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--c-interactive-focus)]`}
                       onClick={onClose}
                     >
                       <span className="sr-only">Close</span>
@@ -100,6 +105,6 @@ export default function RegularModal({
         </div>
       </Dialog>
     </Transition.Root>,
-    document.body
+    document.body,
   );
 }

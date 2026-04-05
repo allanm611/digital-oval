@@ -12,20 +12,74 @@ import {
 // Standardized rounded corners - use this constant instead of hardcoded "rounded-md"
 export const ROUNDED = "rounded-md";
 
+const themedColor = {
+  primary: {
+    action: "var(--c-primary-action)",
+    accent: "var(--c-primary-accent)",
+    background: "var(--c-primary-background)",
+  },
+  surface: {
+    cards: "var(--c-surface-cards)",
+    background: "var(--c-surface-background)",
+    tableHeader: "var(--c-surface-table-header)",
+    tableHeaderText: "var(--c-surface-table-header-text)",
+    tablebodybg: "var(--c-surface-table-body)",
+  },
+  text: {
+    primary: "var(--c-text-primary)",
+    secondary: "var(--c-text-secondary)",
+    muted: "var(--c-text-muted)",
+    inverse: "var(--c-text-inverse)",
+  },
+  interactive: {
+    hover: "var(--c-interactive-hover)",
+    active: "var(--c-interactive-active)",
+    focus: "var(--c-interactive-focus)",
+    disabled: "var(--c-interactive-disabled)",
+    link: "var(--c-interactive-link)",
+  },
+  border: {
+    default: "var(--c-border-default)",
+    accent: "var(--c-border-accent)",
+    muted: "var(--c-border-muted)",
+  },
+  notes: {
+    warning: {
+      background: "var(--c-note-warning-bg)",
+      border: "var(--c-note-warning-border)",
+      text: "var(--c-note-warning-text)",
+      textLight: "var(--c-note-warning-text-light)",
+    },
+  },
+};
+
+const themedButtons = {
+  ...buttons,
+  action: {
+    ...buttons.action,
+    background: "var(--c-primary-action)",
+  },
+  bordered: {
+    ...buttons.bordered,
+    color: "var(--c-primary-action)",
+    border: "1px solid var(--c-primary-action)",
+  },
+};
+
 // Direct access to color values from tokens.ts - use these for custom styling
 export const color = {
-  primary: colors.primary,
-  surface: colors.surface,
+  primary: themedColor.primary,
+  surface: themedColor.surface,
   status: colors.status,
   configStatus: colors.configStatus,
   tertiary: colors.tertiary,
   charts: colors.charts,
-  text: colors.text,
-  interactive: colors.interactive,
-  border: colors.border,
+  text: themedColor.text,
+  interactive: themedColor.interactive,
+  border: themedColor.border,
   gradients: colors.gradients,
   iconSizes: colors.iconSizes,
-  notes,
+  notes: themedColor.notes,
 };
 
 // Font system with Satoshi and sans-serif - includes weights, sizes, and pre-defined typography styles
@@ -40,7 +94,7 @@ export const typography = {
 // Spacing and border radius values for consistent layout and rounded corners
 export const space = spacing;
 export const radius = borderRadius;
-export const button = buttons;
+export const button = themedButtons;
 export { zIndex };
 export const zIndexTokens = zIndex;
 
@@ -69,9 +123,9 @@ export const noteStyles = {
 
 // Ready-to-use Tailwind CSS classes - copy and paste these directly into your className props
 export const tw = {
-  primaryAction: `bg-[${colors.primary.action}] text-white`,
-  primaryAccent: `bg-[${colors.primary.accent}] text-black`,
-  primaryBackground: `bg-[${colors.primary.background}]`,
+  primaryAction: "bg-[var(--c-primary-action)] text-white",
+  primaryAccent: "bg-[var(--c-primary-accent)] text-black",
+  primaryBackground: "bg-[var(--c-primary-background)]",
 
   // Accent color with opacity variants
   accent10: `bg-[${colors.primary.accent}]/10`,
@@ -79,9 +133,9 @@ export const tw = {
   accent30: `bg-[${colors.primary.accent}]/30`,
   accent50: `bg-[${colors.primary.accent}]/50`,
 
-  surfaceCards: `bg-[${colors.surface.cards}]`,
-  surfaceBackground: `bg-[${colors.surface.background}]`,
-  tableHeader: `bg-[${colors.surface.tableHeader}]`,
+  surfaceCards: "bg-[var(--c-surface-cards)]",
+  surfaceBackground: "bg-[var(--c-surface-background)]",
+  tableHeader: "bg-[var(--c-surface-table-header)]",
 
   success: `text-[${colors.status.success}]`,
   danger: `text-[${colors.status.danger}]`,
@@ -99,20 +153,20 @@ export const tw = {
   statusWarning10: `bg-[${colors.status.warning}]/10`,
   statusInfo10: `bg-[${colors.status.info}]/10`,
 
-  textPrimary: `text-[${colors.text.primary}]`,
-  textSecondary: `text-[${colors.text.secondary}]`,
-  textMuted: `text-[${colors.text.muted}]`,
-  textInverse: `text-[${colors.text.inverse}]`,
+  textPrimary: "text-[var(--c-text-primary)]",
+  textSecondary: "text-[var(--c-text-secondary)]",
+  textMuted: "text-[var(--c-text-muted)]",
+  textInverse: "text-[var(--c-text-inverse)]",
 
-  hover: `hover:bg-[${colors.interactive.hover}]`,
-  active: `active:bg-[${colors.interactive.active}]`,
-  focus: `focus:ring-[${colors.interactive.focus}]`,
-  disabled: `disabled:bg-[${colors.interactive.disabled}]`,
-  link: `text-[${colors.interactive.link}]`,
+  hover: "hover:bg-[var(--c-interactive-hover)]",
+  active: "active:bg-[var(--c-interactive-active)]",
+  focus: "focus:ring-[var(--c-interactive-focus)]",
+  disabled: "disabled:bg-[var(--c-interactive-disabled)]",
+  link: "text-[var(--c-interactive-link)]",
 
-  borderDefault: `border-[${colors.border.default}]`,
-  borderAccent: `border-[${colors.border.accent}]`,
-  borderMuted: `border-[${colors.border.muted}]`,
+  borderDefault: "border-[var(--c-border-default)]",
+  borderAccent: "border-[var(--c-border-accent)]",
+  borderMuted: "border-[var(--c-border-muted)]",
 
   fontPrimary: "font-sans",
   fontSecondary: "font-mono",
@@ -144,7 +198,7 @@ export const tw = {
   // Standardized rounded corners - use this instead of hardcoded rounded-md
   rounded: ROUNDED,
 
-  button: `bg-[#252829] active:bg-[#252829]/80 text-white text-sm font-medium transition-colors px-4 py-2.5 ${ROUNDED} cursor-pointer`,
+  button: `bg-[var(--c-primary-action)] text-white text-sm font-medium transition-colors px-4 py-2.5 ${ROUNDED} cursor-pointer`,
 
   // Bordered button with transparent background and colored border
   // Use with inline styles: style={{ borderColor: color.primary.action, color: color.primary.action }}
@@ -154,15 +208,15 @@ export const tw = {
 // Complete component styles - pre-built styles for common UI elements that you can use directly
 export const components = {
   card: {
-    default: `bg-neutral-100 border border-[#E5E7EB] ${ROUNDED} p-6`,
-    surface: `bg-white border border-[#E5E7EB] ${ROUNDED} p-6`,
-    elevated: `bg-neutral-100 border border-[#E5E7EB] ${ROUNDED} p-6`,
+    default: `bg-[var(--c-surface-cards)] border border-[var(--c-border-default)] ${ROUNDED} p-6`,
+    surface: `bg-[var(--c-surface-background)] border border-[var(--c-border-default)] ${ROUNDED} p-6`,
+    elevated: `bg-[var(--c-surface-cards)] border border-[var(--c-border-default)] ${ROUNDED} p-6`,
   },
 
   input: {
-    default: `border border-[${colors.border.default}] focus:border-[${colors.interactive.focus}] bg-white text-[${colors.text.primary}] ${ROUNDED}`,
-    error: `border border-[${colors.status.danger}] focus:border-[${colors.status.danger}] bg-white text-[${colors.text.primary}] ${ROUNDED}`,
-    accent: `border border-[${colors.border.accent}] focus:border-[${colors.border.accent}] bg-white text-[${colors.text.primary}] ${ROUNDED}`,
+    default: `border border-[var(--c-border-default)] focus:border-[var(--c-interactive-focus)] bg-[var(--c-surface-background)] text-[var(--c-text-primary)] ${ROUNDED}`,
+    error: `border border-[${colors.status.danger}] focus:border-[${colors.status.danger}] bg-[var(--c-surface-background)] text-[var(--c-text-primary)] ${ROUNDED}`,
+    accent: `border border-[var(--c-border-accent)] focus:border-[var(--c-border-accent)] bg-[var(--c-surface-background)] text-[var(--c-text-primary)] ${ROUNDED}`,
   },
 
   badge: {

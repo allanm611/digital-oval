@@ -2453,6 +2453,150 @@ Satoshi
   --ease-in-out-cubic: cubic-bezier(0.65, 0, 0.35, 1);
   --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  /* Theme semantic variables (light mode defaults) */
+  --c-primary-action: #252829;
+  --c-primary-accent: #00bbcc;
+  --c-primary-background: #e5e7eb;
+
+  --c-surface-cards: #f5f5f5;
+  --c-surface-background: #ffffff;
+  --c-surface-table-header: #e5e7eb;
+  --c-surface-table-header-text: #000000;
+  --c-surface-table-body: #ffffff;
+
+  --c-text-primary: #000000;
+  --c-text-secondary: #394247;
+  --c-text-muted: #6b7280;
+  --c-text-inverse: #ffffff;
+
+  --c-interactive-hover: #f3f4f6;
+  --c-interactive-active: #e5e7eb;
+  --c-interactive-focus: #00bbcc;
+  --c-interactive-disabled: #d1d5db;
+  --c-interactive-link: #00bbcc;
+
+  --c-border-default: #e5e7eb;
+  --c-border-accent: #00bbcc;
+  --c-border-muted: #d1d5db;
+
+  --c-note-warning-bg: #fffbeb;
+  --c-note-warning-border: #fcd34d;
+  --c-note-warning-text: #92400e;
+  --c-note-warning-text-light: #b45309;
+}
+
+.dark,
+[color-mode="dark"] {
+  --c-primary-action: #00bbcc;
+  --c-primary-accent: #22d3ee;
+  --c-primary-background: #1f2223;
+
+  --c-surface-cards: #2a2f31;
+  --c-surface-background: #1f2223;
+  --c-surface-table-header: #2a2f31;
+  --c-surface-table-header-text: #f9fafb;
+  --c-surface-table-body: #1f2223;
+
+  --c-text-primary: #f9fafb;
+  --c-text-secondary: #d1d5db;
+  --c-text-muted: #9ca3af;
+  --c-text-inverse: #000000;
+
+  --c-interactive-hover: #2a2f31;
+  --c-interactive-active: #394247;
+  --c-interactive-focus: #22d3ee;
+  --c-interactive-disabled: #4b5563;
+  --c-interactive-link: #67e8f9;
+
+  --c-border-default: #394247;
+  --c-border-accent: #22d3ee;
+  --c-border-muted: #4b5563;
+
+  --c-note-warning-bg: #332108;
+  --c-note-warning-border: #d97706;
+  --c-note-warning-text: #fde68a;
+  --c-note-warning-text-light: #fcd34d;
+}
+
+/*
+ * Dark mode compatibility layer:
+ * Gradually migrate legacy hardcoded utility classes to semantic theme tokens.
+ */
+
+.dark .bg-gray-50,
+[color-mode="dark"] .bg-gray-50 {
+  background-color: #2a2f31 !important;
+}
+
+.dark .bg-gray-100,
+[color-mode="dark"] .bg-gray-100 {
+  background-color: #394247 !important;
+}
+
+.dark .text-black,
+[color-mode="dark"] .text-black {
+  color: var(--c-text-primary) !important;
+}
+
+.dark .text-black\/80,
+[color-mode="dark"] .text-black\/80 {
+  color: rgba(249, 250, 251, 0.8) !important;
+}
+
+.dark .text-gray-900,
+[color-mode="dark"] .text-gray-900 {
+  color: var(--c-text-primary) !important;
+}
+
+.dark .text-gray-700,
+[color-mode="dark"] .text-gray-700 {
+  color: var(--c-text-secondary) !important;
+}
+
+.dark .text-gray-600,
+[color-mode="dark"] .text-gray-600 {
+  color: var(--c-text-secondary) !important;
+}
+
+.dark .text-gray-500,
+[color-mode="dark"] .text-gray-500 {
+  color: var(--c-text-muted) !important;
+}
+
+.dark .border-gray-100,
+[color-mode="dark"] .border-gray-100,
+.dark .border-gray-200,
+[color-mode="dark"] .border-gray-200,
+.dark .border-gray-300,
+[color-mode="dark"] .border-gray-300 {
+  border-color: var(--c-border-default) !important;
+}
+
+/* Normalize hardcoded light utility classes when dark theme is active */
+.dark .bg-white,
+[color-mode="dark"] .bg-white {
+  background-color: var(--c-surface-cards) !important;
+}
+
+.dark .text-white,
+[color-mode="dark"] .text-white {
+  color: var(--c-text-primary) !important;
+}
+
+.dark .text-white\/90,
+[color-mode="dark"] .text-white\/90 {
+  color: rgba(249, 250, 251, 0.9) !important;
+}
+
+.dark .text-white\/80,
+[color-mode="dark"] .text-white\/80 {
+  color: rgba(249, 250, 251, 0.8) !important;
+}
+
+.dark .text-white\/70,
+[color-mode="dark"] .text-white\/70 {
+  color: rgba(249, 250, 251, 0.7) !important;
 }
 
 /* Base Styles */
@@ -2479,6 +2623,8 @@ Satoshi
       "Cantarell",
       sans-serif;
     @apply bg-white text-secondary-900 antialiased;
+    background-color: var(--c-primary-background);
+    color: var(--c-text-primary);
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     font-variation-settings: normal;
     overscroll-behavior: none;
@@ -3263,7 +3409,7 @@ Satoshi
 /* Global Checkbox and Radio Styling - Accent Color Indicator */
 input[type="checkbox"],
 input[type="radio"] {
-  accent-color: #00BBCC;
+  accent-color: #00bbcc;
   cursor: pointer;
   background-color: white;
 }

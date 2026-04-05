@@ -541,7 +541,7 @@ export default function QuickListForm({
                       {previewRows.map((row, rowIndex) => (
                         <tr
                           key={rowIndex}
-                          className="hover:bg-gray-50 transition-colors"
+                          className={`${tw.hover} transition-colors`}
                         >
                           {previewHeaders.map((_, colIndex) => (
                             <td
@@ -667,7 +667,7 @@ export default function QuickListForm({
                         .map((contact, index) => (
                           <tr
                             key={index}
-                            className="hover:bg-gray-50 transition-colors"
+                            className={`${tw.hover} transition-colors`}
                           >
                             <td
                               className={`px-3 py-2 ${tw.textMuted} whitespace-nowrap border-b`}

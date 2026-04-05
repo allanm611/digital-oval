@@ -6,10 +6,12 @@ import StepLabel from "@mui/material/StepLabel";
 import StepIcon from "@mui/material/StepIcon";
 import { styled } from "@mui/material/styles";
 import { colors } from "../../../shared/utils/tokens";
+import { tw } from "../../../shared/utils/utils";
 
 const ACCENT_COLOR = colors.primary.accent;
-const GRAY_COLOR = "#e5e7eb";
-const TEXT_GRAY = "#9ca3af";
+const GRAY_COLOR = "var(--c-border-default)";
+const TEXT_PRIMARY = "var(--c-text-primary)";
+const TEXT_MUTED = "var(--c-text-muted)";
 
 // Custom step icon
 const _CustomStepIcon = styled(StepIcon)((_theme) => ({
@@ -19,7 +21,7 @@ const _CustomStepIcon = styled(StepIcon)((_theme) => ({
     color: GRAY_COLOR,
     border: `2px solid ${GRAY_COLOR}`,
     borderRadius: "50%",
-    backgroundColor: "white",
+    backgroundColor: "var(--c-surface-background)",
     fontSize: 16,
     display: "flex",
     alignItems: "center",
@@ -75,7 +77,7 @@ export default function ProgressStepper({
   return (
     <nav
       aria-label="Progress"
-      className="sticky top-16 z-40 bg-white py-4 sm:py-6 px-2 sm:px-0"
+      className="sticky top-16 z-40 bg-[var(--c-surface-background)] py-4 sm:py-6 px-2 sm:px-0"
     >
       {/* Mobile - Simple dots */}
       <div className="md:hidden flex items-center justify-center gap-2 flex-wrap">
@@ -116,15 +118,15 @@ export default function ProgressStepper({
                 ".MuiStepLabel-label": {
                   fontSize: "14px",
                   fontWeight: "normal",
-                  color: "#000000",
+                  color: "var(--c-text-primary)",
                   marginTop: "12px",
                   cursor: "pointer !important",
                   "&.Mui-active": {
-                    color: "#000000",
+                    color: "var(--c-text-primary)",
                     fontWeight: "normal",
                   },
                   "&.Mui-completed": {
-                    color: "#000000",
+                    color: "var(--c-text-primary)",
                     fontWeight: "normal",
                   },
                 },
@@ -186,7 +188,7 @@ export default function ProgressStepper({
                           color:
                             status === "completed" || status === "current"
                               ? "white"
-                              : TEXT_GRAY,
+                              : TEXT_MUTED,
                           fontSize: 16,
                           cursor: "pointer",
                         }}
@@ -198,7 +200,7 @@ export default function ProgressStepper({
                     <div style={{ textAlign: "center" }}>
                       <div
                         style={{
-                          color: "#000000",
+                          color: TEXT_PRIMARY,
                           fontSize: "14px",
                           fontWeight: "normal",
                         }}
@@ -206,7 +208,9 @@ export default function ProgressStepper({
                         {step.name}
                       </div>
                       {step.description && (
-                        <div className="text-xs text-gray-500 mt-1 hidden lg:block">
+                        <div
+                          className={`text-xs ${tw.textMuted} mt-1 hidden lg:block`}
+                        >
                           {step.description}
                         </div>
                       )}
