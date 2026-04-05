@@ -139,7 +139,9 @@ export default function CampaignDetailsPage() {
     broadcasts_completed: number;
     execution_time_ms: number;
   } | null>(null);
-  const [campaignChannelStats, setCampaignChannelStats] = useState<ChannelStat[]>([]);
+  const [campaignChannelStats, setCampaignChannelStats] = useState<
+    ChannelStat[]
+  >([]);
 
   // Stat card modal states
   const [showBroadcastsModal, setShowBroadcastsModal] = useState(false);
@@ -401,46 +403,51 @@ export default function CampaignDetailsPage() {
       }
 
       // Fetch each offer AND its channels in parallel
-      const offerAndChannelPromises = Array.from(offerIds).map(async (offerId) => {
-        try {
-          const [offerResponse, channelsResponse] = await Promise.all([
-            offerService.getOfferById(offerId, true),
-            offerCreativeService.getChannelsByOffer(offerId, true),
-          ]);
+      const offerAndChannelPromises = Array.from(offerIds).map(
+        async (offerId) => {
+          try {
+            const [offerResponse, channelsResponse] = await Promise.all([
+              offerService.getOfferById(offerId, true),
+              offerCreativeService.getChannelsByOffer(offerId, true),
+            ]);
 
-          // Handle offer response
-          let offer: Offer | null = null;
-          if (offerResponse && typeof offerResponse === "object") {
-            if ("data" in offerResponse && offerResponse.data) {
-              offer = offerResponse.data as Offer;
-            } else if ("id" in offerResponse) {
-              offer = offerResponse as unknown as Offer;
+            // Handle offer response
+            let offer: Offer | null = null;
+            if (offerResponse && typeof offerResponse === "object") {
+              if ("data" in offerResponse && offerResponse.data) {
+                offer = offerResponse.data as Offer;
+              } else if ("id" in offerResponse) {
+                offer = offerResponse as unknown as Offer;
+              }
             }
-          }
 
-          // Handle channels response - extract channels and total count
-          let channelStats: Array<{ channel: CreativeChannel; total: number }> = [];
-          if (
-            channelsResponse &&
-            "data" in channelsResponse &&
-            channelsResponse.data &&
-            "channels" in channelsResponse.data &&
-            Array.isArray(channelsResponse.data.channels)
-          ) {
-            const channels = channelsResponse.data.channels;
-            const total = channelsResponse.data.total || 1;
-            channelStats = channels.map((channel) => ({
-              channel,
-              total,
-            }));
-          }
+            // Handle channels response - extract channels and total count
+            let channelStats: Array<{
+              channel: CreativeChannel;
+              total: number;
+            }> = [];
+            if (
+              channelsResponse &&
+              "data" in channelsResponse &&
+              channelsResponse.data &&
+              "channels" in channelsResponse.data &&
+              Array.isArray(channelsResponse.data.channels)
+            ) {
+              const channels = channelsResponse.data.channels;
+              const total = channelsResponse.data.total || 1;
+              channelStats = channels.map((channel) => ({
+                channel,
+                total,
+              }));
+            }
 
-          return { offer, channelStats };
-        } catch (error) {
-          console.error(`Failed to fetch offer ${offerId}:`, error);
-          return { offer: null, channelStats: [] };
-        }
-      });
+            return { offer, channelStats };
+          } catch (error) {
+            console.error(`Failed to fetch offer ${offerId}:`, error);
+            return { offer: null, channelStats: [] };
+          }
+        },
+      );
 
       const results = await Promise.all(offerAndChannelPromises);
 
@@ -454,7 +461,10 @@ export default function CampaignDetailsPage() {
       const channelMap = new Map<CreativeChannel, number>();
       results.forEach((result) => {
         result.channelStats.forEach((stat) => {
-          channelMap.set(stat.channel, (channelMap.get(stat.channel) || 0) + stat.total);
+          channelMap.set(
+            stat.channel,
+            (channelMap.get(stat.channel) || 0) + stat.total,
+          );
         });
       });
 
@@ -463,8 +473,8 @@ export default function CampaignDetailsPage() {
         ([channel, total]) => ({
           channel,
           creativeCount: total,
-          description: `${total} creative${total !== 1 ? 's' : ''} created for this channel`,
-        })
+          description: `${total} creative${total !== 1 ? "s" : ""} created for this channel`,
+        }),
       );
       setCampaignChannelStats(stats);
     } catch (error) {
@@ -921,7 +931,12 @@ export default function CampaignDetailsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-        <BackButton fallbackTo="/dashboard/campaigns" onClick={handleBack} showBreadcrumb={true} currentLabel="Campaign Details" />
+        <BackButton
+          fallbackTo="/dashboard/campaigns"
+          onClick={handleBack}
+          showBreadcrumb={true}
+          currentLabel="Campaign Details"
+        />
         <div className="flex flex-wrap items-center gap-2">
           {/* Scheduled Run Clock Button */}
           <button
@@ -1103,7 +1118,10 @@ export default function CampaignDetailsPage() {
                         setIsActionLoading(true);
                         await campaignService.unarchiveCampaign(parseInt(id));
                         setCampaign({ ...campaign, status: "draft" });
-                        showToast("success", "Campaign unarchived successfully!");
+                        showToast(
+                          "success",
+                          "Campaign unarchived successfully!",
+                        );
                         setShowMoreMenu(false);
                       } catch (error) {
                         console.error("Failed to unarchive campaign:", error);
@@ -1223,9 +1241,7 @@ export default function CampaignDetailsPage() {
               : "0.0"}
             %
           </p>
-          <p className="text-xs text-gray-500 mt-2">
-            Delivery success rate
-          </p>
+          <p className="text-xs text-gray-500 mt-2">Delivery success rate</p>
         </div>
 
         {/* Broadcasts Card */}
@@ -1303,7 +1319,8 @@ export default function CampaignDetailsPage() {
                   ).replace(/text-\S+/, "")}`}
                   style={{
                     backgroundColor:
-                      campaign.status === "active" || campaign.status === "approved"
+                      campaign.status === "active" ||
+                      campaign.status === "approved"
                         ? "#10B981"
                         : campaign.status === "draft"
                           ? "#6B7280"
@@ -1349,9 +1366,7 @@ export default function CampaignDetailsPage() {
             <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
               Category
             </label>
-            <p className={`text-sm ${tw.textPrimary}`}>
-              {categoryName || "—"}
-            </p>
+            <p className={`text-sm ${tw.textPrimary}`}>{categoryName || "—"}</p>
           </div>
           <div>
             <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
@@ -1459,9 +1474,7 @@ export default function CampaignDetailsPage() {
               >
                 Timezone
               </label>
-              <p className={`text-sm ${tw.textPrimary}`}>
-                {campaign.timezone}
-              </p>
+              <p className={`text-sm ${tw.textPrimary}`}>{campaign.timezone}</p>
             </div>
           </div>
         </div>
@@ -1763,9 +1776,7 @@ export default function CampaignDetailsPage() {
                   >
                     Category
                   </label>
-                  <p className={`text-sm ${tw.textPrimary}`}>
-                    {categoryName}
-                  </p>
+                  <p className={`text-sm ${tw.textPrimary}`}>{categoryName}</p>
                 </div>
                 <div>
                   <label
@@ -2913,7 +2924,8 @@ export default function CampaignDetailsPage() {
                 {/* Status */}
                 <div>
                   <div className="flex items-center gap-2">
-                    <Checkbox id="flowActive"
+                    <Checkbox
+                      id="flowActive"
                       checked={editedFlow.is_active !== false}
                       onChange={(e) =>
                         setEditedFlow({
@@ -2921,7 +2933,8 @@ export default function CampaignDetailsPage() {
                           is_active: e.target.checked,
                         })
                       }
-                      className="w-4 h-4" />
+                      className="w-4 h-4"
+                    />
                     <label
                       htmlFor="flowActive"
                       className={`text-sm font-medium ${tw.textPrimary}`}
@@ -3063,12 +3076,10 @@ export default function CampaignDetailsPage() {
               (executionMetrics?.total_messages_sent || 0) +
                 (executionMetrics?.total_messages_failed || 0) >
               0
-                ? (
-                    ((executionMetrics?.total_messages_sent || 0) /
-                      ((executionMetrics?.total_messages_sent || 0) +
-                        (executionMetrics?.total_messages_failed || 0))) *
-                    100
-                  )
+                ? ((executionMetrics?.total_messages_sent || 0) /
+                    ((executionMetrics?.total_messages_sent || 0) +
+                      (executionMetrics?.total_messages_failed || 0))) *
+                  100
                 : 0
             }
             channelStats={campaignChannelStats}

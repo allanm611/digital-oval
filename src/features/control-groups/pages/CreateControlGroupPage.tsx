@@ -269,7 +269,9 @@ export default function CreateControlGroupPage() {
                         name="customerBase"
                         value="all_customers"
                         checked={selectedCustomerBase === "all_customers"}
-                        onChange={() => setSelectedCustomerBase("all_customers")}
+                        onChange={() =>
+                          setSelectedCustomerBase("all_customers")
+                        }
                         className="mt-1"
                       />
                       <div className="ml-3">
@@ -289,7 +291,9 @@ export default function CreateControlGroupPage() {
                         name="customerBase"
                         value="saved_segments"
                         checked={selectedCustomerBase === "saved_segments"}
-                        onChange={() => setSelectedCustomerBase("saved_segments")}
+                        onChange={() =>
+                          setSelectedCustomerBase("saved_segments")
+                        }
                         className="mt-1"
                       />
                       <div className="ml-3">

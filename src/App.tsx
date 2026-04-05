@@ -32,8 +32,13 @@ const AuthenticatedLandingPage = lazy(
   () => import("./features/dashboard/components/AuthenticatedLandingPage"),
 );
 const Dashboard = lazy(() => import("./features/dashboard/pages/Dashboard"));
-const DocsPage = lazy(() => import("./features/docs/pages/DocsPage").then(m => ({ default: m.DocsPage })));
+const DocsPage = lazy(() =>
+  import("./features/docs/pages/DocsPage").then((m) => ({
+    default: m.DocsPage,
+  })),
+);
 const EditDocsPage = lazy(() => import("./features/docs/pages/EditDocsPage"));
+const NotFoundPage = lazy(() => import("./shared/pages/NotFoundPage"));
 
 // Loading fallback component
 function PageLoader() {
@@ -81,6 +86,9 @@ function AppRoutes() {
 
           {/* Default redirect */}
           <Route path="/" element={<Navigate to="/login" />} />
+
+          {/* 404 catch-all */}
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
     </SafeRoute>

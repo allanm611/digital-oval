@@ -138,7 +138,9 @@ export default function SegmentDetailsPage() {
     level?: number;
     path?: (string | number)[];
   } | null>(null);
-  const [parentSegmentName, setParentSegmentName] = useState<string | null>(null);
+  const [parentSegmentName, setParentSegmentName] = useState<string | null>(
+    null,
+  );
   const [childSegments, setChildSegments] = useState<
     Array<{ id: number; name: string }>
   >([]);
@@ -267,7 +269,10 @@ export default function SegmentDetailsPage() {
   const loadCategoryName = useCallback(
     async (categoryId: number | string) => {
       try {
-        const response = await segmentService.getSegmentCategories(undefined, true);
+        const response = await segmentService.getSegmentCategories(
+          undefined,
+          true,
+        );
         const categories = response.data || [];
 
         // Handle both string and number IDs
@@ -412,9 +417,10 @@ export default function SegmentDetailsPage() {
         try {
           const parentRes = await segmentService.getSegmentById(
             Number(hierarchyData.parent_segment),
-            true
+            true,
           );
-          const parentData = (parentRes as { data?: Segment }).data || (parentRes as Segment);
+          const parentData =
+            (parentRes as { data?: Segment }).data || (parentRes as Segment);
           setParentSegmentName((parentData as Segment)?.name || null);
         } catch {
           setParentSegmentName(null);
@@ -1019,7 +1025,8 @@ export default function SegmentDetailsPage() {
         // Transform API response to display format
         const flows = response.data.map((flow: any) => ({
           campaign_id: flow.campaign_id,
-          campaign_name: flow.campaign_name || flow.name || `Campaign ${flow.campaign_id}`,
+          campaign_name:
+            flow.campaign_name || flow.name || `Campaign ${flow.campaign_id}`,
           segment_id: flow.segment_id,
           offer_id: flow.offer_id,
           offer_name: flow.offer_name || flow.title || `Offer ${flow.offer_id}`,
@@ -1089,7 +1096,12 @@ export default function SegmentDetailsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-        <BackButton fallbackTo="/dashboard/segments" onClick={handleBack} showBreadcrumb={true} currentLabel="Segment Details" />
+        <BackButton
+          fallbackTo="/dashboard/segments"
+          onClick={handleBack}
+          showBreadcrumb={true}
+          currentLabel="Segment Details"
+        />
         <div className="flex flex-wrap items-center gap-2">
           <PermissionGate permission="segments.update">
             <button
@@ -1291,9 +1303,7 @@ export default function SegmentDetailsPage() {
             />
             <p className="text-sm font-medium text-gray-600">Segment Type</p>
           </div>
-          <p className="mt-2 text-xl font-bold text-gray-900">
-            {segment.type}
-          </p>
+          <p className="mt-2 text-xl font-bold text-gray-900">{segment.type}</p>
         </div>
 
         <div
@@ -1580,14 +1590,18 @@ export default function SegmentDetailsPage() {
           Array.isArray(segment.definition.layer_filters.groups) ? (
             <div className="space-y-4">
               <div className="bg-gray-50 p-4 rounded border border-gray-200">
-                <p className="text-sm font-semibold text-gray-700 mb-2">Query Filters:</p>
+                <p className="text-sm font-semibold text-gray-700 mb-2">
+                  Query Filters:
+                </p>
                 <pre className="text-xs text-gray-600 overflow-auto max-h-48 bg-white p-2 rounded">
                   {JSON.stringify(segment.definition.layer_filters, null, 2)}
                 </pre>
               </div>
               {segment.query && (
                 <div className="bg-gray-50 p-4 rounded border border-gray-200">
-                  <p className="text-sm font-semibold text-gray-700 mb-2">Generated SQL:</p>
+                  <p className="text-sm font-semibold text-gray-700 mb-2">
+                    Generated SQL:
+                  </p>
                   <pre className="text-xs text-gray-600 overflow-auto max-h-48 bg-white p-2 rounded font-mono">
                     {segment.query}
                   </pre>
@@ -1595,10 +1609,10 @@ export default function SegmentDetailsPage() {
               )}
             </div>
           ) : segment.criteria &&
-          "conditions" in segment.criteria &&
-          Array.isArray(
-            (segment.criteria as Record<string, unknown>).conditions,
-          ) ? (
+            "conditions" in segment.criteria &&
+            Array.isArray(
+              (segment.criteria as Record<string, unknown>).conditions,
+            ) ? (
             <div className="space-y-2">
               {(
                 (segment.criteria as Record<string, unknown>)
@@ -1764,7 +1778,7 @@ export default function SegmentDetailsPage() {
                     <button
                       onClick={() =>
                         navigate(
-                          `/dashboard/segments/${segmentHierarchy.parent_segment}`
+                          `/dashboard/segments/${segmentHierarchy.parent_segment}`,
                         )
                       }
                       className={`text-sm px-4 py-2 bg-gray-50 ${tw.rounded} border border-transparent hover:opacity-80 transition-colors font-medium`}
@@ -1800,11 +1814,12 @@ export default function SegmentDetailsPage() {
                   </div>
                 </div>
               )}
-              {!segmentHierarchy?.parent_segment && childSegments.length === 0 && (
-                <p className={`text-sm ${tw.textSecondary}`}>
-                  No parent or child segments
-                </p>
-              )}
+              {!segmentHierarchy?.parent_segment &&
+                childSegments.length === 0 && (
+                  <p className={`text-sm ${tw.textSecondary}`}>
+                    No parent or child segments
+                  </p>
+                )}
             </div>
           </div>
         )}
@@ -1825,7 +1840,7 @@ export default function SegmentDetailsPage() {
                 setEditParentId(
                   segmentHierarchy?.parent_segment
                     ? Number(segmentHierarchy.parent_segment)
-                    : null
+                    : null,
                 );
                 loadParentSegments();
               }}
@@ -1895,9 +1910,14 @@ export default function SegmentDetailsPage() {
                       { label: "No parent segment", value: "" },
                       // Include current parent if it exists (but exclude if it's the current segment)
                       ...(segmentHierarchy?.parent_segment &&
-                        parentSegmentName &&
-                        Number(segmentHierarchy.parent_segment) !== Number(id)
-                        ? [{ label: parentSegmentName, value: String(segmentHierarchy.parent_segment) }]
+                      parentSegmentName &&
+                      Number(segmentHierarchy.parent_segment) !== Number(id)
+                        ? [
+                            {
+                              label: parentSegmentName,
+                              value: String(segmentHierarchy.parent_segment),
+                            },
+                          ]
                         : []),
                       ...parentSegments.map((parent) => ({
                         label: parent.name,
@@ -1941,7 +1961,7 @@ export default function SegmentDetailsPage() {
                   <button
                     onClick={() =>
                       navigate(
-                        `/dashboard/segments/${segmentHierarchy.parent_segment}`
+                        `/dashboard/segments/${segmentHierarchy.parent_segment}`,
                       )
                     }
                     className="hover:opacity-80 transition-colors font-medium"
@@ -2365,7 +2385,8 @@ export default function SegmentDetailsPage() {
                               }}
                             >
                               <td className="px-4 py-3">
-                                <Checkbox checked={isSelected}
+                                <Checkbox
+                                  checked={isSelected}
                                   onChange={() => {
                                     setSelectedCustomers((prev) =>
                                       prev.includes(customerId)
@@ -2375,7 +2396,8 @@ export default function SegmentDetailsPage() {
                                         : [...prev, customerId],
                                     );
                                   }}
-                                  className="w-4 h-4 cursor-pointer" />
+                                  className="w-4 h-4 cursor-pointer"
+                                />
                               </td>
                               <td className="px-4 py-3">
                                 <div className="text-sm text-gray-900">

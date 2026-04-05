@@ -52,7 +52,7 @@ export default function SchedulingComponent({
   const [startBroadcastBefore, setStartBroadcastBefore] = useState("Before");
   const [hoursBeforeBroadcast, setHoursBeforeBroadcast] = useState(0);
 
-  // Initialize with defaults if not provided
+  // Initialize with defaults if not provided (mount-only)
   useEffect(() => {
     if (!scheduling.start_date) {
       const defaultScheduling = {
@@ -64,6 +64,7 @@ export default function SchedulingComponent({
       };
       onSchedulingChange(defaultScheduling);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -98,6 +99,7 @@ export default function SchedulingComponent({
             }))
           : undefined,
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     recurrencePattern,
     recurrenceInterval,
@@ -469,7 +471,8 @@ export default function SchedulingComponent({
 
           {/* Additional Options */}
           <div className="space-y-3">
-            {(recurrencePattern === "Days" || recurrencePattern === "Months") && (
+            {(recurrencePattern === "Days" ||
+              recurrencePattern === "Months") && (
               <>
                 <Checkbox
                   checked={setSpecificStartTime}
@@ -486,7 +489,9 @@ export default function SchedulingComponent({
                 />
 
                 {setSpecificStartTime && recurrencePattern === "Days" && (
-                  <div className={`border border-gray-200 ${tw.rounded} p-4 space-y-3`}>
+                  <div
+                    className={`border border-gray-200 ${tw.rounded} p-4 space-y-3`}
+                  >
                     {specificDayStartTimes.map((entry) => (
                       <div
                         key={entry.id}

@@ -245,7 +245,16 @@ export default function OfferDetailsPage() {
   } | null>(null);
 
   // Campaign Flows state
-  const [campaignFlows, setCampaignFlows] = useState<Array<{ campaign_id: number; campaign_name: string; segment_id: number; segment_name: string; flow_type: string; wait_interval_hours: number }>>([]);
+  const [campaignFlows, setCampaignFlows] = useState<
+    Array<{
+      campaign_id: number;
+      campaign_name: string;
+      segment_id: number;
+      segment_name: string;
+      flow_type: string;
+      wait_interval_hours: number;
+    }>
+  >([]);
   const [isLoadingCampaignFlows, setIsLoadingCampaignFlows] = useState(false);
 
   // Flow type mapping (same as CampaignDetailsPage)
@@ -749,7 +758,9 @@ export default function OfferDetailsPage() {
 
       try {
         setIsLoadingCampaignFlows(true);
-        const response = await campaignFlowService.getCampaignFlowsByOffer(Number(id));
+        const response = await campaignFlowService.getCampaignFlowsByOffer(
+          Number(id),
+        );
         if (response && response.success && Array.isArray(response.data)) {
           // Transform API response to display format
           const flows = response.data.map((flow: any) => ({
@@ -1020,7 +1031,8 @@ export default function OfferDetailsPage() {
           products.push(...responseProducts);
 
           const total = response.pagination?.total || 0;
-          hasMore = products.length < total && responseProducts.length === limit;
+          hasMore =
+            products.length < total && responseProducts.length === limit;
           offset += limit;
         }
       }
@@ -1138,7 +1150,15 @@ export default function OfferDetailsPage() {
 
   // Consolidated offer action handler for details page
   interface OfferDetailActionParams {
-    action: "approve" | "reject" | "request_approval" | "activate" | "pause" | "expire" | "archive" | "unarchive";
+    action:
+      | "approve"
+      | "reject"
+      | "request_approval"
+      | "activate"
+      | "pause"
+      | "expire"
+      | "archive"
+      | "unarchive";
     successMessage: string;
     updateFields: Partial<Offer>;
     onSuccess?: () => void;
@@ -1151,25 +1171,37 @@ export default function OfferDetailsPage() {
     try {
       switch (action) {
         case "approve":
-          await offerService.approveOffer(Number(id), { approved_by: user.user_id });
+          await offerService.approveOffer(Number(id), {
+            approved_by: user.user_id,
+          });
           break;
         case "reject":
-          await offerService.rejectOffer(Number(id), { rejected_by: user.user_id });
+          await offerService.rejectOffer(Number(id), {
+            rejected_by: user.user_id,
+          });
           break;
         case "request_approval":
           await offerService.submitForApproval(Number(id), {});
           break;
         case "activate":
-          await offerService.updateOfferStatus(Number(id), { status: OfferStatusEnum.ACTIVE });
+          await offerService.updateOfferStatus(Number(id), {
+            status: OfferStatusEnum.ACTIVE,
+          });
           break;
         case "pause":
-          await offerService.updateOfferStatus(Number(id), { status: OfferStatusEnum.PAUSED });
+          await offerService.updateOfferStatus(Number(id), {
+            status: OfferStatusEnum.PAUSED,
+          });
           break;
         case "expire":
-          await offerService.updateOfferStatus(Number(id), { status: OfferStatusEnum.EXPIRED });
+          await offerService.updateOfferStatus(Number(id), {
+            status: OfferStatusEnum.EXPIRED,
+          });
           break;
         case "archive":
-          await offerService.updateOfferStatus(Number(id), { status: OfferStatusEnum.ARCHIVED });
+          await offerService.updateOfferStatus(Number(id), {
+            status: OfferStatusEnum.ARCHIVED,
+          });
           break;
         case "unarchive":
           await offerService.unarchiveOffer(Number(id));
@@ -1229,7 +1261,7 @@ export default function OfferDetailsPage() {
         successMessage: `Offer Approved: "${offer?.name}" has been approved successfully.`,
         updateFields: {
           status: OfferStatusEnum.APPROVED,
-          approval_status: "approved"
+          approval_status: "approved",
         },
       });
     } finally {
@@ -1249,7 +1281,7 @@ export default function OfferDetailsPage() {
         successMessage: `Offer Rejected: "${offer?.name}" has been rejected.`,
         updateFields: {
           status: OfferStatusEnum.REJECTED,
-          approval_status: "rejected"
+          approval_status: "rejected",
         },
       });
     } finally {
@@ -1262,7 +1294,8 @@ export default function OfferDetailsPage() {
     try {
       await handleOfferDetailAction({
         action: "request_approval",
-        successMessage: "Approval Requested: Your approval request has been submitted successfully.",
+        successMessage:
+          "Approval Requested: Your approval request has been submitted successfully.",
         updateFields: {
           status: OfferStatusEnum.PENDING_APPROVAL,
           approval_status: "pending",
@@ -1494,7 +1527,11 @@ export default function OfferDetailsPage() {
       );
     } catch (err) {
       // Failed to set primary product - show generic message only
-      showError("Failed to set primary", "Unable to set this product as primary. Please try again.", true);
+      showError(
+        "Failed to set primary",
+        "Unable to set this product as primary. Please try again.",
+        true,
+      );
     } finally {
       setSettingPrimaryId(null);
     }
@@ -1839,7 +1876,9 @@ export default function OfferDetailsPage() {
       >
         <div className="flex items-start space-x-4">
           <div className="flex-1">
-            <h2 className={`${tw.tableFirstColumn} ${tw.textPrimary} mb-2`}>{offer.name}</h2>
+            <h2 className={`${tw.tableFirstColumn} ${tw.textPrimary} mb-2`}>
+              {offer.name}
+            </h2>
             <p className={`${tw.textSecondary} mb-4`}>
               {offer.description || "No description available"}
             </p>
@@ -1945,7 +1984,7 @@ export default function OfferDetailsPage() {
 
         <div
           className={` ${tw.rounded} border overflow-hidden`}
-        style={{ borderColor: color.border.default }}
+          style={{ borderColor: color.border.default }}
         >
           {productsLoading ? (
             <div className="flex flex-col items-center justify-center py-16">
@@ -2220,7 +2259,7 @@ export default function OfferDetailsPage() {
 
         <div
           className={` ${tw.rounded} border overflow-hidden`}
-        style={{ borderColor: color.border.default }}
+          style={{ borderColor: color.border.default }}
         >
           {creativesLoading ? (
             <div className="flex flex-col items-center justify-center py-16">
@@ -2447,26 +2486,50 @@ export default function OfferDetailsPage() {
             </p>
           </div>
         ) : (
-          <div className={`overflow-x-auto ${tw.rounded} border`} style={{ borderColor: color.border.default }}>
-            <table className="w-full" style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}>
+          <div
+            className={`overflow-x-auto ${tw.rounded} border`}
+            style={{ borderColor: color.border.default }}
+          >
+            <table
+              className="w-full"
+              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+            >
               <thead style={{ background: color.surface.tableHeader }}>
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
+                  <th
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{ color: color.surface.tableHeaderText }}
+                  >
                     Step
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
+                  <th
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{ color: color.surface.tableHeaderText }}
+                  >
                     Campaign
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
+                  <th
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{ color: color.surface.tableHeaderText }}
+                  >
                     Segment
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
+                  <th
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{ color: color.surface.tableHeaderText }}
+                  >
                     Campaign Type
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
+                  <th
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{ color: color.surface.tableHeaderText }}
+                  >
                     Wait (hours)
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider hidden md:table-cell" style={{ color: color.surface.tableHeaderText }}>
+                  <th
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider hidden md:table-cell"
+                    style={{ color: color.surface.tableHeaderText }}
+                  >
                     Allocation
                   </th>
                 </tr>
@@ -2490,7 +2553,9 @@ export default function OfferDetailsPage() {
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       <button
-                        onClick={() => navigate(`/dashboard/campaigns/${flow.campaign_id}`)}
+                        onClick={() =>
+                          navigate(`/dashboard/campaigns/${flow.campaign_id}`)
+                        }
                         className="text-sm font-medium hover:underline"
                         style={{ color: color.primary.accent }}
                       >
@@ -2502,7 +2567,9 @@ export default function OfferDetailsPage() {
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       <button
-                        onClick={() => navigate(`/dashboard/segments/${flow.segment_id}`)}
+                        onClick={() =>
+                          navigate(`/dashboard/segments/${flow.segment_id}`)
+                        }
                         className="text-sm font-medium hover:underline"
                         style={{ color: color.primary.accent }}
                       >
@@ -2755,7 +2822,8 @@ export default function OfferDetailsPage() {
                       }));
                     }}
                     options={
-                      smsRoutes?.filter((route) => route.isActive)
+                      smsRoutes
+                        ?.filter((route) => route.isActive)
                         .map((route) => ({
                           value: route.id?.toString() || "",
                           label: route.name,
@@ -2919,7 +2987,8 @@ export default function OfferDetailsPage() {
 
             <div className="flex items-center gap-2">
               <Checkbox
-                id="new-creative-active" checked={newCreativeForm.is_active}
+                id="new-creative-active"
+                checked={newCreativeForm.is_active}
                 onChange={(e) =>
                   setNewCreativeForm((prev) => ({
                     ...prev,
@@ -2927,7 +2996,8 @@ export default function OfferDetailsPage() {
                   }))
                 }
                 className="h-4 w-4 rounded border-gray-300"
-                style={{ accentColor: color.primary.accent }} />
+                style={{ accentColor: color.primary.accent }}
+              />
               <label
                 htmlFor="new-creative-active"
                 className="text-sm text-gray-700"
@@ -3231,13 +3301,15 @@ export default function OfferDetailsPage() {
                           >
                             <td className="px-4 py-3">
                               {!isAlreadyLinked && (
-                                <Checkbox checked={isSelected}
+                                <Checkbox
+                                  checked={isSelected}
                                   onChange={() =>
                                     toggleProductSelection(product)
                                   }
                                   onClick={(e) => e.stopPropagation()}
                                   className="w-4 h-4 border-gray-400 rounded"
-                                  style={{ accentColor: "#111827" }} />
+                                  style={{ accentColor: "#111827" }}
+                                />
                               )}
                               {isAlreadyLinked && (
                                 <Check className="w-4 h-4 text-gray-400" />
@@ -3373,7 +3445,9 @@ export default function OfferDetailsPage() {
                     reloadedProducts.push(...products);
 
                     const total = response.pagination?.total || 0;
-                    hasMore = reloadedProducts.length < total && products.length === limit;
+                    hasMore =
+                      reloadedProducts.length < total &&
+                      products.length === limit;
                     offset += limit;
                   }
 

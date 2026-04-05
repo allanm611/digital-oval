@@ -3,6 +3,7 @@ import { lazy, Suspense } from "react";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 
 import DashboardLayout from "../components/DashboardLayout";
+import NotFoundPage from "../../../shared/pages/NotFoundPage";
 
 const DashboardHome = lazy(
   () => import(/* webpackPrefetch: true */ "../components/DashboardHome"),
@@ -1197,6 +1198,9 @@ export default function Dashboard() {
             path="/etl/analytics"
             element={<EtlPages.EtlAnalyticsPage />}
           />
+
+          {/* 404 catch-all */}
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
     </DashboardLayout>

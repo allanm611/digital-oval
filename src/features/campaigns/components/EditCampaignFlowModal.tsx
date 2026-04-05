@@ -1,7 +1,10 @@
 import { X } from "lucide-react";
 import { color, tw, button } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import { CampaignFlowConfig, CampaignFlowResponseData } from "../types/campaignFlow";
+import {
+  CampaignFlowConfig,
+  CampaignFlowResponseData,
+} from "../types/campaignFlow";
 import { Offer } from "../../offers/types/offer";
 import { SegmentType } from "../../segments/types/segment";
 import Checkbox from "../../../shared/components/ui/Checkbox";
@@ -346,7 +349,8 @@ export default function EditCampaignFlowModal({
             {/* Status */}
             <div>
               <div className="flex items-center gap-2">
-                <Checkbox id="flowActive"
+                <Checkbox
+                  id="flowActive"
                   checked={editedFlow.is_active !== false}
                   onChange={(e) =>
                     setEditedFlow({
@@ -354,7 +358,8 @@ export default function EditCampaignFlowModal({
                       is_active: e.target.checked,
                     })
                   }
-                  className="w-4 h-4" />
+                  className="w-4 h-4"
+                />
                 <label
                   htmlFor="flowActive"
                   className={`text-sm font-medium ${tw.textPrimary}`}
