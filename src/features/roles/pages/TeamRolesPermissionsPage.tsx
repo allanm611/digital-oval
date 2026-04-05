@@ -38,6 +38,7 @@ import PermissionFormModal from "../components/PermissionFormModal";
 import AssignPermissionsModal from "../components/AssignPermissionsModal";
 import RoleHierarchyChip from "../components/RoleHierarchyChip";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 type TabType = "roles" | "permissions" | "assign";
 
@@ -1190,14 +1191,11 @@ export default function TeamRolesPermissionsPage() {
                 />
               </div>
               <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="cascadeToChildren"
+                <Checkbox id="cascadeToChildren"
                   checked={cascadeToChildren}
                   onChange={(e) => setCascadeToChildren(e.target.checked)}
                   disabled={deactivatingRoleId !== null}
-                  className="w-4 h-4 text-blue-600 rounded cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                />
+                  className="w-4 h-4 text-blue-600 rounded cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" />
                 <label
                   htmlFor="cascadeToChildren"
                   className="text-sm text-gray-700 cursor-pointer"

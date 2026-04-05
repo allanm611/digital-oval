@@ -28,6 +28,8 @@ import SequentialCampaignDisplay from "../displays/SequentialCampaignDisplay";
 import { tw, components, color, zIndex } from "../../../../shared/utils/utils";
 import { useClickOutside } from "../../../../shared/hooks/useClickOutside";
 import { useLanguage } from "../../../../contexts/LanguageContext";
+import Checkbox from "../../../../shared/components/ui/Checkbox";
+import Radio from "../../../../shared/components/ui/Radio";
 
 interface AvailableControlGroup {
   id: string;
@@ -535,9 +537,7 @@ export default function AudienceConfigurationStep({
           </h3>
           <div className="space-y-4">
             <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={controlGroupMode === "shared"}
+              <Checkbox checked={controlGroupMode === "shared"}
                 onChange={(e) => {
                   setControlGroupMode(e.target.checked ? "shared" : "per-segment");
                   if (e.target.checked) {
@@ -545,8 +545,7 @@ export default function AudienceConfigurationStep({
                   }
                 }}
                 className="w-4 h-4"
-                style={{ accentColor: color.primary.accent }}
-              />
+                style={{ accentColor: color.primary.accent }} />
               <span className={`text-sm font-medium ${tw.textPrimary}`}>
                 Use shared control group for all segments
               </span>
@@ -565,9 +564,7 @@ export default function AudienceConfigurationStep({
             </label>
 
             <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={controlGroupMode === "per-segment"}
+              <Checkbox checked={controlGroupMode === "per-segment"}
                 onChange={(e) => {
                   setControlGroupMode(e.target.checked ? "per-segment" : "shared");
                   if (e.target.checked) {
@@ -575,8 +572,7 @@ export default function AudienceConfigurationStep({
                   }
                 }}
                 className="w-4 h-4"
-                style={{ accentColor: color.primary.accent }}
-              />
+                style={{ accentColor: color.primary.accent }} />
               <span className={`text-sm font-medium ${tw.textPrimary}`}>
                 Configure control group per segment
               </span>
@@ -593,13 +589,10 @@ export default function AudienceConfigurationStep({
           </h3>
           <div className="space-y-4">
             <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={seedListMode === "all"}
+              <Checkbox checked={seedListMode === "all"}
                 onChange={(e) => handleSetSeedListMode(e.target.checked ? "all" : "per-segment")}
                 className="w-4 h-4"
-                style={{ accentColor: color.primary.accent }}
-              />
+                style={{ accentColor: color.primary.accent }} />
               <span className={`text-sm font-medium ${tw.textPrimary}`}>
                 Apply seed list to all segments
               </span>
@@ -618,13 +611,10 @@ export default function AudienceConfigurationStep({
             </label>
 
             <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={seedListMode === "per-segment"}
+              <Checkbox checked={seedListMode === "per-segment"}
                 onChange={(e) => handleSetSeedListMode(e.target.checked ? "per-segment" : "all")}
                 className="w-4 h-4"
-                style={{ accentColor: color.primary.accent }}
-              />
+                style={{ accentColor: color.primary.accent }} />
               <span className={`text-sm font-medium ${tw.textPrimary}`}>
                 Apply seed list per segment
               </span>
@@ -637,9 +627,7 @@ export default function AudienceConfigurationStep({
       {selectedSegments.length > 1 && (
         <div className={`${tw.rounded} p-3`}>
           <label className="flex items-start space-x-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={mutuallyExclusive}
+            <Checkbox checked={mutuallyExclusive}
               onChange={(e) => {
                 setMutuallyExclusive(e.target.checked);
                 // Update all segments with mutual exclusivity
@@ -650,8 +638,7 @@ export default function AudienceConfigurationStep({
                 setSelectedSegments(updatedSegments);
               }}
               className="mt-1 w-4 h-4 border-gray-300 rounded"
-              style={{ accentColor: color.primary.accent }}
-            />
+              style={{ accentColor: color.primary.accent }} />
             <div>
               <div className="text-sm font-medium text-gray-900">
                 {t.campaigns.audienceConfiguration.mutuallyExclusiveSegments}
@@ -1164,14 +1151,11 @@ function ControlGroupConfigModal({
             </label>
             <div className="space-y-3">
               <label className="flex items-start space-x-3 cursor-pointer">
-                <input
-                  type="radio"
-                  name="controlGroupType"
+                <Radio name="controlGroupType"
                   value="none"
                   checked={config.type === "none"}
                   onChange={() => setConfig({ type: "none" })}
-                  className="mt-1 w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157]"
-                />
+                  className="mt-1 w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157]" />
                 <div>
                   <div className="text-sm font-medium text-gray-900">
                     {t.campaigns.audienceConfiguration.noControlGroup}
@@ -1183,9 +1167,7 @@ function ControlGroupConfigModal({
               </label>
 
               <label className="flex items-start space-x-3 cursor-pointer">
-                <input
-                  type="radio"
-                  name="controlGroupType"
+                <Radio name="controlGroupType"
                   value="with_control_group"
                   checked={config.type === "with_control_group"}
                   onChange={() =>
@@ -1195,8 +1177,7 @@ function ControlGroupConfigModal({
                       percentage: 23,
                     })
                   }
-                  className="mt-1 w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157]"
-                />
+                  className="mt-1 w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157]" />
                 <div>
                   <div className="text-sm font-medium text-gray-900">
                     {t.campaigns.audienceConfiguration.withControlGroup}
@@ -1208,14 +1189,11 @@ function ControlGroupConfigModal({
               </label>
 
               <label className="flex items-start space-x-3 cursor-pointer">
-                <input
-                  type="radio"
-                  name="controlGroupType"
+                <Radio name="controlGroupType"
                   value="multiple_control_group"
                   checked={config.type === "multiple_control_group"}
                   onChange={() => setConfig({ type: "multiple_control_group" })}
-                  className="mt-1 w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157]"
-                />
+                  className="mt-1 w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157]" />
                 <div>
                   <div className="text-sm font-medium text-gray-900">
                     {t.campaigns.audienceConfiguration.universalControlGroup}
@@ -1240,9 +1218,7 @@ function ControlGroupConfigModal({
 
               <div className="space-y-3">
                 <label className="flex items-start space-x-3 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="controlGroupMethod"
+                  <Radio name="controlGroupMethod"
                     value="fixed_percentage"
                     checked={config.control_group_method === "fixed_percentage"}
                     onChange={() =>
@@ -1252,8 +1228,7 @@ function ControlGroupConfigModal({
                         percentage: 23,
                       })
                     }
-                    className="mt-1 w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157]"
-                  />
+                    className="mt-1 w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157]" />
                   <div>
                     <div className="text-sm font-medium text-gray-900">
                       {t.campaigns.audienceConfiguration.fixedPercentage}
@@ -1265,9 +1240,7 @@ function ControlGroupConfigModal({
                 </label>
 
                 <label className="flex items-start space-x-3 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="controlGroupMethod"
+                  <Radio name="controlGroupMethod"
                     value="fixed_number"
                     checked={config.control_group_method === "fixed_number"}
                     onChange={() =>
@@ -1277,8 +1250,7 @@ function ControlGroupConfigModal({
                         fixed_number: 10000,
                       })
                     }
-                    className="mt-1 w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157]"
-                  />
+                    className="mt-1 w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157]" />
                   <div>
                     <div className="text-sm font-medium text-gray-900">
                       {t.campaigns.audienceConfiguration.fixedNumber}
@@ -1290,9 +1262,7 @@ function ControlGroupConfigModal({
                 </label>
 
                 <label className="flex items-start space-x-3 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="controlGroupMethod"
+                  <Radio name="controlGroupMethod"
                     value="advanced_parameters"
                     checked={
                       config.control_group_method === "advanced_parameters"
@@ -1305,8 +1275,7 @@ function ControlGroupConfigModal({
                         margin_of_error: 99,
                       })
                     }
-                    className="mt-1 w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157]"
-                  />
+                    className="mt-1 w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157]" />
                   <div>
                     <div className="text-sm font-medium text-gray-900">
                       {t.campaigns.audienceConfiguration.advancedParameters}
@@ -1357,15 +1326,12 @@ function ControlGroupConfigModal({
                   </div>
 
                   <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="setLimits"
+                    <Checkbox id="setLimits"
                       checked={config.set_limits || false}
                       onChange={(e) =>
                         setConfig({ ...config, set_limits: e.target.checked })
                       }
-                      className="w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157] rounded"
-                    />
+                      className="w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157] rounded" />
                     <label
                       htmlFor="setLimits"
                       className="text-sm font-medium text-gray-700"
@@ -1487,9 +1453,7 @@ function ControlGroupConfigModal({
                       key={group.id}
                       className={`flex items-start space-x-3 p-3 border border-gray-200 ${tw.rounded} hover:bg-white cursor-pointer`}
                     >
-                      <input
-                        type="radio"
-                        name="selectedControlGroup"
+                      <Radio name="selectedControlGroup"
                         value={group.id}
                         checked={config.selected_control_group_id === group.id}
                         onChange={(e) =>
@@ -1498,8 +1462,7 @@ function ControlGroupConfigModal({
                             selected_control_group_id: e.target.value,
                           })
                         }
-                        className="mt-1 w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157]"
-                      />
+                        className="mt-1 w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157]" />
                       <div className="flex-1">
                         <div className="text-sm font-medium text-gray-900">
                           {group.name}

@@ -40,6 +40,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import Pagination from "../../../shared/components/ui/Pagination";
 import { PermissionGate } from "../../auth/components/PermissionGate";
+import Radio from "../../../shared/components/ui/Radio";
 
 const CATALOG_TAG_PREFIX = "catalog:";
 
@@ -1661,9 +1662,7 @@ function OfferCategoriesPage() {
                       { value: "inactive", label: "Inactive Categories" },
                     ].map((option) => (
                       <label key={option.value} className="flex items-center">
-                        <input
-                          type="radio"
-                          name="filterType"
+                        <Radio name="filterType"
                           value={option.value}
                           checked={filterType === option.value}
                           onChange={() =>
@@ -1676,8 +1675,7 @@ function OfferCategoriesPage() {
                                 | "inactive",
                             )
                           }
-                          className={`mr-3 text-[${color.primary.action}] focus:ring-[${color.primary.action}]`}
-                        />
+                          className={`mr-3 text-[${color.primary.action}] focus:ring-[${color.primary.action}]`} />
                         <span className={`text-sm ${tw.textSecondary}`}>
                           {option.label}
                         </span>

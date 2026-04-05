@@ -11,6 +11,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 type FetchMode = "immediate" | "by-time" | "by-range";
 
@@ -257,12 +258,9 @@ export default function EtlFetchControlsPage() {
             />
           </div>
           <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={forceReprocess}
+            <Checkbox checked={forceReprocess}
               onChange={(e) => setForceReprocess(e.target.checked)}
-              className="w-4 h-4"
-            />
+              className="w-4 h-4" />
             <span className={`text-sm ${tw.textPrimary}`}>
               {t.etl.forceReprocessing}
             </span>

@@ -22,6 +22,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw } from "../../../shared/utils/utils";
 import { CONNECTION_TYPE_OPTIONS } from "../constants/connectionTypes";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 interface ConnectionProfileFormPageProps {
   mode: "create" | "edit";
@@ -700,33 +701,27 @@ export default function ConnectionProfileFormPage({
             </div>
             <div className="flex items-center gap-4">
               <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={formData.contains_pii}
+                <Checkbox checked={formData.contains_pii}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
                       contains_pii: e.target.checked,
                     })
                   }
-                  className="w-4 h-4"
-                />
+                  className="w-4 h-4" />
                 <span className="text-sm font-medium text-gray-700">
                   Contains PII
                 </span>
               </label>
               <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={formData.gdpr_applicable}
+                <Checkbox checked={formData.gdpr_applicable}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
                       gdpr_applicable: e.target.checked,
                     })
                   }
-                  className="w-4 h-4"
-                />
+                  className="w-4 h-4" />
                 <span className="text-sm font-medium text-gray-700">
                   GDPR Applicable
                 </span>
@@ -835,17 +830,14 @@ export default function ConnectionProfileFormPage({
               </p>
             </div>
             <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={formData.health_check_enabled || false}
+              <Checkbox checked={formData.health_check_enabled || false}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
                     health_check_enabled: e.target.checked,
                   })
                 }
-                className="w-4 h-4"
-              />
+                className="w-4 h-4" />
               <span className="text-sm font-medium text-gray-700">Enabled</span>
             </label>
           </div>

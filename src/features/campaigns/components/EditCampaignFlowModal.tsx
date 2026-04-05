@@ -4,6 +4,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { CampaignFlowConfig, CampaignFlowResponseData } from "../types/campaignFlow";
 import { Offer } from "../../offers/types/offer";
 import { SegmentType } from "../../segments/types/segment";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 interface EditCampaignFlowModalProps {
   isOpen: boolean;
@@ -70,6 +71,13 @@ export default function EditCampaignFlowModal({
 }: EditCampaignFlowModalProps) {
   if (!isOpen || !selectedFlow) return null;
 
+  const effectiveFlowType =
+    editedFlow.flow_type || selectedFlow.flow_type || "";
+  const flowTypeLabel =
+    FLOW_TYPE_OPTIONS.find((opt) => opt.value === effectiveFlowType)?.label ||
+    effectiveFlowType ||
+    "-";
+
   const handleClose = () => {
     setRawConditionRuleInput("");
     onClose();
@@ -117,29 +125,19 @@ export default function EditCampaignFlowModal({
                 />
               </div>
 
-              {/* Campaign Type */}
+              {/* Campaign Type - Read Only Input */}
               <div>
                 <label
                   className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
                 >
                   Campaign Type
                 </label>
-                <HeadlessSelect
-                  value={editedFlow.flow_type || ""}
-                  onChange={(value) =>
-                    setEditedFlow({
-                      ...editedFlow,
-                      flow_type: value,
-                    })
-                  }
-                  options={[
-                    { value: "", label: "Select Campaign Type" },
-                    ...FLOW_TYPE_OPTIONS.map((opt) => ({
-                      value: opt.value,
-                      label: opt.label,
-                    })),
-                  ]}
-                  disabled={isLoadingActiveData}
+                <input
+                  type="text"
+                  readOnly
+                  value={flowTypeLabel}
+                  className={`w-full px-4 py-2 border ${tw.rounded} text-sm ${tw.textSecondary} bg-gray-50`}
+                  style={{ borderColor: color.border.default }}
                 />
               </div>
             </div>
@@ -348,9 +346,7 @@ export default function EditCampaignFlowModal({
             {/* Status */}
             <div>
               <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="flowActive"
+                <Checkbox id="flowActive"
                   checked={editedFlow.is_active !== false}
                   onChange={(e) =>
                     setEditedFlow({
@@ -358,8 +354,7 @@ export default function EditCampaignFlowModal({
                       is_active: e.target.checked,
                     })
                   }
-                  className="w-4 h-4"
-                />
+                  className="w-4 h-4" />
                 <label
                   htmlFor="flowActive"
                   className={`text-sm font-medium ${tw.textPrimary}`}

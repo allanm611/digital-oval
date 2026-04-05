@@ -22,6 +22,7 @@ import {
   isValidCountryCodePhone,
   isValidEmail,
 } from "../../../shared/utils/validation";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 interface DefineRewardStepProps {
   data: ManualRewardData;
@@ -570,11 +571,8 @@ export default function DefineRewardStep({
                     key={contact}
                     className="flex items-center gap-2 text-sm text-gray-700"
                   >
-                    <input
-                      type="checkbox"
-                      checked={selectedSeedContacts.has(contact)}
-                      onChange={() => toggleSeedContact(contact)}
-                    />
+                    <Checkbox checked={selectedSeedContacts.has(contact)}
+                      onChange={() => toggleSeedContact(contact)} />
                     <span>{contact}</span>
                   </label>
                 ))}

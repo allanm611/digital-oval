@@ -4,6 +4,7 @@ import { Plus, Trash2, Gift, Edit, X } from "lucide-react";
 import { color , tw} from "../../../shared/utils/utils";
 import { zIndex } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 interface RewardRule {
   id: string;
@@ -586,9 +587,7 @@ export default function OfferRewardStep({
                 </div>
 
                 <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="rule-enabled"
+                  <Checkbox id="rule-enabled"
                     checked={editingRule.enabled}
                     onChange={(e) =>
                       setEditingRule({
@@ -596,8 +595,7 @@ export default function OfferRewardStep({
                         enabled: e.target.checked,
                       })
                     }
-                    className="w-4 h-4 text-gray-600 border-gray-300 rounded focus:outline-none"
-                  />
+                    className="w-4 h-4 text-gray-600 border-gray-300 rounded focus:outline-none" />
                   <label
                     htmlFor="rule-enabled"
                     className="ml-2 text-sm text-gray-700"

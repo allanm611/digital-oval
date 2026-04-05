@@ -11,6 +11,7 @@ import type { SegmentConditionGroup } from "../../segments/types/segment";
 import SchedulingComponent from "../../../shared/components/SchedulingComponent";
 import type { SchedulingData } from "../../../shared/types/scheduling";
 import { useToast } from "../../../contexts/ToastContext";
+import Radio from "../../../shared/components/ui/Radio";
 
 export default function CreateControlGroupPage() {
   const navigate = useNavigate();
@@ -239,19 +240,17 @@ export default function CreateControlGroupPage() {
                     Select the Customer Base for your Control Group
                   </label>
                   <div className="space-y-3">
-                    <label
+                    <div
                       className={`flex items-start p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50`}
                     >
-                      <input
-                        type="radio"
+                      <Radio
                         name="customerBase"
                         value="active_subscribers"
                         checked={selectedCustomerBase === "active_subscribers"}
-                        onChange={(e) =>
-                          setSelectedCustomerBase(e.target.value)
+                        onChange={() =>
+                          setSelectedCustomerBase("active_subscribers")
                         }
-                        className="mt-1 w-4 h-4 border-gray-300"
-                        style={{ accentColor: color.primary.action }}
+                        className="mt-1"
                       />
                       <div className="ml-3">
                         <div className="font-medium text-sm text-gray-900">
@@ -261,21 +260,17 @@ export default function CreateControlGroupPage() {
                           Only active subscribers
                         </div>
                       </div>
-                    </label>
+                    </div>
 
-                    <label
+                    <div
                       className={`flex items-start p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50`}
                     >
-                      <input
-                        type="radio"
+                      <Radio
                         name="customerBase"
                         value="all_customers"
                         checked={selectedCustomerBase === "all_customers"}
-                        onChange={(e) =>
-                          setSelectedCustomerBase(e.target.value)
-                        }
-                        className="mt-1 w-4 h-4 border-gray-300"
-                        style={{ accentColor: color.primary.action }}
+                        onChange={() => setSelectedCustomerBase("all_customers")}
+                        className="mt-1"
                       />
                       <div className="ml-3">
                         <div className="font-medium text-sm text-gray-900">
@@ -285,21 +280,17 @@ export default function CreateControlGroupPage() {
                           All customers in the database
                         </div>
                       </div>
-                    </label>
+                    </div>
 
-                    <label
+                    <div
                       className={`flex items-start p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50`}
                     >
-                      <input
-                        type="radio"
+                      <Radio
                         name="customerBase"
                         value="saved_segments"
                         checked={selectedCustomerBase === "saved_segments"}
-                        onChange={(e) =>
-                          setSelectedCustomerBase(e.target.value)
-                        }
-                        className="mt-1 w-4 h-4 border-gray-300"
-                        style={{ accentColor: color.primary.action }}
+                        onChange={() => setSelectedCustomerBase("saved_segments")}
+                        className="mt-1"
                       />
                       <div className="ml-3">
                         <div className="font-medium text-sm text-gray-900">
@@ -309,7 +300,7 @@ export default function CreateControlGroupPage() {
                           Define custom segment conditions
                         </div>
                       </div>
-                    </label>
+                    </div>
                   </div>
 
                   {selectedCustomerBase === "saved_segments" && (
@@ -360,35 +351,29 @@ export default function CreateControlGroupPage() {
                     Generation Method
                   </label>
                   <div className="space-y-2">
-                    <label className="flex items-center p-3 border border-gray-200 rounded cursor-pointer hover:bg-gray-50">
-                      <input
-                        type="radio"
+                    <div className="flex items-center p-3 border border-gray-200 rounded cursor-pointer hover:bg-gray-50">
+                      <Radio
                         name="generationMethod"
                         value="random"
                         checked={generationMethod === "random"}
                         onChange={() => setGenerationMethod("random")}
-                        className="w-4 h-4"
-                        style={{ accentColor: color.primary.action }}
                       />
                       <span className="ml-3 text-sm font-medium text-gray-900">
                         Random Selection
                       </span>
-                    </label>
+                    </div>
 
-                    <label className="flex items-center p-3 border border-gray-200 rounded cursor-pointer hover:bg-gray-50">
-                      <input
-                        type="radio"
+                    <div className="flex items-center p-3 border border-gray-200 rounded cursor-pointer hover:bg-gray-50">
+                      <Radio
                         name="generationMethod"
                         value="stratified"
                         checked={generationMethod === "stratified"}
                         onChange={() => setGenerationMethod("stratified")}
-                        className="w-4 h-4"
-                        style={{ accentColor: color.primary.action }}
                       />
                       <span className="ml-3 text-sm font-medium text-gray-900">
                         Stratified Sampling
                       </span>
-                    </label>
+                    </div>
                   </div>
                 </div>
               </>

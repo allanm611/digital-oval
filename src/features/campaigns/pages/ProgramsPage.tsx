@@ -27,6 +27,7 @@ import { Program } from "../types/program";
 import ProgramModal from "../components/ProgramModal";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
+import Radio from "../../../shared/components/ui/Radio";
 
 const PAGE_SIZE = 20;
 
@@ -627,9 +628,7 @@ export default function ProgramsPage() {
                         key={String(option.value)}
                         className="flex items-center"
                       >
-                        <input
-                          type="radio"
-                          name="status"
+                        <Radio name="status"
                           value={String(option.value)}
                           checked={filters.is_active === option.value}
                           onChange={() =>
@@ -638,8 +637,7 @@ export default function ProgramsPage() {
                               option.value === "all" ? "all" : option.value,
                             )
                           }
-                          className={`mr-3 text-[${color.primary.action}] focus:ring-[${color.primary.action}]`}
-                        />
+                          className={`mr-3 text-[${color.primary.action}] focus:ring-[${color.primary.action}]`} />
                         <span className={`text-sm ${tw.textSecondary}`}>
                           {option.label}
                         </span>

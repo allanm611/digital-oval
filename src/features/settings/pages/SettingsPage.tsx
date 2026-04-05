@@ -16,6 +16,7 @@ import currencyCodes from "currency-codes";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import { characterSetService } from "../../configurations/services/characterSetService";
 import { senderIdService } from "../../configurations/services/senderIdService";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 // Get all countries from world-countries library, sorted alphabetically
 const countriesList = countries
@@ -980,13 +981,10 @@ export default function SettingsPage() {
           <div className="space-y-6">
             {/* DND Enabled */}
             <div className="flex items-center gap-4">
-              <input
-                id="dnd-enabled"
-                type="checkbox"
-                checked={settings.dnd_enabled}
+              <Checkbox
+                id="dnd-enabled" checked={settings.dnd_enabled}
                 onChange={(e) => handleDNDEnabledChange(e.target.checked)}
-                className="w-5 h-5 text-emerald-600 rounded"
-              />
+                className="w-5 h-5 text-emerald-600 rounded" />
               <label
                 htmlFor="dnd-enabled"
                 className="text-sm font-semibold text-gray-700"
@@ -1174,9 +1172,7 @@ export default function SettingsPage() {
                   key={type.id}
                   className="flex items-start gap-3 cursor-pointer p-3 hover:bg-gray-50 rounded-lg transition-colors"
                 >
-                  <input
-                    type="checkbox"
-                    checked={enabledNotificationTypes.has(type.id)}
+                  <Checkbox checked={enabledNotificationTypes.has(type.id)}
                     onChange={(e) => {
                       const updated = new Set(enabledNotificationTypes);
                       if (e.target.checked) {
@@ -1186,8 +1182,7 @@ export default function SettingsPage() {
                       }
                       setEnabledNotificationTypes(updated);
                     }}
-                    className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-2 mt-1"
-                  />
+                    className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-2 mt-1" />
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-900">
                       {type.label}

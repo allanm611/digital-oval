@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { tw, color, zIndex } from "../../../../shared/utils/utils";
+import Checkbox from "../../../../shared/components/ui/Checkbox";
 
 interface SeedListConfigModalProps {
   isOpen: boolean;
@@ -84,13 +85,10 @@ export default function SeedListConfigModal({
               key={list.id}
               className="flex items-center gap-3 cursor-pointer p-3 rounded hover:bg-gray-50"
             >
-              <input
-                type="checkbox"
-                checked={selected.includes(list.id)}
+              <Checkbox checked={selected.includes(list.id)}
                 onChange={() => handleToggle(list.id)}
                 className="w-4 h-4"
-                style={{ accentColor: color.primary.accent }}
-              />
+                style={{ accentColor: color.primary.accent }} />
               <span className="text-sm font-medium text-gray-900">
                 {list.name}
               </span>

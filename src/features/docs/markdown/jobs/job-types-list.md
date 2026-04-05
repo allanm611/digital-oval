@@ -24,7 +24,6 @@ Code is constrained to lowercase snake_case style and must be unique.
 
 ## Related Pages
 
-- [Job Management Overview](/documentation/jobs/overview)
-- [Scheduled Jobs](/documentation/jobs/scheduled-jobs)
-- [Job Executions](/documentation/jobs/job-executions)
-- [Job Workflows](/documentation/jobs/job-workflows)
+- [Job Types](/documentation/jobs/job-types)
+- [Create Job Type](/documentation/jobs/create-job-type)
+- [View Job Type](/documentation/jobs/view-job-type)

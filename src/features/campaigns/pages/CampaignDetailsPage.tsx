@@ -64,6 +64,7 @@ import {
 } from "../types/campaignFlow";
 import { Offer } from "../../offers/types/offer";
 import { SegmentType } from "../../segments/types/segment";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 interface ChannelStat {
   channel: CreativeChannel;
@@ -2450,7 +2451,7 @@ export default function CampaignDetailsPage() {
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                     style={{ color: color.surface.tableHeaderText }}
                   >
-                    Flow Type
+                    Campaign Type
                   </th>
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
@@ -2912,9 +2913,7 @@ export default function CampaignDetailsPage() {
                 {/* Status */}
                 <div>
                   <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="flowActive"
+                    <Checkbox id="flowActive"
                       checked={editedFlow.is_active !== false}
                       onChange={(e) =>
                         setEditedFlow({
@@ -2922,8 +2921,7 @@ export default function CampaignDetailsPage() {
                           is_active: e.target.checked,
                         })
                       }
-                      className="w-4 h-4"
-                    />
+                      className="w-4 h-4" />
                     <label
                       htmlFor="flowActive"
                       className={`text-sm font-medium ${tw.textPrimary}`}

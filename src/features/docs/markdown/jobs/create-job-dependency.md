@@ -29,7 +29,7 @@ The edit flow uses the same field structure with existing values pre-filled.
 
 ## Related Pages
 
-- [Job Management Overview](/documentation/jobs/overview)
-- [Scheduled Jobs](/documentation/jobs/scheduled-jobs)
-- [Job Executions](/documentation/jobs/job-executions)
-- [Job Workflows](/documentation/jobs/job-workflows)
+- [Job Dependencies](/documentation/jobs/job-dependencies)
+- [Job Dependencies List](/documentation/jobs/job-dependencies-list)
+- [View Job Dependency](/documentation/jobs/view-job-dependency)
+- [Job Dependencies Analytics](/documentation/jobs/job-dependencies-analytics)

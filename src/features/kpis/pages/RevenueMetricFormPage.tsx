@@ -8,6 +8,7 @@ import { RevenueMetric, RevenueMetricOperator } from "../types/revenueMetrics";
 import { revenueMetricService } from "../services/revenueMetricService";
 import { useToast } from "../../../contexts/ToastContext";
 import { color, tw } from "../../../shared/utils/utils";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 const CATEGORY_OPTIONS = [
   { label: "Data Revenue", value: "data_revenue" },
@@ -380,13 +381,10 @@ export default function RevenueMetricFormPage({ mode }: RevenueMetricFormPagePro
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {OPERATORS.map((op) => (
               <label key={op.value} className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.operators.includes(op.value)}
+                <Checkbox checked={formData.operators.includes(op.value)}
                   onChange={(e) => handleOperatorChange(op.value, e.target.checked)}
                   disabled={saving}
-                  style={{ accentColor: color.primary.accent }}
-                />
+                  style={{ accentColor: color.primary.accent }} />
                 <span className="text-sm text-gray-700">{op.label}</span>
               </label>
             ))}

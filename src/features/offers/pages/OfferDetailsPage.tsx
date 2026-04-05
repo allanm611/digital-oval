@@ -27,6 +27,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 const CreateProductModalWrapper = lazy(
   () => import("../../products/components/CreateProductModalWrapper"),
@@ -2460,7 +2461,7 @@ export default function OfferDetailsPage() {
                     Segment
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
-                    Flow Type
+                    Campaign Type
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
                     Wait (hours)
@@ -2917,10 +2918,8 @@ export default function OfferDetailsPage() {
             </div>
 
             <div className="flex items-center gap-2">
-              <input
-                id="new-creative-active"
-                type="checkbox"
-                checked={newCreativeForm.is_active}
+              <Checkbox
+                id="new-creative-active" checked={newCreativeForm.is_active}
                 onChange={(e) =>
                   setNewCreativeForm((prev) => ({
                     ...prev,
@@ -2928,8 +2927,7 @@ export default function OfferDetailsPage() {
                   }))
                 }
                 className="h-4 w-4 rounded border-gray-300"
-                style={{ accentColor: color.primary.accent }}
-              />
+                style={{ accentColor: color.primary.accent }} />
               <label
                 htmlFor="new-creative-active"
                 className="text-sm text-gray-700"
@@ -3233,16 +3231,13 @@ export default function OfferDetailsPage() {
                           >
                             <td className="px-4 py-3">
                               {!isAlreadyLinked && (
-                                <input
-                                  type="checkbox"
-                                  checked={isSelected}
+                                <Checkbox checked={isSelected}
                                   onChange={() =>
                                     toggleProductSelection(product)
                                   }
                                   onClick={(e) => e.stopPropagation()}
                                   className="w-4 h-4 border-gray-400 rounded"
-                                  style={{ accentColor: "#111827" }}
-                                />
+                                  style={{ accentColor: "#111827" }} />
                               )}
                               {isAlreadyLinked && (
                                 <Check className="w-4 h-4 text-gray-400" />

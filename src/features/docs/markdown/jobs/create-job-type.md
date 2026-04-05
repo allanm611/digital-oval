@@ -27,7 +27,6 @@ The edit flow uses the same form with current values pre-filled.
 
 ## Related Pages
 
-- [Job Management Overview](/documentation/jobs/overview)
-- [Scheduled Jobs](/documentation/jobs/scheduled-jobs)
-- [Job Executions](/documentation/jobs/job-executions)
-- [Job Workflows](/documentation/jobs/job-workflows)
+- [Job Types](/documentation/jobs/job-types)
+- [Job Types List](/documentation/jobs/job-types-list)
+- [View Job Type](/documentation/jobs/view-job-type)

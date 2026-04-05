@@ -44,7 +44,7 @@ After selection, you are taken to the scheduled job form, where campaign mode sh
 
 ## Related Pages
 
-- [Job Management Overview](/documentation/jobs/overview)
 - [Scheduled Jobs](/documentation/jobs/scheduled-jobs)
-- [Job Executions](/documentation/jobs/job-executions)
-- [Job Workflows](/documentation/jobs/job-workflows)
+- [Create Scheduled Job](/documentation/jobs/create-scheduled-job)
+- [View Scheduled Job](/documentation/jobs/view-scheduled-job)
+- [Scheduled Jobs Analytics](/documentation/jobs/scheduled-jobs-analytics)

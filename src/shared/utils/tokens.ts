@@ -545,6 +545,36 @@ export const cards = {
   },
 };
 
+// Form controls defines consistent styling for checkboxes, radios, and form labels
+export const formControls = {
+  checkbox: {
+    width: "w-4",
+    height: "h-4",
+    border: "border border-gray-300",
+    borderRadius: "rounded",
+    background: "bg-white",
+    accentColor: colors.primary.accent, // #00BBCC
+    cursor: "cursor-pointer",
+  },
+
+  radio: {
+    width: "w-4",
+    height: "h-4",
+    border: "border border-gray-300",
+    borderRadius: "rounded-full",
+    background: "bg-white",
+    accentColor: colors.primary.accent, // #00BBCC
+    cursor: "cursor-pointer",
+  },
+
+  label: {
+    text: "text-sm",
+    fontWeight: "font-medium",
+    textColor: "text-gray-700",
+    gap: "gap-2",
+  },
+};
+
 // Reusable note/banner styling tokens to avoid hardcoded colors
 export const notes = {
   warning: {

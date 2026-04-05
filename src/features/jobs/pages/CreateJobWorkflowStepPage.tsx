@@ -18,6 +18,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw, noteStyles, zIndex } from "../../../shared/utils/utils";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 const getStepTypes = (t: any): { value: StepType; label: string }[] => [
   { value: "sql", label: t.jobs.jobWorkflow.sql },
@@ -1068,17 +1069,14 @@ export default function CreateJobWorkflowStepPage() {
                 <div className="space-y-4">
                   <div>
                     <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={formData.is_parallel}
+                      <Checkbox checked={formData.is_parallel}
                         onChange={(e) =>
                           setFormData({
                             ...formData,
                             is_parallel: e.target.checked,
                           })
                         }
-                        className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
-                      />
+                        className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
                       <span className="text-sm font-medium text-gray-700">
                         {t.jobs.jobWorkflow.enableParallel}
                       </span>
@@ -1264,34 +1262,28 @@ export default function CreateJobWorkflowStepPage() {
                 </h2>
                 <div className="space-y-3">
                   <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={formData.is_active}
+                    <Checkbox checked={formData.is_active}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
                           is_active: e.target.checked,
                         })
                       }
-                      className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
-                    />
+                      className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
                     <span className="text-sm font-medium text-gray-700">
                       {t.jobs.jobWorkflow.active}
                     </span>
                   </label>
 
                   <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={formData.is_critical}
+                    <Checkbox checked={formData.is_critical}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
                           is_critical: e.target.checked,
                         })
                       }
-                      className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
-                    />
+                      className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
                     <span className="text-sm font-medium text-gray-700">
                       {t.jobs.jobWorkflow.critical}
                     </span>

@@ -16,6 +16,7 @@ import {
 import { getConnectorDisplayName } from "../utils/connectorIcons";
 import { dataConnectorService } from "../services/dataConnectorService";
 import { color, zIndex } from "../../../shared/utils/utils";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 interface DataConnectorFormProps {
   connector?: ProcessedDataConnector;
@@ -224,13 +225,10 @@ const APIConfig: React.FC<ConfigComponentProps> = ({
           </Listbox>
         </div>
         <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="enable_proxy"
+          <Checkbox id="enable_proxy"
             checked={config.enable_proxy || false}
             onChange={(e) => updateConfiguration("enable_proxy", e.target.checked)}
-            className="mr-2 h-4 w-4 text-blue-600"
-          />
+            className="mr-2 h-4 w-4 text-blue-600" />
           <label htmlFor="enable_proxy" className="text-sm text-black">Enable Proxy</label>
         </div>
       </div>
@@ -560,13 +558,10 @@ const JDBCConfig: React.FC<ConfigComponentProps> = ({
 
       {/* SSL Option */}
       <div className="flex items-center">
-        <input
-          type="checkbox"
-          id="ssl_enabled"
+        <Checkbox id="ssl_enabled"
           checked={config.ssl_enabled || false}
           onChange={(e) => updateConfiguration("ssl_enabled", e.target.checked)}
-          className="mr-2 h-4 w-4 text-blue-600"
-        />
+          className="mr-2 h-4 w-4 text-blue-600" />
         <label htmlFor="ssl_enabled" className="text-sm text-black">Enable SSL Connection</label>
       </div>
     </div>
@@ -801,33 +796,24 @@ const TCPConfig: React.FC<ConfigComponentProps> = ({
 
       <div className="space-y-2">
         <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="non_blocking_io"
+          <Checkbox id="non_blocking_io"
             checked={config.non_blocking_io || false}
             onChange={(e) => updateConfiguration("non_blocking_io", e.target.checked)}
-            className="mr-2 h-4 w-4 text-blue-600"
-          />
+            className="mr-2 h-4 w-4 text-blue-600" />
           <label htmlFor="non_blocking_io" className="text-sm text-black">Non-blocking I/O</label>
         </div>
         <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="reverse_lookup"
+          <Checkbox id="reverse_lookup"
             checked={config.reverse_lookup || false}
             onChange={(e) => updateConfiguration("reverse_lookup", e.target.checked)}
-            className="mr-2 h-4 w-4 text-blue-600"
-          />
+            className="mr-2 h-4 w-4 text-blue-600" />
           <label htmlFor="reverse_lookup" className="text-sm text-black">Reverse Lookup</label>
         </div>
         <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="direct_buffers"
+          <Checkbox id="direct_buffers"
             checked={config.direct_buffers || false}
             onChange={(e) => updateConfiguration("direct_buffers", e.target.checked)}
-            className="mr-2 h-4 w-4 text-blue-600"
-          />
+            className="mr-2 h-4 w-4 text-blue-600" />
           <label htmlFor="direct_buffers" className="text-sm text-black">Direct Buffers</label>
         </div>
       </div>
@@ -1008,24 +994,18 @@ const FilesConfig: React.FC<ConfigComponentProps> = ({
             </div>
 
             <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="delete_after_process"
+              <Checkbox id="delete_after_process"
                 checked={config.delete_after_process || false}
                 onChange={(e) => updateConfiguration("delete_after_process", e.target.checked)}
-                className="mr-2 h-4 w-4 text-blue-600"
-              />
+                className="mr-2 h-4 w-4 text-blue-600" />
               <label htmlFor="delete_after_process" className="text-sm text-black">Delete files after processing</label>
             </div>
 
             <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="create_backup"
+              <Checkbox id="create_backup"
                 checked={config.create_backup || true}
                 onChange={(e) => updateConfiguration("create_backup", e.target.checked)}
-                className="mr-2 h-4 w-4 text-blue-600"
-              />
+                className="mr-2 h-4 w-4 text-blue-600" />
               <label htmlFor="create_backup" className="text-sm text-black">Create backup before processing</label>
             </div>
           </div>
@@ -1103,13 +1083,10 @@ const SMSInboxConfig: React.FC<ConfigComponentProps> = ({
       <div>
         <div className="p-3">
           <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="filter_by_keyword"
+            <Checkbox id="filter_by_keyword"
               checked={config.filter_by_keyword || false}
               onChange={(e) => updateConfiguration("filter_by_keyword", e.target.checked)}
-              className="mr-2 h-4 w-4 text-blue-600"
-            />
+              className="mr-2 h-4 w-4 text-blue-600" />
             <label htmlFor="filter_by_keyword" className="text-sm font-medium text-black">
               Filter messages based on keyword
             </label>
@@ -1217,24 +1194,18 @@ const SMSInboxConfig: React.FC<ConfigComponentProps> = ({
             </div>
 
             <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="archive_messages"
+              <Checkbox id="archive_messages"
                 checked={config.archive_messages || true}
                 onChange={(e) => updateConfiguration("archive_messages", e.target.checked)}
-                className="mr-2 h-4 w-4 text-blue-600"
-              />
+                className="mr-2 h-4 w-4 text-blue-600" />
               <label htmlFor="archive_messages" className="text-sm text-black">Archive processed messages</label>
             </div>
 
             <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="process_unread_only"
+              <Checkbox id="process_unread_only"
                 checked={config.process_unread_only || true}
                 onChange={(e) => updateConfiguration("process_unread_only", e.target.checked)}
-                className="mr-2 h-4 w-4 text-blue-600"
-              />
+                className="mr-2 h-4 w-4 text-blue-600" />
               <label htmlFor="process_unread_only" className="text-sm text-black">Process unread messages only</label>
             </div>
 
@@ -1321,24 +1292,18 @@ const AdvancedSettings: React.FC<{
           </div>
 
           <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="enable_monitoring"
+            <Checkbox id="enable_monitoring"
               checked={config.enable_monitoring || true}
               onChange={(e) => updateConfiguration("enable_monitoring", e.target.checked)}
-              className="mr-2 h-4 w-4 text-blue-600"
-            />
+              className="mr-2 h-4 w-4 text-blue-600" />
             <label htmlFor="enable_monitoring" className="text-sm text-black">Enable monitoring</label>
           </div>
 
           <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="enable_logging"
+            <Checkbox id="enable_logging"
               checked={config.enable_logging || true}
               onChange={(e) => updateConfiguration("enable_logging", e.target.checked)}
-              className="mr-2 h-4 w-4 text-blue-600"
-            />
+              className="mr-2 h-4 w-4 text-blue-600" />
             <label htmlFor="enable_logging" className="text-sm text-black">Enable detailed logging</label>
           </div>
         </div>

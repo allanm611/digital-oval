@@ -29,7 +29,6 @@ Depending on state and permissions: **Abort**, **Retry**, and **Archive** action
 
 ## Related Pages
 
-- [Job Management Overview](/documentation/jobs/overview)
-- [Scheduled Jobs](/documentation/jobs/scheduled-jobs)
 - [Job Executions](/documentation/jobs/job-executions)
-- [Job Workflows](/documentation/jobs/job-workflows)
+- [Job Executions List](/documentation/jobs/job-executions-list)
+- [Job Executions Analytics](/documentation/jobs/job-executions-analytics)

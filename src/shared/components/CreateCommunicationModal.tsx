@@ -46,6 +46,7 @@ import { Segment } from "../../features/segments/types/segment";
 import { DUMMY_RECIPIENTS } from "../../features/campaigns/pages/SeedListManagementPage";
 import type { SeedListRecipient } from "../../features/campaigns/pages/SeedListManagementPage";
 import { validatePhoneOnly, isValidEmail } from "../utils/validation";
+import Checkbox from "./ui/Checkbox";
 
 interface CreateCommunicationModalProps {
   isOpen: boolean;
@@ -1060,12 +1061,9 @@ export default function CreateCommunicationModal({
                               key={contact}
                               className="flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-gray-50"
                             >
-                              <input
-                                type="checkbox"
-                                checked={selectedTestContacts.has(contact)}
+                              <Checkbox checked={selectedTestContacts.has(contact)}
                                 onChange={() => toggleTestContact(contact)}
-                                className="w-4 h-4 rounded border-gray-300 cursor-pointer"
-                              />
+                                className="w-4 h-4 rounded border-gray-300 cursor-pointer" />
                               <span className="text-sm text-gray-700 flex-1">
                                 {contact}
                               </span>

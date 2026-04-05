@@ -28,6 +28,7 @@ import {
   DND_CATEGORIES,
   DAYS_OF_WEEK,
 } from "../types/communicationPolicyConfig";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 interface CommunicationPolicyModalProps {
   isOpen: boolean;
@@ -238,9 +239,7 @@ export default function CommunicationPolicyModal({
                 key={day.value}
                 className="flex items-center space-x-2 cursor-pointer"
               >
-                <input
-                  type="checkbox"
-                  checked={timeConfig.days?.includes(day.value) || false}
+                <Checkbox checked={timeConfig.days?.includes(day.value) || false}
                   onChange={(e) => {
                     const days = timeConfig.days || [];
                     const newDays = e.target.checked
@@ -252,8 +251,7 @@ export default function CommunicationPolicyModal({
                     }));
                   }}
                   className="rounded"
-                  style={{ accentColor: color.primary.action }}
-                />
+                  style={{ accentColor: color.primary.action }} />
                 <span className={`${tw.caption} ${tw.textSecondary}`}>
                   {day.label}
                 </span>
@@ -793,9 +791,7 @@ export default function CommunicationPolicyModal({
                           key={ch.value}
                           className="flex items-start space-x-3 px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
                         >
-                          <input
-                            type="checkbox"
-                            checked={channels.includes(ch.value)}
+                          <Checkbox checked={channels.includes(ch.value)}
                             onChange={(e) => {
                               if (e.target.checked) {
                                 setChannels((prev) => [...prev, ch.value]);
@@ -806,8 +802,7 @@ export default function CommunicationPolicyModal({
                               }
                             }}
                             className="mt-1 rounded"
-                            style={{ accentColor: color.primary.accent }}
-                          />
+                            style={{ accentColor: color.primary.accent }} />
                           <div className="flex-1">
                             <div className="text-sm font-medium text-gray-900">
                               {ch.label}
@@ -866,13 +861,10 @@ export default function CommunicationPolicyModal({
             {/* Active Status */}
             <div className="px-4 pt-4">
               <label className="flex items-center space-x-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={isActive}
+                <Checkbox checked={isActive}
                   onChange={(e) => setIsActive(e.target.checked)}
                   className="rounded w-5 h-5"
-                  style={{ accentColor: color.primary.action }}
-                />
+                  style={{ accentColor: color.primary.action }} />
                 <div>
                   <span className={`${tw.body} font-medium ${tw.textPrimary}`}>
                     Active Policy

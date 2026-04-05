@@ -43,6 +43,7 @@ import type {
 } from "../types/jobWorkflowStep";
 import { useAuth } from "../../../contexts/AuthContext";
 import type { ScheduledJob } from "../types/scheduledJob";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 const STEP_TYPE_OPTIONS: Array<{ label: string; value: StepType }> = [
   { label: "All Types", value: "sql" },
@@ -1285,15 +1286,12 @@ export default function JobWorkflowStepsPage() {
                         borderTopLeftRadius: "0.375rem",
                       }}
                     >
-                      <input
-                        type="checkbox"
-                        checked={
+                      <Checkbox checked={
                           filteredSteps.length > 0 &&
                           selectedSteps.size === filteredSteps.length
                         }
                         onChange={handleSelectAll}
-                        className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
-                      />
+                        className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
                     </th>
                   )}
                   <th
@@ -1369,12 +1367,9 @@ export default function JobWorkflowStepsPage() {
                           borderBottomLeftRadius: "0.375rem",
                         }}
                       >
-                        <input
-                          type="checkbox"
-                          checked={selectedSteps.has(step.id)}
+                        <Checkbox checked={selectedSteps.has(step.id)}
                           onChange={() => handleSelectStep(step.id)}
-                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
-                        />
+                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
                       </td>
                     )}
                     <td
@@ -1757,9 +1752,7 @@ export default function JobWorkflowStepsPage() {
                         Special Filters
                       </p>
                       <label className="flex items-center gap-2 text-sm text-gray-700">
-                        <input
-                          type="checkbox"
-                          checked={showValidationSteps}
+                        <Checkbox checked={showValidationSteps}
                           onChange={(e) => {
                             setShowValidationSteps(e.target.checked);
                             if (e.target.checked) {
@@ -1767,14 +1760,11 @@ export default function JobWorkflowStepsPage() {
                               setShowOrphanedSteps(false);
                             }
                           }}
-                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
-                        />
+                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
                         Validation Steps
                       </label>
                       <label className="flex items-center gap-2 text-sm text-gray-700">
-                        <input
-                          type="checkbox"
-                          checked={showRetrySteps}
+                        <Checkbox checked={showRetrySteps}
                           onChange={(e) => {
                             setShowRetrySteps(e.target.checked);
                             if (e.target.checked) {
@@ -1782,14 +1772,11 @@ export default function JobWorkflowStepsPage() {
                               setShowOrphanedSteps(false);
                             }
                           }}
-                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
-                        />
+                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
                         Retry Steps
                       </label>
                       <label className="flex items-center gap-2 text-sm text-gray-700">
-                        <input
-                          type="checkbox"
-                          checked={showOrphanedSteps}
+                        <Checkbox checked={showOrphanedSteps}
                           onChange={(e) => {
                             setShowOrphanedSteps(e.target.checked);
                             if (e.target.checked) {
@@ -1797,8 +1784,7 @@ export default function JobWorkflowStepsPage() {
                               setShowRetrySteps(false);
                             }
                           }}
-                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
-                        />
+                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
                         Orphaned Steps
                       </label>
                     </div>
@@ -2114,17 +2100,14 @@ export default function JobWorkflowStepsPage() {
                   <div className="space-y-4">
                     <div>
                       <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={batchUpdateFields.is_active !== undefined}
+                        <Checkbox checked={batchUpdateFields.is_active !== undefined}
                           onChange={(e) =>
                             setBatchUpdateFields({
                               ...batchUpdateFields,
                               is_active: e.target.checked ? true : undefined,
                             })
                           }
-                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
-                        />
+                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
                         <span className="text-sm font-medium text-gray-700">
                           Set Active Status
                         </span>
@@ -2132,17 +2115,14 @@ export default function JobWorkflowStepsPage() {
                       {batchUpdateFields.is_active !== undefined && (
                         <div className="mt-2 ml-6">
                           <label className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={batchUpdateFields.is_active}
+                            <Checkbox checked={batchUpdateFields.is_active}
                               onChange={(e) =>
                                 setBatchUpdateFields({
                                   ...batchUpdateFields,
                                   is_active: e.target.checked,
                                 })
                               }
-                              className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
-                            />
+                              className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
                             <span className="text-sm text-gray-600">
                               Active
                             </span>
@@ -2153,17 +2133,14 @@ export default function JobWorkflowStepsPage() {
 
                     <div>
                       <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={batchUpdateFields.is_critical !== undefined}
+                        <Checkbox checked={batchUpdateFields.is_critical !== undefined}
                           onChange={(e) =>
                             setBatchUpdateFields({
                               ...batchUpdateFields,
                               is_critical: e.target.checked ? true : undefined,
                             })
                           }
-                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
-                        />
+                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
                         <span className="text-sm font-medium text-gray-700">
                           Set Critical Status
                         </span>
@@ -2171,17 +2148,14 @@ export default function JobWorkflowStepsPage() {
                       {batchUpdateFields.is_critical !== undefined && (
                         <div className="mt-2 ml-6">
                           <label className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={batchUpdateFields.is_critical}
+                            <Checkbox checked={batchUpdateFields.is_critical}
                               onChange={(e) =>
                                 setBatchUpdateFields({
                                   ...batchUpdateFields,
                                   is_critical: e.target.checked,
                                 })
                               }
-                              className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
-                            />
+                              className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
                             <span className="text-sm text-gray-600">
                               Critical
                             </span>
@@ -2192,9 +2166,7 @@ export default function JobWorkflowStepsPage() {
 
                     <div>
                       <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={
+                        <Checkbox checked={
                             batchUpdateFields.timeout_seconds !== undefined
                           }
                           onChange={(e) =>
@@ -2205,8 +2177,7 @@ export default function JobWorkflowStepsPage() {
                                 : undefined,
                             })
                           }
-                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
-                        />
+                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
                         <span className="text-sm font-medium text-gray-700">
                           Set Timeout
                         </span>
@@ -2232,17 +2203,14 @@ export default function JobWorkflowStepsPage() {
 
                     <div>
                       <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={batchUpdateFields.retry_count !== undefined}
+                        <Checkbox checked={batchUpdateFields.retry_count !== undefined}
                           onChange={(e) =>
                             setBatchUpdateFields({
                               ...batchUpdateFields,
                               retry_count: e.target.checked ? 0 : undefined,
                             })
                           }
-                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
-                        />
+                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
                         <span className="text-sm font-medium text-gray-700">
                           Set Retry Count
                         </span>
@@ -2268,9 +2236,7 @@ export default function JobWorkflowStepsPage() {
 
                     <div>
                       <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={
+                        <Checkbox checked={
                             batchUpdateFields.on_failure_action !== undefined
                           }
                           onChange={(e) =>
@@ -2281,8 +2247,7 @@ export default function JobWorkflowStepsPage() {
                                 : undefined,
                             })
                           }
-                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
-                        />
+                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
                         <span className="text-sm font-medium text-gray-700">
                           Set Failure Action
                         </span>

@@ -2,10 +2,7 @@
 
 Create Job Workflow adds a new workflow record.
 
-The frontend uses one form page for both create and edit:
-
-- Create route: `/dashboard/workflows/create`
-- Edit route: `/dashboard/workflows/:id/edit`
+The frontend uses one form page for both create and edit
 
 ## Required Fields
 

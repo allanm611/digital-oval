@@ -45,6 +45,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import Pagination from "../../../shared/components/ui/Pagination";
 import { PermissionGate } from "../../auth/components/PermissionGate";
+import Radio from "../../../shared/components/ui/Radio";
 
 interface ProductsModalProps {
   isOpen: boolean;
@@ -1623,9 +1624,7 @@ export default function ProductCatalogsPage() {
                         key={option.value}
                         className="flex items-center space-x-3 cursor-pointer"
                       >
-                        <input
-                          type="radio"
-                          name="filterType"
+                        <Radio name="filterType"
                           value={option.value}
                           checked={filterType === option.value}
                           onChange={(e) =>
@@ -1637,8 +1636,7 @@ export default function ProductCatalogsPage() {
                                 | "empty",
                             )
                           }
-                          className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                        />
+                          className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500" />
                         <span className="text-sm text-gray-700">
                           {option.label}
                         </span>

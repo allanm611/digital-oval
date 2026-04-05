@@ -15,6 +15,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
+import Radio from "../../../shared/components/ui/Radio";
 
 export default function EditSegmentPage() {
   const { id } = useParams<{ id: string }>();
@@ -295,29 +296,23 @@ export default function EditSegmentPage() {
                 </label>
                 <div className="flex items-center space-x-4">
                   <label className="flex items-center">
-                    <input
-                      type="radio"
-                      value="private"
+                    <Radio value="private"
                       checked={visibility === "private"}
                       onChange={(e) =>
                         setVisibility(e.target.value as SegmentVisibility)
                       }
                       className="mr-2"
-                      disabled={isSaving}
-                    />
+                      disabled={isSaving} />
                     <span className={`text-sm ${tw.textPrimary}`}>Private</span>
                   </label>
                   <label className="flex items-center">
-                    <input
-                      type="radio"
-                      value="public"
+                    <Radio value="public"
                       checked={visibility === "public"}
                       onChange={(e) =>
                         setVisibility(e.target.value as SegmentVisibility)
                       }
                       className="mr-2"
-                      disabled={isSaving}
-                    />
+                      disabled={isSaving} />
                     <span className={`text-sm ${tw.textPrimary}`}>Public</span>
                   </label>
                 </div>

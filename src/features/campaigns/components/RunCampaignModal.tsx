@@ -12,6 +12,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import { color, tw, components } from "../../../shared/utils/utils";
 import React, { useCallback } from "react";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 interface RunCampaignModalProps {
   isOpen: boolean;
@@ -387,13 +388,10 @@ export default function RunCampaignModal({
                       )}
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3 flex-1">
-                          <input
-                            type="checkbox"
-                            checked={segment.selected}
+                          <Checkbox checked={segment.selected}
                             onChange={() => toggleSegment(segment.segment_id)}
                             className="w-4 h-4 rounded flex-shrink-0"
-                            style={{ accentColor: color.primary.accent }}
-                          />
+                            style={{ accentColor: color.primary.accent }} />
                           <div className="flex-1">
                             <div
                               className={`text-sm font-medium ${tw.textPrimary}`}

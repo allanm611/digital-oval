@@ -41,7 +41,7 @@ Scheduled Job Details provides a read-focused view of one job definition and its
 
 ## Related Pages
 
-- [Job Management Overview](/documentation/jobs/overview)
 - [Scheduled Jobs](/documentation/jobs/scheduled-jobs)
-- [Job Executions](/documentation/jobs/job-executions)
-- [Job Workflows](/documentation/jobs/job-workflows)
+- [Scheduled Jobs List](/documentation/jobs/scheduled-jobs-list)
+- [Create Scheduled Job](/documentation/jobs/create-scheduled-job)
+- [Scheduled Jobs Analytics](/documentation/jobs/scheduled-jobs-analytics)

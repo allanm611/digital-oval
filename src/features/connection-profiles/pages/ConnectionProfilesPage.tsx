@@ -38,6 +38,7 @@ import {
   ConnectionProfileTypeStatsItem,
 } from "../types/connectionProfile";
 import { PermissionGate } from "../../auth/components/PermissionGate";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 type StatusFilter = "all" | "active" | "inactive" | "expired";
 type PiiFilter = "all" | "with" | "without";
@@ -848,9 +849,7 @@ export default function ConnectionProfilesPage() {
                       className="px-3 py-3 text-sm font-medium whitespace-nowrap"
                       style={{ borderTopLeftRadius: "0.375rem" }}
                     >
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
+                      <Checkbox className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
                         checked={
                           selectedProfileIds.size > 0 &&
                           selectedProfileIds.size === filteredProfiles.length
@@ -864,8 +863,7 @@ export default function ConnectionProfilesPage() {
                             setSelectedProfileIds(new Set());
                           }
                         }}
-                        aria-label="Select all profiles"
-                      />
+                        aria-label="Select all profiles" />
                     </th>
                   )}
                   <th
@@ -918,12 +916,9 @@ export default function ConnectionProfilesPage() {
                             borderBottomLeftRadius: "0.375rem",
                           }}
                         >
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
+                          <Checkbox checked={isSelected}
                             onChange={() => toggleProfileSelection(profile.id)}
-                            className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
-                          />
+                            className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black" />
                         </td>
                       )}
                       <td

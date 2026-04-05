@@ -15,6 +15,7 @@ import { CampaignFlowConfig, CampaignFlowResponseData } from "../types/campaignF
 import { CampaignSegmentDetail } from "../types/campaign";
 import { Offer } from "../../offers/types/offer";
 import { SegmentType } from "../../segments/types/segment";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 export default function CampaignFlowDetailsPage() {
   const { flowId } = useParams<{
@@ -767,9 +768,7 @@ export default function CampaignFlowDetailsPage() {
                 {/* Status */}
                 <div>
                   <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="flowActive"
+                    <Checkbox id="flowActive"
                       checked={editedFlow.is_active !== false}
                       onChange={(e) =>
                         setEditedFlow({
@@ -777,8 +776,7 @@ export default function CampaignFlowDetailsPage() {
                           is_active: e.target.checked,
                         })
                       }
-                      className="w-4 h-4"
-                    />
+                      className="w-4 h-4" />
                     <label htmlFor="flowActive" className={`text-sm font-medium ${tw.textPrimary}`}>
                       Active Flow
                     </label>

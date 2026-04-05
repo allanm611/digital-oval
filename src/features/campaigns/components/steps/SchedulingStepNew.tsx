@@ -6,6 +6,8 @@ import {
 } from "../../types/campaign";
 import { tw } from "../../../../shared/utils/utils";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
+import Checkbox from "../../../../shared/components/ui/Checkbox";
+import Radio from "../../../../shared/components/ui/Radio";
 
 interface SchedulingStepProps {
   formData: CreateCampaignRequest;
@@ -102,27 +104,21 @@ export default function SchedulingStep({
           <div className="mb-6">
             <div className="flex items-center space-x-6 mb-4">
               <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="startType"
+                <Radio name="startType"
                   value="datetime"
                   checked={startType === "datetime"}
                   onChange={() => setStartType("datetime")}
-                  className="w-4 h-4 text-[#3b8169] border-gray-300 focus:ring-[#3b8169]"
-                />
+                  className="w-4 h-4 text-[#3b8169] border-gray-300 focus:ring-[#3b8169]" />
                 <span className="ml-2 text-sm font-medium text-gray-700">
                   Start date/time
                 </span>
               </label>
               <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="startType"
+                <Radio name="startType"
                   value="previous"
                   checked={startType === "previous"}
                   onChange={() => setStartType("previous")}
-                  className="w-4 h-4 text-[#3b8169] border-gray-300 focus:ring-[#3b8169]"
-                />
+                  className="w-4 h-4 text-[#3b8169] border-gray-300 focus:ring-[#3b8169]" />
                 <span className="ml-2 text-sm font-medium text-gray-700">
                   Starts when the previous broadcast is aborted
                 </span>
@@ -177,33 +173,27 @@ export default function SchedulingStep({
             </label>
             <div className="flex items-center space-x-6 mb-4">
               <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="endType"
+                <Radio name="endType"
                   value="never"
                   checked={endType === "never"}
                   onChange={() => {
                     setEndType("never");
                     updateScheduling({ end_date: "" });
                   }}
-                  className="w-4 h-4 text-[#3b8169] border-gray-300 focus:ring-[#3b8169]"
-                />
+                  className="w-4 h-4 text-[#3b8169] border-gray-300 focus:ring-[#3b8169]" />
                 <span className="ml-2 text-sm font-medium text-gray-700">
                   Never
                 </span>
               </label>
               <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="endType"
+                <Radio name="endType"
                   value="at"
                   checked={endType === "at"}
                   onChange={() => {
                     setEndType("at");
                     updateScheduling({ end_date: "2025-12-31T23:59" });
                   }}
-                  className="w-4 h-4 text-[#3b8169] border-gray-300 focus:ring-[#3b8169]"
-                />
+                  className="w-4 h-4 text-[#3b8169] border-gray-300 focus:ring-[#3b8169]" />
                 <span className="ml-2 text-sm font-medium text-gray-700">
                   At
                 </span>
@@ -342,12 +332,9 @@ export default function SchedulingStep({
                   key={day.value}
                   className="flex items-center justify-center"
                 >
-                  <input
-                    type="checkbox"
-                    checked={selectedDays.includes(day.value)}
+                  <Checkbox checked={selectedDays.includes(day.value)}
                     onChange={() => toggleDayOfWeek(day.value)}
-                    className="w-4 h-4 text-[#3b8169] border-gray-300 rounded focus:ring-[#3b8169] mr-2"
-                  />
+                    className="w-4 h-4 text-[#3b8169] border-gray-300 rounded focus:ring-[#3b8169] mr-2" />
                   <span className="text-sm font-medium text-gray-700">
                     {day.label}
                   </span>
@@ -364,24 +351,18 @@ export default function SchedulingStep({
           {/* Additional Options */}
           <div className="space-y-3">
             <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={setSpecificStartTime}
+              <Checkbox checked={setSpecificStartTime}
                 onChange={(e) => setSetSpecificStartTime(e.target.checked)}
-                className="w-4 h-4 text-[#3b8169] border-gray-300 rounded focus:ring-[#3b8169]"
-              />
+                className="w-4 h-4 text-[#3b8169] border-gray-300 rounded focus:ring-[#3b8169]" />
               <span className="ml-3 text-sm font-medium text-gray-700">
                 Set specific start time for days
               </span>
             </label>
 
             <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={startDeliveryOnCompletion}
+              <Checkbox checked={startDeliveryOnCompletion}
                 onChange={(e) => setStartDeliveryOnCompletion(e.target.checked)}
-                className="w-4 h-4 text-[#3b8169] border-gray-300 rounded focus:ring-[#3b8169]"
-              />
+                className="w-4 h-4 text-[#3b8169] border-gray-300 rounded focus:ring-[#3b8169]" />
               <span className="ml-3 text-sm font-medium text-gray-700">
                 Start delivery on completion of specific Broadcasts
               </span>
@@ -399,42 +380,33 @@ export default function SchedulingStep({
         <div className={`bg-white border border-gray-200 ${tw.rounded} p-6`}>
           <div className="flex items-center space-x-8 mb-6">
             <label className="flex items-center">
-              <input
-                type="radio"
-                name="renderTime"
+              <Radio name="renderTime"
                 value="Pre-Render"
                 checked={targetRenderTime === "Pre-Render"}
                 onChange={(e) => setTargetRenderTime(e.target.value)}
-                className="w-4 h-4 text-[#3b8169] border-gray-300 focus:ring-[#3b8169]"
-              />
+                className="w-4 h-4 text-[#3b8169] border-gray-300 focus:ring-[#3b8169]" />
               <span className="ml-2 text-sm font-medium text-gray-700">
                 Pre-Render
               </span>
             </label>
 
             <label className="flex items-center">
-              <input
-                type="radio"
-                name="renderTime"
+              <Radio name="renderTime"
                 value="Real Time"
                 checked={targetRenderTime === "Real Time"}
                 onChange={(e) => setTargetRenderTime(e.target.value)}
-                className="w-4 h-4 text-[#3b8169] border-gray-300 focus:ring-[#3b8169]"
-              />
+                className="w-4 h-4 text-[#3b8169] border-gray-300 focus:ring-[#3b8169]" />
               <span className="ml-2 text-sm font-medium text-gray-700">
                 Real Time
               </span>
             </label>
 
             <label className="flex items-center">
-              <input
-                type="radio"
-                name="renderTime"
+              <Radio name="renderTime"
                 value="Broadcast Schedule"
                 checked={targetRenderTime === "Broadcast Schedule"}
                 onChange={(e) => setTargetRenderTime(e.target.value)}
-                className="w-4 h-4 text-[#3b8169] border-gray-300 focus:ring-[#3b8169]"
-              />
+                className="w-4 h-4 text-[#3b8169] border-gray-300 focus:ring-[#3b8169]" />
               <span className="ml-2 text-sm font-medium text-gray-700">
                 Broadcast Schedule
               </span>

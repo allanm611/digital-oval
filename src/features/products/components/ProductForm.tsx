@@ -18,6 +18,7 @@ import { useConfigurationData } from "../../../shared/services/configurationData
 import { useBackendProductTypeData } from "../../../shared/hooks/useBackendProductTypeData";
 import { useBackendComboTypeData } from "../../../shared/hooks/useBackendComboTypeData";
 import { ComboType } from "../services/comboTypeService";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 interface ProductFormProps {
   formData: CreateProductRequest | UpdateProductRequest;
@@ -807,17 +808,14 @@ export default function ProductForm({
                   <div className="grid gap-4 md:grid-cols-2 mb-4">
                     <div>
                       <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={comboData.shared_validity ?? true}
+                        <Checkbox checked={comboData.shared_validity ?? true}
                           onChange={(e) =>
                             setComboData({
                               ...comboData,
                               shared_validity: e.target.checked,
                             })
                           }
-                          className="w-4 h-4 cursor-pointer"
-                        />
+                          className="w-4 h-4 cursor-pointer" />
                         <span
                           className={`text-sm font-medium ${tw.textPrimary}`}
                         >
@@ -827,17 +825,14 @@ export default function ProductForm({
                     </div>
                     <div>
                       <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={comboData.shared_price ?? true}
+                        <Checkbox checked={comboData.shared_price ?? true}
                           onChange={(e) =>
                             setComboData({
                               ...comboData,
                               shared_price: e.target.checked,
                             })
                           }
-                          className="w-4 h-4 cursor-pointer"
-                        />
+                          className="w-4 h-4 cursor-pointer" />
                         <span
                           className={`text-sm font-medium ${tw.textPrimary}`}
                         >

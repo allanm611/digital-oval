@@ -47,6 +47,8 @@ import {
   Legend,
   Tooltip,
 } from "recharts";
+import Checkbox from "../../../shared/components/ui/Checkbox";
+import Radio from "../../../shared/components/ui/Radio";
 
 // Helper function to extract error messages from various error types
 const extractErrorMessage = (error: unknown): string => {
@@ -1825,15 +1827,12 @@ export default function UserManagementPage() {
                           className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
                           style={{ color: color.surface.tableHeaderText }}
                         >
-                          <input
-                            type="checkbox"
-                            checked={
+                          <Checkbox checked={
                               filteredUsers.length > 0 &&
                               selectedUsers.size === filteredUsers.length
                             }
                             onChange={handleSelectAll}
-                            className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
-                          />
+                            className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
                         </th>
                       )}
                       <th
@@ -1896,12 +1895,9 @@ export default function UserManagementPage() {
                                 backgroundColor: color.surface.tablebodybg,
                               }}
                             >
-                              <input
-                                type="checkbox"
-                                checked={selectedUsers.has(user.id)}
+                              <Checkbox checked={selectedUsers.has(user.id)}
                                 onChange={() => handleSelectUser(user.id)}
-                                className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
-                              />
+                                className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
                             </td>
                           )}
                           <td
@@ -3126,26 +3122,20 @@ export default function UserManagementPage() {
                   </label>
                   <div className="space-y-2">
                     <label className="flex items-center gap-3 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="department"
+                      <Radio name="department"
                         value="all"
                         checked={filterDepartment === "all"}
                         onChange={(e) => setFilterDepartment(e.target.value)}
-                        className="h-4 w-4"
-                      />
+                        className="h-4 w-4" />
                       <span className="text-sm text-gray-700">All Departments</span>
                     </label>
                     {uniqueDepartments.map((dept) => (
                       <label key={dept} className="flex items-center gap-3 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="department"
+                        <Radio name="department"
                           value={dept}
                           checked={filterDepartment === dept}
                           onChange={(e) => setFilterDepartment(e.target.value)}
-                          className="h-4 w-4"
-                        />
+                          className="h-4 w-4" />
                         <span className="text-sm text-gray-700">{dept}</span>
                       </label>
                     ))}
@@ -3159,26 +3149,20 @@ export default function UserManagementPage() {
                   </label>
                   <div className="space-y-2">
                     <label className="flex items-center gap-3 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="role"
+                      <Radio name="role"
                         value="all"
                         checked={filterRole === "all"}
                         onChange={(e) => setFilterRole(e.target.value)}
-                        className="h-4 w-4"
-                      />
+                        className="h-4 w-4" />
                       <span className="text-sm text-gray-700">All Roles</span>
                     </label>
                     {uniqueRoles.map((role) => (
                       <label key={role} className="flex items-center gap-3 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="role"
+                        <Radio name="role"
                           value={role}
                           checked={filterRole === role}
                           onChange={(e) => setFilterRole(e.target.value)}
-                          className="h-4 w-4"
-                        />
+                          className="h-4 w-4" />
                         <span className="text-sm text-gray-700">{role}</span>
                       </label>
                     ))}
@@ -3197,9 +3181,7 @@ export default function UserManagementPage() {
                           key={status}
                           className="flex items-center gap-3 cursor-pointer"
                         >
-                          <input
-                            type="radio"
-                            name="status"
+                          <Radio name="status"
                             value={status}
                             checked={filterStatus === status}
                             onChange={(e) =>
@@ -3214,8 +3196,7 @@ export default function UserManagementPage() {
                                   | "deleted"
                               )
                             }
-                            className="h-4 w-4"
-                          />
+                            className="h-4 w-4" />
                           <span className="text-sm text-gray-700 capitalize">
                             {status === "all"
                               ? "All Statuses"

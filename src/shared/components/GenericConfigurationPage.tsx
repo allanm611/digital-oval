@@ -14,6 +14,7 @@ import LoadingSpinner from "./ui/LoadingSpinner";
 import BackButton from "./ui/BackButton";
 import CreateButton from "./ui/CreateButton";
 import HeadlessSelect from "./ui/HeadlessSelect";
+import Checkbox from "./ui/Checkbox";
 
 export interface ConfigurationItem {
   id: number;
@@ -333,17 +334,14 @@ export function ConfigurationModal({
                     )}
 
                     {field.type === "toggle" && (
-                      <input
-                        type="checkbox"
-                        checked={formData[field.key] ?? false}
+                      <Checkbox checked={formData[field.key] ?? false}
                         onChange={(e) =>
                           setFormData((prev) => ({
                             ...prev,
                             [field.key]: e.target.checked,
                           }))
                         }
-                        className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-2 focus:ring-purple-500"
-                      />
+                        className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-2 focus:ring-purple-500" />
                     )}
                   </div>
                 );

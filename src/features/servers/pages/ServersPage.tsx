@@ -38,6 +38,7 @@ import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { PermissionGate } from "../../auth/components/PermissionGate";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 const PAGE_SIZE = 15;
 const BASE_FETCH_LIMIT = 100;
@@ -862,14 +863,11 @@ export default function ServersPage() {
                         borderTopLeftRadius: "0.375rem",
                       }}
                     >
-                      <input
-                        ref={headerCheckboxRef}
-                        type="checkbox"
-                        className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
+                      <Checkbox
+                        ref={headerCheckboxRef} className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
                         checked={allVisibleSelected}
                         onChange={toggleSelectAllVisible}
-                        aria-label="Select visible servers"
-                      />
+                        aria-label="Select visible servers" />
                     </th>
                   )}
                   <th
@@ -931,16 +929,13 @@ export default function ServersPage() {
                             borderBottomLeftRadius: "0.375rem",
                           }}
                         >
-                          <input
-                            type="checkbox"
-                            checked={selectedServerIds.has(server.id)}
+                          <Checkbox checked={selectedServerIds.has(server.id)}
                             onChange={(event) => {
                               event.stopPropagation();
                               toggleServerSelection(server.id);
                             }}
                             aria-label={`Select ${server.name}`}
-                            className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
-                          />
+                            className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black" />
                         </td>
                       )}
                       <td

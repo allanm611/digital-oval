@@ -8,6 +8,7 @@ import SegmentConditionsBuilder from "../../segments/components/SegmentCondition
 import type { SegmentConditionGroup } from "../../segments/types/segment";
 import SchedulingComponent from "../../../shared/components/SchedulingComponent";
 import type { SchedulingData } from "../../../shared/types/scheduling";
+import Radio from "../../../shared/components/ui/Radio";
 
 interface UniversalControlGroupModalProps {
   isOpen: boolean;
@@ -256,9 +257,7 @@ function CreateControlGroupModal({
                       key={option.value}
                       className={`flex items-start p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50`}
                     >
-                      <input
-                        type="radio"
-                        name="customerBase"
+                      <Radio name="customerBase"
                         value={option.value}
                         checked={formData.customerBase === option.value}
                         onChange={(e) =>
@@ -270,8 +269,7 @@ function CreateControlGroupModal({
                               | "saved_segments",
                           })
                         }
-                        className="mt-1 w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157]"
-                      />
+                        className="mt-1 w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157]" />
                       <div className="ml-3">
                         <div className="font-medium text-gray-900">
                           {option.label}
@@ -307,29 +305,23 @@ function CreateControlGroupModal({
                 </label>
                 <div className="space-y-3">
                   <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="outlierRemoval"
+                    <Radio name="outlierRemoval"
                       checked={formData.outlierRemoval === true}
                       onChange={() =>
                         setFormData({ ...formData, outlierRemoval: true })
                       }
-                      className="w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157]"
-                    />
+                      className="w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157]" />
                     <span className="ml-2 text-sm text-gray-900">
                       Yes - Remove outliers
                     </span>
                   </label>
                   <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="outlierRemoval"
+                    <Radio name="outlierRemoval"
                       checked={formData.outlierRemoval === false}
                       onChange={() =>
                         setFormData({ ...formData, outlierRemoval: false })
                       }
-                      className="w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157]"
-                    />
+                      className="w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157]" />
                     <span className="ml-2 text-sm text-gray-900">
                       No - Keep all data
                     </span>
@@ -343,29 +335,23 @@ function CreateControlGroupModal({
                 </label>
                 <div className="space-y-3">
                   <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="varianceCalculation"
+                    <Radio name="varianceCalculation"
                       checked={formData.varianceCalculation === true}
                       onChange={() =>
                         setFormData({ ...formData, varianceCalculation: true })
                       }
-                      className="w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157]"
-                    />
+                      className="w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157]" />
                     <span className="ml-2 text-sm text-gray-900">
                       Yes - Calculate variance
                     </span>
                   </label>
                   <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="varianceCalculation"
+                    <Radio name="varianceCalculation"
                       checked={formData.varianceCalculation === false}
                       onChange={() =>
                         setFormData({ ...formData, varianceCalculation: false })
                       }
-                      className="w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157]"
-                    />
+                      className="w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157]" />
                     <span className="ml-2 text-sm text-gray-900">
                       No - Skip variance calculation
                     </span>

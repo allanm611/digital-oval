@@ -39,6 +39,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import Pagination from "../../../shared/components/ui/Pagination";
 import { PermissionGate } from "../../auth/components/PermissionGate";
+import Radio from "../../../shared/components/ui/Radio";
 
 export default function OffersPage() {
   const navigate = useNavigate();
@@ -1790,9 +1791,7 @@ export default function OffersPage() {
                       { value: OfferStatusEnum.ARCHIVED, label: "Archived" },
                     ].map((option) => (
                       <label key={option.value} className="flex items-center">
-                        <input
-                          type="radio"
-                          name="status"
+                        <Radio name="status"
                           value={option.value}
                           checked={selectedStatus === option.value}
                           onChange={() =>
@@ -1800,8 +1799,7 @@ export default function OffersPage() {
                               option.value as OfferStatusEnum | "all",
                             )
                           }
-                          className={`mr-3 text-[${color.primary.action}] focus:ring-[${color.primary.action}]`}
-                        />
+                          className={`mr-3 text-[${color.primary.action}] focus:ring-[${color.primary.action}]`} />
                         <span className={`text-sm ${tw.textSecondary}`}>
                           {option.label}
                         </span>
@@ -1825,16 +1823,13 @@ export default function OffersPage() {
                       { value: "rejected", label: "Rejected" },
                     ].map((option) => (
                       <label key={option.value} className="flex items-center">
-                        <input
-                          type="radio"
-                          name="approval"
+                        <Radio name="approval"
                           value={option.value}
                           checked={selectedApproval === option.value}
                           onChange={() =>
                             handleApprovalFilter(option.value as string | "all")
                           }
-                          className={`mr-3 text-[${color.primary.action}] focus:ring-[${color.primary.action}]`}
-                        />
+                          className={`mr-3 text-[${color.primary.action}] focus:ring-[${color.primary.action}]`} />
                         <span className={`text-sm ${tw.textSecondary}`}>
                           {option.label}
                         </span>

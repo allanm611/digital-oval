@@ -13,6 +13,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { scheduledJobService } from "../../jobs/services/scheduledJobService";
 import { ScheduledJob } from "../../jobs/types/scheduledJob";
 import FetchSummaryModal from "./FetchSummaryModal";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 type FetchMode = "immediate" | "by-time" | "by-range";
 
@@ -359,13 +360,10 @@ export default function FetchControlsModal({
                 )}
               </div>
               <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={forceReprocess}
+                <Checkbox checked={forceReprocess}
                   onChange={(e) => setForceReprocess(e.target.checked)}
                   className="w-4 h-4 cursor-pointer"
-                  disabled={isLoading}
-                />
+                  disabled={isLoading} />
                 <span className={`text-sm ${tw.textPrimary}`}>
                   Force Reprocess
                 </span>

@@ -11,6 +11,7 @@ import { productCategoryService } from "../services/productCategoryService";
 import { color, tw } from "../../../shared/utils/utils";
 import { zIndex } from "../../../shared/utils/tokens";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 const CreateProductModalWrapper = lazy(() => import("./CreateProductModalWrapper"));
 
@@ -514,14 +515,11 @@ export default function ProductSelector({
                               className="cursor-pointer transition-colors hover:bg-gray-50"
                             >
                               <td className="px-4 py-3">
-                                <input
-                                  type="checkbox"
-                                  checked={isSelected}
+                                <Checkbox checked={isSelected}
                                   onChange={() => handleProductToggle(product)}
                                   onClick={(e) => e.stopPropagation()}
                                   className="w-4 h-4 border-gray-400 rounded"
-                                  style={{ accentColor: "#111827" }}
-                                />
+                                  style={{ accentColor: "#111827" }} />
                               </td>
                               <td className="px-4 py-3">
                                 <div className="min-w-0">

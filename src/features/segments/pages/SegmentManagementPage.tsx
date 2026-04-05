@@ -41,6 +41,7 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import Pagination from "../../../shared/components/ui/Pagination";
 import ErrorState from "../../../shared/components/ui/ErrorState";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 export default function SegmentManagementPage() {
   const navigate = useNavigate();
@@ -1521,14 +1522,11 @@ export default function SegmentManagementPage() {
                         className="px-3 py-4 text-sm font-medium"
                         style={{ color: color.surface.tableHeaderText }}
                       >
-                        <input
-                          ref={headerCheckboxRef}
-                          type="checkbox"
-                          className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
+                        <Checkbox
+                          ref={headerCheckboxRef} className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
                           checked={allVisibleSelected}
                           onChange={toggleSelectAllVisible}
-                          aria-label="Select all visible segments"
-                        />
+                          aria-label="Select all visible segments" />
                       </th>
                     )}
                     <th
@@ -1583,16 +1581,13 @@ export default function SegmentManagementPage() {
                           className="px-3 py-4"
                           style={{ backgroundColor: color.surface.tablebodybg }}
                         >
-                          <input
-                            type="checkbox"
-                            checked={selectedSegmentIds.has(segment.id)}
+                          <Checkbox checked={selectedSegmentIds.has(segment.id)}
                             onChange={(event) => {
                               event.stopPropagation();
                               toggleSegmentSelection(segment.id);
                             }}
                             aria-label={`Select ${segment.name}`}
-                            className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
-                          />
+                            className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black" />
                         </td>
                       )}
                       <td
@@ -1863,16 +1858,13 @@ export default function SegmentManagementPage() {
                   <div className="flex items-start justify-between mb-3">
                     {isSelectionMode && (
                       <div className="mr-3 pt-1">
-                        <input
-                          type="checkbox"
-                          checked={selectedSegmentIds.has(segment.id)}
+                        <Checkbox checked={selectedSegmentIds.has(segment.id)}
                           onChange={(event) => {
                             event.stopPropagation();
                             toggleSegmentSelection(segment.id);
                           }}
                           aria-label={`Select ${segment.name}`}
-                          className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
-                        />
+                          className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black" />
                       </div>
                     )}
                     <div className="flex-1">
@@ -2162,9 +2154,7 @@ export default function SegmentManagementPage() {
                     <div className="space-y-2 max-h-48 overflow-y-auto">
                       {allTags.map((tag) => (
                         <label key={tag} className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={selectedTags.includes(tag)}
+                          <Checkbox checked={selectedTags.includes(tag)}
                             onChange={(e) => {
                               e.stopPropagation(); // Prevent event bubbling
                               if (e.target.checked) {
@@ -2176,8 +2166,7 @@ export default function SegmentManagementPage() {
                               }
                             }}
                             onClick={(e) => e.stopPropagation()} // Prevent event bubbling
-                            className={`mr-3 text-[${color.primary.action}] focus:ring-[${color.primary.action}]`}
-                          />
+                            className={`mr-3 text-[${color.primary.action}] focus:ring-[${color.primary.action}]`} />
                           <span className={`text-sm ${tw.textSecondary}`}>
                             {tag}
                           </span>

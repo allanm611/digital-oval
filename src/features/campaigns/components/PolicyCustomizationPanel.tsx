@@ -12,6 +12,7 @@ import {
 } from "../types/communicationPolicyConfig";
 import { color, tw, components } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 type PolicyConfig =
   | TimeWindowConfig
@@ -70,9 +71,7 @@ export default function PolicyCustomizationPanel({
           <div className="grid grid-cols-4 gap-2">
             {DAYS_OF_WEEK.map((day) => (
               <label key={day.value} className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={timeConfig.days?.includes(day.value) || false}
+                <Checkbox checked={timeConfig.days?.includes(day.value) || false}
                   onChange={(e) => {
                     const days = timeConfig.days || [];
                     const newDays = e.target.checked
@@ -86,8 +85,7 @@ export default function PolicyCustomizationPanel({
                       accentColor: color.primary.action,
                       "--tw-ring-color": color.primary.action,
                     } as React.CSSProperties
-                  }
-                />
+                  } />
                 <span className={`${tw.caption} ${tw.textSecondary}`}>
                   {day.label}
                 </span>

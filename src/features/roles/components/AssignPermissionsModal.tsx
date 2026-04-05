@@ -18,6 +18,7 @@ import { color, tw } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 interface AssignPermissionsModalProps {
   isOpen: boolean;
@@ -684,14 +685,11 @@ export default function AssignPermissionsModal({
                         className="px-4 py-3 sm:py-4 text-left"
                         style={{ color: color.surface.tableHeaderText }}
                       >
-                        <input
-                          ref={headerCheckboxRef}
-                          type="checkbox"
-                          checked={allVisibleSelected}
+                        <Checkbox
+                          ref={headerCheckboxRef} checked={allVisibleSelected}
                           onChange={toggleSelectAllVisible}
                           aria-label="Select all visible permissions"
-                          className="cursor-pointer w-4 h-4"
-                        />
+                          className="cursor-pointer w-4 h-4" />
                       </th>
                     )}
                     <th
@@ -741,9 +739,7 @@ export default function AssignPermissionsModal({
                               backgroundColor: color.surface.tablebodybg,
                             }}
                           >
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
+                            <Checkbox checked={isSelected}
                               disabled={isAssigned}
                               onChange={(e) => {
                                 e.stopPropagation();
@@ -754,8 +750,7 @@ export default function AssignPermissionsModal({
                                 isAssigned
                                   ? "opacity-50 cursor-not-allowed"
                                   : ""
-                              }`}
-                            />
+                              }`} />
                             {isAssigned && (
                               <span
                                 className="ml-2 text-xs font-medium"

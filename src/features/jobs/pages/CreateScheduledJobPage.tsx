@@ -26,6 +26,7 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 const SCHEDULE_TYPES: {
   value: ScheduleType;
@@ -993,13 +994,10 @@ export default function CreateScheduledJobPage() {
                               {({ selected }) => (
                                 <>
                                   <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                      type="checkbox"
-                                      checked={selected}
+                                    <Checkbox checked={selected}
                                       onChange={() => {}}
                                       className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
-                                      onClick={(e) => e.stopPropagation()}
-                                    />
+                                      onClick={(e) => e.stopPropagation()} />
                                     <span
                                       className={`${selected ? "font-semibold" : "font-normal"} block truncate`}
                                     >
@@ -1058,9 +1056,7 @@ export default function CreateScheduledJobPage() {
                                     key={channel}
                                     className="flex items-center gap-2 cursor-pointer"
                                   >
-                                    <input
-                                      type="checkbox"
-                                      checked={channels.includes(channel)}
+                                    <Checkbox checked={channels.includes(channel)}
                                       onChange={(e) => {
                                         const newChannels = e.target.checked
                                           ? [...channels, channel]
@@ -1072,8 +1068,7 @@ export default function CreateScheduledJobPage() {
                                           [segmentId]: newChannels,
                                         }));
                                       }}
-                                      className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
-                                    />
+                                      className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
                                     <span className="text-sm text-gray-700">
                                       {channel}
                                     </span>

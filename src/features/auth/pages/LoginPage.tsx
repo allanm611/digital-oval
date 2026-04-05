@@ -11,6 +11,7 @@ import {
   X,
   CheckCircle,
 } from "lucide-react";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 const LoginPage: React.FC = () => {
   const { login, requestPasswordReset } = useAuth();
@@ -267,11 +268,8 @@ const LoginPage: React.FC = () => {
 
               <div className="form-options">
                 <label className="remember-me">
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                  />
+                  <Checkbox checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)} />
                   <span>{t.auth.login.rememberMe}</span>
                 </label>
                 <a

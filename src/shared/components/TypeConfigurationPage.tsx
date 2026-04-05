@@ -30,6 +30,7 @@ import BackButton from "./ui/BackButton";
 import CreateButton from "./ui/CreateButton";
 import LoadingSpinner from "./ui/LoadingSpinner";
 import DeleteConfirmModal from "./ui/DeleteConfirmModal";
+import Checkbox from "./ui/Checkbox";
 
 export interface TypeConfigurationItem extends ConfigurationItem {
   isActive?: boolean;
@@ -1195,9 +1196,7 @@ function TypeConfigurationModal({
               {/* Validity & Price - 2 Column Layout */}
               <div className="pt-3 mt-3">
                 <label className="flex items-center gap-2 mb-3">
-                  <input
-                    type="checkbox"
-                    checked={comboSharedValidity}
+                  <Checkbox checked={comboSharedValidity}
                     onChange={(e) => {
                       setComboSharedValidity(e.target.checked);
                       setComboResources(
@@ -1207,17 +1206,14 @@ function TypeConfigurationModal({
                         })),
                       );
                     }}
-                    className="rounded"
-                  />
+                    className="rounded" />
                   <span className="text-sm font-medium text-gray-700">
                     Shared Validity
                   </span>
                 </label>
 
                 <label className="flex items-center gap-2 mb-3">
-                  <input
-                    type="checkbox"
-                    checked={comboSharedPrice}
+                  <Checkbox checked={comboSharedPrice}
                     onChange={(e) => {
                       const checked = e.target.checked;
                       setComboSharedPrice(checked);
@@ -1230,8 +1226,7 @@ function TypeConfigurationModal({
                         );
                       }
                     }}
-                    className="rounded"
-                  />
+                    className="rounded" />
                   <span className="text-sm font-medium text-gray-700">
                     Shared Combo Price
                   </span>

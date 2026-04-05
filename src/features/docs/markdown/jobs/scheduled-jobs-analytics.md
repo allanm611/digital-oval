@@ -33,4 +33,5 @@ Scheduled Jobs Analytics provides aggregate visibility into job health and sched
 
 - [Scheduled Jobs](/documentation/jobs/scheduled-jobs)
 - [Scheduled Jobs List](/documentation/jobs/scheduled-jobs-list)
-- [Job Executions Analytics](/documentation/jobs/job-executions-analytics)
+- [Create Scheduled Job](/documentation/jobs/create-scheduled-job)
+- [View Scheduled Job](/documentation/jobs/view-scheduled-job)

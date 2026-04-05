@@ -7,6 +7,7 @@ import { roleService } from "../services/roleService";
 import { color } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 interface RoleFormModalProps {
   isOpen: boolean;
@@ -427,14 +428,11 @@ export default function RoleFormModal({
 
           {/* Checkboxes */}
           <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="is_default"
+            <Checkbox id="is_default"
               name="is_default"
               checked={formData.is_default}
               onChange={handleCheckboxChange}
-              className="w-4 h-4 rounded border-gray-300 focus:ring-2 focus:ring-blue-500"
-            />
+              className="w-4 h-4 rounded border-gray-300 focus:ring-2 focus:ring-blue-500" />
             <label htmlFor="is_default" className="text-sm font-medium text-gray-700 cursor-pointer">
               Set as Default
             </label>

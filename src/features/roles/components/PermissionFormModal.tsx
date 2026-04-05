@@ -6,6 +6,7 @@ import { permissionService } from "../services/permissionService";
 import { color } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 interface PermissionFormModalProps {
   isOpen: boolean;
@@ -340,42 +341,33 @@ export default function PermissionFormModal({
           {/* Security Checkboxes */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="is_sensitive"
+              <Checkbox id="is_sensitive"
                 name="is_sensitive"
                 checked={formData.is_sensitive}
                 onChange={handleCheckboxChange}
-                className="w-4 h-4 rounded border-gray-300 focus:ring-2 focus:ring-blue-500"
-              />
+                className="w-4 h-4 rounded border-gray-300 focus:ring-2 focus:ring-blue-500" />
               <label htmlFor="is_sensitive" className="text-sm font-medium text-gray-700 cursor-pointer">
                 Mark as Sensitive
               </label>
             </div>
 
             <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="requires_mfa"
+              <Checkbox id="requires_mfa"
                 name="requires_mfa"
                 checked={formData.requires_mfa}
                 onChange={handleCheckboxChange}
-                className="w-4 h-4 rounded border-gray-300 focus:ring-2 focus:ring-blue-500"
-              />
+                className="w-4 h-4 rounded border-gray-300 focus:ring-2 focus:ring-blue-500" />
               <label htmlFor="requires_mfa" className="text-sm font-medium text-gray-700 cursor-pointer">
                 Requires MFA Authentication
               </label>
             </div>
 
             <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="requires_justification"
+              <Checkbox id="requires_justification"
                 name="requires_justification"
                 checked={formData.requires_justification}
                 onChange={handleCheckboxChange}
-                className="w-4 h-4 rounded border-gray-300 focus:ring-2 focus:ring-blue-500"
-              />
+                className="w-4 h-4 rounded border-gray-300 focus:ring-2 focus:ring-blue-500" />
               <label htmlFor="requires_justification" className="text-sm font-medium text-gray-700 cursor-pointer">
                 Requires Justification
               </label>

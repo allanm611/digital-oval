@@ -3,6 +3,7 @@ import { ArrowLeft, Save } from "lucide-react";
 import { SMSRoute, CreateSMSRouteRequest, RequestMethod, RequestFormat } from "../types/smsRoute";
 import { color, tw, components, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import Radio from "../../../shared/components/ui/Radio";
 
 // Dummy sender IDs data
 const SENDER_IDS = [
@@ -389,25 +390,19 @@ export default function SMSRouteForm({
             </label>
             <div className="flex items-center gap-4">
               <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="status"
+                <Radio name="status"
                   value="active"
                   checked={formData.status === "active"}
                   onChange={handleChange}
-                  disabled={isLoading}
-                />
+                  disabled={isLoading} />
                 <span className={`text-sm ${tw.textPrimary}`}>Active</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="status"
+                <Radio name="status"
                   value="inactive"
                   checked={formData.status === "inactive"}
                   onChange={handleChange}
-                  disabled={isLoading}
-                />
+                  disabled={isLoading} />
                 <span className={`text-sm ${tw.textPrimary}`}>Inactive</span>
               </label>
             </div>

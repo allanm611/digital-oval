@@ -4,6 +4,7 @@ import { Plus, Trash2, BarChart3, Settings, Edit, X } from "lucide-react";
 import { color , tw} from "../../../shared/utils/utils";
 import { zIndex } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 interface TrackingRule {
   id: string;
@@ -473,17 +474,14 @@ export default function OfferTrackingStep({
                   </div>
 
                   <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id={`enabled-${selectedSourceData.id}`}
+                    <Checkbox id={`enabled-${selectedSourceData.id}`}
                       checked={selectedSourceData.enabled}
                       onChange={(e) =>
                         updateTrackingSource(selectedSourceData.id, {
                           enabled: e.target.checked,
                         })
                       }
-                      className="w-4 h-4 text-gray-600 border-gray-300 rounded focus:outline-none"
-                    />
+                      className="w-4 h-4 text-gray-600 border-gray-300 rounded focus:outline-none" />
                     <label
                       htmlFor={`enabled-${selectedSourceData.id}`}
                       className="ml-2 text-sm text-gray-700"
@@ -732,9 +730,7 @@ export default function OfferTrackingStep({
                 </div>
 
                 <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="rule-enabled"
+                  <Checkbox id="rule-enabled"
                     checked={editingRule.enabled}
                     onChange={(e) =>
                       setEditingRule({
@@ -742,8 +738,7 @@ export default function OfferTrackingStep({
                         enabled: e.target.checked,
                       })
                     }
-                    className="w-4 h-4 text-gray-600 border-gray-300 rounded focus:outline-none"
-                  />
+                    className="w-4 h-4 text-gray-600 border-gray-300 rounded focus:outline-none" />
                   <label
                     htmlFor="rule-enabled"
                     className="ml-2 text-sm text-gray-700"

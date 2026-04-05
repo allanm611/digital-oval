@@ -37,6 +37,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import { validatePhoneOnly, isValidEmail } from "../../../shared/utils/validation";
 import { DUMMY_RECIPIENTS } from "../../campaigns/pages/SeedListManagementPage";
 import type { SeedListRecipient } from "../../campaigns/pages/SeedListManagementPage";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 interface DefineCommunicationStepProps {
   data: ManualBroadcastData;
@@ -1085,13 +1086,10 @@ export default function DefineCommunicationStep({
                       key={index}
                       className="flex items-center gap-2 p-2 rounded-md cursor-pointer hover:bg-gray-50 transition-colors"
                     >
-                      <input
-                        type="checkbox"
-                        checked={selectedTestContacts.has(contact)}
+                      <Checkbox checked={selectedTestContacts.has(contact)}
                         onChange={() => toggleTestContact(contact)}
                         disabled={isTesting}
-                        className="w-4 h-4 rounded cursor-pointer"
-                      />
+                        className="w-4 h-4 rounded cursor-pointer" />
                       <span className={`text-sm ${tw.textPrimary} flex-1 truncate`}>
                         {contact}
                       </span>

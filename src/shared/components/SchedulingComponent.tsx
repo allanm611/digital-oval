@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
-import { Calendar, AlertCircle } from "lucide-react";
+import { Calendar, AlertCircle, Trash2 } from "lucide-react";
 import { tw } from "../utils/utils";
 import HeadlessSelect from "./ui/HeadlessSelect";
 import type {
   SchedulingData,
   SchedulingComponentProps,
 } from "../types/scheduling";
+import Checkbox from "./ui/Checkbox";
+import Radio from "./ui/Radio";
 
 const daysOfWeek = [
   { value: 0, label: "Sunday" },
@@ -41,6 +43,9 @@ export default function SchedulingComponent({
     1, 2, 3, 4, 5, 6,
   ]); // Monday to Saturday
   const [setSpecificStartTime, setSetSpecificStartTime] = useState(false);
+  const [specificDayStartTimes, setSpecificDayStartTimes] = useState<
+    Array<{ id: number; day: number; time: string }>
+  >([{ id: 1, day: 1, time: "08:00" }]);
   const [startDeliveryOnCompletion, setStartDeliveryOnCompletion] =
     useState(false);
   const [targetRenderTime, setTargetRenderTime] = useState("Real Time");
@@ -73,10 +78,24 @@ export default function SchedulingComponent({
       recurrence_pattern: mappedPattern,
       recurrence_interval: recurrenceInterval,
       selected_days: selectedDays,
-      monthly_rule: mappedPattern === "monthly" ? monthlyRule : undefined,
+      monthly_rule:
+        mappedPattern === "monthly" && setSpecificStartTime
+          ? monthlyRule
+          : undefined,
       monthly_day_of_month:
-        mappedPattern === "monthly" && monthlyRule === "day_of_month"
+        mappedPattern === "monthly" &&
+        setSpecificStartTime &&
+        monthlyRule === "day_of_month"
           ? monthlyDayOfMonth
+          : undefined,
+      set_specific_start_time:
+        mappedPattern === "daily" ? setSpecificStartTime : undefined,
+      specific_day_start_times:
+        mappedPattern === "daily" && setSpecificStartTime
+          ? specificDayStartTimes.map((entry) => ({
+              day: entry.day,
+              time: entry.time,
+            }))
           : undefined,
     });
   }, [
@@ -85,7 +104,31 @@ export default function SchedulingComponent({
     selectedDays,
     monthlyRule,
     monthlyDayOfMonth,
+    setSpecificStartTime,
+    specificDayStartTimes,
   ]);
+
+  useEffect(() => {
+    if (
+      recurrencePattern !== "Days" &&
+      recurrencePattern !== "Months" &&
+      setSpecificStartTime
+    ) {
+      setSetSpecificStartTime(false);
+    }
+  }, [recurrencePattern, setSpecificStartTime]);
+
+  const getDayOptionsForRow = (rowId: number) => {
+    const selectedByOtherRows = new Set(
+      specificDayStartTimes
+        .filter((entry) => entry.id !== rowId)
+        .map((entry) => entry.day),
+    );
+
+    return daysOfWeek
+      .filter((day) => !selectedByOtherRows.has(day.value))
+      .map((day) => ({ label: day.label, value: day.value }));
+  };
 
   const updateScheduling = (updates: Partial<SchedulingData>) => {
     const newScheduling = { ...scheduling, ...updates };
@@ -98,6 +141,33 @@ export default function SchedulingComponent({
         ? prev.filter((d) => d !== day)
         : [...prev, day].sort(),
     );
+  };
+
+  const addSpecificDayRow = () => {
+    setSpecificDayStartTimes((prev) => [
+      ...prev,
+      {
+        id: Date.now() + prev.length,
+        day: 1,
+        time: "08:00",
+      },
+    ]);
+  };
+
+  const updateSpecificDayRow = (
+    id: number,
+    updates: Partial<{ day: number; time: string }>,
+  ) => {
+    setSpecificDayStartTimes((prev) =>
+      prev.map((entry) => (entry.id === id ? { ...entry, ...updates } : entry)),
+    );
+  };
+
+  const removeSpecificDayRow = (id: number) => {
+    setSpecificDayStartTimes((prev) => {
+      if (prev.length <= 1) return prev;
+      return prev.filter((entry) => entry.id !== id);
+    });
   };
 
   return (
@@ -118,34 +188,20 @@ export default function SchedulingComponent({
           {/* Start Options */}
           <div className="mb-6">
             <div className="flex items-center space-x-6 mb-4">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="startType"
-                  value="datetime"
-                  checked={startType === "datetime"}
-                  onChange={() => setStartType("datetime")}
-                  style={{ accentColor: "#00BBCC" }}
-                  className="w-4 h-4 border-gray-300 focus:ring-2 focus:ring-[#00BBCC]"
-                />
-                <span className="ml-2 text-sm font-medium text-gray-700">
-                  Start date/time
-                </span>
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="startType"
-                  value="previous"
-                  checked={startType === "previous"}
-                  onChange={() => setStartType("previous")}
-                  style={{ accentColor: "#00BBCC" }}
-                  className="w-4 h-4 border-gray-300 focus:ring-2 focus:ring-[#00BBCC]"
-                />
-                <span className="ml-2 text-sm font-medium text-gray-700">
-                  Starts when the previous broadcast is aborted
-                </span>
-              </label>
+              <Radio
+                name="startType"
+                value="datetime"
+                checked={startType === "datetime"}
+                onChange={() => setStartType("datetime")}
+                label="Start date/time"
+              />
+              <Radio
+                name="startType"
+                value="previous"
+                checked={startType === "previous"}
+                onChange={() => setStartType("previous")}
+                label="Starts when the previous broadcast is aborted"
+              />
             </div>
           </div>
 
@@ -195,40 +251,26 @@ export default function SchedulingComponent({
               End
             </label>
             <div className="flex items-center space-x-6 mb-4">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="endType"
-                  value="never"
-                  checked={endType === "never"}
-                  onChange={() => {
-                    setEndType("never");
-                    updateScheduling({ end_date: "" });
-                  }}
-                  style={{ accentColor: "#00BBCC" }}
-                  className="w-4 h-4 border-gray-300 focus:ring-2 focus:ring-[#00BBCC]"
-                />
-                <span className="ml-2 text-sm font-medium text-gray-700">
-                  Never
-                </span>
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="endType"
-                  value="at"
-                  checked={endType === "at"}
-                  onChange={() => {
-                    setEndType("at");
-                    updateScheduling({ end_date: "2025-12-31T23:59" });
-                  }}
-                  style={{ accentColor: "#00BBCC" }}
-                  className="w-4 h-4 border-gray-300 focus:ring-2 focus:ring-[#00BBCC]"
-                />
-                <span className="ml-2 text-sm font-medium text-gray-700">
-                  At
-                </span>
-              </label>
+              <Radio
+                name="endType"
+                value="never"
+                checked={endType === "never"}
+                onChange={() => {
+                  setEndType("never");
+                  updateScheduling({ end_date: "" });
+                }}
+                label="Never"
+              />
+              <Radio
+                name="endType"
+                value="at"
+                checked={endType === "at"}
+                onChange={() => {
+                  setEndType("at");
+                  updateScheduling({ end_date: "2025-12-31T23:59" });
+                }}
+                label="At"
+              />
             </div>
           </div>
 
@@ -355,8 +397,8 @@ export default function SchedulingComponent({
             </div>
           </div>
 
-          {/* Monthly Rule - shown only for monthly recurrence */}
-          {recurrencePattern === "Months" && (
+          {/* Monthly Rule - shown only when monthly recurrence and specific schedule is enabled */}
+          {recurrencePattern === "Months" && setSpecificStartTime && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -401,26 +443,18 @@ export default function SchedulingComponent({
             </div>
           )}
 
-          {/* Days of Week */}
-          {recurrencePattern !== "Months" && (
+          {/* Days of Week - shown only for weekly recurrence */}
+          {recurrencePattern === "Weeks" && (
             <div className="mb-6">
               <div className="grid grid-cols-7 gap-2">
                 {daysOfWeek.map((day) => (
-                  <label
+                  <Checkbox
                     key={day.value}
-                    className="flex items-center justify-center"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedDays.includes(day.value)}
-                      onChange={() => toggleDayOfWeek(day.value)}
-                      style={{ accentColor: "#00BBCC" }}
-                      className="w-4 h-4 border-gray-300 rounded focus:ring-2 focus:ring-[#00BBCC] mr-2"
-                    />
-                    <span className="text-sm font-medium text-gray-700">
-                      {day.label}
-                    </span>
-                  </label>
+                    checked={selectedDays.includes(day.value)}
+                    onChange={() => toggleDayOfWeek(day.value)}
+                    label={day.label}
+                    wrapperClassName="justify-center"
+                  />
                 ))}
               </div>
             </div>
@@ -435,31 +469,86 @@ export default function SchedulingComponent({
 
           {/* Additional Options */}
           <div className="space-y-3">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={setSpecificStartTime}
-                onChange={(e) => setSetSpecificStartTime(e.target.checked)}
-                style={{ accentColor: "#00BBCC" }}
-                className="w-4 h-4 border-gray-300 rounded focus:ring-2 focus:ring-[#00BBCC]"
-              />
-              <span className="ml-3 text-sm font-medium text-gray-700">
-                Set specific start time for days
-              </span>
-            </label>
+            {(recurrencePattern === "Days" || recurrencePattern === "Months") && (
+              <>
+                <Checkbox
+                  checked={setSpecificStartTime}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setSetSpecificStartTime(checked);
+                    if (checked && specificDayStartTimes.length === 0) {
+                      setSpecificDayStartTimes([
+                        { id: Date.now(), day: 1, time: "08:00" },
+                      ]);
+                    }
+                  }}
+                  label="Set specific schedule"
+                />
 
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={startDeliveryOnCompletion}
-                onChange={(e) => setStartDeliveryOnCompletion(e.target.checked)}
-                style={{ accentColor: "#00BBCC" }}
-                className="w-4 h-4 border-gray-300 rounded focus:ring-2 focus:ring-[#00BBCC]"
-              />
-              <span className="ml-3 text-sm font-medium text-gray-700">
-                Start delivery on completion of specific Broadcasts
-              </span>
-            </label>
+                {setSpecificStartTime && recurrencePattern === "Days" && (
+                  <div className={`border border-gray-200 ${tw.rounded} p-4 space-y-3`}>
+                    {specificDayStartTimes.map((entry) => (
+                      <div
+                        key={entry.id}
+                        className="grid grid-cols-1 md:grid-cols-[1fr_160px_auto] gap-3 items-end"
+                      >
+                        <div>
+                          <HeadlessSelect
+                            value={entry.day}
+                            onChange={(value) =>
+                              updateSpecificDayRow(entry.id, {
+                                day: Number(value),
+                              })
+                            }
+                            options={getDayOptionsForRow(entry.id)}
+                            placeholder="Select day"
+                            className="w-full"
+                          />
+                        </div>
+
+                        <div>
+                          <input
+                            type="time"
+                            value={entry.time}
+                            onChange={(e) =>
+                              updateSpecificDayRow(entry.id, {
+                                time: e.target.value,
+                              })
+                            }
+                            className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#00BBCC] focus:border-transparent bg-white`}
+                          />
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => removeSpecificDayRow(entry.id)}
+                          className="inline-flex items-center justify-center h-10 w-10 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50"
+                          disabled={specificDayStartTimes.length === 1}
+                          aria-label="Remove row"
+                          title="Remove"
+                        >
+                          <Trash2 className="h-4 w-4 text-gray-600" />
+                        </button>
+                      </div>
+                    ))}
+
+                    <button
+                      type="button"
+                      onClick={addSpecificDayRow}
+                      className="px-3 py-2 text-sm font-medium text-[#00BBCC] border border-[#00BBCC] rounded hover:bg-cyan-50"
+                    >
+                      Add Day Time
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+
+            <Checkbox
+              checked={startDeliveryOnCompletion}
+              onChange={(e) => setStartDeliveryOnCompletion(e.target.checked)}
+              label="Start delivery on completion of specific Broadcasts"
+            />
           </div>
         </div>
       </div>
@@ -472,50 +561,29 @@ export default function SchedulingComponent({
 
         <div className={`bg-white border border-gray-200 ${tw.rounded} p-6`}>
           <div className="flex items-center space-x-8 mb-6">
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="renderTime"
-                value="Pre-Render"
-                checked={targetRenderTime === "Pre-Render"}
-                onChange={(e) => setTargetRenderTime(e.target.value)}
-                style={{ accentColor: "#00BBCC" }}
-                className="w-4 h-4 border-gray-300 focus:ring-2 focus:ring-[#00BBCC]"
-              />
-              <span className="ml-2 text-sm font-medium text-gray-700">
-                Pre-Render
-              </span>
-            </label>
+            <Radio
+              name="renderTime"
+              value="Pre-Render"
+              checked={targetRenderTime === "Pre-Render"}
+              onChange={() => setTargetRenderTime("Pre-Render")}
+              label="Pre-Render"
+            />
 
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="renderTime"
-                value="Real Time"
-                checked={targetRenderTime === "Real Time"}
-                onChange={(e) => setTargetRenderTime(e.target.value)}
-                style={{ accentColor: "#00BBCC" }}
-                className="w-4 h-4 border-gray-300 focus:ring-2 focus:ring-[#00BBCC]"
-              />
-              <span className="ml-2 text-sm font-medium text-gray-700">
-                Real Time
-              </span>
-            </label>
+            <Radio
+              name="renderTime"
+              value="Real Time"
+              checked={targetRenderTime === "Real Time"}
+              onChange={() => setTargetRenderTime("Real Time")}
+              label="Real Time"
+            />
 
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="renderTime"
-                value="Broadcast Schedule"
-                checked={targetRenderTime === "Broadcast Schedule"}
-                onChange={(e) => setTargetRenderTime(e.target.value)}
-                style={{ accentColor: "#00BBCC" }}
-                className="w-4 h-4 border-gray-300 focus:ring-2 focus:ring-[#00BBCC]"
-              />
-              <span className="ml-2 text-sm font-medium text-gray-700">
-                Broadcast Schedule
-              </span>
-            </label>
+            <Radio
+              name="renderTime"
+              value="Broadcast Schedule"
+              checked={targetRenderTime === "Broadcast Schedule"}
+              onChange={() => setTargetRenderTime("Broadcast Schedule")}
+              label="Broadcast Schedule"
+            />
           </div>
 
           {targetRenderTime === "Broadcast Schedule" && (

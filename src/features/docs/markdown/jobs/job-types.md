@@ -22,7 +22,6 @@ Consistent job typing makes filtering, reporting, and ownership handoff easier a
 
 ## Related Pages
 
-- [Job Management Overview](/documentation/jobs/overview)
-- [Scheduled Jobs](/documentation/jobs/scheduled-jobs)
-- [Job Executions](/documentation/jobs/job-executions)
-- [Job Workflows](/documentation/jobs/job-workflows)
+- [Job Types List](/documentation/jobs/job-types-list)
+- [Create Job Type](/documentation/jobs/create-job-type)
+- [View Job Type](/documentation/jobs/view-job-type)

@@ -7,6 +7,7 @@ import { customerService } from "../../customers360/services/customerServices";
 import Pagination from "../../../shared/components/ui/Pagination";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { tw, zIndex, color } from "../../../shared/utils/utils";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 interface Customer {
   id: string | number;
@@ -249,9 +250,7 @@ export default function AddMembersModal({
                 <thead className="bg-gray-50 sticky top-0 z-10">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-12">
-                      <input
-                        type="checkbox"
-                        checked={
+                      <Checkbox checked={
                           selectedCustomers.length === filteredCustomers.length &&
                           filteredCustomers.length > 0
                         }
@@ -259,8 +258,7 @@ export default function AddMembersModal({
                         className="w-4 h-4 border-gray-400 rounded"
                         style={{
                           accentColor: "#111827",
-                        }}
-                      />
+                        }} />
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                       Name
@@ -290,16 +288,13 @@ export default function AddMembersModal({
                         className="cursor-pointer transition-colors hover:bg-gray-50"
                       >
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
+                          <Checkbox checked={isSelected}
                             onChange={() => handleToggleCustomer(customer)}
                             onClick={(e) => e.stopPropagation()}
                             className="w-4 h-4 border-gray-400 rounded"
                             style={{
                               accentColor: "#111827",
-                            }}
-                          />
+                            }} />
                         </td>
                         <td className="px-4 py-4">
                           <div className="text-sm font-medium text-black">

@@ -8,6 +8,7 @@ import { segmentService } from "../../../segments/services/segmentService";
 import { Segment } from "../../../segments/types/segment";
 import LoadingSpinner from "../../../../shared/components/ui/LoadingSpinner";
 import DateFormatter from "../../../../shared/components/DateFormatter";
+import Checkbox from "../../../../shared/components/ui/Checkbox";
 
 interface SegmentSelectionModalProps {
   isOpen: boolean;
@@ -271,9 +272,7 @@ export default function SegmentSelectionModal({
                 <thead style={{ backgroundColor: color.surface.cards }}>
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
-                      <input
-                        type="checkbox"
-                        checked={
+                      <Checkbox checked={
                           tempSelectedSegments.length ===
                             filteredSegments.length &&
                           filteredSegments.length > 0
@@ -288,8 +287,7 @@ export default function SegmentSelectionModal({
                         className="w-4 h-4 border-gray-400 rounded"
                         style={{
                           accentColor: "#111827",
-                        }}
-                      />
+                        }} />
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Segment Name
@@ -318,16 +316,13 @@ export default function SegmentSelectionModal({
                         className="cursor-pointer transition-colors hover:bg-gray-50"
                       >
                         <td className="px-4 py-3">
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
+                          <Checkbox checked={isSelected}
                             onChange={() => handleSegmentToggle(segment)}
                             onClick={(e) => e.stopPropagation()}
                             className="w-4 h-4 border-gray-400 rounded"
                             style={{
                               accentColor: "#111827",
-                            }}
-                          />
+                            }} />
                         </td>
                         <td className="px-4 py-3">
                           <div className="text-sm font-medium text-black truncate">

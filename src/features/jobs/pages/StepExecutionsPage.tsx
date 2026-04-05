@@ -25,6 +25,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { ENABLE_JOB_EXECUTION_WRITES_FOR_ALL } from "../../../shared/utils/featureFlags";
 import { useClickOutside } from "../../../shared/hooks/useClickOutside";
 import { color, tw } from "../../../shared/utils/utils";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 const STATUS_OPTIONS = [
   { label: "All statuses", value: "" },
@@ -694,15 +695,12 @@ export default function StepExecutionsPage() {
                         borderTopLeftRadius: "0.375rem",
                       }}
                     >
-                      <input
-                        type="checkbox"
-                        checked={
+                      <Checkbox checked={
                           filteredExecutions.length > 0 &&
                           selectedExecutions.size === filteredExecutions.length
                         }
                         onChange={handleSelectAll}
-                        className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
-                      />
+                        className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
                     </th>
                   )}
                   <th
@@ -786,12 +784,9 @@ export default function StepExecutionsPage() {
                           borderBottomLeftRadius: "0.375rem",
                         }}
                       >
-                        <input
-                          type="checkbox"
-                          checked={selectedExecutions.has(execution.id)}
+                        <Checkbox checked={selectedExecutions.has(execution.id)}
                           onChange={() => handleSelectExecution(execution.id)}
-                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
-                        />
+                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
                       </td>
                     )}
                     <td

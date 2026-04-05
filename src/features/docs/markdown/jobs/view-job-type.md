@@ -17,7 +17,6 @@ From this context, users typically proceed to **Edit** or **Delete** depending o
 
 ## Related Pages
 
-- [Job Management Overview](/documentation/jobs/overview)
-- [Scheduled Jobs](/documentation/jobs/scheduled-jobs)
-- [Job Executions](/documentation/jobs/job-executions)
-- [Job Workflows](/documentation/jobs/job-workflows)
+- [Job Types](/documentation/jobs/job-types)
+- [Job Types List](/documentation/jobs/job-types-list)
+- [Create Job Type](/documentation/jobs/create-job-type)

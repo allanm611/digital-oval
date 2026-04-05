@@ -19,7 +19,7 @@ From details, users usually continue with **Edit**, **Delete**, **Activate/Deact
 
 ## Related Pages
 
-- [Job Management Overview](/documentation/jobs/overview)
-- [Scheduled Jobs](/documentation/jobs/scheduled-jobs)
-- [Job Executions](/documentation/jobs/job-executions)
 - [Job Workflows](/documentation/jobs/job-workflows)
+- [Job Workflows List](/documentation/jobs/job-workflows-list)
+- [Create Job Workflow](/documentation/jobs/create-job-workflow)
+- [Workflows Analytics](/documentation/jobs/workflows-analytics)

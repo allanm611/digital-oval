@@ -12,6 +12,7 @@ import { offerCategoryService } from "../../../offers/services/offerCategoryServ
 import { Offer, OfferStatusEnum } from "../../../offers/types/offer";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { useToast } from "../../../../contexts/ToastContext";
+import Checkbox from "../../../../shared/components/ui/Checkbox";
 
 const CreateOfferModalWrapper = lazy(() => import("./CreateOfferModalWrapper"));
 
@@ -580,14 +581,11 @@ export default function OfferSelectionModal({
                         className="cursor-pointer transition-colors hover:bg-gray-50"
                       >
                         <td className="px-4 py-3">
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
+                          <Checkbox checked={isSelected}
                             onChange={() => handleOfferToggle(offer)}
                             onClick={(e) => e.stopPropagation()}
                             className="w-4 h-4 border-gray-400 rounded"
-                            style={{ accentColor: "#111827" }}
-                          />
+                            style={{ accentColor: "#111827" }} />
                         </td>
                         <td className="px-4 py-3">
                           <div className="text-sm font-medium text-black truncate">

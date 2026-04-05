@@ -49,6 +49,8 @@ import { PermissionGate } from "../../auth/components/PermissionGate";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import CreateCommunicationModal from "../../../shared/components/CreateCommunicationModal";
 import type { Customer } from "../../customers360/types/customer";
+import Checkbox from "../../../shared/components/ui/Checkbox";
+import Radio from "../../../shared/components/ui/Radio";
 
 export default function SegmentDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -2090,7 +2092,7 @@ export default function SegmentDetailsPage() {
                       className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                       style={{ color: color.surface.tableHeaderText }}
                     >
-                      Flow Type
+                      Campaign Type
                     </th>
                     <th
                       className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
@@ -2309,7 +2311,7 @@ export default function SegmentDetailsPage() {
                       <thead className="bg-gray-50 sticky top-0 z-10">
                         <tr>
                           <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-12">
-                            <input type="checkbox" className="w-4 h-4" />
+                            <Checkbox className="w-4 h-4" />
                           </th>
                           <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                             MSISDN
@@ -2363,9 +2365,7 @@ export default function SegmentDetailsPage() {
                               }}
                             >
                               <td className="px-4 py-3">
-                                <input
-                                  type="checkbox"
-                                  checked={isSelected}
+                                <Checkbox checked={isSelected}
                                   onChange={() => {
                                     setSelectedCustomers((prev) =>
                                       prev.includes(customerId)
@@ -2375,8 +2375,7 @@ export default function SegmentDetailsPage() {
                                         : [...prev, customerId],
                                     );
                                   }}
-                                  className="w-4 h-4 cursor-pointer"
-                                />
+                                  className="w-4 h-4 cursor-pointer" />
                               </td>
                               <td className="px-4 py-3">
                                 <div className="text-sm text-gray-900">
@@ -2547,17 +2546,14 @@ export default function SegmentDetailsPage() {
                       <label
                         className={`flex items-center p-3 ${tw.rounded} cursor-pointer hover:bg-gray-50 transition-colors`}
                       >
-                        <input
-                          type="radio"
-                          value="csv"
+                        <Radio value="csv"
                           checked={exportFormat === "csv"}
                           onChange={(e) =>
                             setExportFormat(
                               e.target.value as "csv" | "json" | "xml",
                             )
                           }
-                          className="mr-3"
-                        />
+                          className="mr-3" />
                         <div className="flex-1">
                           <div className="text-sm font-medium text-gray-900">CSV</div>
                           <div className="text-xs text-gray-500">
@@ -2568,17 +2564,14 @@ export default function SegmentDetailsPage() {
                       <label
                         className={`flex items-center p-3 ${tw.rounded} cursor-pointer hover:bg-gray-50 transition-colors`}
                       >
-                        <input
-                          type="radio"
-                          value="json"
+                        <Radio value="json"
                           checked={exportFormat === "json"}
                           onChange={(e) =>
                             setExportFormat(
                               e.target.value as "csv" | "json" | "xml",
                             )
                           }
-                          className="mr-3"
-                        />
+                          className="mr-3" />
                         <div className="flex-1">
                           <div className="text-sm font-medium text-gray-900">JSON</div>
                           <div className="text-xs text-gray-500">
@@ -2589,17 +2582,14 @@ export default function SegmentDetailsPage() {
                       <label
                         className={`flex items-center p-3 ${tw.rounded} cursor-pointer hover:bg-gray-50 transition-colors`}
                       >
-                        <input
-                          type="radio"
-                          value="xml"
+                        <Radio value="xml"
                           checked={exportFormat === "xml"}
                           onChange={(e) =>
                             setExportFormat(
                               e.target.value as "csv" | "json" | "xml",
                             )
                           }
-                          className="mr-3"
-                        />
+                          className="mr-3" />
                         <div className="flex-1">
                           <div className="text-sm font-medium text-gray-900">XML</div>
                           <div className="text-xs text-gray-500">

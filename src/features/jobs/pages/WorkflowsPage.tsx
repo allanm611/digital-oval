@@ -23,6 +23,7 @@ import { PermissionGate } from "../../auth/components/PermissionGate";
 import { workflowService } from "../services/workflowService";
 import type { Workflow } from "../types/workflow";
 import { useAuth } from "../../../contexts/AuthContext";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 export default function WorkflowsPage() {
   const navigate = useNavigate();
@@ -593,15 +594,12 @@ export default function WorkflowsPage() {
                       borderTopLeftRadius: "0.375rem",
                     }}
                   >
-                    <input
-                      type="checkbox"
-                      checked={
+                    <Checkbox checked={
                         selectedWorkflows.size === workflows.length &&
                         workflows.length > 0
                       }
                       onChange={handleSelectAll}
-                      className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
-                    />
+                      className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
                   </th>
                 )}
                 <th
@@ -667,12 +665,9 @@ export default function WorkflowsPage() {
                         borderBottomLeftRadius: "0.375rem",
                       }}
                     >
-                      <input
-                        type="checkbox"
-                        checked={selectedWorkflows.has(workflow.id)}
+                      <Checkbox checked={selectedWorkflows.has(workflow.id)}
                         onChange={() => handleToggleSelection(workflow.id)}
-                        className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
-                      />
+                        className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
                     </td>
                   )}
                   <td

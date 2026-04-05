@@ -23,7 +23,7 @@ Workflow Step Details gives a full read view of one step definition.
 
 ## Related Pages
 
-- [Job Management Overview](/documentation/jobs/overview)
-- [Scheduled Jobs](/documentation/jobs/scheduled-jobs)
-- [Job Executions](/documentation/jobs/job-executions)
-- [Job Workflows](/documentation/jobs/job-workflows)
+- [Job Workflow Steps](/documentation/jobs/job-workflow-steps)
+- [Job Workflow Steps List](/documentation/jobs/job-workflow-steps-list)
+- [Create Job Workflow Step](/documentation/jobs/create-job-workflow-step)
+- [Job Workflow Steps Analytics](/documentation/jobs/job-workflow-steps-analytics)

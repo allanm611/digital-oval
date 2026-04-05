@@ -36,6 +36,7 @@ import type {
 } from "../types/scheduledJob";
 import { useAuth } from "../../../contexts/AuthContext";
 import { PermissionGate } from "../../auth/components/PermissionGate";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 const STATUS_OPTIONS = [
   { label: "All statuses", value: "" },
@@ -746,15 +747,12 @@ export default function ScheduledJobsPage() {
                         borderTopLeftRadius: "0.375rem",
                       }}
                     >
-                      <input
-                        type="checkbox"
-                        checked={
+                      <Checkbox checked={
                           filteredJobs.length > 0 &&
                           selectedJobs.size === filteredJobs.length
                         }
                         onChange={handleSelectAll}
-                        className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
-                      />
+                        className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
                     </th>
                   )}
                   <th
@@ -830,12 +828,9 @@ export default function ScheduledJobsPage() {
                           borderBottomLeftRadius: "0.375rem",
                         }}
                       >
-                        <input
-                          type="checkbox"
-                          checked={selectedJobs.has(job.id)}
+                        <Checkbox checked={selectedJobs.has(job.id)}
                           onChange={() => handleSelectJob(job.id)}
-                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
-                        />
+                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
                       </td>
                     )}
                     <td
@@ -1157,14 +1152,11 @@ export default function ScheduledJobsPage() {
                     {/* Active Jobs Filter */}
                     <div>
                       <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                        <input
-                          type="checkbox"
-                          checked={activeJobsFilter}
+                        <Checkbox checked={activeJobsFilter}
                           onChange={(e) =>
                             setActiveJobsFilter(e.target.checked)
                           }
-                          className="w-4 h-4 text-[#3b8169] border-gray-300 rounded focus:ring-[#3b8169]"
-                        />
+                          className="w-4 h-4 text-[#3b8169] border-gray-300 rounded focus:ring-[#3b8169]" />
                         <span>Show Only Active Jobs</span>
                       </label>
                     </div>

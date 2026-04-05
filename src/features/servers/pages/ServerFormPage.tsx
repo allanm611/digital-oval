@@ -17,6 +17,7 @@ import { color, tw } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 type ServerFormPageProps = {
   mode: "create" | "edit";
@@ -449,13 +450,10 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
               </p>
             </div>
             <label className="inline-flex items-center gap-2 text-sm text-gray-700">
-              <input
-                type="checkbox"
-                name="health_check_enabled"
+              <Checkbox name="health_check_enabled"
                 checked={form.health_check_enabled}
                 onChange={handleChange}
-                className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
-              />
+                className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black" />
               Enabled
             </label>
           </div>
@@ -504,13 +502,10 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
               </p>
             </div>
             <label className="inline-flex items-center gap-2 text-sm text-gray-700">
-              <input
-                type="checkbox"
-                name="circuit_breaker_enabled"
+              <Checkbox name="circuit_breaker_enabled"
                 checked={form.circuit_breaker_enabled}
                 onChange={handleChange}
-                className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
-              />
+                className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black" />
               Enabled
             </label>
           </div>
@@ -569,13 +564,10 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
               </p>
             </div>
             <label className="inline-flex items-center gap-2 text-sm text-gray-700">
-              <input
-                type="checkbox"
-                name="tls_enabled"
+              <Checkbox name="tls_enabled"
                 checked={form.tls_enabled}
                 onChange={handleChange}
-                className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
-              />
+                className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black" />
               Enabled
             </label>
           </div>

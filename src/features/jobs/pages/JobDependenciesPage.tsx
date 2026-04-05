@@ -41,6 +41,7 @@ import {
   JobDependencySearchParams,
 } from "../types/jobDependency";
 import { ScheduledJob } from "../types/scheduledJob";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 const PAGE_SIZE = 20;
 
@@ -332,13 +333,10 @@ function JobDependencyModal({
           </div>
 
           <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="isActive"
+            <Checkbox id="isActive"
               checked={isActive}
               onChange={(e) => setIsActive(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
-            />
+              className="h-4 w-4 rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
             <label htmlFor="isActive" className="ml-2 text-sm text-gray-700">
               Active
             </label>
@@ -2045,16 +2043,13 @@ export default function JobDependenciesPage() {
                         borderTopLeftRadius: "0.375rem",
                       }}
                     >
-                      <input
-                        type="checkbox"
-                        checked={
+                      <Checkbox checked={
                           filteredDependencies.length > 0 &&
                           selectedDependencyIds.size ===
                             filteredDependencies.length
                         }
                         onChange={handleSelectAll}
-                        className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
-                      />
+                        className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
                     </th>
                   )}
                   {/* <th
@@ -2160,12 +2155,9 @@ export default function JobDependenciesPage() {
                           borderBottomLeftRadius: "0.375rem",
                         }}
                       >
-                        <input
-                          type="checkbox"
-                          checked={selectedDependencyIds.has(dependency.id)}
+                        <Checkbox checked={selectedDependencyIds.has(dependency.id)}
                           onChange={() => handleToggleSelection(dependency.id)}
-                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
-                        />
+                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
                       </td>
                     )}
                     {/* <td

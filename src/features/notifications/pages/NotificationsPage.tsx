@@ -12,6 +12,7 @@ import {
 import { NOTIFICATION_TYPE_METADATA } from "../types/notification";
 import { color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 export default function NotificationsPage() {
   const navigate = useNavigate();
@@ -434,14 +435,11 @@ export default function NotificationsPage() {
                   >
                     <div className="flex items-start gap-3 sm:gap-4">
                       {bulkMode && (
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
+                        <Checkbox checked={isSelected}
                           onChange={() =>
                             handleSelectNotification(notification.id)
                           }
-                          className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 flex-shrink-0"
-                        />
+                          className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 flex-shrink-0" />
                       )}
                       <div
                         onClick={() =>
