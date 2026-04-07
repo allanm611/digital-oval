@@ -78,9 +78,10 @@ export default function SMSRouteCreateModal({
 
     try {
       setLoading(true);
-      const route = isEditMode && editingRoute
-        ? await smsRouteService.updateRoute(editingRoute.id, formData)
-        : await smsRouteService.createRoute(formData);
+      const route =
+        isEditMode && editingRoute
+          ? await smsRouteService.updateRoute(editingRoute.id, formData)
+          : await smsRouteService.createRoute(formData);
 
       success(
         "Success",
@@ -93,7 +94,10 @@ export default function SMSRouteCreateModal({
 
       onClose();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : `Failed to ${isEditMode ? "update" : "create"} route`;
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : `Failed to ${isEditMode ? "update" : "create"} route`;
       showError("Error", errorMessage);
     } finally {
       setLoading(false);
@@ -101,7 +105,7 @@ export default function SMSRouteCreateModal({
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value, type } = e.target;
 
@@ -163,7 +167,9 @@ export default function SMSRouteCreateModal({
               }`}
               disabled={loading}
             />
-            {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+            {errors.name && (
+              <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+            )}
           </div>
 
           {/* Description */}

@@ -204,17 +204,17 @@ function TypeConfigurationModal({
   const [comboResources, setComboResources] = useState<
     Array<{
       type: "data" | "voice" | "sms";
-      value: number;
+      value: number | string;
       unit: string;
       sharedValidity: boolean;
-      sharedValidityHours: number;
-      price?: number;
+      sharedValidityHours: number | string;
+      price?: number | string;
     }>
   >([]);
   const [comboSharedValidity, setComboSharedValidity] = useState(true);
   const [comboSharedPrice, setComboSharedPrice] = useState(true);
-  const [comboValidityHours, setComboValidityHours] = useState<number>(720);
-  const [comboPrice, setComboPrice] = useState<number | undefined>(undefined);
+  const [comboValidityHours, setComboValidityHours] = useState<string>("");
+  const [comboPrice, setComboPrice] = useState<string>("");
   const [characterSetOptions, setCharacterSetOptions] = useState<
     Array<{ value: string; label: string }>
   >([]);
@@ -349,8 +349,16 @@ function TypeConfigurationModal({
         setComboResources(item.comboResources || []);
         setComboSharedValidity(item.sharedValidity ?? true);
         setComboSharedPrice(item.sharedPrice ?? true);
-        setComboValidityHours(item.validityHours ?? 720);
-        setComboPrice(item.price);
+        setComboValidityHours(
+          item.validityHours !== undefined && item.validityHours !== null
+            ? String(item.validityHours)
+            : "",
+        );
+        setComboPrice(
+          item.price !== undefined && item.price !== null
+            ? String(item.price)
+            : "",
+        );
       }
     } else {
       setName("");
@@ -387,8 +395,8 @@ function TypeConfigurationModal({
         setComboResources([]);
         setComboSharedValidity(true);
         setComboSharedPrice(true);
-        setComboValidityHours(720);
-        setComboPrice(undefined);
+        setComboValidityHours("");
+        setComboPrice("");
       }
     }
     setError("");
@@ -528,11 +536,28 @@ function TypeConfigurationModal({
 
     // Add combo type fields
     if (isComboType) {
-      payload.comboResources = comboResources;
+      payload.comboResources = comboResources.map((resource) => ({
+        ...resource,
+        value:
+          resource.value !== "" && resource.value !== undefined
+            ? Number(resource.value)
+            : undefined,
+        sharedValidityHours:
+          resource.sharedValidityHours !== "" &&
+          resource.sharedValidityHours !== undefined
+            ? Number(resource.sharedValidityHours)
+            : undefined,
+        price:
+          resource.price !== "" && resource.price !== undefined
+            ? Number(resource.price)
+            : undefined,
+      }));
       payload.sharedValidity = comboSharedValidity;
       payload.sharedPrice = comboSharedPrice;
-      payload.validityHours = comboValidityHours;
-      payload.price = comboSharedPrice ? comboPrice : undefined;
+      payload.validityHours =
+        comboValidityHours !== "" ? Number(comboValidityHours) : undefined;
+      payload.price =
+        comboSharedPrice && comboPrice !== "" ? Number(comboPrice) : undefined;
     }
 
     if (
@@ -1016,11 +1041,11 @@ function TypeConfigurationModal({
                       <p className="text-sm text-gray-500">{resource.unit}</p>
                     </div>
                     <input
-                      type="number"
+                      type="text"
                       value={resource.value}
                       onChange={(e) => {
                         const updated = [...comboResources];
-                        updated[idx].value = parseInt(e.target.value) || 0;
+                        updated[idx].value = e.target.value;
                         setComboResources(updated);
                       }}
                       className="col-span-1 px-3 py-2 border border-gray-300 rounded text-sm"
@@ -1028,12 +1053,11 @@ function TypeConfigurationModal({
                     />
                     {!comboSharedValidity && (
                       <input
-                        type="number"
+                        type="text"
                         value={resource.sharedValidityHours}
                         onChange={(e) => {
                           const updated = [...comboResources];
-                          updated[idx].sharedValidityHours =
-                            parseInt(e.target.value) || 0;
+                          updated[idx].sharedValidityHours = e.target.value;
                           setComboResources(updated);
                         }}
                         className="col-span-1 px-3 py-2 border border-gray-300 rounded text-sm"
@@ -1042,15 +1066,11 @@ function TypeConfigurationModal({
                     )}
                     {!comboSharedPrice && (
                       <input
-                        type="number"
-                        min="0"
-                        step="0.01"
+                        type="text"
                         value={resource.price ?? ""}
                         onChange={(e) => {
                           const updated = [...comboResources];
-                          updated[idx].price = e.target.value
-                            ? parseFloat(e.target.value)
-                            : undefined;
+                          updated[idx].price = e.target.value;
                           setComboResources(updated);
                         }}
                         className="col-span-1 px-3 py-2 border border-gray-300 rounded text-sm"
@@ -1083,11 +1103,11 @@ function TypeConfigurationModal({
                         ...comboResources,
                         {
                           type: "data",
-                          value: 5,
+                          value: "",
                           unit: "data_mb",
                           sharedValidity: comboSharedValidity,
                           sharedValidityHours: comboValidityHours,
-                          price: comboSharedPrice ? undefined : 0,
+                          price: comboSharedPrice ? undefined : "",
                         },
                       ]);
                     }}
@@ -1126,11 +1146,11 @@ function TypeConfigurationModal({
                         ...comboResources,
                         {
                           type: "voice",
-                          value: 500,
+                          value: "",
                           unit: "onnet_minutes",
                           sharedValidity: comboSharedValidity,
                           sharedValidityHours: comboValidityHours,
-                          price: comboSharedPrice ? undefined : 0,
+                          price: comboSharedPrice ? undefined : "",
                         },
                       ]);
                     }}
@@ -1169,11 +1189,11 @@ function TypeConfigurationModal({
                         ...comboResources,
                         {
                           type: "sms",
-                          value: 100,
+                          value: "",
                           unit: "sms_count",
                           sharedValidity: comboSharedValidity,
                           sharedValidityHours: comboValidityHours,
-                          price: comboSharedPrice ? undefined : 0,
+                          price: comboSharedPrice ? undefined : "",
                         },
                       ]);
                     }}
@@ -1252,10 +1272,10 @@ function TypeConfigurationModal({
                         Validity Hours
                       </label>
                       <input
-                        type="number"
+                        type="text"
                         value={comboValidityHours}
                         onChange={(e) => {
-                          const newHours = parseInt(e.target.value) || 0;
+                          const newHours = e.target.value;
                           setComboValidityHours(newHours);
                           setComboResources(
                             comboResources.map((r) => ({
@@ -1276,17 +1296,9 @@ function TypeConfigurationModal({
                         Combo Price <span className="text-red-600">*</span>
                       </label>
                       <input
-                        type="number"
-                        min="0"
-                        step="0.01"
+                        type="text"
                         value={comboPrice ?? ""}
-                        onChange={(e) =>
-                          setComboPrice(
-                            e.target.value
-                              ? parseFloat(e.target.value)
-                              : undefined,
-                          )
-                        }
+                        onChange={(e) => setComboPrice(e.target.value)}
                         className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500`}
                         placeholder="Enter price"
                       />

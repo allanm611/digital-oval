@@ -1,4 +1,6 @@
 import React from "react";
+import { Check } from "lucide-react";
+import { color } from "../../utils/utils";
 
 interface CheckboxProps extends Omit<
   React.InputHTMLAttributes<HTMLInputElement>,
@@ -17,11 +19,21 @@ export default function Checkbox({
   ...inputProps
 }: CheckboxProps) {
   const input = (
-    <input
-      {...inputProps}
-      type="checkbox"
-      className={`w-5 h-5 cursor-pointer border border-gray-300 rounded accent-black disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
-    />
+    <span className="relative inline-flex items-center justify-center">
+      <input
+        {...inputProps}
+        type="checkbox"
+        className="peer sr-only"
+      />
+      <span
+        className={`inline-flex h-5 w-5 items-center justify-center rounded border border-gray-300 bg-white transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-[#00BBCC]/30 peer-disabled:opacity-50 peer-checked:[&>svg]:opacity-100 ${className}`}
+      >
+        <Check
+          className="h-4 w-4 opacity-0 transition-opacity"
+          style={{ color: color.primary.accent }}
+        />
+      </span>
+    </span>
   );
 
   if (!label && !children && !wrapperClassName) {
@@ -30,7 +42,7 @@ export default function Checkbox({
 
   return (
     <label
-      className={`flex items-center gap-2 cursor-pointer ${wrapperClassName}`}
+      className={`flex items-center gap-2 cursor-pointer ${inputProps.disabled ? "opacity-70 cursor-not-allowed" : ""} ${wrapperClassName}`}
     >
       {input}
       {label && (

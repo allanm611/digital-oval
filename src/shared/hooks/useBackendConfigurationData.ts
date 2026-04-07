@@ -346,7 +346,7 @@ export function useBackendConfigurationData(
   type: "campaignTypes" | "offerTypes" | "segmentTypes" | "productTypes" | "rewardTypes" | "senderIds" | "languages" | "characterSets" | "creativeTemplates" | "smsRoutes" | "comboTypes" | "notificationTypes" | "vipLists" | "controlGroups" | undefined
 ): UseBackendConfigDataResult<any, any, any> | null {
   const [data, setData] = useState<CampaignType[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // If type is undefined, return null early

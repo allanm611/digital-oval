@@ -44,10 +44,10 @@ export default function ComboTypeFormModal({
     comboResources: [
       {
         type: "data" as "data" | "voice" | "sms",
-        value: 0,
+        value: "",
         unit: "MB",
         sharedValidity: false,
-        sharedValidityHours: 0,
+        sharedValidityHours: "",
       },
     ],
   });
@@ -66,18 +66,25 @@ export default function ComboTypeFormModal({
         comboResources: comboType.combo_resources
           ? comboType.combo_resources.map((r: any) => ({
               type: r.resource_type,
-              value: r.unit_value,
+              value:
+                r.unit_value !== undefined && r.unit_value !== null
+                  ? String(r.unit_value)
+                  : "",
               unit: r.unit,
               sharedValidity: r.shared_validity,
-              sharedValidityHours: r.shared_validity_hours,
+              sharedValidityHours:
+                r.shared_validity_hours !== undefined &&
+                r.shared_validity_hours !== null
+                  ? String(r.shared_validity_hours)
+                  : "",
             }))
           : [
               {
                 type: "data" as const,
-                value: 0,
+                value: "",
                 unit: "MB",
                 sharedValidity: false,
-                sharedValidityHours: 0,
+                sharedValidityHours: "",
               },
             ],
       });
@@ -92,10 +99,10 @@ export default function ComboTypeFormModal({
         comboResources: [
           {
             type: "data" as const,
-            value: 0,
+            value: "",
             unit: "MB",
             sharedValidity: false,
-            sharedValidityHours: 0,
+            sharedValidityHours: "",
           },
         ],
       });
@@ -109,10 +116,10 @@ export default function ComboTypeFormModal({
         ...prev.comboResources,
         {
           type: "data" as const,
-          value: 0,
+          value: "",
           unit: "MB",
           sharedValidity: false,
-          sharedValidityHours: 0,
+          sharedValidityHours: "",
         },
       ],
     }));
@@ -160,7 +167,18 @@ export default function ComboTypeFormModal({
         validityHours: formData.validityHours
           ? parseInt(formData.validityHours)
           : undefined,
-        comboResources: formData.comboResources,
+        comboResources: formData.comboResources.map((resource) => ({
+          ...resource,
+          value:
+            resource.value !== "" && resource.value !== null
+              ? parseFloat(String(resource.value))
+              : undefined,
+          sharedValidityHours:
+            resource.sharedValidityHours !== "" &&
+            resource.sharedValidityHours !== null
+              ? parseInt(String(resource.sharedValidityHours))
+              : undefined,
+        })),
       });
       onClose();
     } catch (err) {
@@ -244,8 +262,8 @@ export default function ComboTypeFormModal({
               <Checkbox
                 label="Shared Validity"
                 checked={formData.sharedValidity}
-                onChange={(checked) =>
-                  setFormData({ ...formData, sharedValidity: checked })
+                onChange={(e) =>
+                  setFormData({ ...formData, sharedValidity: e.target.checked })
                 }
                 disabled={isLoading}
               />
@@ -257,7 +275,7 @@ export default function ComboTypeFormModal({
                   Validity Hours
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   value={formData.validityHours}
                   onChange={(e) =>
                     setFormData({ ...formData, validityHours: e.target.value })
@@ -273,8 +291,8 @@ export default function ComboTypeFormModal({
               <Checkbox
                 label="Active"
                 checked={formData.isActive}
-                onChange={(checked) =>
-                  setFormData({ ...formData, isActive: checked })
+                onChange={(e) =>
+                  setFormData({ ...formData, isActive: e.target.checked })
                 }
                 disabled={isLoading}
               />
@@ -341,14 +359,10 @@ export default function ComboTypeFormModal({
                       Value
                     </label>
                     <input
-                      type="number"
+                      type="text"
                       value={resource.value}
                       onChange={(e) =>
-                        handleResourceChange(
-                          index,
-                          "value",
-                          parseFloat(e.target.value) || 0
-                        )
+                        handleResourceChange(index, "value", e.target.value)
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Enter value"
@@ -360,8 +374,12 @@ export default function ComboTypeFormModal({
                     <Checkbox
                       label="Shared Validity"
                       checked={resource.sharedValidity}
-                      onChange={(checked) =>
-                        handleResourceChange(index, "sharedValidity", checked)
+                      onChange={(e) =>
+                        handleResourceChange(
+                          index,
+                          "sharedValidity",
+                          e.target.checked
+                        )
                       }
                       disabled={isLoading}
                     />
@@ -373,13 +391,13 @@ export default function ComboTypeFormModal({
                         Validity Hours
                       </label>
                       <input
-                        type="number"
+                        type="text"
                         value={resource.sharedValidityHours}
                         onChange={(e) =>
                           handleResourceChange(
                             index,
                             "sharedValidityHours",
-                            parseInt(e.target.value) || 0
+                            e.target.value
                           )
                         }
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"

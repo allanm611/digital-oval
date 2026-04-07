@@ -48,7 +48,10 @@ export default function SMSRoutesList() {
     try {
       setDeleting(deleteConfirmId);
       await smsRouteService.deleteRoute(deleteConfirmId);
-      success("Success", `"${deleteConfirmName}" has been deleted successfully`);
+      success(
+        "Success",
+        `"${deleteConfirmName}" has been deleted successfully`,
+      );
       setRoutes((prev) => prev.filter((route) => route.id !== deleteConfirmId));
       setDeleteConfirmId(null);
       setDeleteConfirmName("");
@@ -94,7 +97,8 @@ export default function SMSRoutesList() {
   const filteredRoutes = routes.filter(
     (route) =>
       route.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (route.description && route.description.toLowerCase().includes(searchTerm.toLowerCase()))
+      (route.description &&
+        route.description.toLowerCase().includes(searchTerm.toLowerCase())),
   );
 
   return (
@@ -109,8 +113,8 @@ export default function SMSRoutesList() {
       {/* Description and Create Button */}
       <div className="flex items-start justify-between gap-4">
         <p className={`text-sm ${tw.textSecondary}`}>
-          Manage SMS gateway routes for message delivery. Routes determine which gateway
-          provider is used to send SMS messages.
+          Manage SMS gateway routes for message delivery. Routes determine which
+          gateway provider is used to send SMS messages.
         </p>
         <button
           onClick={() => {
@@ -135,142 +139,153 @@ export default function SMSRoutesList() {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           disabled={loading}
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-gray-400 disabled:opacity-60"
+          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:border-gray-400 disabled:bg-white disabled:text-gray-500"
         />
       </div>
 
       {/* Table Container */}
       <div className="overflow-x-auto">
-        <table
-          className="w-full min-w-[720px]"
-          style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-        >
-          <thead>
-            <tr>
-              <th
-                className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider rounded-tl-md"
-                style={{
-                  color: color.surface.tableHeaderText,
-                  backgroundColor: color.surface.tableHeader,
-                }}
-              >
-                Route Name
-              </th>
-              <th
-                className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                style={{
-                  color: color.surface.tableHeaderText,
-                  backgroundColor: color.surface.tableHeader,
-                }}
-              >
-                Description
-              </th>
-              <th
-                className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                style={{
-                  color: color.surface.tableHeaderText,
-                  backgroundColor: color.surface.tableHeader,
-                }}
-              >
-                Status
-              </th>
-              <th
-                className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider rounded-tr-md"
-                style={{
-                  color: color.surface.tableHeaderText,
-                  backgroundColor: color.surface.tableHeader,
-                }}
-              >
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
+        {loading ? (
+          <div className="px-6 py-12 text-center">
+            <div className="flex flex-col items-center justify-center">
+              <LoadingSpinner variant="modern" size="md" color="primary" />
+              <p className={`${tw.textMuted} font-medium mt-4`}>
+                Loading routes...
+              </p>
+            </div>
+          </div>
+        ) : (
+          <table
+            className="w-full min-w-[720px]"
+            style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+          >
+            <thead>
               <tr>
-                <td colSpan={4} className="px-6 py-12 text-center">
-                  <div className="flex flex-col items-center justify-center">
-                    <LoadingSpinner variant="modern" size="md" color="primary" />
-                    <p className={`${tw.textMuted} font-medium mt-4`}>Loading routes...</p>
-                  </div>
-                </td>
-              </tr>
-            ) : filteredRoutes.length === 0 ? (
-              <tr>
-                <td colSpan={4} className="px-6 py-12 text-center">
-                  <p className={`${tw.textSecondary} text-sm`}>
-                    No routes match your search
-                  </p>
-                </td>
-              </tr>
-            ) : (
-              filteredRoutes.map((route) => (
-                <tr
-                  key={route.id}
-                  style={{ backgroundColor: color.surface.tablebodybg }}
+                <th
+                  className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider rounded-tl-md"
+                  style={{
+                    color: color.surface.tableHeaderText,
+                    backgroundColor: color.surface.tableHeader,
+                  }}
                 >
-                  <td className="px-6 py-4 text-sm font-medium text-black">
-                    {route.name}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-black">
-                    {route.description || "—"}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-black">
-                    {route.is_active ? "Active" : "Inactive"}
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    <div className="flex items-center justify-end space-x-2">
-                      <button
-                        onClick={() => handleToggleStatus(route)}
-                        disabled={
-                          deleting === route.id ||
-                          togglingStatus === route.id ||
-                          loading
-                        }
-                        className={`p-2 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-                        title={route.is_active ? "Deactivate route" : "Activate route"}
-                      >
-                        {togglingStatus === route.id
-                          ? <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                          : route.is_active
-                            ? <PowerOff className="w-4 h-4 text-orange-600" />
-                            : <Power className="w-4 h-4 text-green-600" />}
-                      </button>
-                      <button
-                        onClick={() => {
-                          setEditingRoute(route);
-                          setShowCreateModal(true);
-                        }}
-                        disabled={deleting === route.id || loading}
-                        className={`p-2 ${tw.rounded} text-black disabled:opacity-60`}
-                        title="Edit route"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClick(route)}
-                        disabled={deleting === route.id || loading}
-                        className={`p-2 text-red-600 hover:bg-red-50 ${tw.rounded} disabled:opacity-60`}
-                        title="Delete route"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
+                  Route Name
+                </th>
+                <th
+                  className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                  style={{
+                    color: color.surface.tableHeaderText,
+                    backgroundColor: color.surface.tableHeader,
+                  }}
+                >
+                  Description
+                </th>
+                <th
+                  className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                  style={{
+                    color: color.surface.tableHeaderText,
+                    backgroundColor: color.surface.tableHeader,
+                  }}
+                >
+                  Status
+                </th>
+                <th
+                  className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider rounded-tr-md"
+                  style={{
+                    color: color.surface.tableHeaderText,
+                    backgroundColor: color.surface.tableHeader,
+                  }}
+                >
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredRoutes.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-6 py-12 text-center">
+                    <p className={`${tw.textSecondary} text-sm`}>
+                      No routes match your search
+                    </p>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                filteredRoutes.map((route) => (
+                  <tr
+                    key={route.id}
+                    style={{ backgroundColor: color.surface.tablebodybg }}
+                  >
+                    <td className="px-6 py-4 text-sm font-medium text-black">
+                      {route.name}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-black">
+                      {route.description || "—"}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-black">
+                      {route.is_active ? "Active" : "Inactive"}
+                    </td>
+                    <td className="px-6 py-4 text-sm">
+                      <div className="flex items-center justify-end space-x-2">
+                        <button
+                          onClick={() => handleToggleStatus(route)}
+                          disabled={
+                            deleting === route.id ||
+                            togglingStatus === route.id ||
+                            loading
+                          }
+                          className={`p-2 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                          title={
+                            route.is_active
+                              ? "Deactivate route"
+                              : "Activate route"
+                          }
+                        >
+                          {togglingStatus === route.id ? (
+                            <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                          ) : route.is_active ? (
+                            <PowerOff className="w-4 h-4 text-orange-600" />
+                          ) : (
+                            <Power className="w-4 h-4 text-green-600" />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingRoute(route);
+                            setShowCreateModal(true);
+                          }}
+                          disabled={deleting === route.id || loading}
+                          className={`p-2 ${tw.rounded} text-black disabled:opacity-60`}
+                          title="Edit route"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(route)}
+                          disabled={deleting === route.id || loading}
+                          className={`p-2 text-red-600 hover:bg-red-50 ${tw.rounded} disabled:opacity-60`}
+                          title="Delete route"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* Delete Confirmation Modal */}
       {deleteConfirmId !== null && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-md p-6 max-w-md w-full mx-4">
-            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-2`}>Delete SMS Route</h3>
+            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-2`}>
+              Delete SMS Route
+            </h3>
             <p className={`${tw.textSecondary} text-sm mb-6`}>
-              Are you sure you want to delete "{deleteConfirmName}"? This action cannot be undone.
+              Are you sure you want to delete "{deleteConfirmName}"? This action
+              cannot be undone.
             </p>
             <div className="flex items-center justify-end gap-3">
               <button
