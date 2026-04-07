@@ -1,20 +1,21 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { CreateSMSRouteRequest, SMSRoute } from "../types/smsRoute";
 import { smsRouteService } from "../services/smsRouteService";
 import { useToast } from "../../../contexts/ToastContext";
 import { color, tw } from "../../../shared/utils/utils";
-import Checkbox from "../../../shared/components/ui/Checkbox";
 
 interface SMSRouteCreateModalProps {
   isOpen: boolean;
   onClose: () => void;
+  editingRoute?: SMSRoute | null;
   onSuccess?: (route: SMSRoute) => void;
 }
 
 export default function SMSRouteCreateModal({
   isOpen,
   onClose,
+  editingRoute,
   onSuccess,
 }: SMSRouteCreateModalProps) {
   const { success, error: showError } = useToast();
@@ -29,6 +30,32 @@ export default function SMSRouteCreateModal({
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  const isEditMode = !!editingRoute;
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (editingRoute) {
+      setFormData({
+        name: editingRoute.name || "",
+        description: editingRoute.description || "",
+        gateway_provider: editingRoute.gateway_provider || "",
+        communication_channel_id: editingRoute.communication_channel_id,
+        is_active: editingRoute.is_active,
+      });
+    } else {
+      setFormData({
+        name: "",
+        description: "",
+        gateway_provider: "",
+        communication_channel_id: undefined,
+        is_active: true,
+      });
+    }
+
+    setErrors({});
+  }, [editingRoute, isOpen]);
 
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
@@ -51,24 +78,22 @@ export default function SMSRouteCreateModal({
 
     try {
       setLoading(true);
-      const route = await smsRouteService.createRoute(formData);
-      success("Success", `SMS route "${formData.name}" created successfully`);
+      const route = isEditMode && editingRoute
+        ? await smsRouteService.updateRoute(editingRoute.id, formData)
+        : await smsRouteService.createRoute(formData);
+
+      success(
+        "Success",
+        `SMS route "${formData.name}" ${isEditMode ? "updated" : "created"} successfully`,
+      );
 
       if (onSuccess) {
         onSuccess(route);
       }
 
-      // Reset form
-      setFormData({
-        name: "",
-        description: "",
-        gateway_provider: "",
-        communication_channel_id: undefined,
-        is_active: true,
-      });
       onClose();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to create route";
+      const errorMessage = err instanceof Error ? err.message : `Failed to ${isEditMode ? "update" : "create"} route`;
       showError("Error", errorMessage);
     } finally {
       setLoading(false);
@@ -109,7 +134,9 @@ export default function SMSRouteCreateModal({
       <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white">
-          <h2 className={`text-lg font-bold ${tw.textPrimary}`}>Create SMS Route</h2>
+          <h2 className={`text-lg font-bold ${tw.textPrimary}`}>
+            {isEditMode ? "Edit SMS Route" : "Create SMS Route"}
+          </h2>
           <button
             onClick={onClose}
             className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
@@ -184,33 +211,27 @@ export default function SMSRouteCreateModal({
             />
           </div>
 
-          {/* Active Checkbox */}
-          <div className="flex items-center gap-2 pt-2">
-            <Checkbox
-              label="Active"
-              checked={formData.is_active || false}
-              onChange={(checked) =>
-                setFormData({ ...formData, is_active: checked })
-              }
-              disabled={loading}
-            />
-          </div>
-
           {/* Footer */}
           <div className="flex gap-3 pt-4">
             <button
               type="submit"
               disabled={loading}
-              className={`flex-1 px-4 py-2 text-white ${tw.rounded} font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+              className={`flex-1 px-4 py-2 text-sm text-white ${tw.rounded} font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
               style={{ backgroundColor: color.primary.action }}
             >
-              {loading ? "Creating..." : "Create"}
+              {loading
+                ? isEditMode
+                  ? "Saving..."
+                  : "Creating..."
+                : isEditMode
+                  ? "Save"
+                  : "Create"}
             </button>
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>

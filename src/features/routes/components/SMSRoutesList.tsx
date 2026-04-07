@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Plus, Edit, Trash2, Search, Eye } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Power, PowerOff } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { SMSRoute } from "../types/smsRoute";
@@ -10,16 +9,17 @@ import { color, tw } from "../../../shared/utils/utils";
 import SMSRouteCreateModal from "./SMSRouteCreateModal";
 
 export default function SMSRoutesList() {
-  const navigate = useNavigate();
   const { success, error: showError } = useToast();
 
   const [routes, setRoutes] = useState<SMSRoute[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<number | null>(null);
+  const [togglingStatus, setTogglingStatus] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingRoute, setEditingRoute] = useState<SMSRoute | null>(null);
 
   useEffect(() => {
     loadRoutes();
@@ -49,13 +49,45 @@ export default function SMSRoutesList() {
       setDeleting(deleteConfirmId);
       await smsRouteService.deleteRoute(deleteConfirmId);
       success("Success", `"${deleteConfirmName}" has been deleted successfully`);
-      await loadRoutes();
+      setRoutes((prev) => prev.filter((route) => route.id !== deleteConfirmId));
       setDeleteConfirmId(null);
       setDeleteConfirmName("");
     } catch (err) {
       showError("Error", "Failed to delete SMS route");
     } finally {
       setDeleting(null);
+    }
+  };
+
+  const handleToggleStatus = async (route: SMSRoute) => {
+    const nextStatus = !route.is_active;
+
+    try {
+      setTogglingStatus(route.id);
+      setRoutes((prev) =>
+        prev.map((r) =>
+          r.id === route.id ? { ...r, is_active: nextStatus } : r,
+        ),
+      );
+
+      await smsRouteService.updateRoute(route.id, {
+        is_active: nextStatus,
+      });
+
+      success(
+        "Success",
+        `"${route.name}" has been ${nextStatus ? "activated" : "deactivated"} successfully`,
+      );
+    } catch (err) {
+      // Revert optimistic update if API call fails
+      setRoutes((prev) =>
+        prev.map((r) =>
+          r.id === route.id ? { ...r, is_active: route.is_active } : r,
+        ),
+      );
+      showError("Error", "Failed to update route status");
+    } finally {
+      setTogglingStatus(null);
     }
   };
 
@@ -81,7 +113,10 @@ export default function SMSRoutesList() {
           provider is used to send SMS messages.
         </p>
         <button
-          onClick={() => setShowCreateModal(true)}
+          onClick={() => {
+            setEditingRoute(null);
+            setShowCreateModal(true);
+          }}
           disabled={loading}
           className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-md whitespace-nowrap disabled:opacity-60"
           style={{ backgroundColor: color.primary.action }}
@@ -186,15 +221,26 @@ export default function SMSRoutesList() {
                   <td className="px-6 py-4 text-sm">
                     <div className="flex items-center justify-end space-x-2">
                       <button
-                        onClick={() => navigate(`/dashboard/sms-routes/${route.id}`)}
-                        disabled={deleting === route.id || loading}
-                        className={`p-2 ${tw.rounded} text-black disabled:opacity-60`}
-                        title="View details"
+                        onClick={() => handleToggleStatus(route)}
+                        disabled={
+                          deleting === route.id ||
+                          togglingStatus === route.id ||
+                          loading
+                        }
+                        className={`p-2 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                        title={route.is_active ? "Deactivate route" : "Activate route"}
                       >
-                        <Eye className="w-4 h-4" />
+                        {togglingStatus === route.id
+                          ? <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                          : route.is_active
+                            ? <PowerOff className="w-4 h-4 text-orange-600" />
+                            : <Power className="w-4 h-4 text-green-600" />}
                       </button>
                       <button
-                        onClick={() => navigate(`/dashboard/sms-routes/${route.id}/edit`)}
+                        onClick={() => {
+                          setEditingRoute(route);
+                          setShowCreateModal(true);
+                        }}
                         disabled={deleting === route.id || loading}
                         className={`p-2 ${tw.rounded} text-black disabled:opacity-60`}
                         title="Edit route"
@@ -204,7 +250,7 @@ export default function SMSRoutesList() {
                       <button
                         onClick={() => handleDeleteClick(route)}
                         disabled={deleting === route.id || loading}
-                        className={`p-2 text-black ${tw.rounded} disabled:opacity-60`}
+                        className={`p-2 text-red-600 hover:bg-red-50 ${tw.rounded} disabled:opacity-60`}
                         title="Delete route"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -249,10 +295,23 @@ export default function SMSRoutesList() {
       {/* Create Modal */}
       <SMSRouteCreateModal
         isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onSuccess={() => {
+        editingRoute={editingRoute}
+        onClose={() => {
           setShowCreateModal(false);
-          loadRoutes();
+          setEditingRoute(null);
+        }}
+        onSuccess={(savedRoute) => {
+          setRoutes((prev) => {
+            const exists = prev.some((route) => route.id === savedRoute.id);
+            if (exists) {
+              return prev.map((route) =>
+                route.id === savedRoute.id ? savedRoute : route,
+              );
+            }
+            return [savedRoute, ...prev];
+          });
+          setShowCreateModal(false);
+          setEditingRoute(null);
         }}
       />
     </div>
