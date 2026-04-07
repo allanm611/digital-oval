@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import {
   // ArrowLeft,
   Edit,
+  Eye,
   LucideIcon,
   Search,
   Trash2,
@@ -1404,6 +1405,11 @@ export default function TypeConfigurationPage({
     "languages",
     "characterSets",
     "creativeTemplates",
+    "smsRoutes",
+    "comboTypes",
+    "notificationTypes",
+    "vipLists",
+    "controlGroups",
   ];
   const useBackendConfig = backendTypes.includes(config.configType);
 
@@ -1479,6 +1485,7 @@ export default function TypeConfigurationPage({
       navigate("/dashboard/creative-templates/create");
       return;
     }
+    // For comboTypes, use the modal
     setEditingItem(undefined);
     setIsModalOpen(true);
   };
@@ -1492,8 +1499,30 @@ export default function TypeConfigurationPage({
       navigate(`/dashboard/creative-templates/${item.id}`);
       return;
     }
+    // For comboTypes, open the modal for editing
+    if (config.configType === "comboTypes") {
+      setEditingItem(item);
+      setIsModalOpen(true);
+      return;
+    }
     setEditingItem(item);
     setIsModalOpen(true);
+  };
+
+  const handleViewItem = (item: TypeConfigurationItem) => {
+    // Navigate to details page for types that have dedicated detail pages
+    if (config.configType === "characterSets") {
+      navigate(`/dashboard/character-sets/${item.id}`);
+      return;
+    }
+    if (config.configType === "creativeTemplates") {
+      navigate(`/dashboard/creative-templates/${item.id}`);
+      return;
+    }
+    if (config.configType === "comboTypes") {
+      navigate(`/dashboard/combo-types/${item.id}`);
+      return;
+    }
   };
 
   const handleDeleteItem = (item: TypeConfigurationItem) => {
@@ -1576,7 +1605,11 @@ export default function TypeConfigurationPage({
           }
         } else {
           // Create: show loading and wait for response (need ID from API)
-          await backendConfig.create(itemData);
+          const createdItem = await backendConfig.create(itemData);
+          // Add newly created item to the list
+          if (createdItem && createdItem.id) {
+            setItems((prev) => [...prev, createdItem]);
+          }
           showToast(config.createSuccessMessage);
         }
         // Close modal
@@ -2025,6 +2058,28 @@ export default function TypeConfigurationPage({
                       }}
                     >
                       <div className="flex items-center justify-end space-x-2">
+                        {(config.configType === "comboTypes" ||
+                          config.configType === "characterSets" ||
+                          config.configType === "creativeTemplates") && (
+                          <button
+                            onClick={() => handleViewItem(item)}
+                            className={`p-2 ${tw.rounded} transition-colors`}
+                            style={{
+                              color: color.primary.action,
+                              backgroundColor: "transparent",
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = `${color.primary.action}10`;
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor =
+                                "transparent";
+                            }}
+                            title="View details"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                        )}
                         <button
                           onClick={() => handleEditItem(item)}
                           className={`p-2 ${tw.rounded} transition-colors`}

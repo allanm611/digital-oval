@@ -56,11 +56,20 @@ class ComboTypeService {
     return this.request<ApiResponse<ComboType[]>>("");
   }
 
+  // Get combo type by ID
+  async getComboTypeById(id: number): Promise<ComboType> {
+    const response = await this.request<ApiResponse<ComboType>>(`/${id}`);
+    return response.data;
+  }
+
   // Create new combo type
   async createComboType(
     data: CreateComboTypeRequest
   ): Promise<ApiResponse<ComboType>> {
-    return this.request<ApiResponse<ComboType>>("");
+    return this.request<ApiResponse<ComboType>>("", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
   }
 
   // Update combo type

@@ -1,11 +1,10 @@
-import { buildApiUrl, getAuthHeaders } from "../../../shared/services/api";
+import { buildApiUrl, getAuthHeaders } from "./api";
 
-export interface SMSRoute {
+export interface NotificationType {
   id: number;
   name: string;
   description?: string;
-  gateway_provider?: string;
-  communication_channel_id?: number;
+  notification_key: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -13,25 +12,23 @@ export interface SMSRoute {
   updated_by?: number;
 }
 
-export interface CreateSMSRouteRequest {
+export interface CreateNotificationTypeRequest {
   name: string;
   description?: string;
-  gateway_provider?: string;
-  communication_channel_id?: number;
+  notification_key: string;
   is_active?: boolean;
 }
 
-export interface UpdateSMSRouteRequest {
+export interface UpdateNotificationTypeRequest {
   name?: string;
   description?: string;
-  gateway_provider?: string;
-  communication_channel_id?: number;
+  notification_key?: string;
   is_active?: boolean;
 }
 
-const BASE_URL = buildApiUrl("/sms-routes");
+const BASE_URL = buildApiUrl("/notifications/types");
 
-class SMSRouteService {
+class NotificationTypeService {
   private async request<T>(
     endpoint: string,
     options: RequestInit = {},
@@ -52,20 +49,20 @@ class SMSRouteService {
     return response.json();
   }
 
-  async getAllRoutes() {
-    const data = await this.request<{ success: boolean; data: SMSRoute[] }>("");
+  async getAll() {
+    const data = await this.request<{ success: boolean; data: NotificationType[] }>("");
     return data.data;
   }
 
-  async getRouteById(id: number) {
-    const data = await this.request<{ success: boolean; data: SMSRoute }>(
+  async getById(id: number) {
+    const data = await this.request<{ success: boolean; data: NotificationType }>(
       `/${id}`
     );
     return data.data;
   }
 
-  async createRoute(data: CreateSMSRouteRequest) {
-    const response = await this.request<{ success: boolean; data: SMSRoute }>(
+  async create(data: CreateNotificationTypeRequest) {
+    const response = await this.request<{ success: boolean; data: NotificationType }>(
       "",
       {
         method: "POST",
@@ -75,22 +72,18 @@ class SMSRouteService {
     return response.data;
   }
 
-  async updateRoute(data: UpdateSMSRouteRequest) {
-    if (!("id" in data)) {
-      throw new Error("ID is required for update");
-    }
-    const { id, ...updateData } = data as any;
-    const response = await this.request<{ success: boolean; data: SMSRoute }>(
+  async update(id: number, data: UpdateNotificationTypeRequest) {
+    const response = await this.request<{ success: boolean; data: NotificationType }>(
       `/${id}`,
       {
         method: "PUT",
-        body: JSON.stringify(updateData),
+        body: JSON.stringify(data),
       }
     );
     return response.data;
   }
 
-  async deleteRoute(id: number) {
+  async delete(id: number) {
     const response = await this.request<{ success: boolean; message: string }>(
       `/${id}`,
       {
@@ -101,4 +94,4 @@ class SMSRouteService {
   }
 }
 
-export const smsRouteService = new SMSRouteService();
+export const notificationTypeService = new NotificationTypeService();

@@ -8,6 +8,11 @@ import { senderIdService, SenderId } from "../../features/configurations/service
 import { languageService, Language } from "../../features/configurations/services/languageService";
 import { characterSetService, CharacterSet } from "../../features/configurations/services/characterSetService";
 import { creativeTemplateService, CreativeTemplate } from "../../features/configurations/services/creativeTemplateService";
+import { smsRouteService, SmsRoute, CreateSmsRouteRequest, UpdateSmsRouteRequest } from "../../features/routes/services/smsRouteService";
+import { comboTypeService, ComboType, CreateComboTypeRequest, UpdateComboTypeRequest } from "../../features/products/services/comboTypeService";
+import { notificationTypeService, NotificationType, CreateNotificationTypeRequest, UpdateNotificationTypeRequest } from "../services/notificationTypeService";
+import { vipListService, VIPList, CreateVIPListRequest, AddVIPMemberRequest } from "../services/vipListService";
+import { controlGroupService, ControlGroup, CreateControlGroupRequest, UpdateControlGroupRequest } from "../services/controlGroupService";
 
 /**
  * Normalize API response to TypeConfigurationItem format
@@ -85,6 +90,35 @@ function normalizeApiResponse(type: string, data: any[]): any[] {
         // Convert is_active to isActive
         if (normalized.is_active !== undefined) {
           normalized.isActive = normalized.is_active;
+        }
+        break;
+
+      case "comboTypes":
+        // Convert is_active to isActive
+        if (normalized.is_active !== undefined) {
+          normalized.isActive = normalized.is_active;
+        }
+        // Convert combo_resources to comboResources and transform nested fields
+        if (normalized.combo_resources && Array.isArray(normalized.combo_resources)) {
+          normalized.comboResources = normalized.combo_resources.map((resource: any) => ({
+            type: resource.resource_type,
+            value: resource.unit_value,
+            unit: resource.unit,
+            sharedValidity: resource.shared_validity,
+            sharedValidityHours: resource.shared_validity_hours,
+          }));
+        }
+        // Convert shared_validity to sharedValidity
+        if (normalized.shared_validity !== undefined) {
+          normalized.sharedValidity = normalized.shared_validity;
+        }
+        // Convert shared_price to sharedPrice
+        if (normalized.shared_price !== undefined) {
+          normalized.sharedPrice = normalized.shared_price;
+        }
+        // Convert validity_hours to validityHours
+        if (normalized.validity_hours !== undefined) {
+          normalized.validityHours = normalized.validity_hours;
         }
         break;
     }
@@ -222,6 +256,38 @@ function transformPayload(type: string, payload: any): any {
         delete transformed.metadataValue;
       }
       break;
+
+    case "comboTypes":
+      // Map isActive to is_active
+      if (transformed.isActive !== undefined) {
+        transformed.is_active = transformed.isActive;
+        delete transformed.isActive;
+      }
+      // Map comboResources to combo_resources with nested field transformations
+      if (transformed.comboResources && Array.isArray(transformed.comboResources)) {
+        transformed.combo_resources = transformed.comboResources.map((resource: any) => ({
+          resource_type: resource.type,
+          unit_value: resource.value,
+          unit: resource.unit,
+          shared_validity: resource.sharedValidity,
+          shared_validity_hours: resource.sharedValidityHours,
+          ...(resource.price !== undefined && { price: resource.price }),
+        }));
+        delete transformed.comboResources;
+      }
+      // Map sharedValidity to shared_validity
+      if (transformed.sharedValidity !== undefined) {
+        transformed.shared_validity = transformed.sharedValidity;
+        delete transformed.sharedValidity;
+      }
+      // Remove sharedPrice - API doesn't accept this field
+      delete transformed.sharedPrice;
+      // Map validityHours to validity_hours
+      if (transformed.validityHours !== undefined) {
+        transformed.validity_hours = transformed.validityHours;
+        delete transformed.validityHours;
+      }
+      break;
   }
 
   return transformed;
@@ -249,7 +315,7 @@ export type UseBackendConfigDataResult<T, CreateReq, UpdateReq> = UseBackendConf
  * Pass undefined to skip fetching (useful for conditional hook usage in React)
  */
 export function useBackendConfigurationData(
-  type: "campaignTypes" | "offerTypes" | "segmentTypes" | "productTypes" | "rewardTypes" | "senderIds" | "languages" | "characterSets" | "creativeTemplates" | undefined
+  type: "campaignTypes" | "offerTypes" | "segmentTypes" | "productTypes" | "rewardTypes" | "senderIds" | "languages" | "characterSets" | "creativeTemplates" | "smsRoutes" | "comboTypes" | "notificationTypes" | "vipLists" | "controlGroups" | undefined
 ): UseBackendConfigDataResult<any, any, any> | null {
   const [data, setData] = useState<CampaignType[]>([]);
   const [loading, setLoading] = useState(false);
@@ -368,6 +434,53 @@ export function useBackendConfigurationData(
           }
           break;
 
+        case "smsRoutes":
+          response = await smsRouteService.getAllRoutes();
+          if (Array.isArray(response)) {
+            setData(normalizeApiResponse(type, response));
+          } else {
+            setData([]);
+          }
+          break;
+
+        case "comboTypes":
+          response = await comboTypeService.getAllComboTypes();
+          if (response?.data && Array.isArray(response.data)) {
+            setData(normalizeApiResponse(type, response.data));
+          } else if (Array.isArray(response)) {
+            setData(normalizeApiResponse(type, response));
+          } else {
+            setData([]);
+          }
+          break;
+
+        case "notificationTypes":
+          response = await notificationTypeService.getAll();
+          if (Array.isArray(response)) {
+            setData(normalizeApiResponse(type, response));
+          } else {
+            setData([]);
+          }
+          break;
+
+        case "vipLists":
+          response = await vipListService.getAll();
+          if (Array.isArray(response)) {
+            setData(normalizeApiResponse(type, response));
+          } else {
+            setData([]);
+          }
+          break;
+
+        case "controlGroups":
+          response = await controlGroupService.getAll();
+          if (Array.isArray(response)) {
+            setData(normalizeApiResponse(type, response));
+          } else {
+            setData([]);
+          }
+          break;
+
         default:
           throw new Error(`Unknown configuration type: ${type}`);
       }
@@ -418,6 +531,21 @@ export function useBackendConfigurationData(
             else if (type === "creativeTemplates") response = await creativeTemplateService.createCreativeTemplate(payload);
             // Return the data if wrapped, otherwise return response directly
             return response?.data || response;
+          case "smsRoutes":
+            response = await smsRouteService.createRoute(payload);
+            return response;
+          case "comboTypes":
+            response = await comboTypeService.createComboType(payload);
+            return response?.data || response;
+          case "notificationTypes":
+            response = await notificationTypeService.create(payload);
+            return response;
+          case "vipLists":
+            response = await vipListService.create(payload);
+            return response;
+          case "controlGroups":
+            response = await controlGroupService.create(payload);
+            return response;
           default:
             throw new Error(`Unknown configuration type: ${type}`);
         }
@@ -467,6 +595,21 @@ export function useBackendConfigurationData(
             else if (type === "creativeTemplates") response = await creativeTemplateService.updateCreativeTemplate(id, payload);
             // Return the data if wrapped, otherwise return response directly
             return response?.data || response;
+          case "smsRoutes":
+            response = await smsRouteService.updateRoute(payload);
+            return response;
+          case "comboTypes":
+            response = await comboTypeService.updateComboType(id, payload);
+            return response?.data || response;
+          case "notificationTypes":
+            response = await notificationTypeService.update(id, payload);
+            return response;
+          case "vipLists":
+            response = await vipListService.create(payload);
+            return response;
+          case "controlGroups":
+            response = await controlGroupService.update(id, payload);
+            return response;
           default:
             throw new Error(`Unknown configuration type: ${type}`);
         }
@@ -512,6 +655,21 @@ export function useBackendConfigurationData(
             else if (type === "languages") await languageService.deleteLanguage(id);
             else if (type === "characterSets") await characterSetService.deleteCharacterSet(id);
             else if (type === "creativeTemplates") await creativeTemplateService.deleteCreativeTemplate(id);
+            break;
+          case "smsRoutes":
+            await smsRouteService.deleteRoute(id);
+            break;
+          case "comboTypes":
+            await comboTypeService.deleteComboType(id);
+            break;
+          case "notificationTypes":
+            await notificationTypeService.delete(id);
+            break;
+          case "vipLists":
+            await vipListService.delete(id);
+            break;
+          case "controlGroups":
+            await controlGroupService.delete(id);
             break;
           default:
             throw new Error(`Unknown configuration type: ${type}`);

@@ -620,7 +620,7 @@ export default function ProductsPage() {
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
                         <span
-                          className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-[${color.primary.accent}]/10 text-[${color.primary.accent}]`}
+                          className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-[${color.primary.accent}]/10 text-black`}
                         >
                           {categoryName}
                         </span>

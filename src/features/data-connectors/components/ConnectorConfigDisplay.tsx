@@ -22,7 +22,7 @@ export default function ConnectorConfigDisplay({
 
   if (!config || Object.keys(config).length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
+      <div className="text-center py-8 text-sm text-gray-500">
         No configuration defined for this connector yet.
       </div>
     );
@@ -97,7 +97,7 @@ export default function ConnectorConfigDisplay({
 
     return (
       <div className={fullWidth ? "col-span-2" : ""}>
-        <label className="block text-xs font-medium text-gray-600 mb-1 uppercase tracking-wide">
+        <label className="block text-sm font-medium text-gray-600 mb-1 uppercase tracking-wide">
           {label}
         </label>
         {isEditMode && type !== "password" ? (
@@ -181,8 +181,8 @@ export default function ConnectorConfigDisplay({
         return (
           <div className="space-y-5">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1 uppercase">Brokers</label>
-              <div className="bg-gray-50 p-3 rounded border border-gray-200 text-sm">
+              <label className="block text-sm font-medium text-gray-600 mb-1 uppercase">Brokers</label>
+              <div className="text-sm text-gray-900">
                 {config.brokers?.join(", ") || "—"}
               </div>
             </div>
@@ -234,7 +234,7 @@ export default function ConnectorConfigDisplay({
             <p className="text-sm text-yellow-700 mt-2">
               Raw configuration:
             </p>
-            <pre className="mt-3 bg-white p-4 rounded text-left text-xs overflow-auto max-h-80">
+            <pre className="mt-3 bg-white p-4 rounded text-left text-sm overflow-auto max-h-80">
               {JSON.stringify(config, null, 2)}
             </pre>
           </div>
@@ -244,8 +244,8 @@ export default function ConnectorConfigDisplay({
 
   return (
     <div className="space-y-6">
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
-        <h3 className="text-base font-semibold text-gray-800 mb-4">
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900 mb-4">
           {connector.name} Configuration ({getConnectorDisplayName(type)})
         </h3>
         {renderTypeSpecific()}

@@ -15,7 +15,7 @@ import {
 import { processDataConnectors } from "../utils/connectorIcons";
 import { buildApiUrl, getAuthHeaders } from "../../../shared/services/api";
 
-const BASE_URL = buildApiUrl("/dataconnectors");
+const BASE_URL = buildApiUrl("/data-connectors");
 
 class DataConnectorService {
   private async request<T>(

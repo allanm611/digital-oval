@@ -2415,7 +2415,7 @@ export const comboTypesConfig: TypeConfigurationPageConfig = {
   backPath: "/dashboard/configuration",
   icon: Briefcase,
   searchPlaceholder: "Search combo types by name or description...",
-  initialData: hardcodedComboTypes,
+  initialData: [],
   createButtonText: "Create",
   modalTitle: {
     create: "Create New Combo Type",

@@ -177,41 +177,31 @@ export default function ProductForm({
       comboData.combo_type_id !== 0 &&
       selectedComboType
     ) {
-      // For now, prefill based on combo type name
-      // This will be replaced with actual template data from backend
+      // Map API resource types to form resource types
       const resources: ComboResource[] = [];
 
-      // Parse resources from combo type name and add default values
-      if (selectedComboType.name.toLowerCase().includes("data")) {
-        resources.push({
-          resource_type: "data_mb",
-          unit: "data_mb",
-          unit_value: 5,
-        });
-      }
-      if (selectedComboType.name.toLowerCase().includes("voice")) {
-        resources.push({
-          resource_type: "onnet_minutes",
-          unit: "onnet_minutes",
-          unit_value: 500,
-        });
-      }
-      if (selectedComboType.name.toLowerCase().includes("sms")) {
-        resources.push({
-          resource_type: "sms_count",
-          unit: "sms_count",
-          unit_value: 100,
+      if (selectedComboType.combo_resources && Array.isArray(selectedComboType.combo_resources)) {
+        selectedComboType.combo_resources.forEach((apiResource: any) => {
+          // Map API resource_type to form unit (keeping it as-is since it's already in correct format)
+          let resourceType: ProductUnit = apiResource.unit as ProductUnit;
+
+          resources.push({
+            resource_type: resourceType,
+            unit: apiResource.unit,
+            unit_value: apiResource.unit_value,
+          });
         });
       }
 
-      // Prefill with default shared validity and price from template
+      // Prefill with combo type data from API
       if (resources.length > 0) {
         setComboData({
           combo_type_id: comboData.combo_type_id,
           resources,
-          shared_validity: true,
-          shared_validity_hours: 720, // 30 days default (720 hours)
-          price: selectedComboType.price, // Prefill price from template
+          shared_validity: selectedComboType.shared_validity ?? true,
+          shared_validity_hours: selectedComboType.validity_hours,
+          shared_price: true,
+          price: selectedComboType.price,
         });
       }
     }
