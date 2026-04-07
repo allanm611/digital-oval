@@ -1,33 +1,5 @@
 import { buildApiUrl, getAuthHeaders } from "../../../shared/services/api";
-
-export interface SMSRoute {
-  id: number;
-  name: string;
-  description?: string;
-  gateway_provider?: string;
-  communication_channel_id?: number;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-  created_by?: number;
-  updated_by?: number;
-}
-
-export interface CreateSMSRouteRequest {
-  name: string;
-  description?: string;
-  gateway_provider?: string;
-  communication_channel_id?: number;
-  is_active?: boolean;
-}
-
-export interface UpdateSMSRouteRequest {
-  name?: string;
-  description?: string;
-  gateway_provider?: string;
-  communication_channel_id?: number;
-  is_active?: boolean;
-}
+import { SMSRoute, CreateSMSRouteRequest, UpdateSMSRouteRequest } from "../types/smsRoute";
 
 const BASE_URL = buildApiUrl("/sms-routes");
 
@@ -70,21 +42,23 @@ class SMSRouteService {
       {
         method: "POST",
         body: JSON.stringify(data),
+        headers: {
+          "Content-Type": "application/json",
+        },
       }
     );
     return response.data;
   }
 
-  async updateRoute(data: UpdateSMSRouteRequest) {
-    if (!("id" in data)) {
-      throw new Error("ID is required for update");
-    }
-    const { id, ...updateData } = data as any;
+  async updateRoute(id: number, data: UpdateSMSRouteRequest) {
     const response = await this.request<{ success: boolean; data: SMSRoute }>(
       `/${id}`,
       {
         method: "PUT",
-        body: JSON.stringify(updateData),
+        body: JSON.stringify(data),
+        headers: {
+          "Content-Type": "application/json",
+        },
       }
     );
     return response.data;

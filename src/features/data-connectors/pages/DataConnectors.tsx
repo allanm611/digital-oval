@@ -8,16 +8,14 @@ import {
   CheckCircle,
   Database,
   Layers,
-  MoreVertical,
   Eye,
-  Copy,
-  Download,
-  Upload,
+  Edit,
   Trash2,
 } from "lucide-react";
 import {
   DataConnectorType,
   ProcessedDataConnector,
+  DataConnectorStatistics,
 } from "../types/dataConnector";
 import { dataConnectorService } from "../services/dataConnectorService";
 import {
@@ -27,7 +25,6 @@ import {
 import { tw, color, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import CreateButton from "../../../shared/components/ui/CreateButton";
-import BackButton from "../../../shared/components/ui/BackButton";
 import DataConnectorForm from "../components/DataConnectorForm";
 import {
   CreateDataConnectorRequest,
@@ -41,14 +38,19 @@ import { PermissionGate } from "../../auth/components/PermissionGate";
 export default function DataConnectors() {
   const navigate = useNavigate();
   const { error: showError, success } = useToast();
-  // const [connectors, setConnectors] = useState<DataConnector[]>([]);
   const [connectors, setConnectors] = useState<ProcessedDataConnector[]>([]);
+  const [statistics, setStatistics] = useState<DataConnectorStatistics | null>(
+    null,
+  );
+  const [connectorTypes, setConnectorTypes] = useState<DataConnectorType[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingConnector, setEditingConnector] =
     useState<ProcessedDataConnector | null>(null);
+  const [connectorToDelete, setConnectorToDelete] =
+    useState<ProcessedDataConnector | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [filterType, setFilterType] = useState<DataConnectorType | "all">(
     "all",
   );
@@ -89,59 +91,53 @@ export default function DataConnectors() {
     }
   };
 
+  const loadReferenceData = async () => {
+    try {
+      const [stats, types] = await Promise.all([
+        dataConnectorService.getDataConnectorStatistics(),
+        dataConnectorService.getAvailableConnectorTypes(),
+      ]);
+      setStatistics(stats);
+      setConnectorTypes(types);
+    } catch (error) {
+      console.error("Failed to load data connector reference data:", error);
+    }
+  };
+
   useEffect(() => {
     loadConnectors();
   }, [searchTerm, filterType, filterStatus]);
 
-  // Close action menu on outside click
   useEffect(() => {
-    const handleClickOutside = () => setActionMenuOpen(null);
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
+    loadReferenceData();
   }, []);
 
   const handleConnectorClick = (connector: ProcessedDataConnector) => {
     navigate(`/dashboard/data-connectors/${connector.id}`);
   };
 
-  const handleMenuToggle = (
-    e: React.MouseEvent<HTMLButtonElement>,
-    connectorId: string,
-  ) => {
-    e.stopPropagation();
-    setActionMenuOpen((prev) => (prev === connectorId ? null : connectorId));
+  const handleEdit = (connector: ProcessedDataConnector) => {
+    setEditingConnector(connector);
+    setShowCreateModal(true);
   };
 
-  const handleMenuAction = (
-    e: React.MouseEvent<HTMLButtonElement>,
-    action: "view" | "edit" | "clone" | "export" | "import" | "delete",
-    connector: ProcessedDataConnector,
-  ) => {
-    e.stopPropagation();
-    setActionMenuOpen(null);
+  const handleDelete = (connector: ProcessedDataConnector) => {
+    setConnectorToDelete(connector);
+  };
 
-    switch (action) {
-      case "view":
-        handleConnectorClick(connector);
-        break;
-      case "edit":
-        setEditingConnector(connector as ProcessedDataConnector);
-        setShowCreateModal(true);
-        break;
-      case "clone":
-        showError("Not implemented", "Clone connector will be available soon");
-        break;
-      case "export":
-        showError("Not implemented", "Export connector will be available soon");
-        break;
-      case "import":
-        showError("Not implemented", "Import connector will be available soon");
-        break;
-      case "delete":
-        showError("Not implemented", "Delete connector will be available soon");
-        break;
-      default:
-        break;
+  const handleConfirmDelete = async () => {
+    if (!connectorToDelete) return;
+
+    try {
+      setIsDeleting(true);
+      await dataConnectorService.deleteDataConnector(connectorToDelete.id);
+      success("Deleted", `${connectorToDelete.name} was deleted successfully.`);
+      setConnectorToDelete(null);
+      await Promise.all([loadConnectors(), loadReferenceData()]);
+    } catch (err: any) {
+      showError("Delete failed", err.message || "Could not delete connector");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -182,6 +178,7 @@ export default function DataConnectors() {
       }
 
       await loadConnectors(); // refresh list
+      await loadReferenceData();
     } catch (err: any) {
       console.error(err);
       showError("Save failed", err.message || "Could not save connector");
@@ -197,7 +194,14 @@ export default function DataConnectors() {
     <div className="">
       {/* Header */}
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <BackButton fallbackTo="/dashboard" showBreadcrumb={true} currentLabel="Data Connectors" />
+        <div>
+          <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
+            Data Connectors
+          </h1>
+          <p className={`${tw.textSecondary} mt-2 text-sm`}>
+            Manage connector configurations and monitor integration health.
+          </p>
+        </div>
         <PermissionGate permission="servers.create">
           <CreateButton
             onClick={() => {
@@ -224,7 +228,7 @@ export default function DataConnectors() {
               </p>
             </div>
             <p className="mt-2 text-3xl font-bold text-gray-900">
-              {connectors.length}
+              {statistics?.total_connectors ?? connectors.length}
             </p>
           </div>
           <div
@@ -238,7 +242,8 @@ export default function DataConnectors() {
               <p className="text-sm font-medium text-gray-600">Active</p>
             </div>
             <p className="mt-2 text-3xl font-bold text-gray-900">
-              {connectors.filter((c) => c.is_active).length}
+              {statistics?.active_connectors ??
+                connectors.filter((c) => c.is_active).length}
             </p>
           </div>
           <div
@@ -254,10 +259,11 @@ export default function DataConnectors() {
               </p>
             </div>
             <p className="mt-2 text-3xl font-bold text-gray-900">
-              {connectors.reduce(
-                (sum, c) => sum + (c.connection_count || 0),
-                0,
-              )}
+              {statistics?.total_connection_count ??
+                connectors.reduce(
+                  (sum, c) => sum + (c.connection_count || 0),
+                  0,
+                )}
             </p>
           </div>
           <div
@@ -273,7 +279,8 @@ export default function DataConnectors() {
               </p>
             </div>
             <p className="mt-2 text-3xl font-bold text-gray-900">
-              {new Set(connectors.map((c) => c.type)).size}
+              {statistics?.connectors_by_type?.length ??
+                new Set(connectors.map((c) => c.type)).size}
             </p>
           </div>
         </div>
@@ -328,17 +335,18 @@ export default function DataConnectors() {
               className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">All Types</option>
-              {(
-                [
-                  "tcp",
-                  "websocket",
-                  "kafka",
-                  "jdbc",
-                  "sms_inbox",
-                  "api",
-                  "files",
-                  "digital_tags",
-                ] as DataConnectorType[]
+              {(connectorTypes.length
+                ? connectorTypes
+                : ([
+                    "tcp",
+                    "websocket",
+                    "kafka",
+                    "jdbc",
+                    "sms_inbox",
+                    "api",
+                    "files",
+                    "digital_tags",
+                  ] as DataConnectorType[])
               ).map((t) => (
                 <option key={t} value={t}>
                   {getConnectorDisplayName(t)}
@@ -440,6 +448,12 @@ export default function DataConnectors() {
                     className="px-6 py-4 text-left text-xs sm:text-sm font-medium uppercase tracking-wider"
                     style={{ color: color.surface.tableHeaderText }}
                   >
+                    Type
+                  </th>
+                  <th
+                    className="px-6 py-4 text-left text-xs sm:text-sm font-medium uppercase tracking-wider"
+                    style={{ color: color.surface.tableHeaderText }}
+                  >
                     Connections
                   </th>
                   <th
@@ -461,7 +475,7 @@ export default function DataConnectors() {
                   <tr>
                     <td
                       className={`px-6 py-6 text-sm ${tw.textSecondary}`}
-                      colSpan={5}
+                      colSpan={6}
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       No data connectors found. Get started by creating your
@@ -512,6 +526,14 @@ export default function DataConnectors() {
                         className="px-6 py-4 text-sm"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
+                        <span className={tw.textPrimary}>
+                          {getConnectorDisplayName(connector.type)}
+                        </span>
+                      </td>
+                      <td
+                        className="px-6 py-4 text-sm"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
                         <span className={`font-medium ${tw.textPrimary}`}>
                           {connector.connection_count ?? "--"}
                         </span>
@@ -538,65 +560,24 @@ export default function DataConnectors() {
                           >
                             <Eye className="h-4 w-4" />
                           </button>
+                          <PermissionGate permission="servers.update">
+                            <button
+                              onClick={() => handleEdit(connector)}
+                              className={`group p-3 ${tw.rounded} ${tw.textSecondary} hover:bg-[${color.primary.accent}]/10 transition-all duration-200`}
+                              title="Edit connector"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </button>
+                          </PermissionGate>
                           <PermissionGate permission="servers.delete">
                             <button
-                              onClick={(e) =>
-                                handleMenuAction(e, "delete", connector)
-                              }
+                              onClick={() => handleDelete(connector)}
                               className={`group p-3 ${tw.rounded} text-red-600 hover:bg-red-50 transition-all duration-200`}
                               title="Delete connector"
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
                           </PermissionGate>
-                          <div className="relative">
-                            <button
-                              onClick={(e) => handleMenuToggle(e, connector.id)}
-                              className={`group p-3 ${tw.rounded} ${tw.textSecondary} hover:bg-[${color.primary.accent}]/10 transition-all duration-200`}
-                              aria-label="More actions"
-                            >
-                              <MoreVertical className="h-4 w-4" />
-                            </button>
-                            {actionMenuOpen === connector.id && (
-                              <div
-                                className="absolute right-0 z-20 mt-2 w-48 rounded-md border border-gray-200 bg-white shadow-lg"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                {[
-                                  { key: "edit", label: "Edit", icon: Eye },
-                                  { key: "clone", label: "Clone", icon: Copy },
-                                  {
-                                    key: "export",
-                                    label: "Export",
-                                    icon: Download,
-                                  },
-                                  {
-                                    key: "import",
-                                    label: "Import",
-                                    icon: Upload,
-                                  },
-                                ].map((item) => (
-                                  <button
-                                    key={item.key}
-                                    className={`w-full flex items-center px-4 py-2 text-left text-sm transition-colors ${tw.textPrimary} hover:bg-gray-50`}
-                                    onClick={(e) =>
-                                      handleMenuAction(
-                                        e,
-                                        item.key as
-                                          | "clone"
-                                          | "export"
-                                          | "import",
-                                        connector,
-                                      )
-                                    }
-                                  >
-                                    <item.icon className="h-4 w-4 mr-3" />
-                                    {item.label}
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                          </div>
                         </div>
                       </td>
                     </tr>
@@ -614,7 +595,19 @@ export default function DataConnectors() {
         isOpen={showCreateModal}
         onClose={handleCloseForm}
         onSave={handleSaveConnector}
-        // loading={someGlobalSavingState}           // optional – you can add if needed
+        availableTypes={connectorTypes}
+      />
+
+      <DeleteConfirmModal
+        isOpen={!!connectorToDelete}
+        onClose={() => setConnectorToDelete(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Data Connector"
+        description="Are you sure you want to delete this data connector? This action cannot be undone."
+        itemName={connectorToDelete?.name || ""}
+        isLoading={isDeleting}
+        confirmText="Delete Connector"
+        cancelText="Cancel"
       />
     </div>
   );

@@ -1,57 +1,49 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
+  ArrowLeft,
   Trash2,
   Edit,
-  PlayCircle,
+  Play,
   AlertTriangle,
   CheckCircle,
-  Loader2,
   Database,
-  Activity,
-  Shield,
-  RefreshCw,
-  ExternalLink,
-  Clock,
 } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import {
   ConnectionTestResult,
-  DataConnector,
+  ProcessedDataConnector,
   UpdateDataConnectorRequest,
   DataConnectorFormData,
 } from "../types/dataConnector";
 import { dataConnectorService } from "../services/dataConnectorService";
 import { useToast } from "../../../contexts/ToastContext";
-import { useLanguage } from "../../../contexts/LanguageContext";
 import { tw, color, button } from "../../../shared/utils/utils";
 import ConnectorConfigDisplay from "../components/ConnectorConfigDisplay";
 import DataConnectorForm from "../components/DataConnectorForm";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import DateFormatter from "../../../shared/components/DateFormatter";
+import { getConnectorDisplayName } from "../utils/connectorIcons";
 
 export default function DataConnectorDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { error: showError, success } = useToast();
-  const { t } = useLanguage();
 
-  const [connector, setConnector] = useState<DataConnector | null>(null);
+  const [connector, setConnector] = useState<ProcessedDataConnector | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [testResult, setTestResult] = useState<ConnectionTestResult | null>(
     null,
   );
   const [isTesting, setIsTesting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
 
-  useEffect(() => {
-    if (id) {
-      loadConnector();
-    }
-  }, [id]);
-
-  const loadConnector = async () => {
+  const loadConnector = useCallback(async () => {
     if (!id) return;
 
     try {
@@ -74,7 +66,13 @@ export default function DataConnectorDetailsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, navigate, showError]);
+
+  useEffect(() => {
+    if (id) {
+      loadConnector();
+    }
+  }, [id, loadConnector]);
 
   const handleTestConnection = async () => {
     if (!connector) return;
@@ -101,12 +99,17 @@ export default function DataConnectorDetailsPage() {
   };
 
   const confirmDelete = async () => {
+    if (!connector) return;
+
     try {
-      await dataConnectorService.deleteDataConnector(connector!.id);
+      setIsDeleting(true);
+      await dataConnectorService.deleteDataConnector(connector.id);
       success("Deleted", "Connector removed");
       navigate("/dashboard/data-connectors");
     } catch (err: any) {
       showError("Delete failed", err.message || "Could not delete connector");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -142,27 +145,39 @@ export default function DataConnectorDetailsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <LoadingSpinner size="lg" />
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <LoadingSpinner
+          variant="modern"
+          size="xl"
+          color="primary"
+          className="mb-4"
+        />
+        <p className={`${tw.textMuted} font-medium text-sm`}>
+          Loading connector details...
+        </p>
       </div>
     );
   }
 
   if (!connector) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-8">
-        <div className="text-center space-y-4">
-          <AlertTriangle className="h-16 w-16 text-gray-400 mx-auto" />
-          <h2 className="text-2xl font-bold text-gray-900">
+      <div className="space-y-6">
+        <div className="text-center py-12">
+          <Database
+            className={`w-16 h-16 text-[${color.primary.accent}] mx-auto mb-4`}
+          />
+          <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
             Connector Not Found
-          </h2>
-          <p className="text-gray-600">
-            The data connector you're looking for doesn't exist.
+          </h3>
+          <p className={`${tw.textMuted} mb-6`}>
+            The data connector you are looking for does not exist.
           </p>
           <button
             onClick={() => navigate("/dashboard/data-connectors")}
-            className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className={`px-4 py-2 text-white ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 mx-auto text-sm`}
+            style={{ backgroundColor: button.action.background }}
           >
+            <ArrowLeft className="w-4 h-4" />
             Back to Connectors
           </button>
         </div>
@@ -170,10 +185,13 @@ export default function DataConnectorDetailsPage() {
     );
   }
 
+  const ConnectorIcon = connector.iconComponent || Database;
+  const connectorTypeLabel = getConnectorDisplayName(connector.type);
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <BackButton
           fallbackTo="/dashboard/data-connectors"
           showBreadcrumb={true}
@@ -183,7 +201,7 @@ export default function DataConnectorDetailsPage() {
           <button
             onClick={handleTestConnection}
             disabled={isTesting || !connector.is_active}
-            className="flex items-center gap-2 px-4 py-2.5 border border-gray-900 text-gray-900 rounded text-sm font-medium transition-colors hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm w-fit border border-gray-300 text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed`}
             title={
               connector.is_active
                 ? "Test this connection"
@@ -193,15 +211,15 @@ export default function DataConnectorDetailsPage() {
             {isTesting ? (
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
             ) : (
-              <PlayCircle className="w-4 h-4" />
+              <Play className="w-4 h-4" />
             )}
             {isTesting ? "Testing..." : "Test Connection"}
           </button>
 
           <button
             onClick={() => setShowEditModal(true)}
-            className={`flex items-center gap-2 ${tw.button} text-sm`}
-            style={{ backgroundColor: color.primary.action }}
+            className={`px-4 py-2 text-white ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm w-fit`}
+            style={{ backgroundColor: button.action.background }}
           >
             <Edit className="w-4 h-4" />
             Edit
@@ -209,7 +227,15 @@ export default function DataConnectorDetailsPage() {
 
           <button
             onClick={() => setShowDeleteConfirm(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded text-sm font-medium transition-colors hover:bg-red-700"
+            className={`${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm w-fit`}
+            style={{
+              backgroundColor: button.delete.background,
+              color: button.delete.color,
+              border: button.delete.border,
+              padding: `${button.delete.paddingY} ${button.delete.paddingX}`,
+              borderRadius: button.delete.borderRadius,
+              fontSize: button.delete.fontSize,
+            }}
           >
             <Trash2 className="w-4 h-4" />
             Delete
@@ -218,45 +244,53 @@ export default function DataConnectorDetailsPage() {
       </div>
 
       {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="lg:col-span-2 space-y-6">
           {/* Overview Card */}
-          <div className="bg-white border border-gray-200 rounded-lg p-4">
-            <h2 className="text-sm font-semibold text-gray-900 mb-1">
-              {connector.name}
-            </h2>
-            <p className="text-sm text-gray-600 mb-3">
-              {connector.description || "No description provided"}
-            </p>
-            <div className="flex items-center gap-4 pt-3 border-t border-gray-200">
+          <div
+            className={`bg-white ${tw.rounded} border border-[${tw.borderDefault}] p-6`}
+          >
+            <div className="flex items-start space-x-4 mb-6">
+              <div
+                className={`h-14 w-14 ${tw.rounded} flex items-center justify-center flex-shrink-0`}
+                style={{
+                  backgroundColor: connector.colorClass || color.primary.accent,
+                }}
+              >
+                <ConnectorIcon className="w-7 h-7 text-white" />
+              </div>
+              <div className="flex-1">
+                <h2 className={`${tw.tableFirstColumn} ${tw.textPrimary} mb-2`}>
+                  {connector.name}
+                </h2>
+                <p className={`${tw.textSecondary} text-sm leading-relaxed`}>
+                  {connector.description || "No description available"}
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-gray-200">
               <span
-                className={`px-2 py-1 rounded text-sm font-medium ${
+                className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${
                   connector.is_active
-                    ? "bg-green-100 text-green-800"
-                    : "bg-gray-100 text-gray-800"
+                    ? `bg-[${color.status.success}]/10 text-[${color.status.success}]`
+                    : `bg-[${color.surface.cards}] text-[${color.text.primary}]`
                 }`}
               >
                 {connector.is_active ? "Active" : "Inactive"}
               </span>
-              <span className="text-sm text-gray-500 capitalize">
-                Type: {connector.type}
+              <span
+                className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-[${color.primary.accent}]/10 text-black`}
+              >
+                {connectorTypeLabel}
               </span>
             </div>
-          </div>
-
-          {/* Configuration Card */}
-          <div className="bg-white border border-gray-200 rounded-lg p-4">
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">
-              Configuration
-            </h3>
-            <ConnectorConfigDisplay connector={connector} isEditMode={false} />
           </div>
 
           {/* Test Result */}
           {testResult && (
             <div
-              className={`border rounded-lg p-4 ${
+              className={`border ${tw.rounded} p-6 ${
                 testResult.success
                   ? "bg-green-50 border-green-200"
                   : "bg-red-50 border-red-200"
@@ -271,124 +305,202 @@ export default function DataConnectorDetailsPage() {
                 <div>
                   <h4
                     className={`text-sm font-medium ${
-                      testResult.success
-                        ? "text-green-900"
-                        : "text-red-900"
+                      testResult.success ? "text-green-900" : "text-red-900"
                     }`}
                   >
-                    {testResult.success ? "Connection Successful" : "Test Failed"}
+                    {testResult.success
+                      ? "Connection Successful"
+                      : "Test Failed"}
                   </h4>
                   <p
                     className={`text-sm mt-1 ${
-                      testResult.success
-                        ? "text-green-800"
-                        : "text-red-800"
+                      testResult.success ? "text-green-800" : "text-red-800"
                     }`}
                   >
                     {testResult.message}
                   </p>
+                  {testResult.response_time_ms && (
+                    <p className="text-xs mt-2 text-gray-600">
+                      Response time: {testResult.response_time_ms} ms
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
           )}
 
-          {/* Recent Activity */}
-          <div className="bg-white border border-gray-200 rounded-lg p-4">
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">
-              Recent Activity
+          {/* Information */}
+          <div
+            className={`bg-white ${tw.rounded} border border-[${tw.borderDefault}] p-6`}
+          >
+            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
+              Information
             </h3>
-            <div className="space-y-2 text-sm text-gray-600">
-              <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                <div className="flex items-center gap-3">
-                  <RefreshCw className="h-4 w-4 text-gray-400" />
-                  <span>Created on {connector.created_at}</span>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-1">
+                <label
+                  className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
+                >
+                  Connector ID
+                </label>
+                <p className={`text-sm ${tw.textPrimary} font-mono`}>
+                  {connector.id}
+                </p>
               </div>
-              <div className="flex items-center justify-between py-2">
-                <div className="flex items-center gap-3">
-                  <Clock className="h-4 w-4 text-gray-400" />
-                  <span>Last updated {connector.updated_at}</span>
-                </div>
+              <div className="space-y-1">
+                <label
+                  className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
+                >
+                  Type
+                </label>
+                <p className={`text-sm ${tw.textPrimary}`}>
+                  {connectorTypeLabel}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <label
+                  className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
+                >
+                  Status
+                </label>
+                <p className={`text-sm ${tw.textPrimary}`}>
+                  {connector.is_active ? "Active" : "Inactive"}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <label
+                  className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
+                >
+                  Created By
+                </label>
+                <p className={`text-sm ${tw.textPrimary}`}>
+                  {connector.created_by || "System"}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <label
+                  className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
+                >
+                  Connection Count
+                </label>
+                <p className={`text-sm ${tw.textPrimary}`}>
+                  {connector.connection_count ?? 0}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <label
+                  className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
+                >
+                  Last Connection Test
+                </label>
+                <p className={`text-sm ${tw.textPrimary}`}>
+                  {testResult
+                    ? testResult.success
+                      ? "Passed"
+                      : "Failed"
+                    : "Not tested yet"}
+                </p>
               </div>
             </div>
+          </div>
+
+          {/* Configuration Card */}
+          <div
+            className={`bg-white ${tw.rounded} border border-[${tw.borderDefault}] p-6`}
+          >
+            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
+              Configuration
+            </h3>
+            <ConnectorConfigDisplay connector={connector} isEditMode={false} />
           </div>
         </div>
 
         {/* Right Sidebar */}
-        <div className="space-y-4">
-          {/* Quick Stats */}
-          <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
-            <h3 className="text-sm font-semibold text-gray-900">Details</h3>
-
-            <div className="space-y-3">
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Connector ID</p>
-                <p className="text-sm font-mono text-gray-900">
-                  {connector.id}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Type</p>
-                <div className="flex items-center gap-2">
-                  <Database className="h-4 w-4 text-blue-600" />
-                  <p className="text-sm font-medium text-gray-900 capitalize">
-                    {connector.type}
+        <div className="space-y-6">
+          {/* Timeline */}
+          <div
+            className={`bg-white ${tw.rounded} border border-[${tw.borderDefault}] p-6`}
+          >
+            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
+              Timeline
+            </h3>
+            <div className="space-y-5">
+              <div className="relative pl-6 border-l-2 border-gray-200">
+                <div className="absolute -left-2 top-0 w-4 h-4 rounded-full bg-gray-300"></div>
+                <div className="space-y-1">
+                  <p
+                    className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
+                  >
+                    Created
+                  </p>
+                  <p className={`text-sm ${tw.textPrimary} font-semibold`}>
+                    <DateFormatter
+                      date={connector.created_at}
+                      useLocale
+                      year="numeric"
+                      month="short"
+                      day="numeric"
+                    />
+                  </p>
+                  <p className={`text-xs ${tw.textMuted}`}>
+                    <DateFormatter date={connector.created_at} includeTime />
                   </p>
                 </div>
               </div>
 
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Status</p>
-                <div className="flex items-center gap-2">
-                  <Activity className="h-4 w-4 text-green-600" />
-                  <p className="text-sm font-medium text-gray-900">
-                    {connector.is_active ? "Active" : "Inactive"}
+              <div className="relative pl-6 border-l-2 border-gray-200">
+                <div
+                  className="absolute -left-2 top-0 w-4 h-4 rounded-full"
+                  style={{ backgroundColor: color.primary.accent }}
+                ></div>
+                <div className="space-y-1">
+                  <p
+                    className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
+                  >
+                    Last Updated
+                  </p>
+                  <p className={`text-sm ${tw.textPrimary} font-semibold`}>
+                    <DateFormatter
+                      date={connector.updated_at}
+                      useLocale
+                      year="numeric"
+                      month="short"
+                      day="numeric"
+                    />
+                  </p>
+                  <p className={`text-xs ${tw.textMuted}`}>
+                    <DateFormatter date={connector.updated_at} includeTime />
                   </p>
                 </div>
               </div>
 
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Connection Test</p>
-                <div className="flex items-center gap-2">
-                  {testResult?.success ? (
-                    <>
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                      <p className="text-sm font-medium text-green-700">
-                        Passed
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <Shield className="h-4 w-4 text-gray-400" />
-                      <p className="text-sm text-gray-600">Not tested yet</p>
-                    </>
-                  )}
+              {connector.last_used && (
+                <div className="relative pl-6 border-l-2 border-gray-200">
+                  <div className="absolute -left-2 top-0 w-4 h-4 rounded-full bg-gray-400"></div>
+                  <div className="space-y-1">
+                    <p
+                      className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
+                    >
+                      Last Used
+                    </p>
+                    <p className={`text-sm ${tw.textPrimary} font-semibold`}>
+                      <DateFormatter
+                        date={connector.last_used}
+                        useLocale
+                        year="numeric"
+                        month="short"
+                        day="numeric"
+                      />
+                    </p>
+                    <p className={`text-xs ${tw.textMuted}`}>
+                      <DateFormatter date={connector.last_used} includeTime />
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
-          {/* Quick Actions */}
-          <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-2">
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">
-              Quick Links
-            </h3>
-            <button
-              onClick={() =>
-                navigate(`/dashboard/data-connectors/${connector.id}/logs`)
-              }
-              className="w-full flex items-center justify-between p-2 border border-gray-200 rounded hover:border-blue-300 hover:bg-blue-50/50 transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <Activity className="h-4 w-4 text-gray-600" />
-                <span className="text-sm font-medium text-gray-900">
-                  View Logs
-                </span>
-              </div>
-              <ExternalLink className="h-4 w-4 text-gray-400" />
-            </button>
-          </div>
         </div>
       </div>
 
@@ -399,7 +511,7 @@ export default function DataConnectorDetailsPage() {
         title="Delete Data Connector"
         description={`Are you sure you want to delete "${connector.name}"? This action cannot be undone.`}
         itemName={connector.name}
-        isLoading={false}
+        isLoading={isDeleting}
         confirmText="Delete Connector"
         cancelText="Cancel"
         variant="warning"

@@ -143,9 +143,8 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
       setSaving(true);
 
       if (mode === "edit" && id) {
-        await smsRouteService.updateRoute({
+        await smsRouteService.updateRoute(Number(id), {
           ...formData,
-          id: Number(id),
         });
         success("Success", "SMS route updated successfully");
       } else {

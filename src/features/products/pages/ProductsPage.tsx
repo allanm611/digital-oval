@@ -116,10 +116,14 @@ export default function ProductsPage() {
           } else if (filters.sortBy === "name") {
             compareResult = (a.name || "").localeCompare(b.name || "");
           } else if (filters.sortBy === "product_id") {
-            compareResult = (a.product_code || "").localeCompare(b.product_code || "");
+            compareResult = (a.product_code || "").localeCompare(
+              b.product_code || "",
+            );
           }
 
-          return filters.sortDirection === "DESC" ? -compareResult : compareResult;
+          return filters.sortDirection === "DESC"
+            ? -compareResult
+            : compareResult;
         });
 
         setProducts(sortedProducts);
@@ -204,7 +208,7 @@ export default function ProductsPage() {
       // Optimistic update - update UI immediately
       const updatedProduct = { ...product, is_active: !product.is_active };
       setProducts(
-        products.map((p) => (p.id === product.id ? updatedProduct : p))
+        products.map((p) => (p.id === product.id ? updatedProduct : p)),
       );
 
       if (product.is_active) {
@@ -226,8 +230,8 @@ export default function ProductsPage() {
       // Revert optimistic update on error
       setProducts(
         products.map((p) =>
-          p.id === product.id ? { ...p, is_active: !product.is_active } : p
-        )
+          p.id === product.id ? { ...p, is_active: !product.is_active } : p,
+        ),
       );
     } finally {
       setLoadingProductId(null);
@@ -597,12 +601,12 @@ export default function ProductsPage() {
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
                         <div
-                        className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`}
-                        title={product.name}
-                      >
-                        {product.name}
-                      </div>
-                    </td>
+                          className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`}
+                          title={product.name}
+                        >
+                          {product.name}
+                        </div>
+                      </td>
                       <td
                         className={`px-6 py-4 hidden lg:table-cell text-sm ${tw.textPrimary}`}
                         style={{ backgroundColor: color.surface.tablebodybg }}
@@ -666,7 +670,7 @@ export default function ProductsPage() {
                                         pathname: "/dashboard/products",
                                       },
                                     },
-                                  }
+                                  },
                                 )
                               }
                               className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}

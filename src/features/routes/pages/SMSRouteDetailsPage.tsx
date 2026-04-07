@@ -148,16 +148,12 @@ export default function SMSRouteDetailsPage() {
             </div>
             <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-gray-200">
               <span
-                className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium text-white"
-                style={{ backgroundColor: color.primary.accent }}
+                className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium text-white ${
+                  route.is_active ? "bg-green-600" : "bg-gray-500"
+                }`}
+                style={{ backgroundColor: route.is_active ? "#16a34a" : "#6b7280" }}
               >
-                {route.status === "active" ? "Active" : "Inactive"}
-              </span>
-              <span
-                className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium text-white"
-                style={{ backgroundColor: color.primary.accent }}
-              >
-                Priority {route.priority}
+                {route.is_active ? "Active" : "Inactive"}
               </span>
             </div>
           </div>
@@ -176,63 +172,38 @@ export default function SMSRouteDetailsPage() {
               </div>
               <div className="space-y-1">
                 <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
-                  Gateway Type
+                  Gateway Provider
                 </label>
-                <p className={`text-base ${tw.textPrimary}`}>{route.gatewayType}</p>
+                <p className={`text-base ${tw.textPrimary}`}>{route.gateway_provider || "—"}</p>
               </div>
               <div className="space-y-1">
                 <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
-                  Sender ID
+                  Communication Channel ID
                 </label>
                 <p className={`text-base ${tw.textPrimary}`}>
-                  {route.senderIdName || route.senderId}
+                  {route.communication_channel_id || "—"}
                 </p>
               </div>
               <div className="space-y-1">
                 <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
                   Status
                 </label>
-                <p className={`text-base ${tw.textPrimary} capitalize`}>{route.status}</p>
+                <p className={`text-base ${tw.textPrimary} capitalize`}>{route.is_active ? "Active" : "Inactive"}</p>
               </div>
             </div>
           </div>
 
-          {/* Configuration */}
-          <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
-            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
-              API Configuration
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-1">
-                <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
-                  API Endpoint
-                </label>
-                <p className={`text-base ${tw.textPrimary} break-all font-mono text-sm`}>
-                  {route.apiEndpoint}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
-                  Request Method
-                </label>
-                <p className={`text-base ${tw.textPrimary} font-semibold`}>
-                  {route.requestMethod}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
-                  Request Format
-                </label>
-                <p className={`text-base ${tw.textPrimary}`}>{route.requestFormat}</p>
-              </div>
-              <div className="space-y-1">
-                <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
-                  Priority
-                </label>
-                <p className={`text-base ${tw.textPrimary} font-semibold`}>{route.priority}</p>
-              </div>
+          {/* Description Section */}
+          {route.description && (
+            <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
+              <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
+                Description
+              </h3>
+              <p className={`text-base ${tw.textPrimary} leading-relaxed`}>
+                {route.description}
+              </p>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Sidebar */}

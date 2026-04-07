@@ -7,6 +7,7 @@ import { SMSRoute } from "../types/smsRoute";
 import { smsRouteService } from "../services/smsRouteService";
 import { useToast } from "../../../contexts/ToastContext";
 import { color, tw } from "../../../shared/utils/utils";
+import SMSRouteCreateModal from "./SMSRouteCreateModal";
 
 export default function SMSRoutesList() {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ export default function SMSRoutesList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
     loadRoutes();
@@ -79,7 +81,7 @@ export default function SMSRoutesList() {
           provider is used to send SMS messages.
         </p>
         <button
-          onClick={() => navigate("/dashboard/sms-routes/create")}
+          onClick={() => setShowCreateModal(true)}
           disabled={loading}
           className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-md whitespace-nowrap disabled:opacity-60"
           style={{ backgroundColor: color.primary.action }}
@@ -179,7 +181,7 @@ export default function SMSRoutesList() {
                     {route.description || "—"}
                   </td>
                   <td className="px-6 py-4 text-sm text-black">
-                    {route.status === "active" ? "Active" : "Inactive"}
+                    {route.is_active ? "Active" : "Inactive"}
                   </td>
                   <td className="px-6 py-4 text-sm">
                     <div className="flex items-center justify-end space-x-2">
@@ -243,6 +245,16 @@ export default function SMSRoutesList() {
           </div>
         </div>
       )}
+
+      {/* Create Modal */}
+      <SMSRouteCreateModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={() => {
+          setShowCreateModal(false);
+          loadRoutes();
+        }}
+      />
     </div>
   );
 }
