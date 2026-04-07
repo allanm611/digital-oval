@@ -73,7 +73,7 @@ export default function ChannelSelector({
                   style={{ backgroundColor: color.primary.accent }}
                 >
                   <svg
-                    className="w-3 h-3 text-white"
+                    className={`w-3 h-3 `}
                     fill="none"
                     strokeLinecap="round"
                     strokeLinejoin="round"

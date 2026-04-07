@@ -407,7 +407,7 @@ export default function UserProfilePage() {
           <div className="flex items-center gap-4">
             {/* Avatar */}
             <div
-              className="w-24 h-24 rounded-full flex items-center justify-center text-white text-4xl font-bold flex-shrink-0"
+              className={`w-24 h-24 rounded-full flex items-center justify-center  text-4xl font-bold flex-shrink-0`}
               style={{ backgroundColor: color.primary.accent }}
             >
               {user.first_name?.[0]?.toUpperCase() || ""}
@@ -444,7 +444,7 @@ export default function UserProfilePage() {
             <div className="flex gap-2 mt-4">
               <button
                 onClick={handleUploadClick}
-                className="inline-flex items-center text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2"
+                className={`inline-flex items-center text-sm font-medium  focus:outline-none focus:ring-2 focus:ring-offset-2`}
                 style={{
                   backgroundColor: button.action.background,
                   color: button.action.color,

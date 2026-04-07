@@ -292,7 +292,7 @@ export default function SelectCustomersStep({
                   type="button"
                   onClick={() => setShowCreateModal(true)}
                   disabled={isSubmitting}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md disabled:opacity-50 transition-colors text-white"
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md disabled:opacity-50 transition-colors `}
                   style={{ backgroundColor: color.primary.action }}
                 >
                   <Plus className="w-4 h-4" />

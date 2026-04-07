@@ -675,7 +675,7 @@ export default function QuickListDetailsPage() {
                         Processing Status
                       </span>
                       <span
-                        className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium text-white self-start sm:self-auto"
+                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium  self-start sm:self-auto`}
                         style={{ backgroundColor: color.primary.accent }}
                       >
                         {quicklist.processing_status

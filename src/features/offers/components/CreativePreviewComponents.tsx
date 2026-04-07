@@ -18,7 +18,7 @@ export function SMSButtonPhonePreview({
           {/* Phone Screen */}
           <div className="w-full h-full bg-black rounded-[2rem] p-4 flex flex-col">
             {/* Phone Header */}
-            <div className="text-white text-center mb-2">
+            <div className={` text-center mb-2`}>
               <div className="text-xs font-semibold">PHONE</div>
             </div>
 
@@ -47,7 +47,7 @@ export function SMSButtonPhonePreview({
 
             {/* Reply Button */}
             <div className="mt-2 flex justify-center">
-              <button className="bg-blue-600 text-white text-xs px-6 py-2 rounded">
+              <button className={`bg-blue-600  text-xs px-6 py-2 rounded`}>
                 Reply
               </button>
             </div>
@@ -57,7 +57,11 @@ export function SMSButtonPhonePreview({
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, "*", 0, "#"].map((key) => (
                 <div
                   key={key}
+<<<<<<< Updated upstream
                   className="bg-gray-800 text-white text-xs font-semibold rounded py-2 text-center"
+=======
+                  className={`${tw.surfaceSecondary}00  text-xs font-semibold rounded py-2 text-center`}
+>>>>>>> Stashed changes
                 >
                   {key}
                 </div>
@@ -104,7 +108,7 @@ export function SMSSmartphonePreview({
             </div>
 
             {/* SMS Header */}
-            <div className="bg-blue-500 text-white px-4 py-3 flex items-center gap-3 border-b border-blue-600">
+            <div className={`bg-blue-500  px-4 py-3 flex items-center gap-3 border-b border-blue-600`}>
               <div className="w-10 h-10 bg-blue-400 rounded-full flex items-center justify-center text-lg font-semibold">
                 {title?.[0]?.toUpperCase() || "E"}
               </div>
@@ -174,7 +178,7 @@ export function EmailLaptopPreview({
                 {/* Email Header */}
                 <div className="border-b border-gray-200 p-4 bg-gray-50">
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+                    <div className={`w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center  font-semibold`}>
                       {title?.[0]?.toUpperCase() || "E"}
                     </div>
                     <div className="flex-1">

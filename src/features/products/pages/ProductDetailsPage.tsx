@@ -318,7 +318,7 @@ export default function ProductDetailsPage() {
                 className={`h-14 w-14 ${tw.rounded} flex items-center justify-center flex-shrink-0`}
                 style={{ backgroundColor: color.primary.accent }}
               >
-                <Package className="w-7 h-7 text-white" />
+                <Package className={`w-7 h-7 `} />
               </div>
               <div className="flex-1">
                 <h2 className={`${tw.tableFirstColumn} ${tw.textPrimary} mb-2`}>

@@ -206,7 +206,7 @@ export default function CampaignBroadcastDetailsPage() {
             <p className="text-sm text-gray-600">Status</p>
             <div className="mt-2 flex items-center gap-2">
               <span
-                className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-white"
+                className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium `}
                 style={{ backgroundColor: getStatusColor(broadcast.status) }}
               >
                 {broadcast.status.replace(/_/g, " ")}

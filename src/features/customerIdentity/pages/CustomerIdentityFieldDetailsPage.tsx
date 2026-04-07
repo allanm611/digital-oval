@@ -124,7 +124,7 @@ export default function CustomerIdentityFieldDetailsPage() {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               <InfoCard
-                icon={<Database className="h-5 w-5 text-white" />}
+                icon={<Database className={`h-5 w-5 `} />}
                 title={t.customerIdentity.coreMetadata}
                 items={[
                   {
@@ -142,7 +142,7 @@ export default function CustomerIdentityFieldDetailsPage() {
                 ]}
               />
               <InfoCard
-                icon={<FileText className="h-5 w-5 text-white" />}
+                icon={<FileText className={`h-5 w-5 `} />}
                 title={t.customerIdentity.typeInformation}
                 items={[
                   {
@@ -160,7 +160,7 @@ export default function CustomerIdentityFieldDetailsPage() {
                 ]}
               />
               <InfoCard
-                icon={<SettingsIcon className="h-5 w-5 text-white" />}
+                icon={<SettingsIcon className={`h-5 w-5 `} />}
                 title={t.customerIdentity.sourceValidation}
                 items={[
                   {
@@ -189,7 +189,7 @@ export default function CustomerIdentityFieldDetailsPage() {
                 className={`p-2 ${tw.rounded}`}
                 style={{ backgroundColor: color.primary.accent }}
               >
-                <ListChecks className="h-5 w-5 text-white" />
+                <ListChecks className={`h-5 w-5 `} />
               </div>
               <h2 className="text-lg font-semibold text-gray-900">
                 {t.customerIdentity.operatorSupport}

@@ -253,7 +253,7 @@ export default function QuickListDetailsModal({
                 <table className="w-full text-sm">
                   <thead className="bg-gray-800 border-b border-gray-700">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-white uppercase">
+                      <th className={`px-4 py-3 text-left text-xs font-semibold  uppercase`}>
                         Row
                       </th>
                       {(currentQuickList.columns || [])
@@ -261,7 +261,7 @@ export default function QuickListDetailsModal({
                         .map((column) => (
                           <th
                             key={column}
-                            className="px-4 py-3 text-left text-xs font-semibold text-white uppercase"
+                            className={`px-4 py-3 text-left text-xs font-semibold  uppercase`}
                           >
                             {column.replace(/_/g, " ")}
                           </th>

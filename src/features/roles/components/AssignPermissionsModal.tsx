@@ -609,7 +609,7 @@ export default function AssignPermissionsModal({
                         ? "All selected permissions are already assigned"
                         : "Assign selected permissions to role"
                     }
-                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium  rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                     style={{ backgroundColor: color.primary.action }}
                   >
                     {isAssigning && <LoadingSpinner />}
@@ -633,7 +633,7 @@ export default function AssignPermissionsModal({
                         ? "No assigned permissions selected to remove"
                         : "Remove selected permissions from role"
                     }
-                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium  rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                     style={{
                       backgroundColor: color.status.danger || "#dc2626",
                     }}
@@ -796,7 +796,7 @@ export default function AssignPermissionsModal({
                             <button
                               onClick={() => handleTogglePermission(permission)}
                               disabled={isToggling || isAssigned}
-                              className="px-4 py-2 text-sm font-medium rounded-md text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                              className={`px-4 py-2 text-sm font-medium rounded-md  transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0`}
                               style={{
                                 backgroundColor: color.primary.action,
                               }}

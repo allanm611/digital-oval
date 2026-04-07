@@ -1261,7 +1261,7 @@ export default function SettingsPage() {
                   {preferredNotificationChannels.map((ch) => (
                     <span
                       key={ch}
-                      className="inline-flex items-center gap-1 px-2 py-1 text-white text-xs rounded-full"
+                      className={`inline-flex items-center gap-1 px-2 py-1  text-xs rounded-full`}
                       style={{ backgroundColor: "#00BBCC" }}
                     >
                       {notificationChannels.find((c) => c.id === ch)?.label}

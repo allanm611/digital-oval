@@ -178,7 +178,7 @@ export default function TestBroadcastStep({
 
   return (
     <div
-      className="bg-white rounded-md shadow-sm border"
+      className={` rounded-md shadow-sm border`}
       style={{ borderColor: color.border.default }}
     >
       <div
@@ -226,7 +226,7 @@ export default function TestBroadcastStep({
             <button
               onClick={handleAddContact}
               disabled={isTesting}
-              className="w-full sm:w-auto px-4 py-2 text-white rounded-md transition-all text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              className={`w-full sm:w-auto px-4 py-2  rounded-md transition-all text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
               style={{ backgroundColor: color.primary.action }}
             >
               <Plus className="w-4 h-4 flex-shrink-0" />
@@ -279,7 +279,7 @@ export default function TestBroadcastStep({
           <button
             onClick={handleSendTest}
             disabled={testContacts.length === 0 || isTesting}
-            className="w-full sm:w-auto sm:min-w-[200px] px-6 py-3 text-white rounded-md transition-all text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            className={`w-full sm:w-auto sm:min-w-[200px] px-6 py-3  rounded-md transition-all text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
             style={{ backgroundColor: color.primary.accent }}
           >
             {isTesting ? (

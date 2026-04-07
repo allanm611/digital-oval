@@ -935,7 +935,7 @@ export default function AudienceConfigurationStep({
                             <GripVertical className="w-4 h-4 text-gray-400" />
                           )}
                           <span
-                            className="inline-flex items-center justify-center w-6 h-6 text-xs font-semibold rounded text-white"
+                            className={`inline-flex items-center justify-center w-6 h-6 text-xs font-semibold rounded `}
                             style={{ backgroundColor: color.primary.accent }}
                           >
                             #{index + 1}

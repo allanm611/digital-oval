@@ -120,7 +120,7 @@ export default function ResetPasswordPage() {
       <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 flex items-center justify-center px-4 py-12">
         <div className="max-w-md w-full text-center">
           <div className={`inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-emerald-500 to-teal-500 ${tw.rounded} shadow-lg mb-6`}>
-            <CheckCircle className="w-8 h-8 text-white" />
+            <CheckCircle className={`w-8 h-8 `} />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-4">
             {t.auth.resetPassword.successMessage}
@@ -236,7 +236,7 @@ export default function ResetPasswordPage() {
 
             {/* Secondary card */}
             <div className={`bg-gradient-to-r from-emerald-500 to-teal-600 ${tw.rounded} p-6 shadow-2xl transform -rotate-3 hover:rotate-0 transition-all duration-500 absolute -top-4 -right-8 w-48`}>
-              <div className="text-white text-center">
+              <div className={` text-center`}>
                 <Shield className="w-8 h-8 mb-2 mx-auto" />
                 <div className="text-lg font-bold">Secure</div>
                 <div className="text-sm opacity-90">Password Reset</div>
@@ -246,7 +246,7 @@ export default function ResetPasswordPage() {
         </div>
 
         {/* Title and description */}
-        <div className="text-center text-white mt-16">
+        <div className={`text-center  mt-16`}>
           <h1 className="text-2xl font-bold mb-4">
             {t.auth.resetPassword.title}
             <br />

@@ -376,7 +376,7 @@ export default function CommunicationAnalyticsPage() {
                                 </td>
                                 <td className="px-6 py-4 text-sm text-black">
                                   <span
-                                    className="inline-flex px-2 py-1 text-sm font-semibold rounded-full text-white"
+                                    className={`inline-flex px-2 py-1 text-sm font-semibold rounded-full `}
                                     style={{
                                       backgroundColor:
                                         execution.status === "completed" ||
@@ -543,7 +543,7 @@ export default function CommunicationAnalyticsPage() {
                               </td>
                               <td className="px-6 py-4 text-sm text-black">
                                 <span
-                                  className="inline-flex px-2 py-1 text-sm font-semibold rounded-full text-white"
+                                  className={`inline-flex px-2 py-1 text-sm font-semibold rounded-full `}
                                   style={{
                                     backgroundColor:
                                       log.status === "sent"

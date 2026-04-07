@@ -296,8 +296,13 @@ export default function OfferFlowChart({
         {offerMappings.length > 0 && (
           <div className="flex items-start">
             <div className="flex-shrink-0 w-12 flex flex-col items-center">
+<<<<<<< Updated upstream
               <div className="w-10 h-10 bg-gray-400 rounded-full flex items-center justify-center">
                 <span className="text-white font-bold text-sm">END</span>
+=======
+              <div className="w-10 h-10 ${tw.surfaceSecondary} rounded-full flex items-center justify-center">
+                <span className={` font-bold text-sm`}>END</span>
+>>>>>>> Stashed changes
               </div>
             </div>
             <div className={`flex-1 ml-4 bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}>

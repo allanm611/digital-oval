@@ -185,7 +185,7 @@ export default function OfferCreativeDetailsPage() {
             </span>
             {creative.locale && (
               <span
-                className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold text-white"
+                className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold `}
                 style={{
                   backgroundColor: color.primary.accent,
                 }}
@@ -196,7 +196,7 @@ export default function OfferCreativeDetailsPage() {
             {renderStatusBadge(creative.is_active)}
             {creative.version && (
               <span
-                className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold text-white"
+                className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold `}
                 style={{
                   backgroundColor: color.primary.accent,
                 }}

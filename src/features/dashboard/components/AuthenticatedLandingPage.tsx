@@ -156,10 +156,10 @@ export default function AuthenticatedLandingPage() {
           <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-8">
             {/* Title Section */}
             <div className="text-center mb-12">
-              <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4">
+              <h1 className={`text-4xl sm:text-5xl font-bold  mb-4`}>
                 {t.landing.corePlatform}
               </h1>
-              <p className="text-xl text-white/80 max-w-2xl mx-auto">
+              <p className={`text-xl /80 max-w-2xl mx-auto`}>
                 {t.landing.corePlatformDescription}
               </p>
             </div>
@@ -190,7 +190,7 @@ export default function AuthenticatedLandingPage() {
                       </div>
 
                       {/* Title and Subtitle */}
-                      <h3 className="text-base font-bold text-white mb-1 text-center leading-tight">
+                      <h3 className={`text-base font-bold  mb-1 text-center leading-tight`}>
                         {module.name}
                       </h3>
                       {module.subtitle && (
@@ -203,7 +203,7 @@ export default function AuthenticatedLandingPage() {
                       )}
 
                       {/* Description Inside Card */}
-                      <p className="text-white/80 text-sm leading-relaxed text-center">
+                      <p className={`/80 text-sm leading-relaxed text-center`}>
                         {module.description}
                       </p>
                     </div>

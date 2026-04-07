@@ -30,7 +30,7 @@ function CategoryBarChartComponent({
     <div
       className={`bg-white ${tw.rounded} border border-gray-200 overflow-hidden ${className}`.trim()}
     >
-      <div className="px-6 py-4 border-b border-gray-100">
+      <div className={`px-6 py-4 border-b 00`}>
         <h2 className={tw.cardHeading}>{title}</h2>
         {subtitle && (
           <p className={`${tw.cardSubHeading} text-black mt-1`}>{subtitle}</p>

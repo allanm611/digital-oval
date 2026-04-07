@@ -373,7 +373,7 @@ export default function PermissionFormModal({
           <button
             onClick={handleSubmit}
             disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className={`px-4 py-2 text-sm font-medium  rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
             style={{ backgroundColor: color.primary.action }}
           >
             {isLoading && <LoadingSpinner />}

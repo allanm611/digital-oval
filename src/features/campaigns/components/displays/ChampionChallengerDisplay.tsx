@@ -48,7 +48,7 @@ export default function ChampionChallengerDisplay({
                       {champion.name}
                     </h4>
                     <span
-                      className="px-2 py-0.5 text-white text-xs font-medium rounded-full"
+                      className={`px-2 py-0.5  text-xs font-medium rounded-full`}
                       style={{ backgroundColor: color.primary.accent }}
                     >
                       🏆 CHAMPION
@@ -167,7 +167,7 @@ export default function ChampionChallengerDisplay({
                       <td className="px-4 py-3">
                         <div className="flex items-center">
                           <span
-                            className="inline-flex items-center justify-center w-6 h-6 text-xs font-semibold rounded text-white"
+                            className={`inline-flex items-center justify-center w-6 h-6 text-xs font-semibold rounded `}
                             style={{ backgroundColor: color.primary.action }}
                           >
                             C{index + 1}

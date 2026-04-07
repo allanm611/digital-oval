@@ -561,7 +561,7 @@ export default function ServerDetailsPage() {
           </div>
           <div className="flex items-center gap-2">
             <span
-              className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold text-white"
+              className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold `}
               style={{
                 backgroundColor: color.primary.accent,
               }}
@@ -570,7 +570,7 @@ export default function ServerDetailsPage() {
             </span>
             {server.is_deprecated && (
               <span
-                className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold text-white"
+                className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold `}
                 style={{
                   backgroundColor: color.primary.accent,
                 }}

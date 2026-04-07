@@ -63,7 +63,7 @@ export default function SelectJobTypeModal({
                   backgroundColor: color.primary.accent,
                 }}
               >
-                <Megaphone className="h-5 w-5 text-white" />
+                <Megaphone className={`h-5 w-5 `} />
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900">Campaign</h3>
@@ -100,7 +100,7 @@ export default function SelectJobTypeModal({
                   backgroundColor: color.primary.accent,
                 }}
               >
-                <Database className="h-5 w-5 text-white" />
+                <Database className={`h-5 w-5 `} />
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900">ETL</h3>

@@ -662,7 +662,7 @@ export default function CreateManualBroadcastPage() {
   return (
     <div className="min-h-screen">
       <div
-        className="bg-white rounded-md border p-4"
+        className={` rounded-md border p-4`}
         style={{ borderColor: color.border.default }}
       >
         <div className="px-4 sm:px-6 lg:px-8">
@@ -690,7 +690,7 @@ export default function CreateManualBroadcastPage() {
           <div className="py-4">{renderStep()}</div>
 
           {/* Bottom Navigation */}
-          <div className="sticky bottom-12 bg-white py-4 shadow-sm mt-8">
+          <div className={`sticky bottom-12  py-4 shadow-sm mt-8`}>
             <div className="flex justify-between items-center">
               {currentStep > 1 && (
                 <button

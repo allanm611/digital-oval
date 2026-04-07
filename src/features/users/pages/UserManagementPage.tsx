@@ -1565,7 +1565,7 @@ export default function UserManagementPage() {
           <Users className="w-4 h-4 flex-shrink-0" />
           <span className="whitespace-nowrap">{t.userManagement.users}</span>
           <span
-            className="px-2 py-0.5 rounded-full text-xs text-white flex-shrink-0"
+            className={`px-2 py-0.5 rounded-full text-xs  flex-shrink-0`}
             style={{
               backgroundColor:
                 activeTab === "users" ? color.primary.accent : color.text.muted,
@@ -1592,7 +1592,7 @@ export default function UserManagementPage() {
             {t.userManagement.pendingRequests}
           </span>
           <span
-            className="px-2 py-0.5 rounded-full text-xs text-white flex-shrink-0"
+            className={`px-2 py-0.5 rounded-full text-xs  flex-shrink-0`}
             style={{
               backgroundColor:
                 activeTab === "requests"

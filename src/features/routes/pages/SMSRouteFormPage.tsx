@@ -460,7 +460,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
           <button
             type="submit"
             disabled={saving}
-            className="inline-flex items-center gap-2 px-6 py-2 text-sm font-medium text-white rounded-md transition-colors disabled:opacity-60"
+            className={`inline-flex items-center gap-2 px-6 py-2 text-sm font-medium ${tw.textAction} ${tw.rounded} transition-colors disabled:opacity-60`}
             style={{ backgroundColor: color.primary.action }}
           >
             <Save className="w-4 h-4" />

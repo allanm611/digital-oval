@@ -1153,7 +1153,7 @@ export default function TeamRolesPermissionsPage() {
                     : confirmDeletePermission
                 }
                 disabled={isDeleting}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className={`px-4 py-2 text-sm font-medium  bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
               >
                 {isDeleting && <LoadingSpinner />}
                 Delete
@@ -1220,7 +1220,7 @@ export default function TeamRolesPermissionsPage() {
                 disabled={
                   deactivatingRoleId !== null || !roleDeactivationReason.trim()
                 }
-                className="px-4 py-2 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className={`px-4 py-2 text-sm font-medium  bg-amber-600 hover:bg-amber-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
               >
                 {deactivatingRoleId !== null && <LoadingSpinner />}
                 Deactivate
@@ -1292,7 +1292,7 @@ export default function TeamRolesPermissionsPage() {
               <button
                 onClick={handleConfirmClone}
                 disabled={cloningRoleId !== null}
-                className="px-4 py-2 text-white font-medium rounded hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className={`px-4 py-2  font-medium rounded hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
                 style={{ backgroundColor: color.primary.action }}
               >
                 {cloningRoleId !== null && <LoadingSpinner />}

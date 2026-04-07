@@ -275,7 +275,7 @@ export default function SegmentPickerModal({
                                   backgroundColor: color.primary.action,
                                 }}
                               >
-                                <Check className="w-3 h-3 text-white" />
+                                <Check className={`w-3 h-3 `} />
                               </div>
                             ) : (
                               <div

@@ -1520,7 +1520,7 @@ export default function SegmentManagementPage() {
             {selectedTags.map((tag) => (
               <span
                 key={tag}
-                className="inline-flex items-center px-3 py-1.5 text-sm text-white rounded-full"
+                className={`inline-flex items-center px-3 py-1.5 text-sm  rounded-full`}
                 style={{ backgroundColor: color.primary.accent }}
               >
                 {tag}
@@ -1530,7 +1530,7 @@ export default function SegmentManagementPage() {
                   }
                   className="ml-2 "
                 >
-                  <X className="w-3 h-3 text-white" />
+                  <X className={`w-3 h-3 `} />
                 </button>
               </span>
             ))}

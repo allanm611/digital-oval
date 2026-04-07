@@ -273,7 +273,7 @@ export default function ProductSelector({
                     </p>
                     <div className="flex items-center space-x-2 mt-1">
                       <span
-                        className="text-xs px-2 py-1 text-white rounded-full"
+                        className={`text-xs px-2 py-1  rounded-full`}
                         style={{ backgroundColor: color.primary.action }}
                       >
                         {getCategoryName(product.category_id)}

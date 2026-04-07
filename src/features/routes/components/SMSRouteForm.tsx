@@ -118,7 +118,7 @@ export default function SMSRouteForm({
       <div className="flex items-center gap-3">
         <button
           onClick={onCancel}
-          className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+          className={`p-2 hover:${tw.surfaceSecondary} ${tw.rounded} transition-colors`}
         >
           <ArrowLeft className="w-5 h-5" style={{ color: color.primary.accent }} />
         </button>
@@ -248,7 +248,7 @@ export default function SMSRouteForm({
           <button
             type="submit"
             disabled={isLoading}
-            className={`inline-flex items-center gap-2 px-6 py-2 text-sm font-medium text-white ${tw.rounded} transition-colors`}
+            className={`inline-flex items-center gap-2 px-6 py-2 text-sm font-medium ${tw.textAction} ${tw.rounded} transition-colors`}
             style={{
               backgroundColor: color.primary.action,
               opacity: isLoading ? 0.6 : 1,

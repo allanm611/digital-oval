@@ -74,7 +74,7 @@ export default function CampaignOffersModal({
                   </p>
                   <button
                     onClick={() => handleOfferClick(offer.offer_id)}
-                    className="px-3 py-1 text-sm font-medium text-white rounded transition-colors"
+                    className={`px-3 py-1 text-sm font-medium  rounded transition-colors`}
                     style={{
                       backgroundColor: color.primary.action,
                     }}

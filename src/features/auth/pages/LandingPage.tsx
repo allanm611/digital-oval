@@ -85,7 +85,7 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0a192f] relative overflow-hidden text-white">
+    <div className={`min-h-screen bg-[#0a192f] relative overflow-hidden `}>
       {/* Background Pattern */}
       <div className="bg-gradients"></div>
       <div className="bg-hex"></div>
@@ -192,7 +192,11 @@ export default function LandingPage() {
         <section className="pt-32 pb-20 overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
+<<<<<<< Updated upstream
               <div className="inline-flex items-center px-6 py-3 bg-white/10 backdrop-blur-sm text-white rounded-full text-sm font-semibold mb-8 border border-white/20">
+=======
+              <div className={`inline-flex items-center px-6 py-3 ${tw.surfaceBackground}/10 backdrop-blur-sm  rounded-full text-sm font-semibold mb-8 border border-white/20`}>
+>>>>>>> Stashed changes
                 <Sparkles className="w-4 h-4 mr-2 text-emerald-400 animate-pulse" />
                 {t.landing.nextGenPlatform}
               </div>
@@ -202,7 +206,7 @@ export default function LandingPage() {
                 {t.landing.transformCustomerValue} <br />
                 <span className="text-emerald-400">{t.landing.customerValueManagement}</span>
               </h1>
-              <p className="text-lg text-white/80 mb-12 max-w-3xl mx-auto leading-relaxed">
+              <p className={`text-lg /80 mb-12 max-w-3xl mx-auto leading-relaxed`}>
                 {t.landing.heroDescription}
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
@@ -231,7 +235,7 @@ export default function LandingPage() {
                 {t.landing.everythingYouNeed}{" "}
                 <span className="text-emerald-400">customer value</span>
               </h2>
-              <p className="text-lg text-white/80 max-w-2xl mx-auto">
+              <p className={`text-lg /80 max-w-2xl mx-auto`}>
                 {t.landing.ourComprehensive}
               </p>
             </div>
@@ -241,7 +245,7 @@ export default function LandingPage() {
                   <div className="flex-shrink-0 w-6 h-6 bg-emerald-500/20 rounded-full flex items-center justify-center mt-1">
                     <CheckCircle className="w-4 h-4 text-emerald-400" />
                   </div>
-                  <p className="text-white/90 leading-relaxed">{feature}</p>
+                  <p className={`/90 leading-relaxed`}>{feature}</p>
                 </div>
               ))}
             </div>
@@ -255,7 +259,7 @@ export default function LandingPage() {
               <h2 className={`${tw.mainHeading} text-white mb-4`}>
                 {t.landing.powerfulModules} <span className="text-emerald-400">Modules</span>
               </h2>
-              <p className="text-lg text-white/80 max-w-2xl mx-auto">
+              <p className={`text-lg /80 max-w-2xl mx-auto`}>
                 {t.landing.exploreComprehensive}
               </p>
             </div>
@@ -279,11 +283,11 @@ export default function LandingPage() {
                       <div className={`flex items-center justify-center w-12 h-12 bg-emerald-500/20 ${tw.rounded} mb-4 group-hover:bg-emerald-500/30 transition-all duration-300 group-hover:scale-110`}>
                         <Icon className="w-6 h-6 text-emerald-400" />
                       </div>
-                      <h3 className="text-base font-semibold text-white group-hover:text-emerald-400 transition-colors duration-300 mb-1">
+                      <h3 className={`text-base font-semibold  group-hover:text-emerald-400 transition-colors duration-300 mb-1`}>
                         {module.title}
                       </h3>
-                      <p className="text-sm text-white/50 mb-3">{module.subtitle}</p>
-                      <p className="text-sm text-white/70 leading-relaxed">
+                      <p className={`text-sm /50 mb-3`}>{module.subtitle}</p>
+                      <p className={`text-sm /70 leading-relaxed`}>
                         {module.description}
                       </p>
                     </div>
@@ -311,7 +315,7 @@ export default function LandingPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               {/* Left Side - Benefits */}
               <div>
-                <h2 className="text-3xl sm:text-4xl font-bold text-white mb-8">
+                <h2 className={`text-3xl sm:text-4xl font-bold  mb-8`}>
                   Transform your customer value strategy
                 </h2>
 
@@ -323,8 +327,8 @@ export default function LandingPage() {
                       </div>
                     </div>
                     <div>
-                      <h3 className="text-white font-semibold mb-1">Deploy in days, not months</h3>
-                      <p className="text-white/70 text-sm">
+                      <h3 className={` font-semibold mb-1`}>Deploy in days, not months</h3>
+                      <p className={`/70 text-sm`}>
                         Get up and running quickly with our streamlined implementation process
                       </p>
                     </div>
@@ -337,8 +341,8 @@ export default function LandingPage() {
                       </div>
                     </div>
                     <div>
-                      <h3 className="text-white font-semibold mb-1">Dedicated support team</h3>
-                      <p className="text-white/70 text-sm">
+                      <h3 className={` font-semibold mb-1`}>Dedicated support team</h3>
+                      <p className={`/70 text-sm`}>
                         Expert guidance every step of your customer value journey
                       </p>
                     </div>
@@ -351,8 +355,8 @@ export default function LandingPage() {
                       </div>
                     </div>
                     <div>
-                      <h3 className="text-white font-semibold mb-1">AI-powered insights</h3>
-                      <p className="text-white/70 text-sm">
+                      <h3 className={` font-semibold mb-1`}>AI-powered insights</h3>
+                      <p className={`/70 text-sm`}>
                         Unified customer profiles across all channels in real-time
                       </p>
                     </div>
@@ -365,8 +369,8 @@ export default function LandingPage() {
                       </div>
                     </div>
                     <div>
-                      <h3 className="text-white font-semibold mb-1">Proven ROI results</h3>
-                      <p className="text-white/70 text-sm">
+                      <h3 className={` font-semibold mb-1`}>Proven ROI results</h3>
+                      <p className={`/70 text-sm`}>
                         Average 45% increase in ROI within the first 6 months
                       </p>
                     </div>
@@ -376,10 +380,10 @@ export default function LandingPage() {
 
               {/* Right Side - CTA */}
               <div className="lg:pl-12 border border-white/5 p-8 lg:p-10 rounded-lg">
-                <h3 className="text-2xl font-bold text-white mb-3">
+                <h3 className={`text-2xl font-bold  mb-3`}>
                   Ready to get started?
                 </h3>
-                <p className="text-white/70 mb-6">
+                <p className={`/70 mb-6`}>
                   Start transforming your customer relationships today.
                 </p>
 
@@ -404,39 +408,39 @@ export default function LandingPage() {
         </section>
 
         {/* Footer */}
-        <footer className="border-t border-white/10 text-white py-16">
+        <footer className={`border-t border-white/10  py-16`}>
           <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-8">
             {/* Footer Content */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-8 mb-12">
               {/* Brand Section */}
               <div className="md:col-span-1">
-                <h3 className="text-white font-semibold mb-4">Sentra</h3>
-                <p className="text-white/60 text-sm leading-relaxed">
+                <h3 className={` font-semibold mb-4`}>Sentra</h3>
+                <p className={`/60 text-sm leading-relaxed`}>
                   Enterprise customer value management platform for modern businesses.
                 </p>
               </div>
 
               {/* Product Links */}
               <div>
-                <h4 className="text-white font-semibold mb-4">Product</h4>
+                <h4 className={` font-semibold mb-4`}>Product</h4>
                 <ul className="space-y-2 text-sm">
                   <li>
-                    <Link to="/documentation" className="text-white/60 hover:text-white transition-colors">
+                    <Link to="/documentation" className={`text-white/60 hover: transition-colors`}>
                       Documentation
                     </Link>
                   </li>
                   <li>
-                    <a href="#" className="text-white/60 hover:text-white transition-colors">
+                    <a href="#" className={`text-white/60 hover: transition-colors`}>
                       Features
                     </a>
                   </li>
                   <li>
-                    <a href="#" className="text-white/60 hover:text-white transition-colors">
+                    <a href="#" className={`text-white/60 hover: transition-colors`}>
                       Pricing
                     </a>
                   </li>
                   <li>
-                    <a href="#" className="text-white/60 hover:text-white transition-colors">
+                    <a href="#" className={`text-white/60 hover: transition-colors`}>
                       API Reference
                     </a>
                   </li>
@@ -445,25 +449,25 @@ export default function LandingPage() {
 
               {/* Company Links */}
               <div>
-                <h4 className="text-white font-semibold mb-4">Company</h4>
+                <h4 className={` font-semibold mb-4`}>Company</h4>
                 <ul className="space-y-2 text-sm">
                   <li>
-                    <a href="#" className="text-white/60 hover:text-white transition-colors">
+                    <a href="#" className={`text-white/60 hover: transition-colors`}>
                       About Us
                     </a>
                   </li>
                   <li>
-                    <a href="#" className="text-white/60 hover:text-white transition-colors">
+                    <a href="#" className={`text-white/60 hover: transition-colors`}>
                       Blog
                     </a>
                   </li>
                   <li>
-                    <a href="#" className="text-white/60 hover:text-white transition-colors">
+                    <a href="#" className={`text-white/60 hover: transition-colors`}>
                       Careers
                     </a>
                   </li>
                   <li>
-                    <a href="#" className="text-white/60 hover:text-white transition-colors">
+                    <a href="#" className={`text-white/60 hover: transition-colors`}>
                       Contact
                     </a>
                   </li>
@@ -472,25 +476,25 @@ export default function LandingPage() {
 
               {/* Resources */}
               <div>
-                <h4 className="text-white font-semibold mb-4">Resources</h4>
+                <h4 className={` font-semibold mb-4`}>Resources</h4>
                 <ul className="space-y-2 text-sm">
                   <li>
-                    <a href="#" className="text-white/60 hover:text-white transition-colors">
+                    <a href="#" className={`text-white/60 hover: transition-colors`}>
                       Help Center
                     </a>
                   </li>
                   <li>
-                    <a href="#" className="text-white/60 hover:text-white transition-colors">
+                    <a href="#" className={`text-white/60 hover: transition-colors`}>
                       Tutorials
                     </a>
                   </li>
                   <li>
-                    <a href="#" className="text-white/60 hover:text-white transition-colors">
+                    <a href="#" className={`text-white/60 hover: transition-colors`}>
                       Case Studies
                     </a>
                   </li>
                   <li>
-                    <a href="#" className="text-white/60 hover:text-white transition-colors">
+                    <a href="#" className={`text-white/60 hover: transition-colors`}>
                       Webinars
                     </a>
                   </li>
@@ -501,17 +505,17 @@ export default function LandingPage() {
             {/* Divider */}
             <div className="border-t border-white/10 pt-8">
               <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                <div className="text-white/60 text-sm">
+                <div className={`/60 text-sm`}>
                   <p dangerouslySetInnerHTML={{ __html: t.landing.copyrightNotice }}></p>
                 </div>
                 <div className="flex gap-6 text-sm">
-                  <a href="#" className="text-white/60 hover:text-white transition-colors">
+                  <a href="#" className={`text-white/60 hover: transition-colors`}>
                     Privacy Policy
                   </a>
-                  <a href="#" className="text-white/60 hover:text-white transition-colors">
+                  <a href="#" className={`text-white/60 hover: transition-colors`}>
                     Terms of Service
                   </a>
-                  <a href="#" className="text-white/60 hover:text-white transition-colors">
+                  <a href="#" className={`text-white/60 hover: transition-colors`}>
                     Security
                   </a>
                 </div>

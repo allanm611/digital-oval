@@ -594,7 +594,7 @@ export default function UserDetailsPage() {
                                   backgroundColor: color.tertiary.tag1,
                                 }}
                               >
-                                <Shield className="h-5 w-5 text-white" />
+                                <Shield className={`h-5 w-5 `} />
                               </div>
                               <div className="space-y-1">
                                 <p className="text-3xl font-bold text-black">
@@ -623,7 +623,7 @@ export default function UserDetailsPage() {
                                   backgroundColor: color.tertiary.tag3,
                                 }}
                               >
-                                <Shield className="h-5 w-5 text-white" />
+                                <Shield className={`h-5 w-5 `} />
                               </div>
                               <div className="space-y-1">
                                 <p className="text-3xl font-bold text-black">
@@ -652,7 +652,7 @@ export default function UserDetailsPage() {
                                   backgroundColor: color.tertiary.tag2,
                                 }}
                               >
-                                <Shield className="h-5 w-5 text-white" />
+                                <Shield className={`h-5 w-5 `} />
                               </div>
                               <div className="space-y-1">
                                 <p className="text-3xl font-bold text-black">
@@ -681,7 +681,7 @@ export default function UserDetailsPage() {
                                   backgroundColor: color.tertiary.tag4,
                                 }}
                               >
-                                <Users className="h-5 w-5 text-white" />
+                                <Users className={`h-5 w-5 `} />
                               </div>
                               <div className="space-y-1">
                                 <p className="text-3xl font-bold text-black">
@@ -709,7 +709,7 @@ export default function UserDetailsPage() {
                               className="p-2 rounded-full flex items-center justify-center"
                               style={{ backgroundColor: color.tertiary.tag1 }}
                             >
-                              <Shield className="h-5 w-5 text-white" />
+                              <Shield className={`h-5 w-5 `} />
                             </div>
                             <div className="space-y-1">
                               <p className="text-3xl font-bold text-black">
@@ -972,7 +972,7 @@ export default function UserDetailsPage() {
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold `}
                           style={{ backgroundColor: color.primary.accent }}
                         >
                           {getInitials(report.first_name, report.last_name)}
@@ -1028,7 +1028,7 @@ export default function UserDetailsPage() {
                       >
                         <div className="flex items-center gap-3">
                           <div
-                            className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                            className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold `}
                             style={{ backgroundColor: color.primary.accent }}
                           >
                             {getInitials(report.first_name, report.last_name)}
@@ -1079,7 +1079,7 @@ export default function UserDetailsPage() {
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold `}
                           style={{ backgroundColor: color.primary.accent }}
                         >
                           {getInitials(manager.first_name, manager.last_name)}

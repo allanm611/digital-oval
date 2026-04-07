@@ -100,7 +100,7 @@ export default function BroadcastDetailsPage() {
         <p className={`${tw.textMuted} mb-6`}>Broadcast not found</p>
         <button
           onClick={() => navigate("/dashboard/manual-communications")}
-          className="px-4 py-2 font-semibold rounded text-white transition-all duration-200"
+          className={`px-4 py-2 font-semibold rounded  transition-all duration-200`}
           style={{ backgroundColor: color.primary.action }}
         >
           Back to Broadcasts

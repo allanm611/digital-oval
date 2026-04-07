@@ -37,7 +37,7 @@ export default function ABTestDisplay({
                       className={`w-10 h-10 ${tw.rounded} flex items-center justify-center`}
                       style={{ backgroundColor: color.primary.action }}
                     >
-                      <span className="text-white font-bold text-base">A</span>
+                      <span className={` font-bold text-base`}>A</span>
                     </div>
                     <div>
                       <div className="mb-1">
@@ -113,7 +113,7 @@ export default function ABTestDisplay({
                       className={`w-10 h-10 ${tw.rounded} flex items-center justify-center`}
                       style={{ backgroundColor: color.primary.accent }}
                     >
-                      <span className="text-white font-bold text-base">B</span>
+                      <span className={` font-bold text-base`}>B</span>
                     </div>
                     <div>
                       <div className="mb-1">

@@ -584,7 +584,7 @@ function ChannelSelector({
                     }}
                   >
                     {isSelected && (
-                      <Check className="w-3 h-3 text-white" />
+                      <Check className={`w-3 h-3 `} />
                     )}
                   </div>
                   <span className="text-sm">{channel.label}</span>
