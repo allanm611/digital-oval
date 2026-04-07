@@ -63,7 +63,13 @@ class CharacterSetService {
   }
 
   async getCharacterSetById(id: number): Promise<CharacterSet> {
-    return this.request<CharacterSet>(`/${id}`);
+    const response = await this.request<{ success: boolean; data: CharacterSet[] }>(`/${id}`);
+    // API returns data as an array, extract the first item
+    const characterSet = Array.isArray(response.data) ? response.data[0] : response.data;
+    if (!characterSet) {
+      throw new Error("Character set not found");
+    }
+    return characterSet;
   }
 
   async createCharacterSet(data: CreateCharacterSetRequest): Promise<CharacterSet> {

@@ -177,6 +177,15 @@ export default function ConfigurationPage() {
         navigationPath: "/dashboard/sms-routes",
       },
       {
+        id: "notification-types",
+        name: "Notification Types",
+        description: "Define and manage different types of notifications",
+        type: "offer",
+        category: "Offer Configuration",
+        status: "active",
+        navigationPath: "/dashboard/notification-types",
+      },
+      {
         id: "languages",
         name: "Languages",
         description:
@@ -307,13 +316,13 @@ export default function ConfigurationPage() {
       },
       {
         id: "vip-list-management",
-        name: "VIP List Management",
+        name: "VIP Lists",
         description:
-          "Manage VIP customer lists - add, remove, and organize VIP customers",
+          "Define and manage VIP customer lists for targeted campaigns",
         type: "campaign",
         category: "Campaign Configuration",
         status: "active",
-        navigationPath: "/dashboard/vip-list-management",
+        navigationPath: "/dashboard/vip-lists",
       },
       {
         id: "seed-list-management",

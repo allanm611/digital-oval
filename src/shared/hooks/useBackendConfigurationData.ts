@@ -121,6 +121,18 @@ function normalizeApiResponse(type: string, data: any[]): any[] {
           normalized.validityHours = normalized.validity_hours;
         }
         break;
+
+      case "notificationTypes":
+        // Convert is_active to isActive
+        if (normalized.is_active !== undefined) {
+          normalized.isActive = normalized.is_active;
+        }
+        break;
+
+      case "vipLists":
+        // VIP Lists come with snake_case fields already, just keep them as is
+        // No conversion needed
+        break;
     }
 
     return normalized;
@@ -286,6 +298,22 @@ function transformPayload(type: string, payload: any): any {
       if (transformed.validityHours !== undefined) {
         transformed.validity_hours = transformed.validityHours;
         delete transformed.validityHours;
+      }
+      break;
+
+    case "notificationTypes":
+      // Map isActive to is_active
+      if (transformed.isActive !== undefined) {
+        transformed.is_active = transformed.isActive;
+        delete transformed.isActive;
+      }
+      break;
+
+    case "vipLists":
+      // Map isActive to is_active
+      if (transformed.isActive !== undefined) {
+        transformed.is_active = transformed.isActive;
+        delete transformed.isActive;
       }
       break;
   }
@@ -605,7 +633,7 @@ export function useBackendConfigurationData(
             response = await notificationTypeService.update(id, payload);
             return response;
           case "vipLists":
-            response = await vipListService.create(payload);
+            response = await vipListService.update(id, payload);
             return response;
           case "controlGroups":
             response = await controlGroupService.update(id, payload);

@@ -59,44 +59,42 @@ export default function CreativeTemplateFormPage() {
     loadLanguages();
   }, []);
 
-  // TODO: Uncomment when backend adds getCreativeTemplateById endpoint
-  // useEffect(() => {
-  //   if (!id) {
-  //     setLoading(false);
-  //     return;
-  //   }
+  useEffect(() => {
+    if (!id) {
+      setLoading(false);
+      return;
+    }
 
-  //   const loadTemplate = async () => {
-  //     try {
-  //       const response = await creativeTemplateService.getCreativeTemplateById(
-  //         parseInt(id, 10),
-  //       );
-  //       const template = (response as any)?.data || response;
+    const loadTemplate = async () => {
+      try {
+        const template = await creativeTemplateService.getCreativeTemplateById(
+          parseInt(id, 10),
+        );
 
-  //       setName(template?.name || "");
-  //       setDescription(template?.description || "");
-  //       setCode(template?.code || "");
-  //       setChannel(template?.channel || template?.primaryChannel || "");
-  //       setLocale(template?.locale || "");
-  //       setTitle(template?.title || "");
-  //       setBodyText(template?.body_text || template?.text_body || "");
-  //       setBodyHtml(template?.body_html || template?.html_body || "");
-  //       setVariablesText(
-  //         template?.variables ? JSON.stringify(template.variables, null, 2) : "",
-  //       );
-  //     } catch (err) {
-  //       showError(
-  //         "Error",
-  //         err instanceof Error ? err.message : "Failed to load template",
-  //       );
-  //       navigate("/dashboard/creative-templates");
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
+        setName(template?.name || "");
+        setDescription(template?.description || "");
+        setCode(template?.code || "");
+        setChannel(template?.channel || template?.primaryChannel || "");
+        setLocale(template?.locale || "");
+        setTitle(template?.title || "");
+        setBodyText(template?.body_text || template?.text_body || "");
+        setBodyHtml(template?.body_html || template?.html_body || "");
+        setVariablesText(
+          template?.variables ? JSON.stringify(template.variables, null, 2) : "",
+        );
+      } catch (err) {
+        showError(
+          "Error",
+          err instanceof Error ? err.message : "Failed to load template",
+        );
+        navigate("/dashboard/creative-templates");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  //   loadTemplate();
-  // }, [id, navigate, showError]);
+    loadTemplate();
+  }, [id, navigate, showError]);
 
   // For now, remove loading state when component mounts
   useEffect(() => {
@@ -159,7 +157,7 @@ export default function CreativeTemplateFormPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <BackButton
         fallbackTo="/dashboard/creative-templates"
         showBreadcrumb={true}
@@ -168,13 +166,13 @@ export default function CreativeTemplateFormPage() {
 
       <form
         onSubmit={handleSubmit}
-        className="space-y-6 bg-white rounded-lg p-6 border border-gray-200"
+        className="space-y-4 bg-white rounded-lg p-6 border border-gray-200"
       >
-        <h2 className="text-sm font-bold text-gray-900">
+        <h2 className="text-sm font-semibold text-gray-900">
           {id ? "Edit Creative Template" : "Create Creative Template"}
         </h2>
 
-        <div className="space-y-4 pb-6">
+        <div className="space-y-3 pb-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Name *</label>
             <input
@@ -182,7 +180,7 @@ export default function CreativeTemplateFormPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded}`}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Template name"
             />
           </div>
@@ -193,13 +191,13 @@ export default function CreativeTemplateFormPage() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
-              className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded} resize-vertical`}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               placeholder="Template description"
             />
           </div>
         </div>
 
-        <div className="space-y-4 pb-6">
+        <div className="space-y-3 pb-4">
           <h3 className="text-sm font-semibold text-gray-900">Template Configuration</h3>
 
           <div>
@@ -209,7 +207,7 @@ export default function CreativeTemplateFormPage() {
               value={code}
               onChange={(e) => setCode(e.target.value)}
               required
-              className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded} font-mono`}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
               placeholder="Unique template code"
             />
           </div>
@@ -242,14 +240,14 @@ export default function CreativeTemplateFormPage() {
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded}`}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Template title"
             />
           </div>
         </div>
 
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900">Template Content</h3>
+          <h3 className="text-sm font-semibold text-gray-900">Template Content</h3>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Body Text</label>
@@ -257,7 +255,7 @@ export default function CreativeTemplateFormPage() {
               value={bodyText}
               onChange={(e) => setBodyText(e.target.value)}
               rows={5}
-              className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded} resize-vertical`}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               placeholder="Plain text content"
             />
           </div>
@@ -268,7 +266,7 @@ export default function CreativeTemplateFormPage() {
               value={bodyHtml}
               onChange={(e) => setBodyHtml(e.target.value)}
               rows={5}
-              className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded} resize-vertical font-mono text-sm`}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono"
               placeholder="HTML content"
             />
           </div>
@@ -279,7 +277,7 @@ export default function CreativeTemplateFormPage() {
               value={variablesText}
               onChange={(e) => setVariablesText(e.target.value)}
               rows={5}
-              className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded} resize-vertical font-mono text-sm`}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono"
               placeholder='{"name": "customer"}'
             />
           </div>

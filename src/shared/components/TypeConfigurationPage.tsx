@@ -73,6 +73,16 @@ export interface TypeConfigurationItem extends ConfigurationItem {
   price?: number; // Price for combo type
   // Routes fields
   communication_channel_id?: number;
+  // Notification Type fields
+  notification_key?: string;
+  // VIP List fields
+  original_filename?: string;
+  file_hash?: string;
+  rows_imported?: number;
+  rows_failed?: number;
+  processing_status?: "pending" | "processing" | "completed" | "failed";
+  processing_error?: string;
+  processing_time_ms?: number;
 }
 
 interface MetadataFieldConfig {
@@ -185,6 +195,7 @@ function TypeConfigurationModal({
   const isComboType = config.configType === "comboTypes";
   const isSmsRoutes = config.configType === "smsRoutes";
   const isRoutes = config.configType === "routes";
+  const isNotificationType = config.configType === "notificationTypes";
 
   // Custom fields state for languages and character sets
   const [customFields, setCustomFields] = useState<Record<string, string>>({});
@@ -307,7 +318,7 @@ function TypeConfigurationModal({
         setLocale(item.locale || "");
       }
       if (
-        (isLanguage || isCharacterSet || isSmsRoutes || isRoutes) &&
+        (isLanguage || isCharacterSet || isSmsRoutes || isRoutes || isNotificationType) &&
         config.customFields
       ) {
         const fields: Record<string, string> = {};
@@ -356,7 +367,7 @@ function TypeConfigurationModal({
         setLocale("");
       }
       if (
-        (isLanguage || isCharacterSet || isSmsRoutes || isRoutes) &&
+        (isLanguage || isCharacterSet || isSmsRoutes || isRoutes || isNotificationType) &&
         config.customFields
       ) {
         const fields: Record<string, string> = {};
@@ -390,6 +401,7 @@ function TypeConfigurationModal({
     isComboType,
     isSmsRoutes,
     isRoutes,
+    isNotificationType,
     config.customFields,
   ]);
 
@@ -501,7 +513,7 @@ function TypeConfigurationModal({
 
     // Add custom fields for languages, character sets, SMS routes, and routes
     if (
-      (isLanguage || isCharacterSet || isSmsRoutes || isRoutes) &&
+      (isLanguage || isCharacterSet || isSmsRoutes || isRoutes || isNotificationType) &&
       config.customFields
     ) {
       for (const field of config.customFields) {
@@ -653,7 +665,7 @@ function TypeConfigurationModal({
           )}
 
           {/* Custom Fields (for Languages, Character Sets, SMS Routes, and Routes) */}
-          {(isLanguage || isCharacterSet || isSmsRoutes || isRoutes) &&
+          {(isLanguage || isCharacterSet || isSmsRoutes || isRoutes || isNotificationType) &&
             config.customFields && (
               <>
                 {config.customFields
@@ -1492,11 +1504,11 @@ export default function TypeConfigurationPage({
 
   const handleEditItem = (item: TypeConfigurationItem) => {
     if (config.configType === "characterSets") {
-      navigate(`/dashboard/character-sets/${item.id}`);
+      navigate(`/dashboard/character-sets/${item.id}/edit`);
       return;
     }
     if (config.configType === "creativeTemplates") {
-      navigate(`/dashboard/creative-templates/${item.id}`);
+      navigate(`/dashboard/creative-templates/${item.id}/edit`);
       return;
     }
     // For comboTypes, open the modal for editing

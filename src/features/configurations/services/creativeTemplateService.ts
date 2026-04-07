@@ -85,8 +85,14 @@ class CreativeTemplateService {
     return this.request<ApiResponse<CreativeTemplate[]>>("");
   }
 
-  async getCreativeTemplateById(id: number): Promise<ApiResponse<CreativeTemplate>> {
-    return this.request<ApiResponse<CreativeTemplate>>(`/${id}`);
+  async getCreativeTemplateById(id: number): Promise<CreativeTemplate> {
+    const response = await this.request<{ success: boolean; data: CreativeTemplate[] }>(`/${id}`);
+    // API returns data as an array, extract the first item
+    const template = Array.isArray(response.data) ? response.data[0] : response.data;
+    if (!template) {
+      throw new Error("Creative template not found");
+    }
+    return template;
   }
 
   async createCreativeTemplate(data: CreateCreativeTemplateRequest): Promise<ApiResponse<CreativeTemplate>> {

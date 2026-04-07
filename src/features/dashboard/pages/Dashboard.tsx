@@ -202,6 +202,18 @@ const OfferPages = {
         /* webpackPrefetch: true */ "../../offers/pages/CharacterSetFormPage"
       ),
   ),
+  CharacterSetDetailsPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../offers/pages/CharacterSetDetailsPage"
+      ),
+  ),
+  CreativeTemplateDetailsPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../offers/pages/CreativeTemplateDetailsPage"
+      ),
+  ),
   OfferCreativeDetailsPage: lazy(
     () =>
       import(
@@ -246,6 +258,18 @@ const ProductPages = {
     () =>
       import(
         /* webpackPrefetch: true */ "../../products/pages/ComboTypeDetailsPage"
+      ),
+  ),
+  NotificationTypesPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../configurations/pages/NotificationTypesPage"
+      ),
+  ),
+  VIPListsPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../configurations/pages/VIPListsPage"
       ),
   ),
   ControlGroupsPage: lazy(
@@ -836,6 +860,14 @@ export default function Dashboard() {
             path="/combo-types/:id"
             element={<ProductPages.ComboTypeDetailsPage />}
           />
+          <Route
+            path="/notification-types"
+            element={<ProductPages.NotificationTypesPage />}
+          />
+          <Route
+            path="/vip-lists"
+            element={<ProductPages.VIPListsPage />}
+          />
           <Route path="/offer-types" element={<OfferPages.OfferTypesPage />} />
           <Route
             path="/offer-catalogs"
@@ -978,6 +1010,10 @@ export default function Dashboard() {
           />
           <Route
             path="/creative-templates/:id"
+            element={<OfferPages.CreativeTemplateDetailsPage />}
+          />
+          <Route
+            path="/creative-templates/:id/edit"
             element={<OfferPages.CreativeTemplateFormPage />}
           />
           <Route
@@ -996,6 +1032,10 @@ export default function Dashboard() {
           />
           <Route
             path="/character-sets/:id"
+            element={<OfferPages.CharacterSetDetailsPage />}
+          />
+          <Route
+            path="/character-sets/:id/edit"
             element={<OfferPages.CharacterSetFormPage />}
           />
           <Route

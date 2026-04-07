@@ -33,37 +33,33 @@ export default function CharacterSetFormPage() {
   const [quadChars, setQuadChars] = useState("");
 
   // Load existing character set if editing
-  // TODO: Uncomment when backend adds getCharacterSetById endpoint
-  // useEffect(() => {
-  //   if (id) {
-  //     const loadCharacterSet = async () => {
-  //       try {
-  //         const data = await characterSetService.getCharacterSetById(parseInt(id));
-  //         setName(data.name);
-  //         setDescription(data.description || "");
-  //         setIsActive(data.is_active ?? true);
-  //         setMessageType(data.message_type || "SMS");
-  //         setCharacterSetType(data.character_set_type || "");
-  //         setCharacterSetSize(String(data.character_set_size || ""));
-  //         setStandardChars(data.standard_chars || "");
-  //         setDoubleChars(data.double_chars || "");
-  //         setTripleChars(data.triple_chars || "");
-  //         setQuadChars(data.quad_chars || "");
-  //       } catch (err) {
-  //         showError("Error", "Failed to load character set");
-  //         navigate("/dashboard/character-sets");
-  //       } finally {
-  //         setLoading(false);
-  //       }
-  //     };
-  //     loadCharacterSet();
-  //   }
-  // }, [id, navigate, showError]);
-
-  // For now, remove loading state when component mounts
   useEffect(() => {
-    setLoading(false);
-  }, []);
+    if (id) {
+      const loadCharacterSet = async () => {
+        try {
+          const data = await characterSetService.getCharacterSetById(parseInt(id));
+          setName(data.name);
+          setDescription(data.description || "");
+          setIsActive(data.is_active ?? true);
+          setMessageType(data.message_type || "SMS");
+          setCharacterSetType(data.character_set_type || "");
+          setCharacterSetSize(String(data.character_set_size || ""));
+          setStandardChars(data.standard_chars || "");
+          setDoubleChars(data.double_chars || "");
+          setTripleChars(data.triple_chars || "");
+          setQuadChars(data.quad_chars || "");
+        } catch (err) {
+          showError("Error", "Failed to load character set");
+          navigate("/dashboard/character-sets");
+        } finally {
+          setLoading(false);
+        }
+      };
+      loadCharacterSet();
+    } else {
+      setLoading(false);
+    }
+  }, [id, navigate, showError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,13 +110,13 @@ export default function CharacterSetFormPage() {
     <div className="space-y-6">
       <BackButton fallbackTo="/dashboard/character-sets" showBreadcrumb={true} currentLabel={id ? "Edit Character Set" : "Create Character Set"} />
 
-      <form onSubmit={handleSubmit} className="space-y-6 bg-white rounded-lg p-6 border border-gray-200">
-        <h2 className="text-sm font-bold text-gray-900">
+      <form onSubmit={handleSubmit} className="space-y-4 bg-white rounded-lg p-6 border border-gray-200">
+        <h2 className="text-sm font-semibold text-gray-900">
           {id ? "Edit Character Set" : "Create Character Set"}
         </h2>
 
         {/* Basic Info */}
-        <div className="space-y-4 pb-6">
+        <div className="space-y-3 pb-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Name *
@@ -130,7 +126,7 @@ export default function CharacterSetFormPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="e.g., GSM Default"
             />
           </div>
@@ -143,17 +139,17 @@ export default function CharacterSetFormPage() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-vertical"
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               placeholder="Describe this character set"
             />
           </div>
         </div>
 
         {/* Configuration */}
-        <div className="space-y-4 pb-6">
+        <div className="space-y-3 pb-4">
           <h3 className="text-sm font-semibold text-gray-900">Configuration</h3>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Message Type *
@@ -187,7 +183,7 @@ export default function CharacterSetFormPage() {
               type="number"
               value={characterSetSize}
               onChange={(e) => setCharacterSetSize(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="e.g., 160"
             />
           </div>
@@ -204,9 +200,9 @@ export default function CharacterSetFormPage() {
             <textarea
               value={standardChars}
               onChange={(e) => setStandardChars(e.target.value)}
-              rows={4}
+              rows={3}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-vertical font-mono text-sm"
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono"
               placeholder="e.g., ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
             />
           </div>
@@ -219,7 +215,7 @@ export default function CharacterSetFormPage() {
               value={doubleChars}
               onChange={(e) => setDoubleChars(e.target.value)}
               rows={2}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-vertical font-mono text-sm"
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono"
               placeholder="Characters that take 2 positions"
             />
           </div>
@@ -232,7 +228,7 @@ export default function CharacterSetFormPage() {
               value={tripleChars}
               onChange={(e) => setTripleChars(e.target.value)}
               rows={2}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-vertical font-mono text-sm"
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono"
               placeholder="Characters that take 3 positions"
             />
           </div>
@@ -245,7 +241,7 @@ export default function CharacterSetFormPage() {
               value={quadChars}
               onChange={(e) => setQuadChars(e.target.value)}
               rows={2}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-vertical font-mono text-sm"
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono"
               placeholder="Characters that take 4 positions"
             />
           </div>
@@ -267,7 +263,7 @@ export default function CharacterSetFormPage() {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-3 pt-2">
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
           <button
             type="button"
             onClick={() => navigate("/dashboard/character-sets")}

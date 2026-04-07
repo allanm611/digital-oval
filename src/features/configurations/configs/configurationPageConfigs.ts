@@ -10,6 +10,7 @@ import {
   Palette,
   Gift,
   Globe,
+  Star,
 } from "lucide-react";
 import {
   ConfigurationPageConfig,
@@ -2444,6 +2445,83 @@ export const comboTypesConfig: TypeConfigurationPageConfig = {
   saveErrorMessage: "Please try again later.",
 };
 
+// Notification Types Configuration
+export const notificationTypesConfig: TypeConfigurationPageConfig = {
+  title: "Notification Types",
+  subtitle: "Define and manage different types of notifications",
+  entityName: "notification type",
+  entityNamePlural: "notification types",
+  configType: "notificationTypes",
+  backPath: "/dashboard/configuration",
+  icon: Megaphone,
+  searchPlaceholder: "Search notification types by name...",
+  initialData: [],
+  createButtonText: "Create",
+  modalTitle: {
+    create: "Create New Notification Type",
+    edit: "Edit Notification Type",
+  },
+  nameLabel: "Notification Type Name",
+  nameRequired: true,
+  descriptionLabel: "Description",
+  descriptionRequired: false,
+  nameMaxLength: 150,
+  descriptionMaxLength: 600,
+  statusLabel: "Status",
+  customFields: [
+    {
+      label: "Notification Key",
+      type: "text",
+      fieldKey: "notification_key",
+      required: true,
+      placeholder: "e.g., sms_alert, email_welcome",
+    },
+  ],
+  deleteConfirmTitle: "Delete Notification Type",
+  deleteConfirmMessage: (name: string) =>
+    `Are you sure you want to delete "${name}"? This action cannot be undone.`,
+  deleteSuccessMessage: (name: string) =>
+    `"${name}" has been deleted successfully.`,
+  createSuccessMessage: "Notification type created successfully",
+  updateSuccessMessage: "Notification type updated successfully",
+  deleteErrorMessage: "Failed to delete notification type",
+  saveErrorMessage: "Please try again later.",
+};
+
+// VIP Lists Configuration
+export const vipListsConfig: TypeConfigurationPageConfig = {
+  title: "VIP Lists",
+  subtitle: "Define and manage VIP customer lists for targeted campaigns",
+  entityName: "VIP list",
+  entityNamePlural: "VIP lists",
+  configType: "vipLists",
+  backPath: "/dashboard/configuration",
+  icon: Star,
+  searchPlaceholder: "Search VIP lists by name...",
+  initialData: [],
+  createButtonText: "Create",
+  modalTitle: {
+    create: "Create New VIP List",
+    edit: "Edit VIP List",
+  },
+  nameLabel: "VIP List Name",
+  nameRequired: true,
+  descriptionLabel: "Description",
+  descriptionRequired: false,
+  nameMaxLength: 150,
+  descriptionMaxLength: 600,
+  statusLabel: "Status",
+  deleteConfirmTitle: "Delete VIP List",
+  deleteConfirmMessage: (name: string) =>
+    `Are you sure you want to delete "${name}"? This action cannot be undone.`,
+  deleteSuccessMessage: (name: string) =>
+    `"${name}" has been deleted successfully.`,
+  createSuccessMessage: "VIP list created successfully",
+  updateSuccessMessage: "VIP list updated successfully",
+  deleteErrorMessage: "Failed to delete VIP list",
+  saveErrorMessage: "Please try again later.",
+};
+
 // Communication Channels Configuration
 export const communicationChannelsConfig: TypeConfigurationPageConfig = {
   title: "Communication Channels",
@@ -3066,4 +3144,16 @@ export function getSmsRoutesConfig(
   _t: (key: string) => string,
 ): TypeConfigurationPageConfig {
   return smsRoutesConfig;
+}
+
+export function getNotificationTypesConfig(
+  _t: (key: string) => string,
+): TypeConfigurationPageConfig {
+  return notificationTypesConfig;
+}
+
+export function getVIPListsConfig(
+  _t: (key: string) => string,
+): TypeConfigurationPageConfig {
+  return vipListsConfig;
 }

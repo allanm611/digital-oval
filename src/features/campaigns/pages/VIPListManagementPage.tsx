@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Plus,
   Search,
@@ -6,6 +6,7 @@ import {
   Star,
   Users,
   Eye,
+  Pencil,
 } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -13,6 +14,9 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import DateFormatter from "../../../shared/components/DateFormatter";
+import CreateVIPListModal from "../components/CreateVIPListModal";
+import AddVIPMembersModal from "../components/AddVIPMembersModal";
+import { vipListService } from "../../../shared/services/vipListService";
 
 // Types
 export interface VIPCustomer {
@@ -41,112 +45,14 @@ export interface VIPList {
   created_at: string;
 }
 
-// Dummy data - Using Kenyan names from customer data
-const DUMMY_VIP_CUSTOMERS: VIPCustomer[] = [
-  {
-    id: 1,
-    customer_id: 201,
-    customer_name: "Nelly Mwaura",
-    customer_email: "nelly.mwaura@gmail.com",
-    customer_phone: "+254763056860",
-    vip_list_id: 1,
-    vip_list_name: "Premium VIP",
-    status: "active",
-    added_at: "2025-01-10T09:00:00Z",
-    added_by: 1,
-    added_by_name: "Admin User",
-  },
-  {
-    id: 2,
-    customer_id: 202,
-    customer_name: "Wilson Githaiga",
-    customer_email: "wilson.githaiga@yahoo.com",
-    customer_phone: "+254763056254",
-    vip_list_id: 2,
-    vip_list_name: "Gold VIP",
-    status: "active",
-    added_at: "2025-01-12T11:30:00Z",
-    added_by: 2,
-    added_by_name: "Sales Team",
-  },
-  {
-    id: 3,
-    customer_id: 203,
-    customer_name: "Grace Wanjiru",
-    customer_email: "grace.wanjiru@outlook.com",
-    customer_phone: "+254723456789",
-    vip_list_id: 1,
-    vip_list_name: "Premium VIP",
-    status: "active",
-    added_at: "2025-01-15T14:20:00Z",
-    added_by: 1,
-    added_by_name: "Admin User",
-  },
-  {
-    id: 4,
-    customer_id: 204,
-    customer_name: "Peter Kipchoge",
-    customer_email: "peter.kipchoge@gmail.com",
-    customer_phone: "+254734567890",
-    vip_list_id: 2,
-    vip_list_name: "Gold VIP",
-    status: "inactive",
-    added_at: "2025-01-08T10:15:00Z",
-    added_by: 2,
-    added_by_name: "Sales Team",
-    removed_at: "2025-01-28T16:00:00Z",
-    removed_by: 1,
-    removed_by_name: "Admin User",
-  },
-];
 
-const DUMMY_VIP_LISTS: VIPList[] = [
-  {
-    id: 1,
-    name: "Premium VIP",
-    description: "Top tier VIP customers with exclusive benefits",
-    customer_count: 2,
-    status: "active",
-    created_at: "2025-01-01T00:00:00Z",
-  },
-  {
-    id: 2,
-    name: "Gold VIP",
-    description: "High-value customers with priority support",
-    customer_count: 2,
-    status: "active",
-    created_at: "2025-01-01T00:00:00Z",
-  },
-  {
-    id: 3,
-    name: "Silver VIP",
-    description: "Regular VIP customers",
-    customer_count: 0,
-    status: "active",
-    created_at: "2025-01-05T00:00:00Z",
-  },
-];
-
-interface AddVIPCustomerForm {
-  customer_name: string;
-  customer_email: string;
-  customer_phone: string;
-  vip_list_id: string;
-}
-
-interface FormErrors {
-  customer_name?: string;
-  customer_email?: string;
-  customer_phone?: string;
-  vip_list_id?: string;
-}
 
 export default function VIPListManagementPage() {
-  const { success: showToast } = useToast();
+  const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
-  const [vipCustomers, setVipCustomers] = useState<VIPCustomer[]>(DUMMY_VIP_CUSTOMERS);
-  const [vipLists] = useState<VIPList[]>(DUMMY_VIP_LISTS);
-  const [loading] = useState(false);
+  const [vipCustomers, setVipCustomers] = useState<VIPCustomer[]>([]);
+  const [vipLists, setVipLists] = useState<VIPList[]>([]);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchTermLists, setSearchTermLists] = useState("");
   const [filterList, setFilterList] = useState<string>("all");
@@ -155,24 +61,92 @@ export default function VIPListManagementPage() {
   const [activeTab, setActiveTab] = useState<"customers" | "lists">(
     "customers"
   );
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState<AddVIPCustomerForm>({
-    customer_name: "",
-    customer_email: "",
-    customer_phone: "",
-    vip_list_id: "",
-  });
-  const [errors, setErrors] = useState<FormErrors>({});
+  const [isCreateListModalOpen, setIsCreateListModalOpen] = useState(false);
+  const [isAddMembersModalOpen, setIsAddMembersModalOpen] = useState(false);
+  const [isCreatingList, setIsCreatingList] = useState(false);
+  const [isAddingMembers, setIsAddingMembers] = useState(false);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [debouncedSearchTermLists, setDebouncedSearchTermLists] = useState("");
+
+  // Fetch VIP lists on mount
+  useEffect(() => {
+    loadVIPLists();
+  }, []);
+
+  const loadVIPLists = async () => {
+    setLoading(true);
+    try {
+      const response = await vipListService.getAll();
+      if (Array.isArray(response)) {
+        setVipLists(response);
+      } else {
+        setVipLists([]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch VIP lists:", error);
+      showError("Failed to fetch VIP lists");
+      setVipLists([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadAllMembers = useCallback(async () => {
+    if (vipLists.length === 0) {
+      setVipCustomers([]);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const allMembers: VIPCustomer[] = [];
+      for (const list of vipLists) {
+        const members = await vipListService.getMembers(list.id);
+        if (Array.isArray(members)) {
+          allMembers.push(...members);
+        }
+      }
+      setVipCustomers(allMembers);
+    } catch (error) {
+      console.error("Failed to fetch VIP members:", error);
+      showError("Failed to fetch VIP members");
+      setVipCustomers([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [vipLists, showError]);
+
+  useEffect(() => {
+    if (activeTab === "customers" && vipLists.length > 0) {
+      loadAllMembers();
+    }
+  }, [activeTab, vipLists, loadAllMembers]);
+
+  // Debounce search for customers
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Debounce search for lists
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTermLists(searchTermLists);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTermLists]);
 
   const filteredCustomers = vipCustomers.filter((customer) => {
     const matchesSearch =
       customer.customer_name
         ?.toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
+        .includes(debouncedSearchTerm.toLowerCase()) ||
       customer.customer_email
         ?.toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      customer.customer_phone?.toLowerCase().includes(searchTerm.toLowerCase());
+        .includes(debouncedSearchTerm.toLowerCase()) ||
+      customer.customer_phone?.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
 
     const matchesList =
       filterList === "all" || customer.vip_list_id?.toString() === filterList;
@@ -184,8 +158,8 @@ export default function VIPListManagementPage() {
 
   const filteredLists = vipLists.filter((list) => {
     const matchesSearch =
-      list.name?.toLowerCase().includes(searchTermLists.toLowerCase()) ||
-      list.description?.toLowerCase().includes(searchTermLists.toLowerCase());
+      list.name?.toLowerCase().includes(debouncedSearchTermLists.toLowerCase()) ||
+      list.description?.toLowerCase().includes(debouncedSearchTermLists.toLowerCase());
 
     const matchesStatus =
       filterStatusLists === "all" || list.status === filterStatusLists;
@@ -198,71 +172,42 @@ export default function VIPListManagementPage() {
     showToast("Remove customer functionality will be implemented");
   };
 
-  const handleOpenModal = () => {
-    setFormData({
-      customer_name: "",
-      customer_email: "",
-      customer_phone: "",
-      vip_list_id: "",
-    });
-    setErrors({});
-    setIsModalOpen(true);
+  const handleCreateVIPList = async (data: any) => {
+    setIsCreatingList(true);
+    try {
+      const response = await vipListService.create(data);
+      if (response) {
+        showToast("VIP list created successfully");
+        await loadVIPLists();
+      }
+    } catch (error) {
+      showError("Failed to create VIP list");
+      throw error;
+    } finally {
+      setIsCreatingList(false);
+    }
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setFormData({
-      customer_name: "",
-      customer_email: "",
-      customer_phone: "",
-      vip_list_id: "",
-    });
-    setErrors({});
+  const handleAddMembers = async (members: any[]) => {
+    setIsAddingMembers(true);
+    try {
+      for (const member of members) {
+        await vipListService.addMember(member);
+      }
+      showToast(`${members.length} member${members.length !== 1 ? "s" : ""} added successfully`);
+      await loadAllMembers();
+    } catch (error) {
+      showError("Failed to add members");
+      throw error;
+    } finally {
+      setIsAddingMembers(false);
+    }
   };
 
-  const handleAddCustomer = () => {
-    const newErrors: FormErrors = {};
-
-    if (!formData.customer_name) {
-      newErrors.customer_name = "Name is required";
-    }
-    if (!formData.customer_email) {
-      newErrors.customer_email = "Email is required";
-    }
-    if (!formData.customer_phone) {
-      newErrors.customer_phone = "Phone number is required";
-    }
-    if (!formData.vip_list_id) {
-      newErrors.vip_list_id = "VIP List is required";
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
-    const newCustomer: VIPCustomer = {
-      id: Math.max(...vipCustomers.map(c => c.id), 0) + 1,
-      customer_id: Math.max(...vipCustomers.map(c => c.customer_id), 200) + 1,
-      customer_name: formData.customer_name,
-      customer_email: formData.customer_email,
-      customer_phone: formData.customer_phone,
-      vip_list_id: parseInt(formData.vip_list_id),
-      vip_list_name: vipLists.find(l => l.id.toString() === formData.vip_list_id)?.name,
-      status: "active",
-      added_at: new Date().toISOString(),
-      added_by: 1,
-      added_by_name: "Current User",
-    };
-
-    setVipCustomers([...vipCustomers, newCustomer]);
-    showToast("VIP customer added successfully");
-    handleCloseModal();
-  };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header with Title and Buttons */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
@@ -272,15 +217,28 @@ export default function VIPListManagementPage() {
             {t.vipListManagement.subtitle}
           </p>
         </div>
-        <div className="flex items-center gap-3 w-auto">
-          <button
-            onClick={handleOpenModal}
-            className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white w-auto`}
-            style={{ backgroundColor: color.primary.action }}
-          >
-            <Plus className="w-4 h-4" />
-            {t.vipListManagement.addCustomer}
-          </button>
+        {/* Tab-specific buttons */}
+        <div className="flex items-center gap-3 w-auto flex-shrink-0">
+          {activeTab === "customers" && (
+            <button
+              onClick={() => setIsAddMembersModalOpen(true)}
+              className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white`}
+              style={{ backgroundColor: color.primary.action }}
+            >
+              <Plus className="w-4 h-4" />
+              Add Members
+            </button>
+          )}
+          {activeTab === "lists" && (
+            <button
+              onClick={() => setIsCreateListModalOpen(true)}
+              className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white`}
+              style={{ backgroundColor: color.primary.action }}
+            >
+              <Plus className="w-4 h-4" />
+              Create List
+            </button>
+          )}
         </div>
       </div>
 
@@ -364,9 +322,9 @@ export default function VIPListManagementPage() {
       {/* Filters - Customers tab */}
       {activeTab === "customers" && (
         <div className="my-5">
-          <div className="flex flex-col md:flex-row gap-4">
-            {/* Search - 80% width */}
-            <div className="relative flex-[0.8]">
+          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+            {/* Search */}
+            <div className="relative flex-1 min-w-0">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
@@ -377,9 +335,8 @@ export default function VIPListManagementPage() {
               />
             </div>
 
-            {/* Filters - 20% width */}
-            <div className="flex flex-col md:flex-row gap-4 flex-[0.2]">
-              {/* VIP List Filter */}
+            {/* VIP List Filter */}
+            <div className="w-full sm:w-48 flex-shrink-0">
               <HeadlessSelect
                 value={filterList}
                 onChange={setFilterList}
@@ -392,8 +349,10 @@ export default function VIPListManagementPage() {
                 ]}
                 placeholder="Filter by VIP List"
               />
+            </div>
 
-              {/* Status Filter */}
+            {/* Status Filter */}
+            <div className="w-full sm:w-40 flex-shrink-0">
               <HeadlessSelect
                 value={filterStatus}
                 onChange={setFilterStatus}
@@ -412,9 +371,9 @@ export default function VIPListManagementPage() {
       {/* Filters - VIP Lists tab */}
       {activeTab === "lists" && (
         <div className="my-5">
-          <div className="flex flex-col md:flex-row gap-4">
-            {/* Search - 85% width */}
-            <div className="relative flex-[0.85]">
+          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+            {/* Search */}
+            <div className="relative flex-1 min-w-0">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
@@ -425,9 +384,8 @@ export default function VIPListManagementPage() {
               />
             </div>
 
-            {/* Filters - 15% width */}
-            <div className="flex flex-col md:flex-row gap-4 flex-[0.15]">
-              {/* Status Filter */}
+            {/* Status Filter */}
+            <div className="w-full sm:w-40 flex-shrink-0">
               <HeadlessSelect
                 value={filterStatusLists}
                 onChange={setFilterStatusLists}
@@ -540,17 +498,8 @@ export default function VIPListManagementPage() {
                           borderBottomLeftRadius: "0.375rem",
                         }}
                       >
-                        <div>
-                          <div
-                            className={`${tw.tableFirstColumn} ${tw.textPrimary}`}
-                          >
-                            {customer.customer_name || "Unknown"}
-                          </div>
-                          <div className={`text-sm ${tw.textMuted}`}>
-                            {customer.customer_email ||
-                              customer.customer_phone ||
-                              "No contact info"}
-                          </div>
+                        <div className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
+                          {customer.customer_name || "Unknown"}
                         </div>
                       </td>
                       <td
@@ -745,16 +694,28 @@ export default function VIPListManagementPage() {
                         borderBottomRightRadius: "0.375rem",
                       }}
                     >
-                      <button
-                        onClick={() => {
-                          setActiveTab("customers");
-                          setFilterList(list.id.toString());
-                        }}
-                        className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 ${tw.rounded} transition-colors`}
-                        title="View customers"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => {
+                            // TODO: Implement edit VIP list
+                            showToast("Edit VIP list functionality will be implemented");
+                          }}
+                          className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 ${tw.rounded} transition-colors`}
+                          title="Edit VIP List"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            // TODO: Implement delete VIP list
+                            showToast("Delete VIP list functionality will be implemented");
+                          }}
+                          className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
+                          title="Delete VIP List"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -764,136 +725,23 @@ export default function VIPListManagementPage() {
         )}
       </div>
 
-      {/* Add VIP Customer Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className={`${tw.rounded} bg-white shadow-xl max-w-md w-full mx-4`}>
-            <div className="p-6">
-              <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
-                Add VIP Customer
-              </h2>
 
-              {/* Form Fields */}
-              <div className="space-y-4">
-                {/* Name */}
-                <div>
-                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.customer_name}
-                    onChange={(e) => {
-                      setFormData({ ...formData, customer_name: e.target.value });
-                      if (errors.customer_name) {
-                        setErrors({ ...errors, customer_name: undefined });
-                      }
-                    }}
-                    placeholder="Enter customer name"
-                    className={`w-full px-3 py-2 border text-sm ${errors.customer_name ? "border-red-500" : "border-gray-300"} ${tw.rounded} focus:outline-none focus:ring-2`}
-                    style={{ focusRingColor: color.primary.accent }}
-                  />
-                  {errors.customer_name && (
-                    <p className="text-xs text-red-500 mt-1">{errors.customer_name}</p>
-                  )}
-                </div>
+      {/* Create VIP List Modal */}
+      <CreateVIPListModal
+        isOpen={isCreateListModalOpen}
+        onClose={() => setIsCreateListModalOpen(false)}
+        onSubmit={handleCreateVIPList}
+        isLoading={isCreatingList}
+      />
 
-                {/* Email */}
-                <div>
-                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={formData.customer_email}
-                    onChange={(e) => {
-                      setFormData({ ...formData, customer_email: e.target.value });
-                      if (errors.customer_email) {
-                        setErrors({ ...errors, customer_email: undefined });
-                      }
-                    }}
-                    placeholder="Enter email address"
-                    className={`w-full px-3 py-2 border text-sm ${errors.customer_email ? "border-red-500" : "border-gray-300"} ${tw.rounded} focus:outline-none focus:ring-2`}
-                    style={{ focusRingColor: color.primary.accent }}
-                  />
-                  {errors.customer_email && (
-                    <p className="text-xs text-red-500 mt-1">{errors.customer_email}</p>
-                  )}
-                </div>
-
-                {/* Phone */}
-                <div>
-                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                    Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    value={formData.customer_phone}
-                    onChange={(e) => {
-                      setFormData({ ...formData, customer_phone: e.target.value });
-                      if (errors.customer_phone) {
-                        setErrors({ ...errors, customer_phone: undefined });
-                      }
-                    }}
-                    placeholder="Enter phone number"
-                    className={`w-full px-3 py-2 border text-sm ${errors.customer_phone ? "border-red-500" : "border-gray-300"} ${tw.rounded} focus:outline-none focus:ring-2`}
-                    style={{ focusRingColor: color.primary.accent }}
-                  />
-                  {errors.customer_phone && (
-                    <p className="text-xs text-red-500 mt-1">{errors.customer_phone}</p>
-                  )}
-                </div>
-
-                {/* VIP List */}
-                <div>
-                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                    VIP List
-                  </label>
-                  <div className={errors.vip_list_id ? "border border-red-500 rounded" : ""}>
-                    <HeadlessSelect
-                      value={formData.vip_list_id}
-                      onChange={(value) => {
-                        setFormData({ ...formData, vip_list_id: value });
-                        if (errors.vip_list_id) {
-                          setErrors({ ...errors, vip_list_id: undefined });
-                        }
-                      }}
-                      options={[
-                        { value: "", label: "Select VIP List" },
-                        ...vipLists.map((list) => ({
-                          value: list.id.toString(),
-                          label: list.name,
-                        })),
-                      ]}
-                      placeholder="Select VIP List"
-                    />
-                  </div>
-                  {errors.vip_list_id && (
-                    <p className="text-xs text-red-500 mt-1">{errors.vip_list_id}</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-3 justify-end mt-6">
-                <button
-                  onClick={handleCloseModal}
-                  className={`px-4 py-2 border border-gray-300 text-gray-700 font-medium ${tw.rounded} transition-colors`}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleAddCustomer}
-                  className={`px-4 py-2 text-white font-medium ${tw.rounded}`}
-                  style={{ backgroundColor: color.primary.action }}
-                >
-                  Add Customer
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Add VIP Members Modal */}
+      <AddVIPMembersModal
+        isOpen={isAddMembersModalOpen}
+        onClose={() => setIsAddMembersModalOpen(false)}
+        vipLists={vipLists}
+        onAdd={handleAddMembers}
+        isLoading={isAddingMembers}
+      />
     </div>
   );
 }
