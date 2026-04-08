@@ -38,6 +38,11 @@ export interface CreateVIPListRequest {
   created_by?: string;
 }
 
+export interface UpdateVIPListRequest {
+  name?: string;
+  description?: string;
+}
+
 export interface AddVIPMemberRequest {
   vip_list_id: number;
   customer_id: number;
@@ -93,6 +98,17 @@ class VIPListService {
     return response.data;
   }
 
+  async update(id: number, data: UpdateVIPListRequest) {
+    const response = await this.request<{ success: boolean; data: VIPList }>(
+      `/${id}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }
+    );
+    return response.data;
+  }
+
   async delete(id: number) {
     const response = await this.request<{ success: boolean; message: string }>(
       `/${id}`,
@@ -119,6 +135,32 @@ class VIPListService {
       }
     );
     return response;
+  }
+
+  async removeMember(memberId: number, removedBy?: number) {
+    try {
+      // Primary behavior: mark member inactive to preserve historical records.
+      const response = await this.request<{ success: boolean; data?: VIPCustomer }>(
+        `/members/${memberId}`,
+        {
+          method: "PUT",
+          body: JSON.stringify({
+            status: "inactive",
+            ...(typeof removedBy === "number" ? { removed_by: removedBy } : {}),
+          }),
+        }
+      );
+      return response;
+    } catch {
+      // Fallback for backends that expose hard-delete for member records.
+      const response = await this.request<{ success: boolean; message?: string }>(
+        `/members/${memberId}`,
+        {
+          method: "DELETE",
+        }
+      );
+      return response;
+    }
   }
 }
 

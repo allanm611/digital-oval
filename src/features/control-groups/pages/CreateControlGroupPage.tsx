@@ -1,31 +1,39 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Users, BarChart3, Calendar, Eye } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { Users, BarChart3, Calendar, Eye, Loader2 } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import BackButton from "../../../shared/components/ui/BackButton";
 import ProgressStepper, {
   Step,
 } from "../../../shared/components/ui/ProgressStepper";
 import SegmentConditionsBuilder from "../../segments/components/SegmentConditionsBuilder";
-import type { SegmentConditionGroup } from "../../segments/types/segment";
+import type { SegmentConditionGroup, SegmentPayload, SourceLayer, LayerCondition, LayerColumnRef } from "../../segments/types/segment";
 import SchedulingComponent from "../../../shared/components/SchedulingComponent";
 import type { SchedulingData } from "../../../shared/types/scheduling";
 import { useToast } from "../../../contexts/ToastContext";
 import Radio from "../../../shared/components/ui/Radio";
+import { controlGroupService } from "../services/controlGroupService";
+import type { CreateUniversalControlGroupRequest, TargetRenderTime } from "../types/controlGroup";
 
 export default function CreateControlGroupPage() {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
   const { success: showToast } = useToast();
+  const isEditMode = !!id;
 
   const [currentStep, setCurrentStep] = useState(1);
   const [controlGroupName, setControlGroupName] = useState("");
   const [nameError, setNameError] = useState("");
+  const [percentageError, setPercentageError] = useState("");
+  const [generationMethodError, setGenerationMethodError] = useState("");
   const [controlGroupPercentage, setControlGroupPercentage] = useState(10);
   const [generationMethod, setGenerationMethod] = useState<
-    "random" | "stratified"
-  >("random");
+    "random" | "stratified" | ""
+  >("");
   const [selectedCustomerBase, setSelectedCustomerBase] =
     useState<string>("active_subscribers");
+  const [isCreating, setIsCreating] = useState(false);
+  const [isLoading, setIsLoading] = useState(isEditMode);
   const [segmentConditions, setSegmentConditions] = useState<
     SegmentConditionGroup[]
   >([]);
@@ -38,17 +46,50 @@ export default function CreateControlGroupPage() {
     recurrence_interval: 1,
   });
 
+  useEffect(() => {
+    if (isEditMode && id) {
+      loadControlGroup(Number(id));
+    }
+  }, [id, isEditMode]);
+
+  const loadControlGroup = async (groupId: number) => {
+    try {
+      const group = await controlGroupService.getControlGroupById(groupId);
+      setControlGroupName(group.name);
+      setControlGroupPercentage(group.percentage || 10);
+      setGenerationMethod((group.generation_method as "random" | "stratified") || "random");
+      setSelectedCustomerBase(group.customer_source_type || "active_subscribers");
+
+      if (group.start_date) {
+        setScheduling({
+          type: "scheduled",
+          time_zone: "(GMT+02:00) Sudan",
+          start_date: group.start_date,
+          end_date: group.end_date || "",
+          recurrence_pattern: (group.recurrence_pattern || "monthly") as "one_time" | "daily" | "weekly" | "monthly",
+          recurrence_interval: 1,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to load control group:", error);
+      showToast("Failed to load control group data");
+      navigate("/dashboard/control-groups");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const STEPS: Step[] = [
     {
       id: 1,
-      name: "Customer Base",
-      description: "Select customer source",
+      name: "Basic Info",
+      description: "Control group details",
       icon: Users,
     },
     {
       id: 2,
-      name: "Metrics",
-      description: "Configure group percentage",
+      name: "Configuration",
+      description: "Percentage & generation method",
       icon: BarChart3,
     },
     {
@@ -71,8 +112,8 @@ export default function CreateControlGroupPage() {
         return "Active Subscribers";
       case "all_customers":
         return "All Customers";
-      case "saved_segments":
-        return "Custom Segments";
+      case "custom_conditions":
+        return "Custom Conditions";
       default:
         return base;
     }
@@ -137,6 +178,9 @@ export default function CreateControlGroupPage() {
       if (currentStep === 1 && controlGroupName.trim() === "") {
         return false;
       }
+      if (currentStep === 2 && (controlGroupPercentage < 1 || controlGroupPercentage > 100 || !generationMethod)) {
+        return false;
+      }
       return true;
     }
 
@@ -144,24 +188,54 @@ export default function CreateControlGroupPage() {
   };
 
   const handleStepClick = (stepId: number) => {
-    if (currentStep === 1 && controlGroupName.trim() === "") {
-      setNameError("Control group name is required");
-      return;
+    if (currentStep === 1) {
+      if (controlGroupName.trim() === "") {
+        setNameError("Control group name is required");
+        return;
+      }
+    }
+
+    if (currentStep === 2) {
+      if (controlGroupPercentage < 1 || controlGroupPercentage > 100) {
+        setPercentageError("Percentage must be between 1 and 100");
+        return;
+      }
+      if (!generationMethod) {
+        setGenerationMethodError("Generation method is required");
+        return;
+      }
     }
 
     if (canNavigateToStep(stepId)) {
       setNameError("");
+      setPercentageError("");
+      setGenerationMethodError("");
       setCurrentStep(stepId);
     }
   };
 
   const handleNext = () => {
-    if (currentStep === 1 && controlGroupName.trim() === "") {
-      setNameError("Control group name is required");
-      return;
+    if (currentStep === 1) {
+      if (controlGroupName.trim() === "") {
+        setNameError("Control group name is required");
+        return;
+      }
+    }
+
+    if (currentStep === 2) {
+      if (controlGroupPercentage < 1 || controlGroupPercentage > 100) {
+        setPercentageError("Percentage must be between 1 and 100");
+        return;
+      }
+      if (!generationMethod) {
+        setGenerationMethodError("Generation method is required");
+        return;
+      }
     }
 
     setNameError("");
+    setPercentageError("");
+    setGenerationMethodError("");
     if (currentStep < STEPS.length) {
       setCurrentStep(currentStep + 1);
     }
@@ -173,10 +247,238 @@ export default function CreateControlGroupPage() {
     }
   };
 
-  const handleCreate = () => {
-    showToast("Control group created successfully");
-    navigate("/dashboard/control-groups");
+  const convertConditionsToPayload = (
+    conditions: SegmentConditionGroup[],
+  ): SegmentPayload => {
+    const sourceLayers: SourceLayer[] = [
+      { source_type: "subscribers" },
+    ];
+
+    const addedSegments = new Set<number>();
+    const addedQuicklists = new Set<number>();
+
+    for (const group of conditions) {
+      for (const condition of group.conditions) {
+        if (condition.conditionType === "system_event") {
+          continue;
+        }
+
+        if (condition.conditionType === "segment" && condition.segment_id) {
+          if (!addedSegments.has(condition.segment_id)) {
+            sourceLayers.push({
+              source_type: "segment",
+              segment_id: condition.segment_id,
+              join_config: {
+                join_type: "INNER JOIN",
+                left_column_ref: {
+                  layer_index: 0,
+                  column: "customer_id",
+                },
+                right_column: "customer_id",
+              },
+            });
+            addedSegments.add(condition.segment_id);
+          }
+        } else if (condition.conditionType === "list" && condition.list_id) {
+          if (!addedQuicklists.has(condition.list_id)) {
+            sourceLayers.push({
+              source_type: "quicklist",
+              quicklist_id: condition.list_id,
+              join_config: {
+                join_type: "INNER JOIN",
+                left_column_ref: {
+                  layer_index: 0,
+                  column: "msisdn",
+                },
+                right_column: "msisdn",
+              },
+            });
+            addedQuicklists.add(condition.list_id);
+          }
+        }
+      }
+    }
+
+    const STANDARD_LAYER_FIELDS: LayerColumnRef[] = [
+      { layer_index: 0, column: "msisdn" },
+      { layer_index: 0, column: "customer_id" },
+      { layer_index: 0, column: "first_name" },
+      { layer_index: 0, column: "last_name" },
+      { layer_index: 0, column: "customer_type" },
+      { layer_index: 0, column: "status" },
+      { layer_index: 0, column: "activation_date" },
+      { layer_index: 0, column: "city" },
+    ];
+
+    const layerFilterGroups: any[] = [];
+
+    for (const group of conditions) {
+      const groupConditions: LayerCondition[] = [];
+
+      for (const condition of group.conditions) {
+        if (
+          (condition.conditionType === "360_profile" ||
+            condition.conditionType === "revenue_metric_kpi" ||
+            condition.conditionType === "usage_metric_kpi") &&
+          condition.field_id &&
+          condition.operator_id
+        ) {
+          const hasValue = Array.isArray(condition.value)
+            ? (condition.value as (string | number)[]).length > 0
+            : condition.value !== "" &&
+              condition.value !== undefined &&
+              condition.value !== null;
+          const hasDateRange = condition.start_date || condition.end_date;
+          const isNullOp =
+            condition.operator_id === 13 || condition.operator_id === 14;
+
+          if (!hasValue && !hasDateRange && !isNullOp) {
+            continue;
+          }
+
+          let condValue: string | number | (string | number)[] | undefined =
+            condition.value as
+              | string
+              | number
+              | (string | number)[]
+              | undefined;
+          if (
+            (condition.operator_id === 7 || condition.operator_id === 8) &&
+            condValue
+          ) {
+            if (typeof condValue === "string") {
+              condValue = condValue
+                .split(",")
+                .map((v: string) => v.trim())
+                .filter((v: string) => v !== "");
+            } else if (!Array.isArray(condValue)) {
+              condValue = [condValue];
+            }
+          }
+
+          const layerCond: LayerCondition = {
+            column_ref: {
+              layer_index: 0,
+              column: condition.field_name || "",
+            },
+            operator_id: condition.operator_id,
+            ...(isNullOp
+              ? {}
+              : hasDateRange
+                ? {
+                    start_date: condition.start_date || null,
+                    end_date: condition.end_date || null,
+                  }
+                : { value: condValue || undefined }),
+          };
+          groupConditions.push(layerCond);
+        }
+      }
+
+      if (groupConditions.length > 0) {
+        layerFilterGroups.push({
+          logic: (group.operator || "AND").toUpperCase(),
+          conditions: groupConditions,
+        });
+      }
+    }
+
+    const topLevelLogic =
+      conditions.length > 0 && conditions[0].groupOperator
+        ? conditions[0].groupOperator.toUpperCase()
+        : "AND";
+
+    const payload: SegmentPayload = {
+      source_layers: sourceLayers,
+      layer_fields: STANDARD_LAYER_FIELDS,
+      layer_filters:
+        layerFilterGroups.length > 0
+          ? {
+              logic: topLevelLogic,
+              groups: layerFilterGroups,
+            }
+          : undefined,
+      limit: 100,
+    };
+
+    return payload;
   };
+
+  const handleCreate = async () => {
+    // Final validation
+    if (controlGroupName.trim() === "") {
+      setNameError("Control group name is required");
+      return;
+    }
+    if (controlGroupPercentage < 1 || controlGroupPercentage > 100) {
+      setPercentageError("Percentage must be between 1 and 100");
+      return;
+    }
+    if (!generationMethod) {
+      setGenerationMethodError("Generation method is required");
+      return;
+    }
+
+    setIsCreating(true);
+    try {
+      let definition: SegmentPayload | undefined;
+
+      if (selectedCustomerBase === "custom_conditions") {
+        if (segmentConditions.length === 0) {
+          showToast("Please add at least one condition");
+          setIsCreating(false);
+          return;
+        }
+        definition = convertConditionsToPayload(segmentConditions);
+      }
+
+      const targetRenderConfig: TargetRenderTime = {
+        mode: "pre_render",
+        hours_before_start: 1,
+      };
+
+      const payload: CreateUniversalControlGroupRequest = {
+        name: controlGroupName,
+        percentage: controlGroupPercentage,
+        customer_source: {
+          type: selectedCustomerBase as "active_subscribers" | "all_customers" | "saved_segment",
+        },
+        generation_method: generationMethod as "random" | "stratified",
+        recurrence: {
+          pattern: scheduling.recurrence_pattern as "one_time" | "daily" | "weekly" | "monthly",
+          start_date: scheduling.start_date,
+          ...(scheduling.end_date && { end_date: scheduling.end_date }),
+        },
+        target_render_config: targetRenderConfig,
+        ...(definition && { definition }),
+      };
+
+      if (isEditMode && id) {
+        await controlGroupService.updateControlGroup(Number(id), payload);
+        showToast("Control group updated successfully");
+      } else {
+        await controlGroupService.createUniversalControlGroup(payload);
+        showToast("Control group created successfully");
+      }
+
+      navigate("/dashboard/control-groups");
+    } catch (error) {
+      console.error("Failed to save control group:", error);
+      showToast(
+        error instanceof Error ? error.message : "Failed to save control group"
+      );
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: color.primary.action }} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
@@ -189,7 +491,7 @@ export default function CreateControlGroupPage() {
             <BackButton
               fallbackTo="/dashboard/control-groups"
               showBreadcrumb={true}
-              currentLabel="Create Control Group"
+              currentLabel={isEditMode ? `Edit ${controlGroupName || "Control Group"}` : "Create Control Group"}
             />
           </div>
 
@@ -219,7 +521,6 @@ export default function CreateControlGroupPage() {
                     }}
                     className={`w-full px-3 text-sm py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-offset-0`}
                     style={{
-                      // Uses theme color for ring and focus border on the input.
                       ["--tw-ring-color" as string]: color.primary.action,
                     }}
                     onFocus={(e) => {
@@ -289,16 +590,16 @@ export default function CreateControlGroupPage() {
                     >
                       <Radio
                         name="customerBase"
-                        value="saved_segments"
-                        checked={selectedCustomerBase === "saved_segments"}
+                        value="custom_conditions"
+                        checked={selectedCustomerBase === "custom_conditions"}
                         onChange={() =>
-                          setSelectedCustomerBase("saved_segments")
+                          setSelectedCustomerBase("custom_conditions")
                         }
                         className="mt-1"
                       />
                       <div className="ml-3">
                         <div className="font-medium text-sm text-gray-900">
-                          Custom Segments
+                          Custom Conditions
                         </div>
                         <div className="text-xs text-gray-500">
                           Define custom segment conditions
@@ -307,10 +608,10 @@ export default function CreateControlGroupPage() {
                     </div>
                   </div>
 
-                  {selectedCustomerBase === "saved_segments" && (
+                  {selectedCustomerBase === "custom_conditions" && (
                     <div className="mt-6">
                       <label className="block text-sm font-medium text-gray-700 mb-3">
-                        Define Custom Segment Conditions
+                        Define Custom Conditions
                       </label>
                       <SegmentConditionsBuilder
                         conditions={segmentConditions}
@@ -332,11 +633,12 @@ export default function CreateControlGroupPage() {
                     <input
                       type="range"
                       min="1"
-                      max="50"
+                      max="100"
                       value={controlGroupPercentage}
-                      onChange={(e) =>
-                        setControlGroupPercentage(Number(e.target.value))
-                      }
+                      onChange={(e) => {
+                        setControlGroupPercentage(Number(e.target.value));
+                        if (percentageError) setPercentageError("");
+                      }}
                       className="flex-1"
                       style={{ accentColor: color.primary.action }}
                     />
@@ -346,13 +648,16 @@ export default function CreateControlGroupPage() {
                   </div>
                   <p className="text-xs text-gray-500 mt-2">
                     Percentage of customers to include in the control group
-                    (1-50%)
+                    (1-100%)
                   </p>
+                  {percentageError && (
+                    <p className="text-red-600 text-sm mt-1">{percentageError}</p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Generation Method
+                    Generation Method *
                   </label>
                   <div className="space-y-2">
                     <div className="flex items-center p-3 border border-gray-200 rounded cursor-pointer hover:bg-gray-50">
@@ -360,7 +665,10 @@ export default function CreateControlGroupPage() {
                         name="generationMethod"
                         value="random"
                         checked={generationMethod === "random"}
-                        onChange={() => setGenerationMethod("random")}
+                        onChange={() => {
+                          setGenerationMethod("random");
+                          if (generationMethodError) setGenerationMethodError("");
+                        }}
                       />
                       <span className="ml-3 text-sm font-medium text-gray-900">
                         Random Selection
@@ -372,13 +680,19 @@ export default function CreateControlGroupPage() {
                         name="generationMethod"
                         value="stratified"
                         checked={generationMethod === "stratified"}
-                        onChange={() => setGenerationMethod("stratified")}
+                        onChange={() => {
+                          setGenerationMethod("stratified");
+                          if (generationMethodError) setGenerationMethodError("");
+                        }}
                       />
                       <span className="ml-3 text-sm font-medium text-gray-900">
                         Stratified Sampling
                       </span>
                     </div>
                   </div>
+                  {generationMethodError && (
+                    <p className="text-red-600 text-sm mt-2">{generationMethodError}</p>
+                  )}
                 </div>
               </>
             )}
@@ -396,20 +710,10 @@ export default function CreateControlGroupPage() {
             {currentStep === 4 && (
               <div className="space-y-4">
                 <h3 className="text-base font-semibold text-gray-900">
-                  Review Control Group Setup
+                  Review Universal Control Group Setup
                 </h3>
-                <div
-                  className={`border border-gray-200 ${tw.rounded} p-4 bg-gray-50`}
-                >
-                  <p className="text-xs text-gray-500 mb-1">
-                    Selected Schedule
-                  </p>
-                  <p className="text-sm font-medium text-gray-900">
-                    {getScheduleSummary()}
-                  </p>
-                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className={`border border-gray-200 ${tw.rounded} p-4`}>
+                  <div className={`border border-gray-200 ${tw.rounded} p-4 md:col-span-2`}>
                     <p className="text-xs text-gray-500 mb-1">Group Name</p>
                     <p className="text-sm font-medium text-gray-900">
                       {controlGroupName || "-"}
@@ -434,13 +738,7 @@ export default function CreateControlGroupPage() {
                       Generation Method
                     </p>
                     <p className="text-sm font-medium text-gray-900 capitalize">
-                      {generationMethod}
-                    </p>
-                  </div>
-                  <div className={`border border-gray-200 ${tw.rounded} p-4`}>
-                    <p className="text-xs text-gray-500 mb-1">Schedule Type</p>
-                    <p className="text-sm font-medium text-gray-900 capitalize">
-                      {scheduling.type || "-"}
+                      {generationMethod === "random" ? "Random Selection" : "Stratified Sampling"}
                     </p>
                   </div>
                   <div className={`border border-gray-200 ${tw.rounded} p-4`}>
@@ -461,6 +759,14 @@ export default function CreateControlGroupPage() {
                       {scheduling.time_zone || "-"}
                     </p>
                   </div>
+                  {scheduling.end_date && (
+                    <div className={`border border-gray-200 ${tw.rounded} p-4`}>
+                      <p className="text-xs text-gray-500 mb-1">End Date</p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {scheduling.end_date || "-"}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -470,7 +776,8 @@ export default function CreateControlGroupPage() {
                 {currentStep > 1 ? (
                   <button
                     onClick={handlePrev}
-                    className={`inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-all duration-200`}
+                    disabled={isCreating}
+                    className={`inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
                     Previous
                   </button>
@@ -483,15 +790,18 @@ export default function CreateControlGroupPage() {
                 {currentStep === STEPS.length ? (
                   <button
                     onClick={handleCreate}
-                    className={`inline-flex items-center px-5 py-2 text-sm font-medium ${tw.rounded} text-white`}
+                    disabled={isCreating}
+                    className={`inline-flex items-center gap-2 px-5 py-2 text-sm font-medium ${tw.rounded} text-white disabled:opacity-50 disabled:cursor-not-allowed`}
                     style={{ backgroundColor: color.primary.action }}
                   >
-                    Create Control Group
+                    {isCreating && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {isCreating ? (isEditMode ? "Updating..." : "Creating...") : (isEditMode ? "Update Control Group" : "Create Control Group")}
                   </button>
                 ) : (
                   <button
                     onClick={handleNext}
-                    className={`inline-flex items-center px-5 py-2 text-sm font-medium ${tw.rounded} text-white`}
+                    disabled={isCreating}
+                    className={`inline-flex items-center px-5 py-2 text-sm font-medium ${tw.rounded} text-white disabled:opacity-50 disabled:cursor-not-allowed`}
                     style={{ backgroundColor: color.primary.action }}
                   >
                     Next

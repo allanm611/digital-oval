@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Shield,
@@ -9,37 +9,99 @@ import {
   Users,
   Percent,
   MoreVertical,
+  Loader2,
+  Eye,
 } from "lucide-react";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import BackButton from "../../../shared/components/ui/BackButton";
-import { color, tw } from "../../../shared/utils/utils";
-import {
-  UniversalControlGroup,
-  UNIVERSAL_CONTROL_GROUPS,
-} from "../configs/universalControlGroupsConfig";
+import { color, tw, button } from "../../../shared/utils/utils";
+import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import Pagination from "../../../shared/components/ui/Pagination";
+import { useToast } from "../../../contexts/ToastContext";
+import { controlGroupService } from "../services/controlGroupService";
+import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import type { ControlGroupApiModel, ControlGroupStatistics } from "../types/controlGroup";
 
 export default function ControlGroupsPage() {
   const navigate = useNavigate();
+  const { success: showSuccess, error: showError } = useToast();
+  const [controlGroups, setControlGroups] = useState<ControlGroupApiModel[]>([]);
+  const [statistics, setStatistics] = useState<ControlGroupStatistics | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<
-    "all" | "active" | "inactive" | "expired"
-  >("all");
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
 
   const statusFilterOptions = [
     { value: "all", label: "All Status" },
     { value: "active", label: "Active" },
     { value: "inactive", label: "Inactive" },
-    { value: "expired", label: "Expired" },
   ];
 
-  const controlGroups: UniversalControlGroup[] = UNIVERSAL_CONTROL_GROUPS;
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [groupToDelete, setGroupToDelete] = useState<{ id: number; name: string } | null>(null);
+
+  const loadData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const [groupsResponse, statsResponse] = await Promise.all([
+        controlGroupService.listControlGroups({
+          limit: pageSize,
+          offset: (page - 1) * pageSize,
+        }),
+        controlGroupService.getStatistics(),
+      ]);
+
+      setControlGroups(groupsResponse.control_groups || []);
+      setTotalCount(groupsResponse.total_count || 0);
+      setStatistics(statsResponse);
+    } catch (error) {
+      showError("Failed to load control groups");
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [page, pageSize, showError]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const handleDeleteClick = (id: number, name: string) => {
+    setGroupToDelete({ id, name });
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!groupToDelete) return;
+
+    setIsDeleting(groupToDelete.id);
+    try {
+      await controlGroupService.deleteControlGroup(groupToDelete.id);
+      setControlGroups(controlGroups.filter((g) => g.id !== groupToDelete.id));
+      setTotalCount(Math.max(0, totalCount - 1));
+      showSuccess("Control group deleted successfully");
+      setShowDeleteModal(false);
+      setGroupToDelete(null);
+    } catch (error) {
+      showError("Failed to delete control group");
+      console.error(error);
+    } finally {
+      setIsDeleting(null);
+    }
+  };
 
   const filteredGroups = controlGroups.filter((group) => {
     const matchesSearch =
       group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      group.description?.toLowerCase().includes(searchTerm.toLowerCase());
+      (group.description?.toLowerCase() || "").includes(searchTerm.toLowerCase());
     const matchesStatus =
-      statusFilter === "all" || group.status === statusFilter;
+      statusFilter === "all" ||
+      (statusFilter === "active" && group.is_active) ||
+      (statusFilter === "inactive" && !group.is_active);
     return matchesSearch && matchesStatus;
   });
 
@@ -49,16 +111,16 @@ export default function ControlGroupsPage() {
         return "Active Subscribers";
       case "all_customers":
         return "All Customers";
-      case "saved_segments":
-        return "Custom Segments";
+      case "saved_segment":
+        return "Custom Conditions";
       default:
         return base;
     }
   };
 
-  const getRecurrenceLabel = (recurrence: string) => {
+  const getRecurrenceLabel = (recurrence: string | null) => {
     switch (recurrence) {
-      case "once":
+      case "one_time":
         return "One-time";
       case "daily":
         return "Daily";
@@ -67,7 +129,7 @@ export default function ControlGroupsPage() {
       case "monthly":
         return "Monthly";
       default:
-        return recurrence;
+        return recurrence || "-";
     }
   };
 
@@ -75,9 +137,14 @@ export default function ControlGroupsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div className="space-y-3">
-          <BackButton fallbackTo="/dashboard/configuration" />
+          <BackButton
+            fallbackTo="/dashboard/configuration"
+            showBreadcrumb={true}
+            currentLabel="Universal Control Groups"
+          />
           <div>
-            <p className="text-gray-600 mt-1 text-sm">Control Groups</p>
+            <h1 className="text-2xl font-bold text-gray-900">Universal Control Groups</h1>
+            <p className="text-gray-600 mt-1 text-sm">Create and manage control groups to measure campaign effectiveness and customer behavior</p>
           </div>
         </div>
 
@@ -105,7 +172,7 @@ export default function ControlGroupsPage() {
             <p className="text-sm font-medium text-gray-600">Total Groups</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
-            {controlGroups.length}
+            {isLoading ? "-" : statistics?.total_control_groups || 0}
           </p>
         </div>
 
@@ -120,7 +187,7 @@ export default function ControlGroupsPage() {
             <p className="text-sm font-medium text-gray-600">Active Groups</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
-            {controlGroups.filter((g) => g.status === "active").length}
+            {isLoading ? "-" : statistics?.active_groups || 0}
           </p>
         </div>
 
@@ -132,16 +199,10 @@ export default function ControlGroupsPage() {
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">Avg Percentage</p>
+            <p className="text-sm font-medium text-gray-600">Total Members</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
-            {controlGroups.length > 0
-              ? (
-                  controlGroups.reduce((sum, g) => sum + g.percentage, 0) /
-                  controlGroups.length
-                ).toFixed(1)
-              : 0}
-            %
+            {isLoading ? "-" : (statistics?.total_members || 0).toLocaleString()}
           </p>
         </div>
       </div>
@@ -164,9 +225,7 @@ export default function ControlGroupsPage() {
               options={statusFilterOptions}
               value={statusFilter}
               onChange={(value: string | number) =>
-                setStatusFilter(
-                  value as "all" | "active" | "inactive" | "expired",
-                )
+                setStatusFilter(value as string)
               }
               placeholder="Filter by status"
             />
@@ -175,145 +234,179 @@ export default function ControlGroupsPage() {
       </div>
 
       <div
-        className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
+        className={`${tw.rounded} border border-gray-200 overflow-hidden`}
       >
-        {filteredGroups.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table
-              className="w-full min-w-[720px]"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead style={{ background: color.surface.tableHeader }}>
-                <tr>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Name
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Status
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Generation Time
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Percentage
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Member Count
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Customer Base
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Recurrence
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredGroups.map((group) => (
-                  <tr key={group.id} className="transition-colors">
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div
-                        className={`font-semibold text-sm sm:text-base ${tw.textPrimary}`}
-                      >
-                        {group.name}
-                      </div>
-                    </td>
-                    <td
-                      className={`px-6 py-4 text-sm font-medium ${tw.textPrimary}`}
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {group.status}
-                    </td>
-                    <td
-                      className={`px-6 py-4 text-sm ${tw.textPrimary}`}
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {group.generationTime}
-                    </td>
-                    <td
-                      className={`px-6 py-4 text-sm ${tw.textPrimary}`}
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {group.percentage}%
-                    </td>
-                    <td
-                      className={`px-6 py-4 text-sm ${tw.textPrimary}`}
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {group.memberCount.toLocaleString()}
-                    </td>
-                    <td
-                      className={`px-6 py-4 text-sm ${tw.textPrimary}`}
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {getCustomerBaseLabel(group.customerBase)}
-                    </td>
-                    <td
-                      className={`px-6 py-4 text-sm ${tw.textPrimary}`}
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {getRecurrenceLabel(group.recurrence)}
-                    </td>
-                    <td
-                      className="px-6 py-4 text-sm font-medium"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
-                          title="Edit"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button
-                          className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-all duration-200`}
-                          title="Delete"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                        <button
-                          className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
-                          title="More options"
-                        >
-                          <MoreVertical className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {isLoading ? (
+          <div className="flex justify-center items-center py-12">
+            <LoadingSpinner variant="modern" size="lg" color="primary" />
           </div>
+        ) : filteredGroups.length > 0 ? (
+          <>
+            <div className="overflow-x-auto">
+              <table
+                className="w-full min-w-[720px]"
+                style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+              >
+                <thead style={{ background: color.surface.tableHeader }}>
+                  <tr>
+                    <th
+                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: color.surface.tableHeaderText }}
+                    >
+                      Name
+                    </th>
+                    <th
+                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: color.surface.tableHeaderText }}
+                    >
+                      Status
+                    </th>
+                    <th
+                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: color.surface.tableHeaderText }}
+                    >
+                      Type
+                    </th>
+                    <th
+                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: color.surface.tableHeaderText }}
+                    >
+                      Percentage
+                    </th>
+                    <th
+                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: color.surface.tableHeaderText }}
+                    >
+                      Members
+                    </th>
+                    <th
+                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: color.surface.tableHeaderText }}
+                    >
+                      Customer Base
+                    </th>
+                    <th
+                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: color.surface.tableHeaderText }}
+                    >
+                      Recurrence
+                    </th>
+                    <th
+                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: color.surface.tableHeaderText }}
+                    >
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredGroups.map((group) => (
+                    <tr key={group.id} className="transition-colors">
+                      <td
+                        className="px-6 py-4"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
+                        <div className="font-semibold text-sm sm:text-base text-black">
+                          {group.name}
+                        </div>
+                      </td>
+                      <td
+                        className="px-6 py-4 text-sm font-medium text-black"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
+                        {group.is_active ? "Active" : "Inactive"}
+                      </td>
+                      <td
+                        className="px-6 py-4 text-sm text-black"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
+                        <span className="capitalize">{group.type}</span>
+                      </td>
+                      <td
+                        className="px-6 py-4 text-sm text-black"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
+                        {group.percentage || "-"}%
+                      </td>
+                      <td
+                        className="px-6 py-4 text-sm text-black"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
+                        {(group.member_count || 0).toLocaleString()}
+                      </td>
+                      <td
+                        className="px-6 py-4 text-sm text-black"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
+                        {getCustomerBaseLabel(
+                          group.customer_source_type || "manual"
+                        )}
+                      </td>
+                      <td
+                        className="px-6 py-4 text-sm text-black"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
+                        {getRecurrenceLabel(group.recurrence_pattern)}
+                      </td>
+                      <td
+                        className="px-6 py-4 text-sm font-medium"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() =>
+                              navigate(
+                                `/dashboard/control-groups/${group.id}`
+                              )
+                            }
+                            className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200 disabled:opacity-50`}
+                            disabled={isDeleting === group.id}
+                            title="View"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() =>
+                              navigate(
+                                `/dashboard/control-groups/${group.id}/edit`
+                              )
+                            }
+                            className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200 disabled:opacity-50`}
+                            disabled={isDeleting === group.id}
+                            title="Edit"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(group.id, group.name)}
+                            disabled={isDeleting === group.id}
+                            className={`p-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80`}
+                            title="Delete"
+                          >
+                            {isDeleting === group.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin text-red-600" />
+                            ) : (
+                              <Trash2 className="h-4 w-4 text-red-600" />
+                            )}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {totalCount > pageSize && (
+              <div className="px-6 py-4 border-t border-gray-200">
+                <Pagination
+                  currentPage={page}
+                  pageSize={pageSize}
+                  totalItems={totalCount}
+                  onPageChange={setPage}
+                />
+              </div>
+            )}
+          </>
         ) : (
           <div className="text-center py-12">
             <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -327,7 +420,7 @@ export default function ControlGroupsPage() {
             </p>
             <button
               onClick={() => navigate("/dashboard/control-groups/create")}
-              className={`inline-flex items-center px-4 py-2 ${tw.primaryAction} ${tw.rounded} text-sm font-medium transition-colors hover:opacity-90`}
+              className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium transition-colors hover:opacity-90 text-white`}
               style={{ backgroundColor: color.primary.action }}
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -336,6 +429,19 @@ export default function ControlGroupsPage() {
           </div>
         )}
       </div>
+
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setGroupToDelete(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Delete Control Group"
+        description="This action cannot be undone. All members in this control group will be unassigned."
+        itemName={groupToDelete?.name || ""}
+        isLoading={isDeleting === groupToDelete?.id}
+      />
     </div>
   );
 }

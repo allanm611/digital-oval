@@ -981,7 +981,7 @@ export default function OffersPage() {
       case OfferStatusEnum.DRAFT:
         return (
           <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-base font-medium bg-[${color.surface.cards}] text-[${color.text.primary}]`}
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-[${color.surface.cards}] text-[${color.text.primary}]`}
           >
             draft
           </span>
@@ -989,7 +989,7 @@ export default function OffersPage() {
       case OfferStatusEnum.ACTIVE:
         return (
           <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-base font-medium bg-[${color.status.success}] text-[${color.status.success}]`}
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-[${color.status.success}] text-[${color.status.success}]`}
           >
             active
           </span>
@@ -997,7 +997,7 @@ export default function OffersPage() {
       case OfferStatusEnum.PAUSED:
         return (
           <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-base font-medium bg-[${color.status.warning}] text-[${color.status.warning}]`}
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-[${color.status.warning}] text-[${color.status.warning}]`}
           >
             paused
           </span>
@@ -1005,7 +1005,7 @@ export default function OffersPage() {
       case OfferStatusEnum.EXPIRED:
         return (
           <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-base font-medium bg-[${color.status.danger}] text-[${color.status.danger}]`}
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-[${color.status.danger}] text-[${color.status.danger}]`}
           >
             expired
           </span>
@@ -1013,7 +1013,7 @@ export default function OffersPage() {
       case OfferStatusEnum.ARCHIVED:
         return (
           <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-base font-medium bg-[${color.surface.cards}] text-[${color.text.primary}]`}
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-[${color.surface.cards}] text-[${color.text.primary}]`}
           >
             archived
           </span>
@@ -1021,7 +1021,7 @@ export default function OffersPage() {
       default:
         return (
           <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-base font-medium bg-[${color.surface.cards}] text-[${color.text.primary}]`}
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-[${color.surface.cards}] text-[${color.text.primary}]`}
           >
             {status}
           </span>
@@ -1034,7 +1034,7 @@ export default function OffersPage() {
       case "pending":
         return (
           <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-base font-medium bg-[${color.status.warning}]/10 text-[${color.status.warning}]`}
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-[${color.status.warning}]/10 text-[${color.status.warning}]`}
           >
             pending
           </span>
@@ -1042,7 +1042,7 @@ export default function OffersPage() {
       case "approved":
         return (
           <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-base font-medium bg-[${color.status.success}]/10 text-[${color.status.success}]`}
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-[${color.status.success}]/10 text-[${color.status.success}]`}
           >
             approved
           </span>
@@ -1050,7 +1050,7 @@ export default function OffersPage() {
       case "rejected":
         return (
           <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-base font-medium bg-[${color.status.danger}]/10 text-[${color.status.danger}]`}
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-[${color.status.danger}]/10 text-[${color.status.danger}]`}
           >
             rejected
           </span>
@@ -1058,7 +1058,7 @@ export default function OffersPage() {
       default:
         return (
           <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-base font-medium bg-[${color.surface.cards}] text-[${color.text.primary}]`}
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-[${color.surface.cards}] text-[${color.text.primary}]`}
           >
             {status}
           </span>
@@ -1304,7 +1304,7 @@ export default function OffersPage() {
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       <div
-                        className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`}
+                        className={`${tw.tableFirstColumn} ${tw.textPrimary} text-sm truncate`}
                         title={offer.name}
                       >
                         {offer.name}
@@ -1315,7 +1315,7 @@ export default function OffersPage() {
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       <span
-                        className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${
+                        className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-sm font-medium ${
                           getCategoryName(offer.category_id) === "Data Offers"
                             ? `bg-[${color.status.info}]/10 text-[${color.status.info}]`
                             : getCategoryName(offer.category_id) ===

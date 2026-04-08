@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { tw, color } from "../../../shared/utils/utils";
@@ -8,6 +8,11 @@ interface CreateVIPListModalProps {
   onClose: () => void;
   onSubmit: (data: CreateVIPListRequest) => Promise<void>;
   isLoading?: boolean;
+  mode?: "create" | "edit";
+  initialData?: {
+    name?: string;
+    description?: string;
+  } | null;
 }
 
 interface CreateVIPListRequest {
@@ -26,12 +31,30 @@ export default function CreateVIPListModal({
   onClose,
   onSubmit,
   isLoading = false,
+  mode = "create",
+  initialData = null,
 }: CreateVIPListModalProps) {
   const [formData, setFormData] = useState<CreateVIPListRequest>({
     name: "",
     description: "",
   });
   const [errors, setErrors] = useState<FormErrors>({});
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    if (mode === "edit" && initialData) {
+      setFormData({
+        name: initialData.name || "",
+        description: initialData.description || "",
+      });
+    } else {
+      setFormData({ name: "", description: "" });
+    }
+    setErrors({});
+  }, [isOpen, mode, initialData]);
 
   const handleChange = (field: keyof CreateVIPListRequest, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -83,8 +106,14 @@ export default function CreateVIPListModal({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
-            <h2 className="text-sm font-semibold text-black">Create VIP List</h2>
-            <p className="text-sm text-gray-600 mt-1">Create a new VIP customer list</p>
+            <h2 className="text-sm font-semibold text-black">
+              {mode === "edit" ? "Edit VIP List" : "Create VIP List"}
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              {mode === "edit"
+                ? "Update VIP list details"
+                : "Create a new VIP customer list"}
+            </p>
           </div>
           <button
             onClick={handleClose}
@@ -157,7 +186,13 @@ export default function CreateVIPListModal({
               backgroundColor: formData.name.trim() ? color.primary.action : color.text.muted,
             }}
           >
-            {isLoading ? "Creating..." : "Create List"}
+            {isLoading
+              ? mode === "edit"
+                ? "Saving..."
+                : "Creating..."
+              : mode === "edit"
+                ? "Save Changes"
+                : "Create List"}
           </button>
         </div>
       </div>

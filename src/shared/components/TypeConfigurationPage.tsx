@@ -318,7 +318,11 @@ function TypeConfigurationModal({
         setLocale(item.locale || "");
       }
       if (
-        (isLanguage || isCharacterSet || isSmsRoutes || isRoutes || isNotificationType) &&
+        (isLanguage ||
+          isCharacterSet ||
+          isSmsRoutes ||
+          isRoutes ||
+          isNotificationType) &&
         config.customFields
       ) {
         const fields: Record<string, string> = {};
@@ -375,7 +379,11 @@ function TypeConfigurationModal({
         setLocale("");
       }
       if (
-        (isLanguage || isCharacterSet || isSmsRoutes || isRoutes || isNotificationType) &&
+        (isLanguage ||
+          isCharacterSet ||
+          isSmsRoutes ||
+          isRoutes ||
+          isNotificationType) &&
         config.customFields
       ) {
         const fields: Record<string, string> = {};
@@ -521,7 +529,11 @@ function TypeConfigurationModal({
 
     // Add custom fields for languages, character sets, SMS routes, and routes
     if (
-      (isLanguage || isCharacterSet || isSmsRoutes || isRoutes || isNotificationType) &&
+      (isLanguage ||
+        isCharacterSet ||
+        isSmsRoutes ||
+        isRoutes ||
+        isNotificationType) &&
       config.customFields
     ) {
       for (const field of config.customFields) {
@@ -690,7 +702,11 @@ function TypeConfigurationModal({
           )}
 
           {/* Custom Fields (for Languages, Character Sets, SMS Routes, and Routes) */}
-          {(isLanguage || isCharacterSet || isSmsRoutes || isRoutes || isNotificationType) &&
+          {(isLanguage ||
+            isCharacterSet ||
+            isSmsRoutes ||
+            isRoutes ||
+            isNotificationType) &&
             config.customFields && (
               <>
                 {config.customFields
@@ -1229,7 +1245,8 @@ function TypeConfigurationModal({
               {/* Validity & Price - 2 Column Layout */}
               <div className="pt-3 mt-3">
                 <label className="flex items-center gap-2 mb-3">
-                  <Checkbox checked={comboSharedValidity}
+                  <Checkbox
+                    checked={comboSharedValidity}
                     onChange={(e) => {
                       setComboSharedValidity(e.target.checked);
                       setComboResources(
@@ -1239,14 +1256,16 @@ function TypeConfigurationModal({
                         })),
                       );
                     }}
-                    className="rounded" />
+                    className="rounded"
+                  />
                   <span className="text-sm font-medium text-gray-700">
                     Shared Validity
                   </span>
                 </label>
 
                 <label className="flex items-center gap-2 mb-3">
-                  <Checkbox checked={comboSharedPrice}
+                  <Checkbox
+                    checked={comboSharedPrice}
                     onChange={(e) => {
                       const checked = e.target.checked;
                       setComboSharedPrice(checked);
@@ -1259,7 +1278,8 @@ function TypeConfigurationModal({
                         );
                       }
                     }}
-                    className="rounded" />
+                    className="rounded"
+                  />
                   <span className="text-sm font-medium text-gray-700">
                     Shared Combo Price
                   </span>

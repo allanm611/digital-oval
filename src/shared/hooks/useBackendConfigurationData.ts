@@ -1,25 +1,87 @@
 import { useState, useEffect, useCallback } from "react";
-import { campaignTypeService, CampaignType, CreateCampaignTypeRequest, UpdateCampaignTypeRequest } from "../../features/campaigns/services/campaignTypeService";
-import { offerTypeService, OfferType, CreateOfferTypeRequest, UpdateOfferTypeRequest } from "../../features/offers/services/offerTypeService";
-import { rewardTypeService, RewardType, CreateRewardTypeRequest, UpdateRewardTypeRequest } from "../../features/offers/services/rewardTypeService";
-import { segmentTypeService, SegmentType, CreateSegmentTypeRequest, UpdateSegmentTypeRequest } from "../../features/segments/services/segmentTypeService";
-import { productTypeService, ProductType, CreateProductTypeRequest, UpdateProductTypeRequest } from "../../features/products/services/productTypeService";
-import { senderIdService, SenderId } from "../../features/configurations/services/senderIdService";
-import { languageService, Language } from "../../features/configurations/services/languageService";
-import { characterSetService, CharacterSet } from "../../features/configurations/services/characterSetService";
-import { creativeTemplateService, CreativeTemplate } from "../../features/configurations/services/creativeTemplateService";
-import { smsRouteService, SmsRoute, CreateSmsRouteRequest, UpdateSmsRouteRequest } from "../../features/routes/services/smsRouteService";
-import { comboTypeService, ComboType, CreateComboTypeRequest, UpdateComboTypeRequest } from "../../features/products/services/comboTypeService";
-import { notificationTypeService, NotificationType, CreateNotificationTypeRequest, UpdateNotificationTypeRequest } from "../services/notificationTypeService";
-import { vipListService, VIPList, CreateVIPListRequest, AddVIPMemberRequest } from "../services/vipListService";
-import { controlGroupService, ControlGroup, CreateControlGroupRequest, UpdateControlGroupRequest } from "../services/controlGroupService";
+import {
+  campaignTypeService,
+  CampaignType,
+  CreateCampaignTypeRequest,
+  UpdateCampaignTypeRequest,
+} from "../../features/campaigns/services/campaignTypeService";
+import {
+  offerTypeService,
+  OfferType,
+  CreateOfferTypeRequest,
+  UpdateOfferTypeRequest,
+} from "../../features/offers/services/offerTypeService";
+import {
+  rewardTypeService,
+  RewardType,
+  CreateRewardTypeRequest,
+  UpdateRewardTypeRequest,
+} from "../../features/offers/services/rewardTypeService";
+import {
+  segmentTypeService,
+  SegmentType,
+  CreateSegmentTypeRequest,
+  UpdateSegmentTypeRequest,
+} from "../../features/segments/services/segmentTypeService";
+import {
+  productTypeService,
+  ProductType,
+  CreateProductTypeRequest,
+  UpdateProductTypeRequest,
+} from "../../features/products/services/productTypeService";
+import {
+  senderIdService,
+  SenderId,
+} from "../../features/configurations/services/senderIdService";
+import {
+  languageService,
+  Language,
+} from "../../features/configurations/services/languageService";
+import {
+  characterSetService,
+  CharacterSet,
+} from "../../features/configurations/services/characterSetService";
+import {
+  creativeTemplateService,
+  CreativeTemplate,
+} from "../../features/configurations/services/creativeTemplateService";
+import {
+  smsRouteService,
+  SmsRoute,
+  CreateSmsRouteRequest,
+  UpdateSmsRouteRequest,
+} from "../../features/routes/services/smsRouteService";
+import {
+  comboTypeService,
+  ComboType,
+  CreateComboTypeRequest,
+  UpdateComboTypeRequest,
+} from "../../features/products/services/comboTypeService";
+import {
+  notificationTypeService,
+  NotificationType,
+  CreateNotificationTypeRequest,
+  UpdateNotificationTypeRequest,
+} from "../services/notificationTypeService";
+import {
+  vipListService,
+  VIPList,
+  CreateVIPListRequest,
+  AddVIPMemberRequest,
+} from "../services/vipListService";
+import {
+  controlGroupService,
+  ControlGroup,
+  CreateControlGroupRequest,
+  UpdateControlGroupRequest,
+} from "../services/controlGroupService";
 
 /**
  * Normalize API response to TypeConfigurationItem format
  * Converts API field names back to metadataValue for display
  */
 function normalizeApiResponse(type: string, data: any[]): any[] {
-  return data.map(item => {
+  return data.map((item) => {
     const normalized = { ...item };
 
     switch (type) {
@@ -99,14 +161,19 @@ function normalizeApiResponse(type: string, data: any[]): any[] {
           normalized.isActive = normalized.is_active;
         }
         // Convert combo_resources to comboResources and transform nested fields
-        if (normalized.combo_resources && Array.isArray(normalized.combo_resources)) {
-          normalized.comboResources = normalized.combo_resources.map((resource: any) => ({
-            type: resource.resource_type,
-            value: resource.unit_value,
-            unit: resource.unit,
-            sharedValidity: resource.shared_validity,
-            sharedValidityHours: resource.shared_validity_hours,
-          }));
+        if (
+          normalized.combo_resources &&
+          Array.isArray(normalized.combo_resources)
+        ) {
+          normalized.comboResources = normalized.combo_resources.map(
+            (resource: any) => ({
+              type: resource.resource_type,
+              value: resource.unit_value,
+              unit: resource.unit,
+              sharedValidity: resource.shared_validity,
+              sharedValidityHours: resource.shared_validity_hours,
+            }),
+          );
         }
         // Convert shared_validity to sharedValidity
         if (normalized.shared_validity !== undefined) {
@@ -182,7 +249,10 @@ function transformPayload(type: string, payload: any): any {
       }
       // Map characterSetSize to character_set_size (as number)
       if (transformed.characterSetSize) {
-        transformed.character_set_size = parseInt(String(transformed.characterSetSize), 10);
+        transformed.character_set_size = parseInt(
+          String(transformed.characterSetSize),
+          10,
+        );
         delete transformed.characterSetSize;
       }
       // Map character strings (camelCase to snake_case)
@@ -276,15 +346,20 @@ function transformPayload(type: string, payload: any): any {
         delete transformed.isActive;
       }
       // Map comboResources to combo_resources with nested field transformations
-      if (transformed.comboResources && Array.isArray(transformed.comboResources)) {
-        transformed.combo_resources = transformed.comboResources.map((resource: any) => ({
-          resource_type: resource.type,
-          unit_value: resource.value,
-          unit: resource.unit,
-          shared_validity: resource.sharedValidity,
-          shared_validity_hours: resource.sharedValidityHours,
-          ...(resource.price !== undefined && { price: resource.price }),
-        }));
+      if (
+        transformed.comboResources &&
+        Array.isArray(transformed.comboResources)
+      ) {
+        transformed.combo_resources = transformed.comboResources.map(
+          (resource: any) => ({
+            resource_type: resource.type,
+            unit_value: resource.value,
+            unit: resource.unit,
+            shared_validity: resource.sharedValidity,
+            shared_validity_hours: resource.sharedValidityHours,
+            ...(resource.price !== undefined && { price: resource.price }),
+          }),
+        );
         delete transformed.comboResources;
       }
       // Map sharedValidity to shared_validity
@@ -334,7 +409,9 @@ export interface UseBackendConfigDataActions<T, CreateReq, UpdateReq> {
   delete: (id: number) => Promise<void>;
 }
 
-export type UseBackendConfigDataResult<T, CreateReq, UpdateReq> = UseBackendConfigDataState<T> & UseBackendConfigDataActions<T, CreateReq, UpdateReq>;
+export type UseBackendConfigDataResult<T, CreateReq, UpdateReq> =
+  UseBackendConfigDataState<T> &
+    UseBackendConfigDataActions<T, CreateReq, UpdateReq>;
 
 /**
  * Hook for managing backend-driven configuration data
@@ -343,7 +420,22 @@ export type UseBackendConfigDataResult<T, CreateReq, UpdateReq> = UseBackendConf
  * Pass undefined to skip fetching (useful for conditional hook usage in React)
  */
 export function useBackendConfigurationData(
-  type: "campaignTypes" | "offerTypes" | "segmentTypes" | "productTypes" | "rewardTypes" | "senderIds" | "languages" | "characterSets" | "creativeTemplates" | "smsRoutes" | "comboTypes" | "notificationTypes" | "vipLists" | "controlGroups" | undefined
+  type:
+    | "campaignTypes"
+    | "offerTypes"
+    | "segmentTypes"
+    | "productTypes"
+    | "rewardTypes"
+    | "senderIds"
+    | "languages"
+    | "characterSets"
+    | "creativeTemplates"
+    | "smsRoutes"
+    | "comboTypes"
+    | "notificationTypes"
+    | "vipLists"
+    | "controlGroups"
+    | undefined,
 ): UseBackendConfigDataResult<any, any, any> | null {
   const [data, setData] = useState<CampaignType[]>([]);
   const [loading, setLoading] = useState(true);
@@ -370,14 +462,21 @@ export function useBackendConfigurationData(
           if (response?.success && response?.data) {
             setData(response.data);
           } else {
-            throw new Error(response?.error || "Failed to fetch campaign types");
+            throw new Error(
+              response?.error || "Failed to fetch campaign types",
+            );
           }
           break;
 
         case "senderIds":
           response = await senderIdService.getSenderIds();
           if (response?.success && response?.data) {
-            setData(normalizeApiResponse(type, Array.isArray(response.data) ? response.data : []));
+            setData(
+              normalizeApiResponse(
+                type,
+                Array.isArray(response.data) ? response.data : [],
+              ),
+            );
           } else if (Array.isArray(response)) {
             setData(normalizeApiResponse(type, response));
           } else {
@@ -388,7 +487,12 @@ export function useBackendConfigurationData(
         case "languages":
           response = await languageService.getLanguages();
           if (response?.success && response?.data) {
-            setData(normalizeApiResponse(type, Array.isArray(response.data) ? response.data : []));
+            setData(
+              normalizeApiResponse(
+                type,
+                Array.isArray(response.data) ? response.data : [],
+              ),
+            );
           } else if (Array.isArray(response)) {
             setData(normalizeApiResponse(type, response));
           } else {
@@ -399,7 +503,12 @@ export function useBackendConfigurationData(
         case "characterSets":
           response = await characterSetService.getCharacterSets();
           if (response?.success && response?.data) {
-            setData(normalizeApiResponse(type, Array.isArray(response.data) ? response.data : []));
+            setData(
+              normalizeApiResponse(
+                type,
+                Array.isArray(response.data) ? response.data : [],
+              ),
+            );
           } else if (Array.isArray(response)) {
             setData(normalizeApiResponse(type, response));
           } else {
@@ -410,7 +519,12 @@ export function useBackendConfigurationData(
         case "creativeTemplates":
           response = await creativeTemplateService.getCreativeTemplates();
           if (response?.success && response?.data) {
-            setData(normalizeApiResponse(type, Array.isArray(response.data) ? response.data : []));
+            setData(
+              normalizeApiResponse(
+                type,
+                Array.isArray(response.data) ? response.data : [],
+              ),
+            );
           } else if (Array.isArray(response)) {
             setData(normalizeApiResponse(type, response));
           } else {
@@ -421,7 +535,12 @@ export function useBackendConfigurationData(
         case "offerTypes":
           response = await offerTypeService.getAllOfferTypes();
           if (response?.success && response?.data) {
-            setData(normalizeApiResponse(type, Array.isArray(response.data) ? response.data : []));
+            setData(
+              normalizeApiResponse(
+                type,
+                Array.isArray(response.data) ? response.data : [],
+              ),
+            );
           } else if (Array.isArray(response)) {
             setData(normalizeApiResponse(type, response));
           } else {
@@ -432,7 +551,12 @@ export function useBackendConfigurationData(
         case "segmentTypes":
           response = await segmentTypeService.getAllSegmentTypes();
           if (response?.success && response?.data) {
-            setData(normalizeApiResponse(type, Array.isArray(response.data) ? response.data : []));
+            setData(
+              normalizeApiResponse(
+                type,
+                Array.isArray(response.data) ? response.data : [],
+              ),
+            );
           } else if (Array.isArray(response)) {
             setData(normalizeApiResponse(type, response));
           } else {
@@ -443,7 +567,12 @@ export function useBackendConfigurationData(
         case "productTypes":
           response = await productTypeService.getAllProductTypes();
           if (response?.success && response?.data) {
-            setData(normalizeApiResponse(type, Array.isArray(response.data) ? response.data : []));
+            setData(
+              normalizeApiResponse(
+                type,
+                Array.isArray(response.data) ? response.data : [],
+              ),
+            );
           } else if (Array.isArray(response)) {
             setData(normalizeApiResponse(type, response));
           } else {
@@ -454,7 +583,12 @@ export function useBackendConfigurationData(
         case "rewardTypes":
           response = await rewardTypeService.getAllRewardTypes();
           if (response?.success && response?.data) {
-            setData(normalizeApiResponse(type, Array.isArray(response.data) ? response.data : []));
+            setData(
+              normalizeApiResponse(
+                type,
+                Array.isArray(response.data) ? response.data : [],
+              ),
+            );
           } else if (Array.isArray(response)) {
             setData(normalizeApiResponse(type, response));
           } else {
@@ -514,7 +648,10 @@ export function useBackendConfigurationData(
       }
     } catch (err) {
       // Silently fail - endpoint may not be ready yet or returning errors
-      console.debug(`Configuration fetch failed for ${type}:`, err instanceof Error ? err.message : err);
+      console.debug(
+        `Configuration fetch failed for ${type}:`,
+        err instanceof Error ? err.message : err,
+      );
       setData([]);
       setError(null);
     } finally {
@@ -553,10 +690,15 @@ export function useBackendConfigurationData(
           case "languages":
           case "characterSets":
           case "creativeTemplates":
-            if (type === "senderIds") response = await senderIdService.createSenderId(payload);
-            else if (type === "languages") response = await languageService.createLanguage(payload);
-            else if (type === "characterSets") response = await characterSetService.createCharacterSet(payload);
-            else if (type === "creativeTemplates") response = await creativeTemplateService.createCreativeTemplate(payload);
+            if (type === "senderIds")
+              response = await senderIdService.createSenderId(payload);
+            else if (type === "languages")
+              response = await languageService.createLanguage(payload);
+            else if (type === "characterSets")
+              response = await characterSetService.createCharacterSet(payload);
+            else if (type === "creativeTemplates")
+              response =
+                await creativeTemplateService.createCreativeTemplate(payload);
             // Return the data if wrapped, otherwise return response directly
             return response?.data || response;
           case "smsRoutes":
@@ -583,7 +725,7 @@ export function useBackendConfigurationData(
         throw err;
       }
     },
-    [type]
+    [type],
   );
 
   // Update existing item
@@ -595,7 +737,10 @@ export function useBackendConfigurationData(
         let response: any;
         switch (type) {
           case "campaignTypes":
-            response = await campaignTypeService.updateCampaignType(id, payload);
+            response = await campaignTypeService.updateCampaignType(
+              id,
+              payload,
+            );
             if (response?.success && response?.data) {
               return response.data;
             } else {
@@ -617,10 +762,20 @@ export function useBackendConfigurationData(
           case "languages":
           case "characterSets":
           case "creativeTemplates":
-            if (type === "senderIds") response = await senderIdService.updateSenderId(id, payload);
-            else if (type === "languages") response = await languageService.updateLanguage(id, payload);
-            else if (type === "characterSets") response = await characterSetService.updateCharacterSet(id, payload);
-            else if (type === "creativeTemplates") response = await creativeTemplateService.updateCreativeTemplate(id, payload);
+            if (type === "senderIds")
+              response = await senderIdService.updateSenderId(id, payload);
+            else if (type === "languages")
+              response = await languageService.updateLanguage(id, payload);
+            else if (type === "characterSets")
+              response = await characterSetService.updateCharacterSet(
+                id,
+                payload,
+              );
+            else if (type === "creativeTemplates")
+              response = await creativeTemplateService.updateCreativeTemplate(
+                id,
+                payload,
+              );
             // Return the data if wrapped, otherwise return response directly
             return response?.data || response;
           case "smsRoutes":
@@ -647,7 +802,7 @@ export function useBackendConfigurationData(
         throw err;
       }
     },
-    [type]
+    [type],
   );
 
   // Delete item
@@ -680,9 +835,12 @@ export function useBackendConfigurationData(
           case "characterSets":
           case "creativeTemplates":
             if (type === "senderIds") await senderIdService.deleteSenderId(id);
-            else if (type === "languages") await languageService.deleteLanguage(id);
-            else if (type === "characterSets") await characterSetService.deleteCharacterSet(id);
-            else if (type === "creativeTemplates") await creativeTemplateService.deleteCreativeTemplate(id);
+            else if (type === "languages")
+              await languageService.deleteLanguage(id);
+            else if (type === "characterSets")
+              await characterSetService.deleteCharacterSet(id);
+            else if (type === "creativeTemplates")
+              await creativeTemplateService.deleteCreativeTemplate(id);
             break;
           case "smsRoutes":
             await smsRouteService.deleteRoute(id);
@@ -708,7 +866,7 @@ export function useBackendConfigurationData(
         throw err;
       }
     },
-    [type]
+    [type],
   );
 
   // Fetch data on mount

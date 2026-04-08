@@ -1624,7 +1624,7 @@ export default function SegmentManagementPage() {
                               {segment.tags.slice(0, 2).map((tag) => (
                                 <span
                                   key={tag}
-                                  className={`inline-flex items-center px-2 py-1 bg-[${color.primary.accent}]/10 text-[${color.primary.accent}] text-xs font-medium rounded-full`}
+                                  className={`inline-flex items-center px-2 py-1 bg-[${color.primary.accent}]/10 text-black text-xs font-medium rounded-full`}
                                 >
                                   <Tag className="w-3 h-3 mr-1" />
                                   {tag}
@@ -1940,7 +1940,7 @@ export default function SegmentManagementPage() {
                     {segment.tags?.map((tag) => (
                       <span
                         key={tag}
-                        className={`inline-flex items-center px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full`}
+                        className={`inline-flex items-center px-2 py-1 bg-green-100 text-black text-xs font-medium rounded-full`}
                       >
                         <Tag className="w-3 h-3 mr-1" />
                         {tag}

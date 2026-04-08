@@ -5,8 +5,7 @@ import {
   Trash2,
   Star,
   Users,
-  Eye,
-  Pencil,
+  Edit,
 } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -17,6 +16,7 @@ import DateFormatter from "../../../shared/components/DateFormatter";
 import CreateVIPListModal from "../components/CreateVIPListModal";
 import AddVIPMembersModal from "../components/AddVIPMembersModal";
 import { vipListService } from "../../../shared/services/vipListService";
+import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 
 // Types
 export interface VIPCustomer {
@@ -67,6 +67,11 @@ export default function VIPListManagementPage() {
   const [isAddingMembers, setIsAddingMembers] = useState(false);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [debouncedSearchTermLists, setDebouncedSearchTermLists] = useState("");
+  const [editingList, setEditingList] = useState<VIPList | null>(null);
+  const [listToDelete, setListToDelete] = useState<VIPList | null>(null);
+  const [memberToRemove, setMemberToRemove] = useState<VIPCustomer | null>(null);
+  const [isDeletingList, setIsDeletingList] = useState(false);
+  const [isRemovingMember, setIsRemovingMember] = useState(false);
 
   // Fetch VIP lists on mount
   useEffect(() => {
@@ -167,24 +172,92 @@ export default function VIPListManagementPage() {
     return matchesSearch && matchesStatus;
   });
 
-  const handleRemoveCustomer = () => {
-    // TODO: Implement remove functionality
-    showToast("Remove customer functionality will be implemented");
+  const handleRemoveCustomer = (customer: VIPCustomer) => {
+    setMemberToRemove(customer);
   };
 
-  const handleCreateVIPList = async (data: any) => {
+  const handleSaveVIPList = async (data: any) => {
     setIsCreatingList(true);
     try {
-      const response = await vipListService.create(data);
-      if (response) {
-        showToast("VIP list created successfully");
-        await loadVIPLists();
+      if (editingList) {
+        const response = await vipListService.update(editingList.id, data);
+        if (response) {
+          showToast("VIP list updated successfully");
+        }
+      } else {
+        const response = await vipListService.create(data);
+        if (response) {
+          showToast("VIP list created successfully");
+        }
       }
+
+      await loadVIPLists();
     } catch (error) {
-      showError("Failed to create VIP list");
+      showError(editingList ? "Failed to update VIP list" : "Failed to create VIP list");
       throw error;
     } finally {
       setIsCreatingList(false);
+      setEditingList(null);
+    }
+  };
+
+  const handleEditVIPList = (list: VIPList) => {
+    setEditingList(list);
+    setIsCreateListModalOpen(true);
+  };
+
+  const handleDeleteVIPList = (list: VIPList) => {
+    setListToDelete(list);
+  };
+
+  const confirmDeleteVIPList = async () => {
+    if (!listToDelete) {
+      return;
+    }
+
+    setIsDeletingList(true);
+    try {
+      await vipListService.delete(listToDelete.id);
+      showToast("VIP list deleted successfully");
+
+      setVipLists((prev) => prev.filter((list) => list.id !== listToDelete.id));
+      setVipCustomers((prev) =>
+        prev.filter((customer) => customer.vip_list_id !== listToDelete.id)
+      );
+    } catch {
+      showError("Failed to delete VIP list");
+    } finally {
+      setIsDeletingList(false);
+      setListToDelete(null);
+    }
+  };
+
+  const confirmRemoveMember = async () => {
+    if (!memberToRemove) {
+      return;
+    }
+
+    setIsRemovingMember(true);
+    try {
+      await vipListService.removeMember(memberToRemove.id);
+      showToast("Customer removed from VIP list successfully");
+
+      setVipCustomers((prev) =>
+        prev.map((customer) =>
+          customer.id === memberToRemove.id
+            ? {
+                ...customer,
+                status: "inactive",
+                removed_at: new Date().toISOString(),
+              }
+            : customer
+        )
+      );
+    } catch {
+      showError("Failed to remove customer from VIP list");
+    } finally {
+      setIsRemovingMember(false);
+      setMemberToRemove(null);
     }
   };
 
@@ -412,13 +485,12 @@ export default function VIPListManagementPage() {
           filteredCustomers.length === 0 ? (
             <div className="text-center py-12">
               <Star className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
-                No VIP customers found
-              </h3>
-              <p className={`${tw.textMuted} mb-6`}>
-                {searchTerm
-                  ? "Try adjusting your search terms"
-                  : "No VIP customers available"}
+              <p className={`text-base font-medium ${tw.textPrimary} mb-0`}>
+                {vipLists.length === 0
+                  ? "No VIP lists available. Create a VIP list first to add members"
+                  : searchTerm
+                    ? "No VIP members match your search"
+                    : "No VIP members available"}
               </p>
             </div>
           ) : (
@@ -498,7 +570,7 @@ export default function VIPListManagementPage() {
                           borderBottomLeftRadius: "0.375rem",
                         }}
                       >
-                        <div className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
+                        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} text-sm`}>
                           {customer.customer_name || "Unknown"}
                         </div>
                       </td>
@@ -564,12 +636,9 @@ export default function VIPListManagementPage() {
         filteredLists.length === 0 ? (
           <div className="text-center py-12">
             <Star className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
-              No VIP lists found
-            </h3>
-            <p className={`${tw.textMuted} mb-6`}>
+            <p className={`text-base font-medium ${tw.textPrimary} mb-0`}>
               {searchTermLists
-                ? "Try adjusting your search terms"
+                ? "No VIP lists match your search"
                 : "No VIP lists available"}
             </p>
           </div>
@@ -651,7 +720,7 @@ export default function VIPListManagementPage() {
                       }}
                     >
                       <div
-                        className={`${tw.tableFirstColumn} ${tw.textPrimary}`}
+                        className={`${tw.tableFirstColumn} ${tw.textPrimary} text-sm`}
                       >
                         {list.name}
                       </div>
@@ -696,20 +765,14 @@ export default function VIPListManagementPage() {
                     >
                       <div className="flex items-center justify-center gap-2">
                         <button
-                          onClick={() => {
-                            // TODO: Implement edit VIP list
-                            showToast("Edit VIP list functionality will be implemented");
-                          }}
+                          onClick={() => handleEditVIPList(list)}
                           className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 ${tw.rounded} transition-colors`}
                           title="Edit VIP List"
                         >
-                          <Pencil className="w-4 h-4" />
+                          <Edit className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => {
-                            // TODO: Implement delete VIP list
-                            showToast("Delete VIP list functionality will be implemented");
-                          }}
+                          onClick={() => handleDeleteVIPList(list)}
                           className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
                           title="Delete VIP List"
                         >
@@ -729,9 +792,21 @@ export default function VIPListManagementPage() {
       {/* Create VIP List Modal */}
       <CreateVIPListModal
         isOpen={isCreateListModalOpen}
-        onClose={() => setIsCreateListModalOpen(false)}
-        onSubmit={handleCreateVIPList}
+        onClose={() => {
+          setIsCreateListModalOpen(false);
+          setEditingList(null);
+        }}
+        onSubmit={handleSaveVIPList}
         isLoading={isCreatingList}
+        mode={editingList ? "edit" : "create"}
+        initialData={
+          editingList
+            ? {
+                name: editingList.name,
+                description: editingList.description,
+              }
+            : null
+        }
       />
 
       {/* Add VIP Members Modal */}
@@ -741,6 +816,30 @@ export default function VIPListManagementPage() {
         vipLists={vipLists}
         onAdd={handleAddMembers}
         isLoading={isAddingMembers}
+      />
+
+      <DeleteConfirmModal
+        isOpen={!!listToDelete}
+        onClose={() => setListToDelete(null)}
+        onConfirm={confirmDeleteVIPList}
+        title="Delete VIP List"
+        description="Are you sure you want to delete this VIP list? This action cannot be undone."
+        itemName={listToDelete?.name || ""}
+        isLoading={isDeletingList}
+        confirmText="Delete List"
+        cancelText="Cancel"
+      />
+
+      <DeleteConfirmModal
+        isOpen={!!memberToRemove}
+        onClose={() => setMemberToRemove(null)}
+        onConfirm={confirmRemoveMember}
+        title="Remove VIP Member"
+        description="Are you sure you want to remove this customer from the VIP list? The member will be marked inactive."
+        itemName={memberToRemove?.customer_name || "Selected customer"}
+        isLoading={isRemovingMember}
+        confirmText="Remove Member"
+        cancelText="Cancel"
       />
     </div>
   );

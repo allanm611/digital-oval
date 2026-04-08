@@ -521,6 +521,7 @@ export const buttons = {
     paddingX: "1rem", // px-4
     borderRadius: "0.375rem", // rounded-md
     fontSize: "0.875rem", // text-sm (14px)
+    iconColor: "#DC2626", // Icon color for delete buttons
   },
 
   activeIconDisplay: {

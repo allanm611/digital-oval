@@ -284,6 +284,12 @@ const ProductPages = {
         /* webpackPrefetch: true */ "../../control-groups/pages/CreateControlGroupPage"
       ),
   ),
+  ControlGroupDetailPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../control-groups/pages/ControlGroupDetailPage"
+      ),
+  ),
 };
 
 // Segment Pages - All routes preloaded for instant access
@@ -931,6 +937,14 @@ export default function Dashboard() {
           />
           <Route
             path="/control-groups/create"
+            element={<ProductPages.CreateControlGroupPage />}
+          />
+          <Route
+            path="/control-groups/:id"
+            element={<ProductPages.ControlGroupDetailPage />}
+          />
+          <Route
+            path="/control-groups/:id/edit"
             element={<ProductPages.CreateControlGroupPage />}
           />
           <Route
