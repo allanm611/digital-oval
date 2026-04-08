@@ -49,6 +49,7 @@ export default function Checkbox({
   return (
     <label
       className={`flex items-center gap-2 cursor-pointer ${inputProps.disabled ? "opacity-70 cursor-not-allowed" : ""} ${wrapperClassName}`}
+      onClick={() => !inputProps.disabled && inputRef.current?.click()}
     >
       {input}
       {label && (

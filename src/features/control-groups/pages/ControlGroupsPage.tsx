@@ -143,7 +143,7 @@ export default function ControlGroupsPage() {
             currentLabel="Universal Control Groups"
           />
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Universal Control Groups</h1>
+            {/* <h1 className="text-2xl font-bold text-gray-900">Universal Control Groups</h1> */}
             <p className="text-gray-600 mt-1 text-sm">Create and manage control groups to measure campaign effectiveness and customer behavior</p>
           </div>
         </div>

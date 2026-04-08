@@ -109,7 +109,14 @@ export const controlGroupService = {
       body: JSON.stringify(data),
     });
     if (!response.ok) {
-      throw new Error("Failed to create control group");
+      let errorMessage = "Failed to create control group";
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.error || errorMessage;
+      } catch {
+        // If response is not JSON, use generic message
+      }
+      throw new Error(errorMessage);
     }
     return response.json();
   },
@@ -126,7 +133,14 @@ export const controlGroupService = {
       body: JSON.stringify(data),
     });
     if (!response.ok) {
-      throw new Error("Failed to create universal control group");
+      let errorMessage = "Failed to create universal control group";
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.error || errorMessage;
+      } catch {
+        // If response is not JSON, use generic message
+      }
+      throw new Error(errorMessage);
     }
     return response.json();
   },
@@ -144,7 +158,14 @@ export const controlGroupService = {
       body: JSON.stringify(data),
     });
     if (!response.ok) {
-      throw new Error(`Failed to update control group ${id}`);
+      let errorMessage = `Failed to update control group ${id}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.error || errorMessage;
+      } catch {
+        // If response is not JSON, use generic message
+      }
+      throw new Error(errorMessage);
     }
     return response.json();
   },
@@ -159,7 +180,14 @@ export const controlGroupService = {
       body: JSON.stringify(data),
     });
     if (!response.ok) {
-      throw new Error("Failed to add member to control group");
+      let errorMessage = "Failed to add member to control group";
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.error || errorMessage;
+      } catch {
+        // If response is not JSON, use generic message
+      }
+      throw new Error(errorMessage);
     }
     return response.json();
   },
@@ -174,7 +202,14 @@ export const controlGroupService = {
       body: JSON.stringify(data),
     });
     if (!response.ok) {
-      throw new Error("Failed to remove member from control group");
+      let errorMessage = "Failed to remove member from control group";
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.error || errorMessage;
+      } catch {
+        // If response is not JSON, use generic message
+      }
+      throw new Error(errorMessage);
     }
     return response.json();
   },
@@ -191,7 +226,14 @@ export const controlGroupService = {
       body: JSON.stringify(data),
     });
     if (!response.ok) {
-      throw new Error("Failed to bulk add members to control group");
+      let errorMessage = "Failed to bulk add members to control group";
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.error || errorMessage;
+      } catch {
+        // If response is not JSON, use generic message
+      }
+      throw new Error(errorMessage);
     }
     return response.json();
   },
@@ -212,7 +254,14 @@ export const controlGroupService = {
       }
     );
     if (!response.ok) {
-      throw new Error("Failed to run scheduled control group population");
+      let errorMessage = "Failed to run scheduled control group population";
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.error || errorMessage;
+      } catch {
+        // If response is not JSON, use generic message
+      }
+      throw new Error(errorMessage);
     }
     return response.json();
   },
@@ -226,7 +275,14 @@ export const controlGroupService = {
       },
     });
     if (!response.ok) {
-      throw new Error(`Failed to delete control group ${id}`);
+      let errorMessage = `Failed to delete control group ${id}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.error || errorMessage;
+      } catch {
+        // If response is not JSON, use generic message
+      }
+      throw new Error(errorMessage);
     }
     return response.json();
   },
@@ -248,7 +304,14 @@ export const controlGroupService = {
       }
     );
     if (!response.ok) {
-      throw new Error("Failed to update segment control configuration");
+      let errorMessage = "Failed to update segment control configuration";
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.error || errorMessage;
+      } catch {
+        // If response is not JSON, use generic message
+      }
+      throw new Error(errorMessage);
     }
     return response.json();
   },
@@ -273,7 +336,14 @@ export const controlGroupService = {
       }
     );
     if (!response.ok) {
-      throw new Error("Failed to generate segment members");
+      let errorMessage = "Failed to generate segment members";
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.error || errorMessage;
+      } catch {
+        // If response is not JSON, use generic message
+      }
+      throw new Error(errorMessage);
     }
     return response.json();
   },

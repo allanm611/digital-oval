@@ -19,7 +19,7 @@ import Checkbox from "../../../shared/components/ui/Checkbox";
 export default function CreateControlGroupPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const { success: showToast } = useToast();
+  const { success: showToast, error: showError } = useToast();
   const isEditMode = !!id;
 
   const [currentStep, setCurrentStep] = useState(1);
@@ -50,6 +50,7 @@ export default function CreateControlGroupPage() {
     recurrence_interval: 1,
   });
   const [isUniversal, setIsUniversal] = useState(false);
+  const [isActive, setIsActive] = useState(true);
 
   useEffect(() => {
     if (isEditMode && id) {
@@ -67,6 +68,7 @@ export default function CreateControlGroupPage() {
       setGenerationMethod((group.generation_method as "random" | "stratified") || "random");
       setSelectedCustomerBase(group.customer_source_type || "active_subscribers");
       setIsUniversal(group.is_universal || false);
+      setIsActive(group.is_active !== false);
 
       if (group.start_date) {
         setScheduling({
@@ -80,7 +82,7 @@ export default function CreateControlGroupPage() {
       }
     } catch (error) {
       console.error("Failed to load control group:", error);
-      showToast("Failed to load control group data");
+      showError("Failed to load control group data");
       navigate("/dashboard/control-groups");
     } finally {
       setIsLoading(false);
@@ -437,7 +439,7 @@ export default function CreateControlGroupPage() {
 
       if (selectedCustomerBase === "custom_conditions") {
         if (segmentConditions.length === 0) {
-          showToast("Please add at least one condition");
+          showError("Please add at least one condition");
           setIsCreating(false);
           return;
         }
@@ -453,7 +455,7 @@ export default function CreateControlGroupPage() {
         code: controlGroupCode,
         name: controlGroupName,
         ...(controlGroupDescription && { description: controlGroupDescription }),
-        type: "auto",
+        type: "manual",
         percentage: controlGroupPercentage,
         customer_source_type: selectedCustomerBase as "active_subscribers" | "all_customers" | "saved_segment" | "manual",
         generation_method: generationMethod as "random" | "stratified",
@@ -461,6 +463,7 @@ export default function CreateControlGroupPage() {
         start_date: scheduling.start_date,
         ...(scheduling.end_date && { end_date: scheduling.end_date }),
         is_universal: isUniversal,
+        is_active: isActive,
         target_render_config: targetRenderConfig,
         ...(definition && { definition }),
       };
@@ -476,7 +479,7 @@ export default function CreateControlGroupPage() {
       navigate("/dashboard/control-groups");
     } catch (error) {
       console.error("Failed to save control group:", error);
-      showToast(
+      showError(
         error instanceof Error ? error.message : "Failed to save control group"
       );
     } finally {
@@ -686,15 +689,17 @@ export default function CreateControlGroupPage() {
                   )}
                 </div>
 
-                <div className="mt-4">
+                <div className="mt-4 flex items-center gap-6">
                   <Checkbox
                     label="Mark as Universal Control Group"
                     checked={isUniversal}
                     onChange={(e) => setIsUniversal(e.currentTarget.checked)}
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Universal control groups can be reused across multiple campaigns
-                  </p>
+                  <Checkbox
+                    label="Active"
+                    checked={isActive}
+                    onChange={(e) => setIsActive(e.currentTarget.checked)}
+                  />
                 </div>
               </>
             )}
@@ -816,6 +821,12 @@ export default function CreateControlGroupPage() {
                     <p className="text-xs text-gray-500 mb-1">Universal Control Group</p>
                     <p className="text-sm font-medium text-gray-900">
                       {isUniversal ? "Yes" : "No"}
+                    </p>
+                  </div>
+                  <div className={`border border-gray-200 ${tw.rounded} p-4`}>
+                    <p className="text-xs text-gray-500 mb-1">Status</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {isActive ? "Active" : "Inactive"}
                     </p>
                   </div>
                   <div className={`border border-gray-200 ${tw.rounded} p-4`}>

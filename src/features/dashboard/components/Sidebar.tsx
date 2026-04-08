@@ -490,6 +490,13 @@ export default function Sidebar({
             type: "single",
             entity: "customers",
           },
+          {
+            name: t.sidebar.navigation.kpis,
+            href: "/dashboard/kpis",
+            icon: TrendingUp,
+            type: "single",
+            entity: "customers",
+          },
         ],
       },
       {
@@ -591,13 +598,6 @@ export default function Sidebar({
             name: "ETL",
             href: "/dashboard/etl",
             icon: Download,
-            type: "single",
-            entity: "servers",
-          },
-          {
-            name: t.sidebar.navigation.kpis,
-            href: "/dashboard/kpis",
-            icon: TrendingUp,
             type: "single",
             entity: "servers",
           },

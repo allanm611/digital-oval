@@ -99,6 +99,7 @@ export interface CreateControlGroupRequest {
   start_date?: string;
   end_date?: string;
   is_universal?: boolean;
+  is_active?: boolean;
   target_render_config?: TargetRenderTime | null;
   definition?: any;
 }
@@ -118,12 +119,13 @@ export interface CreateUniversalControlGroupRequest {
     end_date?: string;
   };
   target_render_config: TargetRenderTime;
+  is_active?: boolean;
   definition?: any;
 }
 
-// Update request (universal control groups use same structure as create)
+// Update request (use same structure as create)
 export interface UpdateControlGroupRequest
-  extends Partial<CreateUniversalControlGroupRequest> {}
+  extends Partial<CreateControlGroupRequest> {}
 
 // Segment control configuration
 export interface CampaignSegmentControlConfig {

@@ -67,8 +67,7 @@ export default function KPIPickerModal({
       items={filteredKPIs.map((kpi) => ({
         id: kpi.id,
         title: kpi.name,
-        description: kpi.description || "-",
-        meta: kpi.subcategory ? `Subcategory: ${kpi.subcategory}` : undefined,
+        description: kpi.description,
         raw: kpi,
       }))}
       onSelect={(item) => handleSelectKPI(item.raw)}

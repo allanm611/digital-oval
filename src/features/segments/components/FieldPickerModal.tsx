@@ -51,8 +51,6 @@ export default function FieldPickerModal({
       items={filteredFields.map((field) => ({
         id: field.value,
         title: field.label || "-",
-        description: field.description || "-",
-        meta: `Value: ${field.value || "-"}${field.type ? ` | Type: ${field.type}` : ""}`,
         raw: field,
       }))}
       onSelect={(item) => handleSelectField(item.raw.value)}
