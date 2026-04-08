@@ -82,7 +82,7 @@ class VIPListService {
 
   async getById(id: number) {
     const data = await this.request<{ success: boolean; data: VIPList }>(
-      `/${id}`
+      `/${id}`,
     );
     return data.data;
   }
@@ -93,7 +93,7 @@ class VIPListService {
       {
         method: "POST",
         body: JSON.stringify(data),
-      }
+      },
     );
     return response.data;
   }
@@ -104,7 +104,7 @@ class VIPListService {
       {
         method: "PUT",
         body: JSON.stringify(data),
-      }
+      },
     );
     return response.data;
   }
@@ -114,51 +114,51 @@ class VIPListService {
       `/${id}`,
       {
         method: "DELETE",
-      }
+      },
     );
     return response;
   }
 
   async getMembers(id: number) {
     const data = await this.request<{ success: boolean; data: VIPCustomer[] }>(
-      `/${id}/members`
+      `/${id}/members`,
     );
     return data.data;
   }
 
   async addMember(data: AddVIPMemberRequest) {
-    const response = await this.request<{ success: boolean; member_id: number }>(
-      "/members",
-      {
-        method: "POST",
-        body: JSON.stringify(data),
-      }
-    );
+    const response = await this.request<{
+      success: boolean;
+      member_id: number;
+    }>("/members", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
     return response;
   }
 
   async removeMember(memberId: number, removedBy?: number) {
     try {
       // Primary behavior: mark member inactive to preserve historical records.
-      const response = await this.request<{ success: boolean; data?: VIPCustomer }>(
-        `/members/${memberId}`,
-        {
-          method: "PUT",
-          body: JSON.stringify({
-            status: "inactive",
-            ...(typeof removedBy === "number" ? { removed_by: removedBy } : {}),
-          }),
-        }
-      );
+      const response = await this.request<{
+        success: boolean;
+        data?: VIPCustomer;
+      }>(`/members/${memberId}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          status: "inactive",
+          ...(typeof removedBy === "number" ? { removed_by: removedBy } : {}),
+        }),
+      });
       return response;
     } catch {
       // Fallback for backends that expose hard-delete for member records.
-      const response = await this.request<{ success: boolean; message?: string }>(
-        `/members/${memberId}`,
-        {
-          method: "DELETE",
-        }
-      );
+      const response = await this.request<{
+        success: boolean;
+        message?: string;
+      }>(`/members/${memberId}`, {
+        method: "DELETE",
+      });
       return response;
     }
   }

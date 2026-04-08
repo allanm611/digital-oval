@@ -101,7 +101,10 @@ export default function CreateVIPListModal({
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 9999 }}>
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+      style={{ zIndex: 9999 }}
+    >
       <div className={`bg-white ${tw.rounded} w-full max-w-md`}>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -138,7 +141,9 @@ export default function CreateVIPListModal({
               placeholder="Enter list name"
               disabled={isLoading}
               className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm focus:outline-none focus:ring-2 focus:ring-opacity-50 disabled:opacity-50 disabled:bg-gray-100 ${
-                errors.name ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-[#588157]"
+                errors.name
+                  ? "border-red-500 focus:ring-red-500"
+                  : "border-gray-300 focus:ring-[#588157]"
               }`}
             />
             {errors.name && (
@@ -183,7 +188,9 @@ export default function CreateVIPListModal({
             disabled={isLoading || !formData.name.trim()}
             className={`px-5 py-2 ${tw.rounded} text-sm font-medium text-white transition-opacity disabled:opacity-50 disabled:cursor-not-allowed`}
             style={{
-              backgroundColor: formData.name.trim() ? color.primary.action : color.text.muted,
+              backgroundColor: formData.name.trim()
+                ? color.primary.action
+                : color.text.muted,
             }}
           >
             {isLoading
@@ -197,6 +204,6 @@ export default function CreateVIPListModal({
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

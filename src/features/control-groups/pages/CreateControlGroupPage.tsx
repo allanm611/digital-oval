@@ -520,60 +520,60 @@ export default function CreateControlGroupPage() {
           <div className="py-4 space-y-6">
             {currentStep === 1 && (
               <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Control Group Code *
-                  </label>
-                  <input
-                    type="text"
-                    value={controlGroupCode}
-                    onChange={(e) => {
-                      setControlGroupCode(e.target.value);
-                      if (codeError) setCodeError("");
-                    }}
-                    className={`w-full px-3 text-sm py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-offset-0`}
-                    style={{
-                      ["--tw-ring-color" as string]: color.primary.action,
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = color.primary.action;
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = "";
-                    }}
-                    placeholder="e.g., HOLDOUT_001"
-                  />
-                  {codeError && (
-                    <p className="text-red-600 text-sm mt-1">{codeError}</p>
-                  )}
-                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={controlGroupName}
+                      onChange={(e) => {
+                        setControlGroupName(e.target.value);
+                        if (nameError) setNameError("");
+                      }}
+                      className={`w-full px-3 text-sm py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-offset-0`}
+                      style={{
+                        ["--tw-ring-color" as string]: color.primary.action,
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = color.primary.action;
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = "";
+                      }}
+                    />
+                    {nameError && (
+                      <p className="text-red-600 text-sm mt-1">{nameError}</p>
+                    )}
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Control Group Name *
-                  </label>
-                  <input
-                    type="text"
-                    value={controlGroupName}
-                    onChange={(e) => {
-                      setControlGroupName(e.target.value);
-                      if (nameError) setNameError("");
-                    }}
-                    className={`w-full px-3 text-sm py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-offset-0`}
-                    style={{
-                      ["--tw-ring-color" as string]: color.primary.action,
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = color.primary.action;
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = "";
-                    }}
-                    placeholder="Enter control group name"
-                  />
-                  {nameError && (
-                    <p className="text-red-600 text-sm mt-1">{nameError}</p>
-                  )}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Code *
+                    </label>
+                    <input
+                      type="text"
+                      value={controlGroupCode}
+                      onChange={(e) => {
+                        setControlGroupCode(e.target.value);
+                        if (codeError) setCodeError("");
+                      }}
+                      className={`w-full px-3 text-sm py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-offset-0`}
+                      style={{
+                        ["--tw-ring-color" as string]: color.primary.action,
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = color.primary.action;
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = "";
+                      }}
+                    />
+                    {codeError && (
+                      <p className="text-red-600 text-sm mt-1">{codeError}</p>
+                    )}
+                  </div>
                 </div>
 
                 <div>
@@ -593,7 +593,7 @@ export default function CreateControlGroupPage() {
                     onBlur={(e) => {
                       e.target.style.borderColor = "";
                     }}
-                    placeholder="Optional description for this control group"
+                    
                     rows={3}
                   />
                 </div>

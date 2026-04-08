@@ -1,11 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import {
-  Plus,
-  Search,
-  Star,
-  Users,
-  Edit,
-} from "lucide-react";
+import { Plus, Search, Star, Users, Edit } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -44,8 +38,6 @@ export interface VIPList {
   created_at: string;
 }
 
-
-
 export default function VIPListManagementPage() {
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
@@ -58,7 +50,7 @@ export default function VIPListManagementPage() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterStatusLists, setFilterStatusLists] = useState<string>("all");
   const [activeTab, setActiveTab] = useState<"customers" | "lists">(
-    "customers"
+    "customers",
   );
   const [isCreateListModalOpen, setIsCreateListModalOpen] = useState(false);
   const [isAddMembersModalOpen, setIsAddMembersModalOpen] = useState(false);
@@ -68,7 +60,9 @@ export default function VIPListManagementPage() {
   const [debouncedSearchTermLists, setDebouncedSearchTermLists] = useState("");
   const [editingList, setEditingList] = useState<VIPList | null>(null);
   const [listToDelete, setListToDelete] = useState<VIPList | null>(null);
-  const [memberToRemove, setMemberToRemove] = useState<VIPCustomer | null>(null);
+  const [memberToRemove, setMemberToRemove] = useState<VIPCustomer | null>(
+    null,
+  );
   const [isDeletingList, setIsDeletingList] = useState(false);
   const [isRemovingMember, setIsRemovingMember] = useState(false);
 
@@ -150,7 +144,9 @@ export default function VIPListManagementPage() {
       customer.customer_email
         ?.toLowerCase()
         .includes(debouncedSearchTerm.toLowerCase()) ||
-      customer.customer_phone?.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
+      customer.customer_phone
+        ?.toLowerCase()
+        .includes(debouncedSearchTerm.toLowerCase());
 
     const matchesList =
       filterList === "all" || customer.vip_list_id?.toString() === filterList;
@@ -162,8 +158,12 @@ export default function VIPListManagementPage() {
 
   const filteredLists = vipLists.filter((list) => {
     const matchesSearch =
-      list.name?.toLowerCase().includes(debouncedSearchTermLists.toLowerCase()) ||
-      list.description?.toLowerCase().includes(debouncedSearchTermLists.toLowerCase());
+      list.name
+        ?.toLowerCase()
+        .includes(debouncedSearchTermLists.toLowerCase()) ||
+      list.description
+        ?.toLowerCase()
+        .includes(debouncedSearchTermLists.toLowerCase());
 
     const matchesStatus =
       filterStatusLists === "all" || list.status === filterStatusLists;
@@ -192,7 +192,9 @@ export default function VIPListManagementPage() {
 
       await loadVIPLists();
     } catch (error) {
-      showError(editingList ? "Failed to update VIP list" : "Failed to create VIP list");
+      showError(
+        editingList ? "Failed to update VIP list" : "Failed to create VIP list",
+      );
       throw error;
     } finally {
       setIsCreatingList(false);
@@ -221,7 +223,7 @@ export default function VIPListManagementPage() {
 
       setVipLists((prev) => prev.filter((list) => list.id !== listToDelete.id));
       setVipCustomers((prev) =>
-        prev.filter((customer) => customer.vip_list_id !== listToDelete.id)
+        prev.filter((customer) => customer.vip_list_id !== listToDelete.id),
       );
     } catch {
       showError("Failed to delete VIP list");
@@ -249,8 +251,8 @@ export default function VIPListManagementPage() {
                 status: "inactive",
                 removed_at: new Date().toISOString(),
               }
-            : customer
-        )
+            : customer,
+        ),
       );
     } catch {
       showError("Failed to remove customer from VIP list");
@@ -266,7 +268,9 @@ export default function VIPListManagementPage() {
       for (const member of members) {
         await vipListService.addMember(member);
       }
-      showToast(`${members.length} member${members.length !== 1 ? "s" : ""} added successfully`);
+      showToast(
+        `${members.length} member${members.length !== 1 ? "s" : ""} added successfully`,
+      );
       await loadAllMembers();
     } catch (error) {
       showError("Failed to add members");
@@ -275,7 +279,6 @@ export default function VIPListManagementPage() {
       setIsAddingMembers(false);
     }
   };
-
 
   return (
     <div className="space-y-6">
@@ -561,7 +564,9 @@ export default function VIPListManagementPage() {
                           borderBottomLeftRadius: "0.375rem",
                         }}
                       >
-                        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} text-sm`}>
+                        <div
+                          className={`${tw.tableFirstColumn} ${tw.textPrimary} text-sm`}
+                        >
                           {customer.customer_name || "Unknown"}
                         </div>
                       </td>
@@ -585,7 +590,9 @@ export default function VIPListManagementPage() {
                         className="px-6 py-4"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        <span className="text-sm text-black">{customer.status}</span>
+                        <span className="text-sm text-black">
+                          {customer.status}
+                        </span>
                       </td>
                       <td
                         className="px-6 py-4 whitespace-nowrap"
@@ -761,7 +768,6 @@ export default function VIPListManagementPage() {
           </div>
         )}
       </div>
-
 
       {/* Create VIP List Modal */}
       <CreateVIPListModal

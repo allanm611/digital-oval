@@ -754,7 +754,9 @@ export default function SegmentManagementPage() {
     return segment.size_estimate ?? 0;
   };
 
-  const [computeDialogSegmentId, setComputeDialogSegmentId] = useState<number | null>(null);
+  const [computeDialogSegmentId, setComputeDialogSegmentId] = useState<
+    number | null
+  >(null);
 
   const handleComputeSegment = async (segment: Segment) => {
     setShowActionMenu(null);
@@ -775,7 +777,8 @@ export default function SegmentManagementPage() {
     const targetId = computeDialogSegmentId;
     if (!targetId) return;
 
-    const segmentName = segments.find((s) => s.id === targetId)?.name || "Segment";
+    const segmentName =
+      segments.find((s) => s.id === targetId)?.name || "Segment";
 
     // Now actually mark the row as computing
     setComputingSegmentId(targetId);
@@ -789,14 +792,20 @@ export default function SegmentManagementPage() {
     }
 
     try {
-      const response = await segmentService.refreshSegment(Number(targetId), { force: true });
+      const response = await segmentService.refreshSegment(Number(targetId), {
+        force: true,
+      });
       const data = (response as any)?.data || {};
       const total = data.total ?? 0;
       // Update just this one row instead of reloading the whole table
       setSegments((prev) =>
         prev.map((s) =>
           s.id === targetId
-            ? { ...s, size_estimate: total, last_computed_at: new Date().toISOString() }
+            ? {
+                ...s,
+                size_estimate: total,
+                last_computed_at: new Date().toISOString(),
+              }
             : s,
         ),
       );
@@ -1523,10 +1532,12 @@ export default function SegmentManagementPage() {
                         style={{ color: color.surface.tableHeaderText }}
                       >
                         <Checkbox
-                          ref={headerCheckboxRef} className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
+                          ref={headerCheckboxRef}
+                          className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
                           checked={allVisibleSelected}
                           onChange={toggleSelectAllVisible}
-                          aria-label="Select all visible segments" />
+                          aria-label="Select all visible segments"
+                        />
                       </th>
                     )}
                     <th
@@ -1581,13 +1592,15 @@ export default function SegmentManagementPage() {
                           className="px-3 py-4"
                           style={{ backgroundColor: color.surface.tablebodybg }}
                         >
-                          <Checkbox checked={selectedSegmentIds.has(segment.id)}
+                          <Checkbox
+                            checked={selectedSegmentIds.has(segment.id)}
                             onChange={(event) => {
                               event.stopPropagation();
                               toggleSegmentSelection(segment.id);
                             }}
                             aria-label={`Select ${segment.name}`}
-                            className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black" />
+                            className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
+                          />
                         </td>
                       )}
                       <td
@@ -1858,13 +1871,15 @@ export default function SegmentManagementPage() {
                   <div className="flex items-start justify-between mb-3">
                     {isSelectionMode && (
                       <div className="mr-3 pt-1">
-                        <Checkbox checked={selectedSegmentIds.has(segment.id)}
+                        <Checkbox
+                          checked={selectedSegmentIds.has(segment.id)}
                           onChange={(event) => {
                             event.stopPropagation();
                             toggleSegmentSelection(segment.id);
                           }}
                           aria-label={`Select ${segment.name}`}
-                          className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black" />
+                          className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
+                        />
                       </div>
                     )}
                     <div className="flex-1">
@@ -2154,7 +2169,8 @@ export default function SegmentManagementPage() {
                     <div className="space-y-2 max-h-48 overflow-y-auto">
                       {allTags.map((tag) => (
                         <label key={tag} className="flex items-center">
-                          <Checkbox checked={selectedTags.includes(tag)}
+                          <Checkbox
+                            checked={selectedTags.includes(tag)}
                             onChange={(e) => {
                               e.stopPropagation(); // Prevent event bubbling
                               if (e.target.checked) {
@@ -2166,7 +2182,8 @@ export default function SegmentManagementPage() {
                               }
                             }}
                             onClick={(e) => e.stopPropagation()} // Prevent event bubbling
-                            className={`mr-3 text-[${color.primary.action}] focus:ring-[${color.primary.action}]`} />
+                            className={`mr-3 text-[${color.primary.action}] focus:ring-[${color.primary.action}]`}
+                          />
                           <span className={`text-sm ${tw.textSecondary}`}>
                             {tag}
                           </span>

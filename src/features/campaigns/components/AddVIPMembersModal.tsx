@@ -93,15 +93,21 @@ export default function AddVIPMembersModal({
     loadCustomers();
   }, [loadCustomers]);
 
-
   const filteredCustomers = useMemo(() => {
     return customers.filter((customer) => {
-      const fullName = `${customer.first_name || ""} ${customer.last_name || ""}`.trim();
+      const fullName =
+        `${customer.first_name || ""} ${customer.last_name || ""}`.trim();
       const matchesSearch =
         fullName.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
-        (customer.msisdn?.toLowerCase() || "").includes(customerSearchTerm.toLowerCase()) ||
-        (customer.email_address?.toLowerCase() || "").includes(customerSearchTerm.toLowerCase()) ||
-        String(customer.customer_id || customer.id || "").includes(customerSearchTerm);
+        (customer.msisdn?.toLowerCase() || "").includes(
+          customerSearchTerm.toLowerCase(),
+        ) ||
+        (customer.email_address?.toLowerCase() || "").includes(
+          customerSearchTerm.toLowerCase(),
+        ) ||
+        String(customer.customer_id || customer.id || "").includes(
+          customerSearchTerm,
+        );
 
       if (customerStatusFilter === "all") return matchesSearch;
       const status = customer.status;
@@ -118,14 +124,20 @@ export default function AddVIPMembersModal({
 
     const customerId = getCustomerId(customer);
     const isSelected = selectedMembers.some(
-      (m) => m.customer_id === customerId && m.vip_list_id === Number(selectedVIPListId)
+      (m) =>
+        m.customer_id === customerId &&
+        m.vip_list_id === Number(selectedVIPListId),
     );
 
     if (isSelected) {
       setSelectedMembers(
         selectedMembers.filter(
-          (m) => !(m.customer_id === customerId && m.vip_list_id === Number(selectedVIPListId))
-        )
+          (m) =>
+            !(
+              m.customer_id === customerId &&
+              m.vip_list_id === Number(selectedVIPListId)
+            ),
+        ),
       );
     } else {
       setSelectedMembers([
@@ -133,7 +145,9 @@ export default function AddVIPMembersModal({
         {
           vip_list_id: Number(selectedVIPListId),
           customer_id: Number(customerId),
-          customer_name: `${customer.first_name || ""} ${customer.last_name || ""}`.trim() || undefined,
+          customer_name:
+            `${customer.first_name || ""} ${customer.last_name || ""}`.trim() ||
+            undefined,
           customer_email: customer.email_address || undefined,
           customer_phone: customer.msisdn || undefined,
         },
@@ -148,14 +162,14 @@ export default function AddVIPMembersModal({
       selectedMembers.some(
         (m) =>
           m.customer_id === getCustomerId(customer) &&
-          m.vip_list_id === Number(selectedVIPListId)
-      )
+          m.vip_list_id === Number(selectedVIPListId),
+      ),
     );
 
     if (allSelected) {
       const listId = Number(selectedVIPListId);
       setSelectedMembers(
-        selectedMembers.filter((m) => m.vip_list_id !== listId)
+        selectedMembers.filter((m) => m.vip_list_id !== listId),
       );
     } else {
       const newMembers = filteredCustomers
@@ -164,13 +178,15 @@ export default function AddVIPMembersModal({
             !selectedMembers.some(
               (m) =>
                 m.customer_id === getCustomerId(customer) &&
-                m.vip_list_id === Number(selectedVIPListId)
-            )
+                m.vip_list_id === Number(selectedVIPListId),
+            ),
         )
         .map((customer) => ({
           vip_list_id: Number(selectedVIPListId),
           customer_id: Number(getCustomerId(customer)),
-          customer_name: `${customer.first_name || ""} ${customer.last_name || ""}`.trim() || undefined,
+          customer_name:
+            `${customer.first_name || ""} ${customer.last_name || ""}`.trim() ||
+            undefined,
           customer_email: customer.email_address || undefined,
           customer_phone: customer.msisdn || undefined,
         }));
@@ -200,22 +216,29 @@ export default function AddVIPMembersModal({
   };
 
   const selectedMembersForCurrentList = selectedMembers.filter(
-    (m) => m.vip_list_id === Number(selectedVIPListId)
+    (m) => m.vip_list_id === Number(selectedVIPListId),
   );
   const selectedVIPList = vipLists.find(
-    (list) => String(list.id) === selectedVIPListId
+    (list) => String(list.id) === selectedVIPListId,
   );
   const hasSelectedVIPList = Boolean(selectedVIPListId);
 
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: zIndex.modal }}>
-      <div className={`bg-white ${tw.rounded} w-full max-w-4xl max-h-[90vh] flex flex-col`}>
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+      style={{ zIndex: zIndex.modal }}
+    >
+      <div
+        className={`bg-white ${tw.rounded} w-full max-w-4xl max-h-[90vh] flex flex-col`}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
           <div>
-            <h2 className="text-sm font-semibold text-black">Add Members to VIP List</h2>
+            <h2 className="text-sm font-semibold text-black">
+              Add Members to VIP List
+            </h2>
             <p className="text-sm text-gray-600 mt-1">
               Select customers to add to VIP list
             </p>
@@ -272,10 +295,15 @@ export default function AddVIPMembersModal({
                 disabled={isLoading || !hasSelectedVIPList}
                 className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded} text-sm font-medium text-black hover:bg-gray-50 transition-colors text-left flex items-center justify-between disabled:opacity-50 disabled:bg-gray-100`}
               >
-                {customerStatusFilter === "all" ? "All Statuses" : customerStatusFilter}
+                {customerStatusFilter === "all"
+                  ? "All Statuses"
+                  : customerStatusFilter}
                 <ChevronUpDownIcon className="w-4 h-4 text-gray-400" />
               </Popover.Button>
-              <Popover.Panel className={`absolute right-0 mt-2 w-48 ${tw.rounded} border border-gray-200 bg-white shadow-lg`} style={{ zIndex: zIndex.popover }}>
+              <Popover.Panel
+                className={`absolute right-0 mt-2 w-48 ${tw.rounded} border border-gray-200 bg-white shadow-lg`}
+                style={{ zIndex: zIndex.popover }}
+              >
                 <div className="py-1">
                   {["all", "Active", "Inactive", "Suspended"].map((status) => (
                     <button
@@ -287,7 +315,7 @@ export default function AddVIPMembersModal({
                           : "hover:bg-gray-50"
                       }`}
                       style={{
-                        color: "black"
+                        color: "black",
                       }}
                     >
                       {status === "all" ? "All Statuses" : status}
@@ -316,14 +344,15 @@ export default function AddVIPMembersModal({
                   }}
                 >
                   {selectedMembersForCurrentList.length} customer
-                  {selectedMembersForCurrentList.length !== 1 ? "s" : ""} selected
+                  {selectedMembersForCurrentList.length !== 1 ? "s" : ""}{" "}
+                  selected
                 </span>
                 <button
                   onClick={() =>
                     setSelectedMembers(
                       selectedMembers.filter(
-                        (m) => m.vip_list_id !== Number(selectedVIPListId)
-                      )
+                        (m) => m.vip_list_id !== Number(selectedVIPListId),
+                      ),
                     )
                   }
                   className="text-sm font-medium hover:opacity-80 transition-opacity"
@@ -371,7 +400,8 @@ export default function AddVIPMembersModal({
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-12">
                       <Checkbox
                         checked={
-                          selectedMembersForCurrentList.length === filteredCustomers.length &&
+                          selectedMembersForCurrentList.length ===
+                            filteredCustomers.length &&
                           filteredCustomers.length > 0
                         }
                         onChange={handleSelectAll}
@@ -398,16 +428,21 @@ export default function AddVIPMembersModal({
                     const isSelected = selectedMembers.some(
                       (m) =>
                         m.customer_id === Number(customerId) &&
-                        m.vip_list_id === Number(selectedVIPListId)
+                        m.vip_list_id === Number(selectedVIPListId),
                     );
 
                     return (
                       <tr
                         key={customer.id || customerId}
-                        onClick={() => !isLoading && handleToggleCustomer(customer)}
+                        onClick={() =>
+                          !isLoading && handleToggleCustomer(customer)
+                        }
                         className={`${!isLoading ? "cursor-pointer" : ""} transition-colors hover:bg-gray-50`}
                       >
-                        <td className="px-4 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                        <td
+                          className="px-4 py-4 whitespace-nowrap"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <Checkbox
                             checked={isSelected}
                             onChange={() => handleToggleCustomer(customer)}
@@ -416,7 +451,8 @@ export default function AddVIPMembersModal({
                         </td>
                         <td className="px-4 py-4">
                           <div className="text-sm font-medium text-black">
-                            {`${customer.first_name || ""} ${customer.last_name || ""}`.trim() || "—"}
+                            {`${customer.first_name || ""} ${customer.last_name || ""}`.trim() ||
+                              "—"}
                           </div>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
@@ -473,15 +509,23 @@ export default function AddVIPMembersModal({
             </button>
             <button
               onClick={handleConfirm}
-              disabled={!hasSelectedVIPList || selectedMembersForCurrentList.length === 0 || isLoading}
+              disabled={
+                !hasSelectedVIPList ||
+                selectedMembersForCurrentList.length === 0 ||
+                isLoading
+              }
               className={`px-5 py-2 ${tw.rounded} text-sm font-medium transition-opacity ${
-                !hasSelectedVIPList || selectedMembersForCurrentList.length === 0 || isLoading
+                !hasSelectedVIPList ||
+                selectedMembersForCurrentList.length === 0 ||
+                isLoading
                   ? "cursor-not-allowed opacity-50"
                   : ""
               }`}
               style={{
                 backgroundColor:
-                  hasSelectedVIPList && selectedMembersForCurrentList.length > 0 && !isLoading
+                  hasSelectedVIPList &&
+                  selectedMembersForCurrentList.length > 0 &&
+                  !isLoading
                     ? color.primary.action
                     : color.text.muted,
                 color: "white",
@@ -495,6 +539,6 @@ export default function AddVIPMembersModal({
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

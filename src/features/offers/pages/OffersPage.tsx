@@ -380,7 +380,11 @@ export default function OffersPage() {
             const offersResponse = await offerService.getStats();
             if (offersResponse.success && offersResponse.data) {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const data = offersResponse.data as { total_offers?: string | number; totalOffers?: string | number; total?: string | number };
+              const data = offersResponse.data as {
+                total_offers?: string | number;
+                totalOffers?: string | number;
+                total?: string | number;
+              };
               total =
                 parseInt(data.total_offers as string) ||
                 parseInt(data.totalOffers as string) ||
@@ -397,7 +401,11 @@ export default function OffersPage() {
         try {
           const offersResponse = await offerService.getStats();
           if (offersResponse.success && offersResponse.data) {
-            const data = offersResponse.data as { total_offers?: string | number; totalOffers?: string | number; total?: string | number };
+            const data = offersResponse.data as {
+              total_offers?: string | number;
+              totalOffers?: string | number;
+              total?: string | number;
+            };
             total =
               parseInt(data.total_offers as string) ||
               parseInt(data.totalOffers as string) ||
@@ -653,7 +661,13 @@ export default function OffersPage() {
   interface OfferActionParams {
     offerId: number;
     offerName: string;
-    action: "activate" | "pause" | "archive" | "unarchive" | "approve" | "reject";
+    action:
+      | "activate"
+      | "pause"
+      | "archive"
+      | "unarchive"
+      | "approve"
+      | "reject";
     successMessage: string;
     updateFields: Partial<Offer>;
   }
@@ -710,7 +724,8 @@ export default function OffersPage() {
         offerId: id,
         offerName: offer.name,
         action: "activate",
-        successMessage: "Offer Activated: Offer has been activated successfully.",
+        successMessage:
+          "Offer Activated: Offer has been activated successfully.",
         updateFields: { status: OfferStatusEnum.ACTIVE },
       },
       {
@@ -719,13 +734,13 @@ export default function OffersPage() {
         onUpdateOffers: (offerId, updateFields) =>
           setOffers((prev) =>
             prev.map((o) =>
-              Number(o.id) === offerId ? { ...o, ...updateFields } : o
-            )
+              Number(o.id) === offerId ? { ...o, ...updateFields } : o,
+            ),
           ),
         onSuccess: success,
         onError: showError,
         onRefreshStats: fetchOfferStats,
-      }
+      },
     );
   };
 
@@ -780,13 +795,13 @@ export default function OffersPage() {
         onUpdateOffers: (offerId, updateFields) =>
           setOffers((prev) =>
             prev.map((o) =>
-              Number(o.id) === offerId ? { ...o, ...updateFields } : o
-            )
+              Number(o.id) === offerId ? { ...o, ...updateFields } : o,
+            ),
           ),
         onSuccess: success,
         onError: showError,
         onRefreshStats: fetchOfferStats,
-      }
+      },
     );
   };
 
@@ -807,13 +822,13 @@ export default function OffersPage() {
         onUpdateOffers: (offerId, updateFields) =>
           setOffers((prev) =>
             prev.map((o) =>
-              Number(o.id) === offerId ? { ...o, ...updateFields } : o
-            )
+              Number(o.id) === offerId ? { ...o, ...updateFields } : o,
+            ),
           ),
         onSuccess: success,
         onError: showError,
         onRefreshStats: fetchOfferStats,
-      }
+      },
     );
   };
 
@@ -825,7 +840,8 @@ export default function OffersPage() {
         offerId: id,
         offerName: offer.name,
         action: "unarchive",
-        successMessage: "Offer Unarchived: Offer has been unarchived successfully.",
+        successMessage:
+          "Offer Unarchived: Offer has been unarchived successfully.",
         updateFields: { status: OfferStatusEnum.DRAFT },
       },
       {
@@ -834,13 +850,13 @@ export default function OffersPage() {
         onUpdateOffers: (offerId, updateFields) =>
           setOffers((prev) =>
             prev.map((o) =>
-              Number(o.id) === offerId ? { ...o, ...updateFields } : o
-            )
+              Number(o.id) === offerId ? { ...o, ...updateFields } : o,
+            ),
           ),
         onSuccess: success,
         onError: showError,
         onRefreshStats: fetchOfferStats,
-      }
+      },
     );
   };
 
@@ -908,7 +924,7 @@ export default function OffersPage() {
         successMessage: "Offer Approved: Offer has been approved successfully.",
         updateFields: {
           status: OfferStatusEnum.APPROVED,
-          approval_status: "approved"
+          approval_status: "approved",
         },
         userId: user.user_id,
       },
@@ -918,13 +934,13 @@ export default function OffersPage() {
         onUpdateOffers: (offerId, updateFields) =>
           setOffers((prev) =>
             prev.map((o) =>
-              Number(o.id) === offerId ? { ...o, ...updateFields } : o
-            )
+              Number(o.id) === offerId ? { ...o, ...updateFields } : o,
+            ),
           ),
         onSuccess: success,
         onError: showError,
         onRefreshStats: fetchOfferStats,
-      }
+      },
     );
   };
 
@@ -943,7 +959,7 @@ export default function OffersPage() {
         successMessage: "Offer Rejected: Offer has been rejected.",
         updateFields: {
           status: OfferStatusEnum.REJECTED,
-          approval_status: "rejected"
+          approval_status: "rejected",
         },
         userId: user.user_id,
       },
@@ -953,13 +969,13 @@ export default function OffersPage() {
         onUpdateOffers: (offerId, updateFields) =>
           setOffers((prev) =>
             prev.map((o) =>
-              Number(o.id) === offerId ? { ...o, ...updateFields } : o
-            )
+              Number(o.id) === offerId ? { ...o, ...updateFields } : o,
+            ),
           ),
         onSuccess: success,
         onError: showError,
         onRefreshStats: fetchOfferStats,
-      }
+      },
     );
   };
 
@@ -1791,7 +1807,8 @@ export default function OffersPage() {
                       { value: OfferStatusEnum.ARCHIVED, label: "Archived" },
                     ].map((option) => (
                       <label key={option.value} className="flex items-center">
-                        <Radio name="status"
+                        <Radio
+                          name="status"
                           value={option.value}
                           checked={selectedStatus === option.value}
                           onChange={() =>
@@ -1799,7 +1816,8 @@ export default function OffersPage() {
                               option.value as OfferStatusEnum | "all",
                             )
                           }
-                          className={`mr-3 text-[${color.primary.action}] focus:ring-[${color.primary.action}]`} />
+                          className={`mr-3 text-[${color.primary.action}] focus:ring-[${color.primary.action}]`}
+                        />
                         <span className={`text-sm ${tw.textSecondary}`}>
                           {option.label}
                         </span>
@@ -1823,13 +1841,15 @@ export default function OffersPage() {
                       { value: "rejected", label: "Rejected" },
                     ].map((option) => (
                       <label key={option.value} className="flex items-center">
-                        <Radio name="approval"
+                        <Radio
+                          name="approval"
                           value={option.value}
                           checked={selectedApproval === option.value}
                           onChange={() =>
                             handleApprovalFilter(option.value as string | "all")
                           }
-                          className={`mr-3 text-[${color.primary.action}] focus:ring-[${color.primary.action}]`} />
+                          className={`mr-3 text-[${color.primary.action}] focus:ring-[${color.primary.action}]`}
+                        />
                         <span className={`text-sm ${tw.textSecondary}`}>
                           {option.label}
                         </span>
