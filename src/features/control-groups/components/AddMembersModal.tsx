@@ -275,7 +275,6 @@ export default function AddMembersModal({
                           filteredCustomers.length > 0
                         }
                         onChange={handleSelectAll}
-                        className="w-4 h-4 border-gray-400 rounded"
                       />
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">

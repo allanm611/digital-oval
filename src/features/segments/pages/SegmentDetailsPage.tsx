@@ -2331,7 +2331,7 @@ export default function SegmentDetailsPage() {
                       <thead className="bg-gray-50 sticky top-0 z-10">
                         <tr>
                           <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-12">
-                            <Checkbox className="w-4 h-4" />
+                            <Checkbox />
                           </th>
                           <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                             MSISDN

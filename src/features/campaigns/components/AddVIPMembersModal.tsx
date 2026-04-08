@@ -63,7 +63,6 @@ export default function AddVIPMembersModal({
   useEffect(() => {
     if (isOpen) {
       setPage(1);
-      setSelectedVIPListId("");
       loadCustomers();
     }
   }, [isOpen]);
@@ -93,6 +92,7 @@ export default function AddVIPMembersModal({
   useEffect(() => {
     loadCustomers();
   }, [loadCustomers]);
+
 
   const filteredCustomers = useMemo(() => {
     return customers.filter((customer) => {
@@ -376,7 +376,6 @@ export default function AddVIPMembersModal({
                         }
                         onChange={handleSelectAll}
                         disabled={isLoading}
-                        className="w-4 h-4 border-gray-400 rounded"
                       />
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -398,7 +397,7 @@ export default function AddVIPMembersModal({
                     const customerId = getCustomerId(customer);
                     const isSelected = selectedMembers.some(
                       (m) =>
-                        m.customer_id === customerId &&
+                        m.customer_id === Number(customerId) &&
                         m.vip_list_id === Number(selectedVIPListId)
                     );
 
@@ -413,7 +412,6 @@ export default function AddVIPMembersModal({
                             checked={isSelected}
                             onChange={() => handleToggleCustomer(customer)}
                             disabled={isLoading}
-                            className="w-4 h-4 border-gray-400 rounded disabled:opacity-50"
                           />
                         </td>
                         <td className="px-4 py-4">

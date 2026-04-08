@@ -849,7 +849,7 @@ export default function ConnectionProfilesPage() {
                       className="px-3 py-3 text-sm font-medium whitespace-nowrap"
                       style={{ borderTopLeftRadius: "0.375rem" }}
                     >
-                      <Checkbox className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
+                      <Checkbox
                         checked={
                           selectedProfileIds.size > 0 &&
                           selectedProfileIds.size === filteredProfiles.length
