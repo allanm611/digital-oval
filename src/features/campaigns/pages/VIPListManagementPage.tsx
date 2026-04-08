@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Search, Star, Users, Edit } from "lucide-react";
+import { Plus, Search, Star, Users, Trash2 } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -33,8 +33,11 @@ export interface VIPList {
   id: number;
   name: string;
   description?: string;
-  customer_count?: number;
-  status: "active" | "inactive";
+  customer_count?: number | string;
+  rows_imported?: number;
+  rows_failed?: number;
+  processing_status?: "pending" | "processing" | "completed" | "failed";
+  status?: string;
   created_at: string;
 }
 
@@ -165,8 +168,9 @@ export default function VIPListManagementPage() {
         ?.toLowerCase()
         .includes(debouncedSearchTermLists.toLowerCase());
 
+    const listStatus = (list.processing_status || list.status || "").toLowerCase();
     const matchesStatus =
-      filterStatusLists === "all" || list.status === filterStatusLists;
+      filterStatusLists === "all" || listStatus === filterStatusLists;
 
     return matchesSearch && matchesStatus;
   });
@@ -200,11 +204,6 @@ export default function VIPListManagementPage() {
       setIsCreatingList(false);
       setEditingList(null);
     }
-  };
-
-  const handleEditVIPList = (list: VIPList) => {
-    setEditingList(list);
-    setIsCreateListModalOpen(true);
   };
 
   const handleDeleteVIPList = (list: VIPList) => {
@@ -433,8 +432,10 @@ export default function VIPListManagementPage() {
                 onChange={setFilterStatus}
                 options={[
                   { value: "all", label: "All Status" },
-                  { value: "active", label: "Active" },
-                  { value: "inactive", label: "Inactive" },
+                  { value: "pending", label: "Pending" },
+                  { value: "processing", label: "Processing" },
+                  { value: "completed", label: "Completed" },
+                  { value: "failed", label: "Failed" },
                 ]}
                 placeholder="Filter by Status"
               />
@@ -666,16 +667,25 @@ export default function VIPListManagementPage() {
                       backgroundColor: color.surface.tableHeader,
                     }}
                   >
-                    Status
+                    Rows Imported
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                     style={{
                       color: color.surface.tableHeaderText,
                       backgroundColor: color.surface.tableHeader,
                     }}
                   >
-                    Created
+                    Rows Failed
+                  </th>
+                  <th
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{
+                      color: color.surface.tableHeaderText,
+                      backgroundColor: color.surface.tableHeader,
+                    }}
+                  >
+                    Status
                   </th>
                   <th
                     className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
@@ -723,18 +733,28 @@ export default function VIPListManagementPage() {
                       </span>
                     </td>
                     <td
-                      className="px-6 py-4"
+                      className="px-6 py-4 whitespace-nowrap"
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
-                      <span className="text-sm text-black">{list.status}</span>
+                      <span className="text-sm text-black">
+                        {list.rows_imported ?? 0}
+                      </span>
                     </td>
                     <td
                       className="px-6 py-4 whitespace-nowrap"
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
-                      <div className={`text-sm ${tw.textSecondary}`}>
-                        <DateFormatter date={list.created_at} />
-                      </div>
+                      <span className="text-sm text-black">
+                        {list.rows_failed ?? 0}
+                      </span>
+                    </td>
+                    <td
+                      className="px-6 py-4"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      <span className="text-sm text-black">
+                        {list.processing_status || list.status || "-"}
+                      </span>
                     </td>
                     <td
                       className="px-6 py-4 text-center"
@@ -745,13 +765,6 @@ export default function VIPListManagementPage() {
                       }}
                     >
                       <div className="flex items-center justify-center gap-2">
-                        <button
-                          onClick={() => handleEditVIPList(list)}
-                          className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 ${tw.rounded} transition-colors`}
-                          title="Edit VIP List"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
                         <button
                           onClick={() => handleDeleteVIPList(list)}
                           className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}

@@ -1,7 +1,5 @@
 import { useState } from "react";
-import { createPortal } from "react-dom";
-import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import { color, tw, zIndex } from "../../../shared/utils/utils";
+import UnifiedPickerModal from "../../segments/components/UnifiedPickerModal";
 import { type KPI } from "../types/kpi";
 
 interface KPIPickerModalProps {
@@ -12,8 +10,8 @@ interface KPIPickerModalProps {
   category: KPI["category"];
   title: string;
   searchPlaceholder?: string;
-  hasSubcategories?: boolean;  // Only show category filter if true
-  subcategoryOptions?: Array<{ value: string; label: string }>;  // Custom subcategory options
+  hasSubcategories?: boolean; // Only show category filter if true
+  subcategoryOptions?: Array<{ value: string; label: string }>; // Custom subcategory options
 }
 
 export default function KPIPickerModal({
@@ -24,151 +22,58 @@ export default function KPIPickerModal({
   category,
   title,
   searchPlaceholder,
-  hasSubcategories = false,  // Default: no category filter
-  subcategoryOptions,  // Custom subcategory options
+  hasSubcategories = false, // Default: no category filter
+  subcategoryOptions, // Custom subcategory options
 }: KPIPickerModalProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>(category);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("all");
 
   // Get default subcategory options or use provided ones
-  const defaultSubcategoryOptions = [
-    { value: "all", label: "All" },
-  ];
+  const defaultSubcategoryOptions = [{ value: "all", label: "All" }];
 
-  const finalSubcategoryOptions = subcategoryOptions || defaultSubcategoryOptions;
+  const finalSubcategoryOptions =
+    subcategoryOptions || defaultSubcategoryOptions;
 
   // Filter KPIs by category, subcategory, and search
   const filteredKPIs = kpis.filter(
     (kpi) =>
       kpi.category === selectedCategory &&
-      (selectedSubcategory === "all" || kpi.subcategory === selectedSubcategory) &&
+      (selectedSubcategory === "all" ||
+        kpi.subcategory === selectedSubcategory) &&
       (kpi.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (kpi.description && kpi.description.toLowerCase().includes(searchTerm.toLowerCase())))
+        (kpi.description &&
+          kpi.description.toLowerCase().includes(searchTerm.toLowerCase()))),
   );
 
-  if (!isOpen) return null;
-
-  const handleSelectKPI = (kpi: DummyKPI) => {
+  const handleSelectKPI = (kpi: KPI) => {
     onSelect(kpi);
-    onClose();
   };
 
-  return createPortal(
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
-      style={{
-        zIndex: zIndex.modal,
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        width: "100vw",
-        height: "100vh",
-      }}
-    >
-      <div
-        className={`bg-white ${tw.rounded} shadow-lg w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col`}
-      >
-        {/* Header */}
-        <div className="px-6 py-4 flex items-center justify-between">
-          <div>
-            <h2 className={`text-lg font-semibold ${tw.textPrimary}`}>{title}</h2>
-            <p className={`text-sm ${tw.textSecondary} mt-1`}>
-              Choose a {title.toLowerCase()} to add to your segment condition
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors text-gray-500 font-medium`}
-          >
-            ✕
-          </button>
-        </div>
-
-        {/* Filters */}
-        <div className="px-6 py-3 space-y-3">
-          {/* Search and Category Filter - Side by side (or search only) */}
-          <div className={`flex gap-3 ${hasSubcategories ? "flex-row" : "flex-row"}`}>
-            {/* Search */}
-            <div className={`relative ${hasSubcategories ? "flex-1" : "w-full"}`}>
-              <input
-                type="text"
-                placeholder={searchPlaceholder || `Search ${title.toLowerCase()}...`}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className={`w-full px-4 py-3 border text-sm ${tw.rounded} focus:outline-none focus:ring-2`}
-                style={{
-                  borderColor: color.border.default,
-                }}
-              />
-            </div>
-
-            {/* Subcategory Filter - Only show if hasSubcategories is true */}
-            {hasSubcategories && (
-              <div className="min-w-[160px]">
-                <HeadlessSelect
-                  options={finalSubcategoryOptions}
-                  value={selectedSubcategory}
-                  onChange={(value) => setSelectedSubcategory(value as string)}
-                  placeholder="Filter by..."
-                  className="text-sm"
-                  zIndex={zIndex.popover}
-                />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* KPI List */}
-        <div className="overflow-y-auto flex-1 px-6 py-4">
-          {filteredKPIs.length === 0 ? (
-            <div className="text-center py-8">
-              <p className={tw.textSecondary}>
-                No KPIs found matching your criteria
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {filteredKPIs.map((kpi) => (
-                <button
-                  key={kpi.id}
-                  onClick={() => handleSelectKPI(kpi)}
-                  className={`w-full p-3 ${tw.rounded} border transition-all text-left hover:border-gray-400`}
-                  style={{
-                    backgroundColor: color.surface.background,
-                    borderColor: color.border.default,
-                  }}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="flex-1">
-                      <h3 className="text-sm font-medium text-black">
-                        {kpi.name}
-                      </h3>
-                      <p className="text-sm text-black mt-1.5">
-                        {kpi.description}
-                      </p>
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="px-6 py-4 flex items-center justify-end">
-          <button
-            onClick={onClose}
-            className={`px-4 py-2 text-sm ${tw.rounded} border font-medium transition-all`}
-            style={{ borderColor: color.border.default, color: tw.textPrimary }}
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    </div>,
-    document.body
+  return (
+    <UnifiedPickerModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={title}
+      subtitle={`Choose a ${title.toLowerCase()} to add to your segment condition`}
+      searchTerm={searchTerm}
+      onSearchTermChange={setSearchTerm}
+      searchPlaceholder={
+        searchPlaceholder || `Search ${title.toLowerCase()}...`
+      }
+      filterOptions={hasSubcategories ? finalSubcategoryOptions : undefined}
+      filterValue={hasSubcategories ? selectedSubcategory : undefined}
+      onFilterChange={hasSubcategories ? setSelectedSubcategory : undefined}
+      items={filteredKPIs.map((kpi) => ({
+        id: kpi.id,
+        title: kpi.name,
+        description: kpi.description || "-",
+        meta: kpi.subcategory ? `Subcategory: ${kpi.subcategory}` : undefined,
+        raw: kpi,
+      }))}
+      onSelect={(item) => handleSelectKPI(item.raw)}
+      emptyTitle="No KPIs found"
+      emptyDescription="No KPIs found matching your criteria"
+    />
   );
 }

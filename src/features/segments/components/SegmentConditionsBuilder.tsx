@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Plus,
   Trash2,
@@ -15,16 +15,17 @@ import {
   SegmentCondition,
   SegmentConditionGroup,
   SEGMENT_FIELDS,
+  SegmentType,
 } from "../types/segment";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useSegmentationFields } from "../hooks/useSegmentationFields";
 import { getOperatorsForFieldType } from "../../../shared/utils/operatorMapper";
-import SegmentPickerModal from "./SegmentPickerModal";
-import QuickListPickerModal from "./QuickListPickerModal";
+import UnifiedPickerModal from "./UnifiedPickerModal";
 import SystemEventPickerModal from "./SystemEventPickerModal";
 import FieldPickerModal from "./FieldPickerModal";
 import { quicklistService } from "../../quicklists/services/quicklistService";
+import { segmentService } from "../services/segmentService";
 import {
   SYSTEM_EVENTS,
   TIME_OPERATOR_OPTIONS,
@@ -41,6 +42,15 @@ import { type KPI } from "../../kpis/types/kpi";
 import { generateAllKPIs } from "../../kpis/utils/kpiGenerator";
 
 const allKPIs = generateAllKPIs();
+
+interface QuickListPickerItem {
+  id: number;
+  name: string;
+  description?: string;
+  upload_type: string;
+  row_count: number;
+  created_at: string;
+}
 
 interface SegmentConditionsBuilderProps {
   conditions: SegmentConditionGroup[];
@@ -73,6 +83,96 @@ export default function SegmentConditionsBuilder({
     groupId: string;
     conditionId: string;
   } | null>(null);
+  const [segmentSearchTerm, setSegmentSearchTerm] = useState("");
+  const [segmentFilter, setSegmentFilter] = useState("all");
+  const [segmentOptions, setSegmentOptions] = useState<SegmentType[]>([]);
+  const [isLoadingSegments, setIsLoadingSegments] = useState(false);
+  const [quickListSearchTerm, setQuickListSearchTerm] = useState("");
+  const [quickListFilter, setQuickListFilter] = useState("all");
+  const [quickListOptions, setQuickListOptions] = useState<QuickListPickerItem[]>([]);
+  const [isLoadingQuickLists, setIsLoadingQuickLists] = useState(false);
+
+  useEffect(() => {
+    const loadSegments = async () => {
+      if (!isSegmentModalOpen) {
+        return;
+      }
+
+      setIsLoadingSegments(true);
+      try {
+        let response;
+        if (segmentSearchTerm.trim()) {
+          response = await segmentService.searchSegments({
+            q: segmentSearchTerm,
+            type:
+              segmentFilter !== "all"
+                ? (segmentFilter as "static" | "dynamic" | "trigger")
+                : undefined,
+            skipCache: true,
+          });
+        } else {
+          response = await segmentService.getSegments({
+            type:
+              segmentFilter !== "all"
+                ? (segmentFilter as "static" | "dynamic" | "trigger")
+                : undefined,
+            skipCache: true,
+          });
+        }
+        setSegmentOptions(response.data || []);
+      } catch (error) {
+        console.error("Failed to load segments:", error);
+        setSegmentOptions([]);
+      } finally {
+        setIsLoadingSegments(false);
+      }
+    };
+
+    loadSegments();
+  }, [isSegmentModalOpen, segmentSearchTerm, segmentFilter]);
+
+  useEffect(() => {
+    const loadQuickLists = async () => {
+      if (!isQuickListModalOpen) {
+        return;
+      }
+
+      setIsLoadingQuickLists(true);
+      try {
+        const response = await quicklistService.getAllQuickLists({
+          offset: 0,
+          limit: 100,
+        });
+
+        if (response.success && response.data) {
+          const lists = response.data
+            .filter(
+              (item: any) =>
+                item.status === "completed" ||
+                item.processing_status === "completed",
+            )
+            .map((item: any) => ({
+              id: item.id,
+              name: item.name,
+              description: item.description,
+              upload_type: item.processing_status || "multi",
+              row_count: item.rows_imported || 0,
+              created_at: item.created_at,
+            }));
+          setQuickListOptions(lists);
+        } else {
+          setQuickListOptions([]);
+        }
+      } catch (error) {
+        console.error("Failed to load quicklists:", error);
+        setQuickListOptions([]);
+      } finally {
+        setIsLoadingQuickLists(false);
+      }
+    };
+
+    loadQuickLists();
+  }, [isQuickListModalOpen]);
 
   // Get icon for condition type (using theme colors only)
   const getConditionTypeIcon = (type: string) => {
@@ -1269,6 +1369,32 @@ export default function SegmentConditionsBuilder({
     );
   }
 
+  const selectedSegmentId = currentEditingCondition
+    ? conditions
+        .find((g) => g.id === currentEditingCondition.groupId)
+        ?.conditions.find((c) => c.id === currentEditingCondition.conditionId)
+        ?.segment_id
+    : undefined;
+
+  const selectedQuickListId = currentEditingCondition
+    ? conditions
+        .find((g) => g.id === currentEditingCondition.groupId)
+        ?.conditions.find((c) => c.id === currentEditingCondition.conditionId)
+        ?.list_id
+    : undefined;
+
+  const filteredQuickListOptions = quickListOptions.filter((quicklist) => {
+    const matchesSearch =
+      quicklist.name.toLowerCase().includes(quickListSearchTerm.toLowerCase()) ||
+      (quicklist.description?.toLowerCase() || "").includes(
+        quickListSearchTerm.toLowerCase(),
+      );
+
+    if (quickListFilter === "all") return matchesSearch;
+
+    return matchesSearch && quicklist.upload_type === quickListFilter;
+  });
+
   return (
     <div className="space-y-2">
       {conditions.map((group, groupIndex) => (
@@ -1591,19 +1717,43 @@ export default function SegmentConditionsBuilder({
         Add Condition Group
       </button>
 
-      {/* Segment Picker Modal */}
-      <SegmentPickerModal
+      {/* Segment Picker Modal (Unified UI) */}
+      <UnifiedPickerModal
         isOpen={isSegmentModalOpen}
         onClose={() => {
           setIsSegmentModalOpen(false);
           setCurrentEditingCondition(null);
         }}
-        onSelect={async (segment) => {
-          // Validate segment if validator is provided
+        title="Select a Segment"
+        subtitle="Choose a segment to use in this condition"
+        searchTerm={segmentSearchTerm}
+        onSearchTermChange={setSegmentSearchTerm}
+        searchPlaceholder="Search segments..."
+        filterOptions={[
+          { value: "all", label: "All Segments" },
+          { value: "static", label: "Static" },
+          { value: "dynamic", label: "Dynamic" },
+          { value: "trigger", label: "Trigger" },
+        ]}
+        filterValue={segmentFilter}
+        onFilterChange={setSegmentFilter}
+        items={segmentOptions.map((segment) => ({
+          id: segment.id || segment.name,
+          title: segment.name,
+          description: segment.description,
+          raw: segment,
+        }))}
+        selectedId={selectedSegmentId}
+        loading={isLoadingSegments}
+        loadingText="Loading segments..."
+        emptyTitle="No segments found"
+        emptyDescription="Try adjusting your search or filter criteria"
+        onSelect={async (item) => {
+          const segment = item.raw;
+
           if (onSegmentValidate) {
             const validation = await onSegmentValidate(segment.id!);
             if (!validation.valid) {
-              // Validation failed - call error callback instead of alert
               if (onValidationError) {
                 onValidationError(
                   validation.error ||
@@ -1627,25 +1777,41 @@ export default function SegmentConditionsBuilder({
           setIsSegmentModalOpen(false);
           setCurrentEditingCondition(null);
         }}
-        selectedSegmentId={
-          currentEditingCondition
-            ? conditions
-                .find((g) => g.id === currentEditingCondition.groupId)
-                ?.conditions.find(
-                  (c) => c.id === currentEditingCondition.conditionId,
-                )?.segment_id
-            : undefined
-        }
       />
 
-      {/* QuickList Picker Modal */}
-      <QuickListPickerModal
+      {/* QuickList Picker Modal (Unified UI) */}
+      <UnifiedPickerModal
         isOpen={isQuickListModalOpen}
         onClose={() => {
           setIsQuickListModalOpen(false);
           setCurrentEditingCondition(null);
         }}
-        onSelect={(quicklist) => {
+        title="Select a QuickList"
+        subtitle="Choose a quicklist to use in this condition"
+        searchTerm={quickListSearchTerm}
+        onSearchTermChange={setQuickListSearchTerm}
+        searchPlaceholder="Search quicklists..."
+        filterOptions={[
+          { value: "all", label: "All Types" },
+          { value: "email", label: "Email" },
+          { value: "phone", label: "Phone" },
+          { value: "multi", label: "Multi-Channel" },
+        ]}
+        filterValue={quickListFilter}
+        onFilterChange={setQuickListFilter}
+        items={filteredQuickListOptions.map((quicklist) => ({
+          id: quicklist.id,
+          title: quicklist.name,
+          description: quicklist.description,
+          raw: quicklist,
+        }))}
+        selectedId={selectedQuickListId}
+        loading={isLoadingQuickLists}
+        loadingText="Loading quicklists..."
+        emptyTitle="No quicklists found"
+        emptyDescription="Try adjusting your search or filter criteria"
+        onSelect={(item) => {
+          const quicklist = item.raw;
           if (currentEditingCondition) {
             updateCondition(
               currentEditingCondition.groupId,
@@ -1659,15 +1825,6 @@ export default function SegmentConditionsBuilder({
           setIsQuickListModalOpen(false);
           setCurrentEditingCondition(null);
         }}
-        selectedQuickListId={
-          currentEditingCondition
-            ? conditions
-                .find((g) => g.id === currentEditingCondition.groupId)
-                ?.conditions.find(
-                  (c) => c.id === currentEditingCondition.conditionId,
-                )?.list_id
-            : undefined
-        }
       />
 
       {/* System Event Picker Modal */}
