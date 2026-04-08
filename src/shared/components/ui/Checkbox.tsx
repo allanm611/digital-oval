@@ -18,9 +18,19 @@ export default function Checkbox({
   wrapperClassName = "",
   ...inputProps
 }: CheckboxProps) {
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
   const input = (
-    <span className="relative inline-flex items-center justify-center">
-      <input {...inputProps} type="checkbox" className="peer sr-only" />
+    <span
+      className="relative inline-flex items-center justify-center cursor-pointer"
+      onClick={() => inputRef.current?.click()}
+    >
+      <input
+        ref={inputRef}
+        {...inputProps}
+        type="checkbox"
+        className="peer sr-only"
+      />
       <span
         className={`inline-flex h-5 w-5 items-center justify-center rounded border border-gray-300 bg-white transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-[#00BBCC]/30 peer-disabled:opacity-50 peer-checked:[&>svg]:opacity-100 ${className}`}
       >

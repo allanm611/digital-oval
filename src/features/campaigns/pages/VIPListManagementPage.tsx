@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import {
   Plus,
   Search,
-  Trash2,
   Star,
   Users,
   Edit,
@@ -509,7 +508,16 @@ export default function VIPListManagementPage() {
                         borderTopLeftRadius: "0.375rem",
                       }}
                     >
-                      Customer
+                      Name
+                    </th>
+                    <th
+                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{
+                        color: color.surface.tableHeaderText,
+                        backgroundColor: color.surface.tableHeader,
+                      }}
+                    >
+                      Email
                     </th>
                     <th
                       className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
@@ -534,29 +542,12 @@ export default function VIPListManagementPage() {
                       style={{
                         color: color.surface.tableHeaderText,
                         backgroundColor: color.surface.tableHeader,
-                      }}
-                    >
-                      Added
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{
-                        color: color.surface.tableHeaderText,
-                        backgroundColor: color.surface.tableHeader,
-                      }}
-                    >
-                      Added By
-                    </th>
-                    <th
-                      className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                      style={{
-                        color: color.surface.tableHeaderText,
-                        backgroundColor: color.surface.tableHeader,
                         borderTopRightRadius: "0.375rem",
                       }}
                     >
-                      Actions
+                      Added Date
                     </th>
+                    {/* Actions column intentionally hidden until member remove endpoint is finalized */}
                   </tr>
                 </thead>
                 <tbody>
@@ -579,7 +570,7 @@ export default function VIPListManagementPage() {
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
                         <span className="text-sm text-black">
-                          {customer.vip_list_name || "Default"}
+                          {customer.customer_email || "-"}
                         </span>
                       </td>
                       <td
@@ -587,45 +578,28 @@ export default function VIPListManagementPage() {
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
                         <span className="text-sm text-black">
-                          {customer.status}
+                          {customer.vip_list_name || "Default"}
                         </span>
-                      </td>
-                      <td
-                        className="px-6 py-4 whitespace-nowrap"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <div className={`text-sm ${tw.textSecondary}`}>
-                          <DateFormatter date={customer.added_at} />
-                        </div>
                       </td>
                       <td
                         className="px-6 py-4"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        <div className={`text-sm ${tw.textSecondary}`}>
-                          {customer.added_by_name || "System"}
-                        </div>
+                        <span className="text-sm text-black">{customer.status}</span>
                       </td>
                       <td
-                        className="px-6 py-4 text-center"
+                        className="px-6 py-4 whitespace-nowrap"
                         style={{
                           backgroundColor: color.surface.tablebodybg,
                           borderTopRightRadius: "0.375rem",
                           borderBottomRightRadius: "0.375rem",
                         }}
                       >
-                        <button
-                          onClick={() => handleRemoveCustomer(customer)}
-                          className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
-                          title={
-                            customer.status === "active"
-                              ? "Remove from VIP List"
-                              : "Delete from VIP List"
-                          }
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <div className={`text-sm ${tw.textSecondary}`}>
+                          <DateFormatter date={customer.added_at} />
+                        </div>
                       </td>
+                      {/* Actions cell intentionally hidden until member remove endpoint is finalized */}
                     </tr>
                   ))}
                 </tbody>

@@ -210,7 +210,7 @@ export default function AddVIPMembersModal({
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 9999 }}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: zIndex.modal }}>
       <div className={`bg-white ${tw.rounded} w-full max-w-4xl max-h-[90vh] flex flex-col`}>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
@@ -248,20 +248,10 @@ export default function AddVIPMembersModal({
                   : "No VIP lists available"
               }
               disabled={isLoading || vipLists.length === 0}
+              zIndex={zIndex.popover}
             />
           </div>
         </div>
-
-        {hasSelectedVIPList && (
-          <div className="px-6 pb-2 flex-shrink-0">
-            <div
-              className="rounded-lg px-4 py-3 border bg-white text-sm font-medium"
-              style={{ borderColor: `${color.primary.accent}40`, color: color.primary.accent }}
-            >
-              Adding members to: {selectedVIPList?.name}
-            </div>
-          </div>
-        )}
 
         {/* Step 2: Search and Filter */}
         <div className="px-6 pt-6 pb-4 flex-shrink-0">
@@ -285,7 +275,7 @@ export default function AddVIPMembersModal({
                 {customerStatusFilter === "all" ? "All Statuses" : customerStatusFilter}
                 <ChevronUpDownIcon className="w-4 h-4 text-gray-400" />
               </Popover.Button>
-              <Popover.Panel className={`absolute right-0 mt-2 w-48 ${tw.rounded} border border-gray-200 bg-white shadow-lg`} style={{ zIndex: zIndex.modal }}>
+              <Popover.Panel className={`absolute right-0 mt-2 w-48 ${tw.rounded} border border-gray-200 bg-white shadow-lg`} style={{ zIndex: zIndex.popover }}>
                 <div className="py-1">
                   {["all", "Active", "Inactive", "Suspended"].map((status) => (
                     <button
@@ -386,6 +376,7 @@ export default function AddVIPMembersModal({
                         }
                         onChange={handleSelectAll}
                         disabled={isLoading}
+                        className="w-4 h-4 border-gray-400 rounded"
                       />
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -422,6 +413,7 @@ export default function AddVIPMembersModal({
                             checked={isSelected}
                             onChange={() => handleToggleCustomer(customer)}
                             disabled={isLoading}
+                            className="w-4 h-4 border-gray-400 rounded disabled:opacity-50"
                           />
                         </td>
                         <td className="px-4 py-4">

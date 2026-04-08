@@ -276,9 +276,7 @@ export default function AddMembersModal({
                         }
                         onChange={handleSelectAll}
                         className="w-4 h-4 border-gray-400 rounded"
-                        style={{
-                          accentColor: "#111827",
-                        }} />
+                      />
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                       Name
