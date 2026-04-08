@@ -259,7 +259,11 @@ export default function CreateManualBroadcastPage() {
     // Validate each step's required fields
     switch (stepId) {
       case 1: // Target Audience
-        return !!(broadcastData.audienceFile || broadcastData.quicklistId);
+        return !!(
+          broadcastData.audienceFile ||
+          broadcastData.quicklistId ||
+          broadcastData.audienceFileText
+        );
       case 2: // Define Communication
         return !!(
           broadcastData.channel &&

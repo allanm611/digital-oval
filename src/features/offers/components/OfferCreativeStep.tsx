@@ -24,11 +24,13 @@ import {
   RenderCreativeResponse,
 } from "../types/offerCreative";
 import { offerCreativeService } from "../services/offerCreativeService";
-import { useConfigurationData } from "../../../shared/services/configurationDataService";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { useConfigurationData } from "../../../shared/services/configurationDataService";
 import { TypeConfigurationItem } from "../../../shared/components/TypeConfigurationPage";
 import { senderIdService, SenderId } from "../../configurations/services/senderIdService";
 import { creativeTemplateService, CreativeTemplate } from "../../configurations/services/creativeTemplateService";
+import { smsRouteService } from "../../routes/services/smsRouteService";
+import { SMSRoute } from "../../routes/types/smsRoute";
 import {
   SMSSmartphonePreview,
   EmailLaptopPreview,
@@ -490,8 +492,11 @@ export default function OfferCreativeStep({
   const [senderIds, setSenderIds] = useState<SenderId[]>([]);
   const [senderIdsLoading, setSenderIdsLoading] = useState(true);
 
-  // Load SMS routes and languages from configuration
-  const { data: smsRoutes } = useConfigurationData("smsRoutes");
+  // Fetch SMS routes from backend
+  const [smsRoutes, setSmsRoutes] = useState<SMSRoute[]>([]);
+  const [smsRoutesLoading, setSmsRoutesLoading] = useState(true);
+
+  // Load languages from configuration
   const { data: languages } = useConfigurationData("languages");
 
   // Fetch creative templates on component mount
@@ -531,6 +536,24 @@ export default function OfferCreativeStep({
     };
     fetchSenderIds();
   }, []);
+
+  // Fetch SMS routes on component mount
+  useEffect(() => {
+    const fetchSmsRoutes = async () => {
+      try {
+        setSmsRoutesLoading(true);
+        const routes = await smsRouteService.getAllRoutes();
+        setSmsRoutes(Array.isArray(routes) ? routes : []);
+      } catch (error) {
+        console.error("Failed to fetch SMS routes:", error);
+        setSmsRoutes([]);
+      } finally {
+        setSmsRoutesLoading(false);
+      }
+    };
+    fetchSmsRoutes();
+  }, []);
+
   // Initialize selectedCreative from creatives if available, otherwise null
   const [selectedCreative, setSelectedCreative] = useState<string | null>(
     () => {
@@ -583,7 +606,7 @@ export default function OfferCreativeStep({
       text_body: "",
       html_body: "",
       variables: {
-        sms_route: "Effortel SMS Gateway", // Default to Effortel SMS Gateway
+        sms_route: "", // Leave empty until user selects
       } as Record<string, string | number | boolean>,
       is_active: true,
     };
@@ -1285,7 +1308,7 @@ export default function OfferCreativeStep({
                             });
                           }}
                           options={
-                            smsRoutes?.filter((route) => route.isActive)
+                            smsRoutes?.filter((route) => route.is_active)
                               .map((route) => ({
                                 value: route.id?.toString() || "",
                                 label: route.name,

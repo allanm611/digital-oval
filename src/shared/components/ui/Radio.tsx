@@ -17,10 +17,12 @@ export default function Radio({
   wrapperClassName = "",
   ...inputProps
 }: RadioProps) {
+  const inputRef = React.useRef<HTMLInputElement>(null);
   const checked = inputProps.checked;
 
   const input = (
     <input
+      ref={inputRef}
       {...inputProps}
       type="radio"
       className={`w-6 h-6 border border-gray-300 rounded-full bg-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed appearance-none ${className}`}
@@ -43,7 +45,8 @@ export default function Radio({
 
   return (
     <label
-      className={`flex items-center gap-2 cursor-pointer ${wrapperClassName}`}
+      className={`flex items-center gap-2 cursor-pointer ${inputProps.disabled ? "opacity-70 cursor-not-allowed" : ""} ${wrapperClassName}`}
+      onClick={() => !inputProps.disabled && inputRef.current?.click()}
     >
       {input}
       {label && (

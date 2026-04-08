@@ -13,7 +13,8 @@ import type { SchedulingData } from "../../../shared/types/scheduling";
 import { useToast } from "../../../contexts/ToastContext";
 import Radio from "../../../shared/components/ui/Radio";
 import { controlGroupService } from "../services/controlGroupService";
-import type { CreateUniversalControlGroupRequest, TargetRenderTime } from "../types/controlGroup";
+import type { CreateControlGroupRequest, TargetRenderTime } from "../types/controlGroup";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 export default function CreateControlGroupPage() {
   const navigate = useNavigate();
@@ -22,8 +23,11 @@ export default function CreateControlGroupPage() {
   const isEditMode = !!id;
 
   const [currentStep, setCurrentStep] = useState(1);
+  const [controlGroupCode, setControlGroupCode] = useState("");
   const [controlGroupName, setControlGroupName] = useState("");
+  const [controlGroupDescription, setControlGroupDescription] = useState("");
   const [nameError, setNameError] = useState("");
+  const [codeError, setCodeError] = useState("");
   const [percentageError, setPercentageError] = useState("");
   const [generationMethodError, setGenerationMethodError] = useState("");
   const [controlGroupPercentage, setControlGroupPercentage] = useState(10);
@@ -45,6 +49,7 @@ export default function CreateControlGroupPage() {
     recurrence_pattern: "monthly",
     recurrence_interval: 1,
   });
+  const [isUniversal, setIsUniversal] = useState(false);
 
   useEffect(() => {
     if (isEditMode && id) {
@@ -55,10 +60,13 @@ export default function CreateControlGroupPage() {
   const loadControlGroup = async (groupId: number) => {
     try {
       const group = await controlGroupService.getControlGroupById(groupId);
+      setControlGroupCode(group.code);
       setControlGroupName(group.name);
+      setControlGroupDescription(group.description || "");
       setControlGroupPercentage(group.percentage || 10);
       setGenerationMethod((group.generation_method as "random" | "stratified") || "random");
       setSelectedCustomerBase(group.customer_source_type || "active_subscribers");
+      setIsUniversal(group.is_universal || false);
 
       if (group.start_date) {
         setScheduling({
@@ -406,6 +414,10 @@ export default function CreateControlGroupPage() {
 
   const handleCreate = async () => {
     // Final validation
+    if (controlGroupCode.trim() === "") {
+      setCodeError("Control group code is required");
+      return;
+    }
     if (controlGroupName.trim() === "") {
       setNameError("Control group name is required");
       return;
@@ -437,18 +449,18 @@ export default function CreateControlGroupPage() {
         hours_before_start: 1,
       };
 
-      const payload: CreateUniversalControlGroupRequest = {
+      const payload: CreateControlGroupRequest = {
+        code: controlGroupCode,
         name: controlGroupName,
+        ...(controlGroupDescription && { description: controlGroupDescription }),
+        type: "auto",
         percentage: controlGroupPercentage,
-        customer_source: {
-          type: selectedCustomerBase as "active_subscribers" | "all_customers" | "saved_segment",
-        },
+        customer_source_type: selectedCustomerBase as "active_subscribers" | "all_customers" | "saved_segment" | "manual",
         generation_method: generationMethod as "random" | "stratified",
-        recurrence: {
-          pattern: scheduling.recurrence_pattern as "one_time" | "daily" | "weekly" | "monthly",
-          start_date: scheduling.start_date,
-          ...(scheduling.end_date && { end_date: scheduling.end_date }),
-        },
+        recurrence_pattern: scheduling.recurrence_pattern as "one_time" | "daily" | "weekly" | "monthly",
+        start_date: scheduling.start_date,
+        ...(scheduling.end_date && { end_date: scheduling.end_date }),
+        is_universal: isUniversal,
         target_render_config: targetRenderConfig,
         ...(definition && { definition }),
       };
@@ -457,7 +469,7 @@ export default function CreateControlGroupPage() {
         await controlGroupService.updateControlGroup(Number(id), payload);
         showToast("Control group updated successfully");
       } else {
-        await controlGroupService.createUniversalControlGroup(payload);
+        await controlGroupService.createControlGroup(payload);
         showToast("Control group created successfully");
       }
 
@@ -510,6 +522,34 @@ export default function CreateControlGroupPage() {
               <>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Control Group Code *
+                  </label>
+                  <input
+                    type="text"
+                    value={controlGroupCode}
+                    onChange={(e) => {
+                      setControlGroupCode(e.target.value);
+                      if (codeError) setCodeError("");
+                    }}
+                    className={`w-full px-3 text-sm py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-offset-0`}
+                    style={{
+                      ["--tw-ring-color" as string]: color.primary.action,
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = color.primary.action;
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = "";
+                    }}
+                    placeholder="e.g., HOLDOUT_001"
+                  />
+                  {codeError && (
+                    <p className="text-red-600 text-sm mt-1">{codeError}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Control Group Name *
                   </label>
                   <input
@@ -537,12 +577,35 @@ export default function CreateControlGroupPage() {
                 </div>
 
                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    value={controlGroupDescription}
+                    onChange={(e) => setControlGroupDescription(e.target.value)}
+                    className={`w-full px-3 text-sm py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-offset-0 resize-none`}
+                    style={{
+                      ["--tw-ring-color" as string]: color.primary.action,
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = color.primary.action;
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = "";
+                    }}
+                    placeholder="Optional description for this control group"
+                    rows={3}
+                  />
+                </div>
+
+                <div>
                   <label className="block text-sm font-medium text-gray-700 my-3">
                     Select the Customer Base for your Control Group
                   </label>
                   <div className="space-y-3">
                     <div
                       className={`flex items-start p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50`}
+                      onClick={() => setSelectedCustomerBase("active_subscribers")}
                     >
                       <Radio
                         name="customerBase"
@@ -565,6 +628,7 @@ export default function CreateControlGroupPage() {
 
                     <div
                       className={`flex items-start p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50`}
+                      onClick={() => setSelectedCustomerBase("all_customers")}
                     >
                       <Radio
                         name="customerBase"
@@ -587,6 +651,7 @@ export default function CreateControlGroupPage() {
 
                     <div
                       className={`flex items-start p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50`}
+                      onClick={() => setSelectedCustomerBase("custom_conditions")}
                     >
                       <Radio
                         name="customerBase"
@@ -619,6 +684,17 @@ export default function CreateControlGroupPage() {
                       />
                     </div>
                   )}
+                </div>
+
+                <div className="mt-4">
+                  <Checkbox
+                    label="Mark as Universal Control Group"
+                    checked={isUniversal}
+                    onChange={(e) => setIsUniversal(e.currentTarget.checked)}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Universal control groups can be reused across multiple campaigns
+                  </p>
                 </div>
               </>
             )}
@@ -660,7 +736,13 @@ export default function CreateControlGroupPage() {
                     Generation Method *
                   </label>
                   <div className="space-y-2">
-                    <div className="flex items-center p-3 border border-gray-200 rounded cursor-pointer hover:bg-gray-50">
+                    <div
+                      className="flex items-center p-3 border border-gray-200 rounded cursor-pointer hover:bg-gray-50"
+                      onClick={() => {
+                        setGenerationMethod("random");
+                        if (generationMethodError) setGenerationMethodError("");
+                      }}
+                    >
                       <Radio
                         name="generationMethod"
                         value="random"
@@ -675,7 +757,13 @@ export default function CreateControlGroupPage() {
                       </span>
                     </div>
 
-                    <div className="flex items-center p-3 border border-gray-200 rounded cursor-pointer hover:bg-gray-50">
+                    <div
+                      className="flex items-center p-3 border border-gray-200 rounded cursor-pointer hover:bg-gray-50"
+                      onClick={() => {
+                        setGenerationMethod("stratified");
+                        if (generationMethodError) setGenerationMethodError("");
+                      }}
+                    >
                       <Radio
                         name="generationMethod"
                         value="stratified"
@@ -710,13 +798,24 @@ export default function CreateControlGroupPage() {
             {currentStep === 4 && (
               <div className="space-y-4">
                 <h3 className="text-base font-semibold text-gray-900">
-                  Review Universal Control Group Setup
+                  Review Control Group Setup
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className={`border border-gray-200 ${tw.rounded} p-4 md:col-span-2`}>
-                    <p className="text-xs text-gray-500 mb-1">Group Name</p>
+                    <p className="text-xs text-gray-500 mb-2">Code & Name</p>
                     <p className="text-sm font-medium text-gray-900">
-                      {controlGroupName || "-"}
+                      {controlGroupCode && controlGroupName ? `${controlGroupCode} - ${controlGroupName}` : controlGroupName || controlGroupCode || "-"}
+                    </p>
+                    {controlGroupDescription && (
+                      <p className="text-sm text-gray-600 mt-2">
+                        {controlGroupDescription}
+                      </p>
+                    )}
+                  </div>
+                  <div className={`border border-gray-200 ${tw.rounded} p-4`}>
+                    <p className="text-xs text-gray-500 mb-1">Universal Control Group</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {isUniversal ? "Yes" : "No"}
                     </p>
                   </div>
                   <div className={`border border-gray-200 ${tw.rounded} p-4`}>

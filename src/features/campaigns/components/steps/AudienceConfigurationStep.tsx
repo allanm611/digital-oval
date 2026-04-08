@@ -30,6 +30,7 @@ import { useClickOutside } from "../../../../shared/hooks/useClickOutside";
 import { useLanguage } from "../../../../contexts/LanguageContext";
 import Checkbox from "../../../../shared/components/ui/Checkbox";
 import Radio from "../../../../shared/components/ui/Radio";
+import { controlGroupService } from "../../../control-groups/services/controlGroupService";
 
 interface AvailableControlGroup {
   id: string;
@@ -41,7 +42,6 @@ interface AvailableControlGroup {
 import SegmentSelectionModal from "./SegmentSelectionModal";
 import SeedListConfigModal from "./SeedListConfigModal";
 import SegmentModal from "../../../segments/components/SegmentModal";
-import { UNIVERSAL_CONTROL_GROUPS } from "../../../control-groups/configs/universalControlGroupsConfig";
 
 
 const AVAILABLE_SEED_LISTS = [
@@ -210,16 +210,37 @@ export default function AudienceConfigurationStep({
     },
   ];
 
-  // Mock data for available control groups
-  const [availableControlGroups] = useState<AvailableControlGroup[]>(
-    UNIVERSAL_CONTROL_GROUPS.map((group) => ({
-      id: group.id,
-      name: group.name,
-      description: group.description || "",
-      percentage: group.percentage,
-      created_at: group.createdAt || group.created_at || new Date().toISOString(),
-    }))
-  );
+  // Fetch available control groups from API
+  const [availableControlGroups, setAvailableControlGroups] = useState<AvailableControlGroup[]>([]);
+  const [controlGroupsLoading, setControlGroupsLoading] = useState(false);
+
+  // Fetch control groups on component mount
+  useEffect(() => {
+    const fetchControlGroups = async () => {
+      setControlGroupsLoading(true);
+      try {
+        const response = await controlGroupService.listControlGroups({ limit: 100 });
+        // Filter for universal control groups only
+        const universalGroups = (response.control_groups || [])
+          .filter((group) => group.is_universal)
+          .map((group) => ({
+            id: String(group.id),
+            name: group.name,
+            description: group.description || "",
+            percentage: group.percentage || 0,
+            created_at: group.created_at,
+          }));
+        setAvailableControlGroups(universalGroups);
+      } catch (error) {
+        console.error("Failed to fetch control groups:", error);
+        setAvailableControlGroups([]);
+      } finally {
+        setControlGroupsLoading(false);
+      }
+    };
+
+    fetchControlGroups();
+  }, []);
 
   const handleSegmentSelect = (segments: CampaignSegment[]) => {
     // Clear validation errors when segments are selected

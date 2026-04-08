@@ -38,6 +38,8 @@ import { validatePhoneOnly, isValidEmail } from "../../../shared/utils/validatio
 import { DUMMY_RECIPIENTS } from "../../campaigns/pages/SeedListManagementPage";
 import type { SeedListRecipient } from "../../campaigns/pages/SeedListManagementPage";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import { smsRouteService } from "../../routes/services/smsRouteService";
+import { SMSRoute } from "../../routes/types/smsRoute";
 
 interface DefineCommunicationStepProps {
   data: ManualBroadcastData;
@@ -61,7 +63,7 @@ export default function DefineCommunicationStep({
   onPrevious,
 }: DefineCommunicationStepProps) {
   const { t } = useLanguage();
-  const { data: smsRoutes } = useConfigurationData("smsRoutes");
+  const [smsRoutes, setSmsRoutes] = useState<SMSRoute[]>([]);
 
   const channels = [
     {
@@ -130,6 +132,20 @@ export default function DefineCommunicationStep({
   const { success: showToast, error: showError } = useToast();
 
   useClickOutside(policyDropdownRef, () => setIsPolicyDropdownOpen(false));
+
+  // Fetch SMS routes on component mount
+  useEffect(() => {
+    const fetchSmsRoutes = async () => {
+      try {
+        const routes = await smsRouteService.getAllRoutes();
+        setSmsRoutes(Array.isArray(routes) ? routes : []);
+      } catch (error) {
+        console.error("Failed to fetch SMS routes:", error);
+        setSmsRoutes([]);
+      }
+    };
+    fetchSmsRoutes();
+  }, []);
 
   // Get active seed list recipients
   const getActiveRecipients = (): SeedListRecipient[] => {
@@ -877,8 +893,8 @@ export default function DefineCommunicationStep({
                   options={[
                     { value: "", label: "Select SMS Route" },
                     ...((smsRoutes || [])
-                      .filter((route: any) => route.isActive)
-                      .map((route: any) => ({
+                      .filter((route) => route.is_active)
+                      .map((route) => ({
                         value: route.id.toString(),
                         label: route.name,
                       }))),
