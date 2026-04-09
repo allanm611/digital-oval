@@ -169,6 +169,8 @@ const SIDEBAR_ROUTE_PRELOADERS: Record<string, () => Promise<unknown>> = {
     import("../../reports-analytics/pages/CampaignReportsPage"),
   "/dashboard/reports/offers": () =>
     import("../../reports-analytics/pages/OfferReportsPage"),
+  "/dashboard/reports/segments": () =>
+    import("../../reports-analytics/pages/SegmentReportsPage"),
   "/dashboard/reports/delivery": () =>
     import("../../reports-analytics/pages/DeliverySMSReportsPage"),
   "/dashboard/reports/email-delivery": () =>
@@ -549,6 +551,12 @@ export default function Sidebar({
             name: t.sidebar.navigation.offerReports,
             href: "/dashboard/reports/offers",
             icon: Gift,
+            type: "single",
+          },
+          {
+            name: "Segment Reports",
+            href: "/dashboard/reports/segments",
+            icon: UsersRound,
             type: "single",
           },
           {

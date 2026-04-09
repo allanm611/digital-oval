@@ -616,6 +616,12 @@ const AnalyticsPages = {
         /* webpackPrefetch: true */ "../../reports-analytics/pages/OfferReportsPage"
       ),
   ),
+  SegmentReportsPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../reports-analytics/pages/SegmentReportsPage"
+      ),
+  ),
 };
 
 // Other Pages - All routes preloaded for instant access
@@ -1091,6 +1097,10 @@ export default function Dashboard() {
           <Route
             path="/reports/offers"
             element={<AnalyticsPages.OfferReportsPage />}
+          />
+          <Route
+            path="/reports/segments"
+            element={<AnalyticsPages.SegmentReportsPage />}
           />
           <Route
             path="/reports/delivery"

@@ -460,7 +460,7 @@ export default function CreateCommunicationModal({
             ? "quicklist"
             : "segment",
         source_id:
-          customerRecord?.customerId || quicklist?.id || segment?.id || 0,
+          (customerRecord?.customer_id || customerRecord?.customerId) || quicklist?.id || segment?.id || 0,
         channels: [selectedChannel],
         message_template: {
           ...(messageTitle && selectedChannel === "EMAIL"
@@ -671,7 +671,7 @@ export default function CreateCommunicationModal({
               Sending to:{" "}
               <span className="font-semibold text-gray-700 break-words">
                 {customerRecord
-                  ? `${customerRecord.firstName} ${customerRecord.lastName}`
+                  ? `${customerRecord.first_name || customerRecord.firstName || ""} ${customerRecord.last_name || customerRecord.lastName || ""}`
                   : quicklist?.name || segment?.name}
               </span>{" "}
               (

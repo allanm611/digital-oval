@@ -97,7 +97,10 @@ export default function CustomersPage() {
   // Action menu state
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [actionMenuIndex, setActionMenuIndex] = useState<number | null>(null);
-  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null);
+  const [dropdownPosition, setDropdownPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
   const [isCommunicateModalOpen, setIsCommunicateModalOpen] = useState(false);
   const [customerToCommunicate, setCustomerToCommunicate] =
     useState<CustomerSubscriptionRecord | null>(null);
@@ -611,7 +614,7 @@ export default function CustomersPage() {
       const menuHeight = 120; // Approximate height for dropdown
       const top = rect.bottom + 8;
       const left = rect.right - 200; // Approximate menu width
-      
+
       setActionMenuIndex(index);
       setShowActionMenu(true);
       setDropdownPosition({ top, left });
@@ -942,7 +945,9 @@ export default function CustomersPage() {
                             ref={(el) => {
                               actionMenuRefs.current[index] = el;
                             }}
-                            onClick={(e) => handleActionMenuToggle(index, e as any)}
+                            onClick={(e) =>
+                              handleActionMenuToggle(index, e as any)
+                            }
                             className="inline-flex items-center justify-center p-2 text-gray-700 hover:text-gray-900 transition-colors"
                             title="More actions"
                           >
@@ -968,9 +973,7 @@ export default function CustomersPage() {
                               >
                                 <button
                                   type="button"
-                                  onClick={() =>
-                                    handleSendCommunication(row)
-                                  }
+                                  onClick={() => handleSendCommunication(row)}
                                   className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 first:rounded-t flex items-center gap-2 transition-colors"
                                 >
                                   <Send className="h-4 w-4" />

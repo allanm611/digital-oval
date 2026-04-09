@@ -1463,6 +1463,10 @@ export default function SegmentConditionsBuilder({
       condition.operator?.toLowerCase() || "",
     );
 
+    // For non-revenue KPIs, check if the selected field is of type "date"
+    // Revenue/Usage KPIs always support date operators, others only if field is date type
+    const shouldShowDateOperators = isNumericKPI; // Only Revenue/Usage have date operators
+
     return (
       <>
         {/* Operator for KPI - Only show if KPI selected */}
@@ -1514,8 +1518,8 @@ export default function SegmentConditionsBuilder({
                     />
                   )}
 
-                  {/* Secondary Date Range Dropdown - Only show if numeric operator selected */}
-                  {!isDateOperator && (
+                  {/* Secondary Date Range Dropdown - Only show for Revenue/Usage KPIs with numeric operator selected */}
+                  {!isDateOperator && isNumericKPI && (
                     <div className="min-w-[140px] max-w-[170px] flex-shrink-0">
                       <HeadlessSelect
                         options={DATE_OPERATORS}
@@ -1754,15 +1758,13 @@ export default function SegmentConditionsBuilder({
                 </div>
               </>
             ) : (
-              /* Legacy KPI operators (kept for non-numeric KPIs if needed) */
+              /* Non-numeric KPIs (System Events, etc.) - only show non-date operators */
               <>
                 <div className="min-w-[220px] max-w-[300px] flex-shrink-0">
                   <HeadlessSelect
                     options={[
                       { value: "equals", label: "Equals" },
                       { value: "not_equals", label: "Not Equals" },
-                      { value: "on_date", label: "On Date" },
-                      { value: "between_dates", label: "Between Dates" },
                       { value: "greater_than", label: "Greater Than" },
                       { value: "less_than", label: "Less Than" },
                       { value: "contains", label: "Contains" },
@@ -1785,87 +1787,26 @@ export default function SegmentConditionsBuilder({
                   />
                 </div>
 
-                {condition.operator !== "between_dates" &&
-                  condition.operator !== "on_date" && (
-                    <input
-                      type={
-                        condition.operator === "in_last_days"
-                          ? "number"
-                          : "text"
-                      }
-                      value={condition.value as string}
-                      onChange={(e) => {
-                        updateCondition(groupId, condition.id, {
-                          value: e.target.value,
-                        });
-                      }}
-                      placeholder={
-                        condition.operator === "in_last_days"
-                          ? "Enter days (e.g., 30)"
-                          : "Enter value"
-                      }
-                      className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[100px] flex-1 max-w-[200px]`}
-                      style={{ borderColor: color.border.default }}
-                    />
-                  )}
-
-                {condition.operator === "on_date" && (
-                  <input
-                    type="date"
-                    value={condition.value as string}
-                    onChange={(e) => {
-                      updateCondition(groupId, condition.id, {
-                        value: e.target.value,
-                      });
-                    }}
-                    placeholder="Select Date"
-                    className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm`}
-                    style={{ borderColor: color.border.default }}
-                  />
-                )}
-
-                {condition.operator === "between_dates" && (
-                  <>
-                    <input
-                      type="date"
-                      value={
-                        condition.value
-                          ? (condition.value as string).split(",")[0] || ""
-                          : ""
-                      }
-                      onChange={(e) => {
-                        const endDate = condition.value
-                          ? (condition.value as string).split(",")[1] || ""
-                          : "";
-                        updateCondition(groupId, condition.id, {
-                          value: `${e.target.value},${endDate}`,
-                        });
-                      }}
-                      placeholder="Start Date"
-                      className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm`}
-                      style={{ borderColor: color.border.default }}
-                    />
-                    <input
-                      type="date"
-                      value={
-                        condition.value
-                          ? (condition.value as string).split(",")[1] || ""
-                          : ""
-                      }
-                      onChange={(e) => {
-                        const startDate = condition.value
-                          ? (condition.value as string).split(",")[0] || ""
-                          : "";
-                        updateCondition(groupId, condition.id, {
-                          value: `${startDate},${e.target.value}`,
-                        });
-                      }}
-                      placeholder="End Date"
-                      className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm`}
-                      style={{ borderColor: color.border.default }}
-                    />
-                  </>
-                )}
+                <input
+                  type={
+                    condition.operator === "in_last_days"
+                      ? "number"
+                      : "text"
+                  }
+                  value={condition.value as string}
+                  onChange={(e) => {
+                    updateCondition(groupId, condition.id, {
+                      value: e.target.value,
+                    });
+                  }}
+                  placeholder={
+                    condition.operator === "in_last_days"
+                      ? "Enter days (e.g., 30)"
+                      : "Enter value"
+                  }
+                  className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[100px] flex-1 max-w-[200px]`}
+                  style={{ borderColor: color.border.default }}
+                />
               </>
             )}
           </>

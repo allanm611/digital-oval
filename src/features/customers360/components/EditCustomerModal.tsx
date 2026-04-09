@@ -100,11 +100,12 @@ export default function EditCustomerModal({
 
   // Initialize form data when customer changes - fetch full details from API
   useEffect(() => {
-    if (customer && customer.customerId) {
+    const customerId = customer?.customerId || customer?.customer_id;
+    if (customer && customerId) {
       const fetchCustomerDetails = async () => {
         setIsLoading(true);
         try {
-          const response = await customerService.getCustomerById(customer.customerId);
+          const response = await customerService.getCustomerById(customerId);
           if (response.success && response.data) {
             const customerData = response.data;
             setFormData({
@@ -135,26 +136,30 @@ export default function EditCustomerModal({
         } catch (err) {
           console.error("Failed to fetch customer details:", err);
           error("Error", "Failed to load customer details");
-          // Fallback to local data
+          // Fallback to local data (support both camelCase and snake_case)
           setFormData({
-            subscriptionId: String(customer.subscriptionId || ""),
-            firstName: customer.firstName || "",
-            lastName: customer.lastName || "",
+            subscriptionId: String(customer.subscription_id || customer.subscriptionId || ""),
+            firstName: customer.first_name || customer.firstName || "",
+            lastName: customer.last_name || customer.lastName || "",
             msisdn: customer.msisdn || "",
-            alternatemsisdns: "",
+            alternatemsisdns: Array.isArray(customer.alternate_msisdns)
+              ? customer.alternate_msisdns.join(", ")
+              : "",
             email: customer.email || "",
-            alternateEmail: "",
-            gender: "",
-            dateOfBirth: "",
-            languagePreference: "en",
+            alternateEmail: customer.alternate_email || "",
+            gender: customer.gender || "",
+            dateOfBirth: customer.birth_date
+              ? new Date(customer.birth_date).toISOString().split("T")[0]
+              : "",
+            languagePreference: customer.language_preference || "en",
             city: customer.city || "",
-            physicalAddress: "",
-            region: "",
-            postalCode: "",
-            countryCode: "",
-            customerTier: "",
-            preferredChannel: "NORMAL_SMS",
-            timezone: "Africa/Kampala",
+            physicalAddress: customer.physical_address || "",
+            region: customer.region || "",
+            postalCode: customer.postal_code || "",
+            countryCode: customer.country_code || "",
+            customerTier: customer.customer_tier || "",
+            preferredChannel: customer.preferred_channel || "NORMAL_SMS",
+            timezone: customer.timezone || "Africa/Kampala",
           });
         } finally {
           setIsLoading(false);

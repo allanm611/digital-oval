@@ -234,6 +234,36 @@ export const colors = {
       },
     },
 
+    // Segment Reports
+    segmentReports: {
+      memberGrowth: {
+        members: "#4FDFF3", // color4 - period members
+        cumulative: "#92A6B0", // color3 - cumulative
+      },
+      sizeDistribution: {
+        // Top 6 segment colors
+        segment1: "#4FDFF3", // color4 - cyan
+        segment2: "#C38BFB", // color2 - purple
+        segment3: "#00505C", // color1 - dark teal
+        segment4: "#FC9C9C", // color5 - coral
+        segment5: "#F7B430", // color6 - orange
+        segment6: "#92A6B0", // color3 - light gray
+      },
+      campaignUsage: {
+        // Gradient of colors for bars
+        bar1: "#4FDFF3", // color4 - cyan
+        bar2: "#C38BFB", // color2 - purple
+        bar3: "#00505C", // color1 - dark teal
+        bar4: "#FC9C9C", // color5 - coral
+        bar5: "#F7B430", // color6 - orange
+        bar6: "#92A6B0", // color3 - light gray
+      },
+      performanceComparison: {
+        engagement: "#4FDFF3", // color4 - lighter
+        conversion: "#C38BFB", // color2 - purple (changed for contrast)
+      },
+    },
+
     // Overall Dashboard Performance
     overallPerformance: {
       channelPerformance: {

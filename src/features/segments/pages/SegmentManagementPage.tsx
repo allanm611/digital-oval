@@ -176,7 +176,8 @@ export default function SegmentManagementPage() {
   const [segmentToDelete, setSegmentToDelete] = useState<Segment | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCommunicateModalOpen, setIsCommunicateModalOpen] = useState(false);
-  const [segmentToCommunicate, setSegmentToCommunicate] = useState<Segment | null>(null);
+  const [segmentToCommunicate, setSegmentToCommunicate] =
+    useState<Segment | null>(null);
 
   const handleActionMenuToggle = (
     segmentId: number,

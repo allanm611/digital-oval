@@ -146,7 +146,7 @@ export default function QuickListsPage() {
       filtered = filtered.filter(
         (ql) =>
           ql.name.toLowerCase().includes(term) ||
-          (ql.description && ql.description.toLowerCase().includes(term))
+          (ql.description && ql.description.toLowerCase().includes(term)),
       );
     }
 
@@ -575,7 +575,10 @@ export default function QuickListsPage() {
                       className="px-6 py-4 text-sm text-black"
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
-                      {(quicklist.processing_status || "N/A").replace(/_/g, " ")}
+                      {(quicklist.processing_status || "N/A").replace(
+                        /_/g,
+                        " ",
+                      )}
                     </td>
                     <td
                       className={`px-6 py-4 hidden md:table-cell text-sm ${tw.textMuted}`}
@@ -695,7 +698,6 @@ export default function QuickListsPage() {
         }
         return null;
       })}
-      
 
       {/* Pagination */}
       {!loading && filteredAndPaginatedQuicklists.total > 0 && (
