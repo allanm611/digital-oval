@@ -1850,6 +1850,20 @@ export default function OfferDetailsPage() {
                   </button>
                 )}
 
+                {/* View Offer Report */}
+                <button
+                  onClick={() => {
+                    navigate(`/dashboard/reports/offers/${id}`, {
+                      state: { returnTo: { pathname: location.pathname } },
+                    });
+                    setShowMoreMenu(false);
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 flex items-center gap-2"
+                >
+                  <FileText className="w-4 h-4" />
+                  View Offer Report
+                </button>
+
                 {/* Delete */}
                 <PermissionGate permission="offers.delete">
                   <button

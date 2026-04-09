@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
   Upload,
@@ -11,8 +12,10 @@ import {
   CheckCircle,
   XCircle,
   Edit,
+  Send,
+  MoreHorizontal,
 } from "lucide-react";
-import { color, tw, components } from "../../../shared/utils/utils";
+import { color, tw, components, zIndex } from "../../../shared/utils/utils";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -28,6 +31,7 @@ import CreateQuickListModal from "../components/CreateQuickListModal";
 import EditQuickListModal from "../components/EditQuickListModal";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import Pagination from "../../../shared/components/ui/Pagination";
+import CreateCommunicationModal from "../../../shared/components/CreateCommunicationModal";
 
 export default function QuickListsPage() {
   const navigate = useNavigate();
@@ -51,6 +55,17 @@ export default function QuickListsPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editQuickList, setEditQuickList] = useState<QuickList | null>(null);
   const isInitialMount = useRef(true);
+
+  const [showActionMenu, setShowActionMenu] = useState<string | null>(null);
+  const [dropdownPosition, setDropdownPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
+  const [isCommunicateModalOpen, setIsCommunicateModalOpen] = useState(false);
+  const [quicklistToCommunicate, setQuicklistToCommunicate] =
+    useState<QuickList | null>(null);
+  const actionMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const dropdownMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   useEffect(() => {
     loadInitialData();
@@ -310,6 +325,49 @@ export default function QuickListsPage() {
     }
   };
 
+  const handleActionMenuToggle = (
+    quicklistId: string,
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) => {
+    if (showActionMenu === quicklistId) {
+      setShowActionMenu(null);
+      setDropdownPosition(null);
+    } else {
+      setShowActionMenu(quicklistId);
+
+      // Calculate position from the clicked button
+      if (event && event.currentTarget) {
+        const button = event.currentTarget;
+        const buttonRect = button.getBoundingClientRect();
+        const dropdownWidth = 256; // w-64 = 256px
+        const spacing = 4;
+        const padding = 8;
+
+        // Position dropdown below button
+        const top = buttonRect.bottom + spacing;
+        let left = buttonRect.right - dropdownWidth;
+
+        // Adjust if dropdown extends beyond right edge
+        if (left + dropdownWidth > window.innerWidth - padding) {
+          left = window.innerWidth - dropdownWidth - padding;
+        }
+
+        // Adjust if dropdown extends beyond left edge
+        if (left < padding) {
+          left = padding;
+        }
+
+        setDropdownPosition({ top, left });
+      }
+    }
+  };
+
+  const handleSendCommunication = (quicklist: QuickList) => {
+    setQuicklistToCommunicate(quicklist);
+    setIsCommunicateModalOpen(true);
+    setShowActionMenu(null);
+  };
+
   const quicklistStatsCards = [
     {
       name: "Total QuickLists",
@@ -553,22 +611,20 @@ export default function QuickListsPage() {
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button
-                          onClick={() => handleExport(quicklist, "csv")}
-                          className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200 cursor-pointer`}
-                          title={t.quickList.export}
+                        <div
+                          ref={(el) => {
+                            actionMenuRefs.current[quicklist.id] = el;
+                          }}
                         >
-                          <Download className="w-4 h-4" />
-                        </button>
-                        <PermissionGate permission="quicklists.delete">
                           <button
-                            onClick={() => handleDelete(quicklist)}
-                            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-all duration-200 cursor-pointer`}
-                            title={t.quickList.delete}
+                            onClick={(e) =>
+                              handleActionMenuToggle(quicklist.id, e)
+                            }
+                            className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <MoreHorizontal className="w-4 h-4" />
                           </button>
-                        </PermissionGate>
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -578,6 +634,68 @@ export default function QuickListsPage() {
           </div>
         )}
       </div>
+
+      {/* Render dropdown menus via portal outside the table */}
+      {filteredAndPaginatedQuicklists.paginated.map((quicklist) => {
+        if (showActionMenu === quicklist.id && dropdownPosition) {
+          return createPortal(
+            <div
+              key={`dropdown-${quicklist.id}`}
+              ref={(el) => {
+                dropdownMenuRefs.current[quicklist.id] = el;
+              }}
+              className={`fixed bg-white border border-gray-200 ${tw.rounded} shadow-xl py-3 w-64`}
+              style={{
+                zIndex: zIndex.popover,
+                top: `${dropdownPosition.top}px`,
+                left: `${dropdownPosition.left}px`,
+              }}
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSendCommunication(quicklist);
+                }}
+                className="w-full flex items-center px-4 py-3 text-sm text-black hover:bg-gray-50 transition-colors"
+              >
+                <Send className="w-4 h-4 mr-4" />
+                Send Communication
+              </button>
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleExport(quicklist, "csv");
+                  setShowActionMenu(null);
+                }}
+                className="w-full flex items-center px-4 py-3 text-sm text-black hover:bg-gray-50 transition-colors"
+              >
+                <Download className="w-4 h-4 mr-4" />
+                Export
+              </button>
+
+              <PermissionGate permission="quicklists.delete">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(quicklist);
+                    setShowActionMenu(null);
+                  }}
+                  className="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                >
+                  <Trash2 className="w-4 h-4 mr-4" />
+                  Delete
+                </button>
+              </PermissionGate>
+            </div>,
+            document.body,
+          );
+        }
+        return null;
+      })}
+      
 
       {/* Pagination */}
       {!loading && filteredAndPaginatedQuicklists.total > 0 && (
@@ -607,6 +725,26 @@ export default function QuickListsPage() {
           onSubmit={handleUpdateQuickList}
           initialName={editQuickList.name}
           initialDescription={editQuickList.description || null}
+        />
+      )}
+
+      {/* Send Communication Modal */}
+      {isCommunicateModalOpen && quicklistToCommunicate && (
+        <CreateCommunicationModal
+          isOpen={isCommunicateModalOpen}
+          onClose={() => {
+            setIsCommunicateModalOpen(false);
+            setQuicklistToCommunicate(null);
+          }}
+          quicklist={quicklistToCommunicate}
+          onSuccess={(result) => {
+            showToast(
+              "Success",
+              `Communication sent successfully! ${result.total_messages_sent} messages sent.`,
+            );
+            setIsCommunicateModalOpen(false);
+            setQuicklistToCommunicate(null);
+          }}
         />
       )}
 

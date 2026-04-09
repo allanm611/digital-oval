@@ -586,10 +586,10 @@ const AnalyticsPages = {
   CustomersPage: lazy(
     () => import("../../customers360/pages/CustomersPageWrapper"),
   ),
-  CustomerSearchResultsPage: lazy(
+  CustomerDetailPage: lazy(
     () =>
       import(
-        /* webpackPrefetch: true */ "../../customers360/pages/CustomerSearchResultsPage"
+        /* webpackPrefetch: true */ "../../customers360/pages/CustomerDetailPage"
       ),
   ),
   CampaignReportsPage: lazy(
@@ -870,10 +870,7 @@ export default function Dashboard() {
             path="/notification-types"
             element={<ProductPages.NotificationTypesPage />}
           />
-          <Route
-            path="/vip-lists"
-            element={<ProductPages.VIPListsPage />}
-          />
+          <Route path="/vip-lists" element={<ProductPages.VIPListsPage />} />
           <Route path="/offer-types" element={<OfferPages.OfferTypesPage />} />
           <Route
             path="/offer-catalogs"
@@ -1000,7 +997,7 @@ export default function Dashboard() {
           <Route path="/customers" element={<AnalyticsPages.CustomersPage />} />
           <Route
             path="/customers/details/:customerId"
-            element={<AnalyticsPages.CustomerSearchResultsPage />}
+            element={<AnalyticsPages.CustomerDetailPage />}
           />
           <Route
             path="/configuration"
@@ -1085,7 +1082,7 @@ export default function Dashboard() {
           />
           <Route
             path="/reports/customer-profiles/search"
-            element={<AnalyticsPages.CustomerSearchResultsPage />}
+            element={<AnalyticsPages.CustomerDetailPage />}
           />
           <Route
             path="/reports/campaigns"

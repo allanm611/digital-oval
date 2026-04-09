@@ -651,6 +651,7 @@ export interface SegmentCondition {
   // For date filtering
   start_date?: string; // ISO 8601 date for "from" date or range start
   end_date?: string; // ISO 8601 date for "to" date or range end
+  date_operator?: "on" | "between" | "since" | "until"; // Date context operator for metric-based conditions
 }
 
 export interface SegmentConditionGroup {

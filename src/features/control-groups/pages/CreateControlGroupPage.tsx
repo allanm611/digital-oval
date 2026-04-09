@@ -30,12 +30,14 @@ export default function CreateControlGroupPage() {
   const [codeError, setCodeError] = useState("");
   const [percentageError, setPercentageError] = useState("");
   const [generationMethodError, setGenerationMethodError] = useState("");
+  const [customerBaseError, setCustomerBaseError] = useState("");
+  const [scheduleDateError, setScheduleDateError] = useState("");
   const [controlGroupPercentage, setControlGroupPercentage] = useState(10);
   const [generationMethod, setGenerationMethod] = useState<
     "random" | "stratified" | ""
   >("");
   const [selectedCustomerBase, setSelectedCustomerBase] =
-    useState<string>("active_subscribers");
+    useState<string>("");
   const [isCreating, setIsCreating] = useState(false);
   const [isLoading, setIsLoading] = useState(isEditMode);
   const [segmentConditions, setSegmentConditions] = useState<
@@ -185,10 +187,15 @@ export default function CreateControlGroupPage() {
     if (stepId <= currentStep) return true;
 
     if (stepId === currentStep + 1) {
-      if (currentStep === 1 && controlGroupName.trim() === "") {
-        return false;
+      if (currentStep === 1) {
+        if (controlGroupName.trim() === "") return false;
+        if (!selectedCustomerBase) return false;
+        if (selectedCustomerBase === "custom_conditions" && segmentConditions.length === 0) return false;
       }
       if (currentStep === 2 && (controlGroupPercentage < 1 || controlGroupPercentage > 100 || !generationMethod)) {
+        return false;
+      }
+      if (currentStep === 3 && !scheduling.start_date) {
         return false;
       }
       return true;
@@ -203,6 +210,14 @@ export default function CreateControlGroupPage() {
         setNameError("Control group name is required");
         return;
       }
+      if (!selectedCustomerBase) {
+        setCustomerBaseError("Please select a customer base");
+        return;
+      }
+      if (selectedCustomerBase === "custom_conditions" && segmentConditions.length === 0) {
+        setCustomerBaseError("Please add at least one custom condition");
+        return;
+      }
     }
 
     if (currentStep === 2) {
@@ -216,10 +231,19 @@ export default function CreateControlGroupPage() {
       }
     }
 
+    if (currentStep === 3) {
+      if (!scheduling.start_date) {
+        setScheduleDateError("Schedule date is required");
+        return;
+      }
+    }
+
     if (canNavigateToStep(stepId)) {
       setNameError("");
+      setCustomerBaseError("");
       setPercentageError("");
       setGenerationMethodError("");
+      setScheduleDateError("");
       setCurrentStep(stepId);
     }
   };
@@ -230,6 +254,14 @@ export default function CreateControlGroupPage() {
         setNameError("Control group name is required");
         return;
       }
+      if (!selectedCustomerBase) {
+        setCustomerBaseError("Please select a customer base");
+        return;
+      }
+      if (selectedCustomerBase === "custom_conditions" && segmentConditions.length === 0) {
+        setCustomerBaseError("Please add at least one custom condition");
+        return;
+      }
     }
 
     if (currentStep === 2) {
@@ -243,9 +275,18 @@ export default function CreateControlGroupPage() {
       }
     }
 
+    if (currentStep === 3) {
+      if (!scheduling.start_date) {
+        setScheduleDateError("Schedule date is required");
+        return;
+      }
+    }
+
     setNameError("");
+    setCustomerBaseError("");
     setPercentageError("");
     setGenerationMethodError("");
+    setScheduleDateError("");
     if (currentStep < STEPS.length) {
       setCurrentStep(currentStep + 1);
     }
@@ -255,6 +296,20 @@ export default function CreateControlGroupPage() {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
+  };
+
+  const isNextButtonDisabled = () => {
+    if (currentStep === 1) {
+      return controlGroupName.trim() === "" || !selectedCustomerBase ||
+             (selectedCustomerBase === "custom_conditions" && segmentConditions.length === 0);
+    }
+    if (currentStep === 2) {
+      return controlGroupPercentage < 1 || controlGroupPercentage > 100 || !generationMethod;
+    }
+    if (currentStep === 3) {
+      return !scheduling.start_date;
+    }
+    return false;
   };
 
   const convertConditionsToPayload = (
@@ -608,15 +663,19 @@ export default function CreateControlGroupPage() {
                   <div className="space-y-3">
                     <div
                       className={`flex items-start p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50`}
-                      onClick={() => setSelectedCustomerBase("active_subscribers")}
+                      onClick={() => {
+                        setSelectedCustomerBase("active_subscribers");
+                        if (customerBaseError) setCustomerBaseError("");
+                      }}
                     >
                       <Radio
                         name="customerBase"
                         value="active_subscribers"
                         checked={selectedCustomerBase === "active_subscribers"}
-                        onChange={() =>
-                          setSelectedCustomerBase("active_subscribers")
-                        }
+                        onChange={() => {
+                          setSelectedCustomerBase("active_subscribers");
+                          if (customerBaseError) setCustomerBaseError("");
+                        }}
                         className="mt-1"
                       />
                       <div className="ml-3">
@@ -631,15 +690,19 @@ export default function CreateControlGroupPage() {
 
                     <div
                       className={`flex items-start p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50`}
-                      onClick={() => setSelectedCustomerBase("all_customers")}
+                      onClick={() => {
+                        setSelectedCustomerBase("all_customers");
+                        if (customerBaseError) setCustomerBaseError("");
+                      }}
                     >
                       <Radio
                         name="customerBase"
                         value="all_customers"
                         checked={selectedCustomerBase === "all_customers"}
-                        onChange={() =>
-                          setSelectedCustomerBase("all_customers")
-                        }
+                        onChange={() => {
+                          setSelectedCustomerBase("all_customers");
+                          if (customerBaseError) setCustomerBaseError("");
+                        }}
                         className="mt-1"
                       />
                       <div className="ml-3">
@@ -654,15 +717,19 @@ export default function CreateControlGroupPage() {
 
                     <div
                       className={`flex items-start p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50`}
-                      onClick={() => setSelectedCustomerBase("custom_conditions")}
+                      onClick={() => {
+                        setSelectedCustomerBase("custom_conditions");
+                        if (customerBaseError) setCustomerBaseError("");
+                      }}
                     >
                       <Radio
                         name="customerBase"
                         value="custom_conditions"
                         checked={selectedCustomerBase === "custom_conditions"}
-                        onChange={() =>
-                          setSelectedCustomerBase("custom_conditions")
-                        }
+                        onChange={() => {
+                          setSelectedCustomerBase("custom_conditions");
+                          if (customerBaseError) setCustomerBaseError("");
+                        }}
                         className="mt-1"
                       />
                       <div className="ml-3">
@@ -686,6 +753,9 @@ export default function CreateControlGroupPage() {
                         onChange={setSegmentConditions}
                       />
                     </div>
+                  )}
+                  {customerBaseError && (
+                    <p className="text-red-600 text-sm mt-3">{customerBaseError}</p>
                   )}
                 </div>
 
@@ -791,13 +861,23 @@ export default function CreateControlGroupPage() {
             )}
 
             {currentStep === 3 && (
-              <SchedulingComponent
-                scheduling={scheduling}
-                onSchedulingChange={setScheduling}
-                title="Control Group Generation Schedule"
-                subtitle="Configure when this control group is generated"
-                showPreviewButton={false}
-              />
+              <>
+                <SchedulingComponent
+                  scheduling={scheduling}
+                  onSchedulingChange={(newScheduling) => {
+                    setScheduling(newScheduling);
+                    if (scheduleDateError && newScheduling.start_date) {
+                      setScheduleDateError("");
+                    }
+                  }}
+                  title="Control Group Generation Schedule"
+                  subtitle="Configure when this control group is generated"
+                  showPreviewButton={false}
+                />
+                {scheduleDateError && (
+                  <p className="text-red-600 text-sm mt-3">{scheduleDateError}</p>
+                )}
+              </>
             )}
 
             {currentStep === 4 && (
@@ -910,7 +990,7 @@ export default function CreateControlGroupPage() {
                 ) : (
                   <button
                     onClick={handleNext}
-                    disabled={isCreating}
+                    disabled={isCreating || isNextButtonDisabled()}
                     className={`inline-flex items-center px-5 py-2 text-sm font-medium ${tw.rounded} text-white disabled:opacity-50 disabled:cursor-not-allowed`}
                     style={{ backgroundColor: color.primary.action }}
                   >

@@ -47,12 +47,14 @@ import { DUMMY_RECIPIENTS } from "../../features/campaigns/pages/SeedListManagem
 import type { SeedListRecipient } from "../../features/campaigns/pages/SeedListManagementPage";
 import { validatePhoneOnly, isValidEmail } from "../utils/validation";
 import Checkbox from "./ui/Checkbox";
+import type { CustomerSubscriptionRecord } from "../../features/customers360/types/customerSubscription";
 
 interface CreateCommunicationModalProps {
   isOpen: boolean;
   onClose: () => void;
   quicklist?: QuickList;
   segment?: Segment;
+  customerRecord?: CustomerSubscriptionRecord;
   onSuccess?: (result: CommunicationResult) => void;
 }
 
@@ -63,6 +65,7 @@ export default function CreateCommunicationModal({
   onClose,
   quicklist,
   segment,
+  customerRecord,
   onSuccess,
 }: CreateCommunicationModalProps) {
   const { data: smsRoutes } = useConfigurationData("smsRoutes");
@@ -91,9 +94,9 @@ export default function CreateCommunicationModal({
   const [showVariableSelector, setShowVariableSelector] = useState(false);
   const [activeField, setActiveField] = useState<"title" | "body">("body");
   const [cursorPosition, setCursorPosition] = useState<number>(0);
-  const [selectedVariables, setSelectedVariables] = useState<TemplateVariable[]>(
-    []
-  );
+  const [selectedVariables, setSelectedVariables] = useState<
+    TemplateVariable[]
+  >([]);
 
   // Test state
   const [isTesting, setIsTesting] = useState(false);
@@ -102,7 +105,7 @@ export default function CreateCommunicationModal({
   >([]);
   const [testError, setTestError] = useState("");
   const [selectedTestContacts, setSelectedTestContacts] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
 
   const titleInputRef = useRef<HTMLInputElement>(null);
@@ -149,7 +152,7 @@ export default function CreateCommunicationModal({
   // Get only the selected/checked test contacts
   const getSelectedTestContacts = (): string[] => {
     return getAvailableTestContacts().filter((contact) =>
-      selectedTestContacts.has(contact)
+      selectedTestContacts.has(contact),
     );
   };
 
@@ -205,7 +208,10 @@ export default function CreateCommunicationModal({
 
         if (selectedChannel === "EMAIL") {
           errorMessage = "Invalid email address";
-        } else if (selectedChannel === "SMS" || selectedChannel === "WHATSAPP") {
+        } else if (
+          selectedChannel === "SMS" ||
+          selectedChannel === "WHATSAPP"
+        ) {
           errorMessage = "Invalid phone number";
         } else {
           errorMessage = "Invalid contact";
@@ -244,7 +250,7 @@ export default function CreateCommunicationModal({
       const unsubscribe = communicationPolicyService.subscribe(
         (updatedPolicies) => {
           setCommunicationPolicies(updatedPolicies);
-        }
+        },
       );
 
       return unsubscribe;
@@ -283,14 +289,14 @@ export default function CreateCommunicationModal({
       const result = insertVariableAtCursor(
         messageTitle,
         cursorPosition,
-        variable
+        variable,
       );
       setMessageTitle(result.newText);
       setTimeout(() => {
         if (titleInputRef.current) {
           titleInputRef.current.setSelectionRange(
             result.newCursorPosition,
-            result.newCursorPosition
+            result.newCursorPosition,
           );
           titleInputRef.current.focus();
         }
@@ -303,14 +309,14 @@ export default function CreateCommunicationModal({
         const result = insertVariableAtCursor(
           messageBody,
           cursorPosition,
-          variable
+          variable,
         );
         setMessageBody(result.newText);
         setTimeout(() => {
           if (bodyTextareaRef.current) {
             bodyTextareaRef.current.setSelectionRange(
               result.newCursorPosition,
-              result.newCursorPosition
+              result.newCursorPosition,
             );
             bodyTextareaRef.current.focus();
           }
@@ -330,7 +336,7 @@ export default function CreateCommunicationModal({
   };
 
   const handleSaveCustomizedPolicy = async (
-    policyData: Record<string, unknown>
+    policyData: Record<string, unknown>,
   ) => {
     setIsCustomizationModalOpen(false);
     setPendingPolicyData(policyData);
@@ -343,7 +349,7 @@ export default function CreateCommunicationModal({
     try {
       const originalPolicyName = policyToCustomize.name.replace(
         " - Customizing...",
-        ""
+        "",
       );
 
       const newPolicy = communicationPolicyService.createPolicy({
@@ -448,8 +454,13 @@ export default function CreateCommunicationModal({
       setResult(null);
 
       const response = await communicationService.sendCommunication({
-        source_type: quicklist ? "quicklist" : "segment",
-        source_id: quicklist?.id || segment?.id || 0,
+        source_type: customerRecord
+          ? "customer"
+          : quicklist
+            ? "quicklist"
+            : "segment",
+        source_id:
+          customerRecord?.customerId || quicklist?.id || segment?.id || 0,
         channels: [selectedChannel],
         message_template: {
           ...(messageTitle && selectedChannel === "EMAIL"
@@ -470,9 +481,10 @@ export default function CreateCommunicationModal({
         // Handle backend error response
         let errorMsg = "Failed to send communication";
         if (response.error) {
-          errorMsg = typeof response.error === "string"
-            ? response.error
-            : JSON.stringify(response.error);
+          errorMsg =
+            typeof response.error === "string"
+              ? response.error
+              : JSON.stringify(response.error);
         }
         showError("Communication Error", errorMsg, true); // bypassSilentMode
       }
@@ -485,9 +497,10 @@ export default function CreateCommunicationModal({
       if (err && typeof err === "object" && "response" in err) {
         const errResponse = (err as any).response?.data;
         if (errResponse?.error) {
-          errorMsg = typeof errResponse.error === "string"
-            ? errResponse.error
-            : JSON.stringify(errResponse.error);
+          errorMsg =
+            typeof errResponse.error === "string"
+              ? errResponse.error
+              : JSON.stringify(errResponse.error);
         }
       }
 
@@ -635,7 +648,7 @@ export default function CreateCommunicationModal({
           </div>
         </div>
       </div>,
-      document.body
+      document.body,
     );
   }
 
@@ -657,9 +670,15 @@ export default function CreateCommunicationModal({
             <p className="text-xs sm:text-sm text-gray-500 mt-1">
               Sending to:{" "}
               <span className="font-semibold text-gray-700 break-words">
-                {quicklist?.name || segment?.name}
+                {customerRecord
+                  ? `${customerRecord.firstName} ${customerRecord.lastName}`
+                  : quicklist?.name || segment?.name}
               </span>{" "}
-              ({quicklist?.rows_imported || segment?.size_estimate || 0} recipients)
+              (
+              {customerRecord
+                ? 1
+                : quicklist?.rows_imported || segment?.size_estimate || 0}{" "}
+              recipients)
             </p>
           </div>
           <button
@@ -702,7 +721,9 @@ export default function CreateCommunicationModal({
                           onClick={() => setSelectedChannel(channel.id)}
                           className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all"
                           style={{
-                            backgroundColor: isSelected ? "white" : "transparent",
+                            backgroundColor: isSelected
+                              ? "white"
+                              : "transparent",
                             color: isSelected
                               ? color.primary.accent
                               : color.text.secondary,
@@ -719,480 +740,495 @@ export default function CreateCommunicationModal({
                   </div>
                 </div>
 
-              {/* Communication Policy */}
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-3">
-                  Communication Policy
-                </label>
-                <div className="relative" ref={policyDropdownRef}>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setIsPolicyDropdownOpen(!isPolicyDropdownOpen)
-                    }
-                    className={`${
-                      components.input.default
-                    } w-full px-3 py-2 text-left flex items-center justify-between ${
-                      selectedPolicy ? "" : "text-gray-500"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      {selectedPolicy && (
-                        <div
-                          className={`w-2 h-2 rounded-full ${
-                            selectedPolicy.isActive
-                              ? "bg-green-500"
-                              : "bg-gray-400"
-                          }`}
-                        ></div>
-                      )}
-                      <span className="text-sm">
-                        {selectedPolicy
-                          ? selectedPolicy.name
-                          : "Choose a communication policy (optional)"}
-                      </span>
-                    </div>
-                    <ChevronDown
-                      className={`w-4 h-4 transition-transform ${
-                        isPolicyDropdownOpen ? "rotate-180" : ""
-                      }`}
-                    />
-                  </button>
-
-                  {isPolicyDropdownOpen && (
-                    <div
-                      className={`absolute z-50 w-full mt-1 bg-white border ${tw.rounded} shadow-xl max-h-64 overflow-hidden`}
-                      style={{ borderColor: color.border.default }}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedPolicy(null);
-                          setIsPolicyDropdownOpen(false);
-                        }}
-                        className="w-full text-left px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none border-b"
-                        style={{ borderColor: color.border.default }}
-                      >
-                        <div className="text-sm font-medium text-gray-900">
-                          No Policy
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          Broadcast will use default communication settings
-                        </div>
-                      </button>
-
-                      <div className="max-h-48 overflow-y-auto">
-                        {communicationPolicies.map((policy) => (
-                          <button
-                            key={policy.id}
-                            type="button"
-                            onClick={() => {
-                              setSelectedPolicy(policy);
-                              setIsPolicyDropdownOpen(false);
-                            }}
-                            className={`w-full text-left px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none ${
-                              selectedPolicy?.id === policy.id
-                                ? "bg-blue-50"
-                                : ""
-                            }`}
-                          >
-                            <div className="flex items-center gap-2 mb-1">
-                              <div
-                                className={`w-2 h-2 rounded-full ${
-                                  policy.isActive
-                                    ? "bg-green-500"
-                                    : "bg-gray-400"
-                                }`}
-                              ></div>
-                              <div className="text-sm font-medium text-gray-900">
-                                {policy.name}
-                              </div>
-                            </div>
-                            {policy.description && (
-                              <div className="text-xs text-gray-500 ml-4">
-                                {policy.description}
-                              </div>
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Customization Toggle */}
-                {selectedPolicy && (
-                  <div
-                    className="flex items-center justify-between px-3 py-2 mt-2 rounded-md border"
-                    style={{
-                      backgroundColor: color.surface.cards,
-                      borderColor: color.border.default,
-                    }}
-                  >
-                    <span className="text-xs text-gray-500 flex items-center gap-2">
-                      <Settings className="w-3 h-3" />
-                      Want to modify this policy?
-                    </span>
+                {/* Communication Policy */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-3">
+                    Communication Policy
+                  </label>
+                  <div className="relative" ref={policyDropdownRef}>
                     <button
                       type="button"
-                      onClick={() => handleCustomizePolicy(selectedPolicy)}
-                      className="px-3 py-1 text-xs flex items-center gap-1 rounded text-white hover:opacity-90"
-                      style={{ backgroundColor: color.primary.action }}
+                      onClick={() =>
+                        setIsPolicyDropdownOpen(!isPolicyDropdownOpen)
+                      }
+                      className={`${
+                        components.input.default
+                      } w-full px-3 py-2 text-left flex items-center justify-between ${
+                        selectedPolicy ? "" : "text-gray-500"
+                      }`}
                     >
-                      <Settings className="w-3 h-3" />
-                      Customize
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                {/* Left Column - Message Editor (3/5) */}
-                <div className="lg:col-span-3 space-y-4">
-                  {/* SMS Route Selection - Show only when SMS is selected */}
-                  {selectedChannel === "SMS" && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-900 mb-2 block">
-                        SMS Route <span className="text-red-500">*</span>
-                      </label>
-                      <HeadlessSelect
-                        options={[
-                          { value: "", label: "Select SMS Route" },
-                          ...((smsRoutes || [])
-                            .filter((route: any) => route.isActive)
-                            .map((route: any) => ({
-                              value: route.id.toString(),
-                              label: route.name,
-                            }))),
-                        ]}
-                        value={smsRoute}
-                        onChange={(value) => {
-                          setSmsRoute(value);
-                          setError("");
-                        }}
-                        placeholder="Select SMS Route"
-                        zIndex={zIndex.popover}
-                      />
-                    </div>
-                  )}
-
-                  {/* Toolbar */}
-                  <div
-                    className="flex items-center justify-between p-3 rounded-md"
-                    style={{ backgroundColor: color.surface.cards }}
-                  >
-                    <span className="text-sm font-medium text-gray-900">
-                      Message Content
-                    </span>
-                    <div className="flex items-center gap-2">
-                      {selectedChannel === "EMAIL" && (
-                        <button
-                          type="button"
-                          onClick={() => setIsRichText(!isRichText)}
-                          className="px-3 py-1.5 text-sm rounded-md border transition-colors"
-                          style={{
-                            backgroundColor: isRichText
-                              ? `${color.primary.accent}10`
-                              : "white",
-                            borderColor: isRichText
-                              ? color.primary.accent
-                              : color.border.default,
-                            color: isRichText
-                              ? color.primary.accent
-                              : color.text.secondary,
-                          }}
-                        >
-                          {isRichText ? "Rich Text" : "Plain Text"}
-                        </button>
-                      )}
-                      <div className="relative">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setShowVariableSelector(!showVariableSelector)
-                          }
-                          className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors"
-                          style={{
-                            backgroundColor: color.primary.accent,
-                            color: "white",
-                          }}
-                        >
-                          <Variable className="w-4 h-4" />
-                          <span>Insert Variable</span>
-                          <ChevronDown
-                            className={`w-4 h-4 transition-transform ${
-                              showVariableSelector ? "rotate-180" : ""
+                      <div className="flex items-center gap-2">
+                        {selectedPolicy && (
+                          <div
+                            className={`w-2 h-2 rounded-full ${
+                              selectedPolicy.isActive
+                                ? "bg-green-500"
+                                : "bg-gray-400"
                             }`}
-                          />
-                        </button>
-                        <CascadingVariableSelector
-                          isOpen={showVariableSelector}
-                          onClose={() => setShowVariableSelector(false)}
-                          onVariableSelect={handleVariableSelect}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Subject Line for Email */}
-                  {selectedChannel === "EMAIL" && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-900 mb-2 block">
-                        Subject Line <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        ref={titleInputRef}
-                        type="text"
-                        value={messageTitle}
-                        onChange={(e) => {
-                          setMessageTitle(e.target.value);
-                          setCursorPosition(e.target.selectionStart || 0);
-                        }}
-                        onClick={(e) => {
-                          setActiveField("title");
-                          setCursorPosition(e.currentTarget.selectionStart || 0);
-                        }}
-                        onFocus={(e) => {
-                          setActiveField("title");
-                          setCursorPosition(e.currentTarget.selectionStart || 0);
-                        }}
-                        placeholder="Enter email subject..."
-                        className="w-full px-4 py-2.5 border rounded-md text-sm focus:outline-none focus:ring-2 transition-all"
-                        style={{ borderColor: color.border.default }}
-                      />
-                    </div>
-                  )}
-
-                  {/* Message Body */}
-                  <div>
-                    <label className="text-sm font-medium text-gray-900 mb-2 block">
-                      Message Body <span className="text-red-500">*</span>
-                    </label>
-                    {isRichText ? (
-                      <RichTextEditor
-                        value={messageBody}
-                        onChange={(value) => {
-                          setMessageBody(value);
-                          setActiveField("body");
-                        }}
-                        placeholder="Enter your message... Click 'Insert Variable' to add dynamic content"
-                        minHeight="250px"
-                      />
-                    ) : (
-                      <textarea
-                        ref={bodyTextareaRef}
-                        value={messageBody}
-                        onChange={(e) => {
-                          setMessageBody(e.target.value);
-                          setCursorPosition(e.target.selectionStart || 0);
-                        }}
-                        onClick={(e) => {
-                          setActiveField("body");
-                          setCursorPosition(e.currentTarget.selectionStart || 0);
-                        }}
-                        onFocus={(e) => {
-                          setActiveField("body");
-                          setCursorPosition(e.currentTarget.selectionStart || 0);
-                        }}
-                        placeholder="Enter your message... Click 'Insert Variable' to add dynamic content"
-                        rows={10}
-                        className="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 transition-all text-sm resize-none"
-                        style={{ borderColor: color.border.default }}
-                      />
-                    )}
-
-                    {/* Info bar */}
-                    <div className="mt-2 flex items-center justify-between">
-                      {selectedChannel === "SMS" || selectedChannel === "WHATSAPP" ? (
-                        messageBody.trim() ? (
-                          <div className="flex items-center gap-4 text-xs text-gray-500">
-                            <span>
-                              {getCharacterInfo().charCount} characters
-                            </span>
-                            <span>{getCharacterInfo().segments} SMS</span>
-                            {getCharacterInfo().isUnicode && (
-                              <span className="text-amber-600">Unicode</span>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-xs text-gray-500">
-                            Enter your message to see character and SMS count
-                          </span>
-                        )
-                      ) : (
-                        <span className="text-xs text-gray-500">
-                          Variables like {"{{field}}"} will be replaced with
-                          customer data
+                          ></div>
+                        )}
+                        <span className="text-sm">
+                          {selectedPolicy
+                            ? selectedPolicy.name
+                            : "Choose a communication policy (optional)"}
                         </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
+                      </div>
+                      <ChevronDown
+                        className={`w-4 h-4 transition-transform ${
+                          isPolicyDropdownOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
 
-                {/* Right Column - Preview (2/5) */}
-                <div className="lg:col-span-2 space-y-4">
-                  <div className="sticky top-4">
-                    <PreviewPanel
-                      channel={selectedChannel}
-                      title={messageTitle}
-                      body={messageBody}
-                      sampleData={getSampleDataForPreview()}
-                    />
-                  </div>
+                    {isPolicyDropdownOpen && (
+                      <div
+                        className={`absolute z-50 w-full mt-1 bg-white border ${tw.rounded} shadow-xl max-h-64 overflow-hidden`}
+                        style={{ borderColor: color.border.default }}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedPolicy(null);
+                            setIsPolicyDropdownOpen(false);
+                          }}
+                          className="w-full text-left px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none border-b"
+                          style={{ borderColor: color.border.default }}
+                        >
+                          <div className="text-sm font-medium text-gray-900">
+                            No Policy
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            Broadcast will use default communication settings
+                          </div>
+                        </button>
 
-                  {/* Test Section - Send Test Message */}
-                  {getAvailableTestContacts().length > 0 && (
-                    <div
-                      className="bg-white rounded-md border p-4"
-                      style={{ borderColor: color.border.default }}
-                    >
-                      <h3 className="text-sm font-semibold text-gray-900 mb-4">
-                        Send Test Message
-                      </h3>
-
-                      {/* Available Test Contacts */}
-                      <div className="mb-4">
-                        <label className="text-sm font-medium text-gray-900 mb-2 block">
-                          Test Contacts
-                        </label>
-                        <div className="space-y-2 max-h-48 overflow-y-auto">
-                          {getAvailableTestContacts().map((contact) => (
-                            <label
-                              key={contact}
-                              className="flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-gray-50"
+                        <div className="max-h-48 overflow-y-auto">
+                          {communicationPolicies.map((policy) => (
+                            <button
+                              key={policy.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedPolicy(policy);
+                                setIsPolicyDropdownOpen(false);
+                              }}
+                              className={`w-full text-left px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none ${
+                                selectedPolicy?.id === policy.id
+                                  ? "bg-blue-50"
+                                  : ""
+                              }`}
                             >
-                              <Checkbox checked={selectedTestContacts.has(contact)}
-                                onChange={() => toggleTestContact(contact)}
-                                className="w-4 h-4 rounded border-gray-300 cursor-pointer" />
-                              <span className="text-sm text-gray-700 flex-1">
-                                {contact}
-                              </span>
-                            </label>
+                              <div className="flex items-center gap-2 mb-1">
+                                <div
+                                  className={`w-2 h-2 rounded-full ${
+                                    policy.isActive
+                                      ? "bg-green-500"
+                                      : "bg-gray-400"
+                                  }`}
+                                ></div>
+                                <div className="text-sm font-medium text-gray-900">
+                                  {policy.name}
+                                </div>
+                              </div>
+                              {policy.description && (
+                                <div className="text-xs text-gray-500 ml-4">
+                                  {policy.description}
+                                </div>
+                              )}
+                            </button>
                           ))}
                         </div>
                       </div>
+                    )}
+                  </div>
 
-                      {/* Send Test Button */}
-                      <div className="mb-4">
-                        <button
-                          onClick={handleSendTest}
-                          disabled={
-                            getSelectedTestContacts().length === 0 || isTesting
-                          }
-                          className="w-auto px-4 py-2.5 text-white rounded-md text-sm font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                          style={{ backgroundColor: color.primary.accent }}
-                        >
-                          {isTesting ? (
-                            <>
-                              <Loader className="w-4 h-4 animate-spin flex-shrink-0" />
-                              <span>Sending Tests...</span>
-                            </>
-                          ) : (
-                            <>
-                              <Send className="w-4 h-4 flex-shrink-0" />
-                              <span>Send Test</span>
-                            </>
-                          )}
-                        </button>
-                      </div>
-
-                      {/* Test Error Message */}
-                      {testError && (
-                        <div
-                          className="p-3 rounded-md flex items-start gap-2 mb-4"
-                          style={{
-                            backgroundColor: `${color.status.danger}10`,
-                            border: `1px solid ${color.status.danger}30`,
-                          }}
-                        >
-                          <AlertCircle
-                            className="w-5 h-5 flex-shrink-0"
-                            style={{ color: color.status.danger }}
-                          />
-                          <p
-                            className="text-sm"
-                            style={{ color: color.status.danger }}
-                          >
-                            {testError}
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Test Results */}
-                      {testResults.length > 0 && (
-                        <div>
-                          <label className="text-sm font-medium text-gray-900 mb-2 block">
-                            Test Results
-                          </label>
-                          <div className="space-y-2 max-h-48 overflow-y-auto">
-                            {testResults.map((result, index) => (
-                              <div
-                                key={index}
-                                className="flex items-start gap-2 p-2 rounded-md text-sm"
-                                style={{
-                                  backgroundColor:
-                                    result.status === "success"
-                                      ? `${color.status.success}10`
-                                      : `${color.status.danger}10`,
-                                }}
-                              >
-                                {result.status === "success" ? (
-                                  <CheckCircle
-                                    className="w-4 h-4 flex-shrink-0 mt-0.5"
-                                    style={{ color: color.status.success }}
-                                  />
-                                ) : (
-                                  <XCircle
-                                    className="w-4 h-4 flex-shrink-0 mt-0.5"
-                                    style={{ color: color.status.danger }}
-                                  />
-                                )}
-                                <div className="flex-1">
-                                  <p
-                                    className="text-xs font-medium"
-                                    style={{
-                                      color:
-                                        result.status === "success"
-                                          ? color.status.success
-                                          : color.status.danger,
-                                    }}
-                                  >
-                                    {result.contact}
-                                  </p>
-                                  {result.message && (
-                                    <p className="text-xs text-gray-600 mt-0.5">
-                                      {result.message}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                  {/* Customization Toggle */}
+                  {selectedPolicy && (
+                    <div
+                      className="flex items-center justify-between px-3 py-2 mt-2 rounded-md border"
+                      style={{
+                        backgroundColor: color.surface.cards,
+                        borderColor: color.border.default,
+                      }}
+                    >
+                      <span className="text-xs text-gray-500 flex items-center gap-2">
+                        <Settings className="w-3 h-3" />
+                        Want to modify this policy?
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleCustomizePolicy(selectedPolicy)}
+                        className="px-3 py-1 text-xs flex items-center gap-1 rounded text-white hover:opacity-90"
+                        style={{ backgroundColor: color.primary.action }}
+                      >
+                        <Settings className="w-3 h-3" />
+                        Customize
+                      </button>
                     </div>
                   )}
                 </div>
-              </div>
 
-              {/* Error Message */}
-              {error && (
-                <div
-                  className="p-3 rounded-md flex items-start gap-2"
-                  style={{
-                    backgroundColor: `${color.status.danger}10`,
-                    border: `1px solid ${color.status.danger}30`,
-                  }}
-                >
-                  <AlertCircle
-                    className="w-5 h-5 flex-shrink-0"
-                    style={{ color: color.status.danger }}
-                  />
-                  <p className="text-sm" style={{ color: color.status.danger }}>
-                    {error}
-                  </p>
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                  {/* Left Column - Message Editor (3/5) */}
+                  <div className="lg:col-span-3 space-y-4">
+                    {/* SMS Route Selection - Show only when SMS is selected */}
+                    {selectedChannel === "SMS" && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-900 mb-2 block">
+                          SMS Route <span className="text-red-500">*</span>
+                        </label>
+                        <HeadlessSelect
+                          options={[
+                            { value: "", label: "Select SMS Route" },
+                            ...(smsRoutes || [])
+                              .filter((route: any) => route.isActive)
+                              .map((route: any) => ({
+                                value: route.id.toString(),
+                                label: route.name,
+                              })),
+                          ]}
+                          value={smsRoute}
+                          onChange={(value) => {
+                            setSmsRoute(value);
+                            setError("");
+                          }}
+                          placeholder="Select SMS Route"
+                          zIndex={zIndex.popover}
+                        />
+                      </div>
+                    )}
+
+                    {/* Toolbar */}
+                    <div
+                      className="flex items-center justify-between p-3 rounded-md"
+                      style={{ backgroundColor: color.surface.cards }}
+                    >
+                      <span className="text-sm font-medium text-gray-900">
+                        Message Content
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {selectedChannel === "EMAIL" && (
+                          <button
+                            type="button"
+                            onClick={() => setIsRichText(!isRichText)}
+                            className="px-3 py-1.5 text-sm rounded-md border transition-colors"
+                            style={{
+                              backgroundColor: isRichText
+                                ? `${color.primary.accent}10`
+                                : "white",
+                              borderColor: isRichText
+                                ? color.primary.accent
+                                : color.border.default,
+                              color: isRichText
+                                ? color.primary.accent
+                                : color.text.secondary,
+                            }}
+                          >
+                            {isRichText ? "Rich Text" : "Plain Text"}
+                          </button>
+                        )}
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setShowVariableSelector(!showVariableSelector)
+                            }
+                            className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors"
+                            style={{
+                              backgroundColor: color.primary.accent,
+                              color: "white",
+                            }}
+                          >
+                            <Variable className="w-4 h-4" />
+                            <span>Insert Variable</span>
+                            <ChevronDown
+                              className={`w-4 h-4 transition-transform ${
+                                showVariableSelector ? "rotate-180" : ""
+                              }`}
+                            />
+                          </button>
+                          <CascadingVariableSelector
+                            isOpen={showVariableSelector}
+                            onClose={() => setShowVariableSelector(false)}
+                            onVariableSelect={handleVariableSelect}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Subject Line for Email */}
+                    {selectedChannel === "EMAIL" && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-900 mb-2 block">
+                          Subject Line <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          ref={titleInputRef}
+                          type="text"
+                          value={messageTitle}
+                          onChange={(e) => {
+                            setMessageTitle(e.target.value);
+                            setCursorPosition(e.target.selectionStart || 0);
+                          }}
+                          onClick={(e) => {
+                            setActiveField("title");
+                            setCursorPosition(
+                              e.currentTarget.selectionStart || 0,
+                            );
+                          }}
+                          onFocus={(e) => {
+                            setActiveField("title");
+                            setCursorPosition(
+                              e.currentTarget.selectionStart || 0,
+                            );
+                          }}
+                          placeholder="Enter email subject..."
+                          className="w-full px-4 py-2.5 border rounded-md text-sm focus:outline-none focus:ring-2 transition-all"
+                          style={{ borderColor: color.border.default }}
+                        />
+                      </div>
+                    )}
+
+                    {/* Message Body */}
+                    <div>
+                      <label className="text-sm font-medium text-gray-900 mb-2 block">
+                        Message Body <span className="text-red-500">*</span>
+                      </label>
+                      {isRichText ? (
+                        <RichTextEditor
+                          value={messageBody}
+                          onChange={(value) => {
+                            setMessageBody(value);
+                            setActiveField("body");
+                          }}
+                          placeholder="Enter your message... Click 'Insert Variable' to add dynamic content"
+                          minHeight="250px"
+                        />
+                      ) : (
+                        <textarea
+                          ref={bodyTextareaRef}
+                          value={messageBody}
+                          onChange={(e) => {
+                            setMessageBody(e.target.value);
+                            setCursorPosition(e.target.selectionStart || 0);
+                          }}
+                          onClick={(e) => {
+                            setActiveField("body");
+                            setCursorPosition(
+                              e.currentTarget.selectionStart || 0,
+                            );
+                          }}
+                          onFocus={(e) => {
+                            setActiveField("body");
+                            setCursorPosition(
+                              e.currentTarget.selectionStart || 0,
+                            );
+                          }}
+                          placeholder="Enter your message... Click 'Insert Variable' to add dynamic content"
+                          rows={10}
+                          className="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 transition-all text-sm resize-none"
+                          style={{ borderColor: color.border.default }}
+                        />
+                      )}
+
+                      {/* Info bar */}
+                      <div className="mt-2 flex items-center justify-between">
+                        {selectedChannel === "SMS" ||
+                        selectedChannel === "WHATSAPP" ? (
+                          messageBody.trim() ? (
+                            <div className="flex items-center gap-4 text-xs text-gray-500">
+                              <span>
+                                {getCharacterInfo().charCount} characters
+                              </span>
+                              <span>{getCharacterInfo().segments} SMS</span>
+                              {getCharacterInfo().isUnicode && (
+                                <span className="text-amber-600">Unicode</span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-500">
+                              Enter your message to see character and SMS count
+                            </span>
+                          )
+                        ) : (
+                          <span className="text-xs text-gray-500">
+                            Variables like {"{{field}}"} will be replaced with
+                            customer data
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Column - Preview (2/5) */}
+                  <div className="lg:col-span-2 space-y-4">
+                    <div className="sticky top-4">
+                      <PreviewPanel
+                        channel={selectedChannel}
+                        title={messageTitle}
+                        body={messageBody}
+                        sampleData={getSampleDataForPreview()}
+                      />
+                    </div>
+
+                    {/* Test Section - Send Test Message */}
+                    {getAvailableTestContacts().length > 0 && (
+                      <div
+                        className="bg-white rounded-md border p-4"
+                        style={{ borderColor: color.border.default }}
+                      >
+                        <h3 className="text-sm font-semibold text-gray-900 mb-4">
+                          Send Test Message
+                        </h3>
+
+                        {/* Available Test Contacts */}
+                        <div className="mb-4">
+                          <label className="text-sm font-medium text-gray-900 mb-2 block">
+                            Test Contacts
+                          </label>
+                          <div className="space-y-2 max-h-48 overflow-y-auto">
+                            {getAvailableTestContacts().map((contact) => (
+                              <label
+                                key={contact}
+                                className="flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-gray-50"
+                              >
+                                <Checkbox
+                                  checked={selectedTestContacts.has(contact)}
+                                  onChange={() => toggleTestContact(contact)}
+                                  className="w-4 h-4 rounded border-gray-300 cursor-pointer"
+                                />
+                                <span className="text-sm text-gray-700 flex-1">
+                                  {contact}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Send Test Button */}
+                        <div className="mb-4">
+                          <button
+                            onClick={handleSendTest}
+                            disabled={
+                              getSelectedTestContacts().length === 0 ||
+                              isTesting
+                            }
+                            className="w-auto px-4 py-2.5 text-white rounded-md text-sm font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            style={{ backgroundColor: color.primary.accent }}
+                          >
+                            {isTesting ? (
+                              <>
+                                <Loader className="w-4 h-4 animate-spin flex-shrink-0" />
+                                <span>Sending Tests...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Send className="w-4 h-4 flex-shrink-0" />
+                                <span>Send Test</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+
+                        {/* Test Error Message */}
+                        {testError && (
+                          <div
+                            className="p-3 rounded-md flex items-start gap-2 mb-4"
+                            style={{
+                              backgroundColor: `${color.status.danger}10`,
+                              border: `1px solid ${color.status.danger}30`,
+                            }}
+                          >
+                            <AlertCircle
+                              className="w-5 h-5 flex-shrink-0"
+                              style={{ color: color.status.danger }}
+                            />
+                            <p
+                              className="text-sm"
+                              style={{ color: color.status.danger }}
+                            >
+                              {testError}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Test Results */}
+                        {testResults.length > 0 && (
+                          <div>
+                            <label className="text-sm font-medium text-gray-900 mb-2 block">
+                              Test Results
+                            </label>
+                            <div className="space-y-2 max-h-48 overflow-y-auto">
+                              {testResults.map((result, index) => (
+                                <div
+                                  key={index}
+                                  className="flex items-start gap-2 p-2 rounded-md text-sm"
+                                  style={{
+                                    backgroundColor:
+                                      result.status === "success"
+                                        ? `${color.status.success}10`
+                                        : `${color.status.danger}10`,
+                                  }}
+                                >
+                                  {result.status === "success" ? (
+                                    <CheckCircle
+                                      className="w-4 h-4 flex-shrink-0 mt-0.5"
+                                      style={{ color: color.status.success }}
+                                    />
+                                  ) : (
+                                    <XCircle
+                                      className="w-4 h-4 flex-shrink-0 mt-0.5"
+                                      style={{ color: color.status.danger }}
+                                    />
+                                  )}
+                                  <div className="flex-1">
+                                    <p
+                                      className="text-xs font-medium"
+                                      style={{
+                                        color:
+                                          result.status === "success"
+                                            ? color.status.success
+                                            : color.status.danger,
+                                      }}
+                                    >
+                                      {result.contact}
+                                    </p>
+                                    {result.message && (
+                                      <p className="text-xs text-gray-600 mt-0.5">
+                                        {result.message}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
+
+                {/* Error Message */}
+                {error && (
+                  <div
+                    className="p-3 rounded-md flex items-start gap-2"
+                    style={{
+                      backgroundColor: `${color.status.danger}10`,
+                      border: `1px solid ${color.status.danger}30`,
+                    }}
+                  >
+                    <AlertCircle
+                      className="w-5 h-5 flex-shrink-0"
+                      style={{ color: color.status.danger }}
+                    />
+                    <p
+                      className="text-sm"
+                      style={{ color: color.status.danger }}
+                    >
+                      {error}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </>
@@ -1210,7 +1246,9 @@ export default function CreateCommunicationModal({
           <button
             onClick={handleSend}
             disabled={
-              sending || !messageBody.trim() || (selectedChannel === "EMAIL" && !messageTitle.trim())
+              sending ||
+              !messageBody.trim() ||
+              (selectedChannel === "EMAIL" && !messageTitle.trim())
             }
             className={`w-full sm:w-auto px-6 sm:px-8 py-2.5 text-sm font-semibold text-white ${tw.rounded} transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
             style={{ backgroundColor: color.primary.action }}
@@ -1224,7 +1262,13 @@ export default function CreateCommunicationModal({
               <>
                 <Send className="w-4 h-4" />
                 <span className="hidden sm:inline">
-                  Send Now to {quicklist?.rows_imported || segment?.size_estimate || 0} Recipients
+                  Send Now to{" "}
+                  {customerRecord
+                    ? 1
+                    : quicklist?.rows_imported ||
+                      segment?.size_estimate ||
+                      0}{" "}
+                  Recipients
                 </span>
                 <span className="sm:hidden">Send Now</span>
               </>
@@ -1257,6 +1301,6 @@ export default function CreateCommunicationModal({
         />
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

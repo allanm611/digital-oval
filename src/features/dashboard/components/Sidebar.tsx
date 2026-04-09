@@ -180,8 +180,7 @@ const SIDEBAR_ROUTE_PRELOADERS: Record<string, () => Promise<unknown>> = {
     import("../../data-connectors/pages/DataConnectors"),
   "/dashboard/etl": () => import("../../etl/pages/EtlFileRegistryPage"),
   "/dashboard/kpis": () => import("../../kpis/pages/KPIsPage"),
-  "/dashboard/jobs": () =>
-    import("../../jobs/pages/ScheduledJobsPageWrapper"),
+  "/dashboard/jobs": () => import("../../jobs/pages/ScheduledJobsPageWrapper"),
   "/dashboard/job-executions": () =>
     import("../../jobs/pages/JobExecutionsPage"),
   "/dashboard/job-types": () => import("../../jobs/pages/JobTypesPage"),
@@ -2179,7 +2178,9 @@ export default function Sidebar({
                           </button>
 
                           {isExpanded && (
-                            <ul className={`mt-2 md:space-y-2 xl:space-y-2 md:ml-0 ${isMinimized ? "" : "xl:ml-7"}`}>
+                            <ul
+                              className={`mt-2 md:space-y-2 xl:space-y-2 md:ml-0 ${isMinimized ? "" : "xl:ml-7"}`}
+                            >
                               {item.children?.map((child) => {
                                 const ChildIcon = child.icon;
                                 const isChildActive =
@@ -2274,7 +2275,9 @@ export default function Sidebar({
                           </button>
 
                           {isExpanded && (
-                            <ul className={`mt-2 md:space-y-2 xl:space-y-2 md:ml-0 ${isMinimized ? "" : "xl:ml-7"}`}>
+                            <ul
+                              className={`mt-2 md:space-y-2 xl:space-y-2 md:ml-0 ${isMinimized ? "" : "xl:ml-7"}`}
+                            >
                               {item.children?.map((child) => {
                                 const ChildIcon = child.icon;
                                 const isChildActive =
@@ -2369,7 +2372,9 @@ export default function Sidebar({
                           </button>
 
                           {isExpanded && (
-                            <ul className={`mt-2 md:space-y-2 xl:space-y-2 md:ml-0 ${isMinimized ? "" : "xl:ml-7"}`}>
+                            <ul
+                              className={`mt-2 md:space-y-2 xl:space-y-2 md:ml-0 ${isMinimized ? "" : "xl:ml-7"}`}
+                            >
                               {item.children?.map((child) => {
                                 const ChildIcon = child.icon;
                                 const isChildActive =
@@ -2464,7 +2469,9 @@ export default function Sidebar({
                           </button>
 
                           {isExpanded && (
-                            <ul className={`mt-2 md:space-y-2 xl:space-y-2 md:ml-0 ${isMinimized ? "" : "xl:ml-7"}`}>
+                            <ul
+                              className={`mt-2 md:space-y-2 xl:space-y-2 md:ml-0 ${isMinimized ? "" : "xl:ml-7"}`}
+                            >
                               {item.children?.map((child) => {
                                 const ChildIcon = child.icon;
                                 const isChildActive =
@@ -2590,7 +2597,9 @@ export default function Sidebar({
                           </button>
 
                           {isExpanded && (
-                            <ul className={`mt-2 md:space-y-2 xl:space-y-2 md:ml-0 ${isMinimized ? "" : "xl:ml-7"}`}>
+                            <ul
+                              className={`mt-2 md:space-y-2 xl:space-y-2 md:ml-0 ${isMinimized ? "" : "xl:ml-7"}`}
+                            >
                               {item.children?.map((child) => {
                                 const ChildIcon = child.icon;
                                 const isChildActive =
@@ -2717,7 +2726,9 @@ export default function Sidebar({
                           </button>
 
                           {isExpanded && (
-                            <ul className={`mt-2 md:space-y-2 xl:space-y-2 md:ml-0 ${isMinimized ? "" : "xl:ml-7"}`}>
+                            <ul
+                              className={`mt-2 md:space-y-2 xl:space-y-2 md:ml-0 ${isMinimized ? "" : "xl:ml-7"}`}
+                            >
                               {item.children?.map((child) => {
                                 const ChildIcon = child.icon;
                                 const isChildActive =
@@ -2844,7 +2855,9 @@ export default function Sidebar({
                           </button>
 
                           {isExpanded && (
-                            <ul className={`mt-2 md:space-y-2 xl:space-y-2 md:ml-0 ${isMinimized ? "" : "xl:ml-7"}`}>
+                            <ul
+                              className={`mt-2 md:space-y-2 xl:space-y-2 md:ml-0 ${isMinimized ? "" : "xl:ml-7"}`}
+                            >
                               {item.children?.map((child) => {
                                 const ChildIcon = child.icon;
                                 const isChildActive =
@@ -2974,7 +2987,9 @@ export default function Sidebar({
                           </button>
 
                           {isExpanded && (
-                            <ul className={`mt-2 md:space-y-2 xl:space-y-2 md:ml-0 ${isMinimized ? "" : "xl:ml-7"}`}>
+                            <ul
+                              className={`mt-2 md:space-y-2 xl:space-y-2 md:ml-0 ${isMinimized ? "" : "xl:ml-7"}`}
+                            >
                               {item.children?.map((child) => {
                                 const ChildIcon = child.icon;
                                 const isChildActive =
@@ -3101,7 +3116,9 @@ export default function Sidebar({
                           </button>
 
                           {isExpanded && (
-                            <ul className={`mt-2 md:space-y-2 xl:space-y-2 md:ml-0 ${isMinimized ? "" : "xl:ml-7"}`}>
+                            <ul
+                              className={`mt-2 md:space-y-2 xl:space-y-2 md:ml-0 ${isMinimized ? "" : "xl:ml-7"}`}
+                            >
                               {item.children?.map((child) => {
                                 const ChildIcon = child.icon;
                                 const isChildActive =
@@ -3228,7 +3245,9 @@ export default function Sidebar({
                           </button>
 
                           {isExpanded && (
-                            <ul className={`mt-2 md:space-y-2 xl:space-y-2 md:ml-0 ${isMinimized ? "" : "xl:ml-7"}`}>
+                            <ul
+                              className={`mt-2 md:space-y-2 xl:space-y-2 md:ml-0 ${isMinimized ? "" : "xl:ml-7"}`}
+                            >
                               {item.children?.map((child) => {
                                 const ChildIcon = child.icon;
                                 const isChildActive =

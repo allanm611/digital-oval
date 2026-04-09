@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowLeft,
@@ -21,6 +21,7 @@ import {
   ChevronDown,
   Archive,
   RotateCcw,
+  FileText,
 } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -149,6 +150,26 @@ export default function CampaignDetailsPage() {
   const [showExecutionTimeModal, setShowExecutionTimeModal] = useState(false);
   const [showSuccessRateModal, setShowSuccessRateModal] = useState(false);
   const [showScheduledModal, setShowScheduledModal] = useState(false);
+
+  const moreMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close "More" menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        moreMenuRef.current &&
+        !moreMenuRef.current.contains(event.target as Node)
+      ) {
+        setShowMoreMenu(false);
+      }
+    };
+
+    if (showMoreMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showMoreMenu]);
 
   const formatObjective = (objective?: string | null) => {
     if (!objective) return "—";
@@ -1031,7 +1052,7 @@ export default function CampaignDetailsPage() {
             </button>
           </PermissionGate>
 
-          <div className="relative">
+          <div className="relative" ref={moreMenuRef}>
             <button
               onClick={() => setShowMoreMenu(!showMoreMenu)}
               className={`flex items-center gap-2 ${tw.rounded} font-semibold text-sm`}
@@ -1159,6 +1180,32 @@ export default function CampaignDetailsPage() {
                     {isActionLoading ? "Archiving..." : "Archive Campaign"}
                   </button>
                 )}
+
+                {/* View Broadcasts */}
+                <button
+                  onClick={() => {
+                    setShowBroadcastsModal(true);
+                    setShowMoreMenu(false);
+                  }}
+                  className="w-full flex items-center px-4 py-2 text-sm text-gray-700"
+                >
+                  <TrendingUp className="w-4 h-4 mr-3" />
+                  View Broadcasts
+                </button>
+
+                {/* View Campaign Report */}
+                <button
+                  onClick={() => {
+                    navigate(`/dashboard/reports/campaigns/${id}`, {
+                      state: { returnTo: { pathname: location.pathname } },
+                    });
+                    setShowMoreMenu(false);
+                  }}
+                  className="w-full flex items-center px-4 py-2 text-sm text-gray-700"
+                >
+                  <FileText className="w-4 h-4 mr-3" />
+                  View Campaign Report
+                </button>
 
                 <PermissionGate permission="campaigns.delete">
                   <button

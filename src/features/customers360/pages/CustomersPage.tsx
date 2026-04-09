@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import type { CSSProperties } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
@@ -12,6 +13,8 @@ import {
   Edit,
   Trash2,
   X,
+  MoreHorizontal,
+  Send,
 } from "lucide-react";
 import type { CustomerSubscriptionRecord } from "../types/customerSubscription";
 import type { Subscriber } from "../types/customer";
@@ -31,10 +34,11 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import CreateCustomerModal from "../components/CreateCustomerModal";
 import EditCustomerModal from "../components/EditCustomerModal";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useToast } from "../../../contexts/ToastContext";
 import { PermissionGate } from "../../auth/components/PermissionGate";
+import CreateCommunicationModal from "../../../shared/components/CreateCommunicationModal";
 
 const pageSize = 20;
 
@@ -90,14 +94,22 @@ export default function CustomersPage() {
   const [channelFilter, setChannelFilter] = useState("");
   const [customerTypeFilter, setCustomerTypeFilter] = useState("");
 
+  // Action menu state
+  const [showActionMenu, setShowActionMenu] = useState(false);
+  const [actionMenuIndex, setActionMenuIndex] = useState<number | null>(null);
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null);
+  const [isCommunicateModalOpen, setIsCommunicateModalOpen] = useState(false);
+  const [customerToCommunicate, setCustomerToCommunicate] =
+    useState<CustomerSubscriptionRecord | null>(null);
+  const actionMenuRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const dropdownMenuRefs = useRef<(HTMLDivElement | null)[]>([]);
+
   // Customer creation/edit modal state
   const [isCreateCustomerModalOpen, setIsCreateCustomerModalOpen] =
     useState(false);
   const [editingCustomer, setEditingCustomer] =
     useState<CustomerSubscriptionRecord | null>(null);
   const [customers, setCustomers] = useState<CustomerSubscriptionRecord[]>([]);
-
-  // Load customers from API with pagination
   const loadCustomers = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -120,13 +132,14 @@ export default function CustomersPage() {
           timeoutPromise,
         ]);
 
-          if (
-            apiResponse.success &&
-            apiResponse.data &&
-            Array.isArray(apiResponse.data)
-          ) {
-            // Convert API customers to local format
-            const apiCustomers = apiResponse.data.map((apiCustomer: Subscriber) => {
+        if (
+          apiResponse.success &&
+          apiResponse.data &&
+          Array.isArray(apiResponse.data)
+        ) {
+          // Convert API customers to local format
+          const apiCustomers = apiResponse.data.map(
+            (apiCustomer: Subscriber) => {
               const customerId =
                 typeof apiCustomer.id === "string"
                   ? parseInt(apiCustomer.id, 10)
@@ -151,40 +164,43 @@ export default function CustomersPage() {
                 customerType: apiCustomer.subscriber_type || "prepaid",
                 tariff: apiCustomer.preferred_channel || "NORMAL_SMS",
                 status: apiCustomer.subscriber_status || "active",
-                simType: apiCustomer.kyc_verified ? "KYC Verified" : "Not Verified",
+                simType: apiCustomer.kyc_verified
+                  ? "KYC Verified"
+                  : "Not Verified",
                 activationDate: apiCustomer.created_at,
               };
-            });
-            setCustomers(apiCustomers);
+            },
+          );
+          setCustomers(apiCustomers);
 
-            // Set total from response pagination.total (preferred) or top-level total
-            const total =
-              apiResponse.pagination?.total ||
-              apiResponse.total ||
-              apiCustomers.length;
-            setTotalCustomers(total);
-          }
-        } catch (apiError: any) {
-          if (apiError.message === "TIMEOUT") {
-            setIsTimeout(true);
-            showError(
-              "Network Timeout",
-              "Backend server may be unresponsive. Please try again.",
-            );
-          } else {
-            console.error("Failed to load customers from API:", apiError);
-            showError(
-              "Failed to Load Customers",
-              "Unable to retrieve customers. Please try again.",
-            );
-          }
+          // Set total from response pagination.total (preferred) or top-level total
+          const total =
+            apiResponse.pagination?.total ||
+            apiResponse.total ||
+            apiCustomers.length;
+          setTotalCustomers(total);
         }
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Failed to load customers:", error);
-        showError("Error", "Failed to load customers");
-        setIsLoading(false);
+      } catch (apiError: any) {
+        if (apiError.message === "TIMEOUT") {
+          setIsTimeout(true);
+          showError(
+            "Network Timeout",
+            "Backend server may be unresponsive. Please try again.",
+          );
+        } else {
+          console.error("Failed to load customers from API:", apiError);
+          showError(
+            "Failed to Load Customers",
+            "Unable to retrieve customers. Please try again.",
+          );
+        }
       }
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Failed to load customers:", error);
+      showError("Error", "Failed to load customers");
+      setIsLoading(false);
+    }
   }, [filters, showError]);
 
   // Load customers when filters change
@@ -229,33 +245,37 @@ export default function CustomersPage() {
           apiResponse.data &&
           Array.isArray(apiResponse.data)
         ) {
-          const apiCustomers = apiResponse.data.map((apiCustomer: Subscriber) => {
-            const customerId =
-              typeof apiCustomer.id === "string"
-                ? parseInt(apiCustomer.id, 10)
-                : apiCustomer.id;
+          const apiCustomers = apiResponse.data.map(
+            (apiCustomer: Subscriber) => {
+              const customerId =
+                typeof apiCustomer.id === "string"
+                  ? parseInt(apiCustomer.id, 10)
+                  : apiCustomer.id;
 
-            const subscriberId = apiCustomer.subscriber_id
-              ? typeof apiCustomer.subscriber_id === "string"
-                ? parseInt(apiCustomer.subscriber_id, 10)
-                : apiCustomer.subscriber_id
-              : customerId;
+              const subscriberId = apiCustomer.subscriber_id
+                ? typeof apiCustomer.subscriber_id === "string"
+                  ? parseInt(apiCustomer.subscriber_id, 10)
+                  : apiCustomer.subscriber_id
+                : customerId;
 
-            return {
-              customerId: customerId,
-              subscriptionId: subscriberId,
-              firstName: apiCustomer.first_name || "Unknown",
-              lastName: apiCustomer.last_name || "Customer",
-              msisdn: apiCustomer.msisdn,
-              email: apiCustomer.email,
-              city: apiCustomer.city,
-              customerType: apiCustomer.subscriber_type || "prepaid",
-              tariff: apiCustomer.preferred_channel || "NORMAL_SMS",
-              status: apiCustomer.subscriber_status || "active",
-              simType: apiCustomer.kyc_verified ? "KYC Verified" : "Not Verified",
-              activationDate: apiCustomer.created_at,
-            };
-          });
+              return {
+                customerId: customerId,
+                subscriptionId: subscriberId,
+                firstName: apiCustomer.first_name || "Unknown",
+                lastName: apiCustomer.last_name || "Customer",
+                msisdn: apiCustomer.msisdn,
+                email: apiCustomer.email,
+                city: apiCustomer.city,
+                customerType: apiCustomer.subscriber_type || "prepaid",
+                tariff: apiCustomer.preferred_channel || "NORMAL_SMS",
+                status: apiCustomer.subscriber_status || "active",
+                simType: apiCustomer.kyc_verified
+                  ? "KYC Verified"
+                  : "Not Verified",
+                activationDate: apiCustomer.created_at,
+              };
+            },
+          );
 
           allCustomers = [...allCustomers, ...apiCustomers];
 
@@ -320,7 +340,9 @@ export default function CustomersPage() {
               customerType: apiCustomer.subscriber_type || "prepaid",
               tariff: apiCustomer.preferred_channel || "NORMAL_SMS",
               status: apiCustomer.subscriber_status || "active",
-              simType: apiCustomer.kyc_verified ? "KYC Verified" : "Not Verified",
+              simType: apiCustomer.kyc_verified
+                ? "KYC Verified"
+                : "Not Verified",
               activationDate: apiCustomer.created_at,
             };
           });
@@ -358,12 +380,13 @@ export default function CustomersPage() {
 
     // Apply customer type filter
     if (customerTypeFilter) {
-      results = results.filter((customer) => customer.customerType === customerTypeFilter);
+      results = results.filter(
+        (customer) => customer.customerType === customerTypeFilter,
+      );
     }
 
     return results;
   }, [debouncedSearchTerm, customers, channelFilter, customerTypeFilter]);
-
 
   // Backend pagination - no need to slice since backend returns paginated data
   const paginatedResults = filteredCustomers;
@@ -480,16 +503,13 @@ export default function CustomersPage() {
   ) => {
     const derivedCustomer = convertSubscriptionToCustomerRow(customerToSelect);
 
-    navigate(
-      `/dashboard/customers/details/${derivedCustomer.id}`,
-      {
-        state: {
-          customer: derivedCustomer,
-          subscription: customerToSelect,
-          source: "customers" as const,
-        },
+    navigate(`/dashboard/customers/details/${derivedCustomer.id}`, {
+      state: {
+        customer: derivedCustomer,
+        subscription: customerToSelect,
+        source: "customers" as const,
       },
-    );
+    });
   };
 
   const handleCustomersAdded = (newCustomers: CustomerSubscriptionRecord[]) => {
@@ -569,6 +589,32 @@ export default function CustomersPage() {
       showError("Error", "Failed to delete customer");
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleSendCommunication = (customer: CustomerSubscriptionRecord) => {
+    setCustomerToCommunicate(customer);
+    setIsCommunicateModalOpen(true);
+    setShowActionMenu(false);
+    setActionMenuIndex(null);
+  };
+
+  const handleActionMenuToggle = (index: number, event: React.MouseEvent) => {
+    event.stopPropagation();
+    if (actionMenuIndex === index && showActionMenu) {
+      setShowActionMenu(false);
+      setActionMenuIndex(null);
+      setDropdownPosition(null);
+    } else {
+      const button = event.currentTarget as HTMLElement;
+      const rect = button.getBoundingClientRect();
+      const menuHeight = 120; // Approximate height for dropdown
+      const top = rect.bottom + 8;
+      const left = rect.right - 200; // Approximate menu width
+      
+      setActionMenuIndex(index);
+      setShowActionMenu(true);
+      setDropdownPosition({ top, left });
     }
   };
 
@@ -653,7 +699,9 @@ export default function CustomersPage() {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder={t.customer360.searchPlaceholder || "Search customers..."}
+            placeholder={
+              t.customer360.searchPlaceholder || "Search customers..."
+            }
             className={`w-full ${tw.rounded} border border-gray-300 py-3 pl-10 pr-4 text-sm focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-[--accent-color]`}
             style={
               {
@@ -685,12 +733,12 @@ export default function CustomersPage() {
           onChange={(value) => setCustomerTypeFilter(String(value))}
           options={[
             { value: "", label: "All Types" },
-            ...Array.from(new Set(customers.map((c) => c.customerType).filter(Boolean))).map(
-              (type) => ({
-                value: type,
-                label: type,
-              }),
-            ),
+            ...Array.from(
+              new Set(customers.map((c) => c.customerType).filter(Boolean)),
+            ).map((type) => ({
+              value: type,
+              label: type,
+            })),
           ]}
           placeholder="Select customer type"
           className={`text-sm`}
@@ -717,7 +765,9 @@ export default function CustomersPage() {
             <p className="text-red-600 font-medium text-center mb-4">
               {isTimeout ? "Network Timeout" : "Failed to Load Customers"}
             </p>
-            <p className={`${tw.textSecondary} text-sm text-center mb-6 max-w-md`}>
+            <p
+              className={`${tw.textSecondary} text-sm text-center mb-6 max-w-md`}
+            >
               {isTimeout
                 ? "The backend server may be unresponsive. Please try again."
                 : error || "Unable to retrieve customers. Please try again."}
@@ -863,14 +913,14 @@ export default function CustomersPage() {
                         {formatDateTime(row.activationDate)}
                       </td>
                       <td
-                        className="rounded-r-md px-6 py-5 text-sm text-right"
+                        className="rounded-r-md px-6 py-5 text-sm text-right relative"
                         style={cellBackground}
                       >
                         <div className="flex items-center justify-end gap-2">
                           <PermissionGate permission="customer.read">
                             <button
                               type="button"
-                              onClick={() => handleViewCustomer(row)}
+                              onClick={() => handleSelectCustomer(row)}
                               className="inline-flex items-center justify-center p-2 text-gray-700 hover:text-gray-900 transition-colors"
                               title="View customer"
                             >
@@ -887,16 +937,63 @@ export default function CustomersPage() {
                               <Edit className="h-4 w-4" />
                             </button>
                           </PermissionGate>
-                          <PermissionGate permission="customer.delete">
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteCustomer(row)}
-                              className="inline-flex items-center justify-center p-2 text-red-600 hover:text-red-800 transition-colors"
-                              title="Delete customer"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </PermissionGate>
+                          {/* Action Menu Button */}
+                          <button
+                            ref={(el) => {
+                              actionMenuRefs.current[index] = el;
+                            }}
+                            onClick={(e) => handleActionMenuToggle(index, e as any)}
+                            className="inline-flex items-center justify-center p-2 text-gray-700 hover:text-gray-900 transition-colors"
+                            title="More actions"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </button>
+
+                          {/* Dropdown Menu Portal */}
+                          {showActionMenu &&
+                            actionMenuIndex === index &&
+                            dropdownPosition &&
+                            createPortal(
+                              <div
+                                ref={(el) => {
+                                  dropdownMenuRefs.current[index] = el;
+                                }}
+                                style={{
+                                  position: "fixed",
+                                  top: `${dropdownPosition.top}px`,
+                                  left: `${dropdownPosition.left}px`,
+                                  zIndex: zIndex.popover,
+                                }}
+                                className={`${tw.rounded} border border-gray-200 bg-white shadow-lg py-1 w-56`}
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleSendCommunication(row)
+                                  }
+                                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 first:rounded-t flex items-center gap-2 transition-colors"
+                                >
+                                  <Send className="h-4 w-4" />
+                                  Send Communication
+                                </button>
+                                <PermissionGate permission="customer.delete">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      handleDeleteCustomer(row);
+                                      setShowActionMenu(false);
+                                      setActionMenuIndex(null);
+                                      setDropdownPosition(null);
+                                    }}
+                                    className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 last:rounded-b flex items-center gap-2 transition-colors"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                    Delete
+                                  </button>
+                                </PermissionGate>
+                              </div>,
+                              document.body,
+                            )}
                         </div>
                       </td>
                     </tr>
@@ -908,22 +1005,24 @@ export default function CustomersPage() {
         )}
 
         {/* Pagination */}
-        {!isLoading && !isDeleting && !error && filteredCustomers.length > pageSize && (
-          <Pagination
-            currentPage={filters.page}
-            pageSize={filters.limit}
-            totalItems={filteredCustomers.length}
-            onPageChange={(page) =>
-              setFilters((prev) => ({
-                ...prev,
-                page,
-                offset: (page - 1) * pageSize,
-              }))
-            }
-          />
-        )}
+        {!isLoading &&
+          !isDeleting &&
+          !error &&
+          filteredCustomers.length > pageSize && (
+            <Pagination
+              currentPage={filters.page}
+              pageSize={filters.limit}
+              totalItems={filteredCustomers.length}
+              onPageChange={(page) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  page,
+                  offset: (page - 1) * pageSize,
+                }))
+              }
+            />
+          )}
       </div>
-
 
       {/* Create/Edit customer modals */}
       <CreateCustomerModal
@@ -955,6 +1054,26 @@ export default function CustomersPage() {
         confirmText="Delete"
         cancelText="Cancel"
       />
+
+      {/* Send Communication Modal */}
+      {isCommunicateModalOpen && customerToCommunicate && (
+        <CreateCommunicationModal
+          isOpen={isCommunicateModalOpen}
+          onClose={() => {
+            setIsCommunicateModalOpen(false);
+            setCustomerToCommunicate(null);
+          }}
+          customerRecord={customerToCommunicate}
+          onSuccess={(result) => {
+            showSuccess(
+              "Success",
+              `Communication sent successfully! ${result.total_messages_sent} messages sent.`,
+            );
+            setIsCommunicateModalOpen(false);
+            setCustomerToCommunicate(null);
+          }}
+        />
+      )}
 
       {/* Advanced filters modal */}
     </div>

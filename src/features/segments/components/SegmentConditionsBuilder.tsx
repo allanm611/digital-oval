@@ -20,7 +20,7 @@ import {
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useSegmentationFields } from "../hooks/useSegmentationFields";
-import { getOperatorsForFieldType } from "../../../shared/utils/operatorMapper";
+import { getOperatorsForFieldType, DATE_OPERATORS } from "../../../shared/utils/operatorMapper";
 import UnifiedPickerModal from "./UnifiedPickerModal";
 import SystemEventPickerModal from "./SystemEventPickerModal";
 import FieldPickerModal from "./FieldPickerModal";
@@ -222,27 +222,6 @@ export default function SegmentConditionsBuilder({
       : { id: 1, label: "equals" };
   };
 
-  // Helper: get all operators for a backend field (prefer field.operators[], fallback to mapper)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const getBackendOperators = (
-    field: Record<string, any> | null | undefined,
-  ) => {
-    if (
-      field?.operators &&
-      Array.isArray(field.operators) &&
-      field.operators.length > 0
-    ) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return field.operators.map((op: Record<string, any>) => ({
-        id: op.id,
-        label: op.label,
-        symbol: op.symbol,
-        requiresValue: op.requires_value !== false,
-        requiresTwoValues: op.requires_two_values === true,
-      }));
-    }
-    return getOperatorsForFieldType(field?.field_type || "text");
-  };
 
   // Helper: check if a field is a date/timestamp field
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -568,13 +547,14 @@ export default function SegmentConditionsBuilder({
               <HeadlessSelect
                 options={(() => {
                   if (field) {
-                    // Use operators from backend field's operators array
-                    const operators = getBackendOperators(field);
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    return operators.map((op: Record<string, any>) => ({
+                    // Use operators based on field type (frontend-defined)
+                    const operators = getOperatorsForFieldType(field.field_type);
+                    return operators.map((op) => ({
                       value: `${op.label}|${op.id}`,
-                      label:
-                        op.label.charAt(0).toUpperCase() + op.label.slice(1),
+                      label: op.label
+                        .split("_")
+                        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                        .join(" "),
                     }));
                   }
                   return [];
@@ -616,6 +596,9 @@ export default function SegmentConditionsBuilder({
     const isDateField = isDateFieldType(backendField);
     const isBooleanField = fieldType === "boolean" || fieldType === "bool";
 
+    // Check if field is numeric (Money, decimal, numeric)
+    const isNumericField = ["money", "decimal", "numeric", "number", "integer", "int", "bigint", "float", "double"].includes(fieldType);
+
     // Check if operator is NULL-type (no value needed) — backend labels: "is empty" / "is not empty"
     const isNullOperator =
       operator.includes("null") || operator.includes("empty");
@@ -630,9 +613,272 @@ export default function SegmentConditionsBuilder({
     // Check if operator is between (backend label: "between")
     const isBetweenOperator = operator === "between";
 
+    // Check if selected operator is a date operator
+    const isDateOperator = ["on_date", "between_dates", "since_date", "until_date"].includes(operator);
+
     // No value input needed for NULL operators
     if (isNullOperator) {
       return null;
+    }
+
+    // For numeric fields, show dual-operator UI (value + secondary date dropdown)
+    // But NOT if a date operator is selected
+    if (isNumericField && !isBetweenOperator && !isInListOperator && !isDateField && !isDateOperator) {
+      return (
+        <>
+          {/* Numeric field dual-operator UI - ALL on one line */}
+          <div className="flex items-center gap-2 flex-wrap w-full">
+            {/* Numeric Value Input */}
+            <input
+              type="number"
+              value={condition.value as string | number}
+              onChange={(e) => {
+                updateCondition(groupId, condition.id, {
+                  value: e.target.value ? parseFloat(e.target.value) : "",
+                });
+              }}
+              placeholder="Enter value"
+              className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[100px] max-w-[150px]`}
+              style={{ borderColor: color.border.default }}
+            />
+
+            {/* Secondary Date Range Dropdown (on, between, since, until) */}
+            <div className="min-w-[140px] max-w-[170px] flex-shrink-0">
+              <HeadlessSelect
+                options={DATE_OPERATORS}
+                value={condition.date_operator || "on"}
+                onChange={(value) => {
+                  updateCondition(groupId, condition.id, {
+                    date_operator: value as SegmentCondition["date_operator"],
+                    start_date: undefined,
+                    end_date: undefined,
+                  });
+                }}
+                placeholder="Select date type"
+                className="text-sm"
+                zIndex={zIndex.popover}
+              />
+            </div>
+
+            {(condition.date_operator || "on") === "on" && (
+              <input
+                type="date"
+                value={
+                  condition.start_date
+                    ? condition.start_date.split("T")[0]
+                    : ""
+                }
+                onChange={(e) => {
+                  updateCondition(groupId, condition.id, {
+                    start_date: e.target.value
+                      ? `${e.target.value}T00:00:00Z`
+                      : undefined,
+                  });
+                }}
+                placeholder="Select date"
+                className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                style={{ borderColor: color.border.default }}
+              />
+            )}
+
+            {(condition.date_operator || "on") === "between" && (
+              <>
+                <input
+                  type="date"
+                  value={
+                    condition.start_date
+                      ? condition.start_date.split("T")[0]
+                      : ""
+                  }
+                  onChange={(e) => {
+                    updateCondition(groupId, condition.id, {
+                      start_date: e.target.value
+                        ? `${e.target.value}T00:00:00Z`
+                        : undefined,
+                    });
+                  }}
+                  placeholder="From date"
+                  className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                  style={{ borderColor: color.border.default }}
+                />
+                <input
+                  type="date"
+                  value={
+                    condition.end_date
+                      ? condition.end_date.split("T")[0]
+                      : ""
+                  }
+                  onChange={(e) => {
+                    updateCondition(groupId, condition.id, {
+                      end_date: e.target.value
+                        ? `${e.target.value}T23:59:59Z`
+                        : undefined,
+                    });
+                  }}
+                  placeholder="To date"
+                  className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                  style={{ borderColor: color.border.default }}
+                />
+              </>
+            )}
+
+            {(condition.date_operator || "on") === "since" && (
+              <input
+                type="date"
+                value={
+                  condition.start_date
+                    ? condition.start_date.split("T")[0]
+                    : ""
+                }
+                onChange={(e) => {
+                  updateCondition(groupId, condition.id, {
+                    start_date: e.target.value
+                      ? `${e.target.value}T00:00:00Z`
+                      : undefined,
+                  });
+                }}
+                placeholder="From date"
+                className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                style={{ borderColor: color.border.default }}
+              />
+            )}
+
+            {(condition.date_operator || "on") === "until" && (
+              <input
+                type="date"
+                value={
+                  condition.end_date
+                    ? condition.end_date.split("T")[0]
+                    : ""
+                }
+                onChange={(e) => {
+                  updateCondition(groupId, condition.id, {
+                    end_date: e.target.value
+                      ? `${e.target.value}T23:59:59Z`
+                      : undefined,
+                  });
+                }}
+                placeholder="To date"
+                className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                style={{ borderColor: color.border.default }}
+              />
+            )}
+          </div>
+        </>
+      );
+    }
+
+    // For numeric fields with date operators, show date inputs directly (no secondary dropdown)
+    if (isNumericField && isDateOperator) {
+      return (
+        <>
+          <div className="flex items-center gap-2 flex-wrap w-full">
+            {condition.operator === "on_date" && (
+              <input
+                type="date"
+                value={
+                  condition.value
+                    ? (condition.value as string).split("T")[0]
+                    : ""
+                }
+                onChange={(e) => {
+                  updateCondition(groupId, condition.id, {
+                    value: e.target.value
+                      ? `${e.target.value}T00:00:00Z`
+                      : "",
+                  });
+                }}
+                placeholder="Select date"
+                className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                style={{ borderColor: color.border.default }}
+              />
+            )}
+
+            {condition.operator === "between_dates" && (
+              <>
+                <input
+                  type="date"
+                  value={
+                    condition.start_date
+                      ? condition.start_date.split("T")[0]
+                      : ""
+                  }
+                  onChange={(e) => {
+                    updateCondition(groupId, condition.id, {
+                      start_date: e.target.value
+                        ? `${e.target.value}T00:00:00Z`
+                        : undefined,
+                    });
+                  }}
+                  placeholder="From date"
+                  className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                  style={{ borderColor: color.border.default }}
+                />
+                <input
+                  type="date"
+                  value={
+                    condition.end_date
+                      ? condition.end_date.split("T")[0]
+                      : ""
+                  }
+                  onChange={(e) => {
+                    updateCondition(groupId, condition.id, {
+                      end_date: e.target.value
+                        ? `${e.target.value}T23:59:59Z`
+                        : undefined,
+                    });
+                  }}
+                  placeholder="To date"
+                  className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                  style={{ borderColor: color.border.default }}
+                />
+              </>
+            )}
+
+            {condition.operator === "since_date" && (
+              <input
+                type="date"
+                value={
+                  condition.start_date
+                    ? condition.start_date.split("T")[0]
+                    : ""
+                }
+                onChange={(e) => {
+                  updateCondition(groupId, condition.id, {
+                    start_date: e.target.value
+                      ? `${e.target.value}T00:00:00Z`
+                      : undefined,
+                  });
+                }}
+                placeholder="From date"
+                className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                style={{ borderColor: color.border.default }}
+              />
+            )}
+
+            {condition.operator === "until_date" && (
+              <input
+                type="date"
+                value={
+                  condition.end_date
+                    ? condition.end_date.split("T")[0]
+                    : ""
+                }
+                onChange={(e) => {
+                  updateCondition(groupId, condition.id, {
+                    end_date: e.target.value
+                      ? `${e.target.value}T23:59:59Z`
+                      : undefined,
+                  });
+                }}
+                placeholder="To date"
+                className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                style={{ borderColor: color.border.default }}
+              />
+            )}
+          </div>
+        </>
+      );
     }
 
     return (
@@ -1207,121 +1453,419 @@ export default function SegmentConditionsBuilder({
     groupId: string,
     condition: SegmentCondition,
   ) => {
+    // For numeric KPI fields (Revenue, Usage), show dual operators
+    const isNumericKPI =
+      condition.conditionType === "revenue_metric_kpi" ||
+      condition.conditionType === "usage_metric_kpi";
+
+    // Check if selected operator is a date operator (new date operators for numeric fields)
+    const isDateOperator = ["on_date", "between_dates", "since_date", "until_date"].includes(
+      condition.operator?.toLowerCase() || "",
+    );
+
     return (
       <>
         {/* Operator for KPI - Only show if KPI selected */}
         {condition.kpi_name && (
           <>
-            <div className="min-w-[220px] max-w-[300px] flex-shrink-0">
-              <HeadlessSelect
-                options={[
-                  { value: "equals", label: "Equals" },
-                  { value: "not_equals", label: "Not Equals" },
-                  { value: "on_date", label: "On Date" },
-                  { value: "between_dates", label: "Between Dates" },
-                  { value: "greater_than", label: "Greater Than" },
-                  { value: "less_than", label: "Less Than" },
-                  { value: "contains", label: "Contains" },
-                  { value: "not_contains", label: "Not Contains" },
-                  { value: "in", label: "In" },
-                  { value: "not_in", label: "Not In" },
-                  // Time-based operators for metrics
-                  { value: "in_last_days", label: "In Last Days" },
-                ]}
-                value={condition.operator}
-                onChange={(value) => {
-                  updateCondition(groupId, condition.id, {
-                    operator: value as SegmentCondition["operator"],
-                    value: "",
-                    time_unit: undefined,
-                  });
-                }}
-                placeholder="Select operator"
-                className="text-sm"
-                zIndex={zIndex.popover}
-              />
-            </div>
-
-            {/* Value Input - For "in_last_days" and regular operators */}
-            {condition.operator !== "between_dates" &&
-              condition.operator !== "on_date" && (
-                <input
-                  type={
-                    condition.operator === "in_last_days" ? "number" : "text"
-                  }
-                  value={condition.value as string}
-                  onChange={(e) => {
-                    updateCondition(groupId, condition.id, {
-                      value: e.target.value,
-                    });
-                  }}
-                  placeholder={
-                    condition.operator === "in_last_days"
-                      ? "Enter days (e.g., 30)"
-                      : "Enter value"
-                  }
-                  className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[100px] flex-1 max-w-[200px]`}
-                  style={{ borderColor: color.border.default }}
-                />
-              )}
-
-            {/* Single Date Input - For "on_date" operator */}
-            {condition.operator === "on_date" && (
-              <input
-                type="date"
-                value={condition.value as string}
-                onChange={(e) => {
-                  updateCondition(groupId, condition.id, {
-                    value: e.target.value,
-                  });
-                }}
-                placeholder="Select Date"
-                className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm`}
-                style={{ borderColor: color.border.default }}
-              />
-            )}
-
-            {/* Date Range Inputs - For "between_dates" operator */}
-            {condition.operator === "between_dates" && (
+            {/* For numeric KPIs: Show combined operator dropdown (numeric + date options) */}
+            {isNumericKPI ? (
               <>
-                <input
-                  type="date"
-                  value={
-                    condition.value
-                      ? (condition.value as string).split(",")[0] || ""
-                      : ""
-                  }
-                  onChange={(e) => {
-                    const endDate = condition.value
-                      ? (condition.value as string).split(",")[1] || ""
-                      : "";
-                    updateCondition(groupId, condition.id, {
-                      value: `${e.target.value},${endDate}`,
-                    });
-                  }}
-                  placeholder="Start Date"
-                  className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm`}
-                  style={{ borderColor: color.border.default }}
-                />
-                <input
-                  type="date"
-                  value={
-                    condition.value
-                      ? (condition.value as string).split(",")[1] || ""
-                      : ""
-                  }
-                  onChange={(e) => {
-                    const startDate = condition.value
-                      ? (condition.value as string).split(",")[0] || ""
-                      : "";
-                    updateCondition(groupId, condition.id, {
-                      value: `${startDate},${e.target.value}`,
-                    });
-                  }}
-                  placeholder="End Date"
-                  className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm`}
-                  style={{ borderColor: color.border.default }}
-                />
+                {/* Wrapper for operator + value + date operator dropdowns + date inputs ALL on one line */}
+                <div className="flex items-center gap-2 flex-wrap w-full">
+                  {/* Operator Dropdown */}
+                  <div className="min-w-[220px] max-w-[280px] flex-shrink-0">
+                    <HeadlessSelect
+                      options={getOperatorsForFieldType("money").map((op) => ({
+                        value: op.label,
+                        label: op.label
+                          .split("_")
+                          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                          .join(" "),
+                      }))}
+                      value={condition.operator}
+                      onChange={(value) => {
+                        updateCondition(groupId, condition.id, {
+                          operator: value as SegmentCondition["operator"],
+                          value: "",
+                          start_date: undefined,
+                          end_date: undefined,
+                        });
+                      }}
+                      placeholder="Select operator"
+                      className="text-sm"
+                      zIndex={zIndex.popover}
+                    />
+                  </div>
+
+                  {/* Numeric Value Input - Only show if NOT a date operator */}
+                  {!isDateOperator && (
+                    <input
+                      type="number"
+                      value={condition.value as string | number}
+                      onChange={(e) => {
+                        updateCondition(groupId, condition.id, {
+                          value: e.target.value ? parseFloat(e.target.value) : "",
+                        });
+                      }}
+                      placeholder="Enter value"
+                      className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[100px] max-w-[150px]`}
+                      style={{ borderColor: color.border.default }}
+                    />
+                  )}
+
+                  {/* Secondary Date Range Dropdown - Only show if numeric operator selected */}
+                  {!isDateOperator && (
+                    <div className="min-w-[140px] max-w-[170px] flex-shrink-0">
+                      <HeadlessSelect
+                        options={DATE_OPERATORS}
+                        value={condition.date_operator || "on"}
+                        onChange={(value) => {
+                          updateCondition(groupId, condition.id, {
+                            date_operator: value as SegmentCondition["date_operator"],
+                            start_date: undefined,
+                            end_date: undefined,
+                          });
+                        }}
+                        placeholder="Select date type"
+                        className="text-sm"
+                        zIndex={zIndex.popover}
+                      />
+                    </div>
+                  )}
+
+                  {isDateOperator ? (
+                  // When date operator selected directly
+                  <>
+                    {condition.operator === "on_date" && (
+                      <input
+                        type="date"
+                        value={
+                          condition.value
+                            ? (condition.value as string).split("T")[0]
+                            : ""
+                        }
+                        onChange={(e) => {
+                          updateCondition(groupId, condition.id, {
+                            value: e.target.value
+                              ? `${e.target.value}T00:00:00Z`
+                              : "",
+                          });
+                        }}
+                        placeholder="Select date"
+                        className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                        style={{ borderColor: color.border.default }}
+                      />
+                    )}
+
+                    {condition.operator === "between_dates" && (
+                      <>
+                        <input
+                          type="date"
+                          value={
+                            condition.value
+                              ? (condition.value as string).split(",")[0] || ""
+                              : ""
+                          }
+                          onChange={(e) => {
+                            const endDate = condition.value
+                              ? (condition.value as string).split(",")[1] || ""
+                              : "";
+                            updateCondition(groupId, condition.id, {
+                              value: `${e.target.value},${endDate}`,
+                            });
+                          }}
+                          placeholder="From date"
+                          className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                          style={{ borderColor: color.border.default }}
+                        />
+                        <input
+                          type="date"
+                          value={
+                            condition.value
+                              ? (condition.value as string).split(",")[1] || ""
+                              : ""
+                          }
+                          onChange={(e) => {
+                            const startDate = condition.value
+                              ? (condition.value as string).split(",")[0] || ""
+                              : "";
+                            updateCondition(groupId, condition.id, {
+                              value: `${startDate},${e.target.value}`,
+                            });
+                          }}
+                          placeholder="To date"
+                          className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                          style={{ borderColor: color.border.default }}
+                        />
+                      </>
+                    )}
+
+                    {condition.operator === "since_date" && (
+                      <input
+                        type="date"
+                        value={
+                          condition.value
+                            ? (condition.value as string).split("T")[0]
+                            : ""
+                        }
+                        onChange={(e) => {
+                          updateCondition(groupId, condition.id, {
+                            value: e.target.value
+                              ? `${e.target.value}T00:00:00Z`
+                              : "",
+                          });
+                        }}
+                        placeholder="From date"
+                        className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                        style={{ borderColor: color.border.default }}
+                      />
+                    )}
+
+                    {condition.operator === "until_date" && (
+                      <input
+                        type="date"
+                        value={
+                          condition.value
+                            ? (condition.value as string).split("T")[0]
+                            : ""
+                        }
+                        onChange={(e) => {
+                          updateCondition(groupId, condition.id, {
+                            value: e.target.value
+                              ? `${e.target.value}T23:59:59Z`
+                              : "",
+                          });
+                        }}
+                        placeholder="To date"
+                        className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                        style={{ borderColor: color.border.default }}
+                      />
+                    )}
+                  </>
+                ) : (
+                  // When numeric operator selected, show secondary date inputs based on date_operator
+                  <>
+                    {(condition.date_operator || "on") === "on" && (
+                      <input
+                        type="date"
+                        value={
+                          condition.start_date
+                            ? condition.start_date.split("T")[0]
+                            : ""
+                        }
+                        onChange={(e) => {
+                          updateCondition(groupId, condition.id, {
+                            start_date: e.target.value
+                              ? `${e.target.value}T00:00:00Z`
+                              : undefined,
+                          });
+                        }}
+                        placeholder="Select date"
+                        className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                        style={{ borderColor: color.border.default }}
+                      />
+                    )}
+
+                    {(condition.date_operator || "on") === "between" && (
+                      <>
+                        <input
+                          type="date"
+                          value={
+                            condition.start_date
+                              ? condition.start_date.split("T")[0]
+                              : ""
+                          }
+                          onChange={(e) => {
+                            updateCondition(groupId, condition.id, {
+                              start_date: e.target.value
+                                ? `${e.target.value}T00:00:00Z`
+                                : undefined,
+                            });
+                          }}
+                          placeholder="From date"
+                          className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                          style={{ borderColor: color.border.default }}
+                        />
+                        <input
+                          type="date"
+                          value={
+                            condition.end_date
+                              ? condition.end_date.split("T")[0]
+                              : ""
+                          }
+                          onChange={(e) => {
+                            updateCondition(groupId, condition.id, {
+                              end_date: e.target.value
+                                ? `${e.target.value}T23:59:59Z`
+                                : undefined,
+                            });
+                          }}
+                          placeholder="To date"
+                          className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                          style={{ borderColor: color.border.default }}
+                        />
+                      </>
+                    )}
+
+                    {(condition.date_operator || "on") === "since" && (
+                      <input
+                        type="date"
+                        value={
+                          condition.start_date
+                            ? condition.start_date.split("T")[0]
+                            : ""
+                        }
+                        onChange={(e) => {
+                          updateCondition(groupId, condition.id, {
+                            start_date: e.target.value
+                              ? `${e.target.value}T00:00:00Z`
+                              : undefined,
+                          });
+                        }}
+                        placeholder="From date"
+                        className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                        style={{ borderColor: color.border.default }}
+                      />
+                    )}
+
+                    {(condition.date_operator || "on") === "until" && (
+                      <input
+                        type="date"
+                        value={
+                          condition.end_date
+                            ? condition.end_date.split("T")[0]
+                            : ""
+                        }
+                        onChange={(e) => {
+                          updateCondition(groupId, condition.id, {
+                            end_date: e.target.value
+                              ? `${e.target.value}T23:59:59Z`
+                              : undefined,
+                          });
+                        }}
+                        placeholder="To date"
+                        className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                        style={{ borderColor: color.border.default }}
+                      />
+                    )}
+                  </>
+                )}
+                </div>
+              </>
+            ) : (
+              /* Legacy KPI operators (kept for non-numeric KPIs if needed) */
+              <>
+                <div className="min-w-[220px] max-w-[300px] flex-shrink-0">
+                  <HeadlessSelect
+                    options={[
+                      { value: "equals", label: "Equals" },
+                      { value: "not_equals", label: "Not Equals" },
+                      { value: "on_date", label: "On Date" },
+                      { value: "between_dates", label: "Between Dates" },
+                      { value: "greater_than", label: "Greater Than" },
+                      { value: "less_than", label: "Less Than" },
+                      { value: "contains", label: "Contains" },
+                      { value: "not_contains", label: "Not Contains" },
+                      { value: "in", label: "In" },
+                      { value: "not_in", label: "Not In" },
+                      { value: "in_last_days", label: "In Last Days" },
+                    ]}
+                    value={condition.operator}
+                    onChange={(value) => {
+                      updateCondition(groupId, condition.id, {
+                        operator: value as SegmentCondition["operator"],
+                        value: "",
+                        time_unit: undefined,
+                      });
+                    }}
+                    placeholder="Select operator"
+                    className="text-sm"
+                    zIndex={zIndex.popover}
+                  />
+                </div>
+
+                {condition.operator !== "between_dates" &&
+                  condition.operator !== "on_date" && (
+                    <input
+                      type={
+                        condition.operator === "in_last_days"
+                          ? "number"
+                          : "text"
+                      }
+                      value={condition.value as string}
+                      onChange={(e) => {
+                        updateCondition(groupId, condition.id, {
+                          value: e.target.value,
+                        });
+                      }}
+                      placeholder={
+                        condition.operator === "in_last_days"
+                          ? "Enter days (e.g., 30)"
+                          : "Enter value"
+                      }
+                      className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[100px] flex-1 max-w-[200px]`}
+                      style={{ borderColor: color.border.default }}
+                    />
+                  )}
+
+                {condition.operator === "on_date" && (
+                  <input
+                    type="date"
+                    value={condition.value as string}
+                    onChange={(e) => {
+                      updateCondition(groupId, condition.id, {
+                        value: e.target.value,
+                      });
+                    }}
+                    placeholder="Select Date"
+                    className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm`}
+                    style={{ borderColor: color.border.default }}
+                  />
+                )}
+
+                {condition.operator === "between_dates" && (
+                  <>
+                    <input
+                      type="date"
+                      value={
+                        condition.value
+                          ? (condition.value as string).split(",")[0] || ""
+                          : ""
+                      }
+                      onChange={(e) => {
+                        const endDate = condition.value
+                          ? (condition.value as string).split(",")[1] || ""
+                          : "";
+                        updateCondition(groupId, condition.id, {
+                          value: `${e.target.value},${endDate}`,
+                        });
+                      }}
+                      placeholder="Start Date"
+                      className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm`}
+                      style={{ borderColor: color.border.default }}
+                    />
+                    <input
+                      type="date"
+                      value={
+                        condition.value
+                          ? (condition.value as string).split(",")[1] || ""
+                          : ""
+                      }
+                      onChange={(e) => {
+                        const startDate = condition.value
+                          ? (condition.value as string).split(",")[0] || ""
+                          : "";
+                        updateCondition(groupId, condition.id, {
+                          value: `${startDate},${e.target.value}`,
+                        });
+                      }}
+                      placeholder="End Date"
+                      className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm`}
+                      style={{ borderColor: color.border.default }}
+                    />
+                  </>
+                )}
               </>
             )}
           </>
@@ -1866,9 +2410,15 @@ export default function SegmentConditionsBuilder({
                 currentEditingCondition.groupId,
                 currentEditingCondition.conditionId,
                 {
+                  conditionType: currentKPIModalType,
                   kpi_id: kpi.id,
                   kpi_name: kpi.name,
                   kpi_category: kpi.category,
+                  operator: "equals",
+                  date_operator: "on",
+                  value: "",
+                  start_date: undefined,
+                  end_date: undefined,
                 },
               );
             }

@@ -25,6 +25,7 @@ import {
   Square,
   Plus,
   BarChart3,
+  Send,
 } from "lucide-react";
 import { Segment, SegmentFilters, SortDirection } from "../types/segment";
 import { segmentService } from "../services/segmentService";
@@ -42,6 +43,7 @@ import { PermissionGate } from "../../auth/components/PermissionGate";
 import Pagination from "../../../shared/components/ui/Pagination";
 import ErrorState from "../../../shared/components/ui/ErrorState";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import CreateCommunicationModal from "../../../shared/components/CreateCommunicationModal";
 
 export default function SegmentManagementPage() {
   const navigate = useNavigate();
@@ -173,6 +175,8 @@ export default function SegmentManagementPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [segmentToDelete, setSegmentToDelete] = useState<Segment | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isCommunicateModalOpen, setIsCommunicateModalOpen] = useState(false);
+  const [segmentToCommunicate, setSegmentToCommunicate] = useState<Segment | null>(null);
 
   const handleActionMenuToggle = (
     segmentId: number,
@@ -1812,6 +1816,19 @@ export default function SegmentManagementPage() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
+                        setSegmentToCommunicate(segment);
+                        setIsCommunicateModalOpen(true);
+                        setShowActionMenu(null);
+                      }}
+                      className="w-full flex items-center px-4 py-3 text-sm text-black hover:bg-gray-50 transition-colors"
+                    >
+                      <Send className="w-4 h-4 mr-4" />
+                      Send Communication
+                    </button>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
                         handleComputeSegment(segment);
                         setShowActionMenu(null);
                       }}
@@ -2347,6 +2364,26 @@ export default function SegmentManagementPage() {
             )}
           </div>
         </div>
+      )}
+
+      {/* Send Communication Modal */}
+      {isCommunicateModalOpen && segmentToCommunicate && (
+        <CreateCommunicationModal
+          isOpen={isCommunicateModalOpen}
+          onClose={() => {
+            setIsCommunicateModalOpen(false);
+            setSegmentToCommunicate(null);
+          }}
+          segment={segmentToCommunicate}
+          onSuccess={(result) => {
+            showToast(
+              "Success",
+              `Communication sent successfully! ${result.total_messages_sent} messages sent.`,
+            );
+            setIsCommunicateModalOpen(false);
+            setSegmentToCommunicate(null);
+          }}
+        />
       )}
 
       {/* Delete Confirmation Modal */}

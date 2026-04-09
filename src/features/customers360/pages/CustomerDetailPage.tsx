@@ -1,7 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
-  ArrowLeft,
   Search,
   FileText,
   Activity,
@@ -10,6 +9,9 @@ import {
   Calendar,
   X,
   List,
+  Send,
+  Edit,
+  Trash2,
 } from "lucide-react";
 import {
   BarChart,
@@ -34,6 +36,11 @@ import Pagination from "../../../shared/components/ui/Pagination";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { PermissionGate } from "../../auth/components/PermissionGate";
+import { useLanguage } from "../../../contexts/LanguageContext";
+import { useToast } from "../../../contexts/ToastContext";
+import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import CreateCommunicationModal from "../../../shared/components/CreateCommunicationModal";
+import EditCustomerModal from "../components/EditCustomerModal";
 import type { CustomerSubscriptionRecord } from "../types/customerSubscription";
 import type { CustomerDetail } from "../types/customer";
 import {
@@ -42,9 +49,7 @@ import {
   formatMsisdn,
   type CustomerRow,
 } from "../utils/customerSubscriptionHelpers";
-import type {
-  CustomerSearchResultsResponse,
-} from "../../reports-analytics/types/ReportsAPI";
+import type { CustomerSearchResultsResponse } from "../../reports-analytics/types/ReportsAPI";
 // Note: CustomerWithContact is not imported as it's not used in this file
 import { customerSubscriptions } from "../utils/customerDataService";
 import { customerService } from "../services/customerServices";
@@ -102,7 +107,10 @@ const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
 
 const generateCustomerRelatedData = (customer: CustomerRow) => {
   // Convert customer ID to string safely for use in IDs
-  const customerId = typeof customer.id === "string" ? customer.id : (customer.id || "0").toString();
+  const customerId =
+    typeof customer.id === "string"
+      ? customer.id
+      : (customer.id || "0").toString();
 
   const segmentNames = [
     customer.segment,
@@ -117,7 +125,10 @@ const generateCustomerRelatedData = (customer: CustomerRow) => {
     const addedDate = new Date(baseDate);
     addedDate.setDate(addedDate.getDate() - index * 15);
 
-    const customerId = typeof customer.id === "string" ? customer.id : (customer.id || "0").toString();
+    const customerId =
+      typeof customer.id === "string"
+        ? customer.id
+        : (customer.id || "0").toString();
     return {
       id: `SEG-${customerId.slice(-3)}-${index + 1}`,
       name,
@@ -156,7 +167,10 @@ const generateCustomerRelatedData = (customer: CustomerRow) => {
     const redeemedDate = new Date(baseDate);
     redeemedDate.setDate(redeemedDate.getDate() - index * 20);
 
-    const customerId = typeof customer.id === "string" ? customer.id : (customer.id || "0").toString();
+    const customerId =
+      typeof customer.id === "string"
+        ? customer.id
+        : (customer.id || "0").toString();
     return {
       id: `OFF-${customerId.slice(-3)}-${index + 1}`,
       name,
@@ -305,10 +319,12 @@ type TabType =
   | "marketing"
   | "subscribedLists";
 
-export default function CustomerSearchResultsPage() {
+export default function CustomerDetailPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { customerId: customerIdFromParams } = useParams<{ customerId: string }>();
+  const { customerId: customerIdFromParams } = useParams<{
+    customerId: string;
+  }>();
 
   const stateSource = location.state?.source as OriginSource | undefined;
   const [origin, setOrigin] = useState<OriginSource | undefined>(
@@ -362,8 +378,7 @@ export default function CustomerSearchResultsPage() {
     if (customerIdFromUrl) {
       const numericId = parseInt(customerIdFromUrl, 10);
       return customerSubscriptions.find(
-        (record) =>
-          record.customerId?.toString() === numericId.toString(),
+        (record) => record.customerId?.toString() === numericId.toString(),
       );
     }
     return undefined;
@@ -475,6 +490,13 @@ export default function CustomerSearchResultsPage() {
   const [eventDateTo, setEventDateTo] = useState<string>("");
   const [eventStatusFilter, setEventStatusFilter] = useState<string>("all");
 
+  const [editingCustomer, setEditingCustomer] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isCommunicateModalOpen, setIsCommunicateModalOpen] = useState(false);
+  const { t } = useLanguage();
+  const { success: showSuccess, error: showError } = useToast();
+
   // Pagination states for the 4 tables
   const [eventPage, setEventPage] = useState(1);
   const [segmentPage, setSegmentPage] = useState(1);
@@ -513,7 +535,10 @@ export default function CustomerSearchResultsPage() {
       const matchesSearch =
         eventSearchTerm.trim() === "" ||
         event.title.toLowerCase().includes(eventSearchTerm.toLowerCase()) ||
-        (event.description && event.description.toLowerCase().includes(eventSearchTerm.toLowerCase()));
+        (event.description &&
+          event.description
+            .toLowerCase()
+            .includes(eventSearchTerm.toLowerCase()));
       const matchesType =
         eventTypeFilter === "all" || event.type === eventTypeFilter;
       const matchesStatus =
@@ -664,11 +689,14 @@ export default function CustomerSearchResultsPage() {
             {
               label: "Date of Birth",
               value: selectedSubscription.birthDate
-                ? new Date(selectedSubscription.birthDate).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  })
+                ? new Date(selectedSubscription.birthDate).toLocaleDateString(
+                    "en-US",
+                    {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    },
+                  )
                 : "—",
             },
           ],
@@ -704,8 +732,14 @@ export default function CustomerSearchResultsPage() {
           items: [
             { label: "City", value: selectedSubscription.city ?? "—" },
             { label: "Region", value: selectedSubscription.region ?? "—" },
-            { label: "Postal Code", value: selectedSubscription.postalCode ?? "—" },
-            { label: "Country", value: selectedSubscription.countryCode ?? "—" },
+            {
+              label: "Postal Code",
+              value: selectedSubscription.postalCode ?? "—",
+            },
+            {
+              label: "Country",
+              value: selectedSubscription.countryCode ?? "—",
+            },
             {
               label: "Physical Address",
               value: selectedSubscription.physicalAddress ?? "—",
@@ -764,15 +798,77 @@ export default function CustomerSearchResultsPage() {
     );
   }
 
+  const handleDeleteCustomer = async () => {
+    if (!selectedSubscription) return;
+
+    setIsDeleting(true);
+    try {
+      await customerService.deleteCustomer(selectedSubscription.customerId);
+      showSuccess("Success", "Customer deleted successfully");
+      setDeleteConfirmOpen(false);
+      navigate("/dashboard/customers", { replace: true });
+    } catch (err) {
+      showError("Error", "Failed to delete customer");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCustomerUpdated = (
+    updatedCustomer: CustomerSubscriptionRecord,
+  ) => {
+    setSelectedSubscription(updatedCustomer);
+    setEditingCustomer(false);
+    showSuccess("Success", "Customer updated successfully");
+  };
+
   return (
     <PermissionGate permission="customer.read">
       <div className="space-y-4">
         {/* Header */}
-        <BackButton
-          fallbackTo="/dashboard/customers"
-          showBreadcrumb={true}
-          currentLabel="Customer Details"
-        />
+        <div className="flex items-center justify-between gap-4">
+          <BackButton
+            fallbackTo="/dashboard/customers"
+            showBreadcrumb={true}
+            currentLabel="Customer Details"
+          />
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsCommunicateModalOpen(true)}
+              className={`${tw.rounded} inline-flex items-center gap-2 px-4 py-2 text-sm font-medium`}
+              style={{
+                backgroundColor: color.primary.action,
+                color: "white",
+              }}
+            >
+              <Send className="h-4 w-4" />
+              Send Communication
+            </button>
+            <PermissionGate permission="customer.update">
+              <button
+                onClick={() => setEditingCustomer(true)}
+                className={`text-sm font-medium inline-flex items-center gap-2 flex-shrink-0 ${tw.rounded}`}
+                style={{
+                  backgroundColor: color.primary.action,
+                  color: "white",
+                  padding: "8px 16px",
+                }}
+              >
+                <Edit className="h-4 w-4" />
+                Edit
+              </button>
+            </PermissionGate>
+            <PermissionGate permission="customer.delete">
+              <button
+                onClick={() => setDeleteConfirmOpen(true)}
+                className={`${tw.rounded} inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border border-red-300 text-red-600 hover:bg-red-50`}
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete
+              </button>
+            </PermissionGate>
+          </div>
+        </div>
 
         {/* Tabs */}
         <div className="flex gap-1 border-b border-gray-200">
@@ -1491,6 +1587,45 @@ export default function CustomerSearchResultsPage() {
             />
           </div>
         )}
+
+        {/* Send Communication Modal */}
+        {isCommunicateModalOpen && selectedSubscription && (
+          <CreateCommunicationModal
+            isOpen={isCommunicateModalOpen}
+            onClose={() => setIsCommunicateModalOpen(false)}
+            customerRecord={selectedSubscription}
+            onSuccess={(result) => {
+              showSuccess(
+                "Success",
+                `Communication sent successfully! ${result.total_messages_sent} messages sent.`,
+              );
+              setIsCommunicateModalOpen(false);
+            }}
+          />
+        )}
+
+        {/* Edit Customer Modal */}
+        {editingCustomer && selectedSubscription && (
+          <EditCustomerModal
+            isOpen={editingCustomer}
+            onClose={() => setEditingCustomer(false)}
+            customer={selectedSubscription}
+            onCustomerUpdated={handleCustomerUpdated}
+          />
+        )}
+
+        {/* Delete Confirmation Modal */}
+        <DeleteConfirmModal
+          isOpen={deleteConfirmOpen}
+          title="Delete Customer"
+          description="This customer and all their data will be permanently deleted. This action cannot be undone."
+          itemName={`${selectedSubscription?.firstName} ${selectedSubscription?.lastName}`}
+          onConfirm={handleDeleteCustomer}
+          onClose={() => setDeleteConfirmOpen(false)}
+          isLoading={isDeleting}
+          confirmText="Delete"
+          cancelText="Cancel"
+        />
       </div>
     </PermissionGate>
   );

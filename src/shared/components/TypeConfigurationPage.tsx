@@ -9,6 +9,8 @@ import {
   Search,
   Trash2,
   X,
+  Power,
+  PowerOff,
 } from "lucide-react";
 import { color, tw, button, zIndex } from "../utils/utils";
 import { useToast } from "../../contexts/ToastContext";
@@ -25,6 +27,11 @@ import {
 import { CHANNEL_OPTIONS } from "../../features/configurations/services/creativeTemplateService";
 import { characterSetService } from "../../features/configurations/services/characterSetService";
 import { languageService } from "../../features/configurations/services/languageService";
+import { campaignTypeService } from "../../features/campaigns/services/campaignTypeService";
+import { rewardTypeService } from "../../features/offers/services/rewardTypeService";
+import { offerTypeService } from "../../features/offers/services/offerTypeService";
+import { segmentTypeService } from "../../features/segments/services/segmentTypeService";
+import { productTypeService } from "../../features/products/services/productTypeService";
 import HeadlessSelect from "./ui/HeadlessSelect";
 import Pagination from "./ui/Pagination";
 import BackButton from "./ui/BackButton";
@@ -136,6 +143,7 @@ export interface TypeConfigurationPageConfig {
   saveErrorMessage: string;
   disableCreate?: boolean;
   disableDelete?: boolean;
+  enableActivateDeactivate?: boolean;
 }
 
 interface TypeConfigurationModalProps {
@@ -1476,6 +1484,7 @@ export default function TypeConfigurationPage({
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [togglingId, setTogglingId] = useState<number | null>(null);
 
   // Config type checks for conditional rendering
   const isRoutes = config.configType === "routes";
@@ -1679,6 +1688,64 @@ export default function TypeConfigurationPage({
       showError(`Failed to save ${config.entityName}`, config.saveErrorMessage);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleToggleActive = async (item: TypeConfigurationItem) => {
+    if (!config.enableActivateDeactivate) return;
+
+    try {
+      setTogglingId(item.id);
+      const newActiveStatus = !item.isActive;
+
+      // Optimistic update
+      setItems((prev) =>
+        prev.map((it) =>
+          it.id === item.id ? { ...it, isActive: newActiveStatus } : it
+        )
+      );
+
+      // Call the appropriate service based on config type
+      if (config.configType === "campaignTypes") {
+        await campaignTypeService.updateCampaignType(item.id, {
+          is_active: newActiveStatus,
+        });
+      } else if (config.configType === "rewardTypes") {
+        await rewardTypeService.updateRewardType(item.id, {
+          is_active: newActiveStatus,
+        });
+      } else if (config.configType === "offerTypes") {
+        await offerTypeService.updateOfferType(item.id, {
+          is_active: newActiveStatus,
+        });
+      } else if (config.configType === "segmentTypes") {
+        await segmentTypeService.updateSegmentType(item.id, {
+          is_active: newActiveStatus,
+        });
+      } else if (config.configType === "productTypes") {
+        await productTypeService.updateProductType(item.id, {
+          is_active: newActiveStatus,
+        });
+      }
+
+      showToast(
+        config.title,
+        newActiveStatus ? "Activated successfully" : "Deactivated successfully"
+      );
+    } catch (err) {
+      console.error(`Failed to toggle ${config.entityName}:`, err);
+      // Revert optimistic update on failure
+      setItems((prev) =>
+        prev.map((it) =>
+          it.id === item.id ? { ...it, isActive: !item.isActive } : it
+        )
+      );
+      showError(
+        "Error",
+        err instanceof Error ? err.message : "Failed to update status"
+      );
+    } finally {
+      setTogglingId(null);
     }
   };
 
@@ -2142,6 +2209,24 @@ export default function TypeConfigurationPage({
                         >
                           <Edit className="w-4 h-4" />
                         </button>
+                        {config.enableActivateDeactivate && (
+                          <button
+                            onClick={() => handleToggleActive(item)}
+                            disabled={togglingId === item.id}
+                            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                            title={
+                              item.isActive ? "Deactivate" : "Activate"
+                            }
+                          >
+                            {togglingId === item.id ? (
+                              <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                            ) : item.isActive ? (
+                              <PowerOff className="w-4 h-4 text-orange-600" />
+                            ) : (
+                              <Power className="w-4 h-4 text-green-600" />
+                            )}
+                          </button>
+                        )}
                         {!config.disableDelete && (
                           <button
                             onClick={() => handleDeleteItem(item)}

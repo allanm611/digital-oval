@@ -6,26 +6,7 @@ export type OperatorType = {
   requiresTwoValues: boolean;
 };
 
-/**
- * Backend-aligned operator IDs.
- * These MUST match the IDs returned by GET /segmentation-fields/profile → field.operators[].id
- *
- * Backend operator mapping:
- *   1  =          equals
- *   2  !=         not equals
- *   3  >          greater than
- *   4  <          less than
- *   5  >=         greater than or equal
- *   6  <=         less than or equal
- *   7  IN         in list
- *   8  NOT IN     not in list
- *  12  BETWEEN    between
- *  13  IS NULL    is empty
- *  14  IS NOT NULL is not empty
- *
- * Date fields use standard operators (1, 3, 4, 5, 6, 12, 13, 14) combined with
- * start_date / end_date fields instead of value.
- */
+
 const OPERATORS: Record<string, OperatorType> = {
   EQUALS: {
     id: 1,
@@ -104,13 +85,36 @@ const OPERATORS: Record<string, OperatorType> = {
     requiresValue: false,
     requiresTwoValues: false,
   },
+  ON_DATE: {
+    id: 20,
+    symbol: "ON",
+    label: "on_date",
+    requiresValue: true,
+    requiresTwoValues: false,
+  },
+  BETWEEN_DATES: {
+    id: 21,
+    symbol: "BETWEEN",
+    label: "between_dates",
+    requiresValue: true,
+    requiresTwoValues: true,
+  },
+  SINCE_DATE: {
+    id: 22,
+    symbol: "SINCE",
+    label: "since_date",
+    requiresValue: true,
+    requiresTwoValues: false,
+  },
+  UNTIL_DATE: {
+    id: 23,
+    symbol: "UNTIL",
+    label: "until_date",
+    requiresValue: true,
+    requiresTwoValues: false,
+  },
 };
 
-/**
- * Fallback: get operators for a given field type when backend operators are not available.
- * Prefer using field.operators[] from the backend API response instead of this function.
- * Field types from backend: "Text", "Number", "Money", "Boolean", "Date", "Timestamp"
- */
 export function getOperatorsForFieldType(fieldType: string): OperatorType[] {
   const fieldTypeNormalized = (fieldType || "").toLowerCase().trim();
 
@@ -129,6 +133,7 @@ export function getOperatorsForFieldType(fieldType: string): OperatorType[] {
       ];
 
     // Numeric fields (backend sends "Number" and "Money")
+    // Includes both value operators and date operators for date range filtering
     case "numeric":
     case "number":
     case "money":
@@ -148,6 +153,10 @@ export function getOperatorsForFieldType(fieldType: string): OperatorType[] {
         OPERATORS.IN,
         OPERATORS.NOT_IN,
         OPERATORS.BETWEEN,
+        OPERATORS.ON_DATE,
+        OPERATORS.BETWEEN_DATES,
+        OPERATORS.SINCE_DATE,
+        OPERATORS.UNTIL_DATE,
         OPERATORS.IS_NULL,
         OPERATORS.IS_NOT_NULL,
       ];
@@ -219,3 +228,14 @@ export function getOperatorByLabel(label: string): OperatorType | undefined {
 export function getAllOperators(): OperatorType[] {
   return Object.values(OPERATORS);
 }
+
+/**
+ * Date range operators for numeric field conditions
+ * Used as secondary dropdown when numeric operator is selected
+ */
+export const DATE_OPERATORS = [
+  { value: "on", label: "On" },
+  { value: "between", label: "Between" },
+  { value: "since", label: "Since" },
+  { value: "until", label: "Until" },
+];

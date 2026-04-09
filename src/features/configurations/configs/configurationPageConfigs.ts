@@ -1586,6 +1586,7 @@ export const rewardTypesConfig: TypeConfigurationPageConfig = {
   // Permissions - Reward types are backend-managed, not creatable via UI
   disableCreate: true,
   disableDelete: true,
+  enableActivateDeactivate: true,
   deleteConfirmTitle: "Delete Reward Type",
   deleteConfirmMessage: (name: string) =>
     `Are you sure you want to delete "${name}"?`,
@@ -2246,6 +2247,7 @@ export const offerTypesConfig: TypeConfigurationPageConfig = {
   // Permissions - Offer types are backend-managed, not creatable via UI
   disableCreate: true,
   disableDelete: true,
+  enableActivateDeactivate: true,
 
   // Messages
   deleteConfirmTitle: "Delete Offer Type",
@@ -2298,6 +2300,7 @@ export const campaignTypesConfig: TypeConfigurationPageConfig = {
   // Permissions - Campaign types are backend-managed, not creatable via UI
   disableCreate: true,
   disableDelete: true,
+  enableActivateDeactivate: true,
 
   // Messages
   deleteConfirmTitle: "Delete Campaign Type",
@@ -2350,6 +2353,7 @@ export const segmentTypesConfig: TypeConfigurationPageConfig = {
   // Permissions - Segment types are backend-managed, not creatable via UI
   disableCreate: true,
   disableDelete: true,
+  enableActivateDeactivate: true,
 
   // Messages
   deleteConfirmTitle: "Delete Segment Type",
@@ -2395,6 +2399,7 @@ export const productTypesConfig: TypeConfigurationPageConfig = {
   // Permissions - Product types are backend-managed, not creatable via UI
   disableCreate: true,
   disableDelete: true,
+  enableActivateDeactivate: true,
   deleteConfirmTitle: "Delete Product Type",
   deleteConfirmMessage: (name: string) =>
     `Are you sure you want to delete "${name}"? This action cannot be undone.`,

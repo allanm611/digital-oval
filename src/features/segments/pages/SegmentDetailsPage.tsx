@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Popover } from "@headlessui/react";
@@ -97,6 +97,7 @@ export default function SegmentDetailsPage() {
   const [categoryName, setCategoryName] = useState<string>("Uncategorized");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
   const [isCommunicateModalOpen, setIsCommunicateModalOpen] = useState(false);
 
   // Members state
@@ -336,6 +337,23 @@ export default function SegmentDetailsPage() {
       setIsLoadingMembers(false);
     }
   }, [id, t]);
+
+  // Close "More" menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        moreMenuRef.current &&
+        !moreMenuRef.current.contains(event.target as Node)
+      ) {
+        setShowMoreMenu(false);
+      }
+    };
+
+    if (showMoreMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showMoreMenu]);
 
   // Debounce members search term
   useEffect(() => {
@@ -1135,7 +1153,7 @@ export default function SegmentDetailsPage() {
           </button>
 
           {/* More Menu Button */}
-          <div className="relative">
+          <div className="relative" ref={moreMenuRef}>
             <button
               onClick={() => setShowMoreMenu(!showMoreMenu)}
               className="text-sm font-medium flex items-center gap-1 transition-all hover:opacity-80"

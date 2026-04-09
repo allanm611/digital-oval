@@ -168,7 +168,11 @@ export default function VIPListManagementPage() {
         ?.toLowerCase()
         .includes(debouncedSearchTermLists.toLowerCase());
 
-    const listStatus = (list.processing_status || list.status || "").toLowerCase();
+    const listStatus = (
+      list.processing_status ||
+      list.status ||
+      ""
+    ).toLowerCase();
     const matchesStatus =
       filterStatusLists === "all" || listStatus === filterStatusLists;
 
