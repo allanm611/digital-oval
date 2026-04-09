@@ -180,8 +180,129 @@ const generateCustomerRelatedData = (customer: CustomerRow) => {
   });
 
   const events: CustomerEvent[] = [];
+  const interactionDate = new Date(customer.lastInteractionDate);
+  if (!isNaN(interactionDate.getTime())) {
+    const baseDate = new Date(interactionDate);
+    for (let i = 0; i < 15; i++) {
+      const eventDate = new Date(baseDate);
+      eventDate.setDate(eventDate.getDate() - i * 7);
+      const channelIndex = i % 3;
+      const channelType =
+        channelIndex === 0 ? "email" : channelIndex === 1 ? "sms" : "push";
 
-  return { segments, offers, events, lists: [] };
+      if (channelType === "email") {
+        const emailTitles = [
+          "Welcome Email",
+          "Newsletter",
+          "Promotional Email",
+          "Order Confirmation",
+          "Shipping Update",
+        ];
+        const emailDescriptions = [
+          "Welcome to our community",
+          "Monthly updates and news",
+          "Special offers just for you",
+          "Your order has been confirmed",
+          "Your order is on the way",
+        ];
+        const emailStatuses = [
+          "Opened",
+          "Clicked",
+          "Opened",
+          "Delivered",
+          "Opened",
+        ];
+
+        events.push({
+          id: `EVT-${customerId.slice(-3)}-E${i}`,
+          type: "email",
+          title: emailTitles[i % emailTitles.length],
+          description: emailDescriptions[i % emailDescriptions.length],
+          date: eventDate.toISOString(),
+          status: emailStatuses[i % emailStatuses.length],
+        });
+      } else if (channelType === "sms") {
+        const smsTitles = [
+          "Transaction Update",
+          "Promotional SMS",
+          "Order Alert",
+          "Payment Reminder",
+          "Delivery Notification",
+        ];
+        const smsDescriptions = [
+          "Your transaction has been processed",
+          "Flash sale - 24 hours only",
+          "Your order is ready",
+          "Payment due soon",
+          "Package delivered",
+        ];
+        const smsStatuses = ["Delivered", "Read", "Delivered", "Sent", "Read"];
+
+        events.push({
+          id: `EVT-${customerId.slice(-3)}-S${i}`,
+          type: "sms",
+          title: smsTitles[i % smsTitles.length],
+          description: smsDescriptions[i % smsDescriptions.length],
+          date: eventDate.toISOString(),
+          status: smsStatuses[i % smsStatuses.length],
+        });
+      } else if (channelType === "push") {
+        const pushTitles = [
+          "New Products",
+          "Cart Reminder",
+          "Price Drop Alert",
+          "New Arrivals",
+          "Special Offer",
+        ];
+        const pushDescriptions = [
+          "Check out our latest arrivals",
+          "Items waiting in your cart",
+          "Price reduced on favorites",
+          "New collection available",
+          "Limited time offer",
+        ];
+        const pushStatuses = ["Sent", "Opened", "Sent", "Opened", "Sent"];
+
+        events.push({
+          id: `EVT-${customerId.slice(-3)}-P${i}`,
+          type: "push",
+          title: pushTitles[i % pushTitles.length],
+          description: pushDescriptions[i % pushDescriptions.length],
+          date: eventDate.toISOString(),
+          status: pushStatuses[i % pushStatuses.length],
+        });
+      }
+    }
+  }
+
+  const listNames = [
+    "Newsletter",
+    "Promotions",
+    "Product Updates",
+    "Special Offers",
+  ];
+
+  const lists: SubscribedList[] = listNames.map((name, index) => {
+    const baseDate = new Date(customer.lastInteractionDate);
+    const subscribedDate = new Date(baseDate);
+    subscribedDate.setDate(subscribedDate.getDate() - index * 30);
+
+    return {
+      id: `LIST-${customerId.slice(-3)}-${index + 1}`,
+      name,
+      subscribedDate: isNaN(subscribedDate.getTime())
+        ? new Date().toISOString().split("T")[0]
+        : subscribedDate.toISOString().split("T")[0],
+      status:
+        index < 3
+          ? "active"
+          : customer.engagementScore > 70
+            ? "active"
+            : "unsubscribed",
+    };
+  });
+
+  return { segments, offers, events, lists };
 };
 
 type TabType =
@@ -192,6 +313,7 @@ type TabType =
   | "offers"
   | "quicklists"
   | "subscribedLists"
+  | "campaigns"
   | "communications"
   | "purchases"
   | "loyalty"
@@ -400,18 +522,19 @@ export default function CustomerDetailPage() {
 
     // Generate mock events for now (backend doesn't return events)
     let mockEvents: CustomerEvent[] = [];
+    let mockLists: SubscribedList[] = [];
     if (customer) {
       const result = generateCustomerRelatedData(customer);
       return {
         segments: segmentsData,
         offers: offersData,
         events: result.events,
-        lists: [],
+        lists: result.lists,
         quicklists: quicklistsData,
       };
     }
 
-    return { segments: segmentsData, offers: offersData, events: mockEvents, lists: [], quicklists: quicklistsData };
+    return { segments: segmentsData, offers: offersData, events: mockEvents, lists: mockLists, quicklists: quicklistsData };
   }, [selectedSubscription, customer]);
 
   const filteredEvents = useMemo(() => {
@@ -772,6 +895,7 @@ export default function CustomerDetailPage() {
             { id: "segments", label: "Segments" },
             { id: "offers", label: "Offers" },
             { id: "quicklists", label: "QuickLists" },
+            { id: "campaigns", label: "Campaigns" },
             { id: "communications", label: "Communications" },
             { id: "purchases", label: "Purchase History" },
             { id: "loyalty", label: "Loyalty & Rewards" },
@@ -1493,6 +1617,12 @@ export default function CustomerDetailPage() {
           </div>
         )}
 
+        {activeTab === "campaigns" && (
+          <div className="py-12 text-center">
+            <p className="text-gray-500 text-sm">No campaigns found</p>
+          </div>
+        )}
+
         {activeTab === "subscribedLists" && (
           <div>
             <div className="mb-6">
@@ -1693,17 +1823,7 @@ export default function CustomerDetailPage() {
                             backgroundColor: color.surface.tablebodybg,
                           }}
                         >
-                          <span
-                            className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
-                              comm.status === "Delivered"
-                                ? "bg-blue-100 text-blue-800"
-                                : comm.status === "Opened"
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-purple-100 text-purple-800"
-                            }`}
-                          >
-                            {comm.status}
-                          </span>
+                          {comm.status}
                         </td>
                       </tr>
                     ))}
@@ -1726,8 +1846,112 @@ export default function CustomerDetailPage() {
               </p>
             </div>
 
-            <div className="py-12 text-center">
-              <p className="text-gray-500 text-sm">No purchase history found</p>
+            <div
+              className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
+            >
+              <div className="hidden lg:block overflow-x-auto">
+                <table
+                  className="w-full"
+                  style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+                >
+                  <thead style={{ background: color.surface.tableHeader }}>
+                    <tr className="text-left text-sm font-medium uppercase tracking-wider">
+                      {["Transaction ID", "Product", "Amount", "Date", "Status"].map(
+                        (header) => (
+                          <th
+                            key={header}
+                            className="px-6 py-3"
+                            style={{ color: color.surface.tableHeaderText }}
+                          >
+                            {header}
+                          </th>
+                        ),
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      {
+                        id: "TXN-001",
+                        product: "Premium Data Bundle",
+                        amount: 50.0,
+                        date: "2026-04-08",
+                        status: "Completed",
+                      },
+                      {
+                        id: "TXN-002",
+                        product: "Voice Minutes",
+                        amount: 25.0,
+                        date: "2026-04-05",
+                        status: "Completed",
+                      },
+                      {
+                        id: "TXN-003",
+                        product: "International Roaming",
+                        amount: 75.0,
+                        date: "2026-03-28",
+                        status: "Completed",
+                      },
+                      {
+                        id: "TXN-004",
+                        product: "Monthly Plan",
+                        amount: 100.0,
+                        date: "2026-03-09",
+                        status: "Completed",
+                      },
+                    ].map((purchase) => (
+                      <tr key={purchase.id} className="transition-colors">
+                        <td
+                          className="px-6 py-4 font-semibold text-sm text-gray-900"
+                          style={{
+                            backgroundColor: color.surface.tablebodybg,
+                          }}
+                        >
+                          {purchase.id}
+                        </td>
+                        <td
+                          className="px-6 py-4 text-sm text-gray-900"
+                          style={{
+                            backgroundColor: color.surface.tablebodybg,
+                          }}
+                        >
+                          {purchase.product}
+                        </td>
+                        <td
+                          className="px-6 py-4 text-sm text-gray-900"
+                          style={{
+                            backgroundColor: color.surface.tablebodybg,
+                          }}
+                        >
+                          <CurrencyFormatter amount={purchase.amount} />
+                        </td>
+                        <td
+                          className="px-6 py-4 text-sm text-gray-900"
+                          style={{
+                            backgroundColor: color.surface.tablebodybg,
+                          }}
+                        >
+                          <DateFormatter
+                            date={purchase.date}
+                            useLocale
+                            year="numeric"
+                            month="short"
+                            day="numeric"
+                          />
+                        </td>
+                        <td
+                          className="px-6 py-4 text-sm text-gray-900"
+                          style={{
+                            backgroundColor: color.surface.tablebodybg,
+                          }}
+                        >
+                          {purchase.status}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}
@@ -1742,7 +1966,7 @@ export default function CustomerDetailPage() {
                 <p className="text-sm font-medium text-gray-600">
                   Total Points
                 </p>
-                <p className="mt-2 text-3xl font-bold text-gray-900">0</p>
+                <p className="mt-2 text-3xl font-bold text-gray-900">12,450</p>
               </div>
 
               <div
@@ -1751,7 +1975,7 @@ export default function CustomerDetailPage() {
                 <p className="text-sm font-medium text-gray-600">
                   Current Tier
                 </p>
-                <p className="mt-2 text-3xl font-bold text-gray-900">—</p>
+                <p className="mt-2 text-3xl font-bold text-gray-900">Gold</p>
               </div>
 
               <div
@@ -1760,7 +1984,7 @@ export default function CustomerDetailPage() {
                 <p className="text-sm font-medium text-gray-600">
                   Points Redeemed
                 </p>
-                <p className="mt-2 text-3xl font-bold text-gray-900">0</p>
+                <p className="mt-2 text-3xl font-bold text-gray-900">3,200</p>
               </div>
             </div>
 
@@ -1768,8 +1992,92 @@ export default function CustomerDetailPage() {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Redemption History
               </h3>
-              <div className="py-12 text-center">
-                <p className="text-gray-500 text-sm">No redemption history found</p>
+              <div
+                className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
+              >
+                <div className="hidden lg:block overflow-x-auto">
+                  <table
+                    className="w-full"
+                    style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+                  >
+                    <thead style={{ background: color.surface.tableHeader }}>
+                      <tr className="text-left text-sm font-medium uppercase tracking-wider">
+                        {["Reward Name", "Points", "Redeemed Date"].map(
+                          (header) => (
+                            <th
+                              key={header}
+                              className="px-6 py-3"
+                              style={{ color: color.surface.tableHeaderText }}
+                            >
+                              {header}
+                            </th>
+                          ),
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        {
+                          id: "reward-1",
+                          name: "Data Bonus 5GB",
+                          points: 500,
+                          date: "2026-04-05",
+                        },
+                        {
+                          id: "reward-2",
+                          name: "Free Minutes 100",
+                          points: 300,
+                          date: "2026-03-28",
+                        },
+                        {
+                          id: "reward-3",
+                          name: "Discount Voucher",
+                          points: 400,
+                          date: "2026-03-15",
+                        },
+                        {
+                          id: "reward-4",
+                          name: "Cashback 2000",
+                          points: 2000,
+                          date: "2026-03-09",
+                        },
+                      ].map((reward) => (
+                        <tr key={reward.id} className="transition-colors">
+                          <td
+                            className="px-6 py-4 font-semibold text-sm text-gray-900"
+                            style={{
+                              backgroundColor: color.surface.tablebodybg,
+                            }}
+                          >
+                            {reward.name}
+                          </td>
+                          <td
+                            className="px-6 py-4 text-sm text-gray-900"
+                            style={{
+                              backgroundColor: color.surface.tablebodybg,
+                            }}
+                          >
+                            {reward.points.toLocaleString()}
+                          </td>
+                          <td
+                            className="px-6 py-4 text-sm text-gray-900"
+                            style={{
+                              backgroundColor: color.surface.tablebodybg,
+                            }}
+                          >
+                            <DateFormatter
+                              date={reward.date}
+                              useLocale
+                              year="numeric"
+                              month="short"
+                              day="numeric"
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
@@ -1896,8 +2204,112 @@ export default function CustomerDetailPage() {
               </p>
             </div>
 
-            <div className="py-12 text-center">
-              <p className="text-gray-500 text-sm">No interactions found</p>
+            <div
+              className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
+            >
+              <div className="hidden lg:block overflow-x-auto">
+                <table
+                  className="w-full"
+                  style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+                >
+                  <thead style={{ background: color.surface.tableHeader }}>
+                    <tr className="text-left text-sm font-medium uppercase tracking-wider">
+                      {["Ticket ID", "Type", "Subject", "Status", "Date"].map(
+                        (header) => (
+                          <th
+                            key={header}
+                            className="px-6 py-3"
+                            style={{ color: color.surface.tableHeaderText }}
+                          >
+                            {header}
+                          </th>
+                        ),
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      {
+                        id: "TKT-1001",
+                        type: "Support",
+                        subject: "Billing inquiry",
+                        status: "Resolved",
+                        date: "2026-04-06",
+                      },
+                      {
+                        id: "TKT-1002",
+                        type: "Technical",
+                        subject: "Network connectivity issue",
+                        status: "In Progress",
+                        date: "2026-04-08",
+                      },
+                      {
+                        id: "TKT-1003",
+                        type: "Complaint",
+                        subject: "Service quality",
+                        status: "Resolved",
+                        date: "2026-03-30",
+                      },
+                      {
+                        id: "TKT-1004",
+                        type: "Support",
+                        subject: "Account verification",
+                        status: "Resolved",
+                        date: "2026-03-25",
+                      },
+                    ].map((interaction) => (
+                      <tr key={interaction.id} className="transition-colors">
+                        <td
+                          className="px-6 py-4 font-semibold text-sm text-gray-900"
+                          style={{
+                            backgroundColor: color.surface.tablebodybg,
+                          }}
+                        >
+                          {interaction.id}
+                        </td>
+                        <td
+                          className="px-6 py-4 text-sm text-gray-900"
+                          style={{
+                            backgroundColor: color.surface.tablebodybg,
+                          }}
+                        >
+                          {interaction.type}
+                        </td>
+                        <td
+                          className="px-6 py-4 text-sm text-gray-900"
+                          style={{
+                            backgroundColor: color.surface.tablebodybg,
+                          }}
+                        >
+                          {interaction.subject}
+                        </td>
+                        <td
+                          className="px-6 py-4 text-sm text-gray-900"
+                          style={{
+                            backgroundColor: color.surface.tablebodybg,
+                          }}
+                        >
+                          {interaction.status}
+                        </td>
+                        <td
+                          className="px-6 py-4 text-sm text-gray-900"
+                          style={{
+                            backgroundColor: color.surface.tablebodybg,
+                          }}
+                        >
+                          <DateFormatter
+                            date={interaction.date}
+                            useLocale
+                            year="numeric"
+                            month="short"
+                            day="numeric"
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}

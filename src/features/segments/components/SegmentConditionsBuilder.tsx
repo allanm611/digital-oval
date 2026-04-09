@@ -408,14 +408,15 @@ export default function SegmentConditionsBuilder({
       });
     });
 
-    // Add special types
-    options.push({ value: "segment", label: "Segment", type: "segment" });
+    // Only hardcode system_event (backend doesn't support it yet)
     options.push({
       value: "system_event",
       label: "System Event",
       type: "system_event",
     });
-    options.push({ value: "list", label: "QuickList", type: "list" });
+
+    // TODO: Backend will return segment and list options like revenue/usage
+    // Once backend is ready, remove hardcoding and fetch from API
 
     return options;
   };
@@ -642,7 +643,7 @@ export default function SegmentConditionsBuilder({
               style={{ borderColor: color.border.default }}
             />
 
-            {/* Secondary Date Range Dropdown (on, between, since, until) */}
+            {/* TODO: Secondary Date Range Dropdown - Commented out pending backend updates
             <div className="min-w-[140px] max-w-[170px] flex-shrink-0">
               <HeadlessSelect
                 options={DATE_OPERATORS}
@@ -763,6 +764,7 @@ export default function SegmentConditionsBuilder({
                 style={{ borderColor: color.border.default }}
               />
             )}
+            */}
           </div>
         </>
       );
@@ -1518,7 +1520,7 @@ export default function SegmentConditionsBuilder({
                     />
                   )}
 
-                  {/* Secondary Date Range Dropdown - Only show for Revenue/Usage KPIs with numeric operator selected */}
+                  {/* TODO: Secondary Date Range Dropdown - Commented out pending backend updates
                   {!isDateOperator && isNumericKPI && (
                     <div className="min-w-[140px] max-w-[170px] flex-shrink-0">
                       <HeadlessSelect
@@ -1755,6 +1757,7 @@ export default function SegmentConditionsBuilder({
                     )}
                   </>
                 )}
+                */}
                 </div>
               </>
             ) : (
