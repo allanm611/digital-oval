@@ -501,7 +501,7 @@ export default function CategoryDetailsPage() {
                 >
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-gray-900 capitalize">
-                      {item.offer_type.replace("_", " ")}
+                      {(item.offer_type || "").replace("_", " ")}
                     </span>
                     <span className="text-sm text-gray-600">
                       {item.offer_count} offers

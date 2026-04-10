@@ -127,16 +127,16 @@ export default function SMSTestPage() {
       });
 
       if (data.success) {
-        success("Test Sent", `Your test ${channel.toLowerCase()} has been sent successfully`);
+        success("Test Sent", `Your test ${(channel || "").toLowerCase()} has been sent successfully`);
       } else {
-        showError("Test Failed", data.error || `Failed to send test ${channel.toLowerCase()}`);
+        showError("Test Failed", data.error || `Failed to send test ${(channel || "").toLowerCase()}`);
       }
     } catch (err) {
       setResponse({
         success: false,
         error: (err as Error).message,
       });
-      showError("Error", (err as Error).message || `Failed to send test ${channel.toLowerCase()}`);
+      showError("Error", (err as Error).message || `Failed to send test ${(channel || "").toLowerCase()}`);
     } finally {
       setIsLoading(false);
     }

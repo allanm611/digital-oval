@@ -77,9 +77,9 @@ export default function ProfileFieldSelector({
     const query = searchQuery.toLowerCase().trim();
     return fields.filter(
       (field) =>
-        field.name.toLowerCase().includes(query) ||
-        field.description.toLowerCase().includes(query) ||
-        field.value.toLowerCase().includes(query),
+        (field.name || "").toLowerCase().includes(query) ||
+        (field.description || "").toLowerCase().includes(query) ||
+        (field.value || "").toLowerCase().includes(query),
     );
   }, [fields, searchQuery]);
 

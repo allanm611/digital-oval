@@ -14,6 +14,8 @@ import {
   Edit,
   Send,
   MoreHorizontal,
+  UserPlus,
+  UserMinus,
 } from "lucide-react";
 import { color, tw, components, zIndex } from "../../../shared/utils/utils";
 import CreateButton from "../../../shared/components/ui/CreateButton";
@@ -32,6 +34,7 @@ import EditQuickListModal from "../components/EditQuickListModal";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import Pagination from "../../../shared/components/ui/Pagination";
 import CreateCommunicationModal from "../../../shared/components/CreateCommunicationModal";
+import ManageQuickListCustomersModal from "../components/ManageQuickListCustomersModal";
 
 export default function QuickListsPage() {
   const navigate = useNavigate();
@@ -63,6 +66,13 @@ export default function QuickListsPage() {
   } | null>(null);
   const [isCommunicateModalOpen, setIsCommunicateModalOpen] = useState(false);
   const [quicklistToCommunicate, setQuicklistToCommunicate] =
+    useState<QuickList | null>(null);
+  const [isManageCustomersModalOpen, setIsManageCustomersModalOpen] =
+    useState(false);
+  const [manageCustomersMode, setManageCustomersMode] = useState<"add" | "remove">(
+    "add",
+  );
+  const [selectedQuicklistForCustomer, setSelectedQuicklistForCustomer] =
     useState<QuickList | null>(null);
   const actionMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const dropdownMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -368,6 +378,20 @@ export default function QuickListsPage() {
     setShowActionMenu(null);
   };
 
+  const handleAddCustomer = (quicklist: QuickList) => {
+    setSelectedQuicklistForCustomer(quicklist);
+    setManageCustomersMode("add");
+    setIsManageCustomersModalOpen(true);
+    setShowActionMenu(null);
+  };
+
+  const handleRemoveCustomer = (quicklist: QuickList) => {
+    setSelectedQuicklistForCustomer(quicklist);
+    setManageCustomersMode("remove");
+    setIsManageCustomersModalOpen(true);
+    setShowActionMenu(null);
+  };
+
   const quicklistStatsCards = [
     {
       name: "Total QuickLists",
@@ -670,6 +694,28 @@ export default function QuickListsPage() {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
+                  handleAddCustomer(quicklist);
+                }}
+                className="w-full flex items-center px-4 py-3 text-sm text-black hover:bg-gray-50 transition-colors"
+              >
+                <UserPlus className="w-4 h-4 mr-4" />
+                Add Customer
+              </button>
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemoveCustomer(quicklist);
+                }}
+                className="w-full flex items-center px-4 py-3 text-sm text-black hover:bg-gray-50 transition-colors"
+              >
+                <UserMinus className="w-4 h-4 mr-4" />
+                Remove Customer
+              </button>
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
                   handleExport(quicklist, "csv");
                   setShowActionMenu(null);
                 }}
@@ -762,6 +808,27 @@ export default function QuickListsPage() {
         confirmText={t.quickList.deleteConfirmText}
         cancelText={t.common.cancel}
       />
+
+      {/* Manage Customers Modal */}
+      {isManageCustomersModalOpen && selectedQuicklistForCustomer && (
+        <ManageQuickListCustomersModal
+          isOpen={isManageCustomersModalOpen}
+          onClose={() => {
+            setIsManageCustomersModalOpen(false);
+            setSelectedQuicklistForCustomer(null);
+          }}
+          quicklist={selectedQuicklistForCustomer}
+          mode={manageCustomersMode}
+          onSubmit={async (customers) => {
+            const action = manageCustomersMode === "add" ? "added to" : "removed from";
+            showToast(
+              `${customers.length} customer${customers.length !== 1 ? "s" : ""} ${action} ${selectedQuicklistForCustomer.name}`,
+            );
+            setIsManageCustomersModalOpen(false);
+            setSelectedQuicklistForCustomer(null);
+          }}
+        />
+      )}
     </div>
   );
 }

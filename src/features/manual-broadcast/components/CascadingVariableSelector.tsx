@@ -76,7 +76,7 @@ export default function CascadingVariableSelector({
     const query = searchQuery.toLowerCase();
     return hoveredSourceFields.filter(
       (field) =>
-        field.name.toLowerCase().includes(query) ||
+        (field.name || "").toLowerCase().includes(query) ||
         (field.description && field.description.toLowerCase().includes(query)),
     );
   }, [hoveredSourceFields, searchQuery]);

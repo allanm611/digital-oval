@@ -116,7 +116,7 @@ export default function ConnectionProfileFormPage({
         data_classification: data.data_classification,
         contains_pii: data.contains_pii,
         gdpr_applicable: data.gdpr_applicable,
-        valid_from: data.valid_from.split("T")[0],
+        valid_from: data.valid_from?.split("T")[0] ?? "",
         valid_to: data.valid_to ? data.valid_to.split("T")[0] : null,
         server_id: data.server_id || undefined,
         database_name: data.database_name || undefined,

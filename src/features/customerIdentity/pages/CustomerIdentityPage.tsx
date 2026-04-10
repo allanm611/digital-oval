@@ -66,8 +66,8 @@ export default function CustomerIdentityPage() {
     return fields.filter((field) => {
       const matchesSearch =
         search.length === 0 ||
-        field.field_name.toLowerCase().includes(search) ||
-        field.field_value.toLowerCase().includes(search) ||
+        (field.field_name || "").toLowerCase().includes(search) ||
+        (field.field_value || "").toLowerCase().includes(search) ||
         (field.description || "").toLowerCase().includes(search) ||
         (field.source_table || "").toLowerCase().includes(search);
 

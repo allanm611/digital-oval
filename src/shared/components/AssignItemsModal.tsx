@@ -445,7 +445,7 @@ function AssignItemsModal({
     if (searchTerm.trim()) {
       filtered = filtered.filter(
         (item) =>
-          item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (item.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
           (item.description &&
             item.description.toLowerCase().includes(searchTerm.toLowerCase()))
       );

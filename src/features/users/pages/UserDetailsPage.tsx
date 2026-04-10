@@ -404,8 +404,8 @@ export default function UserDetailsPage() {
                       </span>
                     </div>
                     {user.job_title &&
-                      user.job_title.toLowerCase() !==
-                        getUserRoleName(user).toLowerCase() && (
+                      (user.job_title || "").toLowerCase() !==
+                        (getUserRoleName(user) || "").toLowerCase() && (
                         <div className="flex justify-between items-start py-2 ">
                           <span className="text-sm text-gray-600">
                             {t.userManagement.jobTitle}

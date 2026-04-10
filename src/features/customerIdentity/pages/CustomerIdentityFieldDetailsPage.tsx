@@ -196,7 +196,7 @@ export default function CustomerIdentityFieldDetailsPage() {
                 {t.customerIdentity.operatorSupport}
               </h2>
             </div>
-            {field.operators.length === 0 ? (
+            {!field.operators || field.operators.length === 0 ? (
               <div
                 className={`bg-white border border-gray-200 ${tw.rounded} p-6`}
               >

@@ -10,6 +10,8 @@ import {
   Edit,
   Trash2,
   MoreVertical,
+  UserPlus,
+  UserMinus,
 } from "lucide-react";
 import { quicklistService } from "../services/quicklistService";
 import {
@@ -28,6 +30,7 @@ import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import BackButton from "../../../shared/components/ui/BackButton";
 import CreateCommunicationModal from "../../../shared/components/CreateCommunicationModal";
 import EditQuickListModal from "../components/EditQuickListModal";
+import ManageQuickListCustomersModal from "../components/ManageQuickListCustomersModal";
 
 export default function QuickListDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -66,6 +69,11 @@ export default function QuickListDetailsPage() {
 
   const [isCommunicateModalOpen, setIsCommunicateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isManageCustomersModalOpen, setIsManageCustomersModalOpen] =
+    useState(false);
+  const [manageCustomersMode, setManageCustomersMode] = useState<"add" | "remove">(
+    "add",
+  );
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [tableMapping, setTableMapping] =
     useState<QuickListTableMapping | null>(null);
@@ -238,6 +246,20 @@ export default function QuickListDetailsPage() {
   const handleCommunicate = () => {
     if (quicklist) {
       setIsCommunicateModalOpen(true);
+    }
+  };
+
+  const handleAddCustomer = () => {
+    if (quicklist) {
+      setManageCustomersMode("add");
+      setIsManageCustomersModalOpen(true);
+    }
+  };
+
+  const handleRemoveCustomer = () => {
+    if (quicklist) {
+      setManageCustomersMode("remove");
+      setIsManageCustomersModalOpen(true);
     }
   };
 
@@ -486,6 +508,26 @@ export default function QuickListDetailsPage() {
               <div
                 className={`absolute right-0 top-full mt-1 w-48 bg-white ${tw.rounded} shadow-lg border border-gray-200 py-1 z-10`}
               >
+                <button
+                  onClick={() => {
+                    handleAddCustomer();
+                    setShowMoreMenu(false);
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  Add Customer
+                </button>
+                <button
+                  onClick={() => {
+                    handleRemoveCustomer();
+                    setShowMoreMenu(false);
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                >
+                  <UserMinus className="w-4 h-4" />
+                  Remove Customer
+                </button>
                 <button
                   onClick={() => {
                     handleDelete();
@@ -1184,6 +1226,23 @@ export default function QuickListDetailsPage() {
           onSubmit={handleUpdateQuickList}
           initialName={quicklist.name}
           initialDescription={quicklist.description || null}
+        />
+      )}
+
+      {/* Manage Customers Modal */}
+      {isManageCustomersModalOpen && quicklist && (
+        <ManageQuickListCustomersModal
+          isOpen={isManageCustomersModalOpen}
+          onClose={() => setIsManageCustomersModalOpen(false)}
+          quicklist={quicklist}
+          mode={manageCustomersMode}
+          onSubmit={async (customers) => {
+            const action = manageCustomersMode === "add" ? "added to" : "removed from";
+            showToast(
+              `${customers.length} customer${customers.length !== 1 ? "s" : ""} ${action} ${quicklist.name}`,
+            );
+            setIsManageCustomersModalOpen(false);
+          }}
         />
       )}
 

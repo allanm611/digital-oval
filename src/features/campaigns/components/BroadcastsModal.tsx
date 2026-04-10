@@ -1,26 +1,51 @@
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { X, Loader, AlertCircle } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
-import type { CreativeChannel } from "../../offers/types/offerCreative";
-
-interface ChannelStat {
-  channel: CreativeChannel;
-  creativeCount: number;
-}
+import { broadcastService } from "../services/broadcastService";
+import { Broadcast } from "../types/broadcast";
 
 interface BroadcastsModalProps {
   isOpen: boolean;
   onClose: () => void;
   campaignName: string;
-  channelStats?: ChannelStat[];
+  campaignId: number;
 }
 
 export default function BroadcastsModal({
   isOpen,
   onClose,
   campaignName,
-  channelStats = [],
+  campaignId,
 }: BroadcastsModalProps) {
+  const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen && campaignId) {
+      loadBroadcasts();
+    }
+  }, [isOpen, campaignId]);
+
+  const loadBroadcasts = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await broadcastService.getBroadcastsByCampaign(campaignId);
+      if (response.success && response.data) {
+        setBroadcasts(response.data);
+      } else {
+        setError("Failed to load broadcasts");
+      }
+    } catch (err) {
+      console.error("Failed to load broadcasts:", err);
+      setError("Failed to load broadcasts");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return createPortal(
@@ -30,13 +55,13 @@ export default function BroadcastsModal({
       onClick={onClose}
     >
       <div
-        className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col`}
+        className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
-            <h2 className="text-lg font-semibold text-black">Broadcasts by Channel</h2>
+            <h2 className="text-lg font-semibold text-black">Campaign Broadcasts</h2>
             <p className="text-sm text-gray-600 mt-1">{campaignName}</p>
           </div>
           <button
@@ -49,45 +74,85 @@ export default function BroadcastsModal({
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-6 py-4">
-          {channelStats.length === 0 ? (
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader className="w-6 h-6 animate-spin text-gray-400 mr-2" />
+              <p className="text-gray-500">Loading broadcasts...</p>
+            </div>
+          ) : error ? (
+            <div className="flex items-center justify-center py-12">
+              <AlertCircle className="w-6 h-6 text-red-400 mr-2" />
+              <p className="text-red-500">{error}</p>
+            </div>
+          ) : broadcasts.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-gray-500">No channels configured for this campaign</p>
+              <p className="text-gray-500">No broadcasts found for this campaign</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {channelStats.map((stat, index) => (
-                <div
-                  key={`${stat.channel}-${index}`}
-                  className="border border-gray-200 rounded-lg p-4"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <h3 className="text-sm font-medium text-black">
-                        {stat.channel}
-                      </h3>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs font-medium text-gray-600 block mb-1">
-                        Sent
-                      </label>
-                      <p className="text-sm font-semibold text-black">
-                        0
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-gray-600 block mb-1">
-                        Total Targeted
-                      </label>
-                      <p className="text-sm font-semibold text-black">
-                        —
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-3 font-semibold text-gray-700">
+                      Broadcast Name
+                    </th>
+                    <th className="text-left py-3 px-3 font-semibold text-gray-700">
+                      Status
+                    </th>
+                    <th className="text-right py-3 px-3 font-semibold text-gray-700">
+                      Sent
+                    </th>
+                    <th className="text-right py-3 px-3 font-semibold text-gray-700">
+                      Delivered
+                    </th>
+                    <th className="text-right py-3 px-3 font-semibold text-gray-700">
+                      Failed
+                    </th>
+                    <th className="text-right py-3 px-3 font-semibold text-gray-700">
+                      Delivery Rate
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {broadcasts.map((broadcast) => (
+                    <tr
+                      key={broadcast.broadcast_id}
+                      className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="py-3 px-3 text-gray-900">{broadcast.broadcast_name}</td>
+                      <td className="py-3 px-3">
+                        <span
+                          className={`inline-flex px-2 py-1 text-xs font-medium rounded ${
+                            broadcast.status === "completed"
+                              ? "bg-green-100 text-green-800"
+                              : broadcast.status === "running"
+                                ? "bg-blue-100 text-blue-800"
+                                : broadcast.status === "failed"
+                                  ? "bg-red-100 text-red-800"
+                                  : broadcast.status === "paused"
+                                    ? "bg-yellow-100 text-yellow-800"
+                                    : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {broadcast.status}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 text-right text-gray-900">
+                        {broadcast.messages_sent.toLocaleString()}
+                      </td>
+                      <td className="py-3 px-3 text-right text-gray-900">
+                        {broadcast.messages_delivered.toLocaleString()}
+                      </td>
+                      <td className="py-3 px-3 text-right text-gray-900">
+                        {broadcast.messages_failed.toLocaleString()}
+                      </td>
+                      <td className="py-3 px-3 text-right font-semibold text-gray-900">
+                        {broadcast.delivery_rate.toFixed(2)}%
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </div>

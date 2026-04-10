@@ -1379,8 +1379,8 @@ export default function UserManagementPage() {
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
-      user.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (user.first_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (user.last_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (user.email_address || user.email || "")
         .toLowerCase()
         .includes(searchTerm.toLowerCase());

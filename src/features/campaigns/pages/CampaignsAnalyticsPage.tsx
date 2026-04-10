@@ -751,7 +751,7 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
                     <PieChart>
                       <Pie
                         data={approvalStatusBreakdown.map((item) => ({
-                          name: item.status.replace(/_/g, " "),
+                          name: (item.status || "").replace(/_/g, " "),
                           value: item.count,
                         }))}
                         cx="50%"
@@ -918,7 +918,7 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
                 <ResponsiveContainer width="100%" height={384}>
                   <BarChart
                     data={statusBreakdown.map((item) => ({
-                      name: item.status.replace(/_/g, " "),
+                      name: (item.status || "").replace(/_/g, " "),
                       count: item.count,
                     }))}
                     margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
@@ -962,7 +962,7 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
                 <ResponsiveContainer width="100%" height={384}>
                   <BarChart
                     data={activityStatusBreakdown.map((item) => ({
-                      name: item.status.replace(/_/g, " "),
+                      name: (item.status || "").replace(/_/g, " "),
                       count: item.count,
                     }))}
                     margin={{ top: 20, right: 30, left: 20, bottom: 40 }}

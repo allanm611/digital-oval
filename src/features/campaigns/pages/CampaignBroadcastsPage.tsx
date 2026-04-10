@@ -1,11 +1,12 @@
-import { useState, useCallback } from "react";
-import { Eye, Search, Filter, BarChart3, Send, Radio, TrendingUp, CheckCircle, RotateCcw, Archive } from "lucide-react";
+import { useState, useCallback, useEffect } from "react";
+import { Eye, Search, Filter, BarChart3, Send, Radio, TrendingUp, CheckCircle, RotateCcw, Archive, AlertCircle, Loader } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useToast } from "../../../contexts/ToastContext";
 import { color, tw, button } from "../../../shared/utils/utils";
+import { broadcastService } from "../services/broadcastService";
 
 interface CampaignBroadcast {
   id: number;
@@ -36,16 +37,17 @@ const statusOptions = [
 
 export default function CampaignBroadcastsPage() {
   const { t } = useLanguage();
-  const { showToast } = useToast();
+  const { showToast, error: showError } = useToast();
   const navigate = useNavigate();
-  const [isLoading] = useState(false);
-  const [broadcasts] = useState<CampaignBroadcast[]>([
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [broadcasts, setBroadcasts] = useState<CampaignBroadcast[]>([
     {
       id: 1,
       campaign_id: 101,
       campaign_name: "Summer Promo Campaign",
-      status: "completed",
-      sent_at: "2026-03-18T10:30:00Z",
+      status: "running",
+      sent_at: "2026-04-10T10:30:00Z",
       channels: ["email", "sms"],
       total_recipients: 5000,
       delivered: 4850,
@@ -54,14 +56,14 @@ export default function CampaignBroadcastsPage() {
       conversions: 145,
       failed: 150,
       unsubscribed: 10,
-      created_by: "John Doe",
+      created_by: "System Administrator",
     },
     {
       id: 2,
       campaign_id: 102,
       campaign_name: "Flash Sale Alert",
-      status: "in_progress",
-      sent_at: "2026-03-18T14:00:00Z",
+      status: "running",
+      sent_at: "2026-04-10T14:00:00Z",
       channels: ["push", "email"],
       total_recipients: 3500,
       delivered: 2800,
@@ -76,32 +78,32 @@ export default function CampaignBroadcastsPage() {
       id: 3,
       campaign_id: 103,
       campaign_name: "Winter Holiday Special",
-      status: "failed",
-      sent_at: "2026-03-17T09:15:00Z",
+      status: "scheduled",
+      sent_at: "2026-04-15T09:15:00Z",
       channels: ["email"],
       total_recipients: 8000,
-      delivered: 2100,
-      opened: 525,
-      clicked: 157,
-      conversions: 31,
-      failed: 5900,
-      unsubscribed: 3,
-      created_by: "Mike Johnson",
-    },
-    {
-      id: 4,
-      campaign_id: 104,
-      campaign_name: "New Product Launch",
-      status: "scheduled",
-      sent_at: "2026-03-20T08:00:00Z",
-      channels: ["email", "sms", "push"],
-      total_recipients: 12000,
       delivered: 0,
       opened: 0,
       clicked: 0,
       conversions: 0,
       failed: 0,
       unsubscribed: 0,
+      created_by: "Mike Johnson",
+    },
+    {
+      id: 4,
+      campaign_id: 104,
+      campaign_name: "New Product Launch",
+      status: "completed",
+      sent_at: "2026-04-08T08:00:00Z",
+      channels: ["email", "sms", "push"],
+      total_recipients: 12000,
+      delivered: 11500,
+      opened: 5750,
+      clicked: 1725,
+      conversions: 345,
+      failed: 500,
+      unsubscribed: 20,
       created_by: "Sarah Williams",
     },
     {
@@ -109,7 +111,7 @@ export default function CampaignBroadcastsPage() {
       campaign_id: 105,
       campaign_name: "Customer Loyalty Rewards",
       status: "completed",
-      sent_at: "2026-03-16T16:45:00Z",
+      sent_at: "2026-04-07T16:45:00Z",
       channels: ["sms", "push"],
       total_recipients: 6500,
       delivered: 6200,
@@ -120,9 +122,46 @@ export default function CampaignBroadcastsPage() {
       unsubscribed: 8,
       created_by: "Emily Davis",
     },
+    {
+      id: 6,
+      campaign_id: 106,
+      campaign_name: "Easter Campaign",
+      status: "paused",
+      sent_at: "2026-04-09T12:00:00Z",
+      channels: ["email"],
+      total_recipients: 4000,
+      delivered: 3800,
+      opened: 1900,
+      clicked: 570,
+      conversions: 114,
+      failed: 200,
+      unsubscribed: 5,
+      created_by: "Alex Brown",
+    },
   ]);
+  const [statistics, setStatistics] = useState<any>(null);
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    loadBroadcastStatistics();
+  }, []);
+
+  const loadBroadcastStatistics = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await broadcastService.getBroadcastStatistics();
+      console.log("Broadcast Statistics Response:", response);
+      setStatistics(response.data || response);
+    } catch (err) {
+      console.error("Failed to load broadcast statistics:", err);
+      setError("Failed to load broadcast statistics");
+      showError("Error", "Failed to load broadcast statistics");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const getStatusColor = (status: CampaignBroadcast["status"]) => {
     const colors: Record<string, string> = {
@@ -149,27 +188,27 @@ export default function CampaignBroadcastsPage() {
     return matchesStatus && matchesSearch;
   });
 
-  // Stats Cards Data
+  // Stats Cards Data from API
   const broadcastStats = [
     {
       name: "Total Broadcasts",
-      value: broadcasts.length.toString(),
+      value: statistics?.total_broadcasts || "0",
       icon: Radio,
     },
     {
-      name: "Total Sent",
-      value: broadcasts.reduce((sum, b) => sum + (b.status === "sent" || b.status === "completed" ? 1 : 0), 0).toString(),
+      name: "Running",
+      value: statistics?.running_broadcasts || "0",
       icon: Send,
     },
     {
-      name: "Total Recipients",
-      value: broadcasts.reduce((sum, b) => sum + b.total_recipients, 0).toLocaleString(),
-      icon: TrendingUp,
+      name: "Completed",
+      value: statistics?.completed_broadcasts || "0",
+      icon: CheckCircle,
     },
     {
-      name: "Total Conversions",
-      value: broadcasts.reduce((sum, b) => sum + b.conversions, 0).toLocaleString(),
-      icon: CheckCircle,
+      name: "Scheduled",
+      value: statistics?.scheduled_broadcasts || "0",
+      icon: TrendingUp,
     },
   ];
 
@@ -256,7 +295,19 @@ export default function CampaignBroadcastsPage() {
               Loading broadcasts...
             </p>
           </div>
-        ) : filteredBroadcasts.length > 0 ? (
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-16">
+            <AlertCircle className="w-12 h-12 text-red-400 mb-4" />
+            <p className="text-red-600 font-medium">{error}</p>
+            <button
+              onClick={loadBroadcastStatistics}
+              className="mt-4 px-4 py-2 text-sm font-medium text-white rounded transition-all"
+              style={{ backgroundColor: color.primary.action }}
+            >
+              Retry
+            </button>
+          </div>
+        ) : broadcasts.length > 0 && filteredBroadcasts.length > 0 ? (
           <div className="overflow-x-auto">
             <table
               className="w-full"
@@ -397,7 +448,10 @@ export default function CampaignBroadcastsPage() {
         ) : (
           <div className="flex flex-col items-center justify-center py-16">
             <p className={`${tw.textMuted} font-medium text-sm`}>
-              No broadcasts found
+              No individual broadcast records available
+            </p>
+            <p className="text-gray-500 text-xs mt-2">
+              Check the statistics above for system-wide broadcast overview
             </p>
           </div>
         )}

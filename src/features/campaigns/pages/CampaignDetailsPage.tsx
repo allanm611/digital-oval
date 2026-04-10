@@ -3096,7 +3096,7 @@ export default function CampaignDetailsPage() {
             isOpen={showBroadcastsModal}
             onClose={() => setShowBroadcastsModal(false)}
             campaignName={campaign.name}
-            channelStats={campaignChannelStats}
+            campaignId={campaign.id}
           />
           <FailedModal
             isOpen={showFailedModal}

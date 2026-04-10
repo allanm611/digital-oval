@@ -734,7 +734,7 @@ export default function Sidebar({
 
   const parentItemNames = navigation
     .filter((item) => item.type === "parent")
-    .map((item) => item.name.toLowerCase());
+    .map((item) => (item.name || "").toLowerCase());
 
   const toggleExpanded = (itemName: string, exclusiveItems?: string[]) => {
     setExpandedItems((prev) => {
@@ -834,7 +834,7 @@ export default function Sidebar({
         });
 
         if (isParentActive || hasActiveChild || hasActiveNestedChild) {
-          activeParentNames.push(item.name.toLowerCase());
+          activeParentNames.push((item.name || "").toLowerCase());
 
           // If a nested child is active, also expand the intermediate parent
           item.children.forEach((child) => {
@@ -951,7 +951,7 @@ export default function Sidebar({
 
                   const isActive = isItemActive(item);
                   const isExpanded = expandedItems.includes(
-                    item.name.toLowerCase(),
+                    (item.name || "").toLowerCase(),
                   );
 
                   if (item.entity === "users") {
@@ -962,7 +962,7 @@ export default function Sidebar({
                             <button
                               onClick={() =>
                                 toggleExpanded(
-                                  item.name.toLowerCase(),
+                                  (item.name || "").toLowerCase(),
                                   parentItemNames,
                                 )
                               }
@@ -1039,7 +1039,7 @@ export default function Sidebar({
                             <button
                               onClick={() =>
                                 toggleExpanded(
-                                  item.name.toLowerCase(),
+                                  (item.name || "").toLowerCase(),
                                   parentItemNames,
                                 )
                               }
@@ -1116,7 +1116,7 @@ export default function Sidebar({
                             <button
                               onClick={() =>
                                 toggleExpanded(
-                                  item.name.toLowerCase(),
+                                  (item.name || "").toLowerCase(),
                                   parentItemNames,
                                 )
                               }
@@ -1190,7 +1190,7 @@ export default function Sidebar({
                             <button
                               onClick={() => {
                                 toggleExpanded(
-                                  item.name.toLowerCase(),
+                                  (item.name || "").toLowerCase(),
                                   parentItemNames,
                                 );
                               }}
@@ -1284,7 +1284,7 @@ export default function Sidebar({
                             <button
                               onClick={() =>
                                 toggleExpanded(
-                                  item.name.toLowerCase(),
+                                  (item.name || "").toLowerCase(),
                                   parentItemNames,
                                 )
                               }
@@ -1378,7 +1378,7 @@ export default function Sidebar({
                             <button
                               onClick={() =>
                                 toggleExpanded(
-                                  item.name.toLowerCase(),
+                                  (item.name || "").toLowerCase(),
                                   parentItemNames,
                                 )
                               }
@@ -1469,7 +1469,7 @@ export default function Sidebar({
                             <button
                               onClick={() =>
                                 toggleExpanded(
-                                  item.name.toLowerCase(),
+                                  (item.name || "").toLowerCase(),
                                   parentItemNames,
                                 )
                               }
@@ -1563,7 +1563,7 @@ export default function Sidebar({
                             <button
                               onClick={() =>
                                 toggleExpanded(
-                                  item.name.toLowerCase(),
+                                  (item.name || "").toLowerCase(),
                                   parentItemNames,
                                 )
                               }
@@ -1654,7 +1654,7 @@ export default function Sidebar({
                             <button
                               onClick={() =>
                                 toggleExpanded(
-                                  item.name.toLowerCase(),
+                                  (item.name || "").toLowerCase(),
                                   parentItemNames,
                                 )
                               }
@@ -1745,7 +1745,7 @@ export default function Sidebar({
                             <button
                               onClick={() =>
                                 toggleExpanded(
-                                  item.name.toLowerCase(),
+                                  (item.name || "").toLowerCase(),
                                   parentItemNames,
                                 )
                               }
@@ -1869,7 +1869,7 @@ export default function Sidebar({
                       <button
                         onClick={() =>
                           toggleExpanded(
-                            item.name.toLowerCase(),
+                            (item.name || "").toLowerCase(),
                             parentItemNames,
                           )
                         }
@@ -2129,7 +2129,7 @@ export default function Sidebar({
                 const Icon = item.icon;
                 const isActive = isItemActive(item);
                 const isExpanded = expandedItems.includes(
-                  item.name.toLowerCase(),
+                  (item.name || "").toLowerCase(),
                 );
 
                 if (item.entity === "users") {
@@ -2147,7 +2147,7 @@ export default function Sidebar({
                           <button
                             onClick={() =>
                               toggleExpanded(
-                                item.name.toLowerCase(),
+                                (item.name || "").toLowerCase(),
                                 parentItemNames,
                               )
                             }
@@ -2244,7 +2244,7 @@ export default function Sidebar({
                           <button
                             onClick={() =>
                               toggleExpanded(
-                                item.name.toLowerCase(),
+                                (item.name || "").toLowerCase(),
                                 parentItemNames,
                               )
                             }
@@ -2341,7 +2341,7 @@ export default function Sidebar({
                           <button
                             onClick={() =>
                               toggleExpanded(
-                                item.name.toLowerCase(),
+                                (item.name || "").toLowerCase(),
                                 parentItemNames,
                               )
                             }
@@ -2438,7 +2438,7 @@ export default function Sidebar({
                           <button
                             onClick={() =>
                               toggleExpanded(
-                                item.name.toLowerCase(),
+                                (item.name || "").toLowerCase(),
                                 parentItemNames,
                               )
                             }
@@ -2566,7 +2566,7 @@ export default function Sidebar({
                           <button
                             onClick={() =>
                               toggleExpanded(
-                                item.name.toLowerCase(),
+                                (item.name || "").toLowerCase(),
                                 parentItemNames,
                               )
                             }
@@ -2695,7 +2695,7 @@ export default function Sidebar({
                           <button
                             onClick={() =>
                               toggleExpanded(
-                                item.name.toLowerCase(),
+                                (item.name || "").toLowerCase(),
                                 parentItemNames,
                               )
                             }
@@ -2824,7 +2824,7 @@ export default function Sidebar({
                           <button
                             onClick={() =>
                               toggleExpanded(
-                                item.name.toLowerCase(),
+                                (item.name || "").toLowerCase(),
                                 parentItemNames,
                               )
                             }
@@ -2956,7 +2956,7 @@ export default function Sidebar({
                           <button
                             onClick={() =>
                               toggleExpanded(
-                                item.name.toLowerCase(),
+                                (item.name || "").toLowerCase(),
                                 parentItemNames,
                               )
                             }
@@ -3085,7 +3085,7 @@ export default function Sidebar({
                           <button
                             onClick={() =>
                               toggleExpanded(
-                                item.name.toLowerCase(),
+                                (item.name || "").toLowerCase(),
                                 parentItemNames,
                               )
                             }
@@ -3214,7 +3214,7 @@ export default function Sidebar({
                           <button
                             onClick={() =>
                               toggleExpanded(
-                                item.name.toLowerCase(),
+                                (item.name || "").toLowerCase(),
                                 parentItemNames,
                               )
                             }
@@ -3375,7 +3375,7 @@ export default function Sidebar({
                 // }
 
                 if (item.type === "parent") {
-                  const itemLowerName = item.name.toLowerCase();
+                  const itemLowerName = (item.name || "").toLowerCase();
                   const isExpanded = expandedItems.includes(itemLowerName);
 
                   return (
@@ -3391,7 +3391,7 @@ export default function Sidebar({
                       <button
                         onClick={() =>
                           toggleExpanded(
-                            item.name.toLowerCase(),
+                            (item.name || "").toLowerCase(),
                             parentItemNames,
                           )
                         }

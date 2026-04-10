@@ -167,8 +167,8 @@ export default function DynamicMessageVariablesPage() {
       cat.name.toLowerCase().includes(debouncedSearchTerm) ||
       cat.fields.some(
         (field) =>
-          field.field_name.toLowerCase().includes(debouncedSearchTerm) ||
-          field.field_value.toLowerCase().includes(debouncedSearchTerm)
+          (field.field_name || "").toLowerCase().includes(debouncedSearchTerm) ||
+          (field.field_value || "").toLowerCase().includes(debouncedSearchTerm)
       )
     );
 

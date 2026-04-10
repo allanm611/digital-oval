@@ -1528,7 +1528,7 @@ export default function TypeConfigurationPage({
     const term = searchTerm.toLowerCase();
     return (items || []).filter(
       (item) =>
-        item.name.toLowerCase().includes(term) ||
+        (item.name || "").toLowerCase().includes(term) ||
         (item.description && item.description.toLowerCase().includes(term)),
     );
   }, [items, searchTerm]);
