@@ -9,6 +9,9 @@ const BASE_URL = buildApiUrl("");
 interface SMSTestRequest {
   msisdn: string;
   message: string;
+  channel: "SMS" | "EMAIL" | "WHATSAPP" | "PUSH";
+  sms_route_id?: number;
+  sender_id?: number;
 }
 
 interface SMSTestResponse {

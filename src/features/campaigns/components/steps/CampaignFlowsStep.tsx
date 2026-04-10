@@ -32,7 +32,6 @@ interface SegmentFlowState {
   offers: CampaignOffer[];
   waitHours: number;
   allocation?: string;
-  offerCreativeId?: number;
 }
 
 export default function CampaignFlowsStep({
@@ -55,7 +54,11 @@ export default function CampaignFlowsStep({
   // Initialize segmentFlows from existing campaignFlows when editing
   // Allows initialization once on mount OR once when campaignFlows is loaded (for edit mode)
   useEffect(() => {
-    if (campaignFlows && campaignFlows.length > 0 && !hasInitializedFromFlowsRef.current) {
+    if (
+      campaignFlows &&
+      campaignFlows.length > 0 &&
+      !hasInitializedFromFlowsRef.current
+    ) {
       hasInitializedFromFlowsRef.current = true;
 
       const flowsBySegment: { [segmentId: string]: SegmentFlowState } = {};
@@ -76,7 +79,10 @@ export default function CampaignFlowsStep({
         }
 
         // Add offer if it exists and not already in the list
-        if (offer && !flowsBySegment[segmentIdStr].offers.some((o) => o.id === offerIdStr)) {
+        if (
+          offer &&
+          !flowsBySegment[segmentIdStr].offers.some((o) => o.id === offerIdStr)
+        ) {
           flowsBySegment[segmentIdStr].offers.push(offer);
         }
 
@@ -125,7 +131,6 @@ export default function CampaignFlowsStep({
           step_order: flowStepOrder, // Hard coded to value from Step 2
           wait_interval_hours: data.waitHours || 0,
           bucket_allocation: data.allocation,
-          offer_creative_id: data.offerCreativeId, // Optional offer creative
         });
       });
     });
@@ -173,7 +178,7 @@ export default function CampaignFlowsStep({
       const updated = { ...prev };
       if (updated[segmentId]) {
         updated[segmentId].offers = updated[segmentId].offers.filter(
-          (o) => o.id !== offerId
+          (o) => o.id !== offerId,
         );
       }
       return updated;
@@ -181,14 +186,13 @@ export default function CampaignFlowsStep({
 
     // Check if offer is used by any other segment
     const offerUsedElsewhere = Object.entries(segmentFlows).some(
-      ([sid, data]) => sid !== segmentId && data.offers.some((o) => o.id === offerId)
+      ([sid, data]) =>
+        sid !== segmentId && data.offers.some((o) => o.id === offerId),
     );
 
     // If not used elsewhere, remove from selectedOffers
     if (!offerUsedElsewhere) {
-      setSelectedOffers(
-        selectedOffers.filter((o) => o.id !== offerId)
-      );
+      setSelectedOffers(selectedOffers.filter((o) => o.id !== offerId));
     }
   };
 
@@ -214,17 +218,6 @@ export default function CampaignFlowsStep({
     });
   };
 
-  const handleUpdateOfferCreative = (segmentId: string, creativeId?: number) => {
-    setSegmentFlows((prev) => {
-      const updated = { ...prev };
-      if (!updated[segmentId]) {
-        updated[segmentId] = { offers: [], waitHours: 0 };
-      }
-      updated[segmentId].offerCreativeId = creativeId;
-      return updated;
-    });
-  };
-
   const getOffersForSegment = (segmentId: string): CampaignOffer[] => {
     return segmentFlows[segmentId]?.offers || [];
   };
@@ -237,30 +230,8 @@ export default function CampaignFlowsStep({
           Map Segments to Offers
         </h2>
         <p className={`text-xs ${tw.textMuted}`}>
-         Select offers for each segment to create the mappings.
+          Select offers for each segment to create the mappings.
         </p>
-      </div>
-
-      {/* Offer Creative Selection - Optional */}
-      <div className="w-full">
-        <label className={`block text-sm font-medium ${tw.textSecondary} mb-2`}>
-          Offer Creative (Optional)
-        </label>
-        <HeadlessSelect
-          value={String(segmentFlows[selectedSegments[0]?.id]?.offerCreativeId || "")}
-          onChange={(value) => {
-            const numValue = value ? parseInt(value) : undefined;
-            if (selectedSegments.length > 0) {
-              handleUpdateOfferCreative(selectedSegments[0].id, numValue);
-            }
-          }}
-          options={[
-            { value: "", label: "Select offer creative..." },
-            { value: "1", label: "Creative 1" },
-            { value: "2", label: "Creative 2" },
-            { value: "3", label: "Creative 3" },
-          ]}
-        />
       </div>
 
       {/* Error Display */}
@@ -275,7 +246,8 @@ export default function CampaignFlowsStep({
         {selectedSegments.length === 0 ? (
           <div className={components.card.surface}>
             <p className={`${tw.caption} ${tw.textSecondary} text-center py-8`}>
-              No segments selected. Please add segments in the Audience step first.
+              No segments selected. Please add segments in the Audience step
+              first.
             </p>
           </div>
         ) : (
@@ -310,7 +282,9 @@ export default function CampaignFlowsStep({
 
                 {/* Assigned Offers */}
                 <div className="mb-4">
-                  <div className={`text-sm font-medium ${tw.textSecondary} mb-2`}>
+                  <div
+                    className={`text-sm font-medium ${tw.textSecondary} mb-2`}
+                  >
                     Assigned Offers:
                   </div>
                   {offers.length === 0 ? (
@@ -330,12 +304,16 @@ export default function CampaignFlowsStep({
                           className={`flex items-center justify-between p-3 ${tw.rounded}`}
                           style={{ backgroundColor: color.surface.cards }}
                         >
-                          <div className={`text-sm font-medium ${tw.textPrimary}`}>
+                          <div
+                            className={`text-sm font-medium ${tw.textPrimary}`}
+                          >
                             {offer.name}
                           </div>
 
                           <button
-                            onClick={() => handleRemoveOffer(segment.id, offer.id)}
+                            onClick={() =>
+                              handleRemoveOffer(segment.id, offer.id)
+                            }
                             className={`${tw.borderedButton} inline-flex items-center gap-1 p-2`}
                             style={{
                               borderColor: "#DC2626",
@@ -406,7 +384,9 @@ export default function CampaignFlowsStep({
                           handleUpdateAllocation(segment.id, e.target.value)
                         }
                         placeholder={
-                          formData.campaign_type === "ab_test" ? "50-50" : "70-30"
+                          formData.campaign_type === "ab_test"
+                            ? "50-50"
+                            : "70-30"
                         }
                         className={`w-full px-3 py-2 border ${tw.rounded} text-sm`}
                         style={{ borderColor: color.border.default }}
@@ -432,12 +412,23 @@ export default function CampaignFlowsStep({
                           className={`p-3 ${tw.rounded}`}
                           style={{ backgroundColor: color.surface.cards }}
                         >
-                          <div className={`text-xs font-medium ${tw.textPrimary} mb-2`}>
+                          <div
+                            className={`text-xs font-medium ${tw.textPrimary} mb-2`}
+                          >
                             {offer.name}
                           </div>
-                          <div className={`text-xs ${tw.textSecondary} space-y-1`}>
-                            <p>• Tracking Type: <span className="font-medium">Not configured</span></p>
-                            <p>• Rules: <span className="font-medium">0</span></p>
+                          <div
+                            className={`text-xs ${tw.textSecondary} space-y-1`}
+                          >
+                            <p>
+                              • Tracking Type:{" "}
+                              <span className="font-medium">
+                                Not configured
+                              </span>
+                            </p>
+                            <p>
+                              • Rules: <span className="font-medium">0</span>
+                            </p>
                           </div>
                         </div>
                       ))}

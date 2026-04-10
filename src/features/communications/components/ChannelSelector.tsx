@@ -17,8 +17,8 @@ export default function ChannelSelector({
     icon: React.ElementType;
     color: string;
   }[] = [
-    { value: "EMAIL", label: "Email", icon: Mail, color: "#3B82F6" },
     { value: "SMS", label: "SMS", icon: MessageSquare, color: "#10B981" },
+    { value: "EMAIL", label: "Email", icon: Mail, color: "#3B82F6" },
     { value: "WHATSAPP", label: "WhatsApp", icon: Phone, color: "#25D366" },
     { value: "PUSH", label: "Push Notification", icon: Bell, color: "#F59E0B" },
   ];

@@ -11,6 +11,7 @@ import {
   Settings,
   FolderTree,
   List,
+  Shield,
 } from "lucide-react";
 import { campaignService } from "../../features/campaigns/services/campaignService";
 import { offerService } from "../../features/offers/services/offerService";
@@ -22,6 +23,7 @@ import { roleService } from "../../features/roles/services/roleService";
 import { offerCategoryService } from "../../features/offers/services/offerCategoryService";
 import { productCategoryService } from "../../features/products/services/productCategoryService";
 import { quicklistService } from "../../features/quicklists/services/quicklistService";
+import { controlGroupService } from "../../features/control-groups/services/controlGroupService";
 import { Role } from "../../features/roles/types/role";
 import { color, tw } from "../utils/utils";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
@@ -40,7 +42,8 @@ interface SearchResult {
     | "product-catalog"
     | "segment-catalog"
     | "campaign-catalog"
-    | "quicklist";
+    | "quicklist"
+    | "control-group";
   name: string;
   description?: string;
   url: string;
@@ -60,6 +63,7 @@ interface SearchResults {
   "segment-catalogs": SearchResult[];
   "campaign-catalogs": SearchResult[];
   quicklists: SearchResult[];
+  "control-groups": SearchResult[];
 }
 
 export default function SearchResultsPage() {
@@ -79,6 +83,7 @@ export default function SearchResultsPage() {
     "segment-catalogs": [],
     "campaign-catalogs": [],
     quicklists: [],
+    "control-groups": [],
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -109,6 +114,7 @@ export default function SearchResultsPage() {
         "segment-catalogs": [],
         "campaign-catalogs": [],
         quicklists: [],
+        "control-groups": [],
       });
       return;
     }
@@ -432,6 +438,7 @@ export default function SearchResultsPage() {
         segmentCatalogsRes,
         campaignCatalogsRes,
         quicklistsRes,
+        controlGroupsRes,
       ] = await Promise.allSettled([
         campaignService.getCampaigns({
           limit: 50,
@@ -486,6 +493,10 @@ export default function SearchResultsPage() {
           limit: 100,
           offset: 0,
         }),
+        controlGroupService.listControlGroups({
+          limit: 50,
+          offset: 0,
+        }),
       ]);
 
       const searchResults: SearchResults = {
@@ -501,6 +512,7 @@ export default function SearchResultsPage() {
         "segment-catalogs": [],
         "campaign-catalogs": [],
         quicklists: [],
+        "control-groups": [],
       };
 
       // Process campaigns
@@ -797,9 +809,40 @@ export default function SearchResultsPage() {
           }));
       }
 
+      // Process control groups
+      if (
+        controlGroupsRes.status === "fulfilled" &&
+        controlGroupsRes.value.control_groups
+      ) {
+        const controlGroups = Array.isArray(controlGroupsRes.value.control_groups)
+          ? controlGroupsRes.value.control_groups
+          : [];
+        searchResults["control-groups"] = controlGroups
+          .filter((group: Record<string, unknown>) => {
+            const nameMatch = (group.name as string)
+              ?.toLowerCase()
+              .includes(searchQueryLower);
+            const descMatch = (group.description as string)
+              ?.toLowerCase()
+              .includes(searchQueryLower);
+            return nameMatch || descMatch;
+          })
+          .map((group: Record<string, unknown>) => ({
+            id: group.id as string | number,
+            type: "control-group" as const,
+            name: (group.name as string) || "Unnamed Control Group",
+            description: (group.description as string) || undefined,
+            url: `/dashboard/control-groups/${group.id}`,
+            metadata: {
+              is_active: group.is_active,
+            },
+          }));
+      }
+
+      // Set all results to state
       setResults(searchResults);
     } catch (err) {
-      console.error("Search failed:", err);
+      console.error("Search error:", err);
       setError("Failed to perform search. Please try again.");
     } finally {
       setIsLoading(false);
@@ -829,7 +872,8 @@ export default function SearchResultsPage() {
         results["product-catalogs"].length +
         results["segment-catalogs"].length +
         results["campaign-catalogs"].length +
-        results.quicklists.length,
+        results.quicklists.length +
+        results["control-groups"].length,
     },
     {
       id: "campaign" as const,
@@ -871,6 +915,11 @@ export default function SearchResultsPage() {
       name: "Quicklists",
       count: results.quicklists.length,
     },
+    {
+      id: "control-group" as const,
+      name: "Control Groups",
+      count: results["control-groups"].length,
+    },
   ];
 
   // Filter results by selected category
@@ -892,6 +941,7 @@ export default function SearchResultsPage() {
       "segment-catalogs": [],
       "campaign-catalogs": [],
       quicklists: [],
+      "control-groups": [],
     };
 
     if (selectedCategory === "campaign") {
@@ -914,6 +964,8 @@ export default function SearchResultsPage() {
       filtered.configurations = results.configurations;
     } else if (selectedCategory === "quicklist") {
       filtered.quicklists = results.quicklists;
+    } else if (selectedCategory === "control-group") {
+      filtered["control-groups"] = results["control-groups"];
     }
 
     return filtered;
@@ -971,6 +1023,10 @@ export default function SearchResultsPage() {
         label: "Quicklist",
         icon: List,
       },
+      "control-group": {
+        label: "Control Group",
+        icon: Shield,
+      },
     };
     return types[type];
   };
@@ -987,7 +1043,8 @@ export default function SearchResultsPage() {
     filteredResults["product-catalogs"].length +
     filteredResults["segment-catalogs"].length +
     filteredResults["campaign-catalogs"].length +
-    filteredResults.quicklists.length;
+    filteredResults.quicklists.length +
+    filteredResults["control-groups"].length;
 
   const renderResultsSection = (
     title: string,
@@ -1172,6 +1229,11 @@ export default function SearchResultsPage() {
                 "Quicklists",
                 filteredResults.quicklists,
                 "quicklist"
+              )}
+              {renderResultsSection(
+                "Control Groups",
+                filteredResults["control-groups"],
+                "control-group"
               )}
             </div>
           )}

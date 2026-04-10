@@ -13,6 +13,7 @@ import {
   Settings,
   FolderTree,
   List,
+  Shield,
 } from "lucide-react";
 import { InputAdornment, TextField } from "@mui/material";
 import { AutoAwesome } from "@mui/icons-material";
@@ -27,6 +28,7 @@ import { roleService } from "../../features/roles/services/roleService";
 import { offerCategoryService } from "../../features/offers/services/offerCategoryService";
 import { productCategoryService } from "../../features/products/services/productCategoryService";
 import { quicklistService } from "../../features/quicklists/services/quicklistService";
+import { controlGroupService } from "../../features/control-groups/services/controlGroupService";
 import { Role } from "../../features/roles/types/role";
 import { tw, zIndex } from "../utils/utils";
 
@@ -44,7 +46,8 @@ interface SearchSuggestion {
     | "product-catalog"
     | "segment-catalog"
     | "campaign-catalog"
-    | "quicklist";
+    | "quicklist"
+    | "control-group";
   name: string;
   description?: string;
   url: string;
@@ -431,6 +434,7 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
         segmentCatalogsRes,
         campaignCatalogsRes,
         quicklistsRes,
+        controlGroupsRes,
       ] = await Promise.allSettled([
         campaignService.getCampaigns({
           limit: 20,
@@ -483,6 +487,10 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
         }),
         quicklistService.getAllQuickLists({
           limit: 50,
+          offset: 0,
+        }),
+        controlGroupService.listControlGroups({
+          limit: 10,
           offset: 0,
         }),
       ]);
@@ -754,6 +762,38 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
           });
       }
 
+      // Process control groups
+      if (
+        controlGroupsRes.status === "fulfilled" &&
+        controlGroupsRes.value.control_groups
+      ) {
+        const controlGroups = Array.isArray(
+          controlGroupsRes.value.control_groups,
+        )
+          ? controlGroupsRes.value.control_groups
+          : [];
+        (controlGroups as unknown[] as Record<string, unknown>[])
+          .filter((group: Record<string, unknown>) => {
+            const nameMatch = (group.name as string)
+              ?.toLowerCase()
+              .includes(queryLower);
+            const descMatch = (group.description as string)
+              ?.toLowerCase()
+              .includes(queryLower);
+            return nameMatch || descMatch;
+          })
+          .slice(0, 3)
+          .forEach((group: Record<string, unknown>) => {
+            allSuggestions.push({
+              id: group.id as string | number,
+              type: "control-group",
+              name: (group.name as string) || "Unnamed Control Group",
+              description: (group.description as string) || undefined,
+              url: `/dashboard/control-groups/${group.id}`,
+            });
+          });
+      }
+
       // Process configurations (frontend filtering)
       allConfigurations
         .filter(
@@ -870,6 +910,7 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
       "segment-catalog": { label: "Segment Catalog", icon: FolderTree },
       "campaign-catalog": { label: "Campaign Catalog", icon: FolderTree },
       quicklist: { label: "Quicklist", icon: List },
+      "control-group": { label: "Control Group", icon: Shield },
     };
     return types[type];
   };
@@ -896,6 +937,7 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
         variant="outlined"
         size="small"
         fullWidth
+        inputProps={{ autoComplete: "off" }}
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">

@@ -67,14 +67,14 @@ export default function DefineCommunicationStep({
 
   const channels = [
     {
-      id: "EMAIL" as Channel,
-      name: t.manualBroadcast.channelEmail,
-      icon: Mail,
-    },
-    {
       id: "SMS" as Channel,
       name: t.manualBroadcast.channelSMS,
       icon: MessageSquare,
+    },
+    {
+      id: "EMAIL" as Channel,
+      name: t.manualBroadcast.channelEmail,
+      icon: Mail,
     },
     {
       id: "WHATSAPP" as Channel,
@@ -85,7 +85,7 @@ export default function DefineCommunicationStep({
   ];
 
   const [selectedChannel, setSelectedChannel] = useState<Channel>(
-    data.channel || "EMAIL",
+    data.channel || "SMS",
   );
   const [messageTitle, setMessageTitle] = useState(data.messageTitle || "");
   const [messageBody, setMessageBody] = useState(data.messageBody || "");

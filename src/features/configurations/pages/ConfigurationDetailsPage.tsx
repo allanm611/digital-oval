@@ -43,7 +43,6 @@ const subConfigRoutes: Record<string, string> = {
 };
 
 export default function ConfigurationDetailsPage() {
-  
   const { id } = useParams<{ id: string }>();
   const { _t: t } = useLanguage();
   const [config, setConfig] = useState<ConfigurationItem | null>(null);
@@ -135,7 +134,7 @@ export default function ConfigurationDetailsPage() {
 
   const filteredSubConfigs =
     config?.subConfigs?.filter((subConfig) =>
-      subConfig.toLowerCase().includes(searchTerm.toLowerCase())
+      subConfig.toLowerCase().includes(searchTerm.toLowerCase()),
     ) || [];
 
   if (!config) {
@@ -164,7 +163,11 @@ export default function ConfigurationDetailsPage() {
       {/* Header */}
       <div className="mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-          <BackButton fallbackTo="/dashboard/configuration" showBreadcrumb={true} currentLabel="Configuration Details" />
+          <BackButton
+            fallbackTo="/dashboard/configuration"
+            showBreadcrumb={true}
+            currentLabel="Configuration Details"
+          />
           <div className="flex flex-wrap items-center gap-2">
             <span
               className={`px-3 py-1 rounded-full text-sm font-medium bg-neutral-100 ${tw.textSecondary}`}

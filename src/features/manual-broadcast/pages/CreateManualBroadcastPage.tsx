@@ -149,7 +149,7 @@ export default function CreateManualBroadcastPage() {
             logs?.[0]?.channel ||
             exec?.channels?.[0] ||
             exec?.channel ||
-            "EMAIL";
+            "SMS";
 
           // Extract message template from execution with optional chaining
           const messageBody = exec?.message_template?.body || "";
@@ -174,7 +174,7 @@ export default function CreateManualBroadcastPage() {
               exec?.source_name ||
               `Broadcast ${exec?.id || "Unknown"}`,
             channel:
-              (channel as "EMAIL" | "SMS" | "WHATSAPP" | "PUSH") || "EMAIL",
+              (channel as "EMAIL" | "SMS" | "WHATSAPP" | "PUSH") || "SMS",
             messageTitle: messageTitle,
             messageBody: messageBody,
             isRichText: exec?.message_template?.is_rich_text ?? false,
