@@ -91,8 +91,20 @@ export default function ProductForm({
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
+    if (!formData.product_code || !formData.product_code.trim()) {
+      newErrors.product_code = "Product code is required";
+    }
+
     if (!formData.name || !formData.name.trim()) {
       newErrors.name = "Product name is required";
+    }
+
+    if (!formData.da_id || !formData.da_id.trim()) {
+      newErrors.da_id = "DA ID is required";
+    }
+
+    if (!formData.price || formData.price <= 0) {
+      newErrors.price = "Price must be greater than 0";
     }
 
     if (!formData.description || !formData.description.trim()) {
@@ -100,6 +112,17 @@ export default function ProductForm({
     }
 
     setErrors(newErrors);
+
+    // Scroll to first error field
+    if (Object.keys(newErrors).length > 0) {
+      const firstErrorKey = Object.keys(newErrors)[0];
+      const errorElement = document.querySelector(`input[name="${firstErrorKey}"], textarea[name="${firstErrorKey}"]`);
+      if (errorElement) {
+        errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        (errorElement as HTMLInputElement | HTMLTextAreaElement).focus();
+      }
+    }
+
     return Object.keys(newErrors).length === 0;
   };
 
@@ -111,12 +134,28 @@ export default function ProductForm({
     }
   };
 
+  // Helper to ensure tags is always an array
+  const getCurrentTagsAsArray = (): string[] => {
+    const tags = formData.tags || [];
+    // If tags is a string (shouldn't happen, but safety check), try to parse it
+    if (typeof tags === 'string') {
+      try {
+        const parsed = JSON.parse(tags);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    // If tags is already an array, return it
+    return Array.isArray(tags) ? tags : [];
+  };
+
   // Handle adding a tag
   const handleAddTag = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && tagInput.trim()) {
       e.preventDefault();
       const newTag = tagInput.trim().toLowerCase();
-      const currentTags = formData.tags || [];
+      const currentTags = getCurrentTagsAsArray();
       if (!currentTags.includes(newTag)) {
         onInputChange("tags", [...currentTags, newTag]);
       }
@@ -126,7 +165,7 @@ export default function ProductForm({
 
   // Handle removing a tag
   const handleRemoveTag = (tagToRemove: string) => {
-    const currentTags = formData.tags || [];
+    const currentTags = getCurrentTagsAsArray();
     const updatedTags = currentTags.filter((tag) => tag !== tagToRemove);
     onInputChange("tags", updatedTags.length > 0 ? updatedTags : undefined);
   };
@@ -350,6 +389,7 @@ export default function ProductForm({
                 </label>
                 <input
                   type="text"
+                  name="product_code"
                   required
                   value={formData.product_code || ""}
                   onChange={(e) =>
@@ -357,20 +397,37 @@ export default function ProductForm({
                   }
                   className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
                   style={{
-                    borderColor: color.border.default,
+                    borderColor: errors.product_code ? color.status.danger : color.border.default,
                     outline: "none",
                   }}
                   placeholder={t.products.form.enterProductCode}
 
                   onFocus={(e) => {
-                    e.target.style.borderColor = color.primary.accent;
-                    e.target.style.boxShadow = `0 0 0 3px ${color.primary.accent}20`;
+                    e.target.style.borderColor = errors.product_code ? color.status.danger : color.primary.accent;
+                    e.target.style.boxShadow = `0 0 0 3px ${errors.product_code ? color.status.danger : color.primary.accent}20`;
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = color.border.default;
+                    e.target.style.borderColor = errors.product_code ? color.status.danger : color.border.default;
                     e.target.style.boxShadow = "none";
                   }}
                 />
+                {errors.product_code && (
+                  <p
+                    className="text-xs mt-1 cursor-pointer"
+                    style={{
+                      color: color.status.danger,
+                    }}
+                    onClick={() => {
+                      const element = document.querySelector('input[name="product_code"]');
+                      if (element) {
+                        (element as HTMLInputElement).focus();
+                        (element as HTMLInputElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      }
+                    }}
+                  >
+                    {errors.product_code}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -382,24 +439,43 @@ export default function ProductForm({
                 {/* Note: DA ID does not have a translation key in the requirements */}
                 <input
                   type="text"
+                  name="da_id"
                   required
                   value={formData.da_id || ""}
                   onChange={(e) => onInputChange("da_id", e.target.value)}
                   className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
                   style={{
-                    borderColor: color.border.default,
+                    borderColor: errors.da_id ? color.status.danger : color.border.default,
                     outline: "none",
                   }}
                   placeholder="Enter DA ID"
                   onFocus={(e) => {
-                    e.target.style.borderColor = color.primary.accent;
-                    e.target.style.boxShadow = `0 0 0 3px ${color.primary.accent}20`;
+                    e.target.style.borderColor = errors.da_id ? color.status.danger : color.primary.accent;
+                    e.target.style.boxShadow = `0 0 0 3px ${errors.da_id ? color.status.danger : color.primary.accent}20`;
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = color.border.default;
+                    e.target.style.borderColor = errors.da_id ? color.status.danger : color.border.default;
                     e.target.style.boxShadow = "none";
                   }}
                 />
+                {errors.da_id && (
+                  <p
+                    className="text-xs mt-1 font-semibold cursor-pointer"
+                    style={{
+                      color: color.status.danger,
+                      fontWeight: 600,
+                    }}
+                    onClick={() => {
+                      const element = document.querySelector('input[name="da_id"]');
+                      if (element) {
+                        (element as HTMLInputElement).focus();
+                        (element as HTMLInputElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      }
+                    }}
+                  >
+                    {errors.da_id}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -413,6 +489,7 @@ export default function ProductForm({
               </label>
               <input
                 type="text"
+                name="name"
                 required
                 value={formData.name || ""}
                 onChange={(e) => {
@@ -448,8 +525,18 @@ export default function ProductForm({
               />
               {errors.name && (
                 <p
-                  className="mt-1.5 text-sm"
-                  style={{ color: color.status.danger }}
+                  className="mt-1.5 text-xs font-semibold cursor-pointer"
+                  style={{
+                    color: color.status.danger,
+                    fontWeight: 600,
+                  }}
+                  onClick={() => {
+                    const element = document.querySelector('input[name="name"]');
+                    if (element) {
+                      (element as HTMLInputElement).focus();
+                      (element as HTMLInputElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                  }}
                 >
                   {errors.name}
                 </p>
@@ -465,6 +552,7 @@ export default function ProductForm({
                 <span style={{ color: color.status.danger }}>*</span>
               </label>
               <textarea
+                name="description"
                 rows={4}
                 value={formData.description || ""}
                 onChange={(e) => {
@@ -500,8 +588,18 @@ export default function ProductForm({
               />
               {errors.description && (
                 <p
-                  className="mt-1.5 text-sm"
-                  style={{ color: color.status.danger }}
+                  className="mt-1.5 text-xs font-semibold cursor-pointer"
+                  style={{
+                    color: color.status.danger,
+                    fontWeight: 600,
+                  }}
+                  onClick={() => {
+                    const element = document.querySelector('textarea[name="description"]');
+                    if (element) {
+                      (element as HTMLTextAreaElement).focus();
+                      (element as HTMLTextAreaElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                  }}
                 >
                   {errors.description}
                 </p>
@@ -518,6 +616,7 @@ export default function ProductForm({
                 </label>
                 <input
                   type="text"
+                  name="price"
                   required
                   value={formData.price || 0}
                   onChange={(e) =>
@@ -525,19 +624,37 @@ export default function ProductForm({
                   }
                   className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
                   style={{
-                    borderColor: color.border.default,
+                    borderColor: errors.price ? color.status.danger : color.border.default,
                     outline: "none",
                   }}
                   placeholder="0.00"
                   onFocus={(e) => {
-                    e.target.style.borderColor = color.primary.accent;
-                    e.target.style.boxShadow = `0 0 0 3px ${color.primary.accent}20`;
+                    e.target.style.borderColor = errors.price ? color.status.danger : color.primary.accent;
+                    e.target.style.boxShadow = `0 0 0 3px ${errors.price ? color.status.danger : color.primary.accent}20`;
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = color.border.default;
+                    e.target.style.borderColor = errors.price ? color.status.danger : color.border.default;
                     e.target.style.boxShadow = "none";
                   }}
                 />
+                {errors.price && (
+                  <p
+                    className="text-xs mt-1 font-semibold cursor-pointer"
+                    style={{
+                      color: color.status.danger,
+                      fontWeight: 600,
+                    }}
+                    onClick={() => {
+                      const element = document.querySelector('input[name="price"]');
+                      if (element) {
+                        (element as HTMLInputElement).focus();
+                        (element as HTMLInputElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      }
+                    }}
+                  >
+                    {errors.price}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -558,7 +675,7 @@ export default function ProductForm({
                         // Auto-add tag when comma is typed
                         if (value.includes(",")) {
                           const tag = value.replace(",", "").trim();
-                          const currentTags = formData.tags || [];
+                          const currentTags = getCurrentTagsAsArray();
                           if (tag && !currentTags.includes(tag.toLowerCase())) {
                             const updatedTags = [
                               ...currentTags,
@@ -592,7 +709,7 @@ export default function ProductForm({
                       onClick={() => {
                         if (tagInput.trim()) {
                           const newTag = tagInput.trim().toLowerCase();
-                          const currentTags = formData.tags || [];
+                          const currentTags = getCurrentTagsAsArray();
                           if (!currentTags.includes(newTag)) {
                             const updatedTags = [...currentTags, newTag];
                             onInputChange("tags", updatedTags);
@@ -608,9 +725,9 @@ export default function ProductForm({
                       Add
                     </button>
                   </div>
-                  {formData.tags && formData.tags.length > 0 && (
+                  {getCurrentTagsAsArray().length > 0 && (
                     <div className="flex flex-wrap gap-2">
-                      {formData.tags.map((tag, index) => (
+                      {getCurrentTagsAsArray().map((tag, index) => (
                         <span
                           key={`${tag}-${index}`}
                           className="inline-flex items-center px-3 py-1 text-sm font-medium rounded-full border"
@@ -796,38 +913,40 @@ export default function ProductForm({
                 >
                   {/* Shared Configuration Checkboxes */}
                   <div className="grid gap-4 md:grid-cols-2 mb-4">
-                    <div>
-                      <label className="flex items-center gap-2">
-                        <Checkbox checked={comboData.shared_validity ?? true}
-                          onChange={(e) =>
-                            setComboData({
-                              ...comboData,
-                              shared_validity: e.target.checked,
-                            })
-                          }
-                          className="w-4 h-4 cursor-pointer" />
-                        <span
-                          className={`text-sm font-medium ${tw.textPrimary}`}
-                        >
-                          Shared Validity
-                        </span>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="shared-validity-combo"
+                        checked={comboData.shared_validity ?? true}
+                        onChange={(e) =>
+                          setComboData({
+                            ...comboData,
+                            shared_validity: e.target.checked,
+                          })
+                        }
+                      />
+                      <label
+                        htmlFor="shared-validity-combo"
+                        className={`text-sm font-medium ${tw.textPrimary}`}
+                      >
+                        Shared Validity
                       </label>
                     </div>
-                    <div>
-                      <label className="flex items-center gap-2">
-                        <Checkbox checked={comboData.shared_price ?? true}
-                          onChange={(e) =>
-                            setComboData({
-                              ...comboData,
-                              shared_price: e.target.checked,
-                            })
-                          }
-                          className="w-4 h-4 cursor-pointer" />
-                        <span
-                          className={`text-sm font-medium ${tw.textPrimary}`}
-                        >
-                          Shared Price
-                        </span>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="shared-price-combo"
+                        checked={comboData.shared_price ?? true}
+                        onChange={(e) =>
+                          setComboData({
+                            ...comboData,
+                            shared_price: e.target.checked,
+                          })
+                        }
+                      />
+                      <label
+                        htmlFor="shared-price-combo"
+                        className={`text-sm font-medium ${tw.textPrimary}`}
+                      >
+                        Shared Price
                       </label>
                     </div>
                   </div>

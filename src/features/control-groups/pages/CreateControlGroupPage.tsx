@@ -760,16 +760,32 @@ export default function CreateControlGroupPage() {
                 </div>
 
                 <div className="mt-4 flex items-center gap-6">
-                  <Checkbox
-                    label="Mark as Universal Control Group"
-                    checked={isUniversal}
-                    onChange={(e) => setIsUniversal(e.currentTarget.checked)}
-                  />
-                  <Checkbox
-                    label="Active"
-                    checked={isActive}
-                    onChange={(e) => setIsActive(e.currentTarget.checked)}
-                  />
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="universal-control-group"
+                      checked={isUniversal}
+                      onChange={(e) => setIsUniversal(e.currentTarget.checked)}
+                    />
+                    <label
+                      htmlFor="universal-control-group"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Mark as Universal Control Group
+                    </label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="control-group-active"
+                      checked={isActive}
+                      onChange={(e) => setIsActive(e.currentTarget.checked)}
+                    />
+                    <label
+                      htmlFor="control-group-active"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Active
+                    </label>
+                  </div>
                 </div>
               </>
             )}

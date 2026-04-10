@@ -57,6 +57,7 @@ export default function CreateProductPage({
     unit: "data_mb",
     unit_value: 1,
     validity_hours: 24,
+    tags: [],
   });
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
 
@@ -96,16 +97,8 @@ export default function CreateProductPage({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate required fields
-    if (
-      !formData.product_code.trim() ||
-      !formData.name.trim() ||
-      formData.price <= 0 ||
-      !formData.da_id.trim()
-    ) {
-      showError(t.products.productCodeNameRequired, "", true);
-      return;
-    }
+    // Note: Form validation is now handled in ProductForm component
+    // Form will prevent submission if required fields are empty
 
     try {
       setIsLoading(true);
@@ -142,6 +135,27 @@ export default function CreateProductPage({
 
       // Note: combo_data is kept for frontend only, not sent to backend yet
       // Backend support will be added later
+
+      // CRITICAL: Ensure tags is ALWAYS an array, NEVER a string
+      // This is the most important fix - tags MUST be an array for the backend
+      if (finalSubmitData.tags) {
+        if (typeof finalSubmitData.tags === 'string') {
+          // If tags is a string, try to parse it as JSON array
+          try {
+            const parsed = JSON.parse(finalSubmitData.tags);
+            finalSubmitData.tags = Array.isArray(parsed) ? parsed : [];
+          } catch {
+            // If parsing fails, create empty array
+            finalSubmitData.tags = [];
+          }
+        } else if (!Array.isArray(finalSubmitData.tags)) {
+          // If tags is some other type, convert to empty array
+          finalSubmitData.tags = [];
+        }
+      } else {
+        // If tags is undefined/null, set to empty array
+        finalSubmitData.tags = [];
+      }
 
       const result = await productService.createProduct(finalSubmitData);
       success(
@@ -197,6 +211,7 @@ export default function CreateProductPage({
       | string
       | number
       | boolean
+      | string[]
       | undefined
       | CreateProductRequest["combo_data"],
   ) => {

@@ -255,6 +255,16 @@ class DataConnectorService {
       return [];
     }
   }
+
+  async getConnectionProfilesByDataConnectorId(dataConnectorId: string): Promise<any[]> {
+    try {
+      const result = await this.request<any>(`/${dataConnectorId}`);
+      return result?.data || result || [];
+    } catch (err) {
+      console.error('Failed to fetch connection profiles for data connector:', err);
+      return [];
+    }
+  }
 }
 
 export const dataConnectorService = new DataConnectorService();

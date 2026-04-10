@@ -56,6 +56,7 @@ export default function EditProductPage() {
     unit: "data_mb",
     unit_value: 0,
     validity_hours: undefined,
+    tags: [],
   });
 
   useEffect(() => {
@@ -113,6 +114,27 @@ export default function EditProductPage() {
         | { resources: unknown[]; shared_validity?: boolean; shared_validity_hours?: number }
         | undefined;
 
+      // Handle tags - they might come as a string (JSON array) or as an array
+      let tagsArray: string[] = [];
+      if (productData.tags) {
+        if (typeof productData.tags === "string") {
+          // If tags is a stringified JSON array, parse it
+          try {
+            tagsArray = JSON.parse(productData.tags);
+            if (!Array.isArray(tagsArray)) {
+              tagsArray = [];
+            }
+          } catch {
+            tagsArray = [];
+          }
+        } else if (Array.isArray(productData.tags)) {
+          // If tags is already an array, map it to ensure all are strings
+          tagsArray = productData.tags.map((tag: any) =>
+            typeof tag === "string" ? tag : (tag?.name || String(tag))
+          );
+        }
+      }
+
       setFormData({
         product_code: productData.product_code || "",
         name: productData.name || "",
@@ -127,9 +149,7 @@ export default function EditProductPage() {
         unit_value: productData.unit_value ?? 0,
         validity_hours: productData.validity_hours || (productData.validity_days ? productData.validity_days * 24 : undefined),
         combo_data: comboDataFromMetadata,
-        tags: (productData.tags || []).map((tag: any) =>
-          typeof tag === "string" ? tag : (tag?.name || String(tag))
-        ),
+        tags: tagsArray,
       });
 
       // Set selected category IDs for MultiCategorySelector
@@ -147,15 +167,8 @@ export default function EditProductPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate required fields
-    if (
-      !formData.name?.trim() ||
-      !formData.product_code?.trim() ||
-      !formData.da_id?.trim()
-    ) {
-      showError(t.products.productCodeNameRequired, "", true);
-      return;
-    }
+    // Note: Form validation is now handled in ProductForm component
+    // Form will prevent submission if required fields are empty
 
     try {
       setIsLoading(true);
@@ -181,6 +194,7 @@ export default function EditProductPage() {
         ...updateData,
       };
 
+
       // Pass validity_hours for update endpoint
       if (validity_hours && validity_hours > 0) {
         finalUpdateData.validity_hours = validity_hours;
@@ -194,6 +208,27 @@ export default function EditProductPage() {
       // Include combo_data if provided (for combo products)
       if (combo_data && combo_data.resources.length > 0) {
         finalUpdateData.combo_data = combo_data;
+      }
+
+      // CRITICAL: Ensure tags is ALWAYS an array, NEVER a string
+      // This is the most important fix - tags MUST be an array for the backend
+      if (finalUpdateData.tags) {
+        if (typeof finalUpdateData.tags === 'string') {
+          // If tags is a string, try to parse it as JSON array
+          try {
+            const parsed = JSON.parse(finalUpdateData.tags);
+            finalUpdateData.tags = Array.isArray(parsed) ? parsed : [];
+          } catch {
+            // If parsing fails, create empty array
+            finalUpdateData.tags = [];
+          }
+        } else if (!Array.isArray(finalUpdateData.tags)) {
+          // If tags is some other type, convert to empty array
+          finalUpdateData.tags = [];
+        }
+      } else {
+        // If tags is undefined/null, set to empty array
+        finalUpdateData.tags = [];
       }
 
       // Update product data
@@ -214,7 +249,7 @@ export default function EditProductPage() {
 
   const handleInputChange = (
     field: keyof UpdateProductRequest,
-    value: string | number | boolean | undefined | UpdateProductRequest["combo_data"]
+    value: string | number | boolean | string[] | undefined | UpdateProductRequest["combo_data"]
   ) => {
     setFormData({ ...formData, [field]: value });
   };

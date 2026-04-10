@@ -34,6 +34,7 @@ import {
 } from "../types/dataConnector";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { PermissionGate } from "../../auth/components/PermissionGate";
+import Pagination from "../../../shared/components/ui/Pagination";
 
 export default function DataConnectors() {
   const navigate = useNavigate();
@@ -58,6 +59,9 @@ export default function DataConnectors() {
     "all" | "active" | "inactive"
   >("all");
   const [showFilterPanel, setShowFilterPanel] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(15);
+  const [totalCount, setTotalCount] = useState(0);
   const activeFilterCount =
     (filterType !== "all" ? 1 : 0) + (filterStatus !== "all" ? 1 : 0);
 
@@ -67,6 +71,8 @@ export default function DataConnectors() {
 
       const params: DataConnectorFilterParams = {
         search: searchTerm.trim() || undefined,
+        limit: pageSize,
+        offset: (currentPage - 1) * pageSize,
       };
 
       // Type filter – single value
@@ -81,8 +87,9 @@ export default function DataConnectors() {
         params.is_active = false;
       }
 
-      const { data } = await dataConnectorService.fetchDataConnectors(params);
-      setConnectors(data);
+      const response = await dataConnectorService.fetchDataConnectors(params);
+      setConnectors(response.data);
+      setTotalCount(response.total);
     } catch (error) {
       console.error("Failed to load data connectors:", error);
       showError("Error", "Failed to load connectors");
@@ -104,9 +111,15 @@ export default function DataConnectors() {
     }
   };
 
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterType, filterStatus]);
+
+  // Load connectors when currentPage, search, filters, or pageSize changes
   useEffect(() => {
     loadConnectors();
-  }, [searchTerm, filterType, filterStatus]);
+  }, [searchTerm, filterType, filterStatus, currentPage, pageSize]);
 
   useEffect(() => {
     loadReferenceData();
@@ -130,10 +143,27 @@ export default function DataConnectors() {
 
     try {
       setIsDeleting(true);
-      await dataConnectorService.deleteDataConnector(connectorToDelete.id);
+      const connectorId = connectorToDelete.id;
+      await dataConnectorService.deleteDataConnector(connectorId);
+      // Optimistic update: remove from list
+      setConnectors((prev) => prev.filter((c) => c.id !== connectorId));
+      // Update statistics
+      if (statistics) {
+        setStatistics({
+          ...statistics,
+          total_connectors: Math.max(0, statistics.total_connectors - 1),
+          active_connectors: connectorToDelete.is_active
+            ? Math.max(0, statistics.active_connectors - 1)
+            : statistics.active_connectors,
+          total_connection_count: Math.max(
+            0,
+            statistics.total_connection_count -
+              (connectorToDelete.connection_count || 0),
+          ),
+        });
+      }
       success("Deleted", `${connectorToDelete.name} was deleted successfully.`);
       setConnectorToDelete(null);
-      await Promise.all([loadConnectors(), loadReferenceData()]);
     } catch (err: any) {
       showError("Delete failed", err.message || "Could not delete connector");
     } finally {
@@ -162,6 +192,10 @@ export default function DataConnectors() {
         if (!updated) throw new Error("Connector not found");
 
         savedConnector = updated;
+        // Optimistic update: update in list
+        setConnectors((prev) =>
+          prev.map((c) => (c.id === editingConnector.id ? savedConnector : c)),
+        );
         success("Updated", `${formData.name} was updated successfully.`);
       } else {
         // ─── Create ───────────────────────────────────
@@ -174,11 +208,26 @@ export default function DataConnectors() {
 
         savedConnector =
           await dataConnectorService.createDataConnector(createPayload);
+        // Optimistic update: add to list
+        setConnectors((prev) => [savedConnector, ...prev]);
+        // Update statistics
+        if (statistics) {
+          setStatistics({
+            ...statistics,
+            total_connectors: statistics.total_connectors + 1,
+            active_connectors: savedConnector.is_active
+              ? statistics.active_connectors + 1
+              : statistics.active_connectors,
+            total_connection_count:
+              statistics.total_connection_count +
+              (savedConnector.connection_count || 0),
+          });
+        }
         success("Created", `${formData.name} was created successfully.`);
       }
 
-      await loadConnectors(); // refresh list
-      await loadReferenceData();
+      setShowCreateModal(false);
+      setEditingConnector(null);
     } catch (err: any) {
       console.error(err);
       showError("Save failed", err.message || "Could not save connector");
@@ -188,6 +237,10 @@ export default function DataConnectors() {
   const handleCloseForm = () => {
     setShowCreateModal(false);
     setEditingConnector(null);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   return (
@@ -557,6 +610,7 @@ export default function DataConnectors() {
                             onClick={() => handleConnectorClick(connector)}
                             className={`group p-3 ${tw.rounded} ${tw.textSecondary} hover:bg-[${color.primary.accent}]/10 transition-all duration-200`}
                             title="View details"
+                            disabled={isDeleting && connectorToDelete?.id === connector.id}
                           >
                             <Eye className="h-4 w-4" />
                           </button>
@@ -565,6 +619,7 @@ export default function DataConnectors() {
                               onClick={() => handleEdit(connector)}
                               className={`group p-3 ${tw.rounded} ${tw.textSecondary} hover:bg-[${color.primary.accent}]/10 transition-all duration-200`}
                               title="Edit connector"
+                              disabled={isDeleting && connectorToDelete?.id === connector.id}
                             >
                               <Edit className="h-4 w-4" />
                             </button>
@@ -572,10 +627,20 @@ export default function DataConnectors() {
                           <PermissionGate permission="servers.delete">
                             <button
                               onClick={() => handleDelete(connector)}
-                              className={`group p-3 ${tw.rounded} text-red-600 hover:bg-red-50 transition-all duration-200`}
+                              className={`group p-3 ${tw.rounded} text-red-600 hover:bg-red-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
                               title="Delete connector"
+                              disabled={
+                                isDeleting && connectorToDelete?.id === connector.id
+                              }
                             >
-                              <Trash2 className="h-4 w-4" />
+                              {isDeleting &&
+                              connectorToDelete?.id === connector.id ? (
+                                <div
+                                  className="animate-spin rounded-full h-4 w-4 border-2 border-red-300 border-t-red-600"
+                                />
+                              ) : (
+                                <Trash2 className="h-4 w-4" />
+                              )}
                             </button>
                           </PermissionGate>
                         </div>
@@ -586,6 +651,16 @@ export default function DataConnectors() {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
+          {totalCount > 0 && (
+            <Pagination
+              currentPage={currentPage}
+              pageSize={pageSize}
+              totalItems={totalCount}
+              onPageChange={handlePageChange}
+            />
+          )}
         </div>
       )}
 

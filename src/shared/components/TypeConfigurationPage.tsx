@@ -1252,8 +1252,9 @@ function TypeConfigurationModal({
 
               {/* Validity & Price - 2 Column Layout */}
               <div className="pt-3 mt-3">
-                <label className="flex items-center gap-2 mb-3">
+                <div className="flex items-center gap-2 mb-3">
                   <Checkbox
+                    id="combo-shared-validity"
                     checked={comboSharedValidity}
                     onChange={(e) => {
                       setComboSharedValidity(e.target.checked);
@@ -1264,15 +1265,18 @@ function TypeConfigurationModal({
                         })),
                       );
                     }}
-                    className="rounded"
                   />
-                  <span className="text-sm font-medium text-gray-700">
+                  <label
+                    htmlFor="combo-shared-validity"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Shared Validity
-                  </span>
-                </label>
+                  </label>
+                </div>
 
-                <label className="flex items-center gap-2 mb-3">
+                <div className="flex items-center gap-2 mb-3">
                   <Checkbox
+                    id="combo-shared-price"
                     checked={comboSharedPrice}
                     onChange={(e) => {
                       const checked = e.target.checked;
@@ -1286,12 +1290,14 @@ function TypeConfigurationModal({
                         );
                       }
                     }}
-                    className="rounded"
                   />
-                  <span className="text-sm font-medium text-gray-700">
+                  <label
+                    htmlFor="combo-shared-price"
+                    className="text-sm font-medium text-gray-700"
+                  >
                     Shared Combo Price
-                  </span>
-                </label>
+                  </label>
+                </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   {comboSharedValidity && (

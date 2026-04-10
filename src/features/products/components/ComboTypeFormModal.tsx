@@ -254,15 +254,21 @@ export default function ComboTypeFormModal({
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="flex items-center gap-2">
               <Checkbox
-                label="Shared Validity"
+                id="shared-validity"
                 checked={formData.sharedValidity}
                 onChange={(e) =>
                   setFormData({ ...formData, sharedValidity: e.target.checked })
                 }
                 disabled={isLoading}
               />
+              <label
+                htmlFor="shared-validity"
+                className="text-sm font-medium text-gray-700"
+              >
+                Shared Validity
+              </label>
             </div>
 
             {formData.sharedValidity && (
@@ -283,15 +289,18 @@ export default function ComboTypeFormModal({
               </div>
             )}
 
-            <div className="space-y-2">
+            <div className="flex items-center gap-2">
               <Checkbox
-                label="Active"
+                id="is-active"
                 checked={formData.isActive}
                 onChange={(e) =>
                   setFormData({ ...formData, isActive: e.target.checked })
                 }
                 disabled={isLoading}
               />
+              <label htmlFor="is-active" className="text-sm font-medium text-gray-700">
+                Active
+              </label>
             </div>
           </div>
 
@@ -366,9 +375,9 @@ export default function ComboTypeFormModal({
                     />
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="flex items-center gap-2">
                     <Checkbox
-                      label="Shared Validity"
+                      id={`resource-validity-${index}`}
                       checked={resource.sharedValidity}
                       onChange={(e) =>
                         handleResourceChange(
@@ -379,6 +388,12 @@ export default function ComboTypeFormModal({
                       }
                       disabled={isLoading}
                     />
+                    <label
+                      htmlFor={`resource-validity-${index}`}
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Shared Validity
+                    </label>
                   </div>
 
                   {resource.sharedValidity && (
