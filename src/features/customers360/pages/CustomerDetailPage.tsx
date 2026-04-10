@@ -647,12 +647,12 @@ export default function CustomerDetailPage() {
     };
 
     events.forEach((event) => {
-      const channel = event.type.toLowerCase();
+      const channel = (event.type || "").toLowerCase();
       if (channelStats[channel]) {
         channelStats[channel].total++;
         // Count engaged events (opened, clicked, read)
         if (
-          ["opened", "clicked", "read"].includes(event.status.toLowerCase())
+          ["opened", "clicked", "read"].includes((event.status || "").toLowerCase())
         ) {
           channelStats[channel].engaged++;
         }

@@ -385,9 +385,9 @@ export default function ConfigurationPage() {
 
   const filteredConfigurations = configurations.filter((config) => {
     const matchesSearch =
-      config.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      config.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      config.category.toLowerCase().includes(searchTerm.toLowerCase());
+      (config.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (config.description || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (config.category || "").toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesCategory =
       selectedCategory === "all" || config.type === selectedCategory;

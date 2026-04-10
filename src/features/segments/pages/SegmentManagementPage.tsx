@@ -1047,7 +1047,7 @@ export default function SegmentManagementPage() {
   const filteredSegments = (segments || []).filter((segment) => {
     const matchesSearch =
       !searchTerm ||
-      segment.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (segment.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (segment.description || "")
         .toLowerCase()
         .includes(searchTerm.toLowerCase());

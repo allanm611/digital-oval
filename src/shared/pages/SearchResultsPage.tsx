@@ -653,11 +653,11 @@ export default function SearchResultsPage() {
       searchResults.configurations = allConfigurations
         .filter(
           (config) =>
-            config.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            config.description
+            (config.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (config.description || "")
               .toLowerCase()
               .includes(searchQuery.toLowerCase()) ||
-            config.category.toLowerCase().includes(searchQuery.toLowerCase())
+            (config.category || "").toLowerCase().includes(searchQuery.toLowerCase())
         )
         .map((config) => ({
           id: config.id,

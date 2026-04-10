@@ -1086,8 +1086,8 @@ export default function OffersPage() {
   const filteredOffers = offers.filter((offer) => {
     const matchesSearch =
       !searchTerm ||
-      offer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      offer.description?.toLowerCase().includes(searchTerm.toLowerCase());
+      (offer.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (offer.description || "").toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus =
       selectedStatus === "all" || offer.status === selectedStatus;

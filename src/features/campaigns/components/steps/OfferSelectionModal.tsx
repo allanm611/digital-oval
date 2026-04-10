@@ -295,7 +295,7 @@ export default function OfferSelectionModal({
 
   const filteredOffers = offers.filter((offer) => {
     const matchesSearch =
-      offer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (offer.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (offer.description &&
         offer.description.toLowerCase().includes(searchTerm.toLowerCase()));
 

@@ -97,7 +97,7 @@ export default function SegmentSelectionModal({
 
   const filteredSegments = segments.filter((segment) => {
     const matchesSearch =
-      segment.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (segment.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (segment.description?.toLowerCase() || "").includes(
         searchTerm.toLowerCase()
       );

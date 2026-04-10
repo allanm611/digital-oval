@@ -798,9 +798,9 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
       allConfigurations
         .filter(
           (config) =>
-            config.name.toLowerCase().includes(query.toLowerCase()) ||
-            config.description.toLowerCase().includes(query.toLowerCase()) ||
-            config.category.toLowerCase().includes(query.toLowerCase()),
+            (config.name || "").toLowerCase().includes(query.toLowerCase()) ||
+            (config.description || "").toLowerCase().includes(query.toLowerCase()) ||
+            (config.category || "").toLowerCase().includes(query.toLowerCase()),
         )
         .slice(0, 3)
         .forEach((config) => {
