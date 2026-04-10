@@ -17,6 +17,8 @@ import { PermissionGate } from "../../auth/components/PermissionGate";
 import { characterSetService } from "../../configurations/services/characterSetService";
 import { senderIdService } from "../../configurations/services/senderIdService";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import { notificationService } from "../../notifications/services/notificationService";
+import { NotificationSubscription } from "../../notifications/types/notification";
 
 // Get all countries from world-countries library, sorted alphabetically
 const countriesList = countries
@@ -138,28 +140,6 @@ const dndDays = [
   { value: "custom", label: "Custom Days" },
 ];
 
-// Notification Types
-const notificationTypes = [
-  {
-    id: "campaigns",
-    label: "Campaigns",
-    description: "Campaign updates and status",
-  },
-  { id: "offers", label: "Offers", description: "Offer changes and approvals" },
-  {
-    id: "segments",
-    label: "Segments",
-    description: "Segment creation and updates",
-  },
-  { id: "products", label: "Products", description: "Product changes" },
-  { id: "jobs", label: "Jobs", description: "Job execution and workflows" },
-  { id: "users", label: "Users", description: "User management" },
-  {
-    id: "system",
-    label: "System",
-    description: "System alerts and maintenance",
-  },
-];
 
 // Notification Channels
 const notificationChannels = [
@@ -290,17 +270,10 @@ export default function SettingsPage() {
     Record<string, string>
   >({});
 
-  // Notification types enabled/disabled
-  const [enabledNotificationTypes, setEnabledNotificationTypes] = useState<
-    Set<string>
-  >(() => {
-    const stored = localStorage.getItem("enabledNotificationTypes");
-    if (stored) {
-      return new Set(JSON.parse(stored));
-    }
-    // Default: all types enabled
-    return new Set(notificationTypes.map((type) => type.id));
-  });
+  // Notification subscriptions from API
+  const [subscriptions, setSubscriptions] = useState<NotificationSubscription[]>([]);
+  const [subscriptionsLoading, setSubscriptionsLoading] = useState(true);
+  const [subscriptionsSavingId, setSubscriptionsSavingId] = useState<number | null>(null);
 
   // Preferred channels for notifications
   const [preferredNotificationChannels, setPreferredNotificationChannels] =
@@ -312,6 +285,62 @@ export default function SettingsPage() {
       // Default: SMS and Email
       return ["sms", "email"];
     });
+
+  // Load subscriptions from API on mount
+  useEffect(() => {
+    const loadSubscriptions = async () => {
+      try {
+        setSubscriptionsLoading(true);
+        const response = await notificationService.getNotificationSubscriptions();
+        if (response.success && response.data) {
+          setSubscriptions(response.data);
+        }
+      } catch (error) {
+        console.error("Failed to load notification subscriptions:", error);
+      } finally {
+        setSubscriptionsLoading(false);
+      }
+    };
+    loadSubscriptions();
+  }, []);
+
+  // Handle subscription toggle
+  const handleSubscriptionToggle = async (
+    subscriptionId: number,
+    currentEnabled: boolean
+  ) => {
+    try {
+      setSubscriptionsSavingId(subscriptionId);
+      // Update local state optimistically
+      setSubscriptions((prev) =>
+        prev.map((sub) =>
+          sub.id === subscriptionId
+            ? { ...sub, is_enabled: !currentEnabled }
+            : sub
+        )
+      );
+      // Call API
+      const updatedSubscriptions = subscriptions.map((sub) =>
+        sub.id === subscriptionId
+          ? { notification_rule_id: sub.notification_rule_id, is_enabled: !currentEnabled }
+          : { notification_rule_id: sub.notification_rule_id, is_enabled: sub.is_enabled }
+      );
+      await notificationService.updateNotificationSubscriptions(updatedSubscriptions);
+      showToast("Notification preference updated");
+    } catch (error) {
+      console.error("Failed to update subscription:", error);
+      // Revert optimistic update
+      setSubscriptions((prev) =>
+        prev.map((sub) =>
+          sub.id === subscriptionId
+            ? { ...sub, is_enabled: currentEnabled }
+            : sub
+        )
+      );
+    } finally {
+      setSubscriptionsSavingId(null);
+    }
+  };
 
   // Cross-tab synchronization: Listen for localStorage changes from other tabs
   useEffect(() => {
@@ -502,10 +531,6 @@ export default function SettingsPage() {
       await new Promise((resolve) => setTimeout(resolve, 500));
       // Save to localStorage
       localStorage.setItem("appSettings", JSON.stringify(settings));
-      localStorage.setItem(
-        "enabledNotificationTypes",
-        JSON.stringify(Array.from(enabledNotificationTypes)),
-      );
       localStorage.setItem(
         "preferredNotificationChannels",
         JSON.stringify(preferredNotificationChannels),
@@ -1164,36 +1189,41 @@ export default function SettingsPage() {
           {/* Notification Types */}
           <div>
             <h3 className="text-sm font-semibold text-gray-900 mb-4">
-              Notification Types
+              Notification Preferences
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {notificationTypes.map((type) => (
-                <label
-                  key={type.id}
-                  className="flex items-start gap-3 cursor-pointer p-3 hover:bg-gray-50 rounded-lg transition-colors"
-                >
-                  <Checkbox checked={enabledNotificationTypes.has(type.id)}
-                    onChange={(e) => {
-                      const updated = new Set(enabledNotificationTypes);
-                      if (e.target.checked) {
-                        updated.add(type.id);
-                      } else {
-                        updated.delete(type.id);
+            {subscriptionsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+              </div>
+            ) : subscriptions.length === 0 ? (
+              <p className="text-sm text-gray-500">No notification types available</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {subscriptions.map((subscription) => (
+                  <div
+                    key={subscription.id}
+                    className="flex items-start gap-3 cursor-pointer p-3 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    <Checkbox
+                      id={`notification-${subscription.id}`}
+                      checked={subscription.is_enabled}
+                      onChange={() =>
+                        handleSubscriptionToggle(subscription.id, subscription.is_enabled)
                       }
-                      setEnabledNotificationTypes(updated);
-                    }}
-                    className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-2 mt-1" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">
-                      {type.label}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      {type.description}
-                    </p>
+                      disabled={subscriptionsSavingId === subscription.id}
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">
+                        {subscription.rule_name}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {subscription.rule_template}
+                      </p>
+                    </div>
                   </div>
-                </label>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

@@ -1,322 +1,164 @@
 import {
-  Notification,
-  NotificationResponse,
-  NotificationStats,
-  GetNotificationsQuery,
-  MarkAsReadRequest,
-  MarkAllAsReadResponse,
-  // ApiSuccessResponse,
+  InboxNotification,
+  GetInboxResponse,
+  GetSubscriptionsResponse,
+  UpdateSubscriptionsRequest,
+  UpdateSubscriptionsResponse,
+  MarkNotificationReadResponse,
 } from "../types/notification";
-import {
-  hardcodedCampaigns,
-  hardcodedSegments,
-  hardcodedOffers,
-} from "../../configurations/configs/configurationPageConfigs";
-
-const MOCK_NOTIFICATIONS: Notification[] = [
-  {
-    id: 1,
-    type: "campaign_approval_request",
-    title: "Campaign Approval Required",
-    message: `Campaign '${hardcodedCampaigns[0].name}' is pending your approval`,
-    priority: "high",
-    isRead: false,
-    createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(), 
-    actionUrl: `/dashboard/campaigns/${hardcodedCampaigns[0].id}`,
-    actionLabel: "Review Campaign",
-  },
-  {
-    id: 2,
-    type: "campaign_approved",
-    title: "Campaign Approved",
-    message: `Your campaign '${hardcodedCampaigns[1].name}' has been approved and is now active`,
-    priority: "medium",
-    isRead: false,
-    createdAt: new Date(Date.now() - 15 * 60 * 1000).toISOString(), 
-    actionUrl: `/dashboard/campaigns/${hardcodedCampaigns[1].id}`,
-    actionLabel: "View Campaign",
-  },
-  {
-    id: 3,
-    type: "offer_approval_request",
-    title: "Offer Approval Required",
-    message: `Offer '${hardcodedOffers[2].name}' requires your approval`,
-    priority: "high",
-    isRead: false,
-    createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), 
-    actionUrl: `/dashboard/offers/${hardcodedOffers[2].id}`,
-    actionLabel: "Review Offer",
-  },
-  {
-    id: 4,
-    type: "segment_computation_completed",
-    title: "Segment Computation Completed",
-    message: `Segment '${hardcodedSegments[0].name}' has finished computing with ${hardcodedSegments[0].member_count.toLocaleString()} members`,
-    priority: "low",
-    isRead: true,
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-    actionUrl: `/dashboard/segments/${hardcodedSegments[0].id}`,
-    actionLabel: "View Segment",
-  },
-  {
-    id: 5,
-    type: "segment_computation_failed",
-    title: "Segment Computation Failed",
-    message: `Segment '${hardcodedSegments[1].name}' computation failed. Please check the segment criteria`,
-    priority: "high",
-    isRead: false,
-    createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(), // 3 hours ago
-    actionUrl: `/dashboard/segments/${hardcodedSegments[1].id}`,
-    actionLabel: "Fix Segment",
-  },
-  {
-    id: 6,
-    type: "campaign_execution_started",
-    title: "Campaign Execution Started",
-    message: `Campaign '${hardcodedCampaigns[2].name}' has started executing`,
-    priority: "medium",
-    isRead: true,
-    createdAt: new Date(Date.now() - 7 * 60 * 60 * 1000).toISOString(), // 7 hours ago
-    actionUrl: `/dashboard/campaigns/${hardcodedCampaigns[2].id}`,
-    actionLabel: "View Campaign",
-  },
-  {
-    id: 7,
-    type: "offer_approved",
-    title: "Offer Approved",
-    message: `Offer '${hardcodedOffers[3].name}' has been approved`,
-    priority: "medium",
-    isRead: true,
-    createdAt: new Date(Date.now() - 10 * 60 * 60 * 1000).toISOString(), // 10 hours ago
-    actionUrl: `/dashboard/offers/${hardcodedOffers[3].id}`,
-    actionLabel: "View Offer",
-  },
-  {
-    id: 8,
-    type: "channel_delivery_failure",
-    title: "Channel Delivery Failure",
-    message: `SMS delivery failed for campaign '${hardcodedCampaigns[0].name}'. 234 messages failed to deliver`,
-    priority: "high",
-    isRead: false,
-    createdAt: new Date(Date.now() - 14 * 60 * 60 * 1000).toISOString(), // 14 hours ago
-    actionUrl: `/dashboard/campaigns/${hardcodedCampaigns[0].id}`,
-    actionLabel: "View Campaign",
-  },
-  {
-    id: 9,
-    type: "communication_policy_violation",
-    title: "Communication Policy Violation",
-    message: `Campaign '${hardcodedCampaigns[2].name}' violated DND policy. 12 messages sent outside allowed hours`,
-    priority: "high",
-    isRead: false,
-    createdAt: new Date(Date.now() - 15 * 60 * 60 * 1000).toISOString(), // 15 hours ago
-    actionUrl: `/dashboard/campaigns/${hardcodedCampaigns[2].id}`,
-    actionLabel: "View Campaign",
-  },
-  {
-    id: 10,
-    type: "system_update",
-    title: "System Update Available",
-    message: `New system update with offer '${hardcodedOffers[4].name}' integration and improved analytics`,
-    priority: "low",
-    isRead: true,
-    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 24 hours ago
-  },
-];
-
-// Store for managing read/unread state (in-memory only)
-let notificationStore = [...MOCK_NOTIFICATIONS];
+import { buildApiUrl, getAuthHeaders } from "../../../shared/services/api";
 
 class NotificationService {
-  // Simulate API delay
-  private async delay(ms: number = 300): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-
   /**
-   * GET /notifications - Get all notifications for the current user
+   * GET /notifications/inbox - Get user's notification inbox
+   * Retrieves all notifications sent to the current user
    */
-  async getNotifications(
-    query?: GetNotificationsQuery
-  ): Promise<NotificationResponse> {
-    await this.delay(200);
+  async getInboxNotifications(): Promise<GetInboxResponse> {
+    try {
+      const url = buildApiUrl("/notifications/inbox");
+      const response = await fetch(url, {
+        method: "GET",
+        headers: getAuthHeaders(),
+      });
 
-    let filtered = [...notificationStore];
-
-    // Apply filters
-    if (query?.type) {
-      filtered = filtered.filter((n) => n.type === query.type);
-    }
-    if (query?.priority) {
-      filtered = filtered.filter((n) => n.priority === query.priority);
-    }
-    if (query?.isRead !== undefined) {
-      filtered = filtered.filter((n) => n.isRead === query.isRead);
-    }
-    if (query?.search) {
-      const searchLower = query.search.toLowerCase();
-      filtered = filtered.filter(
-        (n) =>
-          n.title.toLowerCase().includes(searchLower) ||
-          n.message.toLowerCase().includes(searchLower)
-      );
-    }
-
-    // Sort by createdAt (newest first)
-    filtered.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-
-    // Apply pagination
-    const page = query?.page || 1;
-    const pageSize = query?.pageSize || 50;
-    const startIndex = (page - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    const paginated = filtered.slice(startIndex, endIndex);
-
-    return {
-      success: true,
-      data: paginated,
-      pagination: {
-        total: filtered.length,
-        page,
-        pageSize,
-        totalPages: Math.ceil(filtered.length / pageSize),
-      },
-    };
-  }
-
-  /**
-   * GET /notifications/stats - Get notification statistics
-   */
-  async getNotificationStats(): Promise<ApiSuccessResponse<NotificationStats>> {
-    await this.delay(100);
-
-    const unread = notificationStore.filter((n) => !n.isRead).length;
-    const byType: Record<string, number> = {};
-    const byPriority: Record<string, number> = {};
-
-    notificationStore.forEach((n) => {
-      byType[n.type] = (byType[n.type] || 0) + 1;
-      byPriority[n.priority] = (byPriority[n.priority] || 0) + 1;
-    });
-
-    return {
-      success: true,
-      data: {
-        total: notificationStore.length,
-        unread,
-        byType: byType as Record<NotificationType, number>,
-        byPriority: byPriority as Record<NotificationPriority, number>,
-      },
-    };
-  }
-
-  /**
-   * GET /notifications/:id - Get a specific notification
-   */
-  async getNotificationById(
-    id: string | number
-  ): Promise<ApiSuccessResponse<Notification>> {
-    await this.delay(100);
-    const notification = notificationStore.find((n) => n.id === id);
-    if (!notification) {
-      throw new Error("Notification not found");
-    }
-    return {
-      success: true,
-      data: notification,
-    };
-  }
-
-  /**
-   * PATCH /notifications/mark-as-read - Mark notifications as read
-   */
-  async markAsRead(
-    request: MarkAsReadRequest
-  ): Promise<ApiSuccessResponse<{ count: number }>> {
-    await this.delay(200);
-    let count = 0;
-    notificationStore = notificationStore.map((n) => {
-      if (request.notificationIds.includes(n.id) && !n.isRead) {
-        count++;
-        return { ...n, isRead: true };
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      return n;
-    });
-    return {
-      success: true,
-      data: { count },
-    };
-  }
 
-  /**
-   * PATCH /notifications/mark-all-as-read - Mark all notifications as read
-   */
-  async markAllAsRead(): Promise<MarkAllAsReadResponse> {
-    await this.delay(200);
-    let count = 0;
-    notificationStore = notificationStore.map((n) => {
-      if (!n.isRead) {
-        count++;
-        return { ...n, isRead: true };
-      }
-      return n;
-    });
-    return {
-      success: true,
-      message: `Marked ${count} notifications as read`,
-      count,
-    };
-  }
-
-  /**
-   * DELETE /notifications/:id - Delete a notification
-   */
-  async deleteNotification(
-    id: string | number
-  ): Promise<ApiSuccessResponse<{ deleted: boolean }>> {
-    await this.delay(200);
-    const index = notificationStore.findIndex((n) => n.id === id);
-    if (index === -1) {
-      throw new Error("Notification not found");
+      const data: GetInboxResponse = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Failed to fetch inbox notifications:", error);
+      throw error;
     }
-    notificationStore.splice(index, 1);
-    return {
-      success: true,
-      data: { deleted: true },
-    };
   }
 
   /**
-   * DELETE /notifications - Delete multiple notifications
+   * PUT /notifications/inbox/:id/read - Mark single notification as read
+   * Marks a specific notification as read
    */
-  async deleteNotifications(
-    ids: (string | number)[]
-  ): Promise<ApiSuccessResponse<{ count: number }>> {
-    await this.delay(200);
-    const initialLength = notificationStore.length;
-    notificationStore = notificationStore.filter((n) => !ids.includes(n.id));
-    const count = initialLength - notificationStore.length;
-    return {
-      success: true,
-      data: { count },
-    };
+  async markNotificationAsRead(
+    id: number | string
+  ): Promise<MarkNotificationReadResponse> {
+    try {
+      const url = buildApiUrl(`/notifications/inbox/${id}/read`);
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data: MarkNotificationReadResponse = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Failed to mark notification as read:", error);
+      throw error;
+    }
   }
 
   /**
-   * DELETE /notifications/read - Delete all read notifications
+   * PUT /notifications/inbox/read-all - Mark all notifications as read
+   * Marks all unread notifications as read in one action
    */
-  async deleteAllRead(): Promise<ApiSuccessResponse<{ count: number }>> {
-    await this.delay(200);
-    const initialLength = notificationStore.length;
-    notificationStore = notificationStore.filter((n) => !n.isRead);
-    const count = initialLength - notificationStore.length;
-    return {
-      success: true,
-      data: { count },
-    };
+  async markAllInboxAsRead(): Promise<MarkNotificationReadResponse> {
+    try {
+      const url = buildApiUrl("/notifications/inbox/read-all");
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data: MarkNotificationReadResponse = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Failed to mark all notifications as read:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * DELETE /notifications/inbox/:id - Delete notification from inbox
+   * Removes a notification from user's inbox
+   */
+  async deleteInboxNotification(id: number | string): Promise<{ success: boolean }> {
+    try {
+      const url = buildApiUrl(`/notifications/inbox/${id}`);
+      const response = await fetch(url, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Failed to delete notification:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * GET /notifications/subscriptions - Get user's notification subscriptions
+   * Retrieves which notification types the user is subscribed to
+   */
+  async getNotificationSubscriptions(): Promise<GetSubscriptionsResponse> {
+    try {
+      const url = buildApiUrl("/notifications/subscriptions");
+      const response = await fetch(url, {
+        method: "GET",
+        headers: getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data: GetSubscriptionsResponse = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Failed to fetch notification subscriptions:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * PUT /notifications/subscriptions - Update user's notification subscriptions
+   * Updates which notification types the user wants to receive
+   */
+  async updateNotificationSubscriptions(
+    subscriptions: UpdateSubscriptionsRequest["subscriptions"]
+  ): Promise<UpdateSubscriptionsResponse> {
+    try {
+      const url = buildApiUrl("/notifications/subscriptions");
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: {
+          ...getAuthHeaders(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ subscriptions }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data: UpdateSubscriptionsResponse = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Failed to update notification subscriptions:", error);
+      throw error;
+    }
   }
 }
 

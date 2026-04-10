@@ -9,22 +9,20 @@ import {
 } from "react";
 import { notificationService } from "../features/notifications/services/notificationService";
 import {
-  Notification,
+  InboxNotification,
   NotificationStats,
-  GetNotificationsQuery,
 } from "../features/notifications/types/notification";
 
 interface NotificationContextType {
-  notifications: Notification[];
+  notifications: InboxNotification[];
   stats: NotificationStats | null;
   isLoading: boolean;
   error: string | null;
-  refreshNotifications: (query?: GetNotificationsQuery) => Promise<void>;
+  refreshNotifications: () => Promise<void>;
   markAsRead: (ids: (string | number)[]) => Promise<void>;
   markAllAsRead: () => Promise<void>;
   deleteNotification: (id: string | number) => Promise<void>;
   deleteNotifications: (ids: (string | number)[]) => Promise<void>;
-  deleteAllRead: () => Promise<void>;
   startPolling: () => void;
   stopPolling: () => void;
   isPolling: boolean;
@@ -43,7 +41,7 @@ export function NotificationProvider({
   children,
   pollInterval = 30000, // 30 seconds default
 }: NotificationProviderProps) {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<InboxNotification[]>([]);
   const [stats, setStats] = useState<NotificationStats | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,134 +49,143 @@ export function NotificationProvider({
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef(true);
 
-  // Fetch notifications
-  const refreshNotifications = useCallback(
-    async (query?: GetNotificationsQuery) => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const response = await notificationService.getNotifications({
-          page: query?.page || 1,
-          pageSize: query?.pageSize || 50,
-          ...query,
-        });
-        if (isMountedRef.current) {
-          setNotifications(response.data || []);
-        }
-      } catch (err) {
-        if (isMountedRef.current) {
-          setError(
-            err instanceof Error ? err.message : "Failed to fetch notifications"
-          );
-          console.error("Failed to fetch notifications:", err);
-        }
-      } finally {
-        if (isMountedRef.current) {
-          setIsLoading(false);
-        }
-      }
-    },
-    []
-  );
-
-  // Fetch stats
-  const refreshStats = useCallback(async () => {
+  // Fetch notifications from inbox
+  const refreshNotifications = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
     try {
-      const response = await notificationService.getNotificationStats();
-      if (isMountedRef.current && response.success && response.data) {
-        setStats(response.data);
+      const response = await notificationService.getInboxNotifications();
+      if (isMountedRef.current) {
+        setNotifications(response.data || []);
+        // Calculate stats from notifications
+        const unread = response.data?.filter((n) => !n.is_read).length || 0;
+        setStats({
+          total: response.data?.length || 0,
+          unread,
+          byType: {},
+          byPriority: {},
+        });
       }
     } catch (err) {
-      console.error("Failed to fetch notification stats:", err);
+      if (isMountedRef.current) {
+        let errorMessage = "Unable to load notifications";
+        if (err instanceof Error) {
+          if (err.message.includes("500")) {
+            errorMessage = "Notification service is temporarily unavailable";
+          } else if (err.message.includes("401")) {
+            errorMessage = "Please log in again to view notifications";
+          } else if (err.message.includes("403")) {
+            errorMessage = "You don't have permission to view notifications";
+          } else if (err.message.includes("Network")) {
+            errorMessage = "Network error - please check your connection";
+          }
+        }
+        setError(errorMessage);
+        console.error("Failed to fetch notifications:", err);
+      }
+    } finally {
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
   }, []);
 
-  // Mark notifications as read
-  const markAsRead = useCallback(
-    async (ids: (string | number)[]) => {
-      try {
-        await notificationService.markAsRead({ notificationIds: ids });
-        // Update local state
-        setNotifications((prev) =>
-          prev.map((notif) =>
-            ids.includes(notif.id) ? { ...notif, isRead: true } : notif
-          )
-        );
-        // Refresh stats
-        await refreshStats();
-      } catch (err) {
-        console.error("Failed to mark notifications as read:", err);
-        throw err;
+  // Mark single notification as read
+  const markAsRead = useCallback(async (ids: (string | number)[]) => {
+    try {
+      // Mark each notification as read
+      for (const id of ids) {
+        await notificationService.markNotificationAsRead(id);
       }
-    },
-    [refreshStats]
-  );
+      // Update local state
+      setNotifications((prev) =>
+        prev.map((notif) =>
+          ids.includes(notif.id) ? { ...notif, is_read: true } : notif
+        )
+      );
+      // Update stats
+      setStats((prev) => {
+        if (!prev) return null;
+        const unread = Math.max(0, prev.unread - ids.length);
+        return { ...prev, unread };
+      });
+    } catch (err) {
+      console.error("Failed to mark notifications as read:", err);
+      throw err;
+    }
+  }, []);
 
   // Mark all as read
   const markAllAsRead = useCallback(async () => {
     try {
-      await notificationService.markAllAsRead();
+      await notificationService.markAllInboxAsRead();
       // Update local state
       setNotifications((prev) =>
-        prev.map((notif) => ({ ...notif, isRead: true }))
+        prev.map((notif) => ({ ...notif, is_read: true }))
       );
-      // Refresh stats
-      await refreshStats();
+      // Update stats
+      setStats((prev) => {
+        if (!prev) return null;
+        return { ...prev, unread: 0 };
+      });
     } catch (err) {
       console.error("Failed to mark all as read:", err);
       throw err;
     }
-  }, [refreshStats]);
+  }, []);
 
   // Delete notification
-  const deleteNotification = useCallback(
-    async (id: string | number) => {
-      try {
-        await notificationService.deleteNotification(id);
-        // Update local state
-        setNotifications((prev) => prev.filter((notif) => notif.id !== id));
-        // Refresh stats
-        await refreshStats();
-      } catch (err) {
-        console.error("Failed to delete notification:", err);
-        throw err;
-      }
-    },
-    [refreshStats]
-  );
-
-  // Delete multiple notifications
-  const deleteNotifications = useCallback(
-    async (ids: (string | number)[]) => {
-      try {
-        await notificationService.deleteNotifications(ids);
-        // Update local state
-        setNotifications((prev) =>
-          prev.filter((notif) => !ids.includes(notif.id))
-        );
-        // Refresh stats
-        await refreshStats();
-      } catch (err) {
-        console.error("Failed to delete notifications:", err);
-        throw err;
-      }
-    },
-    [refreshStats]
-  );
-
-  // Delete all read notifications
-  const deleteAllRead = useCallback(async () => {
+  const deleteNotification = useCallback(async (id: string | number) => {
     try {
-      await notificationService.deleteAllRead();
+      await notificationService.deleteInboxNotification(id);
       // Update local state
-      setNotifications((prev) => prev.filter((notif) => !notif.isRead));
-      // Refresh stats
-      await refreshStats();
+      setNotifications((prev) => {
+        const wasUnread = prev.find((n) => n.id === id)?.is_read === false;
+        // Update stats based on deletion
+        setStats((prevStats) => {
+          if (!prevStats) return null;
+          return {
+            ...prevStats,
+            total: Math.max(0, prevStats.total - 1),
+            unread: wasUnread ? Math.max(0, prevStats.unread - 1) : prevStats.unread,
+          };
+        });
+        return prev.filter((notif) => notif.id !== id);
+      });
     } catch (err) {
-      console.error("Failed to delete all read notifications:", err);
+      console.error("Failed to delete notification:", err);
       throw err;
     }
-  }, [refreshStats]);
+  }, []);
+
+  // Delete multiple notifications
+  const deleteNotifications = useCallback(async (ids: (string | number)[]) => {
+    try {
+      // Delete each notification
+      for (const id of ids) {
+        await notificationService.deleteInboxNotification(id);
+      }
+      // Update local state
+      setNotifications((prev) => {
+        const unreadCount = ids.filter(
+          (id) => prev.find((n) => n.id === id)?.is_read === false
+        ).length;
+        // Update stats based on deletions
+        setStats((prevStats) => {
+          if (!prevStats) return null;
+          return {
+            ...prevStats,
+            total: Math.max(0, prevStats.total - ids.length),
+            unread: Math.max(0, prevStats.unread - unreadCount),
+          };
+        });
+        return prev.filter((notif) => !ids.includes(notif.id));
+      });
+    } catch (err) {
+      console.error("Failed to delete notifications:", err);
+      throw err;
+    }
+  }, []);
 
   // Start polling
   const startPolling = useCallback(() => {
@@ -188,9 +195,8 @@ export function NotificationProvider({
     setIsPolling(true);
     pollingIntervalRef.current = setInterval(() => {
       refreshNotifications();
-      refreshStats();
     }, pollInterval);
-  }, [pollInterval, refreshNotifications, refreshStats]);
+  }, [pollInterval, refreshNotifications]);
 
   // Stop polling
   const stopPolling = useCallback(() => {
@@ -205,7 +211,6 @@ export function NotificationProvider({
   useEffect(() => {
     isMountedRef.current = true;
     refreshNotifications();
-    refreshStats();
     // Start polling automatically
     startPolling();
 
@@ -213,7 +218,7 @@ export function NotificationProvider({
       isMountedRef.current = false;
       stopPolling();
     };
-  }, [refreshNotifications, refreshStats, startPolling, stopPolling]);
+  }, [refreshNotifications, startPolling, stopPolling]);
 
   const value: NotificationContextType = {
     notifications,
@@ -225,7 +230,6 @@ export function NotificationProvider({
     markAllAsRead,
     deleteNotification,
     deleteNotifications,
-    deleteAllRead,
     startPolling,
     stopPolling,
     isPolling,

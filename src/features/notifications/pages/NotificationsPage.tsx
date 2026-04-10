@@ -3,13 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Bell, Trash2, X, ExternalLink, Search } from "lucide-react";
 import { useNotifications } from "../../../contexts/NotificationContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
-import { notificationService } from "../services/notificationService";
-import {
-  Notification,
-  NotificationType,
-  NotificationPriority,
-} from "../types/notification";
-import { NOTIFICATION_TYPE_METADATA } from "../types/notification";
+import { InboxNotification } from "../types/notification";
 import { color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
@@ -35,52 +29,20 @@ export default function NotificationsPage() {
   const [bulkActionType, setBulkActionType] = useState<
     "mark-read" | "delete" | null
   >(null);
-  const [filter, setFilter] = useState<{
-    type?: NotificationType;
-    priority?: NotificationPriority;
-    isRead?: boolean;
-    search?: string;
-  }>({});
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const pageSize = 20;
+  const [searchTerm, setSearchTerm] = useState("");
+  const [readFilter, setReadFilter] = useState<"all" | "read" | "unread">("all");
 
-  // Refresh notifications and get pagination
+  // Refresh notifications on mount
   useEffect(() => {
-    const loadNotifications = async () => {
-      try {
-        const response = await notificationService.getNotifications({
-          page,
-          pageSize,
-          ...filter,
-        });
-        if (response.pagination) {
-          setTotalPages(response.pagination.totalPages || 1);
-        } else {
-          // Fallback: calculate from notifications length
-          setTotalPages(1);
-        }
-      } catch (err) {
-        console.error("Failed to load notifications:", err);
-        setTotalPages(1);
-      }
-    };
-    loadNotifications();
-    refreshNotifications({
-      page,
-      pageSize,
-      ...filter,
-    });
-  }, [page, filter, refreshNotifications, pageSize]);
+    refreshNotifications();
+  }, [refreshNotifications]);
 
   // Filter notifications
   const filteredNotifications = notifications.filter((notif) => {
-    if (filter.type && notif.type !== filter.type) return false;
-    if (filter.priority && notif.priority !== filter.priority) return false;
-    if (filter.isRead !== undefined && notif.isRead !== filter.isRead)
-      return false;
-    if (filter.search) {
-      const searchLower = filter.search.toLowerCase();
+    if (readFilter === "read" && !notif.is_read) return false;
+    if (readFilter === "unread" && notif.is_read) return false;
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
       return (
         notif.title.toLowerCase().includes(searchLower) ||
         notif.message.toLowerCase().includes(searchLower)
@@ -123,33 +85,12 @@ export default function NotificationsPage() {
     }
   };
 
-  const handleNotificationClick = async (notification: Notification) => {
-    if (!notification.isRead) {
+  const handleNotificationClick = async (notification: InboxNotification) => {
+    if (!notification.is_read) {
       await markAsRead([notification.id]);
-    }
-    // Don't navigate to campaign, segment, or offer detail pages
-    if (notification.actionUrl) {
-      const isDetailPage = /\/(campaigns|segments|offers)\/\d+/.test(notification.actionUrl);
-      if (!isDetailPage) {
-        navigate(notification.actionUrl, {
-          state: { fromNotification: true },
-        });
-      }
     }
   };
 
-  const notificationTypes = Object.keys(
-    NOTIFICATION_TYPE_METADATA,
-  ) as NotificationType[];
-  const priorities: NotificationPriority[] = [
-    "low",
-    "medium",
-    "high",
-    "urgent",
-  ];
-
-  const priorityLabel = (priority: NotificationPriority) =>
-    t.notifications.priority[priority] || priority;
 
   return (
     <div className="space-y-6">
@@ -230,78 +171,25 @@ export default function NotificationsPage() {
 
       {/* Filters */}
       <div className="mb-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
               placeholder={t.notifications.searchPlaceholder}
-              value={filter.search || ""}
-              onChange={(e) =>
-                setFilter((prev) => ({ ...prev, search: e.target.value }))
-              }
-              className={`w-full pl-10 pr-4 py-2 bg-white border border-gray-300 ${tw.rounded} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className={`w-full pl-11 pr-5 py-3 bg-white border border-gray-300 ${tw.rounded} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
             />
           </div>
 
-          {/* Type Filter */}
-          <HeadlessSelect
-            value={filter.type || ""}
-            onChange={(value) =>
-              setFilter((prev) => ({
-                ...prev,
-                type: value ? (value as NotificationType) : undefined,
-              }))
-            }
-            options={[
-              { label: t.notifications.typeAll, value: "" },
-              ...notificationTypes.map((type) => ({
-                label: NOTIFICATION_TYPE_METADATA[type].label,
-                value: type,
-              })),
-            ]}
-            placeholder={t.notifications.typeAll}
-            className="w-full"
-          />
-
-          {/* Priority Filter */}
-          <HeadlessSelect
-            value={filter.priority || ""}
-            onChange={(value) =>
-              setFilter((prev) => ({
-                ...prev,
-                priority: value ? (value as NotificationPriority) : undefined,
-              }))
-            }
-            options={[
-              { label: t.notifications.priorityAll, value: "" },
-              ...priorities.map((priority) => ({
-                label: priorityLabel(priority),
-                value: priority,
-              })),
-            ]}
-            placeholder={t.notifications.priorityAll}
-            className="w-full"
-          />
-
           {/* Read Status Filter */}
           <HeadlessSelect
-            value={
-              filter.isRead === undefined
-                ? ""
-                : filter.isRead
-                  ? "read"
-                  : "unread"
-            }
-            onChange={(value) =>
-              setFilter((prev) => ({
-                ...prev,
-                isRead: value === "" ? undefined : value === "read",
-              }))
-            }
+            value={readFilter}
+            onChange={(value) => setReadFilter(value as "all" | "read" | "unread")}
             options={[
-              { label: t.notifications.statusAll, value: "" },
+              { label: t.notifications.statusAll, value: "all" },
               { label: t.notifications.statusUnread, value: "unread" },
               { label: t.notifications.statusRead, value: "read" },
             ]}
@@ -311,12 +199,12 @@ export default function NotificationsPage() {
         </div>
 
         {/* Clear Filters */}
-        {(filter.type ||
-          filter.priority !== undefined ||
-          filter.isRead !== undefined ||
-          filter.search) && (
+        {(searchTerm || readFilter !== "all") && (
           <button
-            onClick={() => setFilter({})}
+            onClick={() => {
+              setSearchTerm("");
+              setReadFilter("all");
+            }}
             className="mt-3 text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
           >
             <X className="h-4 w-4" />
@@ -412,7 +300,7 @@ export default function NotificationsPage() {
               {t.notifications.emptyTitle}
             </p>
             <p className="text-sm text-gray-600">
-              {Object.keys(filter).length > 0
+              {searchTerm || readFilter !== "all"
                 ? t.notifications.emptyFiltered
                 : t.notifications.emptyNoData}
             </p>
@@ -421,9 +309,6 @@ export default function NotificationsPage() {
           <>
             <div className="divide-y divide-gray-200">
               {filteredNotifications.map((notification) => {
-                const metadata =
-                  NOTIFICATION_TYPE_METADATA[notification.type] ||
-                  NOTIFICATION_TYPE_METADATA.general;
                 const isSelected = selectedNotifications.includes(
                   notification.id,
                 );
@@ -435,11 +320,13 @@ export default function NotificationsPage() {
                   >
                     <div className="flex items-start gap-3 sm:gap-4">
                       {bulkMode && (
-                        <Checkbox checked={isSelected}
+                        <Checkbox
+                          id={`notification-${notification.id}`}
+                          checked={isSelected}
                           onChange={() =>
                             handleSelectNotification(notification.id)
                           }
-                          className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 flex-shrink-0" />
+                        />
                       )}
                       <div
                         onClick={() =>
@@ -455,29 +342,16 @@ export default function NotificationsPage() {
                               <div className="flex flex-wrap items-center gap-2 mb-1">
                                 <h3
                                   className={`text-sm font-semibold ${
-                                    !notification.isRead
+                                    !notification.is_read
                                       ? "text-gray-900"
                                       : "text-gray-700"
                                   }`}
                                 >
                                   {notification.title}
                                 </h3>
-                                {!notification.isRead && (
+                                {!notification.is_read && (
                                   <span className="w-2 h-2 bg-blue-600 rounded-full flex-shrink-0"></span>
                                 )}
-                                <span
-                                  className={`px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${
-                                    notification.priority === "urgent"
-                                      ? "bg-red-100 text-red-700"
-                                      : notification.priority === "high"
-                                        ? "bg-orange-100 text-orange-700"
-                                        : notification.priority === "medium"
-                                          ? "bg-yellow-100 text-yellow-700"
-                                          : "bg-gray-100 text-gray-700"
-                                  }`}
-                                >
-                                  {priorityLabel(notification.priority)}
-                                </span>
                               </div>
                               <p className="text-sm text-gray-600 mb-2 break-words">
                                 {notification.message}
@@ -485,40 +359,30 @@ export default function NotificationsPage() {
                               <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-gray-500">
                                 <span className="whitespace-nowrap">
                                   {new Date(
-                                    notification.createdAt,
+                                    notification.created_at,
                                   ).toLocaleString()}
                                 </span>
-                                <span className="text-gray-400">
-                                  {metadata.label}
-                                </span>
-                                {notification.actionUrl && (
-                                  <span
-                                    className={`flex items-center gap-1 text-sm ${tw.link}`}
-                                  >
-                                    <ExternalLink className="h-3 w-3" />
-                                    {notification.actionLabel ||
-                                      t.notifications.viewDetails}
-                                  </span>
-                                )}
                               </div>
                             </div>
                           </div>
                           {!bulkMode && (
                             <div className="flex-shrink-0 flex items-center gap-2 self-start sm:self-auto">
-                              <button
-                                onClick={async (e) => {
-                                  e.stopPropagation();
-                                  await markAsRead([notification.id]);
-                                }}
-                                style={{
-                                  borderColor: color.primary.action,
-                                  color: color.primary.action,
-                                }}
-                                className={`${tw.borderedButton} text-xs sm:text-sm px-3 py-1.5 sm:px-4 sm:py-2 whitespace-nowrap`}
-                                title={t.notifications.bulkMarkAsRead}
-                              >
-                                {t.notifications.bulkMarkAsRead}
-                              </button>
+                              {!notification.is_read && (
+                                <button
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    await markAsRead([notification.id]);
+                                  }}
+                                  style={{
+                                    borderColor: color.primary.action,
+                                    color: color.primary.action,
+                                  }}
+                                  className={`${tw.borderedButton} text-xs sm:text-sm px-3 py-1.5 sm:px-4 sm:py-2 whitespace-nowrap`}
+                                  title={t.notifications.bulkMarkAsRead}
+                                >
+                                  {t.notifications.bulkMarkAsRead}
+                                </button>
+                              )}
                               <button
                                 onClick={async (e) => {
                                   e.stopPropagation();
@@ -538,31 +402,6 @@ export default function NotificationsPage() {
                 );
               })}
             </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="border-t border-gray-200 p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <button
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                  className={`w-full sm:w-auto px-4 py-2 border border-gray-300 ${tw.rounded} text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed`}
-                >
-                  {t.notifications.previous}
-                </button>
-                <span className="text-sm text-gray-600">
-                  {t.notifications.pageOf
-                    .replace("{page}", String(page))
-                    .replace("{total}", String(totalPages))}
-                </span>
-                <button
-                  onClick={() => setPage((p) => p + 1)}
-                  disabled={page >= totalPages}
-                  className={`w-full sm:w-auto px-4 py-2 border border-gray-300 ${tw.rounded} text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed`}
-                >
-                  {t.notifications.next}
-                </button>
-              </div>
-            )}
           </>
         )}
       </div>

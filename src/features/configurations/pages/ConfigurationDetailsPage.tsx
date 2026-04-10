@@ -127,24 +127,6 @@ export default function ConfigurationDetailsPage() {
         gradient: `from-[${color.primary.accent}] to-[${color.primary.accent}]80`,
         navigationPath: "/dashboard/user-management",
       },
-      {
-        id: "control-group-1",
-        name: "Universal Control Groups",
-        description:
-          "Configure and manage universal control groups for campaigns",
-        type: "control-group",
-        category: "Configuration",
-        subConfigs: [
-          "Control Group Templates",
-          "Customer Base Rules",
-          "Scheduling Settings",
-        ],
-        lastModified: "2025-01-22",
-        status: "active",
-        color: "campaigns",
-        gradient: `from-[${color.primary.accent}] to-[${color.primary.accent}]80`,
-        navigationPath: "/dashboard/control-groups",
-      },
     ];
 
     const foundConfig = mockConfigurations.find((c) => c.id === id);

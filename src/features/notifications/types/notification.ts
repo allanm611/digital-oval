@@ -31,244 +31,78 @@ export type NotificationType =
 
 export type NotificationPriority = "low" | "medium" | "high" | "urgent";
 
-export interface Notification {
-  id: string | number;
-  type: NotificationType;
-  title: string;
-  message: string;
-  priority: NotificationPriority;
-  isRead: boolean;
-  createdAt: string;
-  updatedAt?: string;
-  actionUrl?: string;
-  actionLabel?: string;
-  metadata?: Record<string, unknown>;
-  userId?: number;
+// Notification payload structure from API
+export interface NotificationPayload {
+  record_id?: number | string;
+  actor_id?: string;
+  table_name?: string;
+  action_type?: string;
+  [key: string]: any;
 }
 
-export interface NotificationResponse {
+// Inbox notification structure (from GET /notifications/inbox)
+export interface InboxNotification {
+  id: number;
+  user_id: number;
+  notification_log_id: number;
+  title: string;
+  message: string;
+  payload: NotificationPayload;
+  is_read: boolean;
+  created_at: string;
+}
+
+// Subscription rule metadata
+export interface SubscriptionRule {
+  id: number;
+  notification_rule_id: number;
+  rule_name: string;
+  rule_template: string;
+}
+
+// User's subscription to a notification rule
+export interface NotificationSubscription extends SubscriptionRule {
+  user_id: number;
+  is_enabled: boolean;
+}
+
+// Request body for updating subscriptions (PUT /notifications/subscriptions)
+export interface UpdateSubscriptionsRequest {
+  subscriptions: Array<{
+    notification_rule_id: number;
+    is_enabled: boolean;
+  }>;
+}
+
+// Response from GET /notifications/subscriptions
+export interface GetSubscriptionsResponse {
   success: boolean;
-  data: Notification[];
-  pagination?: {
-    total: number;
-    page: number;
-    pageSize: number;
-    totalPages: number;
+  data: NotificationSubscription[];
+}
+
+// Response from PUT /notifications/subscriptions
+export interface UpdateSubscriptionsResponse {
+  success: boolean;
+  message?: string;
+  data?: {
+    updated_count: number;
   };
 }
 
-export interface NotificationStats {
-  total: number;
-  unread: number;
-  byType: Record<NotificationType, number>;
-  byPriority: Record<NotificationPriority, number>;
-}
-
-export interface MarkAsReadRequest {
-  notificationIds: (string | number)[];
-}
-
-export interface MarkAllAsReadResponse {
+// Response from GET /notifications/inbox
+export interface GetInboxResponse {
   success: boolean;
+  data: InboxNotification[];
+}
+
+// Response from mark as read operations
+export interface MarkNotificationReadResponse {
+  success: boolean;
+  data?: {
+    id?: number;
+    is_read: boolean;
+    updated_at?: string;
+  };
   message?: string;
   count?: number;
 }
-
-export interface GetNotificationsQuery {
-  page?: number;
-  pageSize?: number;
-  type?: NotificationType;
-  priority?: NotificationPriority;
-  isRead?: boolean;
-  startDate?: string;
-  endDate?: string;
-  skipCache?: boolean;
-}
-
-// Type metadata for UI display
-export interface NotificationTypeMetadata {
-  label: string;
-  icon: string;
-  color: string;
-  defaultPriority: NotificationPriority;
-}
-
-export const NOTIFICATION_TYPE_METADATA: Record<
-  NotificationType,
-  NotificationTypeMetadata
-> = {
-  campaign_approval_request: {
-    label: "Campaign Approval Request",
-    icon: "📋",
-    color: "blue",
-    defaultPriority: "high",
-  },
-  campaign_approved: {
-    label: "Campaign Approved",
-    icon: "✅",
-    color: "green",
-    defaultPriority: "medium",
-  },
-  campaign_rejected: {
-    label: "Campaign Rejected",
-    icon: "❌",
-    color: "red",
-    defaultPriority: "high",
-  },
-  campaign_status_changed: {
-    label: "Campaign Status Changed",
-    icon: "🔄",
-    color: "blue",
-    defaultPriority: "medium",
-  },
-  campaign_execution_started: {
-    label: "Campaign Execution Started",
-    icon: "🚀",
-    color: "blue",
-    defaultPriority: "medium",
-  },
-  campaign_execution_completed: {
-    label: "Campaign Execution Completed",
-    icon: "✨",
-    color: "green",
-    defaultPriority: "medium",
-  },
-  campaign_error: {
-    label: "Campaign Error",
-    icon: "⚠️",
-    color: "red",
-    defaultPriority: "urgent",
-  },
-  offer_approval_request: {
-    label: "Offer Approval Request",
-    icon: "📋",
-    color: "blue",
-    defaultPriority: "high",
-  },
-  offer_approved: {
-    label: "Offer Approved",
-    icon: "✅",
-    color: "green",
-    defaultPriority: "medium",
-  },
-  offer_rejected: {
-    label: "Offer Rejected",
-    icon: "❌",
-    color: "red",
-    defaultPriority: "high",
-  },
-  offer_status_changed: {
-    label: "Offer Status Changed",
-    icon: "🔄",
-    color: "blue",
-    defaultPriority: "medium",
-  },
-  segment_computation_completed: {
-    label: "Segment Computation Completed",
-    icon: "✅",
-    color: "green",
-    defaultPriority: "low",
-  },
-  segment_computation_failed: {
-    label: "Segment Computation Failed",
-    icon: "❌",
-    color: "red",
-    defaultPriority: "high",
-  },
-  segment_refresh_needed: {
-    label: "Segment Refresh Needed",
-    icon: "🔄",
-    color: "yellow",
-    defaultPriority: "medium",
-  },
-  segment_large_computation_warning: {
-    label: "Large Segment Computation",
-    icon: "⚠️",
-    color: "yellow",
-    defaultPriority: "medium",
-  },
-  scheduled_job_completed: {
-    label: "Scheduled Job Completed",
-    icon: "✅",
-    color: "green",
-    defaultPriority: "low",
-  },
-  scheduled_job_failed: {
-    label: "Scheduled Job Failed",
-    icon: "❌",
-    color: "red",
-    defaultPriority: "high",
-  },
-  scheduled_job_started: {
-    label: "Scheduled Job Started",
-    icon: "🚀",
-    color: "blue",
-    defaultPriority: "low",
-  },
-  user_account_request: {
-    label: "User Account Request",
-    icon: "👤",
-    color: "blue",
-    defaultPriority: "high",
-  },
-  role_permission_changed: {
-    label: "Role Permission Changed",
-    icon: "🔐",
-    color: "yellow",
-    defaultPriority: "high",
-  },
-  system_maintenance: {
-    label: "System Maintenance",
-    icon: "🔧",
-    color: "yellow",
-    defaultPriority: "high",
-  },
-  security_alert: {
-    label: "Security Alert",
-    icon: "🔒",
-    color: "red",
-    defaultPriority: "urgent",
-  },
-  broadcast_delivery_status: {
-    label: "Broadcast Delivery Status",
-    icon: "📢",
-    color: "blue",
-    defaultPriority: "medium",
-  },
-  communication_policy_violation: {
-    label: "Communication Policy Violation",
-    icon: "⚠️",
-    color: "red",
-    defaultPriority: "high",
-  },
-  channel_delivery_failure: {
-    label: "Channel Delivery Failure",
-    icon: "❌",
-    color: "red",
-    defaultPriority: "high",
-  },
-  system_update: {
-    label: "System Update",
-    icon: "🆕",
-    color: "blue",
-    defaultPriority: "medium",
-  },
-  feature_announcement: {
-    label: "Feature Announcement",
-    icon: "📢",
-    color: "blue",
-    defaultPriority: "low",
-  },
-  important_alert: {
-    label: "Important Alert",
-    icon: "🚨",
-    color: "red",
-    defaultPriority: "urgent",
-  },
-  general: {
-    label: "General Notification",
-    icon: "📬",
-    color: "blue",
-    defaultPriority: "low",
-  },
-};

@@ -5,12 +5,11 @@ import {
   Bell,
   X,
   Trash2,
-  ExternalLink,
   Settings,
   CheckCheck,
 } from "lucide-react";
 import { useNotifications } from "../../contexts/NotificationContext";
-import { Notification } from "../../features/notifications/types/notification";
+import { InboxNotification } from "../../features/notifications/types/notification";
 import { color, tw, zIndexTokens } from "../utils/utils";
 import { useLanguage } from "../../contexts/LanguageContext";
 
@@ -45,7 +44,7 @@ export default function NotificationDropdown({
   // Filter notifications
   const filteredNotifications = notifications.filter((notif) => {
     if (filter === "unread") {
-      return !notif.isRead;
+      return !notif.is_read;
     }
     return true;
   });
@@ -93,7 +92,7 @@ export default function NotificationDropdown({
   // Refresh when opened
   useEffect(() => {
     if (isOpen) {
-      refreshNotifications({ pageSize: 10 });
+      refreshNotifications();
     }
   }, [isOpen, refreshNotifications]);
 
@@ -122,23 +121,12 @@ export default function NotificationDropdown({
   );
 
   const handleNotificationClick = useCallback(
-    (notification: Notification) => {
-      if (!notification.isRead) {
-        markAsRead([notification.id]);
-      }
-      // Don't navigate to campaign, segment, or offer detail pages
-      if (notification.actionUrl) {
-        const isDetailPage = /\/(campaigns|segments|offers)\/\d+/.test(notification.actionUrl);
-        if (!isDetailPage) {
-          navigate(notification.actionUrl, {
-            state: { fromNotification: true },
-          });
-          setIsOpen(false);
-          onClose?.();
-        }
+    async (notification: InboxNotification) => {
+      if (!notification.is_read) {
+        await markAsRead([notification.id]);
       }
     },
-    [navigate, markAsRead, onClose],
+    [markAsRead],
   );
 
   const unreadCount = stats?.unread || 0;
@@ -294,7 +282,7 @@ export default function NotificationDropdown({
                         key={notification.id}
                         onClick={() => handleNotificationClick(notification)}
                         className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer ${
-                          !notification.isRead ? "bg-blue-50/50" : ""
+                          !notification.is_read ? "bg-blue-50/50" : ""
                         }`}
                       >
                         <div className="flex items-start gap-3">
@@ -303,7 +291,7 @@ export default function NotificationDropdown({
                               <div className="flex-1 min-w-0">
                                 <p
                                   className={`text-sm font-medium ${
-                                    !notification.isRead
+                                    !notification.is_read
                                       ? "text-gray-900"
                                       : "text-gray-700"
                                   }`}
@@ -315,28 +303,17 @@ export default function NotificationDropdown({
                                 </p>
                                 <p className="text-xs text-gray-400 mt-1">
                                   {new Date(
-                                    notification.createdAt,
+                                    notification.created_at,
                                   ).toLocaleString()}
                                 </p>
                               </div>
-                              {!notification.isRead && (
+                              {!notification.is_read && (
                                 <div className="flex-shrink-0 w-2 h-2 bg-blue-600 rounded-full"></div>
                               )}
                             </div>
-                            {notification.actionUrl && (
-                              <div className="mt-2 flex items-center gap-2">
-                                <ExternalLink
-                                  className={`h-3 w-3 ${tw.link}`}
-                                />
-                                <span className={`text-sm ${tw.link}`}>
-                                  {notification.actionLabel ||
-                                    t.notifications.viewDetails}
-                                </span>
-                              </div>
-                            )}
                           </div>
                           <div className="flex-shrink-0 flex flex-col gap-1">
-                            {!notification.isRead && (
+                            {!notification.is_read && (
                               <button
                                 onClick={(e) =>
                                   handleMarkAsRead(notification.id, e)

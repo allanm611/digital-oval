@@ -282,14 +282,24 @@ export default function ConfigurationPage() {
         status: "active",
         navigationPath: "/dashboard/kpis",
       },
-      // Control group configs
+      // Control group configs (appears under both campaign and segment)
       {
-        id: "control-groups",
+        id: "control-groups-campaign",
         name: "Universal Control Groups",
         description:
           "Configure and manage universal control groups for campaigns",
-        type: "control-group",
+        type: "campaign",
         category: "Campaign Configuration",
+        status: "active",
+        navigationPath: "/dashboard/control-groups",
+      },
+      {
+        id: "control-groups-segment",
+        name: "Universal Control Groups",
+        description:
+          "Configure and manage universal control groups for segments",
+        type: "segment",
+        category: "Segment Configuration",
         status: "active",
         navigationPath: "/dashboard/control-groups",
       },
@@ -370,11 +380,6 @@ export default function ConfigurationPage() {
       id: "user",
       name: t.configuration.user,
       count: configurations.filter((c) => c.type === "user").length,
-    },
-    {
-      id: "control-group",
-      name: t.configuration.controlGroup,
-      count: configurations.filter((c) => c.type === "control-group").length,
     },
   ];
 

@@ -357,12 +357,22 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
           navigationPath: "/dashboard/user-management",
         },
         {
-          id: "control-groups",
+          id: "control-groups-campaign",
           name: "Universal Control Groups",
           description:
             "Configure and manage universal control groups for campaigns",
-          type: "control-group",
+          type: "campaign",
           category: "Campaign Configuration",
+          status: "active",
+          navigationPath: "/dashboard/control-groups",
+        },
+        {
+          id: "control-groups-segment",
+          name: "Universal Control Groups",
+          description:
+            "Configure and manage universal control groups for segments",
+          type: "segment",
+          category: "Segment Configuration",
           status: "active",
           navigationPath: "/dashboard/control-groups",
         },
