@@ -44,7 +44,6 @@ import {
   convertSubscriptionToCustomerRow,
   type CustomerRow,
 } from "../../customers360/utils/customerSubscriptionHelpers";
-import { customerSubscriptions } from "../../customers360/utils/customerDataService";
 import { customerService } from "../../customers360/services/customerServices";
 import { useToast } from "../../../contexts/ToastContext";
 
@@ -487,8 +486,12 @@ export default function CustomerProfileReportsPage() {
   const [tableSearchTerm, setTableSearchTerm] = useState("");
   const [debouncedTableSearchTerm, setDebouncedTableSearchTerm] = useState("");
   const [tablePage, setTablePage] = useState(1);
-  const [apiCustomers, setApiCustomers] = useState<CustomerSubscriptionRecord[]>([]);
-  const [searchedApiCustomers, setSearchedApiCustomers] = useState<CustomerSubscriptionRecord[]>([]);
+  const [apiCustomers, setApiCustomers] = useState<
+    CustomerSubscriptionRecord[]
+  >([]);
+  const [searchedApiCustomers, setSearchedApiCustomers] = useState<
+    CustomerSubscriptionRecord[]
+  >([]);
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(true);
   const [isSearchingTable, setIsSearchingTable] = useState(false);
   const [useDummyData] = useState(true); // Charts use dummy data, table uses API data
@@ -501,63 +504,41 @@ export default function CustomerProfileReportsPage() {
     if (locationState?.subscription) {
       return locationState.subscription;
     }
-    if (subscriptionIdParam) {
-      return customerSubscriptions.find(
-        (record) =>
-          record.subscriptionId?.toString() === subscriptionIdParam ||
-          record.customerId?.toString() === subscriptionIdParam,
-      );
+    // Check if we have a customer fetched via API by subscription ID
+    if (subscriptionIdParam && apiCustomers.length > 0) {
+      return apiCustomers[0];
     }
     return undefined;
-  }, [locationState, subscriptionIdParam]);
+  }, [locationState, subscriptionIdParam, apiCustomers]);
 
   // Generate base customer rows and lookup with safe initialization
-  const { baseCustomerRows, subscriptionLookup, referenceTime } = useMemo(() => {
-    try {
-      const activationTimestamps = customerSubscriptions
-        .map((record) =>
-          record.activationDate ? new Date(record.activationDate).getTime() : NaN,
-        )
-        .filter((value) => !Number.isNaN(value));
-      const datasetReferenceTime = activationTimestamps.length
-        ? Math.max(...activationTimestamps)
-        : Date.now();
+  const { baseCustomerRows, subscriptionLookup, referenceTime } =
+    useMemo(() => {
+      try {
+        // TODO: Use customers from API when available instead of empty array
+        // For now, use fallback data since customerSubscriptions hardcoded import is removed
+        const excelCustomerRows: CustomerRow[] = [];
 
-      const excelCustomerRows: CustomerRow[] = customerSubscriptions.map(
-        convertSubscriptionToCustomerRow,
-      );
+        const rows =
+          excelCustomerRows.length > 0
+            ? excelCustomerRows
+            : fallbackCustomerRows;
 
-      const offsetBuckets = [2, 6, 14, 38, 75];
-      excelCustomerRows.forEach((row, index) => {
-        const offset = offsetBuckets[index % offsetBuckets.length];
-        const adjusted = new Date(datasetReferenceTime);
-        adjusted.setDate(adjusted.getDate() - offset);
-        row.lastInteractionDate = adjusted.toISOString().split("T")[0];
-      });
+        const lookup: Record<string, CustomerSubscriptionRecord> = {};
 
-      const rows = excelCustomerRows.length > 0 ? excelCustomerRows : fallbackCustomerRows;
-
-      const lookup: Record<string, CustomerSubscriptionRecord> = {};
-      excelCustomerRows.forEach((row, index) => {
-        const record = customerSubscriptions[index];
-        if (record) {
-          lookup[row.id] = record;
-        }
-      });
-
-      return {
-        baseCustomerRows: rows,
-        subscriptionLookup: lookup,
-        referenceTime: datasetReferenceTime,
-      };
-    } catch (error) {
-      return {
-        baseCustomerRows: fallbackCustomerRows,
-        subscriptionLookup: {},
-        referenceTime: Date.now(),
-      };
-    }
-  }, []);
+        return {
+          baseCustomerRows: rows,
+          subscriptionLookup: lookup,
+          referenceTime: Date.now(),
+        };
+      } catch (error) {
+        return {
+          baseCustomerRows: fallbackCustomerRows,
+          subscriptionLookup: {},
+          referenceTime: Date.now(),
+        };
+      }
+    }, []);
 
   // Fetch all customers from API
   useEffect(() => {
@@ -576,7 +557,11 @@ export default function CustomerProfileReportsPage() {
             skipCache: true,
           });
 
-          if (response.success && response.data && Array.isArray(response.data)) {
+          if (
+            response.success &&
+            response.data &&
+            Array.isArray(response.data)
+          ) {
             const convertedCustomers = response.data.map((apiCustomer) => {
               const customerId =
                 typeof apiCustomer.id === "string"
@@ -600,7 +585,9 @@ export default function CustomerProfileReportsPage() {
                 customerType: apiCustomer.subscriber_type || "prepaid",
                 tariff: apiCustomer.preferred_channel || "NORMAL_SMS",
                 status: apiCustomer.subscriber_status || "active",
-                simType: apiCustomer.kyc_verified ? "KYC Verified" : "Not Verified",
+                simType: apiCustomer.kyc_verified
+                  ? "KYC Verified"
+                  : "Not Verified",
                 activationDate: apiCustomer.created_at,
               };
             });
@@ -627,6 +614,59 @@ export default function CustomerProfileReportsPage() {
     loadAllCustomersFromAPI();
   }, [showError]);
 
+  // Fetch specific customer by ID when subscriptionIdParam is provided
+  useEffect(() => {
+    if (subscriptionIdParam && !locationState?.subscription) {
+      const fetchCustomerById = async () => {
+        try {
+          const customerId = parseInt(subscriptionIdParam, 10);
+          const response = await customerService.getCustomerById(customerId);
+
+          if (response.success && response.data) {
+            const apiCustomer = response.data;
+            const convertedCustomer: CustomerSubscriptionRecord = {
+              customerId:
+                typeof apiCustomer.subscriber_id === "string"
+                  ? parseInt(apiCustomer.subscriber_id, 10)
+                  : apiCustomer.subscriber_id || customerId,
+              subscriptionId: customerId,
+              firstName:
+                apiCustomer.attributes?.first_name ||
+                apiCustomer.first_name ||
+                "Unknown",
+              lastName:
+                apiCustomer.attributes?.last_name ||
+                apiCustomer.last_name ||
+                "Customer",
+              msisdn: apiCustomer.msisdn,
+              email: apiCustomer.attributes?.email || apiCustomer.email,
+              city: apiCustomer.attributes?.city,
+              customerType: apiCustomer.attributes?.customer_tier || "prepaid",
+              tariff: apiCustomer.attributes?.preferred_channel || "NORMAL_SMS",
+              status:
+                (apiCustomer.attributes as any)?.subscriber_status || "active",
+              simType: (apiCustomer.attributes as any)?.kyc_verified
+                ? "KYC Verified"
+                : "Not Verified",
+              activationDate: apiCustomer.created_at,
+            };
+
+            // Store in state so selectedSubscription can use it
+            setApiCustomers([convertedCustomer]);
+          }
+        } catch (error) {
+          console.error("Failed to fetch customer by ID:", error);
+          showError(
+            "Customer Not Found",
+            "Unable to retrieve customer details. Please try again.",
+          );
+        }
+      };
+
+      fetchCustomerById();
+    }
+  }, [subscriptionIdParam, locationState, showError]);
+
   // Customer search state
   const [customerSearchTerm, setCustomerSearchTerm] = useState<string>("");
   const [isSearchingCustomer, setIsSearchingCustomer] =
@@ -635,7 +675,8 @@ export default function CustomerProfileReportsPage() {
 
   // Convert API customers to CustomerRow format for table display (includes searched customers)
   const apiCustomerRows = useMemo(() => {
-    const allCustomers = searchedApiCustomers.length > 0 ? searchedApiCustomers : apiCustomers;
+    const allCustomers =
+      searchedApiCustomers.length > 0 ? searchedApiCustomers : apiCustomers;
     return allCustomers.map((subscription) =>
       convertSubscriptionToCustomerRow(subscription),
     );
@@ -644,7 +685,8 @@ export default function CustomerProfileReportsPage() {
   // Build subscription lookup from API customers (includes searched customers)
   const apiSubscriptionLookup = useMemo(() => {
     const lookup: Record<string, CustomerSubscriptionRecord> = {};
-    const allCustomers = searchedApiCustomers.length > 0 ? searchedApiCustomers : apiCustomers;
+    const allCustomers =
+      searchedApiCustomers.length > 0 ? searchedApiCustomers : apiCustomers;
     allCustomers.forEach((subscription) => {
       const row = convertSubscriptionToCustomerRow(subscription);
       lookup[row.id] = subscription;
@@ -971,7 +1013,9 @@ export default function CustomerProfileReportsPage() {
               customerType: apiCustomer.subscriber_type || "prepaid",
               tariff: apiCustomer.preferred_channel || "NORMAL_SMS",
               status: apiCustomer.subscriber_status || "active",
-              simType: apiCustomer.kyc_verified ? "KYC Verified" : "Not Verified",
+              simType: apiCustomer.kyc_verified
+                ? "KYC Verified"
+                : "Not Verified",
               activationDate: apiCustomer.created_at,
             };
           });
@@ -988,7 +1032,9 @@ export default function CustomerProfileReportsPage() {
   }, [debouncedTableSearchTerm]);
 
   const tableCustomers = useMemo(() => {
-    return searchedApiCustomers.length > 0 ? searchedApiCustomers : apiCustomers;
+    return searchedApiCustomers.length > 0
+      ? searchedApiCustomers
+      : apiCustomers;
   }, [searchedApiCustomers, apiCustomers]);
 
   // Customers for charts: Apply date range filter
@@ -1067,7 +1113,9 @@ export default function CustomerProfileReportsPage() {
       subscription.tariff ?? "",
       subscription.simType ?? "",
       subscription.status ?? "",
-      subscription.activationDate ? formatDateTime(subscription.activationDate) : "",
+      subscription.activationDate
+        ? formatDateTime(subscription.activationDate)
+        : "",
       subscription.city ?? "",
       subscription.email ?? "",
     ];
@@ -1739,9 +1787,11 @@ export default function CustomerProfileReportsPage() {
           </div>
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
             <div className="relative flex-1 md:flex-none md:w-64">
-              <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${
-                isSearchingTable ? "text-gray-300" : "text-gray-400"
-              }`} />
+              <Search
+                className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${
+                  isSearchingTable ? "text-gray-300" : "text-gray-400"
+                }`}
+              />
               <input
                 type="text"
                 value={tableSearchTerm}
@@ -1777,126 +1827,161 @@ export default function CustomerProfileReportsPage() {
                 className="w-full"
                 style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
               >
-              <thead
-                className="text-xs uppercase tracking-wide"
-                style={{ background: color.surface.tableHeader }}
-              >
-                <tr>
-                  {[
-                    "Customer ID",
-                    "Subscription ID",
-                    "Name",
-                    "MSISDN",
-                    "Customer Type",
-                    "Tariff",
-                    "SIM Type",
-                    "Status",
-                    "Activation Date",
-                    "City",
-                    "Email",
-                    "Actions",
-                  ].map((header) => (
-                    <th
-                      key={header}
-                      className="px-6 py-3 text-left font-semibold text-sm text-gray-900"
-                    >
-                      {header}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedCustomers.map((subscription, index) => {
-                  const status = subscription.status ?? "Unknown";
-                  const statusLower = status.toLowerCase();
-
-                  // Use combination of subscriptionId, msisdn for guaranteed uniqueness
-                  const uniqueKey = `${subscription.subscriptionId}-${subscription.msisdn}`;
-
-                  return (
-                    <tr key={uniqueKey}>
-                      {/* Customer ID */}
-                      <td
-                        className="rounded-l-md px-6 py-5 text-sm font-semibold text-gray-900"
-                        style={tableCellBackground}
+                <thead
+                  className="text-xs uppercase tracking-wide"
+                  style={{ background: color.surface.tableHeader }}
+                >
+                  <tr>
+                    {[
+                      "Customer ID",
+                      "Subscription ID",
+                      "Name",
+                      "MSISDN",
+                      "Customer Type",
+                      "Tariff",
+                      "SIM Type",
+                      "Status",
+                      "Activation Date",
+                      "City",
+                      "Email",
+                      "Actions",
+                    ].map((header) => (
+                      <th
+                        key={header}
+                        className="px-6 py-3 text-left font-semibold text-sm text-gray-900"
                       >
-                        {subscription.customerId ?? "—"}
-                      </td>
-                      {/* Subscription ID */}
-                      <td className="px-6 py-5 text-sm text-gray-900" style={tableCellBackground}>
-                        {subscription.subscriptionId ?? "—"}
-                      </td>
-                      {/* Name */}
-                      <td className="px-6 py-5 text-sm font-semibold text-gray-900" style={tableCellBackground}>
-                        <button
-                          type="button"
-                          className="text-left hover:underline"
+                        {header}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedCustomers.map((subscription, index) => {
+                    const status = subscription.status ?? "Unknown";
+                    const statusLower = status.toLowerCase();
+
+                    // Use combination of subscriptionId, msisdn for guaranteed uniqueness
+                    const uniqueKey = `${subscription.subscriptionId}-${subscription.msisdn}`;
+
+                    return (
+                      <tr key={uniqueKey}>
+                        {/* Customer ID */}
+                        <td
+                          className="rounded-l-md px-6 py-5 text-sm font-semibold text-gray-900"
+                          style={tableCellBackground}
                         >
-                          {`${subscription.firstName} ${subscription.lastName}`}
-                        </button>
-                      </td>
-                      {/* MSISDN */}
-                      <td className="px-6 py-5 text-sm text-gray-900" style={tableCellBackground}>
-                        {subscription.msisdn ?? "—"}
-                      </td>
-                      {/* Customer Type */}
-                      <td className="px-6 py-5 text-sm text-gray-900" style={tableCellBackground}>
-                        {subscription.customerType ?? "—"}
-                      </td>
-                      {/* Tariff */}
-                      <td className="px-6 py-5 text-sm text-gray-900" style={tableCellBackground}>
-                        {subscription.tariff ?? "—"}
-                      </td>
-                      {/* SIM Type */}
-                      <td className="px-6 py-5 text-sm text-gray-900" style={tableCellBackground}>
-                        {subscription.simType ?? "—"}
-                      </td>
-                      {/* Status */}
-                      <td className="px-6 py-5 text-sm text-gray-900" style={tableCellBackground}>
-                        {status}
-                      </td>
-                      {/* Activation Date */}
-                      <td className="px-6 py-5 text-sm text-gray-900" style={tableCellBackground}>
-                        {subscription.activationDate ? formatDateTime(subscription.activationDate) : "—"}
-                      </td>
-                      {/* City */}
-                      <td className="px-6 py-5 text-sm text-gray-900" style={tableCellBackground}>
-                        {subscription.city ?? "—"}
-                      </td>
-                      {/* Email */}
-                      <td className="px-6 py-5 text-sm text-gray-900" style={tableCellBackground}>
-                        {subscription.email ?? "—"}
-                      </td>
-                      {/* Actions */}
-                      <td
-                        className="rounded-r-md px-6 py-5 text-right"
-                        style={tableCellBackground}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => {
-                            navigate(`/dashboard/customers/details/${subscription.customerId}`, {
-                              state: {
-                                customer: {
-                                  id: subscription.customerId,
-                                  name: `${subscription.firstName} ${subscription.lastName}`,
-                                  msisdn: subscription.msisdn,
-                                  email: subscription.email,
-                                  city: subscription.city,
+                          {subscription.customerId ?? "—"}
+                        </td>
+                        {/* Subscription ID */}
+                        <td
+                          className="px-6 py-5 text-sm text-gray-900"
+                          style={tableCellBackground}
+                        >
+                          {subscription.subscriptionId ?? "—"}
+                        </td>
+                        {/* Name */}
+                        <td
+                          className="px-6 py-5 text-sm font-semibold text-gray-900"
+                          style={tableCellBackground}
+                        >
+                          <button
+                            type="button"
+                            className="text-left hover:underline"
+                          >
+                            {`${subscription.firstName} ${subscription.lastName}`}
+                          </button>
+                        </td>
+                        {/* MSISDN */}
+                        <td
+                          className="px-6 py-5 text-sm text-gray-900"
+                          style={tableCellBackground}
+                        >
+                          {subscription.msisdn ?? "—"}
+                        </td>
+                        {/* Customer Type */}
+                        <td
+                          className="px-6 py-5 text-sm text-gray-900"
+                          style={tableCellBackground}
+                        >
+                          {subscription.customerType ?? "—"}
+                        </td>
+                        {/* Tariff */}
+                        <td
+                          className="px-6 py-5 text-sm text-gray-900"
+                          style={tableCellBackground}
+                        >
+                          {subscription.tariff ?? "—"}
+                        </td>
+                        {/* SIM Type */}
+                        <td
+                          className="px-6 py-5 text-sm text-gray-900"
+                          style={tableCellBackground}
+                        >
+                          {subscription.simType ?? "—"}
+                        </td>
+                        {/* Status */}
+                        <td
+                          className="px-6 py-5 text-sm text-gray-900"
+                          style={tableCellBackground}
+                        >
+                          {status}
+                        </td>
+                        {/* Activation Date */}
+                        <td
+                          className="px-6 py-5 text-sm text-gray-900"
+                          style={tableCellBackground}
+                        >
+                          {subscription.activationDate
+                            ? formatDateTime(subscription.activationDate)
+                            : "—"}
+                        </td>
+                        {/* City */}
+                        <td
+                          className="px-6 py-5 text-sm text-gray-900"
+                          style={tableCellBackground}
+                        >
+                          {subscription.city ?? "—"}
+                        </td>
+                        {/* Email */}
+                        <td
+                          className="px-6 py-5 text-sm text-gray-900"
+                          style={tableCellBackground}
+                        >
+                          {subscription.email ?? "—"}
+                        </td>
+                        {/* Actions */}
+                        <td
+                          className="rounded-r-md px-6 py-5 text-right"
+                          style={tableCellBackground}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigate(
+                                `/dashboard/customers/details/${subscription.customerId}`,
+                                {
+                                  state: {
+                                    customer: {
+                                      id: subscription.customerId,
+                                      name: `${subscription.firstName} ${subscription.lastName}`,
+                                      msisdn: subscription.msisdn,
+                                      email: subscription.email,
+                                      city: subscription.city,
+                                    },
+                                    subscription: subscription,
+                                  },
                                 },
-                                subscription: subscription,
-                              },
-                            });
-                          }}
-                          className="inline-flex items-center justify-center p-2 text-gray-700 hover:text-gray-900"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
+                              );
+                            }}
+                            className="inline-flex items-center justify-center p-2 text-gray-700 hover:text-gray-900"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
               </table>
             </div>
             {!tableCustomers.length && (

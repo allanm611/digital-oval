@@ -5,7 +5,6 @@ import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import {
   Filter,
-  Search,
   // Calendar,
   MoreHorizontal,
   Eye,
@@ -22,6 +21,7 @@ import {
   AlertCircle,
   BarChart3,
 } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import CreateButton from "../../../shared/components/ui/CreateButton";
@@ -967,20 +967,12 @@ export default function CampaignsPage() {
 
       {/* Search and Filter Bar */}
       <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5"
-            style={{ color: color.text.muted }}
-          />
-          <input
-            type="text"
-            placeholder="Search campaigns..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && setSearchQuery(searchQuery)}
-            className={`w-full pl-10 pr-4 py-3 text-sm border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 bg-white focus:ring-2 focus:ring-blue-400`}
-          />
-        </div>
+        <SearchInput
+          placeholder="Search campaigns..."
+          value={searchQuery}
+          onChange={setSearchQuery}
+          onKeyDown={(e) => e.key === "Enter" && setSearchQuery(searchQuery)}
+        />
 
         <HeadlessSelect
           options={statusOptions.map((option) => ({

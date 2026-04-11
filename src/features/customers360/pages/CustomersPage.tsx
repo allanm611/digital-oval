@@ -3,7 +3,6 @@ import type { CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
-  Search,
   Users,
   Activity,
   Target,
@@ -16,6 +15,7 @@ import {
   MoreHorizontal,
   Send,
 } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import type { CustomerSubscriptionRecord } from "../types/customerSubscription";
 import type { Subscriber } from "../types/customer";
 import { NotificationChannel } from "../types/customer";
@@ -696,16 +696,12 @@ export default function CustomersPage() {
 
       {/* Search and Filters */}
       <div className="flex gap-3 items-end flex-wrap">
-        <div className="relative flex-1 min-w-[250px]">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder={
-              t.customer360.searchPlaceholder || "Search customers..."
-            }
-            className={`w-full ${tw.rounded} border border-gray-300 py-3 pl-10 pr-4 text-sm focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-[--accent-color]`}
+        <SearchInput
+          value={searchTerm}
+          onChange={setSearchTerm}
+          placeholder={
+            t.customer360.searchPlaceholder || "Search customers..."
+          }
             style={
               {
                 "--accent-color": `${color.primary.accent}33`,
@@ -717,7 +713,6 @@ export default function CustomersPage() {
               }
             }}
           />
-        </div>
         <HeadlessSelect
           value={channelFilter}
           onChange={(value) => setChannelFilter(String(value))}

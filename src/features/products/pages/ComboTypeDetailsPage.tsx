@@ -6,7 +6,6 @@ import { comboTypeService, ComboType } from "../services/comboTypeService";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
-import ComboTypeFormModal from "../components/ComboTypeFormModal";
 import { tw, color, button } from "../../../shared/utils/utils";
 
 export default function ComboTypeDetailsPage() {
@@ -20,8 +19,6 @@ export default function ComboTypeDetailsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isTogglingStatus, setIsTogglingStatus] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -81,40 +78,6 @@ export default function ComboTypeDetailsPage() {
   const handleDelete = () => {
     if (!comboType) return;
     setShowDeleteModal(true);
-  };
-
-  const handleEditSubmit = async (formData: any) => {
-    if (!comboType) return;
-
-    setIsSavingEdit(true);
-    try {
-      await comboTypeService.updateComboType(comboType.id, {
-        name: formData.name,
-        description: formData.description,
-        is_active: formData.isActive,
-        price: formData.price,
-        shared_validity: formData.sharedValidity,
-        validity_hours: formData.validityHours,
-      });
-
-      success(
-        "Combo Type Updated",
-        `"${formData.name}" has been updated successfully.`
-      );
-
-      // Reload combo type data
-      const updated = await comboTypeService.getComboTypeById(comboType.id);
-      setComboType(updated);
-      setIsEditModalOpen(false);
-    } catch (err) {
-      console.error("Failed to update:", err);
-      showError(
-        "Failed to update combo type",
-        err instanceof Error ? err.message : "Please try again later."
-      );
-    } finally {
-      setIsSavingEdit(false);
-    }
   };
 
   const handleConfirmDelete = async () => {
@@ -214,7 +177,7 @@ export default function ComboTypeDetailsPage() {
             )}
           </button>
           <button
-            onClick={() => setIsEditModalOpen(true)}
+            onClick={() => navigate(`/dashboard/combo-types/${id}/edit`)}
             className={`px-4 py-2 text-white ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm w-fit`}
             style={{ backgroundColor: button.action.background }}
             onMouseEnter={(e) => {
@@ -427,15 +390,6 @@ export default function ComboTypeDetailsPage() {
           </div>
         </div>
       </div>
-
-      {/* Edit Modal */}
-      <ComboTypeFormModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        onSubmit={handleEditSubmit}
-        comboType={comboType}
-        isLoading={isSavingEdit}
-      />
 
       {/* Delete Modal */}
       <DeleteConfirmModal

@@ -6,7 +6,6 @@ import {
   CheckCircle,
   Clock,
   Eye,
-  Search,
   Filter,
   BarChart3,
   XCircle,
@@ -19,6 +18,7 @@ import {
   CheckSquare,
   Square,
 } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -680,16 +680,11 @@ export default function JobExecutionsPage() {
       </div>
 
       <div className="flex gap-4">
-        <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            className={`w-full ${tw.rounded} border border-gray-200 py-3 pl-10 pr-4 text-sm shadow-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
-            placeholder="Search by execution ID, job ID, status, trace ID, or correlation ID"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
+        <SearchInput
+          placeholder="Search by execution ID, job ID, status, trace ID, or correlation ID"
+          value={searchTerm}
+          onChange={setSearchTerm}
+        />
         <HeadlessSelect
           value={statusFilter}
           onChange={(value) => {

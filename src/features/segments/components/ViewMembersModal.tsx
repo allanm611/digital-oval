@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, Search } from "lucide-react";
+import { X } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import { segmentService } from "../services/segmentService";
 import Pagination from "../../../shared/components/ui/Pagination";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -157,31 +158,15 @@ export default function ViewMembersModal({
 
         {/* Members Search */}
         <div className="p-6 border-b border-gray-200 bg-gray-50">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              value={membersSearchTerm}
-              onChange={(e) => {
-                setMembersSearchTerm(e.target.value);
-                setMembersPage(1);
-                loadMembers(e.target.value, 1);
-              }}
-              placeholder="Search members by name, email, or ID..."
-              className={`w-full pl-10 pr-4 py-2 border border-gray-300 ${tw.rounded} text-sm focus:outline-none focus:ring-2 focus:ring-purple-500`}
-            />
-            {membersSearchTerm && (
-              <button
-                onClick={() => {
-                  setMembersSearchTerm("");
-                  loadMembers("", 1);
-                }}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
+          <SearchInput
+            placeholder="Search members by name, email, or ID..."
+            value={membersSearchTerm}
+            onChange={(value) => {
+              setMembersSearchTerm(value);
+              setMembersPage(1);
+              loadMembers(value, 1);
+            }}
+          />
         </div>
 
         {/* Members List */}

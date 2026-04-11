@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { Search, Eye,ListChecks, Activity, DollarSign,  ChevronLeft, ChevronRight } from "lucide-react";
+import { Eye,ListChecks, Activity, DollarSign,  ChevronLeft, ChevronRight } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import { generateAllKPIs } from "../utils/kpiGenerator";
 import { color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";

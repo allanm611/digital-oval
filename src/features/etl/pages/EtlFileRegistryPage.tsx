@@ -4,7 +4,6 @@ import {
   Download,
   BarChart3,
   Play,
-  Search,
   ChevronDown,
   FileText,
   CheckCircle,
@@ -12,6 +11,7 @@ import {
   X,
   AlertTriangle,
 } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import { etlService } from "../services/etlService";
 import { EtlFileRegistryRowType, FileStatsResponse } from "../types/etl";
 import { useToast } from "../../../contexts/ToastContext";
@@ -383,19 +383,11 @@ export default function EtlFileRegistryPage() {
 
       {/* Filters */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center">
-        <div className="relative flex-1">
-          <Search
-            className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
-            aria-hidden
-          />
-          <input
-            type="text"
-            placeholder={t.etl.searchByFileName}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className={`w-full ${tw.rounded} border border-gray-200 bg-white py-3 pl-10 pr-4 text-sm focus:border-gray-300 focus:outline-none`}
-          />
-        </div>
+        <SearchInput
+          placeholder={t.etl.searchByFileName}
+          value={searchTerm}
+          onChange={setSearchTerm}
+        />
         <HeadlessSelect
           options={statusOptions}
           value={statusFilter}

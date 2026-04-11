@@ -1,23 +1,7 @@
-import customerSubscriptionsData from "../data/customerSubscriptions.json";
-import type { CustomerSubscriptionRecord } from "../types/customerSubscription";
-
-// Process customer data with explicit msisdn conversion
-const processedData = (customerSubscriptionsData as CustomerSubscriptionRecord[]).map(
-  (record) => ({
-    ...record,
-    msisdn: record.msisdn ? String(record.msisdn) : undefined,
-  })
-);
-
-// Export the processed customer subscriptions
-export const customerSubscriptions: CustomerSubscriptionRecord[] = processedData;
-
-// Shared search function that can be used across components
-export const searchCustomers = (
-  term: string,
-  customers: CustomerSubscriptionRecord[] = customerSubscriptions
-): CustomerSubscriptionRecord[] => {
-  if (!term.trim()) return customers;
+// Search function that searches in an array of customers
+// Note: This is for local filtering only. For production, use customerService APIs
+export const searchCustomers = (term: string, customers: any[] = []): any[] => {
+  if (!term.trim() || !customers.length) return customers;
 
   const normalizedTerm = term.toLowerCase();
   const numericTerm = term.replace(/\D/g, "");
@@ -44,10 +28,10 @@ export const searchCustomers = (
       : false;
     const matchesCustomerId =
       numericTerm.length > 0 &&
-      customer.customerId.toString().includes(numericTerm);
+      customer.customerId?.toString().includes(numericTerm);
     const matchesSubscriptionId =
       numericTerm.length > 0 &&
-      customer.subscriptionId.toString().includes(numericTerm);
+      customer.subscriptionId?.toString().includes(numericTerm);
 
     const msisdnDigits = customer.msisdn
       ? customer.msisdn.toString().replace(/\D/g, "")

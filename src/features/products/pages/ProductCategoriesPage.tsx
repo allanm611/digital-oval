@@ -3,7 +3,6 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
-  Search,
   Edit,
   Trash2,
   Grid,
@@ -18,6 +17,7 @@ import {
   Power,
   PowerOff,
 } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
 import BackButton from "../../../shared/components/ui/BackButton";
 import {
@@ -986,18 +986,11 @@ export default function ProductCatalogsPage() {
 
       {/* Search and Filters */}
       <div className="flex items-center gap-4">
-        <div className="relative flex-1">
-          <Search
-            className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[${tw.textMuted}]`}
-          />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder={t.productCatalogs.searchPlaceholder}
-            className={`w-full pl-10 pr-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
-          />
-        </div>
+        <SearchInput
+          value={searchTerm}
+          onChange={setSearchTerm}
+          placeholder={t.productCatalogs.searchPlaceholder}
+        />
 
         <button
           onClick={() => setShowAdvancedFilters(true)}

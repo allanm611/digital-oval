@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { Search, Filter, Eye, ListChecks, Zap } from "lucide-react";
+import { Filter, Eye, ListChecks, Zap } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import { SYSTEM_EVENTS, SYSTEM_EVENT_CATEGORIES } from "../types/systemEvent";
 import { color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";

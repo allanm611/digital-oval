@@ -260,6 +260,12 @@ const ProductPages = {
         /* webpackPrefetch: true */ "../../products/pages/ComboTypeDetailsPage"
       ),
   ),
+  ComboTypeFormPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../products/pages/ComboTypeFormPage"
+      ),
+  ),
   NotificationTypesPage: lazy(
     () =>
       import(
@@ -866,7 +872,11 @@ export default function Dashboard() {
           />
           <Route
             path="/combo-types/create"
-            element={<ProductPages.ComboTypeDetailsPage />}
+            element={<ProductPages.ComboTypeFormPage />}
+          />
+          <Route
+            path="/combo-types/:id/edit"
+            element={<ProductPages.ComboTypeFormPage />}
           />
           <Route
             path="/combo-types/:id"
@@ -876,7 +886,6 @@ export default function Dashboard() {
             path="/notification-types"
             element={<ProductPages.NotificationTypesPage />}
           />
-          <Route path="/vip-lists" element={<ProductPages.VIPListsPage />} />
           <Route path="/offer-types" element={<OfferPages.OfferTypesPage />} />
           <Route
             path="/offer-catalogs"

@@ -9,6 +9,13 @@ export type ConnectionTypeEnum =
   | "webhook"
   | string;
 
+export type DatabaseTypeEnum =
+  | "mysql"
+  | "postgres"
+  | "mssql"
+  | "oracle"
+  | string;
+
 export type LoadStrategyEnum =
   | "full"
   | "incremental"
@@ -169,13 +176,11 @@ export interface ConnectionProfileStatsItem {
   count: number;
 }
 
-export interface ConnectionProfileTypeStatsItem
-  extends ConnectionProfileStatsItem {
+export interface ConnectionProfileTypeStatsItem extends ConnectionProfileStatsItem {
   connection_type: ConnectionTypeEnum | string;
 }
 
-export interface ConnectionProfileEnvironmentStatsItem
-  extends ConnectionProfileStatsItem {
+export interface ConnectionProfileEnvironmentStatsItem extends ConnectionProfileStatsItem {
   environment: EnvironmentEnum | string;
 }
 

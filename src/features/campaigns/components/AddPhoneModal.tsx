@@ -1,18 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Search, Eye, ArrowLeft } from "lucide-react";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import RegularModal from "../../../shared/components/ui/RegularModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
-import {
-  customerSubscriptions,
-  searchCustomers as searchCustomersUtil,
-} from "../../customers360/utils/customerDataService";
-import type { CustomerSubscriptionRecord } from "../../customers360/types/customerSubscription";
-import {
-  getSubscriptionDisplayName,
-  formatMsisdn,
-} from "../../customers360/utils/customerSubscriptionHelpers";
+import { customerService } from "../../customers360/services/customerServices";
+import type { Subscriber } from "../../customers360/types/customer";
 
 interface AddPhoneModalProps {
   isOpen: boolean;
@@ -42,9 +35,7 @@ export default function AddPhoneModal({
   const [step, setStep] = useState<"search" | "selectType">("search");
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState<
-    CustomerSubscriptionRecord[]
-  >([]);
+  const [searchResults, setSearchResults] = useState<Subscriber[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<{
     id: number;
     name?: string;
@@ -52,13 +43,6 @@ export default function AddPhoneModal({
     phone?: string;
   } | null>(null);
   const [selectedDndType, setSelectedDndType] = useState("promotional");
-
-  const searchCustomers = useCallback(
-    (term: string, customers: CustomerSubscriptionRecord[]) => {
-      return searchCustomersUtil(term, customers);
-    },
-    [],
-  );
 
   // Debounced search
   useEffect(() => {
@@ -77,10 +61,17 @@ export default function AddPhoneModal({
     }
 
     setIsSearching(true);
-    const debounceTimer = setTimeout(() => {
-      const results = searchCustomers(searchTerm, customerSubscriptions);
-      // Limit to top 50 results for performance
-      setSearchResults(results.slice(0, 50));
+    const debounceTimer = setTimeout(async () => {
+      try {
+        const response = await customerService.searchCustomers({
+          search: searchTerm,
+          limit: 50,
+        });
+        setSearchResults(response.data || []);
+      } catch (error) {
+        console.error("Failed to search customers:", error);
+        setSearchResults([]);
+      }
       setIsSearching(false);
     }, 400); // 400ms debounce
 
@@ -88,20 +79,22 @@ export default function AddPhoneModal({
       clearTimeout(debounceTimer);
       setIsSearching(false);
     };
-  }, [searchTerm, isOpen, searchCustomers]);
+  }, [searchTerm, isOpen]);
 
-  const handleSelectCustomer = (customer: CustomerSubscriptionRecord) => {
-    const name = getSubscriptionDisplayName(
-      customer,
-      `Customer ${customer.customerId}`,
-    );
-    const phone = customer.msisdn ? formatMsisdn(customer.msisdn) : undefined;
+  const handleSelectCustomer = (customer: Subscriber) => {
+    const name =
+      customer.first_name || customer.last_name
+        ? `${customer.first_name || ""} ${customer.last_name || ""}`.trim()
+        : customer.msisdn;
 
     setSelectedCustomer({
-      id: customer.customerId,
+      id:
+        typeof customer.id === "string"
+          ? parseInt(customer.id, 10)
+          : customer.id,
       name,
       email: customer.email || undefined,
-      phone: phone || undefined,
+      phone: customer.msisdn || undefined,
     });
     setStep("selectType");
   };

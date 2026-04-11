@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, Search } from "lucide-react";
+import { X } from "lucide-react";
 import { CampaignSegment } from "../../types/campaign";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
+import SearchInput from "../../../../shared/components/ui/SearchInput";
 import { color, tw, zIndexTokens } from "../../../../shared/utils/utils";
 import { segmentService } from "../../../segments/services/segmentService";
 import { Segment } from "../../../segments/types/segment";
@@ -182,16 +183,11 @@ export default function SegmentSelectionModal({
           }`}
         >
           <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search segments..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className={`w-full pl-10 pr-4 py-2 border border-gray-300 ${tw.rounded} `}
-              />
-            </div>
+            <SearchInput
+              placeholder="Search segments..."
+              value={searchTerm}
+              onChange={setSearchTerm}
+            />
             <div className="w-48">
               <div className="[&_button]:py-2 [&_li]:py-1.5">
                 <HeadlessSelect

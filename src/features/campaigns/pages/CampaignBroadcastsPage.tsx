@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect } from "react";
-import { Eye, Search, Filter, BarChart3, Send, Radio, TrendingUp, CheckCircle, RotateCcw, Archive, AlertCircle, Loader } from "lucide-react";
+import { Eye, Filter, BarChart3, Send, Radio, TrendingUp, CheckCircle, RotateCcw, Archive, AlertCircle, Loader } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useToast } from "../../../contexts/ToastContext";
@@ -252,19 +253,11 @@ export default function CampaignBroadcastsPage() {
 
       {/* Search and Filter Bar */}
       <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5"
-            style={{ color: color.text.muted }}
-          />
-          <input
-            type="text"
-            placeholder="Search broadcasts..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className={`w-full pl-10 pr-4 py-3 text-sm border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 bg-white focus:ring-2 focus:ring-blue-400`}
-          />
-        </div>
+        <SearchInput
+          placeholder="Search broadcasts..."
+          value={searchQuery}
+          onChange={setSearchQuery}
+        />
 
         <HeadlessSelect
           options={statusOptions.map((option) => ({

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
-import { Search, Plus, Check, Package, X } from "lucide-react";
+import { Plus, Check, Package, X } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import { useNavigate } from "react-router-dom";
 import { Product } from "../types/product";
 import { ProductCategory } from "../types/productCategory";
@@ -395,16 +396,11 @@ export default function ProductSelector({
               {/* Search and Filters */}
               <div className="px-6 pt-4 space-y-4 flex-shrink-0">
                 <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search products..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className={`w-full pl-10 pr-4 py-2 border border-gray-300 ${tw.rounded}`}
-                    />
-                  </div>
+                  <SearchInput
+                    placeholder="Search products..."
+                    value={searchTerm}
+                    onChange={setSearchTerm}
+                  />
                   <div className="w-48">
                     <div className="[&_button]:py-2 [&_li]:py-1.5">
                       <HeadlessSelect

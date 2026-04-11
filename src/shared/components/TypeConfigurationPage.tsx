@@ -208,10 +208,26 @@ function TypeConfigurationModal({
   // Custom fields state for languages and character sets
   const [customFields, setCustomFields] = useState<Record<string, string>>({});
 
+  // Resource type options matching ProductForm
+  const resourceTypeOptions = [
+    { label: "Data", value: "data_mb" },
+    { label: "On-net Minutes", value: "onnet_minutes" },
+    { label: "Off-net Minutes", value: "offnet_minutes" },
+    { label: "All-net Minutes", value: "allnet_minutes" },
+    { label: "Voice Bundles", value: "voice_bundles" },
+    { label: "SMS Bundles", value: "sms_count" },
+    { label: "Roaming Data", value: "roaming_data_mb" },
+    { label: "Roaming Minutes", value: "roaming_minutes" },
+    { label: "Roaming SMS Count", value: "roaming_sms_count" },
+    { label: "Airtime", value: "airtime" },
+    { label: "Utility", value: "utility" },
+    { label: "Points", value: "points" },
+  ];
+
   // Combo types fields
   const [comboResources, setComboResources] = useState<
     Array<{
-      type: "data" | "voice" | "sms";
+      type: string;
       value: number | string;
       unit: string;
       sharedValidity: boolean;
@@ -223,6 +239,17 @@ function TypeConfigurationModal({
   const [comboSharedPrice, setComboSharedPrice] = useState(true);
   const [comboValidityHours, setComboValidityHours] = useState<string>("");
   const [comboPrice, setComboPrice] = useState<string>("");
+
+  // Selected resource type for combo modal
+  const [selectedResourceType, setSelectedResourceType] = useState<string>("");
+
+  // Temporary resource data being configured
+  const [tempResourceData, setTempResourceData] = useState({
+    value: "",
+    sharedValidityHours: "",
+    price: "",
+  });
+
   const [characterSetOptions, setCharacterSetOptions] = useState<
     Array<{ value: string; label: string }>
   >([]);
@@ -371,6 +398,12 @@ function TypeConfigurationModal({
             ? String(item.price)
             : "",
         );
+        setSelectedResourceType("");
+        setTempResourceData({
+          value: "",
+          sharedValidityHours: "",
+          price: "",
+        });
       }
     } else {
       setName("");
@@ -413,6 +446,12 @@ function TypeConfigurationModal({
         setComboSharedPrice(true);
         setComboValidityHours("");
         setComboPrice("");
+        setSelectedResourceType("");
+        setTempResourceData({
+          value: "",
+          sharedValidityHours: "",
+          price: "",
+        });
       }
     }
     setError("");
@@ -1056,11 +1095,7 @@ function TypeConfigurationModal({
                   >
                     <div className="col-span-1">
                       <p className="text-sm font-semibold text-gray-900">
-                        {resource.type === "data"
-                          ? "Data"
-                          : resource.type === "voice"
-                            ? "Voice"
-                            : "SMS"}
+                        {resourceTypeOptions.find((opt) => opt.value === resource.type)?.label || resource.type}
                       </p>
                       <p className="text-sm text-gray-500">{resource.unit}</p>
                     </div>
@@ -1117,137 +1152,126 @@ function TypeConfigurationModal({
                 ))}
               </div>
 
-              {/* Add Resource Buttons - Inline */}
-              <div className="flex justify-between gap-3 mb-4 w-full">
-                {!comboResources.some((r) => r.type === "data") && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setComboResources([
-                        ...comboResources,
-                        {
-                          type: "data",
-                          value: "",
-                          unit: "data_mb",
-                          sharedValidity: comboSharedValidity,
-                          sharedValidityHours: comboValidityHours,
-                          price: comboSharedPrice ? undefined : "",
-                        },
-                      ]);
-                    }}
-                    style={{
-                      background: button.bordered.background,
-                      color: button.bordered.color,
-                      border: button.bordered.border,
-                      paddingTop: button.bordered.paddingY,
-                      paddingBottom: button.bordered.paddingY,
-                      paddingLeft: button.bordered.paddingX,
-                      paddingRight: button.bordered.paddingX,
-                      borderRadius: button.bordered.borderRadius,
-                      fontSize: button.bordered.fontSize,
-                      fontWeight: "500",
-                      cursor: "pointer",
-                      transition: "all 0.2s",
-                      flex: 1,
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor =
-                        "rgba(37, 40, 41, 0.05)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor =
-                        button.bordered.background;
-                    }}
-                  >
-                    + Data
-                  </button>
-                )}
-                {!comboResources.some((r) => r.type === "voice") && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setComboResources([
-                        ...comboResources,
-                        {
-                          type: "voice",
-                          value: "",
-                          unit: "onnet_minutes",
-                          sharedValidity: comboSharedValidity,
-                          sharedValidityHours: comboValidityHours,
-                          price: comboSharedPrice ? undefined : "",
-                        },
-                      ]);
-                    }}
-                    style={{
-                      background: button.bordered.background,
-                      color: button.bordered.color,
-                      border: button.bordered.border,
-                      paddingTop: button.bordered.paddingY,
-                      paddingBottom: button.bordered.paddingY,
-                      paddingLeft: button.bordered.paddingX,
-                      paddingRight: button.bordered.paddingX,
-                      borderRadius: button.bordered.borderRadius,
-                      fontSize: button.bordered.fontSize,
-                      fontWeight: "500",
-                      cursor: "pointer",
-                      transition: "all 0.2s",
-                      flex: 1,
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor =
-                        "rgba(37, 40, 41, 0.05)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor =
-                        button.bordered.background;
-                    }}
-                  >
-                    + Voice
-                  </button>
-                )}
-                {!comboResources.some((r) => r.type === "sms") && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setComboResources([
-                        ...comboResources,
-                        {
-                          type: "sms",
-                          value: "",
-                          unit: "sms_count",
-                          sharedValidity: comboSharedValidity,
-                          sharedValidityHours: comboValidityHours,
-                          price: comboSharedPrice ? undefined : "",
-                        },
-                      ]);
-                    }}
-                    style={{
-                      background: button.bordered.background,
-                      color: button.bordered.color,
-                      border: button.bordered.border,
-                      paddingTop: button.bordered.paddingY,
-                      paddingBottom: button.bordered.paddingY,
-                      paddingLeft: button.bordered.paddingX,
-                      paddingRight: button.bordered.paddingX,
-                      borderRadius: button.bordered.borderRadius,
-                      fontSize: button.bordered.fontSize,
-                      fontWeight: "500",
-                      cursor: "pointer",
-                      transition: "all 0.2s",
-                      flex: 1,
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor =
-                        "rgba(37, 40, 41, 0.05)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor =
-                        button.bordered.background;
-                    }}
-                  >
-                    + SMS
-                  </button>
-                )}
+              {/* Resource Selection and Input Section */}
+              <div className="border border-gray-200 rounded-lg p-4 space-y-3 mb-4">
+                <div className="grid gap-3 md:grid-cols-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-2">
+                      Resource Type *
+                    </label>
+                    <HeadlessSelect
+                      options={[
+                        { value: "", label: "Select resource" },
+                        ...resourceTypeOptions,
+                      ]}
+                      value={selectedResourceType}
+                      onChange={(value: string | number) =>
+                        setSelectedResourceType(value as string)
+                      }
+                      placeholder="Select resource"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-2">
+                      Value
+                    </label>
+                    <input
+                      type="text"
+                      value={tempResourceData.value}
+                      onChange={(e) =>
+                        setTempResourceData({
+                          ...tempResourceData,
+                          value: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter value"
+                    />
+                  </div>
+
+                  {!comboSharedValidity && (
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-2">
+                        Validity (Hours)
+                      </label>
+                      <input
+                        type="text"
+                        value={tempResourceData.sharedValidityHours}
+                        onChange={(e) =>
+                          setTempResourceData({
+                            ...tempResourceData,
+                            sharedValidityHours: e.target.value,
+                          })
+                        }
+                        className="w-full px-3 py-2.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Hours"
+                      />
+                    </div>
+                  )}
+
+                  {!comboSharedPrice && (
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-2">
+                        Price
+                      </label>
+                      <input
+                        type="text"
+                        value={tempResourceData.price}
+                        onChange={(e) =>
+                          setTempResourceData({
+                            ...tempResourceData,
+                            price: e.target.value,
+                          })
+                        }
+                        className="w-full px-3 py-2.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Price"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Add Resource Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!selectedResourceType) return;
+
+                    setComboResources([
+                      ...comboResources,
+                      {
+                        type: selectedResourceType,
+                        value: tempResourceData.value,
+                        unit: selectedResourceType,
+                        sharedValidity: comboSharedValidity,
+                        sharedValidityHours: tempResourceData.sharedValidityHours || comboValidityHours,
+                        price: comboSharedPrice ? undefined : tempResourceData.price,
+                      },
+                    ]);
+
+                    // Reset
+                    setSelectedResourceType("");
+                    setTempResourceData({
+                      value: "",
+                      sharedValidityHours: "",
+                      price: "",
+                    });
+                  }}
+                  disabled={!selectedResourceType}
+                  style={{
+                    background: button.bordered.background,
+                    color: "#000000",
+                    border: button.bordered.border,
+                    padding: `${button.bordered.paddingY} ${button.bordered.paddingX}`,
+                    borderRadius: button.bordered.borderRadius,
+                    fontSize: button.bordered.fontSize,
+                    fontWeight: "500",
+                    cursor: selectedResourceType ? "pointer" : "not-allowed",
+                    opacity: selectedResourceType ? 1 : 0.5,
+                  }}
+                >
+                  Add Resource
+                </button>
               </div>
 
               {/* Validity & Price - 2 Column Layout */}
@@ -1544,7 +1568,10 @@ export default function TypeConfigurationPage({
       navigate("/dashboard/creative-templates/create");
       return;
     }
-    // For comboTypes, use the modal
+    if (config.configType === "comboTypes") {
+      navigate("/dashboard/combo-types/create");
+      return;
+    }
     setEditingItem(undefined);
     setIsModalOpen(true);
   };
@@ -1558,10 +1585,8 @@ export default function TypeConfigurationPage({
       navigate(`/dashboard/creative-templates/${item.id}/edit`);
       return;
     }
-    // For comboTypes, open the modal for editing
     if (config.configType === "comboTypes") {
-      setEditingItem(item);
-      setIsModalOpen(true);
+      navigate(`/dashboard/combo-types/${item.id}/edit`);
       return;
     }
     setEditingItem(item);

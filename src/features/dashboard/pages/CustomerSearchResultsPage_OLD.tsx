@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Search, Mail, MessageSquare, ArrowLeft } from "lucide-react";
+import { Mail, MessageSquare, ArrowLeft } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import {
   BarChart,
   Bar,
@@ -607,16 +608,11 @@ export default function CustomerSearchResultsPage() {
             <div className="space-y-4">
               {/* Filters */}
               <div className="flex flex-col sm:flex-row gap-3 pb-4 border-b border-gray-200">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <input
-                    type="text"
-                    value={eventSearchTerm}
-                    onChange={(e) => setEventSearchTerm(e.target.value)}
-                    placeholder="Search events..."
-                    className={`w-full pl-10 pr-4 py-2 text-sm ${tw.rounded} border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                  />
-                </div>
+                <SearchInput
+                  value={eventSearchTerm}
+                  onChange={setEventSearchTerm}
+                  placeholder="Search events..."
+                />
                 <select
                   value={eventTypeFilter}
                   onChange={(e) => setEventTypeFilter(e.target.value)}

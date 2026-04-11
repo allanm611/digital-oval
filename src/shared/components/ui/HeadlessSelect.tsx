@@ -93,7 +93,7 @@ export default function HeadlessSelect({
               setIsOpen(!isOpen);
             }}
             className={`
-            relative w-full cursor-default py-3 px-3 pr-10 text-left transition-all duration-200 text-sm
+            relative w-full cursor-default py-2 px-3 pr-10 text-left transition-all duration-200 text-sm
             ${error ? components.input.error : components.input.default}
             ${
               disabled

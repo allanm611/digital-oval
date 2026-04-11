@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { Search, Filter, MoreHorizontal, Eye, Edit, Trash2, ListChecks, Activity, DollarSign, Smartphone, ChevronLeft, ChevronRight } from "lucide-react";
+import { Filter, MoreHorizontal, Eye, Edit, Trash2, ListChecks, Activity, DollarSign, Smartphone, ChevronLeft, ChevronRight } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import { generateAllKPIs } from "../utils/kpiGenerator";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw } from "../../../shared/utils/utils";
@@ -97,22 +98,15 @@ export default function KPIsPage() {
 
       {/* Search and Filters */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:flex-wrap">
-        <div className="relative flex-1 min-w-[250px]">
-          <Search
-            className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
-            aria-hidden
-          />
-          <input
-            type="text"
-            placeholder="Search KPIs..."
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
+        <SearchInput
+          placeholder="Search KPIs..."
+          value={searchTerm}
+          onChange={(value) => {
+            setSearchTerm(value);
+            setCurrentPage(1);
             }}
             className={`w-full ${tw.rounded} border border-gray-200 bg-white py-2 pl-10 pr-4 text-sm focus:border-gray-300 focus:outline-none focus:ring-0`}
           />
-        </div>
 
         <HeadlessSelect
           options={[

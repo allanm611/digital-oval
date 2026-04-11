@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { X, Search } from "lucide-react";
+import { X } from "lucide-react";
 import { ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import { Popover } from "@headlessui/react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import { customerService } from "../../customers360/services/customerServices";
 import Pagination from "../../../shared/components/ui/Pagination";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -218,17 +219,11 @@ export default function AddCustomersToQuickListModal({
         {/* Search and Filter */}
         <div className="px-6 pt-6 pb-4 flex-shrink-0">
           <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search by name, email, phone..."
-                value={customerSearchTerm}
-                onChange={(e) => setCustomerSearchTerm(e.target.value)}
-                disabled={isLoading}
-                className={`w-full pl-10 pr-4 py-2 border border-gray-300 ${tw.rounded} text-sm focus:outline-none focus:ring-2 focus:ring-opacity-50 disabled:opacity-50 disabled:bg-gray-100`}
-              />
-            </div>
+            <SearchInput
+              placeholder="Search by name, email, phone..."
+              value={customerSearchTerm}
+              onChange={setCustomerSearchTerm}
+            />
             <Popover className="relative w-48">
               <Popover.Button
                 disabled={isLoading}

@@ -1,17 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Search, Eye } from "lucide-react";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import RegularModal from "../../../shared/components/ui/RegularModal";
 import { color, tw } from "../../../shared/utils/utils";
-import {
-  customerSubscriptions,
-  searchCustomers as searchCustomersUtil,
-} from "../../customers360/utils/customerDataService";
-import type { CustomerSubscriptionRecord } from "../../customers360/types/customerSubscription";
-import {
-  getSubscriptionDisplayName,
-  formatMsisdn,
-} from "../../customers360/utils/customerSubscriptionHelpers";
+import { customerService } from "../../customers360/services/customerServices";
+import type { Subscriber } from "../../customers360/types/customer";
 
 interface AddEmailModalProps {
   isOpen: boolean;
@@ -31,16 +24,7 @@ export default function AddEmailModal({
 }: AddEmailModalProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState<
-    CustomerSubscriptionRecord[]
-  >([]);
-
-  const searchCustomers = useCallback(
-    (term: string, customers: CustomerSubscriptionRecord[]) => {
-      return searchCustomersUtil(term, customers);
-    },
-    []
-  );
+  const [searchResults, setSearchResults] = useState<Subscriber[]>([]);
 
   // Debounced search
   useEffect(() => {
@@ -50,36 +34,41 @@ export default function AddEmailModal({
       return;
     }
 
-    if (!searchTerm.trim()) {
-      setSearchResults([]);
-      return;
-    }
-
     setIsSearching(true);
-    const debounceTimer = setTimeout(() => {
-      const results = searchCustomers(searchTerm, customerSubscriptions);
-      // Limit to top 50 results for performance
-      setSearchResults(results.slice(0, 50));
+    const debounceTimer = setTimeout(async () => {
+      try {
+        const response = await customerService.searchCustomers({
+          search: searchTerm,
+          limit: 50,
+        });
+        setSearchResults(response.data || []);
+      } catch (error) {
+        console.error("Failed to search customers:", error);
+        setSearchResults([]);
+      }
       setIsSearching(false);
-    }, 400); // 400ms debounce
+    }, 400);
 
     return () => {
       clearTimeout(debounceTimer);
       setIsSearching(false);
     };
-  }, [searchTerm, isOpen, searchCustomers]);
+  }, [searchTerm, isOpen]);
 
-  const handleSelectCustomer = (customer: CustomerSubscriptionRecord) => {
-    const name = getSubscriptionDisplayName(
-      customer,
-      `Customer ${customer.customerId}`
-    );
+  const handleSelectCustomer = (customer: Subscriber) => {
+    const name =
+      customer.first_name || customer.last_name
+        ? `${customer.first_name || ""} ${customer.last_name || ""}`.trim()
+        : customer.msisdn;
 
     onAdd({
-      id: customer.customerId,
+      id:
+        typeof customer.id === "string"
+          ? parseInt(customer.id, 10)
+          : customer.id,
       name,
       email: customer.email || undefined,
-      phone: customer.msisdn ? formatMsisdn(customer.msisdn) : undefined,
+      phone: customer.msisdn || undefined,
     });
 
     // Reset state
@@ -126,7 +115,9 @@ export default function AddEmailModal({
         </p>
 
         {/* Search Results */}
-        <div className={`max-h-[400px] overflow-y-auto border border-gray-200 ${tw.rounded}`}>
+        <div
+          className={`max-h-[400px] overflow-y-auto border border-gray-200 ${tw.rounded}`}
+        >
           {isSearching ? (
             <div className="flex flex-col items-center justify-center py-12">
               <LoadingSpinner variant="modern" size="md" />
@@ -156,7 +147,7 @@ export default function AddEmailModal({
               {searchResults.map((customer) => {
                 const name = getSubscriptionDisplayName(
                   customer,
-                  `Customer ${customer.customerId}`
+                  `Customer ${customer.customerId}`,
                 );
                 return (
                   <button

@@ -12,13 +12,13 @@ import {
   Eye,
   Plus,
   X,
-  Search,
   Layers,
   Zap,
   MoreVertical,
   Send,
   Loader2,
 } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import { ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import {
   LineChart,
@@ -2273,16 +2273,11 @@ export default function SegmentDetailsPage() {
               {/* Search and Filter */}
               <div className="px-6 pt-6 pb-4 flex-shrink-0">
                 <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search by name, email, phone..."
-                      value={customerSearchTerm}
-                      onChange={(e) => setCustomerSearchTerm(e.target.value)}
-                      className={`w-full pl-10 pr-4 py-2 border border-gray-300 ${tw.rounded} text-sm focus:outline-none focus:ring-2 focus:ring-opacity-50`}
-                    />
-                  </div>
+                  <SearchInput
+                    placeholder="Search by name, email, phone..."
+                    value={customerSearchTerm}
+                    onChange={setCustomerSearchTerm}
+                  />
                   <Popover className="relative w-48">
                     <Popover.Button
                       className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded} text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors text-left flex items-center justify-between`}

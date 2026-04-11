@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Calendar, AlertCircle, Trash2 } from "lucide-react";
 import { tw } from "../utils/utils";
+import { buttons } from "../utils/tokens";
 import HeadlessSelect from "./ui/HeadlessSelect";
 import type {
   SchedulingData,
@@ -146,14 +147,26 @@ export default function SchedulingComponent({
   };
 
   const addSpecificDayRow = () => {
-    setSpecificDayStartTimes((prev) => [
-      ...prev,
-      {
-        id: Date.now() + prev.length,
-        day: 1,
-        time: "08:00",
-      },
-    ]);
+    setSpecificDayStartTimes((prev) => {
+      // Find first available day not already selected
+      const selectedDays = new Set(prev.map((entry) => entry.day));
+      let availableDay = 1;
+      for (let day = 0; day < 7; day++) {
+        if (!selectedDays.has(day)) {
+          availableDay = day;
+          break;
+        }
+      }
+
+      return [
+        ...prev,
+        {
+          id: Date.now() + prev.length,
+          day: availableDay,
+          time: "08:00",
+        },
+      ];
+    });
   };
 
   const updateSpecificDayRow = (
@@ -448,15 +461,24 @@ export default function SchedulingComponent({
           {/* Days of Week - shown only for weekly recurrence */}
           {recurrencePattern === "Weeks" && (
             <div className="mb-6">
-              <div className="grid grid-cols-7 gap-2">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Days of Week
+              </label>
+              <div className="flex gap-3 flex-wrap">
                 {daysOfWeek.map((day) => (
-                  <Checkbox
-                    key={day.value}
-                    checked={selectedDays.includes(day.value)}
-                    onChange={() => toggleDayOfWeek(day.value)}
-                    label={day.label}
-                    wrapperClassName="justify-center"
-                  />
+                  <div key={day.value} className="flex items-center gap-2">
+                    <Checkbox
+                      id={`day-${day.value}`}
+                      checked={selectedDays.includes(day.value)}
+                      onChange={() => toggleDayOfWeek(day.value)}
+                    />
+                    <label
+                      htmlFor={`day-${day.value}`}
+                      className="text-sm text-gray-700 cursor-pointer font-medium"
+                    >
+                      {day.label.substring(0, 3)}
+                    </label>
+                  </div>
                 ))}
               </div>
             </div>
@@ -474,19 +496,27 @@ export default function SchedulingComponent({
             {(recurrencePattern === "Days" ||
               recurrencePattern === "Months") && (
               <>
-                <Checkbox
-                  checked={setSpecificStartTime}
-                  onChange={(e) => {
-                    const checked = e.target.checked;
-                    setSetSpecificStartTime(checked);
-                    if (checked && specificDayStartTimes.length === 0) {
-                      setSpecificDayStartTimes([
-                        { id: Date.now(), day: 1, time: "08:00" },
-                      ]);
-                    }
-                  }}
-                  label="Set specific schedule"
-                />
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="set-specific-schedule"
+                    checked={setSpecificStartTime}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setSetSpecificStartTime(checked);
+                      if (checked && specificDayStartTimes.length === 0) {
+                        setSpecificDayStartTimes([
+                          { id: Date.now(), day: 1, time: "08:00" },
+                        ]);
+                      }
+                    }}
+                  />
+                  <label
+                    htmlFor="set-specific-schedule"
+                    className="text-sm text-gray-700 cursor-pointer font-medium"
+                  >
+                    Set specific schedule
+                  </label>
+                </div>
 
                 {setSpecificStartTime && recurrencePattern === "Days" && (
                   <div
@@ -540,7 +570,16 @@ export default function SchedulingComponent({
                     <button
                       type="button"
                       onClick={addSpecificDayRow}
-                      className="px-3 py-2 text-sm font-medium text-[#00BBCC] border border-[#00BBCC] rounded hover:bg-cyan-50"
+                      style={{
+                        background: buttons.bordered.background,
+                        color: buttons.bordered.color,
+                        border: buttons.bordered.border,
+                        padding: `${buttons.bordered.paddingY} ${buttons.bordered.paddingX}`,
+                        borderRadius: buttons.bordered.borderRadius,
+                        fontSize: buttons.bordered.fontSize,
+                        fontWeight: 500,
+                        cursor: "pointer",
+                      }}
                     >
                       Add Day Time
                     </button>
@@ -549,11 +588,19 @@ export default function SchedulingComponent({
               </>
             )}
 
-            <Checkbox
-              checked={startDeliveryOnCompletion}
-              onChange={(e) => setStartDeliveryOnCompletion(e.target.checked)}
-              label="Start delivery on completion of specific Broadcasts"
-            />
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="start-delivery-completion"
+                checked={startDeliveryOnCompletion}
+                onChange={(e) => setStartDeliveryOnCompletion(e.target.checked)}
+              />
+              <label
+                htmlFor="start-delivery-completion"
+                className="text-sm text-gray-700 cursor-pointer font-medium"
+              >
+                Start delivery on completion of specific Broadcasts
+              </label>
+            </div>
           </div>
         </div>
       </div>

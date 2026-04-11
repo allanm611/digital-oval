@@ -15,12 +15,12 @@ import {
   Plus,
   PowerOff,
   RefreshCw,
-  Search,
   Server,
   Shield,
   Square,
   X,
 } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import { useToast } from "../../../contexts/ToastContext";
 import { useConfirm } from "../../../contexts/ConfirmContext";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -782,16 +782,11 @@ export default function ConnectionProfilesPage() {
         {/* Search & Filters */}
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search by profile name, code, or type..."
-                className={`w-full pl-10 pr-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
-              />
-            </div>
+            <SearchInput
+              value={searchTerm}
+              onChange={setSearchTerm}
+              placeholder="Search by profile name, code, or type..."
+            />
             <HeadlessSelect
               options={[
                 { value: "all", label: "All Status" },

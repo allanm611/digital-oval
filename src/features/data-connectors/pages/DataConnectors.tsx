@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { X } from "lucide-react";
 import {
-  Search,
   Filter,
   Plug,
   CheckCircle,
@@ -12,6 +11,7 @@ import {
   Edit,
   Trash2,
 } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import {
   DataConnectorType,
   ProcessedDataConnector,
@@ -433,20 +433,12 @@ export default function DataConnectors() {
 
       {/* Controls */}
       <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5"
-            style={{ color: color.text.muted }}
-          />
-          <input
-            type="text"
-            placeholder="Search connectors..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && setSearchTerm(searchTerm)}
-            className={`w-full pl-10 pr-4 py-3 text-sm border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 bg-white focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
-          />
-        </div>
+        <SearchInput
+          placeholder="Search connectors..."
+          value={searchTerm}
+          onChange={setSearchTerm}
+          onKeyDown={(e) => e.key === "Enter" && setSearchTerm(searchTerm)}
+        />
 
         <button
           onClick={() => setShowFilterPanel((prev) => !prev)}

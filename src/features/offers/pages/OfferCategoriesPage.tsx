@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import {
-  Search,
   Edit,
   Trash2,
   MessageSquare,
@@ -17,6 +16,7 @@ import {
   Power,
   PowerOff,
 } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
@@ -1092,16 +1092,11 @@ function OfferCategoriesPage() {
 
       {/* Search and View Toggle */}
       <div className=" flex items-center gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder={t.offerCatalogs.searchPlaceholder}
-            className={`w-full pl-10 pr-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
-          />
-        </div>
+        <SearchInput
+          value={searchTerm}
+          onChange={setSearchTerm}
+          placeholder={t.offerCatalogs.searchPlaceholder}
+        />
         <div className="flex items-center gap-2 p-1">
           <button
             onClick={() => setShowAdvancedFilters(true)}

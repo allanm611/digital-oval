@@ -5,7 +5,6 @@ import {
   Link2,
   Edit,
   Eye,
-  Search,
   Trash2,
   CheckCircle,
   XCircle,
@@ -16,6 +15,7 @@ import {
   BarChart3,
   MoreHorizontal,
 } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import CreateButton from "../../../shared/components/ui/CreateButton";
@@ -1890,22 +1890,11 @@ export default function JobDependenciesPage() {
 
       {/* Search and Filters */}
       <div className="flex flex-col gap-3 md:flex-row md:gap-4">
-        <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search by job ID, dependency type, or status..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className={`w-full ${tw.rounded} border border-gray-200 py-3 pl-10 pr-4 text-sm shadow-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
-          />
-          {isSearching && (
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-[#3b8169]"></div>
-            </div>
-          )}
-        </div>
-        <div className="flex flex-col gap-3 md:flex-row md:gap-4">
+        <SearchInput
+          placeholder="Search by job ID, dependency type, or status..."
+          value={searchTerm}
+          onChange={setSearchTerm}
+        />
           <HeadlessSelect
             options={[
               { value: "all", label: "All Types" },
@@ -1951,7 +1940,6 @@ export default function JobDependenciesPage() {
               </span>
             )}
           </button>
-        </div>
       </div>
 
       {/* Batch Actions Toolbar */}

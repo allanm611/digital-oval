@@ -7,7 +7,6 @@ import {
   Clock,
   Eye,
   Edit,
-  Search,
   Trash2,
   Play,
   Pause,
@@ -18,6 +17,7 @@ import {
   Filter,
   BarChart3,
 } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import { useNavigate, useLocation } from "react-router-dom";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -611,16 +611,11 @@ export default function ScheduledJobsPage() {
       </div>
 
       <div className="flex gap-4">
-        <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            className={`w-full ${tw.rounded} border border-gray-200 py-3 pl-10 pr-4 text-sm shadow-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
-            placeholder="Search by name or code"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
+        <SearchInput
+          placeholder="Search by name or code"
+          value={searchTerm}
+          onChange={setSearchTerm}
+        />
         <HeadlessSelect
           value={statusFilter}
           onChange={(value) => setStatusFilter(value as string)}

@@ -23,14 +23,12 @@ export default function Checkbox({
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!disabled && inputRef.current) {
-      // Trigger onChange - parent component handles state update
-      const syntheticEvent = new Event("change", { bubbles: true });
-      Object.defineProperty(syntheticEvent, "target", {
-        value: { ...inputRef.current, checked: !checked },
-        enumerable: true,
-      });
-      onChange(syntheticEvent as any);
+      inputRef.current.click();
     }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange(e);
   };
 
   return (
@@ -43,7 +41,7 @@ export default function Checkbox({
         {...inputProps}
         type="checkbox"
         checked={checked}
-        onChange={onChange}
+        onChange={handleChange}
         disabled={disabled}
         className="peer sr-only"
       />

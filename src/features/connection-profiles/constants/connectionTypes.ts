@@ -11,3 +11,12 @@ export const CONNECTION_TYPE_OPTIONS = [
 
 export type ConnectionTypeValue =
   (typeof CONNECTION_TYPE_OPTIONS)[number]["value"];
+
+export const DATABASE_TYPE_OPTIONS = [
+  { value: "mysql", label: "MySQL" },
+  { value: "postgres", label: "PostgreSQL" },
+  { value: "mssql", label: "Microsoft SQL Server" },
+  { value: "oracle", label: "Oracle" },
+] as const;
+
+export type DatabaseTypeValue = (typeof DATABASE_TYPE_OPTIONS)[number]["value"];

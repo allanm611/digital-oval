@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, Trash2 } from "lucide-react";
 import { ComboType } from "../services/comboTypeService";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import { tw, color } from "../../../shared/utils/utils";
+import { buttons } from "../../../shared/utils/tokens";
 
 const RESOURCE_TYPE_OPTIONS = [
   { value: "data", label: "Data" },
@@ -43,6 +44,7 @@ export default function ComboTypeFormModal({
     validityHours: "",
     comboResources: [
       {
+        id: 1,
         type: "data" as "data" | "voice" | "sms",
         value: "",
         unit: "MB",
@@ -50,6 +52,19 @@ export default function ComboTypeFormModal({
         sharedValidityHours: "",
       },
     ],
+  });
+
+  // Selected resource type for dropdown
+  const [selectedResourceType, setSelectedResourceType] = useState<
+    "data" | "voice" | "sms" | ""
+  >("");
+
+  // Temporary resource data being configured
+  const [tempResourceData, setTempResourceData] = useState({
+    value: "",
+    unit: "MB",
+    sharedValidity: false,
+    sharedValidityHours: "",
   });
 
   useEffect(() => {
@@ -64,7 +79,8 @@ export default function ComboTypeFormModal({
           ? String(comboType.validity_hours)
           : "",
         comboResources: comboType.combo_resources
-          ? comboType.combo_resources.map((r: any) => ({
+          ? comboType.combo_resources.map((r: any, idx: number) => ({
+              id: Date.now() + idx,
               type: r.resource_type,
               value:
                 r.unit_value !== undefined && r.unit_value !== null
@@ -80,6 +96,7 @@ export default function ComboTypeFormModal({
             }))
           : [
               {
+                id: 1,
                 type: "data" as const,
                 value: "",
                 unit: "MB",
@@ -98,6 +115,7 @@ export default function ComboTypeFormModal({
         validityHours: "",
         comboResources: [
           {
+            id: 1,
             type: "data" as const,
             value: "",
             unit: "MB",
@@ -110,33 +128,45 @@ export default function ComboTypeFormModal({
   }, [comboType, isOpen]);
 
   const handleAddResource = () => {
+    if (!selectedResourceType) return;
+
     setFormData((prev) => ({
       ...prev,
       comboResources: [
         ...prev.comboResources,
         {
-          type: "data" as const,
-          value: "",
-          unit: "MB",
-          sharedValidity: false,
-          sharedValidityHours: "",
+          id: Date.now() + prev.comboResources.length,
+          type: selectedResourceType,
+          value: tempResourceData.value,
+          unit: tempResourceData.unit,
+          sharedValidity: tempResourceData.sharedValidity,
+          sharedValidityHours: tempResourceData.sharedValidityHours,
         },
       ],
     }));
+
+    // Reset
+    setSelectedResourceType("");
+    setTempResourceData({
+      value: "",
+      unit: "MB",
+      sharedValidity: false,
+      sharedValidityHours: "",
+    });
   };
 
-  const handleRemoveResource = (index: number) => {
+  const handleRemoveResource = (id: number) => {
     setFormData((prev) => ({
       ...prev,
-      comboResources: prev.comboResources.filter((_, i) => i !== index),
+      comboResources: prev.comboResources.filter((r) => r.id !== id),
     }));
   };
 
-  const handleResourceChange = (index: number, field: string, value: any) => {
+  const handleResourceChange = (id: number, field: string, value: any) => {
     setFormData((prev) => ({
       ...prev,
-      comboResources: prev.comboResources.map((resource, i) =>
-        i === index ? { ...resource, [field]: value } : resource,
+      comboResources: prev.comboResources.map((resource) =>
+        resource.id === id ? { ...resource, [field]: value } : resource,
       ),
     }));
   };
@@ -164,11 +194,13 @@ export default function ComboTypeFormModal({
           ? parseInt(formData.validityHours)
           : undefined,
         comboResources: formData.comboResources.map((resource) => ({
-          ...resource,
+          type: resource.type,
           value:
             resource.value !== "" && resource.value !== null
               ? parseFloat(String(resource.value))
               : undefined,
+          unit: resource.unit,
+          sharedValidity: resource.sharedValidity,
           sharedValidityHours:
             resource.sharedValidityHours !== "" &&
             resource.sharedValidityHours !== null
@@ -298,7 +330,10 @@ export default function ComboTypeFormModal({
                 }
                 disabled={isLoading}
               />
-              <label htmlFor="is-active" className="text-sm font-medium text-gray-700">
+              <label
+                htmlFor="is-active"
+                className="text-sm font-medium text-gray-700"
+              >
                 Active
               </label>
             </div>
@@ -306,131 +341,197 @@ export default function ComboTypeFormModal({
 
           {/* Combo Resources */}
           <div className="space-y-4 border-t pt-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Combo Resources *
-              </h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Combo Resources *
+            </h3>
+
+            {/* Resource Selection and Input Section */}
+            <div
+              className={`border border-gray-200 ${tw.rounded} p-4 space-y-3`}
+            >
+              <div className="grid gap-3 md:grid-cols-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-2">
+                    Resource Type *
+                  </label>
+                  <HeadlessSelect
+                    options={RESOURCE_TYPE_OPTIONS}
+                    value={selectedResourceType}
+                    onChange={(value: string | number) =>
+                      setSelectedResourceType(value as "data" | "voice" | "sms")
+                    }
+                    disabled={isLoading}
+                    placeholder="Select resource"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-2">
+                    Value
+                  </label>
+                  <input
+                    type="text"
+                    value={tempResourceData.value}
+                    onChange={(e) =>
+                      setTempResourceData({
+                        ...tempResourceData,
+                        value: e.target.value,
+                      })
+                    }
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter value"
+                    disabled={isLoading}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-2">
+                    Unit
+                  </label>
+                  <HeadlessSelect
+                    options={UNIT_OPTIONS}
+                    value={tempResourceData.unit}
+                    onChange={(value: string | number) =>
+                      setTempResourceData({
+                        ...tempResourceData,
+                        unit: value as string,
+                      })
+                    }
+                    disabled={isLoading}
+                    placeholder="Select unit"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="temp-resource-validity"
+                  checked={tempResourceData.sharedValidity}
+                  onChange={(e) =>
+                    setTempResourceData({
+                      ...tempResourceData,
+                      sharedValidity: e.target.checked,
+                    })
+                  }
+                  disabled={isLoading}
+                />
+                <label
+                  htmlFor="temp-resource-validity"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Shared Validity
+                </label>
+              </div>
+
+              {tempResourceData.sharedValidity && (
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-2">
+                    Validity Hours
+                  </label>
+                  <input
+                    type="text"
+                    value={tempResourceData.sharedValidityHours}
+                    onChange={(e) =>
+                      setTempResourceData({
+                        ...tempResourceData,
+                        sharedValidityHours: e.target.value,
+                      })
+                    }
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter validity hours"
+                    disabled={isLoading}
+                  />
+                </div>
+              )}
+
+              {/* Add Resource Button */}
               <button
                 type="button"
                 onClick={handleAddResource}
-                disabled={isLoading}
-                className={`px-3 py-1 text-sm font-medium text-white rounded-md transition-colors disabled:opacity-50`}
-                style={{ backgroundColor: color.primary.action }}
+                disabled={!selectedResourceType || isLoading}
+                style={{
+                  background: buttons.bordered.background,
+                  color: "#000000",
+                  border: buttons.bordered.border,
+                  padding: `${buttons.bordered.paddingY} ${buttons.bordered.paddingX}`,
+                  borderRadius: buttons.bordered.borderRadius,
+                  fontSize: buttons.bordered.fontSize,
+                  fontWeight: 500,
+                  cursor:
+                    selectedResourceType && !isLoading
+                      ? "pointer"
+                      : "not-allowed",
+                  opacity: selectedResourceType && !isLoading ? 1 : 0.5,
+                }}
               >
                 Add Resource
               </button>
             </div>
 
-            <div className="space-y-4">
-              {formData.comboResources.map((resource, index) => (
-                <div
-                  key={index}
-                  className="p-4 border border-gray-200 rounded-lg space-y-3"
-                >
-                  <div className="grid grid-cols-2 gap-4">
+            {/* Added Resources List */}
+            {formData.comboResources.length > 0 && (
+              <div className="space-y-3">
+                {formData.comboResources.map((resource) => (
+                  <div
+                    key={resource.id}
+                    className={`${tw.rounded} border p-4 flex items-start justify-between`}
+                    style={{
+                      borderColor: color.border.default,
+                      backgroundColor: color.surface.background,
+                    }}
+                  >
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Resource Type
-                      </label>
-                      <HeadlessSelect
-                        options={RESOURCE_TYPE_OPTIONS}
-                        value={resource.type}
-                        onChange={(value: string | number) =>
-                          handleResourceChange(index, "type", value)
-                        }
-                        disabled={isLoading}
-                        placeholder="Select resource type"
-                      />
+                      <div className="flex gap-4 text-sm">
+                        <div>
+                          <span className="text-xs font-medium text-gray-500">
+                            Type:
+                          </span>
+                          <p className="font-medium text-gray-900">
+                            {RESOURCE_TYPE_OPTIONS.find(
+                              (opt) => opt.value === resource.type,
+                            )?.label || resource.type}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs font-medium text-gray-500">
+                            Unit:
+                          </span>
+                          <p className="font-medium text-gray-900">
+                            {resource.unit}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs font-medium text-gray-500">
+                            Value:
+                          </span>
+                          <p className="font-medium text-gray-900">
+                            {resource.value}
+                          </p>
+                        </div>
+                        {resource.sharedValidity && (
+                          <div>
+                            <span className="text-xs font-medium text-gray-500">
+                              Validity:
+                            </span>
+                            <p className="font-medium text-gray-900">
+                              {resource.sharedValidityHours} hrs
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Unit
-                      </label>
-                      <HeadlessSelect
-                        options={UNIT_OPTIONS}
-                        value={resource.unit}
-                        onChange={(value: string | number) =>
-                          handleResourceChange(index, "unit", value)
-                        }
-                        disabled={isLoading}
-                        placeholder="Select unit"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Value
-                    </label>
-                    <input
-                      type="text"
-                      value={resource.value}
-                      onChange={(e) =>
-                        handleResourceChange(index, "value", e.target.value)
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter value"
-                      disabled={isLoading}
-                    />
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      id={`resource-validity-${index}`}
-                      checked={resource.sharedValidity}
-                      onChange={(e) =>
-                        handleResourceChange(
-                          index,
-                          "sharedValidity",
-                          e.target.checked,
-                        )
-                      }
-                      disabled={isLoading}
-                    />
-                    <label
-                      htmlFor={`resource-validity-${index}`}
-                      className="text-sm font-medium text-gray-700"
-                    >
-                      Shared Validity
-                    </label>
-                  </div>
-
-                  {resource.sharedValidity && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Validity Hours
-                      </label>
-                      <input
-                        type="text"
-                        value={resource.sharedValidityHours}
-                        onChange={(e) =>
-                          handleResourceChange(
-                            index,
-                            "sharedValidityHours",
-                            e.target.value,
-                          )
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Enter validity hours"
-                        disabled={isLoading}
-                      />
-                    </div>
-                  )}
-
-                  {formData.comboResources.length > 1 && (
                     <button
                       type="button"
-                      onClick={() => handleRemoveResource(index)}
+                      onClick={() => handleRemoveResource(resource.id)}
+                      className="text-gray-400 hover:text-red-500 transition-colors ml-4"
                       disabled={isLoading}
-                      className="text-red-600 hover:text-red-700 text-sm font-medium disabled:opacity-50"
                     >
-                      Remove Resource
+                      <Trash2 className="h-4 w-4" />
                     </button>
-                  )}
-                </div>
-              ))}
-            </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Footer */}

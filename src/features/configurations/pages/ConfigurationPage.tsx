@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Grid3X3, List, Eye } from "lucide-react";
+import { Grid3X3, List, Eye } from "lucide-react";
 import { color, tw, components, button } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 
 interface ConfigurationItem {
   id: string;
@@ -332,7 +333,7 @@ export default function ConfigurationPage() {
         type: "campaign",
         category: "Campaign Configuration",
         status: "active",
-        navigationPath: "/dashboard/vip-lists",
+        navigationPath: "/dashboard/vip-list-management",
       },
       {
         id: "seed-list-management",
@@ -386,7 +387,9 @@ export default function ConfigurationPage() {
   const filteredConfigurations = configurations.filter((config) => {
     const matchesSearch =
       (config.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (config.description || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (config.description || "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
       (config.category || "").toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesCategory =
@@ -427,16 +430,11 @@ export default function ConfigurationPage() {
       <div className={` mb-8`}>
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-3 lg:space-y-0">
           {/* Search */}
-          <div className="relative flex-1 w-full">
-            <Search
-              className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${tw.textMuted}`}
-            />
-            <input
-              type="text"
+          <div className="flex-1 w-full">
+            <SearchInput
               placeholder={t.configuration.searchPlaceholder}
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className={`w-full pl-10 pr-4 py-4 ${components.input.default} ${tw.rounded} focus:outline-none transition-all duration-200 text-sm`}
+              onChange={setSearchTerm}
             />
           </div>
 

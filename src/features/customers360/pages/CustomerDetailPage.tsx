@@ -1,13 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import {
-  Search,
-  Calendar,
-  X,
-  Send,
-  Edit,
-  Trash2,
-} from "lucide-react";
+import { Search, Calendar, X, Send, Edit, Trash2 } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -47,7 +40,6 @@ import {
 } from "../utils/customerSubscriptionHelpers";
 import type { CustomerSearchResultsResponse } from "../../reports-analytics/types/ReportsAPI";
 // Note: CustomerWithContact is not imported as it's not used in this file
-import { customerSubscriptions } from "../utils/customerDataService";
 import { customerService } from "../services/customerServices";
 
 // Extract types from API response
@@ -339,26 +331,6 @@ export default function CustomerDetailPage() {
     }
   }, [stateSource, origin]);
 
-  // Generate customer rows and lookup safely inside component
-  const { excelCustomerRows, subscriptionLookup } = useMemo(() => {
-    try {
-      const rows: CustomerRow[] = customerSubscriptions.map(
-        convertSubscriptionToCustomerRow,
-      );
-      const lookup: Record<string, CustomerSubscriptionRecord> = {};
-      rows.forEach((row, index) => {
-        const record = customerSubscriptions[index];
-        if (record) {
-          lookup[row.id] = record;
-        }
-      });
-      return { excelCustomerRows: rows, subscriptionLookup: lookup };
-    } catch (error) {
-      console.error("Error generating customer rows:", error);
-      return { excelCustomerRows: [], subscriptionLookup: {} };
-    }
-  }, []);
-
   // Get customer from state (initial navigation) or from URL params (on refresh)
   const customerFromState = location.state?.customer as CustomerRow | undefined;
   const subscriptionFromState = location.state?.subscription as
@@ -366,43 +338,17 @@ export default function CustomerDetailPage() {
     | undefined;
   const customerIdFromUrl = customerIdFromParams;
 
-  const customerFromUrl = useMemo(() => {
-    if (!customerIdFromUrl) return undefined;
-    return excelCustomerRows.find(
-      (customer) => customer.id === customerIdFromUrl,
-    );
-  }, [customerIdFromUrl, excelCustomerRows]);
-
-  const subscriptionFromDataset = useMemo(() => {
-    if (subscriptionFromState) {
-      return subscriptionFromState;
-    }
-    if (customerIdFromUrl) {
-      const numericId = parseInt(customerIdFromUrl, 10);
-      return customerSubscriptions.find(
-        (record) => record.customerId?.toString() === numericId.toString(),
-      );
-    }
-    return undefined;
-  }, [subscriptionFromState, customerIdFromUrl]);
-
   const derivedCustomerFromSubscription = useMemo(() => {
-    if (!subscriptionFromDataset) return undefined;
-    return convertSubscriptionToCustomerRow(subscriptionFromDataset);
-  }, [subscriptionFromDataset]);
+    if (!subscriptionFromState) return undefined;
+    return convertSubscriptionToCustomerRow(subscriptionFromState);
+  }, [subscriptionFromState]);
 
   const [selectedCustomer, setSelectedCustomer] = useState<
     CustomerRow | undefined
-  >(customerFromState || customerFromUrl || derivedCustomerFromSubscription);
+  >(customerFromState || derivedCustomerFromSubscription);
   const [selectedSubscription, setSelectedSubscription] = useState<
     Record<string, any> | undefined
-  >(subscriptionFromState || subscriptionFromDataset);
-
-  useEffect(() => {
-    if (customerFromUrl) {
-      setSelectedCustomer(customerFromUrl);
-    }
-  }, [customerFromUrl]);
+  >(subscriptionFromState);
 
   useEffect(() => {
     if (customerFromState) {
@@ -414,10 +360,10 @@ export default function CustomerDetailPage() {
   }, [customerFromState, stateSource]);
 
   useEffect(() => {
-    if (subscriptionFromDataset) {
-      setSelectedSubscription(subscriptionFromDataset);
+    if (subscriptionFromState) {
+      setSelectedSubscription(subscriptionFromState);
     }
-  }, [subscriptionFromDataset]);
+  }, [subscriptionFromState]);
 
   useEffect(() => {
     if (!selectedCustomer && derivedCustomerFromSubscription) {
@@ -427,25 +373,57 @@ export default function CustomerDetailPage() {
 
   useEffect(() => {
     if (!selectedSubscription && selectedCustomer) {
-      const inferred = subscriptionLookup[selectedCustomer.id];
-      if (inferred) {
-        setSelectedSubscription(inferred);
-      }
+      // API will fetch subscription details when customer ID is available
+      // No need to lookup in local array anymore
     }
   }, [selectedCustomer, selectedSubscription]);
 
   // Fetch full customer details from API when customerId is available
   useEffect(() => {
     const fetchCustomerDetails = async () => {
-      if (!customerIdFromUrl) return;
+      if (!customerIdFromUrl || customerFromState) return;
 
       try {
         const customerId = parseInt(customerIdFromUrl, 10);
         if (!isNaN(customerId)) {
           const response = await customerService.getCustomerById(customerId);
           if (response.success && response.data) {
-            // Store the API response directly without conversion
-            setSelectedSubscription(response.data);
+            // Convert API response to CustomerSubscriptionRecord format
+            const apiData = response.data;
+            const convertedSubscription: CustomerSubscriptionRecord = {
+              customerId:
+                typeof apiData.subscriber_id === "string"
+                  ? parseInt(apiData.subscriber_id, 10)
+                  : apiData.subscriber_id || customerId,
+              subscriptionId: customerId,
+              firstName:
+                apiData.attributes?.first_name ||
+                apiData.first_name ||
+                "Unknown",
+              lastName:
+                apiData.attributes?.last_name ||
+                apiData.last_name ||
+                "Customer",
+              msisdn: apiData.msisdn,
+              email: apiData.attributes?.email || apiData.email,
+              city: apiData.attributes?.city,
+              customerType: apiData.attributes?.customer_tier || "prepaid",
+              tariff: apiData.attributes?.preferred_channel || "NORMAL_SMS",
+              status:
+                (apiData.attributes as any)?.subscriber_status || "active",
+              simType: (apiData.attributes as any)?.kyc_verified
+                ? "KYC Verified"
+                : "Not Verified",
+              activationDate: apiData.created_at,
+            };
+
+            setSelectedSubscription(convertedSubscription);
+
+            // Also derive and set the customer from the subscription
+            const derivedCustomer = convertSubscriptionToCustomerRow(
+              convertedSubscription,
+            );
+            setSelectedCustomer(derivedCustomer);
           }
         }
       } catch (error) {
@@ -454,7 +432,7 @@ export default function CustomerDetailPage() {
     };
 
     fetchCustomerDetails();
-  }, [customerIdFromUrl]);
+  }, [customerIdFromUrl, customerFromState]);
 
   const customer = selectedCustomer || derivedCustomerFromSubscription;
 
@@ -504,7 +482,13 @@ export default function CustomerDetailPage() {
 
   const { segments, offers, events, lists, quicklists } = useMemo(() => {
     if (!selectedSubscription)
-      return { segments: [], offers: [], events: [], lists: [], quicklists: [] };
+      return {
+        segments: [],
+        offers: [],
+        events: [],
+        lists: [],
+        quicklists: [],
+      };
 
     // Use actual data from API, fallback to empty arrays if not present
     const data = selectedSubscription as Record<string, any>;
@@ -534,7 +518,13 @@ export default function CustomerDetailPage() {
       };
     }
 
-    return { segments: segmentsData, offers: offersData, events: mockEvents, lists: mockLists, quicklists: quicklistsData };
+    return {
+      segments: segmentsData,
+      offers: offersData,
+      events: mockEvents,
+      lists: mockLists,
+      quicklists: quicklistsData,
+    };
   }, [selectedSubscription, customer]);
 
   const filteredEvents = useMemo(() => {
@@ -652,7 +642,9 @@ export default function CustomerDetailPage() {
         channelStats[channel].total++;
         // Count engaged events (opened, clicked, read)
         if (
-          ["opened", "clicked", "read"].includes((event.status || "").toLowerCase())
+          ["opened", "clicked", "read"].includes(
+            (event.status || "").toLowerCase(),
+          )
         ) {
           channelStats[channel].engaged++;
         }
@@ -693,7 +685,10 @@ export default function CustomerDetailPage() {
               label: "First Name",
               value: selectedSubscription.first_name ?? "—",
             },
-            { label: "Last Name", value: selectedSubscription.last_name ?? "—" },
+            {
+              label: "Last Name",
+              value: selectedSubscription.last_name ?? "—",
+            },
             {
               label: "Gender",
               value: selectedSubscription.gender ?? "—",
@@ -724,7 +719,7 @@ export default function CustomerDetailPage() {
               label: "Alternate MSISDN",
               value: Array.isArray(selectedSubscription.alternate_msisdns)
                 ? selectedSubscription.alternate_msisdns.join(", ")
-                : selectedSubscription.alternate_msisdns ?? "—",
+                : (selectedSubscription.alternate_msisdns ?? "—"),
             },
             { label: "Email", value: selectedSubscription.email ?? email },
             {
@@ -1069,21 +1064,27 @@ export default function CustomerDetailPage() {
                   <div className="hidden lg:block overflow-x-auto">
                     <table
                       className="w-full"
-                      style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+                      style={{
+                        borderCollapse: "separate",
+                        borderSpacing: "0 8px",
+                      }}
                     >
                       <thead style={{ background: color.surface.tableHeader }}>
                         <tr className="text-left text-sm font-medium uppercase tracking-wider">
-                          {["Event Type", "Description", "Channel", "Status"].map(
-                            (header) => (
-                              <th
-                                key={header}
-                                className="px-6 py-3"
-                                style={{ color: color.surface.tableHeaderText }}
-                              >
-                                {header}
-                              </th>
-                            ),
-                          )}
+                          {[
+                            "Event Type",
+                            "Description",
+                            "Channel",
+                            "Status",
+                          ].map((header) => (
+                            <th
+                              key={header}
+                              className="px-6 py-3"
+                              style={{ color: color.surface.tableHeaderText }}
+                            >
+                              {header}
+                            </th>
+                          ))}
                         </tr>
                       </thead>
                       <tbody>
@@ -1144,7 +1145,9 @@ export default function CustomerDetailPage() {
           <div>
             {filteredEvents.length === 0 ? (
               <div className="py-12 text-center">
-                <p className="text-gray-500 text-sm">No engagement data available</p>
+                <p className="text-gray-500 text-sm">
+                  No engagement data available
+                </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -1159,7 +1162,10 @@ export default function CustomerDetailPage() {
                     <div className="h-64">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={eventDistributionData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="#e5e7eb"
+                          />
                           <XAxis
                             dataKey="name"
                             tick={{ fontSize: 11, fill: "#6b7280" }}
@@ -1191,7 +1197,10 @@ export default function CustomerDetailPage() {
                     <div className="h-64">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={activityTimelineData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="#e5e7eb"
+                          />
                           <XAxis
                             dataKey="month"
                             tick={{ fontSize: 11, fill: "#6b7280" }}
@@ -1226,7 +1235,10 @@ export default function CustomerDetailPage() {
                     <div className="h-64">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={statusDistributionData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="#e5e7eb"
+                          />
                           <XAxis
                             dataKey="name"
                             tick={{ fontSize: 11, fill: "#6b7280" }}
@@ -1261,7 +1273,10 @@ export default function CustomerDetailPage() {
                     <div className="h-64">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={engagementByChannelData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="#e5e7eb"
+                          />
                           <XAxis
                             dataKey="name"
                             tick={{ fontSize: 11, fill: "#6b7280" }}
@@ -1647,7 +1662,10 @@ export default function CustomerDetailPage() {
                   <div className="hidden lg:block overflow-x-auto">
                     <table
                       className="w-full"
-                      style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+                      style={{
+                        borderCollapse: "separate",
+                        borderSpacing: "0 8px",
+                      }}
                     >
                       <thead style={{ background: color.surface.tableHeader }}>
                         <tr className="text-left text-sm font-medium uppercase tracking-wider">
@@ -1728,7 +1746,8 @@ export default function CustomerDetailPage() {
                 Communication History
               </h3>
               <p className="text-sm text-gray-500">
-                View all communications sent to this customer across all channels
+                View all communications sent to this customer across all
+                channels
               </p>
             </div>
 
@@ -1856,17 +1875,21 @@ export default function CustomerDetailPage() {
                 >
                   <thead style={{ background: color.surface.tableHeader }}>
                     <tr className="text-left text-sm font-medium uppercase tracking-wider">
-                      {["Transaction ID", "Product", "Amount", "Date", "Status"].map(
-                        (header) => (
-                          <th
-                            key={header}
-                            className="px-6 py-3"
-                            style={{ color: color.surface.tableHeaderText }}
-                          >
-                            {header}
-                          </th>
-                        ),
-                      )}
+                      {[
+                        "Transaction ID",
+                        "Product",
+                        "Amount",
+                        "Date",
+                        "Status",
+                      ].map((header) => (
+                        <th
+                          key={header}
+                          className="px-6 py-3"
+                          style={{ color: color.surface.tableHeaderText }}
+                        >
+                          {header}
+                        </th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody>
@@ -1998,7 +2021,10 @@ export default function CustomerDetailPage() {
                 <div className="hidden lg:block overflow-x-auto">
                   <table
                     className="w-full"
-                    style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+                    style={{
+                      borderCollapse: "separate",
+                      borderSpacing: "0 8px",
+                    }}
                   >
                     <thead style={{ background: color.surface.tableHeader }}>
                       <tr className="text-left text-sm font-medium uppercase tracking-wider">
@@ -2343,8 +2369,12 @@ export default function CustomerDetailPage() {
                       Account Created
                     </p>
                     <p className="text-sm font-semibold text-gray-900">
-                      {selectedSubscription && (selectedSubscription as Record<string, any>)?.created_at
-                        ? new Date((selectedSubscription as Record<string, any>).created_at).toLocaleDateString()
+                      {selectedSubscription &&
+                      (selectedSubscription as Record<string, any>)?.created_at
+                        ? new Date(
+                            (selectedSubscription as Record<string, any>)
+                              .created_at,
+                          ).toLocaleDateString()
                         : "—"}
                     </p>
                   </div>
@@ -2355,9 +2385,7 @@ export default function CustomerDetailPage() {
                     <p className="text-xs uppercase text-gray-500 mb-1">
                       Last Login
                     </p>
-                    <p className="text-sm font-semibold text-gray-900">
-                      —
-                    </p>
+                    <p className="text-sm font-semibold text-gray-900">—</p>
                   </div>
                 </div>
               </div>
@@ -2373,9 +2401,7 @@ export default function CustomerDetailPage() {
                     <p className="text-xs uppercase text-gray-500 mb-1">
                       Primary Device
                     </p>
-                    <p className="text-sm font-semibold text-gray-900">
-                      —
-                    </p>
+                    <p className="text-sm font-semibold text-gray-900">—</p>
                   </div>
 
                   <div
@@ -2384,9 +2410,7 @@ export default function CustomerDetailPage() {
                     <p className="text-xs uppercase text-gray-500 mb-1">
                       OS Version
                     </p>
-                    <p className="text-sm font-semibold text-gray-900">
-                      —
-                    </p>
+                    <p className="text-sm font-semibold text-gray-900">—</p>
                   </div>
 
                   <div
@@ -2395,9 +2419,7 @@ export default function CustomerDetailPage() {
                     <p className="text-xs uppercase text-gray-500 mb-1">
                       App Version
                     </p>
-                    <p className="text-sm font-semibold text-gray-900">
-                      —
-                    </p>
+                    <p className="text-sm font-semibold text-gray-900">—</p>
                   </div>
                 </div>
               </div>

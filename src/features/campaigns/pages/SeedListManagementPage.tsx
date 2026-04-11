@@ -1,11 +1,13 @@
-import { useState } from "react";
-import { Plus, Search, Trash2, Mail } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Plus, Mail, Trash2, Eye, X } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import DateFormatter from "../../../shared/components/DateFormatter";
+import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { getDepartmentsConfig, getLineOfBusinessConfig } from "../../configurations/configs/configurationPageConfigs";
 
 // Types
@@ -112,16 +114,20 @@ interface FormErrors {
 }
 
 export default function SeedListManagementPage() {
-  const { success: showToast } = useToast();
+  const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
   const [recipients, setRecipients] = useState<SeedListRecipient[]>(DUMMY_RECIPIENTS);
   const departments = getDepartmentsConfig(t).initialData;
   const linesOfBusiness = getLineOfBusinessConfig(t).initialData;
-  const [loading] = useState(false);
+  
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [filterDepartment, setFilterDepartment] = useState<string>("all");
   const [filterLoB, setFilterLoB] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [activeTab, setActiveTab] = useState<"recipients" | "lists">("recipients");
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<AddRecipientForm>({
     customer_name: "",
@@ -131,18 +137,30 @@ export default function SeedListManagementPage() {
     line_of_business_id: "",
   });
   const [errors, setErrors] = useState<FormErrors>({});
+  
+  // Delete confirmation state
+  const [recipientToRemove, setRecipientToRemove] = useState<SeedListRecipient | null>(null);
+  const [isRemovingRecipient, setIsRemovingRecipient] = useState(false);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const filteredRecipients = recipients.filter((recipient) => {
     const matchesSearch =
       recipient.customer_name
         ?.toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
+        .includes(debouncedSearchTerm.toLowerCase()) ||
       recipient.customer_email
         ?.toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
+        .includes(debouncedSearchTerm.toLowerCase()) ||
       recipient.customer_phone
         ?.toLowerCase()
-        .includes(searchTerm.toLowerCase());
+        .includes(debouncedSearchTerm.toLowerCase());
 
     const matchesDepartment =
       filterDepartment === "all" ||
@@ -157,9 +175,29 @@ export default function SeedListManagementPage() {
   });
 
   const handleRemoveRecipient = (recipient: SeedListRecipient) => {
-    // TODO: Implement remove functionality
-    void recipient; // Parameter will be used in future implementation
-    showToast("Remove recipient functionality will be implemented");
+    setRecipientToRemove(recipient);
+  };
+
+  const handleConfirmRemove = useCallback(async () => {
+    if (!recipientToRemove) return;
+
+    setIsRemovingRecipient(true);
+    try {
+      // TODO: Call API to remove recipient when backend is ready
+      // await seedListService.removeRecipient(recipientToRemove.id);
+      
+      setRecipients(recipients.filter((r) => r.id !== recipientToRemove.id));
+      showToast("Recipient removed successfully");
+    } catch {
+      showError("Failed to remove recipient");
+    } finally {
+      setIsRemovingRecipient(false);
+      setRecipientToRemove(null);
+    }
+  }, [recipientToRemove, recipients, showToast, showError]);
+
+  const handleCancelRemove = () => {
+    setRecipientToRemove(null);
   };
 
   const handleOpenModal = () => {
@@ -233,7 +271,7 @@ export default function SeedListManagementPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header with Title and Buttons */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
@@ -250,12 +288,90 @@ export default function SeedListManagementPage() {
             style={{ backgroundColor: color.primary.action }}
           >
             <Plus className="w-4 h-4" />
-            {t.seedListManagement.addRecipient}
+            {activeTab === "recipients" ? "Add Recipient" : "Create List"}
           </button>
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Tabs */}
+      <style>{`
+        @media (max-width: 640px) {
+          .seed-list-tabs::-webkit-scrollbar {
+            display: none;
+          }
+          .seed-list-tabs {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+        }
+      `}</style>
+      <div className="seed-list-tabs flex gap-1 border-b border-gray-200 overflow-x-auto">
+        <button
+          onClick={() => setActiveTab("recipients")}
+          className={`px-3 sm:px-4 py-2.5 text-sm font-medium transition-colors flex items-center gap-1.5 sm:gap-2 relative flex-shrink-0 ${
+            activeTab === "recipients"
+              ? "text-black"
+              : "text-gray-600 hover:text-gray-900"
+          }`}
+        >
+          <Mail className="w-4 h-4 flex-shrink-0" />
+          <span className="whitespace-nowrap">Test Recipients</span>
+          <span
+            className="px-1.5 py-0.5 rounded-full text-xs font-medium flex-shrink-0"
+            style={{
+              backgroundColor:
+                activeTab === "recipients"
+                  ? `${color.primary.accent}15`
+                  : `${color.text.muted}15`,
+              color:
+                activeTab === "recipients"
+                  ? color.primary.accent
+                  : color.text.muted,
+            }}
+          >
+            {recipients.length}
+          </span>
+          {activeTab === "recipients" && (
+            <div
+              className="absolute bottom-0 left-0 right-0 h-0.5"
+              style={{ backgroundColor: color.primary.accent }}
+            />
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab("lists")}
+          className={`px-3 sm:px-4 py-2.5 text-sm font-medium transition-colors flex items-center gap-1.5 sm:gap-2 relative flex-shrink-0 ${
+            activeTab === "lists"
+              ? "text-black"
+              : "text-gray-600 hover:text-gray-900"
+          }`}
+        >
+          <Mail className="w-4 h-4 flex-shrink-0" />
+          <span className="whitespace-nowrap">Test Lists</span>
+          <span
+            className="px-1.5 py-0.5 rounded-full text-xs font-medium flex-shrink-0"
+            style={{
+              backgroundColor:
+                activeTab === "lists"
+                  ? `${color.primary.accent}15`
+                  : `${color.text.muted}15`,
+              color: activeTab === "lists" ? color.primary.accent : color.text.muted,
+            }}
+          >
+            0
+          </span>
+          {activeTab === "lists" && (
+            <div
+              className="absolute bottom-0 left-0 right-0 h-0.5"
+              style={{ backgroundColor: color.primary.accent }}
+            />
+          )}
+        </button>
+      </div>
+
+      {/* Recipients Tab Content */}
+      {activeTab === "recipients" && (
+        <>
       <div className="my-5">
         {/* Mobile: Stack everything vertically */}
         {/* md/lg: Search + Department on row 1, others on row 2 */}
@@ -264,14 +380,11 @@ export default function SeedListManagementPage() {
           {/* First Row: Search + Department on md/lg, all filters on xl+ */}
           <div className="flex flex-col md:flex-row xl:flex-row gap-4">
             {/* Search */}
-            <div className="relative flex-1 xl:flex-[0.6]">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
+            <div className="flex-1 xl:flex-[0.6]">
+              <SearchInput
                 placeholder={t.seedListManagement.searchPlaceholder}
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className={`w-full pl-10 pr-4 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#588157] text-sm`}
+                onChange={setSearchTerm}
               />
             </div>
 
@@ -588,8 +701,23 @@ export default function SeedListManagementPage() {
           </div>
         )}
       </div>
+      </>
+      )}
 
-      {/* Add Recipient Modal */}
+      {/* Test Lists Tab Content */}
+      {activeTab === "lists" && (
+      <div className="text-center py-12">
+        <Mail className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+        <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
+          No test lists created yet
+        </h3>
+        <p className={`text-sm ${tw.textMuted} mb-6`}>
+          Click "Create List" to organize test recipients into groups
+        </p>
+      </div>
+      )}
+
+      {/* Add Recipient/List Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className={`${tw.rounded} bg-white shadow-xl max-w-md w-full mx-4`}>
@@ -747,6 +875,21 @@ export default function SeedListManagementPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {recipientToRemove && (
+        <DeleteConfirmModal
+          isOpen={!!recipientToRemove}
+          title="Remove Test Recipient"
+          message={`Are you sure you want to remove ${recipientToRemove.customer_name || "this recipient"} from the seed list? This action cannot be undone.`}
+          onConfirm={handleConfirmRemove}
+          onCancel={handleCancelRemove}
+          isLoading={isRemovingRecipient}
+          confirmText="Remove"
+          cancelText="Cancel"
+          isDangerous
+        />
       )}
     </div>
   );

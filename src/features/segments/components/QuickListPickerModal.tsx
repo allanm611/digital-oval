@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, Search, List, Check, Loader2 } from "lucide-react";
+import { X, List, Check, Loader2, Search } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
@@ -205,29 +206,11 @@ export default function QuickListPickerModal({
           {/* Search and Filter */}
           <div className="px-6 pt-6 pb-4 space-y-4 flex-shrink-0">
             <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
-              <div className="relative flex-1">
-                <Search
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5"
-                  style={{ color: color.text.muted }}
-                />
-                <input
-                  type="text"
-                  placeholder="Search quicklists..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className={`w-full pl-10 pr-4 py-2 border ${tw.rounded} focus:outline-none focus:ring-2 text-sm`}
-                  style={{
-                    borderColor: color.border.default,
-                    color: color.text.primary,
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = color.primary.accent;
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = color.border.default;
-                  }}
-                />
-              </div>
+              <SearchInput
+                placeholder="Search quicklists..."
+                value={searchTerm}
+                onChange={setSearchTerm}
+              />
               <div className="w-48">
                 <div className="[&_button]:py-2 [&_li]:py-1.5">
                   <HeadlessSelect

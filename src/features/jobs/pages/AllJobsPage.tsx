@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
   Plus,
-  Search,
   Briefcase,
   Clock,
   CheckCircle,
@@ -12,6 +11,7 @@ import { color, tw } from "../../../shared/utils/utils";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import BackButton from "../../../shared/components/ui/BackButton";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import { useLanguage } from "../../../contexts/LanguageContext";
 
 interface Job {
@@ -78,14 +78,11 @@ export default function AllJobsPage() {
         >
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
             {/* Search */}
-            <div className="relative flex-1 w-full sm:max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-              <input
-                type="text"
+            <div className="flex-1 w-full sm:max-w-md">
+              <SearchInput
                 placeholder={t.jobs.searchJobs}
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className={`w-full pl-10 pr-4 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
+                onChange={setSearchQuery}
               />
             </div>
 

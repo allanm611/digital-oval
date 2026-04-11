@@ -11,6 +11,7 @@ import {
   CreateConnectionProfilePayload,
   UpdateConnectionProfilePayload,
   ConnectionTypeEnum,
+  DatabaseTypeEnum,
   LoadStrategyEnum,
   EnvironmentEnum,
   DataClassificationEnum,
@@ -21,7 +22,10 @@ import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw } from "../../../shared/utils/utils";
-import { CONNECTION_TYPE_OPTIONS } from "../constants/connectionTypes";
+import {
+  CONNECTION_TYPE_OPTIONS,
+  DATABASE_TYPE_OPTIONS,
+} from "../constants/connectionTypes";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 
 interface ConnectionProfileFormPageProps {
@@ -279,7 +283,15 @@ export default function ConnectionProfileFormPage({
   return (
     <div className="space-y-6">
       {!onSuccess && (
-        <BackButton fallbackTo="/dashboard/connection-profiles" showBreadcrumb={true} currentLabel={mode === "create" ? "Create Connection Profile" : "Edit Connection Profile"} />
+        <BackButton
+          fallbackTo="/dashboard/connection-profiles"
+          showBreadcrumb={true}
+          currentLabel={
+            mode === "create"
+              ? "Create Connection Profile"
+              : "Edit Connection Profile"
+          }
+        />
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -334,6 +346,27 @@ export default function ConnectionProfileFormPage({
                 }
               />
             </div>
+            {formData.connection_type === "database" && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Database Type
+                </label>
+                <HeadlessSelect
+                  options={DATABASE_TYPE_OPTIONS.map((opt) => ({
+                    value: opt.value,
+                    label: opt.label,
+                  }))}
+                  value={formData.database_type || ""}
+                  onChange={(value) =>
+                    setFormData({
+                      ...formData,
+                      database_type: (value as DatabaseTypeEnum) || undefined,
+                    })
+                  }
+                  placeholder="Select database type..."
+                />
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Environment *
@@ -354,12 +387,12 @@ export default function ConnectionProfileFormPage({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 ">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Data Load Method *
               </label>
-              <p className="text-xs text-gray-500 mb-2">
+              {/* <p className="text-xs text-gray-500 mb-2">
                 How new data is brought in.
-              </p>
+              </p> */}
               <HeadlessSelect
                 options={[
                   { value: "full", label: "Full" },
@@ -383,9 +416,9 @@ export default function ConnectionProfileFormPage({
               <label className="block text-sm font-medium text-gray-700">
                 Server
               </label>
-              <p className="text-xs text-gray-500 mb-2">
+              {/* <p className="text-xs text-gray-500 mb-2">
                 Select the server endpoint for this connection.
-              </p>
+              </p> */}
 
               {loadingServers && (
                 <div className="text-sm text-gray-500 py-2">
@@ -428,12 +461,12 @@ export default function ConnectionProfileFormPage({
             {formData.connection_type === "database" && (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Database Name
                   </label>
-                  <p className="text-xs text-gray-500 mb-2">
+                  {/* <p className="text-xs text-gray-500 mb-2">
                     Name of the database to connect to.
-                  </p>
+                  </p> */}
                   <input
                     type="text"
                     value={formData.database_name || ""}
@@ -441,25 +474,6 @@ export default function ConnectionProfileFormPage({
                       setFormData({
                         ...formData,
                         database_name: e.target.value || undefined,
-                      })
-                    }
-                    className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Database Type
-                  </label>
-                  <p className="text-xs text-gray-500 mb-2">
-                    Type of database (e.g. MySQL, PostgreSQL, Oracle).
-                  </p>
-                  <input
-                    type="text"
-                    value={formData.database_type || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        database_type: e.target.value || undefined,
                       })
                     }
                     className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
@@ -701,27 +715,31 @@ export default function ConnectionProfileFormPage({
             </div>
             <div className="flex items-center gap-4">
               <label className="flex items-center gap-2">
-                <Checkbox checked={formData.contains_pii}
+                <Checkbox
+                  checked={formData.contains_pii}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
                       contains_pii: e.target.checked,
                     })
                   }
-                  className="w-4 h-4" />
+                  className="w-4 h-4"
+                />
                 <span className="text-sm font-medium text-gray-700">
                   Contains PII
                 </span>
               </label>
               <label className="flex items-center gap-2">
-                <Checkbox checked={formData.gdpr_applicable}
+                <Checkbox
+                  checked={formData.gdpr_applicable}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
                       gdpr_applicable: e.target.checked,
                     })
                   }
-                  className="w-4 h-4" />
+                  className="w-4 h-4"
+                />
                 <span className="text-sm font-medium text-gray-700">
                   GDPR Applicable
                 </span>
@@ -830,14 +848,16 @@ export default function ConnectionProfileFormPage({
               </p>
             </div>
             <label className="flex items-center gap-2">
-              <Checkbox checked={formData.health_check_enabled || false}
+              <Checkbox
+                checked={formData.health_check_enabled || false}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
                     health_check_enabled: e.target.checked,
                   })
                 }
-                className="w-4 h-4" />
+                className="w-4 h-4"
+              />
               <span className="text-sm font-medium text-gray-700">Enabled</span>
             </label>
           </div>

@@ -3,7 +3,6 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
   Plus,
-  Search,
   Edit,
   Trash2,
   X,
@@ -14,6 +13,7 @@ import {
   CheckCircle,
   Filter,
 } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw, button } from "../../../shared/utils/utils";
@@ -394,18 +394,11 @@ export default function ProgramsPage() {
 
       <div className="my-5">
         <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
-          <div className="relative flex-1">
-            <Search
-              className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[${color.text.muted}]`}
-            />
-            <input
-              type="text"
-              placeholder={t.programs.searchPlaceholder}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className={`w-full pl-10 pr-4 py-3 text-sm border border-[${color.border.default}] ${tw.rounded} focus:outline-none`}
-            />
-          </div>
+          <SearchInput
+            placeholder={t.programs.searchPlaceholder}
+            value={searchTerm}
+            onChange={setSearchTerm}
+          />
           <button
             onClick={() => setShowAdvancedFilters(true)}
             className={`flex items-center justify-center gap-2 ${tw.rounded} transition-colors font-medium whitespace-nowrap sm:w-auto w-full`}

@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Search, Star, Users, Trash2 } from "lucide-react";
+import { Plus, Star, Users, Trash2, Eye, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import CreateVIPListModal from "../components/CreateVIPListModal";
 import AddVIPMembersModal from "../components/AddVIPMembersModal";
@@ -44,6 +46,7 @@ export interface VIPList {
 export default function VIPListManagementPage() {
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const [vipCustomers, setVipCustomers] = useState<VIPCustomer[]>([]);
   const [vipLists, setVipLists] = useState<VIPList[]>([]);
   const [loading, setLoading] = useState(false);
@@ -68,6 +71,11 @@ export default function VIPListManagementPage() {
   );
   const [isDeletingList, setIsDeletingList] = useState(false);
   const [isRemovingMember, setIsRemovingMember] = useState(false);
+  const [isListMembersModalOpen, setIsListMembersModalOpen] = useState(false);
+  const [selectedListForMembers, setSelectedListForMembers] =
+    useState<VIPList | null>(null);
+  const [listMembers, setListMembers] = useState<VIPCustomer[]>([]);
+  const [isLoadingListMembers, setIsLoadingListMembers] = useState(false);
 
   // Fetch VIP lists on mount
   useEffect(() => {
@@ -283,6 +291,55 @@ export default function VIPListManagementPage() {
     }
   };
 
+  const handleViewListMembers = async (list: VIPList) => {
+    setSelectedListForMembers(list);
+    setIsLoadingListMembers(true);
+    try {
+      const members = await vipListService.getMembers(list.id);
+      setListMembers(Array.isArray(members) ? members : []);
+      setIsListMembersModalOpen(true);
+    } catch (error) {
+      showError("Failed to fetch list members");
+      console.error("Error fetching members:", error);
+    } finally {
+      setIsLoadingListMembers(false);
+    }
+  };
+
+  const handleViewCustomerDetail = (customer: VIPCustomer) => {
+    navigate(`/dashboard/customers/details/${customer.customer_id}`, {
+      state: {
+        customer: {
+          id: customer.customer_id.toString(),
+          name: customer.customer_name || `Customer ${customer.customer_id}`,
+          segment: "VIP",
+          lifetimeValue: 0,
+          clv: 0,
+          orders: 0,
+          aov: 0,
+          lastPurchase: "—",
+          lastInteractionDate: new Date().toISOString().split("T")[0],
+          engagementScore: 70,
+          churnRisk: 10,
+          preferredChannel: "SMS",
+          location: "Nairobi, KE",
+          email: customer.customer_email,
+          phone: customer.customer_phone,
+        },
+        subscription: {
+          customerId: customer.customer_id,
+          firstName: customer.customer_name?.split(" ")[0] || "Unknown",
+          lastName:
+            customer.customer_name?.split(" ").slice(1).join(" ") || "Customer",
+          msisdn: customer.customer_phone,
+          email: customer.customer_email,
+          status: customer.status,
+        },
+        source: "vip-list-management",
+      },
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* Header with Title and Buttons */}
@@ -402,14 +459,11 @@ export default function VIPListManagementPage() {
         <div className="my-5">
           <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
             {/* Search */}
-            <div className="relative flex-1 min-w-0">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
+            <div className="flex-1 min-w-0">
+              <SearchInput
                 placeholder="Search by name, email, or phone..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className={`w-full pl-10 pr-4 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#588157] text-sm`}
+                onChange={setSearchTerm}
               />
             </div>
 
@@ -453,14 +507,11 @@ export default function VIPListManagementPage() {
         <div className="my-5">
           <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
             {/* Search */}
-            <div className="relative flex-1 min-w-0">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
+            <div className="flex-1 min-w-0">
+              <SearchInput
                 placeholder="Search by list name or description..."
                 value={searchTermLists}
-                onChange={(e) => setSearchTermLists(e.target.value)}
-                className={`w-full pl-10 pr-4 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#588157] text-sm`}
+                onChange={setSearchTermLists}
               />
             </div>
 
@@ -732,9 +783,28 @@ export default function VIPListManagementPage() {
                       className="px-6 py-4"
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
-                      <span className="text-sm text-black">
-                        {list.customer_count || 0} customers
-                      </span>
+                      <button
+                        onClick={() => handleViewListMembers(list)}
+                        className="text-sm font-medium transition-colors"
+                        style={{
+                          color: color.text.primary,
+                          background: "none",
+                          border: "none",
+                          padding: "0",
+                          cursor: "pointer",
+                        }}
+                        onMouseEnter={(e) => {
+                          (e.currentTarget as HTMLButtonElement).style.color =
+                            color.primary.action;
+                        }}
+                        onMouseLeave={(e) => {
+                          (e.currentTarget as HTMLButtonElement).style.color =
+                            color.text.primary;
+                        }}
+                        disabled={isLoadingListMembers}
+                      >
+                        {list.customer_count || 0}
+                      </button>
                     </td>
                     <td
                       className="px-6 py-4 whitespace-nowrap"
@@ -838,6 +908,139 @@ export default function VIPListManagementPage() {
         confirmText="Remove Member"
         cancelText="Cancel"
       />
+
+      {/* VIP List Members Modal */}
+      {isListMembersModalOpen && selectedListForMembers && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white">
+              <div>
+                <h2 className={`text-xl font-bold ${tw.textPrimary}`}>
+                  {selectedListForMembers.name}
+                </h2>
+                <p className={`text-sm ${tw.textSecondary} mt-1`}>
+                  {listMembers.length} member
+                  {listMembers.length !== 1 ? "s" : ""}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setIsListMembersModalOpen(false);
+                  setSelectedListForMembers(null);
+                  setListMembers([]);
+                }}
+                className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6">
+              {isLoadingListMembers ? (
+                <div className="flex items-center justify-center py-8">
+                  <LoadingSpinner />
+                </div>
+              ) : listMembers.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className={tw.textSecondary}>No customers in this list</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-gray-50 border-b border-gray-200">
+                        <th className="px-6 py-3 text-left">
+                          <span
+                            className={`text-sm font-semibold ${tw.textPrimary}`}
+                          >
+                            Name
+                          </span>
+                        </th>
+                        <th className="px-6 py-3 text-left">
+                          <span
+                            className={`text-sm font-semibold ${tw.textPrimary}`}
+                          >
+                            Email
+                          </span>
+                        </th>
+                        <th className="px-6 py-3 text-left">
+                          <span
+                            className={`text-sm font-semibold ${tw.textPrimary}`}
+                          >
+                            Phone
+                          </span>
+                        </th>
+                        <th className="px-6 py-3 text-left">
+                          <span
+                            className={`text-sm font-semibold ${tw.textPrimary}`}
+                          >
+                            Status
+                          </span>
+                        </th>
+                        <th className="px-6 py-3 text-center">
+                          <span
+                            className={`text-sm font-semibold ${tw.textPrimary}`}
+                          >
+                            Action
+                          </span>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {listMembers.map((customer) => (
+                        <tr
+                          key={customer.id}
+                          className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
+                        >
+                          <td className="px-6 py-4">
+                            <span className="text-sm text-gray-900">
+                              {customer.customer_name || "N/A"}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-sm text-gray-700">
+                              {customer.customer_email || "N/A"}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-sm text-gray-700">
+                              {customer.customer_phone || "N/A"}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span
+                              className="text-sm font-medium"
+                              style={{ color: color.text.primary }}
+                            >
+                              {customer.status === "active"
+                                ? "Active"
+                                : "Inactive"}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <button
+                              onClick={() => handleViewCustomerDetail(customer)}
+                              className="inline-flex items-center justify-center w-8 h-8 rounded hover:bg-gray-100 transition-colors"
+                              style={{
+                                color: color.primary.action,
+                              }}
+                              title="View customer details"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

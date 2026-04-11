@@ -22,8 +22,13 @@ const BASE_URL = `${API_CONFIG.BASE_URL}/campaign-flows`;
 /** Remove optional fields that are null/undefined before sending to API */
 function cleanFlowData(flow: any) {
   const cleaned = { ...flow };
-  const optionalFields = ['offer_creative_id', 'template_id', 'bucket_allocation', 'condition_rule'];
-  optionalFields.forEach(field => {
+  const optionalFields = [
+    "offer_creative_id",
+    "template_id",
+    "bucket_allocation",
+    "condition_rule",
+  ];
+  optionalFields.forEach((field) => {
     if (cleaned[field] === null || cleaned[field] === undefined) {
       delete cleaned[field];
     }
@@ -34,7 +39,7 @@ function cleanFlowData(flow: any) {
 class CampaignFlowService {
   /** Create a single campaign flow */
   async createCampaignFlow(
-    data: CreateCampaignFlowRequest
+    data: CreateCampaignFlowRequest,
   ): Promise<CampaignFlowResponse> {
     const cleanedData = cleanFlowData(data);
     const response = await fetch(BASE_URL, {
@@ -53,7 +58,7 @@ class CampaignFlowService {
 
   /** Create multiple campaign flows in batch */
   async createBatchCampaignFlows(
-    flows: CreateCampaignFlowRequest[]
+    flows: CreateCampaignFlowRequest[],
   ): Promise<CampaignFlowResponse[]> {
     const results: CampaignFlowResponse[] = [];
 
@@ -68,7 +73,7 @@ class CampaignFlowService {
   /** Get all flows for a specific campaign */
   async getCampaignFlows(
     campaignId: number,
-    skipCache: boolean = false
+    skipCache: boolean = true,
   ): Promise<GetCampaignFlowsResponse> {
     let url = `${BASE_URL}/campaign/${campaignId}`;
     if (skipCache) {
@@ -91,7 +96,7 @@ class CampaignFlowService {
   /** Update a campaign flow */
   async updateCampaignFlow(
     id: number,
-    data: UpdateCampaignFlowRequest
+    data: UpdateCampaignFlowRequest,
   ): Promise<CampaignFlowResponse> {
     const url = `${BASE_URL}/${id}`;
     const cleanedData = cleanFlowData(data);
@@ -127,7 +132,7 @@ class CampaignFlowService {
 
   /** Search all campaign flows with filters */
   async searchCampaignFlows(
-    params?: SearchCampaignFlowsParams
+    params?: SearchCampaignFlowsParams,
   ): Promise<GetCampaignFlowsResponse> {
     const query = buildQueryString(params);
     const url = `${BASE_URL}${query}`;
@@ -150,7 +155,7 @@ class CampaignFlowService {
    */
   async getCampaignFlowById(
     id: number,
-    skipCache?: boolean
+    skipCache?: boolean,
   ): Promise<GetCampaignFlowByIdResponse> {
     const url = `${BASE_URL}/${id}${skipCache ? "?skipCache=true" : ""}`;
 
@@ -173,7 +178,7 @@ class CampaignFlowService {
     skipCache: boolean = true,
     activeOnly?: boolean,
     limit?: number,
-    offset?: number
+    offset?: number,
   ): Promise<GetCampaignFlowsResponse> {
     const query = buildQueryString({ skipCache, activeOnly, limit, offset });
     const url = `${BASE_URL}/segment/${segmentId}${query}`;
@@ -196,7 +201,7 @@ class CampaignFlowService {
     offerId: number,
     activeOnly?: boolean,
     limit?: number,
-    offset?: number
+    offset?: number,
   ): Promise<GetCampaignFlowsResponse> {
     const query = buildQueryString({ activeOnly, limit, offset });
     const url = `${BASE_URL}/offer/${offerId}${query}`;
@@ -220,7 +225,7 @@ class CampaignFlowService {
     flowType: string,
     activeOnly?: boolean,
     limit?: number,
-    offset?: number
+    offset?: number,
   ): Promise<GetCampaignFlowsResponse> {
     const query = buildQueryString({ activeOnly, limit, offset });
     const url = `${BASE_URL}/campaign/${campaignId}/flow-type/${flowType}${query}`;
@@ -244,7 +249,7 @@ class CampaignFlowService {
     segmentId: number,
     activeOnly?: boolean,
     limit?: number,
-    offset?: number
+    offset?: number,
   ): Promise<GetCampaignFlowsResponse> {
     const query = buildQueryString({ activeOnly, limit, offset });
     const url = `${BASE_URL}/campaign/${campaignId}/segment/${segmentId}${query}`;
@@ -267,7 +272,7 @@ class CampaignFlowService {
    */
   async getCampaignOffers(
     campaignId: number,
-    skipCache?: boolean
+    skipCache?: boolean,
   ): Promise<CampaignOffersResponse> {
     const url = `${BASE_URL}/campaign/${campaignId}/offers${skipCache ? "?skipCache=true" : ""}`;
 
@@ -289,7 +294,7 @@ class CampaignFlowService {
    */
   async getCampaignSegments(
     campaignId: number,
-    skipCache?: boolean
+    skipCache?: boolean,
   ): Promise<CampaignSegmentsResponse> {
     const url = `${BASE_URL}/campaign/${campaignId}/segments${skipCache ? "?skipCache=true" : ""}`;
 
@@ -310,7 +315,7 @@ class CampaignFlowService {
   async getUniqueCombinations(
     limit?: number,
     offset?: number,
-    skipCache?: boolean
+    skipCache?: boolean,
   ): Promise<UniqueCombinationsResponse> {
     const query = buildQueryString({ limit, offset, skipCache });
     const url = `${BASE_URL}/unique-combinations${query}`;
@@ -330,7 +335,7 @@ class CampaignFlowService {
 
   /** Get campaign flow statistics */
   async getFlowStatistics(
-    skipCache?: boolean
+    skipCache?: boolean,
   ): Promise<FlowStatisticsResponse> {
     const query = buildQueryString({ skipCache });
     const url = `${BASE_URL}/statistics${query}`;
@@ -352,7 +357,7 @@ class CampaignFlowService {
    * Get campaign flow relationship statistics
    */
   async getRelationshipStatistics(
-    skipCache?: boolean
+    skipCache?: boolean,
   ): Promise<RelationshipStatisticsResponse> {
     const url = `${BASE_URL}/relationship-statistics${skipCache ? "?skipCache=true" : ""}`;
 
@@ -370,9 +375,7 @@ class CampaignFlowService {
   }
 
   /** Get campaign flow growth trends */
-  async getGrowthTrends(
-    skipCache?: boolean
-  ): Promise<GrowthTrendsResponse> {
+  async getGrowthTrends(skipCache?: boolean): Promise<GrowthTrendsResponse> {
     const query = buildQueryString({ skipCache });
     const url = `${BASE_URL}/growth-trends${query}`;
 
@@ -394,7 +397,7 @@ class CampaignFlowService {
    */
   async syncCampaignSegments(
     campaignId: number,
-    request?: SyncSegmentsRequest
+    request?: SyncSegmentsRequest,
   ): Promise<SyncSegmentsResponse> {
     const url = `${BASE_URL}/campaign/${campaignId}/sync-segments`;
 

@@ -1,5 +1,6 @@
 import { createPortal } from "react-dom";
-import { Check, Search, X } from "lucide-react";
+import { Check, X, Search } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 
@@ -90,17 +91,11 @@ export default function UnifiedPickerModal<T = unknown>({
 
         <div className="px-6 py-3 space-y-3">
           <div className="flex gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder={searchPlaceholder}
-                value={searchTerm}
-                onChange={(e) => onSearchTermChange(e.target.value)}
-                className={`w-full pl-10 pr-4 py-3 border text-sm ${tw.rounded} focus:outline-none focus:ring-2`}
-                style={{ borderColor: color.border.default }}
-              />
-            </div>
+            <SearchInput
+              placeholder={searchPlaceholder}
+              value={searchTerm}
+              onChange={onSearchTermChange}
+            />
 
             {hasFilter && (
               <div className="min-w-[180px]">

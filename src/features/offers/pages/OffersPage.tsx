@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
-  Search,
   Clock,
   MoreHorizontal,
   Eye,
@@ -28,6 +27,7 @@ import {
   type OfferActionParams,
 } from "../utils/offerActions";
 import { OfferCategoryType } from "../types/offerCategory";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import CreateButton from "../../../shared/components/ui/CreateButton";
@@ -1173,20 +1173,12 @@ export default function OffersPage() {
 
       {/* Search and Filter Bar */}
       <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search
-            className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5`}
-            style={{ color: color.text.muted }}
-          />
-          <input
-            type="text"
-            placeholder="Search offers..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSearch(searchTerm)}
-            className={`w-full pl-10 pr-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 bg-white focus:ring-2 focus:ring-blue-400`}
-          />
-        </div>
+        <SearchInput
+          placeholder="Search offers..."
+          value={searchTerm}
+          onChange={setSearchTerm}
+          onKeyDown={(e) => e.key === "Enter" && handleSearch(searchTerm)}
+        />
 
         <HeadlessSelect
           options={[

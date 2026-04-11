@@ -3,14 +3,6 @@ import { Search, ArrowLeft, AlertCircle, Check, X } from "lucide-react";
 import { createPortal } from "react-dom";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
-import {
-  customerSubscriptions,
-} from "../../customers360/utils/customerDataService";
-import type { CustomerSubscriptionRecord } from "../../customers360/types/customerSubscription";
-import {
-  getSubscriptionDisplayName,
-  formatMsisdn,
-} from "../../customers360/utils/customerSubscriptionHelpers";
 
 interface DNDSubscription {
   id: number;
@@ -51,7 +43,9 @@ export default function RemovePhoneModal({
 }: RemovePhoneModalProps) {
   const [step, setStep] = useState<"search" | "selectType">("search");
   const [searchTerm, setSearchTerm] = useState("");
-  const [hoveredCustomerId, setHoveredCustomerId] = useState<number | null>(null);
+  const [hoveredCustomerId, setHoveredCustomerId] = useState<number | null>(
+    null,
+  );
   const [selectedCustomer, setSelectedCustomer] = useState<{
     id: number;
     name?: string;
@@ -61,20 +55,11 @@ export default function RemovePhoneModal({
   const [selectedDndType, setSelectedDndType] = useState("promotional");
 
   // Get active DND customers from subscription data
-  const activeDndCustomerIds = useMemo(() => {
-    return new Set(
-      dndSubscriptions
-        .filter((sub) => sub.status === "active")
-        .map((sub) => sub.customer_id)
-    );
-  }, [dndSubscriptions]);
-
-  // Get active DND customers from subscription records
   const activeDndCustomers = useMemo(() => {
-    return customerSubscriptions.filter((customer) =>
-      activeDndCustomerIds.has(customer.customerId)
-    );
-  }, [activeDndCustomerIds]);
+    // TODO: Enhance with backend API call to fetch full customer details if needed
+    // For now, use customer data from dndSubscriptions prop which should include customer details
+    return dndSubscriptions.filter((sub) => sub.status === "active");
+  }, [dndSubscriptions]);
 
   // Filter customers based on search term
   const filteredCustomers = useMemo(() => {
@@ -83,34 +68,28 @@ export default function RemovePhoneModal({
     }
 
     const lowerSearchTerm = searchTerm.toLowerCase();
-    return activeDndCustomers.filter((customer) => {
-      const name = getSubscriptionDisplayName(
-        customer,
-        `Customer ${customer.customerId}`
-      );
-      const phone = customer.msisdn ? formatMsisdn(customer.msisdn) : "";
-      const email = customer.email || "";
+    return activeDndCustomers.filter((sub) => {
+      const name = sub.customer_name || `Customer ${sub.customer_id}`;
+      const phone = sub.customer_phone || "";
+      const email = sub.customer_email || "";
 
       return (
         name.toLowerCase().includes(lowerSearchTerm) ||
         phone.toLowerCase().includes(lowerSearchTerm) ||
         email.toLowerCase().includes(lowerSearchTerm) ||
-        customer.customerId.toString().includes(lowerSearchTerm)
+        sub.customer_id.toString().includes(lowerSearchTerm)
       );
     });
   }, [searchTerm, activeDndCustomers]);
 
-  const handleSelectCustomer = (customer: CustomerSubscriptionRecord) => {
-    const name = getSubscriptionDisplayName(
-      customer,
-      `Customer ${customer.customerId}`,
-    );
-    const phone = customer.msisdn ? formatMsisdn(customer.msisdn) : undefined;
+  const handleSelectCustomer = (sub: DNDSubscription) => {
+    const name = sub.customer_name || `Customer ${sub.customer_id}`;
+    const phone = sub.customer_phone || undefined;
 
     setSelectedCustomer({
-      id: customer.customerId,
+      id: sub.customer_id,
       name,
-      email: customer.email || undefined,
+      email: sub.customer_email || undefined,
       phone: phone || undefined,
     });
     setStep("selectType");
@@ -234,7 +213,9 @@ export default function RemovePhoneModal({
                       className="w-12 h-12 text-gray-300 mx-auto mb-4"
                       style={{ color: color.text.muted }}
                     />
-                    <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
+                    <h3
+                      className={`text-lg font-medium ${tw.textPrimary} mb-2`}
+                    >
                       {searchTerm.trim()
                         ? "No customers found"
                         : "No DND customers"}
@@ -283,24 +264,20 @@ export default function RemovePhoneModal({
                         className="divide-y"
                         style={{ borderColor: color.border.muted }}
                       >
-                        {filteredCustomers.map((customer) => {
-                          const name = getSubscriptionDisplayName(
-                            customer,
-                            `Customer ${customer.customerId}`
-                          );
-                          const phone = customer.msisdn
-                            ? formatMsisdn(customer.msisdn)
-                            : "-";
-                          const email = customer.email || "-";
+                        {filteredCustomers.map((sub) => {
+                          const name =
+                            sub.customer_name || `Customer ${sub.customer_id}`;
+                          const phone = sub.customer_phone || "-";
+                          const email = sub.customer_email || "-";
                           const isHovered =
-                            hoveredCustomerId === customer.customerId;
+                            hoveredCustomerId === sub.customer_id;
 
                           return (
                             <tr
-                              key={`${customer.customerId}-${customer.subscriptionId}`}
-                              onClick={() => handleSelectCustomer(customer)}
+                              key={`${sub.customer_id}-${sub.id}`}
+                              onClick={() => handleSelectCustomer(sub)}
                               onMouseEnter={() =>
-                                setHoveredCustomerId(customer.customerId)
+                                setHoveredCustomerId(sub.customer_id)
                               }
                               onMouseLeave={() => setHoveredCustomerId(null)}
                               className="cursor-pointer transition-colors"
@@ -329,7 +306,7 @@ export default function RemovePhoneModal({
                                 <div
                                   className={`text-xs ${tw.textSecondary} mt-0.5`}
                                 >
-                                  ID: {customer.customerId}
+                                  ID: {sub.customer_id}
                                 </div>
                               </td>
                               <td className="px-4 py-4 whitespace-nowrap">
@@ -419,10 +396,16 @@ export default function RemovePhoneModal({
                     borderColor: color.primary.accent,
                   }}
                 >
-                  <p className="text-sm font-semibold" style={{ color: color.text.primary }}>
+                  <p
+                    className="text-sm font-semibold"
+                    style={{ color: color.text.primary }}
+                  >
                     {selectedCustomer.name || selectedCustomer.phone}
                   </p>
-                  <div className="mt-2 space-y-1 text-xs" style={{ color: color.text.secondary }}>
+                  <div
+                    className="mt-2 space-y-1 text-xs"
+                    style={{ color: color.text.secondary }}
+                  >
                     {selectedCustomer.phone && (
                       <p>Phone: {selectedCustomer.phone}</p>
                     )}
@@ -445,7 +428,10 @@ export default function RemovePhoneModal({
 
                 {/* DND Type Selector */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium" style={{ color: color.text.primary }}>
+                  <label
+                    className="block text-sm font-medium"
+                    style={{ color: color.text.primary }}
+                  >
                     Select DND Type to Remove
                   </label>
                   <HeadlessSelect
@@ -463,7 +449,10 @@ export default function RemovePhoneModal({
 
                 {/* Type Description */}
                 <div className={`p-3 ${tw.rounded} bg-gray-50`}>
-                  <p className="text-xs" style={{ color: color.text.secondary }}>
+                  <p
+                    className="text-xs"
+                    style={{ color: color.text.secondary }}
+                  >
                     {selectedDndType === "promotional" &&
                       "Will allow: Marketing and promotional SMS"}
                     {selectedDndType === "transactional" &&
