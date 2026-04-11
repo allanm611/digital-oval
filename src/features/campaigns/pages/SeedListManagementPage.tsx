@@ -9,6 +9,8 @@ import SearchInput from "../../../shared/components/ui/SearchInput";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { getDepartmentsConfig, getLineOfBusinessConfig } from "../../configurations/configs/configurationPageConfigs";
+import { userService } from "../../users/services/userService";
+import CreateTestListModal from "../components/CreateTestListModal";
 
 // Types
 export interface SeedListRecipient {
@@ -98,19 +100,23 @@ export const DUMMY_RECIPIENTS: SeedListRecipient[] = [
 ];
 
 interface AddRecipientForm {
-  customer_name: string;
-  customer_email: string;
-  customer_phone: string;
-  department_id: string;
+  user_id: string;
   line_of_business_id: string;
 }
 
 interface FormErrors {
-  customer_name?: string;
-  customer_email?: string;
-  customer_phone?: string;
-  department_id?: string;
+  user_id?: string;
   line_of_business_id?: string;
+}
+
+interface SystemUser {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email_address: string;
+  phone_number?: string;
+  department?: string;
+  display_name?: string;
 }
 
 export default function SeedListManagementPage() {
@@ -130,17 +136,38 @@ export default function SeedListManagementPage() {
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<AddRecipientForm>({
-    customer_name: "",
-    customer_email: "",
-    customer_phone: "",
-    department_id: "",
+    user_id: "",
     line_of_business_id: "",
   });
   const [errors, setErrors] = useState<FormErrors>({});
+  const [systemUsers, setSystemUsers] = useState<SystemUser[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
   
   // Delete confirmation state
   const [recipientToRemove, setRecipientToRemove] = useState<SeedListRecipient | null>(null);
   const [isRemovingRecipient, setIsRemovingRecipient] = useState(false);
+  
+  // Test list modal state
+  const [isCreateListModalOpen, setIsCreateListModalOpen] = useState(false);
+  const [testLists, setTestLists] = useState<Array<{ id: string; name: string; description: string }>>([]);
+
+  // Load system users on mount
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        setLoadingUsers(true);
+        const response = await userService.getUsers({ limit: 100, offset: 0 });
+        const users = response.data || [];
+        setSystemUsers(Array.isArray(users) ? users : []);
+      } catch (error) {
+        console.error("Failed to load system users:", error);
+        setSystemUsers([]);
+      } finally {
+        setLoadingUsers(false);
+      }
+    };
+    loadUsers();
+  }, []);
 
   // Debounce search
   useEffect(() => {
@@ -200,12 +227,25 @@ export default function SeedListManagementPage() {
     setRecipientToRemove(null);
   };
 
+  const handleSaveTestList = async (data: { name: string; description?: string }) => {
+    try {
+      // Mock: Add test list to state
+      const newList = {
+        id: `list_${Date.now()}`,
+        name: data.name,
+        description: data.description || "",
+      };
+      setTestLists([...testLists, newList]);
+      showToast("Test list created successfully");
+      setIsCreateListModalOpen(false);
+    } catch {
+      showError("Failed to create test list");
+    }
+  };
+
   const handleOpenModal = () => {
     setFormData({
-      customer_name: "",
-      customer_email: "",
-      customer_phone: "",
-      department_id: "",
+      user_id: "",
       line_of_business_id: "",
     });
     setErrors({});
@@ -215,10 +255,7 @@ export default function SeedListManagementPage() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setFormData({
-      customer_name: "",
-      customer_email: "",
-      customer_phone: "",
-      department_id: "",
+      user_id: "",
       line_of_business_id: "",
     });
     setErrors({});
@@ -227,17 +264,8 @@ export default function SeedListManagementPage() {
   const handleAddRecipient = () => {
     const newErrors: FormErrors = {};
 
-    if (!formData.customer_name) {
-      newErrors.customer_name = "Name is required";
-    }
-    if (!formData.customer_email) {
-      newErrors.customer_email = "Email is required";
-    }
-    if (!formData.customer_phone) {
-      newErrors.customer_phone = "Phone number is required";
-    }
-    if (!formData.department_id) {
-      newErrors.department_id = "Department is required";
+    if (!formData.user_id) {
+      newErrors.user_id = "User is required";
     }
     if (!formData.line_of_business_id) {
       newErrors.line_of_business_id = "Line of Business is required";
@@ -248,14 +276,17 @@ export default function SeedListManagementPage() {
       return;
     }
 
+    const selectedUser = systemUsers.find(u => u.id.toString() === formData.user_id);
+    if (!selectedUser) return;
+
     const newRecipient: SeedListRecipient = {
       id: Math.max(...recipients.map(r => r.id), 0) + 1,
-      customer_id: Math.max(...recipients.map(r => r.customer_id), 300) + 1,
-      customer_name: formData.customer_name,
-      customer_email: formData.customer_email,
-      customer_phone: formData.customer_phone,
-      department_id: parseInt(formData.department_id),
-      department_name: departments.find(d => d.id.toString() === formData.department_id)?.name,
+      customer_id: selectedUser.id,
+      customer_name: `${selectedUser.first_name} ${selectedUser.last_name}`.trim(),
+      customer_email: selectedUser.email_address,
+      customer_phone: selectedUser.phone_number,
+      department_id: undefined,
+      department_name: selectedUser.department,
       line_of_business_id: parseInt(formData.line_of_business_id),
       line_of_business_name: linesOfBusiness.find(l => l.id.toString() === formData.line_of_business_id)?.name,
       status: "active",
@@ -283,7 +314,13 @@ export default function SeedListManagementPage() {
         </div>
         <div className="flex items-center gap-3 w-auto">
           <button
-            onClick={handleOpenModal}
+            onClick={() => {
+              if (activeTab === "recipients") {
+                handleOpenModal();
+              } else {
+                setIsCreateListModalOpen(true);
+              }
+            }}
             className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white w-auto`}
             style={{ backgroundColor: color.primary.action }}
           >
@@ -504,7 +541,7 @@ export default function SeedListManagementPage() {
             <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
               No test recipients found
             </h3>
-            <p className={`${tw.textMuted} mb-6`}>
+            <p className={`text-sm ${tw.textMuted} mb-6`}>
               {searchTerm
                 ? "Try adjusting your search terms"
                 : "No test recipients available"}
@@ -544,7 +581,7 @@ export default function SeedListManagementPage() {
                       backgroundColor: color.surface.tableHeader,
                     }}
                   >
-                    Participants
+                    Phone
                   </th>
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
@@ -728,108 +765,40 @@ export default function SeedListManagementPage() {
 
               {/* Form Fields */}
               <div className="space-y-4">
-                {/* Name */}
+                {/* User Selection */}
                 <div>
                   <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                    Name
+                    Select User *
                   </label>
-                  <input
-                    type="text"
-                    value={formData.customer_name}
-                    onChange={(e) => {
-                      setFormData({ ...formData, customer_name: e.target.value });
-                      if (errors.customer_name) {
-                        setErrors({ ...errors, customer_name: undefined });
-                      }
-                    }}
-                    placeholder="Enter recipient name"
-                    className={`w-full px-3 py-2 border text-sm ${errors.customer_name ? "border-red-500" : "border-gray-300"} ${tw.rounded} focus:outline-none focus:ring-2`}
-                    style={{ focusRingColor: color.primary.accent }}
-                  />
-                  {errors.customer_name && (
-                    <p className="text-xs text-red-500 mt-1">{errors.customer_name}</p>
-                  )}
-                </div>
-
-                {/* Email */}
-                <div>
-                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={formData.customer_email}
-                    onChange={(e) => {
-                      setFormData({ ...formData, customer_email: e.target.value });
-                      if (errors.customer_email) {
-                        setErrors({ ...errors, customer_email: undefined });
-                      }
-                    }}
-                    placeholder="Enter email address"
-                    className={`w-full px-3 py-2 border text-sm ${errors.customer_email ? "border-red-500" : "border-gray-300"} ${tw.rounded} focus:outline-none focus:ring-2`}
-                    style={{ focusRingColor: color.primary.accent }}
-                  />
-                  {errors.customer_email && (
-                    <p className="text-xs text-red-500 mt-1">{errors.customer_email}</p>
-                  )}
-                </div>
-
-                {/* Phone */}
-                <div>
-                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                    Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    value={formData.customer_phone}
-                    onChange={(e) => {
-                      setFormData({ ...formData, customer_phone: e.target.value });
-                      if (errors.customer_phone) {
-                        setErrors({ ...errors, customer_phone: undefined });
-                      }
-                    }}
-                    placeholder="Enter phone number"
-                    className={`w-full px-3 py-2 border text-sm ${errors.customer_phone ? "border-red-500" : "border-gray-300"} ${tw.rounded} focus:outline-none focus:ring-2`}
-                    style={{ focusRingColor: color.primary.accent }}
-                  />
-                  {errors.customer_phone && (
-                    <p className="text-xs text-red-500 mt-1">{errors.customer_phone}</p>
-                  )}
-                </div>
-
-                {/* Department */}
-                <div>
-                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                    Department
-                  </label>
-                  <div className={errors.department_id ? "border border-red-500 rounded" : ""}>
+                  <div className={errors.user_id ? "border border-red-500 rounded" : ""}>
                     <HeadlessSelect
-                      value={formData.department_id}
+                      value={formData.user_id}
                       onChange={(value) => {
-                        setFormData({ ...formData, department_id: value });
-                        if (errors.department_id) {
-                          setErrors({ ...errors, department_id: undefined });
+                        setFormData({ ...formData, user_id: value });
+                        if (errors.user_id) {
+                          setErrors({ ...errors, user_id: undefined });
                         }
                       }}
                       options={[
-                        { value: "", label: "Select Department" },
-                        ...departments.map((dept) => ({
-                          value: dept.id.toString(),
-                          label: dept.name,
+                        { value: "", label: "Select a user" },
+                        ...systemUsers.map((user) => ({
+                          value: user.id.toString(),
+                          label: `${user.first_name} ${user.last_name}${user.department ? ` (${user.department})` : ""}`,
                         })),
                       ]}
-                      placeholder="Select Department"
+                      placeholder="Select user..."
+                      disabled={loadingUsers}
                     />
                   </div>
-                  {errors.department_id && (
-                    <p className="text-xs text-red-500 mt-1">{errors.department_id}</p>
+                  {errors.user_id && (
+                    <p className="text-xs text-red-500 mt-1">{errors.user_id}</p>
                   )}
                 </div>
 
                 {/* Line of Business */}
                 <div>
                   <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                    Line of Business
+                    Line of Business *
                   </label>
                   <div className={errors.line_of_business_id ? "border border-red-500 rounded" : ""}>
                     <HeadlessSelect
@@ -882,15 +851,24 @@ export default function SeedListManagementPage() {
         <DeleteConfirmModal
           isOpen={!!recipientToRemove}
           title="Remove Test Recipient"
-          message={`Are you sure you want to remove ${recipientToRemove.customer_name || "this recipient"} from the seed list? This action cannot be undone.`}
+          description="Are you sure you want to remove this recipient from the seed list? This action cannot be undone."
+          itemName={recipientToRemove.customer_name || "this recipient"}
           onConfirm={handleConfirmRemove}
-          onCancel={handleCancelRemove}
+          onClose={handleCancelRemove}
           isLoading={isRemovingRecipient}
           confirmText="Remove"
           cancelText="Cancel"
-          isDangerous
         />
       )}
+
+      {/* Create Test List Modal */}
+      <CreateTestListModal
+        isOpen={isCreateListModalOpen}
+        onClose={() => setIsCreateListModalOpen(false)}
+        onSubmit={handleSaveTestList}
+        isLoading={false}
+        mode="create"
+      />
     </div>
   );
 }
