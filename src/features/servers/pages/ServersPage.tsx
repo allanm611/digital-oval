@@ -12,12 +12,12 @@ import {
   Play,
   PowerOff,
   RotateCcw,
-  Search,
   Server as ServerIcon,
   Shield,
   Square,
   X,
 } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import { serverService } from "../services/serverService";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import {
@@ -748,17 +748,11 @@ export default function ServersPage() {
 
       <div className="space-y-4">
         <div className="flex flex-col gap-4 md:flex-row md:items-center">
-          <div className="relative flex-1">
-            <Search
-              className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
-              aria-hidden
-            />
-            <input
-              type="text"
+          <div className="flex-1">
+            <SearchInput
               placeholder="Search by name or code..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className={`w-full ${tw.rounded} border border-gray-200 bg-white py-3 pl-10 pr-4 text-sm focus:border-gray-300 focus:outline-none focus:ring-0`}
+              onChange={(value) => setSearchTerm(value)}
             />
           </div>
           <HeadlessSelect

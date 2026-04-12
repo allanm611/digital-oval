@@ -23,8 +23,8 @@ import {
   Eye,
   Repeat,
   Users,
-  Search,
 } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import { colors } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
@@ -1135,19 +1135,16 @@ export default function CustomerProfileReportsPage() {
 
         {/* Customer Search Section */}
         <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
+          <div className="flex-1">
+            <SearchInput
               value={customerSearchTerm}
-              onChange={(e) => setCustomerSearchTerm(e.target.value)}
+              onChange={(value) => setCustomerSearchTerm(value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   handleCustomerSearch();
                 }
               }}
               placeholder={t.customerProfileReports.searchPlaceholder}
-              className={`w-full pl-10 pr-4 py-3.5 text-sm ${tw.rounded} border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#252829] cursor-pointer`}
             />
           </div>
           <button
@@ -1786,21 +1783,13 @@ export default function CustomerProfileReportsPage() {
             </p>
           </div>
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
-            <div className="relative flex-1 md:flex-none md:w-64">
-              <Search
-                className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${
-                  isSearchingTable ? "text-gray-300" : "text-gray-400"
-                }`}
-              />
-              <input
-                type="text"
+            <div className="flex-1 md:flex-none md:w-64">
+              <SearchInput
                 value={tableSearchTerm}
-                onChange={(e) => {
-                  setTableSearchTerm(e.target.value);
+                onChange={(value) => {
+                  setTableSearchTerm(value);
                 }}
-                disabled={isSearchingTable}
                 placeholder="Search by name, email, or MSISDN..."
-                className={`w-full pl-10 pr-4 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:bg-gray-50 disabled:cursor-wait`}
               />
             </div>
             <CsvDownloadButton

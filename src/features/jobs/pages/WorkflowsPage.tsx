@@ -3,13 +3,13 @@ import {
   Eye,
   Edit,
   Plus,
-  Search,
   Trash2,
   BarChart3,
   Copy,
   Play,
   Pause,
 } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -460,14 +460,11 @@ export default function WorkflowsPage() {
 
       {/* Filters and Search */}
       <div className="flex flex-col sm:flex-row gap-4">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <input
-            type="text"
+        <div className="flex-1">
+          <SearchInput
             placeholder="Search workflows..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className={`w-full pl-10 pr-4 py-2 ${tw.rounded} border border-gray-300 focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
+            onChange={(value) => setSearchTerm(value)}
           />
         </div>
         <HeadlessSelect

@@ -250,6 +250,18 @@ const ProductPages = {
         /* webpackPrefetch: true */ "../../products/pages/ProductTypesPage"
       ),
   ),
+  ResourceTypesPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../products/pages/ResourceTypesPage"
+      ),
+  ),
+  UtilitiesPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../products/pages/UtilitiesPage"
+      ),
+  ),
   ComboTypesPage: lazy(
     () =>
       import(/* webpackPrefetch: true */ "../../products/pages/ComboTypesPage"),
@@ -865,6 +877,14 @@ export default function Dashboard() {
           <Route
             path="/product-types"
             element={<ProductPages.ProductTypesPage />}
+          />
+          <Route
+            path="/resource-types"
+            element={<ProductPages.ResourceTypesPage />}
+          />
+          <Route
+            path="/utilities"
+            element={<ProductPages.UtilitiesPage />}
           />
           <Route
             path="/combo-types"

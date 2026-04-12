@@ -2,13 +2,13 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import BackButton from "../components/ui/BackButton";
 import {
-  Search,
   Check,
   CheckCircle2,
   MessageSquare,
   Package,
   Users,
 } from "lucide-react";
+import SearchInput from "../components/ui/SearchInput";
 import { color, tw } from "../utils/utils";
 import { useToast } from "../../contexts/ToastContext";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
@@ -863,16 +863,11 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
         {/* Search, Filters, Count, and Assign Button - All on one line */}
         <div className="flex flex-col sm:flex-row items-center gap-4 flex-wrap">
           {/* Search Bar */}
-          <div className="relative flex-1 w-full sm:w-auto min-w-[200px]">
-            <Search
-              className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[${color.text.muted}]`}
-            />
-            <input
-              type="text"
+          <div className="flex-1 w-full sm:w-auto min-w-[200px]">
+            <SearchInput
               placeholder={`Search ${typeInfo.plural}...`}
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className={`w-full pl-10 pr-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 bg-white focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
+              onChange={(value) => setSearchTerm(value)}
             />
           </div>
 

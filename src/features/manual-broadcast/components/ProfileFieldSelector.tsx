@@ -13,13 +13,14 @@
 
 import { useState, useMemo } from "react";
 import {
-  Search,
   FileText,
   Hash,
   Calendar,
   ToggleLeft,
   Clock,
+  Search,
 } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import { tw } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import type { ProfileField } from "../types";
@@ -110,18 +111,11 @@ export default function ProfileFieldSelector({
 
       {/* Search input */}
       <div className="px-2">
-        <div className="relative">
-          <Search
-            className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${tw.textMuted}`}
-          />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={t.manualBroadcast.searchFields}
-            className={`w-full pl-9 pr-3 py-2 text-sm rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 ${tw.textPrimary} focus:outline-none focus:ring-2 focus:ring-blue-500/20`}
-          />
-        </div>
+        <SearchInput
+          placeholder={t.manualBroadcast.searchFields}
+          value={searchQuery}
+          onChange={(value) => setSearchQuery(value)}
+        />
       </div>
 
       {/* Fields list */}

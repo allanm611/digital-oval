@@ -139,6 +139,10 @@ const SIDEBAR_ROUTE_PRELOADERS: Record<string, () => Promise<unknown>> = {
     import("../../products/pages/ProductsPageWrapper"),
   "/dashboard/product-types": () =>
     import("../../products/pages/ProductTypesPage"),
+  "/dashboard/resource-types": () =>
+    import("../../products/pages/ResourceTypesPage"),
+  "/dashboard/utilities": () =>
+    import("../../products/pages/UtilitiesPage"),
   "/dashboard/products/catalogs": () =>
     import("../../products/pages/ProductCategoriesPageWrapper"),
   "/dashboard/segments": () =>

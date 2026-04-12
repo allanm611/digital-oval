@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
-import { Search, ArrowLeft, AlertCircle, Check, X } from "lucide-react";
+import { ArrowLeft, AlertCircle, Check, X, Search } from "lucide-react";
 import { createPortal } from "react-dom";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 
@@ -179,30 +180,11 @@ export default function RemovePhoneModal({
 
               {/* Search */}
               <div className="px-6 pt-6 pb-4 flex-shrink-0">
-                <div className="relative">
-                  <Search
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5"
-                    style={{ color: color.text.muted }}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Search by name, phone, email, or customer ID..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className={`w-full pl-10 pr-4 py-2 border ${tw.rounded} focus:outline-none focus:ring-2 text-sm`}
-                    style={{
-                      borderColor: color.border.default,
-                      color: color.text.primary,
-                    }}
-                    onFocus={(e) => {
-                      e.currentTarget.style.borderColor = color.primary.accent;
-                    }}
-                    onBlur={(e) => {
-                      e.currentTarget.style.borderColor = color.border.default;
-                    }}
-                    autoFocus
-                  />
-                </div>
+                <SearchInput
+                  placeholder="Search by name, phone, email, or customer ID..."
+                  value={searchTerm}
+                  onChange={(value) => setSearchTerm(value)}
+                />
               </div>
 
               {/* Customers Table */}

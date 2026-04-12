@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { ChevronDown, Search, Plus, X, Check } from "lucide-react";
+import { ChevronDown, Plus, X, Check } from "lucide-react";
+import SearchInput from "./ui/SearchInput";
 import { ProductCategory } from "../../features/products/types/productCategory";
 import { productCategoryService } from "../../features/products/services/productCategoryService";
 import { color, tw, zIndex } from "../utils/utils";
@@ -321,17 +322,11 @@ export default function MultiCategorySelector({
           className={`bg-white border border-gray-300 ${tw.rounded} shadow-lg max-h-60 overflow-hidden`}
         >
           <div className="p-2">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                ref={searchInputRef}
-                type="text"
-                placeholder="Search categories..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className={`w-full pl-10 pr-3 py-2 text-sm border border-gray-200 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-gray-500`}
-              />
-            </div>
+            <SearchInput
+              placeholder="Search categories..."
+              value={searchTerm}
+              onChange={(value) => setSearchTerm(value)}
+            />
           </div>
 
           <div className="max-h-48 overflow-y-auto">

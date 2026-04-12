@@ -18,6 +18,7 @@ import {
   routesConfig,
   languagesConfig,
   characterSetsConfig,
+  resourceTypesConfig,
 } from "../../features/configurations/configs/configurationPageConfigs";
 
 // Type pour identifier les différents types de configuration
@@ -38,7 +39,8 @@ export type ConfigurationType =
   | "smsRoutes"
   | "routes"
   | "languages"
-  | "characterSets";
+  | "characterSets"
+  | "resourceTypes";
 
 // Service singleton pour gérer les données de configuration
 class ConfigurationDataService {
@@ -67,6 +69,7 @@ class ConfigurationDataService {
     this.listeners.set("routes", new Set());
     this.listeners.set("languages", new Set());
     this.listeners.set("characterSets", new Set());
+    this.listeners.set("resourceTypes", new Set());
 
     // Initialize with default data (no localStorage)
     this.initializeDefaultData();
@@ -84,9 +87,7 @@ class ConfigurationDataService {
     this.data.set("segmentTypes", [...segmentTypesConfig.initialData]);
     this.data.set("productTypes", [...productTypesConfig.initialData]);
     this.data.set("comboTypes", [...comboTypesConfig.initialData]);
-    this.data.set("trackingSources", [
-      ...trackingSourcesConfig.initialData,
-    ]);
+    this.data.set("trackingSources", [...trackingSourcesConfig.initialData]);
     this.data.set("creativeTemplates", [
       ...creativeTemplatesConfig.initialData,
     ]);
@@ -99,6 +100,7 @@ class ConfigurationDataService {
     this.data.set("routes", [...routesConfig.initialData]);
     this.data.set("languages", [...languagesConfig.initialData]);
     this.data.set("characterSets", [...characterSetsConfig.initialData]);
+    this.data.set("resourceTypes", [...resourceTypesConfig.initialData]);
   }
 
   // Obtenir les données pour un type de configuration
@@ -115,7 +117,7 @@ class ConfigurationDataService {
   // Ajouter un nouvel élément
   addItem(
     type: ConfigurationType,
-    item: Omit<ConfigurationItem, "id" | "created_at" | "updated_at">
+    item: Omit<ConfigurationItem, "id" | "created_at" | "updated_at">,
   ): ConfigurationItem {
     const currentData = this.getData(type);
     const newItem: ConfigurationItem = {
@@ -134,7 +136,7 @@ class ConfigurationDataService {
   updateItem(
     type: ConfigurationType,
     id: number,
-    updates: Partial<Omit<ConfigurationItem, "id" | "created_at">>
+    updates: Partial<Omit<ConfigurationItem, "id" | "created_at">>,
   ): ConfigurationItem | null {
     const currentData = this.getData(type);
     const itemIndex = currentData.findIndex((item) => item.id === id);
@@ -167,7 +169,7 @@ class ConfigurationDataService {
   // S'abonner aux changements de données
   subscribe(
     type: ConfigurationType,
-    listener: (data: ConfigurationItem[]) => void
+    listener: (data: ConfigurationItem[]) => void,
   ): () => void {
     const typeListeners = this.listeners.get(type);
     if (typeListeners) {
@@ -186,7 +188,7 @@ class ConfigurationDataService {
   // Notifier tous les listeners d'un type de configuration
   private notifyListeners(
     type: ConfigurationType,
-    data: ConfigurationItem[]
+    data: ConfigurationItem[],
   ): void {
     const typeListeners = this.listeners.get(type);
     if (typeListeners) {
@@ -254,7 +256,7 @@ class ConfigurationDataService {
   // Obtenir un élément par ID
   getItemById(
     type: ConfigurationType,
-    id: number
+    id: number,
   ): ConfigurationItem | undefined {
     return this.getData(type).find((item) => item.id === id);
   }
@@ -266,7 +268,7 @@ export const configurationDataService = new ConfigurationDataService();
 // Hook React pour utiliser les données de configuration
 export function useConfigurationData(type: ConfigurationType) {
   const [data, setData] = React.useState<ConfigurationItem[]>(() =>
-    configurationDataService.getData(type)
+    configurationDataService.getData(type),
   );
 
   React.useEffect(() => {
@@ -280,11 +282,11 @@ export function useConfigurationData(type: ConfigurationType) {
   return {
     data,
     addItem: (
-      item: Omit<ConfigurationItem, "id" | "created_at" | "updated_at">
+      item: Omit<ConfigurationItem, "id" | "created_at" | "updated_at">,
     ) => configurationDataService.addItem(type, item),
     updateItem: (
       id: number,
-      updates: Partial<Omit<ConfigurationItem, "id" | "created_at">>
+      updates: Partial<Omit<ConfigurationItem, "id" | "created_at">>,
     ) => configurationDataService.updateItem(type, id, updates),
     deleteItem: (id: number) => configurationDataService.deleteItem(type, id),
     getItemById: (id: number) => configurationDataService.getItemById(type, id),

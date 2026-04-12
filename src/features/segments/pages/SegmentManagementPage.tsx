@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
-  Search,
   Filter,
   Users,
   Tag,
@@ -27,6 +26,7 @@ import {
   BarChart3,
   Send,
 } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import { Segment, SegmentFilters, SortDirection } from "../types/segment";
 import { segmentService } from "../services/segmentService";
 import { useToast } from "../../../contexts/ToastContext";
@@ -1357,17 +1357,12 @@ export default function SegmentManagementPage() {
       {/* Search and Filters */}
       <div className={``}>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-          <div className="flex-1 relative">
-            <Search
-              className={`absolute left-4 top-1/2 transform -translate-y-1/2 ${tw.textMuted} w-5 h-5`}
-            />
-            <input
-              type="text"
+          <div className="flex-1">
+            <SearchInput
               placeholder="Search segments..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(value) => setSearchTerm(value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              className={`w-full pl-10 pr-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 bg-white focus:ring-2 focus:ring-blue-400`}
             />
           </div>
 

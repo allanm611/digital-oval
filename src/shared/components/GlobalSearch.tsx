@@ -324,6 +324,15 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
           navigationPath: "/dashboard/combo-types",
         },
         {
+          id: "resource-types",
+          name: "Resource Types",
+          description: "Manage resource types and their units",
+          type: "product",
+          category: "Product Configuration",
+          status: "active",
+          navigationPath: "/dashboard/resource-types",
+        },
+        {
           id: "product-catalogs",
           name: "Product Categories",
           description: "Manage product categories and catalogs",
@@ -417,6 +426,15 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
           category: "Campaign Configuration",
           status: "active",
           navigationPath: "/dashboard/seed-list-management",
+        },
+        {
+          id: "notification-types",
+          name: "Notification Types",
+          description: "Manage notification types and their templates",
+          type: "notification",
+          category: "Notification Configuration",
+          status: "active",
+          navigationPath: "/dashboard/notification-types",
         },
       ];
 
@@ -799,7 +817,9 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
         .filter(
           (config) =>
             (config.name || "").toLowerCase().includes(query.toLowerCase()) ||
-            (config.description || "").toLowerCase().includes(query.toLowerCase()) ||
+            (config.description || "")
+              .toLowerCase()
+              .includes(query.toLowerCase()) ||
             (config.category || "").toLowerCase().includes(query.toLowerCase()),
         )
         .slice(0, 3)

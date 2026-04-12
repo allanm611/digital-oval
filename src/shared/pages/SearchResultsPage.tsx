@@ -330,6 +330,15 @@ export default function SearchResultsPage() {
           navigationPath: "/dashboard/combo-types",
         },
         {
+          id: "resource-types",
+          name: "Resource Types",
+          description: "Manage resource types and their units",
+          type: "product",
+          category: "Product Configuration",
+          status: "active",
+          navigationPath: "/dashboard/resource-types",
+        },
+        {
           id: "product-catalogs",
           name: "Product Categories",
           description: "Manage product categories and catalogs",
@@ -423,6 +432,15 @@ export default function SearchResultsPage() {
           category: "Campaign Configuration",
           status: "active",
           navigationPath: "/dashboard/seed-list-management",
+        },
+        {
+          id: "notification-types",
+          name: "Notification Types",
+          description: "Manage notification types and their templates",
+          type: "notification",
+          category: "Notification Configuration",
+          status: "active",
+          navigationPath: "/dashboard/notification-types",
         },
       ];
 
@@ -519,7 +537,7 @@ export default function SearchResultsPage() {
       if (campaignsRes.status === "fulfilled" && campaignsRes.value.data) {
         searchResults.campaigns = campaignsRes.value.data
           .filter((c) =>
-            c.name?.toLowerCase().includes(searchQuery.toLowerCase())
+            c.name?.toLowerCase().includes(searchQuery.toLowerCase()),
           )
           .map((campaign) => ({
             id: campaign.id,
@@ -571,7 +589,7 @@ export default function SearchResultsPage() {
               segment.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
               segment.description
                 ?.toLowerCase()
-                .includes(searchQuery.toLowerCase())
+                .includes(searchQuery.toLowerCase()),
           )
           .map((segment) => ({
             id: segment.id,
@@ -590,7 +608,7 @@ export default function SearchResultsPage() {
       if (programsRes.status === "fulfilled" && programsRes.value.data) {
         searchResults.programs = programsRes.value.data
           .filter((p) =>
-            p.name?.toLowerCase().includes(searchQuery.toLowerCase())
+            p.name?.toLowerCase().includes(searchQuery.toLowerCase()),
           )
           .map((program) => ({
             id: program.id,
@@ -653,11 +671,15 @@ export default function SearchResultsPage() {
       searchResults.configurations = allConfigurations
         .filter(
           (config) =>
-            (config.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (config.name || "")
+              .toLowerCase()
+              .includes(searchQuery.toLowerCase()) ||
             (config.description || "")
               .toLowerCase()
               .includes(searchQuery.toLowerCase()) ||
-            (config.category || "").toLowerCase().includes(searchQuery.toLowerCase())
+            (config.category || "")
+              .toLowerCase()
+              .includes(searchQuery.toLowerCase()),
         )
         .map((config) => ({
           id: config.id,
@@ -691,7 +713,7 @@ export default function SearchResultsPage() {
               is_active: catalog.is_active,
               offer_count: catalog.offer_count,
             },
-          })
+          }),
         );
       }
 
@@ -745,7 +767,7 @@ export default function SearchResultsPage() {
             metadata: {
               segment_count: catalog.segment_count,
             },
-          })
+          }),
         );
       }
 
@@ -768,7 +790,7 @@ export default function SearchResultsPage() {
             metadata: {
               campaign_count: catalog.campaign_count,
             },
-          })
+          }),
         );
       }
 
@@ -814,7 +836,9 @@ export default function SearchResultsPage() {
         controlGroupsRes.status === "fulfilled" &&
         controlGroupsRes.value.control_groups
       ) {
-        const controlGroups = Array.isArray(controlGroupsRes.value.control_groups)
+        const controlGroups = Array.isArray(
+          controlGroupsRes.value.control_groups,
+        )
           ? controlGroupsRes.value.control_groups
           : [];
         searchResults["control-groups"] = controlGroups
@@ -1049,7 +1073,7 @@ export default function SearchResultsPage() {
   const renderResultsSection = (
     title: string,
     items: SearchResult[],
-    type: SearchResult["type"]
+    type: SearchResult["type"],
   ) => {
     if (items.length === 0) return null;
 
@@ -1120,10 +1144,10 @@ export default function SearchResultsPage() {
               {isLoading
                 ? "Searching..."
                 : totalResults > 0
-                ? `Found ${totalResults} result${
-                    totalResults !== 1 ? "s" : ""
-                  } for "${query}"`
-                : `No results found for "${query}"`}
+                  ? `Found ${totalResults} result${
+                      totalResults !== 1 ? "s" : ""
+                    } for "${query}"`
+                  : `No results found for "${query}"`}
             </p>
           )}
         </div>
@@ -1181,59 +1205,59 @@ export default function SearchResultsPage() {
               {renderResultsSection(
                 "Campaigns",
                 filteredResults.campaigns,
-                "campaign"
+                "campaign",
               )}
               {renderResultsSection(
                 "Campaign Catalogs",
                 filteredResults["campaign-catalogs"],
-                "campaign-catalog"
+                "campaign-catalog",
               )}
               {renderResultsSection("Offers", filteredResults.offers, "offer")}
               {renderResultsSection(
                 "Offer Catalogs",
                 filteredResults["offer-catalogs"],
-                "offer-catalog"
+                "offer-catalog",
               )}
               {renderResultsSection(
                 "Products",
                 filteredResults.products,
-                "product"
+                "product",
               )}
               {renderResultsSection(
                 "Product Catalogs",
                 filteredResults["product-catalogs"],
-                "product-catalog"
+                "product-catalog",
               )}
               {renderResultsSection(
                 "Segments",
                 filteredResults.segments,
-                "segment"
+                "segment",
               )}
               {renderResultsSection(
                 "Segment Catalogs",
                 filteredResults["segment-catalogs"],
-                "segment-catalog"
+                "segment-catalog",
               )}
               {renderResultsSection(
                 "Programs",
                 filteredResults.programs,
-                "program"
+                "program",
               )}
               {renderResultsSection("Users", filteredResults.users, "user")}
               {renderResultsSection(
                 "Configurations",
                 filteredResults.configurations,
-                "configuration"
+                "configuration",
               )}
               {renderResultsSection(
                 "Quicklists",
                 filteredResults.quicklists,
-                "quicklist"
+                "quicklist",
               )}
               {renderResultsSection(
                 "Control Groups",
                 filteredResults["control-groups"],
-                "control-group"
+                "control-group",
               )}
             </div>
           )}

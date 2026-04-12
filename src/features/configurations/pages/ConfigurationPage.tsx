@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Grid3X3, List, Eye } from "lucide-react";
+import { Grid3X3, List, Eye, Search } from "lucide-react";
 import { color, tw, components, button } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import SearchInput from "../../../shared/components/ui/SearchInput";
@@ -236,6 +236,24 @@ export default function ConfigurationPage() {
         navigationPath: "/dashboard/combo-types",
       },
       {
+        id: "resource-types",
+        name: "Resource Types",
+        description: "Manage resource types and their units",
+        type: "product",
+        category: "Product Configuration",
+        status: "active",
+        navigationPath: "/dashboard/resource-types",
+      },
+      {
+        id: "utilities",
+        name: "Utilities",
+        description: "Manage utility types like water, electricity, and food",
+        type: "product",
+        category: "Product Configuration",
+        status: "active",
+        navigationPath: "/dashboard/utilities",
+      },
+      {
         id: "product-catalogs",
         name: "Product Catalogs",
         description: "Manage product catalogs",
@@ -386,6 +404,7 @@ export default function ConfigurationPage() {
 
   const filteredConfigurations = configurations.filter((config) => {
     const matchesSearch =
+      searchTerm === "" ||
       (config.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (config.description || "")
         .toLowerCase()

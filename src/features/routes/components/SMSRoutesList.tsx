@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, Search, Power, PowerOff } from "lucide-react";
+import { Plus, Edit, Trash2, Power, PowerOff } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { SMSRoute } from "../types/smsRoute";
@@ -131,17 +132,11 @@ export default function SMSRoutesList() {
       </div>
 
       {/* Search Bar */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-        <input
-          type="text"
-          placeholder="Search routes..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          disabled={loading}
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:border-gray-400 disabled:bg-white disabled:text-gray-500"
-        />
-      </div>
+      <SearchInput
+        placeholder="Search routes..."
+        value={searchTerm}
+        onChange={(value) => setSearchTerm(value)}
+      />
 
       {/* Table Container */}
       <div className="overflow-x-auto">

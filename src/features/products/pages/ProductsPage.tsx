@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
-  Search,
   Edit,
   Eye,
   Trash2,
@@ -13,6 +12,7 @@ import {
   DollarSign,
   XCircle,
 } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import { Product } from "../types/product";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import { ProductCategory } from "../types/productCategory";
@@ -412,82 +412,83 @@ export default function ProductsPage() {
 
       {/* Filters */}
       <div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="flex flex-col md:flex-row gap-3 items-end">
           {/* Search */}
-          <div className="relative">
-            <Search
-              className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[${tw.textMuted}]`}
-            />
-            <input
-              type="text"
+          <div className="flex-1">
+            <SearchInput
               placeholder="Search products..."
               value={filters.search || ""}
-              onChange={(e) => handleSearch(e.target.value)}
-              className={`w-full pl-10 pr-4 py-3 text-sm  border border-[${tw.borderDefault}] ${tw.rounded} focus:outline-none`}
+              onChange={(value) => handleSearch(value)}
             />
           </div>
 
           {/* Category Filter */}
-          <HeadlessSelect
-            options={[
-              { value: "", label: "All Categories" },
-              ...categories.map((category) => ({
-                value: category.id.toString(),
-                label: category.name,
-              })),
-            ]}
-            value={filters.categoryId?.toString() || ""}
-            onChange={(value) =>
-              handleFilterChange(
-                "categoryId",
-                value ? Number(value) : undefined,
-              )
-            }
-            placeholder="All Categories"
-            className="min-w-[160px] text-sm"
-          />
+          <div className="w-full md:w-40">
+            <HeadlessSelect
+              options={[
+                { value: "", label: "All Categories" },
+                ...categories.map((category) => ({
+                  value: category.id.toString(),
+                  label: category.name,
+                })),
+              ]}
+              value={filters.categoryId?.toString() || ""}
+              onChange={(value) =>
+                handleFilterChange(
+                  "categoryId",
+                  value ? Number(value) : undefined,
+                )
+              }
+              placeholder="All Categories"
+              className="text-sm"
+            />
+          </div>
 
           {/* Status Filter */}
-          <HeadlessSelect
-            options={[
-              { value: "", label: "All Status" },
-              { value: "true", label: "Active" },
-              { value: "false", label: "Inactive" },
-            ]}
-            value={
-              filters.isActive === undefined ? "" : filters.isActive.toString()
-            }
-            onChange={(value) =>
-              handleFilterChange(
-                "isActive",
-                value === "" ? undefined : value === "true",
-              )
-            }
-            placeholder="All Status"
-            className="min-w-[120px] text-sm"
-          />
+          <div className="w-full md:w-32">
+            <HeadlessSelect
+              options={[
+                { value: "", label: "All Status" },
+                { value: "true", label: "Active" },
+                { value: "false", label: "Inactive" },
+              ]}
+              value={
+                filters.isActive === undefined ? "" : filters.isActive.toString()
+              }
+              onChange={(value) =>
+                handleFilterChange(
+                  "isActive",
+                  value === "" ? undefined : value === "true",
+                )
+              }
+              placeholder="All Status"
+              className="text-sm"
+            />
+          </div>
 
           {/* Sort */}
-          <HeadlessSelect
-            options={[
-              { value: "created_at-DESC", label: "Newest First" },
-              { value: "created_at-ASC", label: "Oldest First" },
-              { value: "name-ASC", label: "Name A-Z" },
-              { value: "name-DESC", label: "Name Z-A" },
-              { value: "product_id-ASC", label: "Product ID A-Z" },
-            ]}
-            value={`${filters.sortBy}-${filters.sortDirection}`}
-            onChange={(value) => {
-              const [sortBy, sortDirection] = value.toString().split("-");
-              setFilters({
-                ...filters,
-                sortBy,
-                sortDirection: sortDirection as "ASC" | "DESC",
-              });
-            }}
-            placeholder="Sort by"
-            className="min-w-[140px] text-sm"
-          />
+          <div className="w-full md:w-40">
+            <HeadlessSelect
+              options={[
+                { value: "created_at-DESC", label: "Newest First" },
+                { value: "created_at-ASC", label: "Oldest First" },
+                { value: "name-ASC", label: "Name A-Z" },
+                { value: "name-DESC", label: "Name Z-A" },
+                { value: "product_id-ASC", label: "Product ID A-Z" },
+              ]}
+              value={`${filters.sortBy}-${filters.sortDirection}`}
+              onChange={(value) => {
+                const [sortBy, sortDirection] = value.toString().split("-");
+                setFilters({
+                  ...filters,
+                  sortBy,
+                  sortDirection: sortDirection as "ASC" | "DESC",
+                });
+              }}
+              placeholder="Sort by"
+              className="text-sm"
+            />
+          </div>
         </div>
       </div>
 

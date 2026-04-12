@@ -6,15 +6,15 @@ import {
   type CSSProperties,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Eye } from "lucide-react";
+import { Eye, AlertTriangle } from "lucide-react";
 import { tw, color } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { customerIdentityService } from "../services/customerIdentityService";
 import { CustomerIdentityField } from "../types/customerIdentity";
-import { AlertTriangle } from "lucide-react";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { PermissionGate } from "../../auth/components/PermissionGate";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 
 export default function CustomerIdentityPage() {
   const navigate = useNavigate();
@@ -103,19 +103,11 @@ export default function CustomerIdentityPage() {
         </div>
 
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div className="relative w-full md:flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <input
-            type="text"
+        <div className="w-full md:flex-1">
+          <SearchInput
             value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
+            onChange={(value) => setSearchTerm(value)}
             placeholder={t.customerIdentity.searchFields}
-            className={`w-full pl-10 pr-4 py-3.5 text-sm ${tw.rounded} border border-[${color.border.default}] focus:outline-none focus:ring-2`}
-            style={
-              {
-                "--tw-ring-color": color.primary.accent,
-              } as CSSProperties
-            }
           />
         </div>
 

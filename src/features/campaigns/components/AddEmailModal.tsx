@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Search, Eye } from "lucide-react";
+import { Eye, Search } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import RegularModal from "../../../shared/components/ui/RegularModal";
 import { color, tw } from "../../../shared/utils/utils";
@@ -92,22 +93,11 @@ export default function AddEmailModal({
     >
       <div className="space-y-4">
         {/* Search Input */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Enter email, customer name, ID, phone number, or MSISDN..."
-            className={`w-full ${tw.rounded} border border-gray-300 py-3 pl-10 pr-3 text-sm focus:border-gray-400 focus:outline-none focus:ring-2 focus:ring-[--accent-color]`}
-            style={
-              {
-                "--accent-color": `${color.primary.accent}33`,
-              } as React.CSSProperties
-            }
-            autoFocus
-          />
-        </div>
+        <SearchInput
+          placeholder="Enter email, customer name, ID, phone number, or MSISDN..."
+          value={searchTerm}
+          onChange={(value) => setSearchTerm(value)}
+        />
 
         {/* Helper Text */}
         <p className="text-xs text-gray-500">

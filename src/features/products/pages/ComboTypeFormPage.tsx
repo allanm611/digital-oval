@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { X, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { ComboType, comboTypeService } from "../services/comboTypeService";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
@@ -9,31 +9,56 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { tw, color } from "../../../shared/utils/utils";
 import { buttons } from "../../../shared/utils/tokens";
 import { useToast } from "../../../contexts/ToastContext";
+import { resourceTypesConfig, utilitiesConfig } from "../../configurations/configs/configurationPageConfigs";
+import CreateUtilityModal from "../../configurations/components/CreateUtilityModal";
 
-const RESOURCE_TYPE_OPTIONS = [
-  { value: "data_mb", label: "Data" },
-  { value: "onnet_minutes", label: "On-net Minutes" },
-  { value: "offnet_minutes", label: "Off-net Minutes" },
-  { value: "allnet_minutes", label: "All-net Minutes" },
-  { value: "voice_bundles", label: "Voice Bundles" },
-  { value: "sms_count", label: "SMS Bundles" },
-  { value: "roaming_data_mb", label: "Roaming Data" },
-  { value: "roaming_minutes", label: "Roaming Minutes" },
-  { value: "roaming_sms_count", label: "Roaming SMS Count" },
-  { value: "airtime", label: "Airtime" },
-  { value: "utility", label: "Utility" },
-  { value: "points", label: "Points" },
-];
+// Build resource type options from config
+const RESOURCE_TYPE_OPTIONS = resourceTypesConfig.initialData
+  .filter((rt: any) => rt.isActive)
+  .map((rt: any) => ({
+    value: rt.value,
+    label: rt.name,
+  }));
 
-const UNIT_OPTIONS = [
-  { value: "MB", label: "MB" },
-  { value: "GB", label: "GB" },
-  { value: "minutes", label: "Minutes" },
-  { value: "seconds", label: "Seconds" },
-  { value: "count", label: "Count" },
-];
+// Helper to get valid units for a selected resource type
+const getValidUnitsForResourceType = (
+  resourceTypeValue: string
+): { value: string; label: string }[] => {
+  const resourceType = resourceTypesConfig.initialData.find(
+    (rt: any) => rt.value === resourceTypeValue
+  ) as any;
+
+  if (!resourceType || !resourceType.validUnits) {
+    return [];
+  }
+
+  return resourceType.validUnits.map((unit: string) => ({
+    value: unit,
+    label: unit,
+  }));
+};
 
 export default function ComboTypeFormPage() {
+  // Helper to get utilities from config
+  const getUtilitiesOptions = () => {
+    const configUtilities = utilitiesConfig.initialData
+      .filter((u: any) => u.isActive)
+      .map((u: any) => ({
+        value: u.value,
+        label: u.name,
+      }));
+
+    // Add "Create custom" option at the beginning, followed by config utilities, then custom utilities
+    return [
+      {
+        value: "create-custom",
+        label: "Create custom",
+        isCreateCustom: true,
+      },
+      ...configUtilities,
+      ...customUtilities,
+    ] as any[];
+  };
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
@@ -45,9 +70,9 @@ export default function ComboTypeFormPage() {
     comboResources: [
       {
         id: 1,
-        type: "data_mb",
+        type: RESOURCE_TYPE_OPTIONS[0]?.value || "",
         value: "",
-        unit: "MB",
+        unit: "",
         hasPriceEnabled: false,
         price: "",
         sharedValidity: false,
@@ -57,10 +82,11 @@ export default function ComboTypeFormPage() {
   });
 
   const [selectedResourceType, setSelectedResourceType] = useState<string>("");
+  const [selectedUtility, setSelectedUtility] = useState<string>("");
 
   const [tempResourceData, setTempResourceData] = useState({
     value: "",
-    unit: "MB",
+    unit: "",
     hasPriceEnabled: false,
     price: "",
     sharedValidity: false,
@@ -70,6 +96,8 @@ export default function ComboTypeFormPage() {
   const [isLoading, setIsLoading] = useState(!!id);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isCreateUtilityModalOpen, setIsCreateUtilityModalOpen] = useState(false);
+  const [customUtilities, setCustomUtilities] = useState<Array<{ value: string; label: string }>>([]);
 
   useEffect(() => {
     if (id) {
@@ -101,9 +129,9 @@ export default function ComboTypeFormPage() {
               : [
                   {
                     id: 1,
-                    type: "data_mb",
+                    type: RESOURCE_TYPE_OPTIONS[0]?.value || "",
                     value: "",
-                    unit: "MB",
+                    unit: "",
                     hasPriceEnabled: false,
                     price: "",
                     sharedValidity: false,
@@ -124,7 +152,22 @@ export default function ComboTypeFormPage() {
   }, [id, showError]);
 
   const handleAddResource = () => {
-    if (!selectedResourceType) return;
+    if (!selectedResourceType || !tempResourceData.unit) {
+      showError(
+        "Validation Error",
+        "Please select both resource type and unit"
+      );
+      return;
+    }
+
+    // For Utility resource type, also require utility selection
+    if (selectedResourceType === "utility" && !selectedUtility) {
+      showError(
+        "Validation Error",
+        "Please select a utility"
+      );
+      return;
+    }
 
     setFormData((prev) => ({
       ...prev,
@@ -146,7 +189,7 @@ export default function ComboTypeFormPage() {
     setSelectedResourceType("");
     setTempResourceData({
       value: "",
-      unit: "MB",
+      unit: "",
       hasPriceEnabled: false,
       price: "",
       sharedValidity: false,
@@ -240,8 +283,11 @@ export default function ComboTypeFormPage() {
     (opt) => !formData.comboResources.some((r) => r.type === opt.value)
   );
 
-  // Fixed 4-column grid for input fields
-  const gridColsClass = "grid-cols-4";
+  // Get valid units for the selected resource type
+  const validUnitsForSelected = useMemo(() => {
+    if (!selectedResourceType) return [];
+    return getValidUnitsForResourceType(selectedResourceType);
+  }, [selectedResourceType]);
 
   if (isLoading) {
     return (
@@ -360,10 +406,7 @@ export default function ComboTypeFormPage() {
             </div>
 
             {/* Shared Configuration Checkboxes */}
-            <div
-              style={{ borderColor: color.border.default }}
-              className="mb-3 pb-3 border-b"
-            >
+            <div className="mb-3 pb-1">
               <div className="grid gap-4 md:grid-cols-2 mb-4">
                 <div className="flex items-center gap-2">
                   <Checkbox
@@ -462,13 +505,7 @@ export default function ComboTypeFormPage() {
 
             {/* Resource Selection and Input Section */}
             <div className={`border border-gray-200 ${tw.rounded} p-4 space-y-3`}>
-              <div className={`grid gap-3 ${
-                !tempResourceData.sharedValidity && !tempResourceData.hasPriceEnabled
-                  ? "md:grid-cols-4"
-                  : (!tempResourceData.sharedValidity || !tempResourceData.hasPriceEnabled)
-                  ? "md:grid-cols-3"
-                  : "md:grid-cols-2"
-              }`}>
+              <div className="grid gap-3 md:grid-cols-4">
                 <div>
                   <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
                     Resource Type
@@ -476,9 +513,24 @@ export default function ComboTypeFormPage() {
                   <HeadlessSelect
                     options={availableResourceTypes}
                     value={selectedResourceType}
-                    onChange={(value: string | number) =>
-                      setSelectedResourceType(value as string)
-                    }
+                    onChange={(value: string | number) => {
+                      const newType = value as string;
+                      setSelectedResourceType(newType);
+
+                      // Auto-select the mapped unit for the selected resource type
+                      const resourceType = resourceTypesConfig.initialData.find(
+                        (rt: any) => rt.value === newType
+                      ) as any;
+                      const defaultUnit = resourceType?.validUnits?.[0] || "";
+
+                      setTempResourceData({
+                        ...tempResourceData,
+                        unit: defaultUnit,
+                      });
+                      if (newType !== "utility") {
+                        setSelectedUtility("");
+                      }
+                    }}
                     disabled={isSaving || availableResourceTypes.length === 0}
                     placeholder={
                       availableResourceTypes.length === 0
@@ -493,7 +545,7 @@ export default function ComboTypeFormPage() {
                     Unit
                   </label>
                   <HeadlessSelect
-                    options={UNIT_OPTIONS}
+                    options={validUnitsForSelected}
                     value={tempResourceData.unit}
                     onChange={(value: string | number) =>
                       setTempResourceData({
@@ -501,10 +553,38 @@ export default function ComboTypeFormPage() {
                         unit: value as string,
                       })
                     }
-                    disabled={isSaving}
-                    placeholder="Select unit"
+                    disabled={isSaving || !selectedResourceType}
+                    placeholder={
+                      !selectedResourceType
+                        ? "Select resource first"
+                        : "Select unit"
+                    }
                   />
                 </div>
+
+                {/* Utility Selection - show when Utility resource type is selected */}
+                {selectedResourceType === "utility" && (
+                  <div>
+                    <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
+                      Utility *
+                    </label>
+                    <HeadlessSelect
+                      options={getUtilitiesOptions()}
+                      value={selectedUtility}
+                      onChange={(value: string | number) => {
+                        const val = value as string;
+                        if (val === "create-custom") {
+                          setIsCreateUtilityModalOpen(true);
+                          setSelectedUtility(""); // Reset selection
+                        } else {
+                          setSelectedUtility(val);
+                        }
+                      }}
+                      disabled={isSaving}
+                      placeholder="Select utility"
+                    />
+                  </div>
+                )}
 
                 <div>
                   <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
@@ -721,6 +801,21 @@ export default function ComboTypeFormPage() {
             </button>
           </div>
         </form>
+
+        {/* Create Custom Utility Modal */}
+        <CreateUtilityModal
+          isOpen={isCreateUtilityModalOpen}
+          onClose={() => setIsCreateUtilityModalOpen(false)}
+          onSave={async (utility) => {
+            // Add custom utility to the list and select it
+            const newUtility = {
+              value: utility.name.toLowerCase().replace(/\s+/g, "-"),
+              label: utility.name,
+            };
+            setCustomUtilities((prev) => [...prev, newUtility]);
+            setSelectedUtility(newUtility.value);
+          }}
+        />
       </div>
     </div>
   );

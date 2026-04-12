@@ -34,6 +34,7 @@ export interface ComboResource {
   unit_value: number;
   validity_hours?: number; // Individual validity in hours (if not using shared)
   price?: number; // Individual price (if not using shared_price)
+  daid_account?: string; // Individual DAID account (if not using shared_daid)
 }
 
 // Combo product structure
@@ -44,6 +45,8 @@ export interface ComboProductData {
   shared_validity_hours?: number; // Validity in hours when shared_validity is true
   shared_price?: boolean; // true = single combo price, false = individual resource pricing
   price?: number; // Price for the entire combo (when shared_price is true)
+  shared_daid?: boolean; // true = all resources share same DAID account, false = each has own
+  shared_daid_account?: string; // DAID account for the entire combo (when shared_daid is true)
 }
 
 export interface Product {

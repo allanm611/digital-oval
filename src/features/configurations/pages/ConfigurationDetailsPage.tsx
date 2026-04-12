@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Search, ChevronRight, Settings } from "lucide-react";
+import { ChevronRight, Settings } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw, components } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 
 interface ConfigurationItem {
   id: string;
@@ -179,16 +180,11 @@ export default function ConfigurationDetailsPage() {
       </div>
 
       {/* Search */}
-      <div className="relative mb-6">
-        <Search
-          className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${tw.textMuted}`}
-        />
-        <input
-          type="text"
+      <div className="mb-6">
+        <SearchInput
           placeholder="Search sub-configurations..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className={`w-full pl-10 pr-4 py-3 ${components.input.default} ${tw.rounded} focus:outline-none transition-all duration-200 text-sm`}
+          onChange={(value) => setSearchTerm(value)}
         />
       </div>
 

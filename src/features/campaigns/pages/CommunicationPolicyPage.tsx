@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Search, Edit, Trash2, ArrowLeft } from "lucide-react";
+import { Plus, Edit, Trash2, ArrowLeft } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import BackButton from "../../../shared/components/ui/BackButton";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import { color, tw, components, helpers } from "../../../shared/utils/utils";
 import {
   CommunicationPolicyConfiguration,
@@ -222,18 +223,11 @@ export default function CommunicationPolicyPage() {
       </div>
 
       <div className={tw.surfaceBackground}>
-        <div className="relative w-full">
-          <Search
-            className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${tw.textMuted}`}
-          />
-          <input
-            type="text"
-            placeholder={t.communicationPolicy.searchPlaceholder}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className={`${components.input.default} w-full pl-10 pr-4 py-3 ${tw.caption}`}
-          />
-        </div>
+        <SearchInput
+          placeholder={t.communicationPolicy.searchPlaceholder}
+          value={searchTerm}
+          onChange={(value) => setSearchTerm(value)}
+        />
       </div>
 
       <div

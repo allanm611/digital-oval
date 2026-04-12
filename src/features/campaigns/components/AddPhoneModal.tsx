@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Search, Eye, ArrowLeft } from "lucide-react";
+import { Eye, ArrowLeft, Search } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import RegularModal from "../../../shared/components/ui/RegularModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -141,22 +142,11 @@ export default function AddPhoneModal({
         {step === "search" && (
           <>
             {/* Search Input */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Enter phone number, MSISDN, customer name, ID, or email..."
-                className={`w-full ${tw.rounded} border border-gray-300 py-3 pl-10 pr-3 text-sm focus:border-gray-400 focus:outline-none focus:ring-2 focus:ring-[--accent-color]`}
-                style={
-                  {
-                    "--accent-color": `${color.primary.accent}33`,
-                  } as React.CSSProperties
-                }
-                autoFocus
-              />
-            </div>
+            <SearchInput
+              placeholder="Enter phone number, MSISDN, customer name, ID, or email..."
+              value={searchTerm}
+              onChange={(value) => setSearchTerm(value)}
+            />
 
             {/* Helper Text */}
             <p className="text-xs text-gray-500">

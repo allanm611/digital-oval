@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { Search, Edit, Trash2, X, ArrowLeft, LucideIcon } from "lucide-react";
+import { Edit, Trash2, X, ArrowLeft, LucideIcon } from "lucide-react";
+import SearchInput from "./ui/SearchInput";
 import { color, tw, zIndex } from "../utils/utils";
 import { useConfirm } from "../../contexts/ConfirmContext";
 import { useToast } from "../../contexts/ToastContext";
@@ -567,20 +568,11 @@ export default function GenericConfigurationPage({
       </div>
 
       <div className={` my-5`}>
-        <div className="relative w-full">
-          <Search
-            className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5`}
-            style={{ color: color.text.muted }}
-          />
-          <input
-            type="text"
-            placeholder={config.searchPlaceholder}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className={`w-full pl-10 pr-4 py-3 text-sm border ${tw.rounded} focus:outline-none`}
-            style={{ borderColor: color.border.default }}
-          />
-        </div>
+        <SearchInput
+          placeholder={config.searchPlaceholder}
+          value={searchTerm}
+          onChange={(value) => setSearchTerm(value)}
+        />
       </div>
 
       <div

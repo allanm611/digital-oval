@@ -4,9 +4,9 @@ import {
   Briefcase,
   Edit,
   Eye,
-  Search,
   Trash2,
 } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import DateFormatter from "../../../shared/components/DateFormatter";
@@ -736,13 +736,10 @@ export default function JobTypesPage() {
 
       <div className="my-5">
         <div className="relative w-full">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
+          <SearchInput
             placeholder="Search job types by name, code, or description..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className={`w-full pl-10 pr-4 py-3 text-sm border border-gray-200 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
+            onChange={(e) => setSearchTerm(e)}
           />
           {isSearching && (
             <div className="absolute right-3 top-1/2 transform -translate-y-1/2">

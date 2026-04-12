@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, Trash2, X, ExternalLink, Search } from "lucide-react";
+import { Bell, Trash2, X, ExternalLink } from "lucide-react";
 import { useNotifications } from "../../../contexts/NotificationContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { InboxNotification } from "../types/notification";
 import { color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 
 export default function NotificationsPage() {
   const navigate = useNavigate();
@@ -173,16 +174,11 @@ export default function NotificationsPage() {
       <div className="mb-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder={t.notifications.searchPlaceholder}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className={`w-full pl-11 pr-5 py-3 bg-white border border-gray-300 ${tw.rounded} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
-            />
-          </div>
+          <SearchInput
+            placeholder={t.notifications.searchPlaceholder}
+            value={searchTerm}
+            onChange={(value) => setSearchTerm(value)}
+          />
 
           {/* Read Status Filter */}
           <HeadlessSelect

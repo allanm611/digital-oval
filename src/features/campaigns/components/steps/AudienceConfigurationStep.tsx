@@ -15,6 +15,7 @@ import {
   Database,
   X,
 } from "lucide-react";
+import SearchInput from "../../../../shared/components/ui/SearchInput";
 import {
   CreateCampaignRequest,
   CampaignSegment,
@@ -1458,14 +1459,12 @@ function ControlGroupConfigModal({
               <div
                 className={`border border-gray-300 ${tw.rounded} p-4 space-y-3`}
               >
-                <input
-                  type="text"
+                <SearchInput
                   placeholder={
                     t.campaigns.audienceConfiguration.searchControlGroups
                   }
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-transparent`}
+                  onChange={(value) => setSearchTerm(value)}
                 />
 
                 <div className="space-y-2 max-h-60 overflow-y-auto">

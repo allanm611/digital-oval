@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
-  Search,
   FileText,
   Trash2,
   Eye,
@@ -20,6 +19,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { useToast } from "../../../contexts/ToastContext";
 import { PermissionGate } from "../../auth/components/PermissionGate";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 export default function ManualBroadcastListsPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -306,16 +306,11 @@ export default function ManualBroadcastListsPage() {
 
       {/* Search and Filters */}
       <div className="flex flex-col lg:flex-row gap-4">
-        <div className="flex-1 relative">
-          <Search
-            className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${tw.textMuted}`}
-          />
-          <input
-            type="text"
+        <div className="flex-1">
+          <SearchInput
             placeholder="Search broadcasts by name or execution ID..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className={`w-full pl-10 pr-4 py-3 text-sm ${components.input.default}`}
+            onChange={(value) => setSearchTerm(value)}
           />
         </div>
       </div>

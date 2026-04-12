@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import {
-  Search,
   Plus,
   Ban,
   CheckCircle,
@@ -17,6 +16,7 @@ import {
   CheckSquare,
   Square,
 } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import { useNavigate } from "react-router-dom";
 import { userService } from "../../users/services/userService";
 import { accountService } from "../../account/services/accountService";
@@ -1623,21 +1623,16 @@ export default function UserManagementPage() {
       {/* Search and Filters - Only show on Users tab */}
       {activeTab === "users" && (
         <div className="flex flex-col lg:flex-row gap-4 lg:items-center">
-          <div className="flex-1 relative">
-            <Search
-              className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${tw.textMuted}`}
-            />
-            <input
-              type="text"
+          <div className="flex-1">
+            <SearchInput
               placeholder={t.userManagement.searchUsers}
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(value) => setSearchTerm(value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   handleSearch();
                 }
               }}
-              className={`w-full pl-10 pr-4 py-3 text-sm ${components.input.default}`}
             />
           </div>
 

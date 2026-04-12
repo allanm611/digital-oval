@@ -2,16 +2,17 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
   Check,
   Plus,
-  Search,
   AlertCircle,
   // Square,
   // CheckSquare,
   X,
   Trash2,
+  Search,
 } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import { Role, Permission, PermissionListResult, RolePermissionListResult } from "../types/role";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import { rolePermissionService } from "../services/rolePermissionService";
 import { permissionService } from "../services/permissionService";
 import { color, tw } from "../../../shared/utils/utils";
@@ -584,16 +585,11 @@ export default function AssignPermissionsModal({
       {selectedRole ? (
         <div className="space-y-3">
           {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search permissions..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+          <SearchInput
+            placeholder="Search permissions..."
+            value={searchTerm}
+            onChange={(value) => setSearchTerm(value)}
+          />
 
           {/* Bulk Actions Toolbar */}
           {isSelectionMode && selectedPermissionIds.size > 0 && (

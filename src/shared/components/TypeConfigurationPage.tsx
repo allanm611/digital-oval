@@ -6,12 +6,12 @@ import {
   Edit,
   Eye,
   LucideIcon,
-  Search,
   Trash2,
   X,
   Power,
   PowerOff,
 } from "lucide-react";
+import SearchInput from "./ui/SearchInput";
 import { color, tw, button, zIndex } from "../utils/utils";
 import { useToast } from "../../contexts/ToastContext";
 import { useLanguage } from "../../contexts/LanguageContext";
@@ -204,25 +204,25 @@ function TypeConfigurationModal({
   const isSmsRoutes = config.configType === "smsRoutes";
   const isRoutes = config.configType === "routes";
   const isNotificationType = config.configType === "notificationTypes";
+  const isResourceTypes = config.configType === "resourceTypes";
 
   // Custom fields state for languages and character sets
   const [customFields, setCustomFields] = useState<Record<string, string>>({});
 
-  // Resource type options matching ProductForm
-  const resourceTypeOptions = [
-    { label: "Data", value: "data_mb" },
-    { label: "On-net Minutes", value: "onnet_minutes" },
-    { label: "Off-net Minutes", value: "offnet_minutes" },
-    { label: "All-net Minutes", value: "allnet_minutes" },
-    { label: "Voice Bundles", value: "voice_bundles" },
-    { label: "SMS Bundles", value: "sms_count" },
-    { label: "Roaming Data", value: "roaming_data_mb" },
-    { label: "Roaming Minutes", value: "roaming_minutes" },
-    { label: "Roaming SMS Count", value: "roaming_sms_count" },
-    { label: "Airtime", value: "airtime" },
-    { label: "Utility", value: "utility" },
-    { label: "Points", value: "points" },
-  ];
+  // Build resource type options from configuration
+  const getResourceTypeOptions = () => {
+    const resourceTypes = configurationDataService.getData(
+      "resourceTypes",
+    ) as TypeConfigurationItem[];
+    return (resourceTypes || []).map((rt) => ({
+      label: rt.name,
+      value: rt.value || rt.name,
+      unit: (rt as any).unit,
+      validUnits: (rt as any).validUnits,
+    }));
+  };
+
+  const resourceTypeOptions = getResourceTypeOptions();
 
   // Combo types fields
   const [comboResources, setComboResources] = useState<
@@ -248,6 +248,7 @@ function TypeConfigurationModal({
     value: "",
     sharedValidityHours: "",
     price: "",
+    unit: "",
   });
 
   const [characterSetOptions, setCharacterSetOptions] = useState<
@@ -357,7 +358,8 @@ function TypeConfigurationModal({
           isCharacterSet ||
           isSmsRoutes ||
           isRoutes ||
-          isNotificationType) &&
+          isNotificationType ||
+          isResourceTypes) &&
         config.customFields
       ) {
         const fields: Record<string, string> = {};
@@ -403,6 +405,7 @@ function TypeConfigurationModal({
           value: "",
           sharedValidityHours: "",
           price: "",
+          unit: "",
         });
       }
     } else {
@@ -424,7 +427,8 @@ function TypeConfigurationModal({
           isCharacterSet ||
           isSmsRoutes ||
           isRoutes ||
-          isNotificationType) &&
+          isNotificationType ||
+          isResourceTypes) &&
         config.customFields
       ) {
         const fields: Record<string, string> = {};
@@ -451,6 +455,7 @@ function TypeConfigurationModal({
           value: "",
           sharedValidityHours: "",
           price: "",
+          unit: "",
         });
       }
     }
@@ -465,6 +470,7 @@ function TypeConfigurationModal({
     isSmsRoutes,
     isRoutes,
     isNotificationType,
+    isResourceTypes,
     config.customFields,
   ]);
 
@@ -574,13 +580,14 @@ function TypeConfigurationModal({
       payload.locale = locale.trim() || undefined;
     }
 
-    // Add custom fields for languages, character sets, SMS routes, and routes
+    // Add custom fields for languages, character sets, SMS routes, routes, notification types, and resource types
     if (
       (isLanguage ||
         isCharacterSet ||
         isSmsRoutes ||
         isRoutes ||
-        isNotificationType) &&
+        isNotificationType ||
+        isResourceTypes) &&
       config.customFields
     ) {
       for (const field of config.customFields) {
@@ -748,12 +755,13 @@ function TypeConfigurationModal({
             </div>
           )}
 
-          {/* Custom Fields (for Languages, Character Sets, SMS Routes, Routes, and Notification Types) */}
+          {/* Custom Fields (for Languages, Character Sets, SMS Routes, Routes, Notification Types, and Resource Types) */}
           {(isLanguage ||
             isCharacterSet ||
             isSmsRoutes ||
             isRoutes ||
-            isNotificationType) &&
+            isNotificationType ||
+            isResourceTypes) &&
             config.customFields && (
               <>
                 {config.customFields
@@ -1112,7 +1120,9 @@ function TypeConfigurationModal({
                   >
                     <div className="col-span-1">
                       <p className="text-sm font-semibold text-gray-900">
-                        {resourceTypeOptions.find((opt) => opt.value === resource.type)?.label || resource.type}
+                        {resourceTypeOptions.find(
+                          (opt) => opt.value === resource.type,
+                        )?.label || resource.type}
                       </p>
                       <p className="text-sm text-gray-500">{resource.unit}</p>
                     </div>
@@ -1170,7 +1180,7 @@ function TypeConfigurationModal({
               </div>
 
               {/* Resource Selection and Input Section */}
-              <div className="border border-gray-200 rounded-lg p-4 space-y-3 mb-4">
+              <div className="border border-gray-200 rounded-lg p-4 space-y-3 mb-4 border-t-0">
                 <div className="grid gap-3 md:grid-cols-3">
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-2">
@@ -1182,10 +1192,51 @@ function TypeConfigurationModal({
                         ...resourceTypeOptions,
                       ]}
                       value={selectedResourceType}
-                      onChange={(value: string | number) =>
-                        setSelectedResourceType(value as string)
-                      }
+                      onChange={(value: string | number) => {
+                        const selected = value as string;
+                        setSelectedResourceType(selected);
+                        // Reset unit when resource changes (don't auto-select)
+                        setTempResourceData((prev) => ({
+                          ...prev,
+                          unit: "",
+                        }));
+                      }}
                       placeholder="Select resource"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-2">
+                      Unit *
+                    </label>
+                    <HeadlessSelect
+                      options={
+                        selectedResourceType
+                          ? (() => {
+                              const resourceType = resourceTypeOptions.find(
+                                (r) => r.value === selectedResourceType,
+                              );
+                              return [
+                                { value: "", label: "Select unit" },
+                                ...(resourceType?.validUnits || []).map(
+                                  (unit: string) => ({
+                                    value: unit,
+                                    label: unit,
+                                  }),
+                                ),
+                              ];
+                            })()
+                          : [{ value: "", label: "Select unit" }]
+                      }
+                      value={tempResourceData.unit}
+                      onChange={(value: string | number) =>
+                        setTempResourceData({
+                          ...tempResourceData,
+                          unit: String(value),
+                        })
+                      }
+                      placeholder="Select unit"
+                      disabled={!selectedResourceType}
                     />
                   </div>
 
@@ -1259,10 +1310,14 @@ function TypeConfigurationModal({
                       {
                         type: selectedResourceType,
                         value: tempResourceData.value,
-                        unit: selectedResourceType,
+                        unit: tempResourceData.unit || selectedResourceType,
                         sharedValidity: comboSharedValidity,
-                        sharedValidityHours: tempResourceData.sharedValidityHours || comboValidityHours,
-                        price: comboSharedPrice ? undefined : tempResourceData.price,
+                        sharedValidityHours:
+                          tempResourceData.sharedValidityHours ||
+                          comboValidityHours,
+                        price: comboSharedPrice
+                          ? undefined
+                          : tempResourceData.price,
                       },
                     ]);
 
@@ -1272,6 +1327,7 @@ function TypeConfigurationModal({
                       value: "",
                       sharedValidityHours: "",
                       price: "",
+                      unit: "",
                     });
                   }}
                   disabled={!selectedResourceType}
@@ -1292,7 +1348,7 @@ function TypeConfigurationModal({
               </div>
 
               {/* Validity & Price - 2 Column Layout */}
-              <div className="pt-3 mt-3">
+              <div className="mt-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Checkbox
                     id="combo-shared-validity"
@@ -1749,8 +1805,8 @@ export default function TypeConfigurationPage({
       // Optimistic update
       setItems((prev) =>
         prev.map((it) =>
-          it.id === item.id ? { ...it, isActive: newActiveStatus } : it
-        )
+          it.id === item.id ? { ...it, isActive: newActiveStatus } : it,
+        ),
       );
 
       // Call the appropriate service based on config type
@@ -1774,23 +1830,28 @@ export default function TypeConfigurationPage({
         await productTypeService.updateProductType(item.id, {
           is_active: newActiveStatus,
         });
+      } else {
+        // For local configs like resourceTypes
+        configurationDataService.updateItem(config.configType, item.id, {
+          isActive: newActiveStatus,
+        });
       }
 
       showToast(
         config.title,
-        newActiveStatus ? "Activated successfully" : "Deactivated successfully"
+        newActiveStatus ? "Activated successfully" : "Deactivated successfully",
       );
     } catch (err) {
       console.error(`Failed to toggle ${config.entityName}:`, err);
       // Revert optimistic update on failure
       setItems((prev) =>
         prev.map((it) =>
-          it.id === item.id ? { ...it, isActive: !item.isActive } : it
-        )
+          it.id === item.id ? { ...it, isActive: !item.isActive } : it,
+        ),
       );
       showError(
         "Error",
-        err instanceof Error ? err.message : "Failed to update status"
+        err instanceof Error ? err.message : "Failed to update status",
       );
     } finally {
       setTogglingId(null);
@@ -1838,18 +1899,11 @@ export default function TypeConfigurationPage({
       </div>
 
       <div className="my-5">
-        <div className="relative w-full">
-          <Search
-            className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[${color.text.muted}]`}
-          />
-          <input
-            type="text"
-            placeholder={config.searchPlaceholder}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className={`w-full pl-10 pr-4 py-3 text-sm border border-[${color.border.default}] ${tw.rounded} focus:outline-none`}
-          />
-        </div>
+        <SearchInput
+          placeholder={config.searchPlaceholder}
+          value={searchTerm}
+          onChange={(value) => setSearchTerm(value)}
+        />
       </div>
 
       <div
@@ -1980,6 +2034,18 @@ export default function TypeConfigurationPage({
                       >
                         Description
                       </th>
+                      {/* Unit column for resource types */}
+                      {config.configType === "resourceTypes" && (
+                        <th
+                          className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                          style={{
+                            color: color.surface.tableHeaderText,
+                            backgroundColor: color.surface.tableHeader,
+                          }}
+                        >
+                          Unit
+                        </th>
+                      )}
                       <th
                         className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                         style={{
@@ -2152,6 +2218,20 @@ export default function TypeConfigurationPage({
                             {item.description || t.genericConfig.noDescription}
                           </div>
                         </td>
+                        {/* Unit column for resource types */}
+                        {config.configType === "resourceTypes" && (
+                          <td
+                            className="px-6 py-4"
+                            style={{
+                              backgroundColor: color.surface.tablebodybg,
+                            }}
+                          >
+                            <div className={`text-sm ${tw.textPrimary}`}>
+                              {(item as unknown as Record<string, unknown>)
+                                .unit || "—"}
+                            </div>
+                          </td>
+                        )}
                         <td
                           className="px-6 py-4"
                           style={{
@@ -2262,9 +2342,7 @@ export default function TypeConfigurationPage({
                             onClick={() => handleToggleActive(item)}
                             disabled={togglingId === item.id}
                             className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-                            title={
-                              item.isActive ? "Deactivate" : "Activate"
-                            }
+                            title={item.isActive ? "Deactivate" : "Activate"}
                           >
                             {togglingId === item.id ? (
                               <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />

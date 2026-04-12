@@ -76,6 +76,8 @@ export default function ProductForm({
       shared_validity_hours: undefined,
       shared_price: true,
       price: undefined,
+      shared_daid: true,
+      shared_daid_account: undefined,
     };
   });
 
@@ -93,6 +95,7 @@ export default function ProductForm({
     unit: "MB" as string,
     validity_hours: undefined as number | undefined,
     price: undefined as number | undefined,
+    daid_account: undefined as string | undefined,
   });
 
   // Tags input state
@@ -218,6 +221,10 @@ export default function ProductForm({
         resources: [],
         shared_validity: true,
         shared_validity_hours: undefined,
+        shared_price: true,
+        price: undefined,
+        shared_daid: true,
+        shared_daid_account: undefined,
       });
     }
   }, [formData.product_type_id, isComboType]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -257,6 +264,8 @@ export default function ProductForm({
           shared_validity_hours: selectedComboType.validity_hours,
           shared_price: true,
           price: selectedComboType.price,
+          shared_daid: true,
+          shared_daid_account: undefined,
         });
       }
     }
@@ -370,6 +379,7 @@ export default function ProductForm({
     unit: string = "MB",
     validity_hours: number | undefined = undefined,
     price: number | undefined = undefined,
+    daid_account: string | undefined = undefined,
   ) => {
     const newResource: ComboResource = {
       resource_type: resourceType,
@@ -377,6 +387,7 @@ export default function ProductForm({
       unit_value,
       validity_hours,
       price,
+      daid_account,
     };
     setComboData({
       ...comboData,
@@ -388,6 +399,7 @@ export default function ProductForm({
       unit: "MB",
       validity_hours: undefined,
       price: undefined,
+      daid_account: undefined,
     });
   };
 
@@ -427,8 +439,75 @@ export default function ProductForm({
           }}
         >
           <div className="space-y-5">
-            {/* Product Code & DA ID */}
+            {/* Product Name & Product Code */}
             <div className="grid gap-5 md:grid-cols-2">
+              <div>
+                <label
+                  className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                >
+                  {t.products.form.productName}{" "}
+                  <span style={{ color: color.status.danger }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  required
+                  value={formData.name || ""}
+                  onChange={(e) => {
+                    onInputChange("name", e.target.value);
+                    if (errors.name) {
+                      setErrors((prev) => {
+                        const newErrors = { ...prev };
+                        delete newErrors.name;
+                        return newErrors;
+                      });
+                    }
+                  }}
+                  className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
+                  style={{
+                    borderColor: errors.name
+                      ? color.status.danger
+                      : color.border.default,
+                    outline: "none",
+                  }}
+                  placeholder={t.products.form.enterProductName}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = errors.name
+                      ? color.status.danger
+                      : color.primary.accent;
+                    e.target.style.boxShadow = `0 0 0 3px ${errors.name ? color.status.danger : color.primary.accent}20`;
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = errors.name
+                      ? color.status.danger
+                      : color.border.default;
+                    e.target.style.boxShadow = "none";
+                  }}
+                />
+                {errors.name && (
+                  <p
+                    className="mt-1.5 text-xs font-semibold cursor-pointer"
+                    style={{
+                      color: color.status.danger,
+                      fontWeight: 600,
+                    }}
+                    onClick={() => {
+                      const element =
+                        document.querySelector('input[name="name"]');
+                      if (element) {
+                        (element as HTMLInputElement).focus();
+                        (element as HTMLInputElement).scrollIntoView({
+                          behavior: "smooth",
+                          block: "center",
+                        });
+                      }
+                    }}
+                  >
+                    {errors.name}
+                  </p>
+                )}
+              </div>
+
               <div>
                 <label
                   className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
@@ -488,7 +567,10 @@ export default function ProductForm({
                   </p>
                 )}
               </div>
+            </div>
 
+            {/* DA ID - Full Width */}
+            {!isComboType && (
               <div>
                 <label
                   className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
@@ -547,75 +629,7 @@ export default function ProductForm({
                   </p>
                 )}
               </div>
-            </div>
-
-            {/* Product Name */}
-            <div>
-              <label
-                className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-              >
-                {t.products.form.productName}{" "}
-                <span style={{ color: color.status.danger }}>*</span>
-              </label>
-              <input
-                type="text"
-                name="name"
-                required
-                value={formData.name || ""}
-                onChange={(e) => {
-                  onInputChange("name", e.target.value);
-                  if (errors.name) {
-                    setErrors((prev) => {
-                      const newErrors = { ...prev };
-                      delete newErrors.name;
-                      return newErrors;
-                    });
-                  }
-                }}
-                className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
-                style={{
-                  borderColor: errors.name
-                    ? color.status.danger
-                    : color.border.default,
-                  outline: "none",
-                }}
-                placeholder={t.products.form.enterProductName}
-                onFocus={(e) => {
-                  e.target.style.borderColor = errors.name
-                    ? color.status.danger
-                    : color.primary.accent;
-                  e.target.style.boxShadow = `0 0 0 3px ${errors.name ? color.status.danger : color.primary.accent}20`;
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = errors.name
-                    ? color.status.danger
-                    : color.border.default;
-                  e.target.style.boxShadow = "none";
-                }}
-              />
-              {errors.name && (
-                <p
-                  className="mt-1.5 text-xs font-semibold cursor-pointer"
-                  style={{
-                    color: color.status.danger,
-                    fontWeight: 600,
-                  }}
-                  onClick={() => {
-                    const element =
-                      document.querySelector('input[name="name"]');
-                    if (element) {
-                      (element as HTMLInputElement).focus();
-                      (element as HTMLInputElement).scrollIntoView({
-                        behavior: "smooth",
-                        block: "center",
-                      });
-                    }
-                  }}
-                >
-                  {errors.name}
-                </p>
-              )}
-            </div>
+            )}
 
             {/* Description */}
             <div>
@@ -924,6 +938,7 @@ export default function ProductForm({
                         shared_validity_hours: undefined,
                         shared_price: true,
                         price: undefined,
+                        shared_daid: true,
                       });
                       setIsCustomComboMode(true);
                     }}
@@ -1003,7 +1018,7 @@ export default function ProductForm({
                   className="mb-3 pb-3"
                 >
                   {/* Shared Configuration Checkboxes */}
-                  <div className="grid gap-4 md:grid-cols-2 mb-4">
+                  <div className="grid gap-4 md:grid-cols-3 mb-4">
                     <div className="flex items-center gap-2">
                       <Checkbox
                         id="shared-validity-combo"
@@ -1040,10 +1055,28 @@ export default function ProductForm({
                         Shared Price
                       </label>
                     </div>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="shared-daid-combo"
+                        checked={comboData.shared_daid ?? true}
+                        onChange={(e) =>
+                          setComboData({
+                            ...comboData,
+                            shared_daid: e.target.checked,
+                          })
+                        }
+                      />
+                      <label
+                        htmlFor="shared-daid-combo"
+                        className={`text-sm font-medium ${tw.textPrimary}`}
+                      >
+                        Shared DAID
+                      </label>
+                    </div>
                   </div>
 
                   {/* Validity and Price Fields */}
-                  <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid gap-4 md:grid-cols-3">
                     {/* Shared Validity Hours */}
                     {comboData.shared_validity && (
                       <div>
@@ -1101,6 +1134,31 @@ export default function ProductForm({
                         />
                       </div>
                     )}
+
+                    {/* Shared DAID Account */}
+                    {comboData.shared_daid && (
+                      <div>
+                        <label
+                          className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                        >
+                          DAID Account{" "}
+                          <span style={{ color: color.status.danger }}>*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={comboData.shared_daid_account ?? ""}
+                          onChange={(e) =>
+                            setComboData({
+                              ...comboData,
+                              shared_daid_account: e.target.value || undefined,
+                            })
+                          }
+                          className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
+                          style={{ borderColor: color.border.default }}
+                          placeholder="Enter shared DAID"
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -1138,10 +1196,15 @@ export default function ProductForm({
                         <div
                           className={`grid gap-3 ${
                             !comboData.shared_validity &&
-                            !comboData.shared_price
-                              ? "md:grid-cols-4"
-                              : !comboData.shared_validity ||
+                            !comboData.shared_price &&
+                            !comboData.shared_daid
+                              ? "md:grid-cols-5"
+                              : !comboData.shared_validity &&
                                   !comboData.shared_price
+                                ? "md:grid-cols-4"
+                              : !comboData.shared_validity ||
+                                  !comboData.shared_price ||
+                                  !comboData.shared_daid
                                 ? "md:grid-cols-3"
                                 : "md:grid-cols-2"
                           } mb-3`}
@@ -1251,6 +1314,30 @@ export default function ProductForm({
                               />
                             </div>
                           )}
+
+                          {!comboData.shared_daid && (
+                            <div>
+                              <label
+                                className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
+                              >
+                                DAID Account
+                              </label>
+                              <input
+                                type="text"
+                                value={resource.daid_account ?? ""}
+                                onChange={(e) =>
+                                  updateComboResource(
+                                    index,
+                                    "daid_account",
+                                    e.target.value || undefined,
+                                  )
+                                }
+                                className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm transition-all`}
+                                style={{ borderColor: color.border.default }}
+                                placeholder="Enter DAID"
+                              />
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -1264,12 +1351,18 @@ export default function ProductForm({
                   >
                     <div
                       className={`grid gap-3 ${
-                        !comboData.shared_validity && !comboData.shared_price
-                          ? "md:grid-cols-5"
-                          : !comboData.shared_validity ||
+                        !comboData.shared_validity &&
+                        !comboData.shared_price &&
+                        !comboData.shared_daid
+                          ? "md:grid-cols-6"
+                          : !comboData.shared_validity &&
                               !comboData.shared_price
-                            ? "md:grid-cols-4"
-                            : "md:grid-cols-3"
+                            ? "md:grid-cols-5"
+                            : !comboData.shared_validity ||
+                                !comboData.shared_price ||
+                                !comboData.shared_daid
+                              ? "md:grid-cols-4"
+                              : "md:grid-cols-3"
                       }`}
                     >
                       {/* Resource Type Dropdown */}
@@ -1289,6 +1382,7 @@ export default function ProductForm({
                               unit: "MB",
                               validity_hours: undefined,
                               price: undefined,
+                              daid_account: undefined,
                             });
                           }}
                           options={availableResourceTypeOptions}
@@ -1412,6 +1506,30 @@ export default function ProductForm({
                           />
                         </div>
                       )}
+
+                      {/* DAID (if not shared) */}
+                      {!comboData.shared_daid && (
+                        <div>
+                          <label
+                            className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
+                          >
+                            DAID Account
+                          </label>
+                          <input
+                            type="text"
+                            value={tempResourceData.daid_account ?? ""}
+                            onChange={(e) =>
+                              setTempResourceData({
+                                ...tempResourceData,
+                                daid_account: e.target.value || undefined,
+                              })
+                            }
+                            className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm transition-all`}
+                            style={{ borderColor: color.border.default }}
+                            placeholder="Enter DAID"
+                          />
+                        </div>
+                      )}
                     </div>
 
                     {/* Add Resource Button - Below fields */}
@@ -1425,6 +1543,7 @@ export default function ProductForm({
                           tempResourceData.unit,
                           tempResourceData.validity_hours,
                           tempResourceData.price,
+                          tempResourceData.daid_account,
                         );
                       }}
                       disabled={!selectedResourceType}

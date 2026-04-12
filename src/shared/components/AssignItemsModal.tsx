@@ -2,13 +2,13 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import {
   X,
-  Search,
   Check,
   CheckCircle2,
   MessageSquare,
   Package,
   Users,
 } from "lucide-react";
+import SearchInput from "./ui/SearchInput";
 import { color, tw, zIndex } from "../utils/utils";
 import { useToast } from "../../contexts/ToastContext";
 import { useConfirm } from "../../contexts/ConfirmContext";
@@ -1033,16 +1033,11 @@ function AssignItemsModal({
           <div className="p-4 sm:p-6 border-b border-gray-200">
             <div className="flex flex-col sm:flex-row items-center gap-4 flex-wrap">
               {/* Search Bar */}
-              <div className="relative flex-1 w-full sm:w-auto min-w-[200px]">
-                <Search
-                  className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400`}
-                />
-                <input
-                  type="text"
+              <div className="flex-1 w-full sm:w-auto min-w-[200px]">
+                <SearchInput
                   placeholder={`Search ${typeInfo.plural}...`}
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className={`w-full pl-10 pr-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  onChange={(value) => setSearchTerm(value)}
                 />
               </div>
 

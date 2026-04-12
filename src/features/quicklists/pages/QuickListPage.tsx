@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import {
   Plus,
-  Search,
   FileText,
   Eye,
   Edit,
@@ -11,6 +10,7 @@ import {
   CheckCircle,
   XCircle,
 } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import { button, color, tw, components } from "../../../shared/utils/utils";
 import CreateQuickListModal, {
   QuickListFormValues,
@@ -321,16 +321,11 @@ export default function QuickListPage() {
 
       {/* Search */}
       <div className="flex flex-col lg:flex-row gap-4">
-        <div className="flex-1 relative">
-          <Search
-            className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${tw.textMuted}`}
-          />
-          <input
-            type="text"
+        <div className="flex-1">
+          <SearchInput
             placeholder="Search QuickLists by name..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className={`w-full pl-10 pr-4 py-3 text-sm ${components.input.default}`}
+            onChange={(value) => setSearchQuery(value)}
           />
         </div>
       </div>

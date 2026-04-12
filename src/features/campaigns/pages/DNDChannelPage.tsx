@@ -2,13 +2,13 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Plus,
-  Search,
   Trash2,
   UserX,
   UserCheck,
   Mail,
   Minus,
 } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -311,10 +311,8 @@ export default function DNDChannelPage() {
       <div className="my-5">
         <div className="flex flex-col md:flex-row gap-4">
           {/* Search - 80% width */}
-          <div className="relative flex-[0.8]">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
+          <div className="flex-[0.8]">
+            <SearchInput
               placeholder={
                 channelValue === "SMS"
                   ? "Search by name, email, or phone number..."
@@ -323,8 +321,7 @@ export default function DNDChannelPage() {
                     : "Search by name..."
               }
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className={`w-full pl-10 pr-4 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#588157] text-sm`}
+              onChange={(value) => setSearchTerm(value)}
             />
           </div>
 

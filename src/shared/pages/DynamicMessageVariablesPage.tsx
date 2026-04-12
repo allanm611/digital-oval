@@ -6,6 +6,7 @@ import { dynamicMessageVariableService } from '../../features/manual-broadcast/s
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import BackButton from '../components/ui/BackButton';
 import HeadlessSelect from '../components/ui/HeadlessSelect';
+import SearchInput from '../components/ui/SearchInput';
 import { createPortal } from 'react-dom';
 
 interface MessageVariableFieldConfig {
@@ -187,14 +188,11 @@ export default function DynamicMessageVariablesPage() {
 
       {/* Search Bar and Category Filter */}
       <div className="flex gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input
-            type="text"
+        <div className="flex-1">
+          <SearchInput
             placeholder="Search categories..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-gray-400"
+            onChange={(value) => setSearchTerm(value)}
           />
         </div>
         <div className="w-48">

@@ -10,7 +10,8 @@
  */
 
 import { useState, useRef, useEffect, useMemo } from "react";
-import { ChevronRight, Search, Database } from "lucide-react";
+import { ChevronRight, Database } from "lucide-react";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import { tw } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useMessageVariableFields } from "../hooks/useMessageVariableFields";
@@ -202,16 +203,11 @@ export default function CascadingVariableSelector({
               {t.manualBroadcast.selectField}
             </p>
             {/* Search Input */}
-            <div className="relative">
-              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t.manualBroadcast.searchFields}
-                className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-            </div>
+            <SearchInput
+              placeholder={t.manualBroadcast.searchFields}
+              value={searchQuery}
+              onChange={(value) => setSearchQuery(value)}
+            />
           </div>
 
           <div className="max-h-64 overflow-y-auto">
