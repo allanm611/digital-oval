@@ -1192,18 +1192,20 @@ export default function ProductForm({
                       <div className="border-t border-gray-200 p-4 space-y-3">
                         <div
                           className={`grid gap-3 ${
-                            !comboData.shared_validity &&
-                            !comboData.shared_price &&
-                            !comboData.shared_daid
-                              ? "md:grid-cols-6"
+                            selectedResourceType === "utility"
+                              ? "md:grid-cols-4"
                               : !comboData.shared_validity &&
-                                  !comboData.shared_price
-                                ? "md:grid-cols-5"
-                                : !comboData.shared_validity ||
-                                    !comboData.shared_price ||
-                                    !comboData.shared_daid
-                                  ? "md:grid-cols-4"
-                                  : "md:grid-cols-3"
+                                  !comboData.shared_price &&
+                                  !comboData.shared_daid
+                                ? "md:grid-cols-6"
+                                : !comboData.shared_validity &&
+                                    !comboData.shared_price
+                                  ? "md:grid-cols-5"
+                                  : !comboData.shared_validity ||
+                                      !comboData.shared_price ||
+                                      !comboData.shared_daid
+                                    ? "md:grid-cols-4"
+                                    : "md:grid-cols-3"
                           }`}
                         >
                           {/* Resource Type Dropdown */}
