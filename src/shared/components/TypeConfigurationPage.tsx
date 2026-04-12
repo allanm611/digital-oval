@@ -673,7 +673,7 @@ function TypeConfigurationModal({
 
         <form
           onSubmit={handleSubmit}
-          className={`p-6 space-y-4 ${
+          className={`px-6 pb-6 pt-2 space-y-4 ${
             isCreativeTemplate ? "flex-1 overflow-y-auto" : ""
           }`}
         >
@@ -748,7 +748,7 @@ function TypeConfigurationModal({
             </div>
           )}
 
-          {/* Custom Fields (for Languages, Character Sets, SMS Routes, and Routes) */}
+          {/* Custom Fields (for Languages, Character Sets, SMS Routes, Routes, and Notification Types) */}
           {(isLanguage ||
             isCharacterSet ||
             isSmsRoutes ||
@@ -837,6 +837,23 @@ function TypeConfigurationModal({
                   ))}
               </>
             )}
+
+          {/* Status Checkbox */}
+          {config.statusLabel && (
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="status-checkbox"
+                checked={isActive}
+                onChange={(e) => setIsActive(e.target.checked)}
+              />
+              <label
+                htmlFor="status-checkbox"
+                className="text-sm font-medium text-gray-700"
+              >
+                {config.statusLabel}
+              </label>
+            </div>
+          )}
 
           {/* Character String Fields (for Character Sets only) */}
           {isCharacterSet && (
