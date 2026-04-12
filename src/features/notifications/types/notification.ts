@@ -106,3 +106,39 @@ export interface MarkNotificationReadResponse {
   message?: string;
   count?: number;
 }
+
+// Notification Rule Resource interface
+export interface NotificationRuleResource {
+  id?: number;
+  name: string;
+  description?: string;
+  table_name: string;
+  action_type: 'CREATE' | 'UPDATE' | 'DELETE';
+  message_template: string;
+  is_active: boolean;
+  created_at?: Date;
+  updated_at?: Date;
+}
+
+// Response types for notification rules
+export interface GetNotificationRulesResponse {
+  success: boolean;
+  data: NotificationRuleResource[];
+}
+
+export interface CreateNotificationRuleResponse {
+  success: boolean;
+  data?: NotificationRuleResource;
+  message?: string;
+}
+
+export interface UpdateNotificationRuleResponse {
+  success: boolean;
+  data?: NotificationRuleResource;
+  message?: string;
+}
+
+export interface DeleteNotificationRuleResponse {
+  success: boolean;
+  message?: string;
+}

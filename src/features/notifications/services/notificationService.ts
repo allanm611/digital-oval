@@ -5,6 +5,11 @@ import {
   UpdateSubscriptionsRequest,
   UpdateSubscriptionsResponse,
   MarkNotificationReadResponse,
+  NotificationRuleResource,
+  GetNotificationRulesResponse,
+  CreateNotificationRuleResponse,
+  UpdateNotificationRuleResponse,
+  DeleteNotificationRuleResponse,
 } from "../types/notification";
 import { buildApiUrl, getAuthHeaders } from "../../../shared/services/api";
 
@@ -157,6 +162,117 @@ class NotificationService {
       return data;
     } catch (error) {
       console.error("Failed to update notification subscriptions:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * GET /notifications/rules - Get all notification rules
+   * Retrieves all configured notification rules
+   */
+  async getNotificationRules(): Promise<GetNotificationRulesResponse> {
+    try {
+      const url = buildApiUrl("/notifications/rules");
+      const response = await fetch(url, {
+        method: "GET",
+        headers: getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data: GetNotificationRulesResponse = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Failed to fetch notification rules:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * POST /notifications/rules - Create new notification rule
+   * Creates a new notification rule for triggering notifications
+   */
+  async createNotificationRule(
+    rule: NotificationRuleResource
+  ): Promise<CreateNotificationRuleResponse> {
+    try {
+      const url = buildApiUrl("/notifications/rules");
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          ...getAuthHeaders(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(rule),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data: CreateNotificationRuleResponse = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Failed to create notification rule:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * PUT /notifications/rules/:id - Update notification rule
+   * Updates an existing notification rule
+   */
+  async updateNotificationRule(
+    id: number | string,
+    rule: NotificationRuleResource
+  ): Promise<UpdateNotificationRuleResponse> {
+    try {
+      const url = buildApiUrl(`/notifications/rules/${id}`);
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: {
+          ...getAuthHeaders(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(rule),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data: UpdateNotificationRuleResponse = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Failed to update notification rule:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * DELETE /notifications/rules/:id - Delete notification rule
+   * Deletes a notification rule
+   */
+  async deleteNotificationRule(
+    id: number | string
+  ): Promise<DeleteNotificationRuleResponse> {
+    try {
+      const url = buildApiUrl(`/notifications/rules/${id}`);
+      const response = await fetch(url, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data: DeleteNotificationRuleResponse = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Failed to delete notification rule:", error);
       throw error;
     }
   }

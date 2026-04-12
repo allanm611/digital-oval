@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { Search, Calendar, X, Send, Edit, Trash2 } from "lucide-react";
+import { Calendar, X, Send, Edit, Trash2, Eye } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -28,6 +28,7 @@ import { PermissionGate } from "../../auth/components/PermissionGate";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useToast } from "../../../contexts/ToastContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import CreateCommunicationModal from "../../../shared/components/CreateCommunicationModal";
 import EditCustomerModal from "../components/EditCustomerModal";
 import type { CustomerSubscriptionRecord } from "../types/customerSubscription";
@@ -447,8 +448,407 @@ export default function CustomerDetailPage() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCommunicateModalOpen, setIsCommunicateModalOpen] = useState(false);
+  const [kpiSearchTerm, setKpiSearchTerm] = useState<string>("");
+  const [expandedKpi, setExpandedKpi] = useState<string | null>(null);
+  const [isKpiModalOpen, setIsKpiModalOpen] = useState(false);
+  const [selectedKpiForModal, setSelectedKpiForModal] = useState<KpiData | null>(null);
   const { t } = useLanguage();
   const { success: showSuccess, error: showError } = useToast();
+
+  // KPI Data Structure
+  type KpiData = {
+    id: string;
+    name: string;
+    category: string;
+    value: string | number;
+    unit?: string;
+    description: string;
+    trend?: "up" | "down" | "neutral";
+    trendPercent?: number;
+    detailedInfo: string | React.ReactNode;
+  };
+
+  const generateKpiData = (): KpiData[] => [
+    // Revenue KPIs
+    {
+      id: "ltv",
+      name: "Lifetime Value",
+      category: "Revenue",
+      value: "285,450.50",
+      unit: "KES",
+      description: "Total revenue generated from airtime and services",
+      trend: "up",
+      trendPercent: 12.5,
+      detailedInfo: (
+        <div className="space-y-3">
+          <div>
+            <p className="text-xs font-semibold text-gray-700 mb-1">Revenue Breakdown:</p>
+            <ul className="text-sm text-gray-900 space-y-1 list-disc list-inside">
+              <li>Voice Services: 98,450 KES</li>
+              <li>SMS Services: 125,000 KES</li>
+              <li>Data Bundles: 45,500 KES</li>
+              <li>Value Added Services: 16,500 KES</li>
+            </ul>
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-gray-700 mb-1">Projection:</p>
+            <p className="text-sm text-gray-900">Customer is on trajectory for 15% growth over next quarter based on consistent usage patterns. Recommended for premium tier upgrade.</p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "monthly-revenue",
+      name: "Monthly Revenue",
+      category: "Revenue",
+      value: "12,450",
+      unit: "KES",
+      description: "Average monthly spending on telecom services",
+      trend: "up",
+      trendPercent: 8,
+      detailedInfo: (
+        <div className="space-y-3">
+          <div>
+            <p className="text-xs font-semibold text-gray-700 mb-1">Monthly Spending Pattern:</p>
+            <ul className="text-sm text-gray-900 space-y-1 list-disc list-inside">
+              <li>Last Month: 12,450 KES</li>
+              <li>Previous Month: 11,520 KES</li>
+              <li>3-Month Average: 11,850 KES</li>
+            </ul>
+          </div>
+          <p className="text-sm text-gray-900">Customer shows consistent monthly spending with growth trend. Primary usage: voice calls (62%) and SMS (28%).</p>
+        </div>
+      ),
+    },
+    {
+      id: "arpu",
+      name: "ARPU (Avg. Revenue Per User)",
+      category: "Revenue",
+      value: "385",
+      unit: "KES/day",
+      description: "Daily revenue per user on average",
+      trend: "neutral",
+      trendPercent: 0,
+      detailedInfo: (
+        <div className="space-y-3">
+          <p className="text-sm text-gray-900">ARPU measures daily revenue efficiency. Current ARPU of 385 KES/day is stable compared to network average of 320 KES/day, indicating above-average usage.</p>
+          <div>
+            <p className="text-xs font-semibold text-gray-700 mb-1">Usage Pattern:</p>
+            <p className="text-sm text-gray-900">Highest usage weekdays (6-9 PM). Peak spending: Monday through Thursday. Weekend usage drops 18%.</p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "bundle-purchases",
+      name: "Bundle Purchases",
+      category: "Revenue",
+      value: 42,
+      description: "Number of data/voice bundles purchased",
+      trend: "up",
+      trendPercent: 15,
+      detailedInfo: (
+        <div className="space-y-3">
+          <p className="text-sm text-gray-900">Customer has purchased 42 bundles in total. Recent bundle activity shows strong engagement.</p>
+          <div>
+            <p className="text-xs font-semibold text-gray-700 mb-1">Recent Bundle History:</p>
+            <ul className="text-sm text-gray-900 space-y-1 list-disc list-inside">
+              <li>Last 7 days: 3 bundles purchased</li>
+              <li>Last 30 days: 8 bundles purchased</li>
+              <li>Most Popular: 5GB Data Bundle (24% of purchases)</li>
+              <li>Average Bundle Value: 4,550 KES</li>
+            </ul>
+          </div>
+        </div>
+      ),
+    },
+
+    // Usage KPIs
+    {
+      id: "voice-minutes",
+      name: "Voice Minutes (Monthly)",
+      category: "Usage",
+      value: "3,450",
+      unit: "mins",
+      description: "Average monthly voice call minutes",
+      trend: "up",
+      trendPercent: 6,
+      detailedInfo: (
+        <div className="space-y-3">
+          <div>
+            <p className="text-xs font-semibold text-gray-700 mb-1">Voice Usage Breakdown:</p>
+            <ul className="text-sm text-gray-900 space-y-1 list-disc list-inside">
+              <li>On-Net Calls: 2,100 mins (61%)</li>
+              <li>Off-Net Calls: 980 mins (28%)</li>
+              <li>International: 370 mins (11%)</li>
+            </ul>
+          </div>
+          <p className="text-sm text-gray-900">Usage shows steady engagement. Average call duration: 4.2 minutes. Peak usage period: 7-9 PM weekdays.</p>
+        </div>
+      ),
+    },
+    {
+      id: "sms-count",
+      name: "SMS Volume (Monthly)",
+      category: "Usage",
+      value: "8,230",
+      unit: "msgs",
+      description: "Total SMS messages sent/received monthly",
+      trend: "up",
+      trendPercent: 9,
+      detailedInfo: (
+        <div className="space-y-3">
+          <div>
+            <p className="text-xs font-semibold text-gray-700 mb-1">SMS Breakdown:</p>
+            <ul className="text-sm text-gray-900 space-y-1 list-disc list-inside">
+              <li>Outbound SMS: 6,540 msgs</li>
+              <li>Inbound SMS: 1,690 msgs</li>
+              <li>Business SMS: 450 msgs (via API)</li>
+            </ul>
+          </div>
+          <p className="text-sm text-gray-900">High SMS usage indicates customer relies on text messaging. Strong candidate for SMS-based services and promotions.</p>
+        </div>
+      ),
+    },
+    {
+      id: "data-usage",
+      name: "Data Usage (Monthly)",
+      category: "Usage",
+      value: "12.5",
+      unit: "GB",
+      description: "Average monthly data consumption",
+      trend: "up",
+      trendPercent: 18,
+      detailedInfo: (
+        <div className="space-y-3">
+          <div>
+            <p className="text-xs font-semibold text-gray-700 mb-1">Data Usage Pattern:</p>
+            <ul className="text-sm text-gray-900 space-y-1 list-disc list-inside">
+              <li>2G/3G/4G: 3.2 GB</li>
+              <li>WiFi: 9.3 GB</li>
+              <li>Peak Time Usage: 7-11 PM</li>
+            </ul>
+          </div>
+          <p className="text-sm text-gray-900">Data usage trending up (18% MoM). Likely streaming/social media user. Recommend promoting high-capacity bundles.</p>
+        </div>
+      ),
+    },
+    {
+      id: "active-days",
+      name: "Active Days (Monthly)",
+      category: "Usage",
+      value: 28,
+      unit: "days",
+      description: "Days per month with network activity",
+      trend: "up",
+      trendPercent: 3,
+      detailedInfo: (
+        <div className="space-y-3">
+          <p className="text-sm text-gray-900">Customer is highly active with 28 out of 30 days showing network engagement. Only 2 inactive days in current month.</p>
+          <div>
+            <p className="text-xs font-semibold text-gray-700 mb-1">Activity Consistency:</p>
+            <ul className="text-sm text-gray-900 space-y-1 list-disc list-inside">
+              <li>Average Daily Transactions: 8-12</li>
+              <li>Longest Gap: 1 day (April 10)</li>
+              <li>Reliability Score: 93% (Very High)</li>
+            </ul>
+          </div>
+        </div>
+      ),
+    },
+
+    // Engagement KPIs
+    {
+      id: "engagement-score",
+      name: "Engagement Score",
+      category: "Engagement",
+      value: 88,
+      unit: "/100",
+      description: "Overall service engagement level",
+      trend: "up",
+      trendPercent: 8,
+      detailedInfo: (
+        <div className="space-y-3">
+          <p className="text-sm text-gray-900">Excellent engagement score indicates highly active user with consistent service usage patterns.</p>
+          <div>
+            <p className="text-xs font-semibold text-gray-700 mb-1">Engagement Factors:</p>
+            <ul className="text-sm text-gray-900 space-y-1 list-disc list-inside">
+              <li>Daily Active Usage: 9/10</li>
+              <li>Bundle Purchase Rate: 8/10</li>
+              <li>Service Utilization: 9/10</li>
+              <li>Retention Likelihood: 9/10</li>
+            </ul>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "promo-response",
+      name: "Promo Response Rate",
+      category: "Engagement",
+      value: "68.5%",
+      description: "Percentage of promotions customer engages with",
+      trend: "up",
+      trendPercent: 12,
+      detailedInfo: (
+        <div className="space-y-3">
+          <p className="text-sm text-gray-900">Customer shows strong response to promotional campaigns. 68.5% engagement rate is significantly above network average of 32%.</p>
+          <div>
+            <p className="text-xs font-semibold text-gray-700 mb-1">Campaign Performance:</p>
+            <ul className="text-sm text-gray-900 space-y-1 list-disc list-inside">
+              <li>Last Campaign: 85% engagement (Bonus Minutes Offer)</li>
+              <li>Data Bundle Promo: 72% engagement</li>
+              <li>SMS Promo: 58% engagement</li>
+              <li>Best Time for Offers: 8-10 AM</li>
+            </ul>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "customer-service",
+      name: "Customer Service Contacts",
+      category: "Engagement",
+      value: 3,
+      description: "Support interactions in last 30 days",
+      trend: "down",
+      trendPercent: -15,
+      detailedInfo: (
+        <div className="space-y-3">
+          <p className="text-sm text-gray-900">Low support contact rate indicates satisfied customer with minimal issues. No complaints on file.</p>
+          <div>
+            <p className="text-xs font-semibold text-gray-700 mb-1">Recent Contacts:</p>
+            <ul className="text-sm text-gray-900 space-y-1 list-disc list-inside">
+              <li>Apr 8: Billing Inquiry (Resolved)</li>
+              <li>Mar 25: Plan Upgrade Assistance (Completed)</li>
+              <li>Mar 10: General Information (Resolved)</li>
+              <li>Satisfaction Score: 4.8/5</li>
+            </ul>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "days-since-contact",
+      name: "Days Since Last Contact",
+      category: "Engagement",
+      value: 4,
+      unit: "days",
+      description: "Days since last customer service interaction",
+      trend: "down",
+      trendPercent: -25,
+      detailedInfo: (
+        <div className="space-y-3">
+          <p className="text-sm text-gray-900">Last contact was on April 8, 2026. Customer reached out for billing inquiry which was promptly resolved.</p>
+          <div>
+            <p className="text-xs font-semibold text-gray-700 mb-1">Contact Summary:</p>
+            <p className="text-sm text-gray-900">Recent decrease in contact frequency suggests customer satisfaction. Most interactions are informational rather than complaint-based.</p>
+          </div>
+        </div>
+      ),
+    },
+
+    // Retention KPIs
+    {
+      id: "churn-risk",
+      name: "Churn Risk Score",
+      category: "Retention",
+      value: 12,
+      unit: "/100",
+      description: "Likelihood of switching providers (lower is better)",
+      trend: "down",
+      trendPercent: -8,
+      detailedInfo: (
+        <div className="space-y-3">
+          <p className="text-sm text-gray-900">Very low churn risk. Customer shows strong loyalty indicators and consistent high engagement.</p>
+          <div>
+            <p className="text-xs font-semibold text-gray-700 mb-1">Risk Factors Analysis:</p>
+            <ul className="text-sm text-gray-900 space-y-1 list-disc list-inside">
+              <li>Revenue Trend: Positive ↑</li>
+              <li>Usage Consistency: Excellent</li>
+              <li>Customer Satisfaction: High (4.8/5)</li>
+              <li>Account Issues: None</li>
+            </ul>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "customer-lifetime",
+      name: "Account Tenure",
+      category: "Retention",
+      value: "3 years",
+      description: "How long customer has been registered",
+      trend: "neutral",
+      trendPercent: 0,
+      detailedInfo: (
+        <div className="space-y-3">
+          <p className="text-sm text-gray-900">Long-standing customer since April 2023. Demonstrates loyalty and stable relationship.</p>
+          <div>
+            <p className="text-xs font-semibold text-gray-700 mb-1">Account History:</p>
+            <ul className="text-sm text-gray-900 space-y-1 list-disc list-inside">
+              <li>Activation Date: April 12, 2023</li>
+              <li>Account Age: 3 years</li>
+              <li>Account Status: Active & In Good Standing</li>
+              <li>Previous Plan Changes: 2 (both upgrades)</li>
+            </ul>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "rfm-score",
+      name: "RFM Score",
+      category: "Retention",
+      value: "953",
+      description: "Recency, Frequency, Monetary combined score",
+      trend: "up",
+      trendPercent: 9,
+      detailedInfo: (
+        <div className="space-y-3">
+          <p className="text-sm text-gray-900">Excellent RFM score of 953 indicates a highly valuable customer who is active, frequent user with high spending.</p>
+          <div>
+            <p className="text-xs font-semibold text-gray-700 mb-1">RFM Breakdown:</p>
+            <ul className="text-sm text-gray-900 space-y-1 list-disc list-inside">
+              <li>Recency (R): 9/10 - Active recently</li>
+              <li>Frequency (F): 5/10 - Multiple transactions daily</li>
+              <li>Monetary (M): 9/10 - High spending level</li>
+            </ul>
+          </div>
+          <p className="text-sm text-gray-900">Segment: Champions - Best customers. Prioritize for VIP programs and retention.</p>
+        </div>
+      ),
+    },
+    {
+      id: "winback-potential",
+      name: "Win-Back Potential",
+      category: "Retention",
+      value: "Low",
+      description: "Possibility of re-engaging inactive customer",
+      trend: "neutral",
+      trendPercent: 0,
+      detailedInfo: (
+        <div className="space-y-3">
+          <p className="text-sm text-gray-900">Win-back potential is LOW because customer is already highly engaged. Not an at-risk segment.</p>
+          <div>
+            <p className="text-xs font-semibold text-gray-700 mb-1">Retention Strategy:</p>
+            <ul className="text-sm text-gray-900 space-y-1 list-disc list-inside">
+              <li>Focus: Upgrade and Cross-sell opportunities</li>
+              <li>Recommended Action: VIP loyalty program enrollment</li>
+              <li>Next Offer: Premium Data Bundles or International Roaming</li>
+            </ul>
+          </div>
+        </div>
+      ),
+    },
+  ];
+
+  const kpiList = generateKpiData();
+  
+  const filteredKpis = kpiList.filter((kpi) =>
+    kpi.name.toLowerCase().includes(kpiSearchTerm.toLowerCase()) ||
+    kpi.category.toLowerCase().includes(kpiSearchTerm.toLowerCase())
+  );
 
   // Pagination states for the 4 tables
   const [eventPage, setEventPage] = useState(1);
@@ -920,40 +1320,315 @@ export default function CustomerDetailPage() {
 
         {/* Content */}
         {activeTab === "overview" && (
-          <div
-            className={`bg-white border border-gray-200 ${tw.rounded} overflow-hidden`}
-          >
-            <div className="p-6 space-y-6">
-              {overviewSections.map((section) => (
-                <div key={section.title} className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-base font-semibold text-gray-900">
-                      {section.title}
-                    </h3>
+          <div className="space-y-6">
+            {/* Customer Information Section */}
+            <div
+              className={`bg-white border border-gray-200 ${tw.rounded} overflow-hidden`}
+            >
+              <div className="p-6 space-y-6">
+                {overviewSections.map((section) => (
+                  <div key={section.title} className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-base font-semibold text-gray-900">
+                        {section.title}
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {section.items.map(({ label, value }) => (
+                        <div
+                          key={`${section.title}-${label}`}
+                          className={`${tw.rounded} border border-gray-100 bg-gray-50 px-4 py-3`}
+                        >
+                          <p className="text-xs uppercase text-gray-500">
+                            {label}
+                          </p>
+                          <p className="mt-1 text-sm font-semibold text-gray-900 break-words">
+                            {value ?? "—"}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {section.items.map(({ label, value }) => (
-                      <div
-                        key={`${section.title}-${label}`}
-                        className={`${tw.rounded} border border-gray-100 bg-gray-50 px-4 py-3`}
+                ))}
+                {!selectedSubscription && (
+                  <p className="text-sm text-gray-500">
+                    Detailed subscription data is unavailable for this record.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* KPIs Section */}
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Key Performance Indicators
+                </h3>
+                
+                {/* KPI Search Bar */}
+                <div className="mb-6">
+                  <SearchInput
+                    placeholder="Search KPIs by name or category..."
+                    value={kpiSearchTerm}
+                    onChange={setKpiSearchTerm}
+                  />
+                </div>
+
+                {/* KPIs Table */}
+                {filteredKpis.length === 0 ? (
+                  <p className="text-sm text-gray-500 text-center py-8">
+                    No KPIs found matching "{kpiSearchTerm}"
+                  </p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table
+                      className="w-full text-sm"
+                      style={{ borderCollapse: "separate", borderSpacing: "0 12px" }}
+                    >
+                      <thead
+                        className="text-xs uppercase tracking-wide"
+                        style={{ background: color.surface.tableHeader }}
                       >
-                        <p className="text-xs uppercase text-gray-500">
-                          {label}
+                        <tr>
+                          <th
+                            className="px-6 py-3 text-left text-gray-900 font-semibold"
+                          >
+                            KPI Name
+                          </th>
+                          <th
+                            className="px-6 py-3 text-left text-gray-900 font-semibold"
+                          >
+                            Category
+                          </th>
+                          <th
+                            className="px-6 py-3 text-left text-gray-900 font-semibold"
+                          >
+                            Value
+                          </th>
+                          <th
+                            className="px-6 py-3 text-left text-gray-900 font-semibold"
+                          >
+                            Trend
+                          </th>
+                          <th
+                            className="px-6 py-3 text-left text-gray-900 font-semibold"
+                          >
+                            Description
+                          </th>
+                          <th
+                            className="px-6 py-3 text-center text-gray-900 font-semibold"
+                          >
+                            Action
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {kpiList.filter((kpi) =>
+                          kpi.name.toLowerCase().includes(kpiSearchTerm.toLowerCase()) ||
+                          kpi.category.toLowerCase().includes(kpiSearchTerm.toLowerCase())
+                        ).map((kpi) => (
+                          <tr
+                            key={kpi.id}
+                            style={{
+                              backgroundColor: color.surface.tablebodybg,
+                            }}
+                          >
+                            <td
+                              className="rounded-l-md px-6 py-4 text-sm text-gray-900 font-semibold"
+                              style={{
+                                backgroundColor: color.surface.tablebodybg,
+                              }}
+                            >
+                              {kpi.name}
+                            </td>
+                            <td
+                              className="px-6 py-4 text-sm text-gray-900"
+                              style={{
+                                backgroundColor: color.surface.tablebodybg,
+                              }}
+                            >
+                              {kpi.category}
+                            </td>
+                            <td
+                              className="px-6 py-4 text-sm text-gray-900 font-bold"
+                              style={{
+                                backgroundColor: color.surface.tablebodybg,
+                              }}
+                            >
+                              {kpi.value}
+                              {kpi.unit && (
+                                <span className="text-xs text-gray-500 ml-1">
+                                  {kpi.unit}
+                                </span>
+                              )}
+                            </td>
+                            <td
+                              className="px-6 py-4 text-sm text-gray-900"
+                              style={{
+                                backgroundColor: color.surface.tablebodybg,
+                              }}
+                            >
+                              {kpi.trend && (
+                                <span className="text-sm font-semibold">
+                                  {kpi.trend === "up" && "↑"}
+                                  {kpi.trend === "down" && "↓"}
+                                  {kpi.trend === "neutral" && "→"}
+                                  {kpi.trendPercent &&
+                                    ` ${Math.abs(kpi.trendPercent)}%`}
+                                </span>
+                              )}
+                            </td>
+                            <td
+                              className="px-6 py-4 text-sm text-gray-900"
+                              style={{
+                                backgroundColor: color.surface.tablebodybg,
+                              }}
+                            >
+                              {kpi.description}
+                            </td>
+                            <td
+                              className="rounded-r-md px-6 py-4 text-center"
+                              style={{
+                                backgroundColor: color.surface.tablebodybg,
+                              }}
+                            >
+                              <button
+                                onClick={() => {
+                                  setSelectedKpiForModal(kpi);
+                                  setIsKpiModalOpen(true);
+                                }}
+                                className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-gray-200 text-gray-600 hover:text-gray-900 transition-colors"
+                                title="View details"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* KPI Details Modal */}
+            {isKpiModalOpen && selectedKpiForModal && (
+              <div
+                className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+                style={{ zIndex: 9999 }}
+                onClick={() => setIsKpiModalOpen(false)}
+              >
+                <div
+                  className={`bg-white ${tw.rounded} w-full max-w-3xl shadow-xl`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Header */}
+                  <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50">
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-900">
+                        {selectedKpiForModal.name}
+                      </h2>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {selectedKpiForModal.description}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setIsKpiModalOpen(false)}
+                      className="text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-8 space-y-8">
+                    {/* Value Card */}
+                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-6 border border-gray-200">
+                      <p className="text-xs uppercase text-gray-600 font-semibold mb-3 tracking-wider">
+                        Current Value
+                      </p>
+                      <div className="flex items-baseline justify-between">
+                        <p className="text-4xl font-bold text-gray-900">
+                          {selectedKpiForModal.value}
                         </p>
-                        <p className="mt-1 text-sm font-semibold text-gray-900 break-words">
-                          {value ?? "—"}
+                        {selectedKpiForModal.unit && (
+                          <span className="text-lg text-gray-700 font-semibold">
+                            {selectedKpiForModal.unit}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Key Metrics Grid */}
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="border border-gray-200 rounded-lg p-4">
+                        <p className="text-xs uppercase text-gray-600 font-semibold mb-2">
+                          Category
+                        </p>
+                        <p className="text-base font-semibold text-gray-900">
+                          {selectedKpiForModal.category}
                         </p>
                       </div>
-                    ))}
+                      {selectedKpiForModal.trend && (
+                        <div className="border border-gray-200 rounded-lg p-4">
+                          <p className="text-xs uppercase text-gray-600 font-semibold mb-2">
+                            Trend
+                          </p>
+                          <p className="text-base font-semibold text-gray-900">
+                            {selectedKpiForModal.trend === "up" && (
+                              <span>↑ +{selectedKpiForModal.trendPercent}%</span>
+                            )}
+                            {selectedKpiForModal.trend === "down" && (
+                              <span>↓ {selectedKpiForModal.trendPercent}%</span>
+                            )}
+                            {selectedKpiForModal.trend === "neutral" && (
+                              <span>→ Stable</span>
+                            )}
+                          </p>
+                        </div>
+                      )}
+                      <div className="border border-gray-200 rounded-lg p-4">
+                        <p className="text-xs uppercase text-gray-600 font-semibold mb-2">
+                          Status
+                        </p>
+                        <p className="text-base font-semibold text-gray-900">
+                          {selectedKpiForModal.trend === "up" && "Improving"}
+                          {selectedKpiForModal.trend === "down" && "Declining"}
+                          {selectedKpiForModal.trend === "neutral" && "Stable"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Detailed Information */}
+                    <div className="border-t border-gray-200 pt-6">
+                      <p className="text-sm uppercase text-gray-700 font-bold mb-4 tracking-wider">
+                        Detailed Breakdown
+                      </p>
+                      <div className="bg-gray-50 rounded-lg p-6 text-gray-900 leading-relaxed">
+                        {typeof selectedKpiForModal.detailedInfo === "string" ? (
+                          <p className="text-sm">{selectedKpiForModal.detailedInfo}</p>
+                        ) : (
+                          <div className="text-sm space-y-3">
+                            {selectedKpiForModal.detailedInfo}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="p-6 border-t border-gray-200 bg-gray-50 flex justify-end gap-3">
+                    <button
+                      onClick={() => setIsKpiModalOpen(false)}
+                      className="px-6 py-2.5 bg-gray-100 text-gray-900 hover:bg-gray-200 rounded font-medium text-sm transition-colors"
+                    >
+                      Close
+                    </button>
                   </div>
                 </div>
-              ))}
-              {!selectedSubscription && (
-                <p className="text-sm text-gray-500">
-                  Detailed subscription data is unavailable for this record.
-                </p>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         )}
 
