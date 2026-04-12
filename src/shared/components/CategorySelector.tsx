@@ -33,6 +33,7 @@ export default function CategorySelector({
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isFocused, setIsFocused] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -114,21 +115,18 @@ export default function CategorySelector({
           disabled={disabled}
           className={`flex-1 px-4 py-2.5 text-left border ${tw.rounded} text-sm transition-all ${
             disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"
+          } ${
+            isFocused
+              ? "border-blue-500 ring-2 ring-blue-500/20"
+              : "border-gray-300"
           }`}
           style={{
-            borderColor: color.border.default,
             outline: "none",
             borderTopRightRadius: allowCreate ? "0" : undefined,
             borderBottomRightRadius: allowCreate ? "0" : undefined,
           }}
-          onFocus={(e) => {
-            e.target.style.borderColor = color.primary.accent;
-            e.target.style.boxShadow = `0 0 0 3px ${color.primary.accent}20`;
-          }}
-          onBlur={(e) => {
-            e.target.style.borderColor = color.border.default;
-            e.target.style.boxShadow = "none";
-          }}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
         >
           <div className="flex items-center justify-between">
             <span

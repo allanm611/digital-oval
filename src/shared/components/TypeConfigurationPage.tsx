@@ -39,6 +39,7 @@ import CreateButton from "./ui/CreateButton";
 import LoadingSpinner from "./ui/LoadingSpinner";
 import DeleteConfirmModal from "./ui/DeleteConfirmModal";
 import Checkbox from "./ui/Checkbox";
+import Input from "./ui/Input";
 
 export interface TypeConfigurationItem extends ConfigurationItem {
   isActive?: boolean;
@@ -688,15 +689,14 @@ function TypeConfigurationModal({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               {config.nameLabel} {config.nameRequired && "*"}
             </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+            <Input
               placeholder={t.genericConfig.enter.replace(
                 "{field}",
                 config.nameLabel.toLowerCase(),
               )}
+              value={name}
+              onChange={(value) => setName(value)}
+              variant="medium"
               maxLength={config.nameMaxLength}
               required={config.nameRequired}
             />
@@ -734,6 +734,13 @@ function TypeConfigurationModal({
                   }
                   options={config.metadataField.options || []}
                   placeholder={config.metadataField.placeholder}
+                />
+              ) : config.metadataField.type === "text" ? (
+                <Input
+                  placeholder={config.metadataField.placeholder}
+                  value={String(metadataValue || "")}
+                  onChange={(value) => setMetadataValue(value)}
+                  variant="medium"
                 />
               ) : (
                 <input
@@ -827,17 +834,16 @@ function TypeConfigurationModal({
                           required={field.required}
                         />
                       ) : (
-                        <input
-                          type="text"
+                        <Input
+                          placeholder={field.placeholder}
                           value={customFields[field.fieldKey] || ""}
-                          onChange={(e) =>
+                          onChange={(value) =>
                             setCustomFields((prev) => ({
                               ...prev,
-                              [field.fieldKey]: e.target.value,
+                              [field.fieldKey]: value,
                             }))
                           }
-                          className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
-                          placeholder={field.placeholder}
+                          variant="medium"
                           required={field.required}
                         />
                       )}
@@ -959,12 +965,11 @@ function TypeConfigurationModal({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Code *
                 </label>
-                <input
-                  type="text"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                <Input
                   placeholder="e.g., WELCOME_SMS, PROMOTION_EMAIL"
+                  value={code}
+                  onChange={(value) => setCode(value)}
+                  variant="medium"
                   required
                 />
                 <p className="text-xs text-gray-500 mt-1">
@@ -1022,12 +1027,11 @@ function TypeConfigurationModal({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   {t.genericConfig.titleOptional}
                 </label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                <Input
                   placeholder={t.genericConfig.enterTemplateTitle}
+                  value={title}
+                  onChange={(value) => setTitle(value)}
+                  variant="medium"
                   maxLength={160}
                 />
                 <p className="text-xs text-gray-500 mt-1">
@@ -1126,42 +1130,45 @@ function TypeConfigurationModal({
                       </p>
                       <p className="text-sm text-gray-500">{resource.unit}</p>
                     </div>
-                    <input
-                      type="text"
-                      value={resource.value}
-                      onChange={(e) => {
-                        const updated = [...comboResources];
-                        updated[idx].value = e.target.value;
-                        setComboResources(updated);
-                      }}
-                      className="col-span-1 px-3 py-2 border border-gray-300 rounded text-sm"
-                      placeholder="Value"
-                    />
-                    {!comboSharedValidity && (
-                      <input
-                        type="text"
-                        value={resource.sharedValidityHours}
-                        onChange={(e) => {
+                    <div className="col-span-1">
+                      <Input
+                        placeholder="Value"
+                        value={resource.value}
+                        onChange={(value) => {
                           const updated = [...comboResources];
-                          updated[idx].sharedValidityHours = e.target.value;
+                          updated[idx].value = value;
                           setComboResources(updated);
                         }}
-                        className="col-span-1 px-3 py-2 border border-gray-300 rounded text-sm"
-                        placeholder="Hours"
+                        variant="medium"
                       />
+                    </div>
+                    {!comboSharedValidity && (
+                      <div className="col-span-1">
+                        <Input
+                          placeholder="Hours"
+                          value={resource.sharedValidityHours}
+                          onChange={(value) => {
+                            const updated = [...comboResources];
+                            updated[idx].sharedValidityHours = value;
+                            setComboResources(updated);
+                          }}
+                          variant="medium"
+                        />
+                      </div>
                     )}
                     {!comboSharedPrice && (
-                      <input
-                        type="text"
-                        value={resource.price ?? ""}
-                        onChange={(e) => {
-                          const updated = [...comboResources];
-                          updated[idx].price = e.target.value;
-                          setComboResources(updated);
-                        }}
-                        className="col-span-1 px-3 py-2 border border-gray-300 rounded text-sm"
-                        placeholder="Price"
-                      />
+                      <div className="col-span-1">
+                        <Input
+                          placeholder="Price"
+                          value={resource.price ?? ""}
+                          onChange={(value) => {
+                            const updated = [...comboResources];
+                            updated[idx].price = value;
+                            setComboResources(updated);
+                          }}
+                          variant="medium"
+                        />
+                      </div>
                     )}
                     <button
                       type="button"
@@ -1244,17 +1251,16 @@ function TypeConfigurationModal({
                     <label className="block text-xs font-medium text-gray-700 mb-2">
                       Value
                     </label>
-                    <input
-                      type="text"
+                    <Input
+                      placeholder="Enter value"
                       value={tempResourceData.value}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setTempResourceData({
                           ...tempResourceData,
-                          value: e.target.value,
+                          value: value,
                         })
                       }
-                      className="w-full px-3 py-2.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter value"
+                      variant="medium"
                     />
                   </div>
 
@@ -1263,17 +1269,16 @@ function TypeConfigurationModal({
                       <label className="block text-xs font-medium text-gray-700 mb-2">
                         Validity (Hours)
                       </label>
-                      <input
-                        type="text"
+                      <Input
+                        placeholder="Hours"
                         value={tempResourceData.sharedValidityHours}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setTempResourceData({
                             ...tempResourceData,
-                            sharedValidityHours: e.target.value,
+                            sharedValidityHours: value,
                           })
                         }
-                        className="w-full px-3 py-2.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Hours"
+                        variant="medium"
                       />
                     </div>
                   )}
@@ -1283,17 +1288,16 @@ function TypeConfigurationModal({
                       <label className="block text-xs font-medium text-gray-700 mb-2">
                         Price
                       </label>
-                      <input
-                        type="text"
+                      <Input
+                        placeholder="Price"
                         value={tempResourceData.price}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setTempResourceData({
                             ...tempResourceData,
-                            price: e.target.value,
+                            price: value,
                           })
                         }
-                        className="w-full px-3 py-2.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Price"
+                        variant="medium"
                       />
                     </div>
                   )}
@@ -1402,11 +1406,11 @@ function TypeConfigurationModal({
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Validity Hours
                       </label>
-                      <input
-                        type="text"
+                      <Input
+                        placeholder="e.g., 720"
                         value={comboValidityHours}
-                        onChange={(e) => {
-                          const newHours = e.target.value;
+                        onChange={(value) => {
+                          const newHours = value;
                           setComboValidityHours(newHours);
                           setComboResources(
                             comboResources.map((r) => ({
@@ -1415,8 +1419,7 @@ function TypeConfigurationModal({
                             })),
                           );
                         }}
-                        className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500`}
-                        placeholder="e.g., 720"
+                        variant="medium"
                       />
                     </div>
                   )}
@@ -1426,12 +1429,11 @@ function TypeConfigurationModal({
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Combo Price <span className="text-red-600">*</span>
                       </label>
-                      <input
-                        type="text"
-                        value={comboPrice ?? ""}
-                        onChange={(e) => setComboPrice(e.target.value)}
-                        className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500`}
+                      <Input
                         placeholder="Enter price"
+                        value={comboPrice ?? ""}
+                        onChange={(value) => setComboPrice(value)}
+                        variant="medium"
                       />
                     </div>
                   )}

@@ -11,6 +11,7 @@ import {
 import MultiCategorySelector from "../../../shared/components/MultiCategorySelector";
 import CreateCategoryModal from "../../../shared/components/CreateCategoryModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import Input from "../../../shared/components/ui/Input";
 import { TypeConfigurationItem } from "../../../shared/components/TypeConfigurationPage";
 import { tw, color, zIndex } from "../../../shared/utils/utils";
 import { buttons } from "../../../shared/utils/tokens";
@@ -483,13 +484,11 @@ export default function ProductForm({
                   {t.products.form.productName}{" "}
                   <span style={{ color: color.status.danger }}>*</span>
                 </label>
-                <input
-                  type="text"
-                  name="name"
-                  required
+                <Input
+                  placeholder={t.products.form.enterProductName}
                   value={formData.name || ""}
-                  onChange={(e) => {
-                    onInputChange("name", e.target.value);
+                  onChange={(value) => {
+                    onInputChange("name", value);
                     if (errors.name) {
                       setErrors((prev) => {
                         const newErrors = { ...prev };
@@ -498,18 +497,10 @@ export default function ProductForm({
                       });
                     }
                   }}
-                  className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all outline-none ${
-                    focusedField === "name"
-                      ? errors.name
-                        ? "border-red-500 ring-2 ring-red-500/20"
-                        : "border-blue-500 ring-2 ring-blue-500/20"
-                      : errors.name
-                        ? "border-red-500"
-                        : "border-gray-300"
-                  }`}
-                  placeholder={t.products.form.enterProductName}
+                  hasError={!!errors.name}
                   onFocus={() => setFocusedField("name")}
                   onBlur={() => setFocusedField(null)}
+                  required
                 />
                 {errors.name && (
                   <p
@@ -542,26 +533,16 @@ export default function ProductForm({
                   {t.products.form.productCode}{" "}
                   <span style={{ color: color.status.danger }}>*</span>
                 </label>
-                <input
-                  type="text"
-                  name="product_code"
-                  required
-                  value={formData.product_code || ""}
-                  onChange={(e) =>
-                    onInputChange("product_code", e.target.value)
-                  }
-                  className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all outline-none ${
-                    focusedField === "product_code"
-                      ? errors.product_code
-                        ? "border-red-500 ring-2 ring-red-500/20"
-                        : "border-blue-500 ring-2 ring-blue-500/20"
-                      : errors.product_code
-                        ? "border-red-500"
-                        : "border-gray-300"
-                  }`}
+                <Input
                   placeholder={t.products.form.enterProductCode}
+                  value={formData.product_code || ""}
+                  onChange={(value) =>
+                    onInputChange("product_code", value)
+                  }
+                  hasError={!!errors.product_code}
                   onFocus={() => setFocusedField("product_code")}
                   onBlur={() => setFocusedField(null)}
+                  required
                 />
                 {errors.product_code && (
                   <p
@@ -597,24 +578,14 @@ export default function ProductForm({
                   DA ID <span style={{ color: color.status.danger }}>*</span>
                 </label>
                 {/* Note: DA ID does not have a translation key in the requirements */}
-                <input
-                  type="text"
-                  name="da_id"
-                  required
-                  value={formData.da_id || ""}
-                  onChange={(e) => onInputChange("da_id", e.target.value)}
-                  className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all outline-none ${
-                    focusedField === "da_id"
-                      ? errors.da_id
-                        ? "border-red-500 ring-2 ring-red-500/20"
-                        : "border-blue-500 ring-2 ring-blue-500/20"
-                      : errors.da_id
-                        ? "border-red-500"
-                        : "border-gray-300"
-                  }`}
+                <Input
                   placeholder="Enter DA ID"
+                  value={formData.da_id || ""}
+                  onChange={(value) => onInputChange("da_id", value)}
+                  hasError={!!errors.da_id}
                   onFocus={() => setFocusedField("da_id")}
                   onBlur={() => setFocusedField(null)}
+                  required
                 />
                 {errors.da_id && (
                   <p
@@ -711,26 +682,16 @@ export default function ProductForm({
                   {t.products.form.pricing}{" "}
                   <span style={{ color: color.status.danger }}>*</span>
                 </label>
-                <input
-                  type="text"
-                  name="price"
-                  required
-                  value={formData.price || 0}
-                  onChange={(e) =>
-                    onInputChange("price", parseFloat(e.target.value) || 0)
-                  }
-                  className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all outline-none ${
-                    focusedField === "price"
-                      ? errors.price
-                        ? "border-red-500 ring-2 ring-red-500/20"
-                        : "border-blue-500 ring-2 ring-blue-500/20"
-                      : errors.price
-                        ? "border-red-500"
-                        : "border-gray-300"
-                  }`}
+                <Input
                   placeholder="0.00"
+                  value={String(formData.price || 0)}
+                  onChange={(value) =>
+                    onInputChange("price", parseFloat(value) || 0)
+                  }
+                  hasError={!!errors.price}
                   onFocus={() => setFocusedField("price")}
                   onBlur={() => setFocusedField(null)}
+                  required
                 />
                 {errors.price && (
                   <p
@@ -765,11 +726,10 @@ export default function ProductForm({
                 </label>
                 <div className="space-y-2">
                   <div className="flex gap-2">
-                    <input
-                      type="text"
+                    <Input
+                      placeholder="Type tags separated by commas"
                       value={tagInput}
-                      onChange={(e) => {
-                        const value = e.target.value;
+                      onChange={(value) => {
                         setTagInput(value);
 
                         // Auto-add tag when comma is typed
@@ -789,17 +749,9 @@ export default function ProductForm({
                       onKeyDown={(e) => {
                         handleAddTag(e);
                       }}
-                      placeholder="Type tags separated by commas"
-                      className={`flex-1 px-4 py-2.5 border ${tw.rounded} text-sm transition-all outline-none ${
-                        focusedField === "tags"
-                          ? "border-blue-500 ring-2 ring-blue-500/20"
-                          : "border-gray-300"
-                      }`}
                       onFocus={() => setFocusedField("tags")}
-                      onBlur={() => {
-                        setFocusedField(null);
-                        e.target.style.boxShadow = "none";
-                      }}
+                      onBlur={() => setFocusedField(null)}
+                      className="flex-1"
                     />
                     <button
                       type="button"
@@ -1136,18 +1088,16 @@ export default function ProductForm({
                           DAID Account{" "}
                           <span style={{ color: color.status.danger }}>*</span>
                         </label>
-                        <input
-                          type="text"
+                        <Input
+                          placeholder="Enter shared DAID"
                           value={comboData.shared_daid_account ?? ""}
-                          onChange={(e) =>
+                          onChange={(value) =>
                             setComboData({
                               ...comboData,
-                              shared_daid_account: e.target.value || undefined,
+                              shared_daid_account: value || undefined,
                             })
                           }
-                          className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
-                          style={{ borderColor: color.border.default }}
-                          placeholder="Enter shared DAID"
+                          required
                         />
                       </div>
                     )}
@@ -1390,18 +1340,16 @@ export default function ProductForm({
                               >
                                 DAID Account
                               </label>
-                              <input
-                                type="text"
+                              <Input
+                                placeholder="Enter DAID"
                                 value={tempResourceData.daid_account ?? ""}
-                                onChange={(e) =>
+                                onChange={(value) =>
                                   setTempResourceData({
                                     ...tempResourceData,
-                                    daid_account: e.target.value || undefined,
+                                    daid_account: value || undefined,
                                   })
                                 }
-                                className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm transition-all`}
-                                style={{ borderColor: color.border.default }}
-                                placeholder="Enter DAID"
+                                variant="medium"
                               />
                             </div>
                           )}
@@ -1506,15 +1454,12 @@ export default function ProductForm({
                             >
                               Unit
                             </label>
-                            <input
-                              type="text"
+                            <Input
+                              placeholder="Unit"
                               value={getResourceTypeLabel(resource.unit)}
                               disabled
-                              className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm bg-gray-50`}
-                              style={{
-                                borderColor: color.border.default,
-                                color: color.text.secondary,
-                              }}
+                              onChange={() => {}}
+                              variant="medium"
                             />
                           </div>
 
@@ -1613,19 +1558,17 @@ export default function ProductForm({
                               >
                                 DAID Account
                               </label>
-                              <input
-                                type="text"
+                              <Input
+                                placeholder="Enter DAID"
                                 value={resource.daid_account ?? ""}
-                                onChange={(e) =>
+                                onChange={(value) =>
                                   updateComboResource(
                                     index,
                                     "daid_account",
-                                    e.target.value || undefined,
+                                    value || undefined,
                                   )
                                 }
-                                className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm transition-all`}
-                                style={{ borderColor: color.border.default }}
-                                placeholder="Enter DAID"
+                                variant="medium"
                               />
                             </div>
                           )}
@@ -1741,17 +1684,14 @@ export default function ProductForm({
                           : undefined,
                       )
                     }
-                    className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
-                    style={{ borderColor: color.border.default }}
+                    className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all outline-none ${
+                      focusedField === "validity_hours"
+                        ? "border-blue-500 ring-2 ring-blue-500/20"
+                        : "border-gray-300"
+                    }`}
                     placeholder="1-8760 hours"
-                    onFocus={(e) => {
-                      e.target.style.borderColor = color.primary.accent;
-                      e.target.style.boxShadow = `0 0 0 3px ${color.primary.accent}20`;
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = color.border.default;
-                      e.target.style.boxShadow = "none";
-                    }}
+                    onFocus={() => setFocusedField("validity_hours")}
+                    onBlur={() => setFocusedField(null)}
                   />
                 </div>
               </div>

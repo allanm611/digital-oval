@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, X } from "lucide-react";
+import { Plus, Trash2, Eye } from "lucide-react";
 import {
   CreateCampaignRequest,
   CampaignSegment,
@@ -9,6 +9,7 @@ import { CampaignFlowConfig, CampaignFlowType } from "../../types/campaignFlow";
 import { color, tw, components } from "../../../../shared/utils/utils";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
 import OfferSelectionModal from "./OfferSelectionModal";
+import OfferPreviewModal from "./OfferPreviewModal";
 
 interface CampaignFlowsStepProps {
   currentStep: number;
@@ -46,6 +47,8 @@ export default function CampaignFlowsStep({
 }: CampaignFlowsStepProps) {
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [editingSegmentId, setEditingSegmentId] = useState<string | null>(null);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewOffer, setPreviewOffer] = useState<CampaignOffer | null>(null);
   const [segmentFlows, setSegmentFlows] = useState<{
     [segmentId: string]: SegmentFlowState;
   }>({});
@@ -222,6 +225,11 @@ export default function CampaignFlowsStep({
     return segmentFlows[segmentId]?.offers || [];
   };
 
+  const handlePreviewOffer = (offer: CampaignOffer) => {
+    setPreviewOffer(offer);
+    setShowPreviewModal(true);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -241,8 +249,8 @@ export default function CampaignFlowsStep({
         </div>
       )}
 
-      {/* Segment Cards */}
-      <div className="space-y-4">
+      {/* Segment Offers Table */}
+      <div>
         {selectedSegments.length === 0 ? (
           <div className={components.card.surface}>
             <p className={`${tw.caption} ${tw.textSecondary} text-center py-8`}>
@@ -251,193 +259,227 @@ export default function CampaignFlowsStep({
             </p>
           </div>
         ) : (
-          selectedSegments.map((segment) => {
-            const offers = getOffersForSegment(segment.id);
-            const flowState = segmentFlows[segment.id] || {
-              offers: [],
-              waitHours: 0,
-            };
+          <div className={`border border-gray-200 ${tw.rounded} overflow-hidden`}>
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider flex-1">
+                    Segment
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider flex-1">
+                    Offer
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider flex-1">
+                    Wait Hours
+                  </th>
+                  {(formData.campaign_type === "ab_test" ||
+                    formData.campaign_type === "champion_challenger") && (
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider flex-1">
+                      Allocation
+                    </th>
+                  )}
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider flex-1 text-right">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {selectedSegments.flatMap((segment) => {
+                  const offers = getOffersForSegment(segment.id);
+                  const flowState = segmentFlows[segment.id] || {
+                    offers: [],
+                    waitHours: 0,
+                  };
 
-            return (
-              <div key={segment.id} className={components.card.surface}>
-                {/* Segment Header */}
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h4 className={`text-sm font-medium ${tw.textPrimary}`}>
-                      {segment.name}
-                    </h4>
-                  </div>
-                  <button
-                    onClick={() => handleSelectOffers(segment.id)}
-                    className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium`}
-                    style={{
-                      backgroundColor: color.primary.action,
-                      color: "white",
-                    }}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Select Offers
-                  </button>
-                </div>
-
-                {/* Assigned Offers */}
-                <div className="mb-4">
-                  <div
-                    className={`text-sm font-medium ${tw.textSecondary} mb-2`}
-                  >
-                    Assigned Offers:
-                  </div>
-                  {offers.length === 0 ? (
-                    <div
-                      className={`text-center py-4 border-2 border-dashed ${tw.rounded}`}
-                      style={{ borderColor: color.border.default }}
-                    >
-                      <p className={`text-sm ${tw.textSecondary}`}>
-                        No offers assigned yet
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {offers.map((offer) => (
-                        <div
-                          key={offer.id}
-                          className={`flex items-center justify-between p-3 ${tw.rounded}`}
-                          style={{ backgroundColor: color.surface.cards }}
-                        >
-                          <div
-                            className={`text-sm font-medium ${tw.textPrimary}`}
-                          >
-                            {offer.name}
+                  if (offers.length === 0) {
+                    // Show one empty row for segment with no offers
+                    return (
+                      <tr
+                        key={`${segment.id}-empty`}
+                        className="hover:bg-gray-50 transition-colors"
+                      >
+                        <td className="px-4 py-3">
+                          <div className="text-sm font-medium text-gray-900">
+                            {segment.name}
                           </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="text-sm text-gray-500">—</div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            min="0"
+                            placeholder="0"
+                            value={flowState.waitHours}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (value === "") {
+                                handleUpdateWaitHours(segment.id, 0);
+                              } else {
+                                const numValue = parseInt(value, 10);
+                                if (!isNaN(numValue) && numValue >= 0) {
+                                  handleUpdateWaitHours(segment.id, numValue);
+                                }
+                              }
+                            }}
+                            onBlur={(e) => {
+                              if (e.target.value === "") {
+                                handleUpdateWaitHours(segment.id, 0);
+                              }
+                            }}
+                            className="w-full px-3 py-2 text-sm hover:bg-gray-100 focus:bg-gray-50"
+                            style={{
+                              border: "none",
+                              outline: "none",
+                              background: "transparent",
+                              boxShadow: "none"
+                            }}
+                          />
+                        </td>
+                        {(formData.campaign_type === "ab_test" ||
+                          formData.campaign_type === "champion_challenger") && (
+                          <td className="px-4 py-3">
+                            <input
+                              type="text"
+                              value={flowState.allocation || ""}
+                              onChange={(e) =>
+                                handleUpdateAllocation(segment.id, e.target.value)
+                              }
+                              placeholder={
+                                formData.campaign_type === "ab_test"
+                                  ? "50-50"
+                                  : "70-30"
+                              }
+                              className="w-full px-3 py-2 text-sm hover:bg-gray-100 focus:bg-gray-50"
+                              style={{
+                                border: "none",
+                                outline: "none",
+                                background: "transparent",
+                                boxShadow: "none"
+                              }}
+                            />
+                          </td>
+                        )}
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => handleSelectOffers(segment.id)}
+                              className="p-1.5 text-gray-900 rounded transition-colors cursor-pointer hover:bg-gray-100"
+                              title="Select Offers"
+                            >
+                              <Plus className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  }
 
+                  // Show one row per offer
+                  return offers.map((offer) => (
+                    <tr
+                      key={`${segment.id}-${offer.id}`}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="px-4 py-3">
+                        <div className="text-sm font-medium text-gray-900">
+                          {segment.name}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="text-sm text-gray-900">{offer.name}</div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          min="0"
+                          placeholder="0"
+                          value={flowState.waitHours}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (value === "") {
+                              handleUpdateWaitHours(segment.id, 0);
+                            } else {
+                              const numValue = parseInt(value, 10);
+                              if (!isNaN(numValue) && numValue >= 0) {
+                                handleUpdateWaitHours(segment.id, numValue);
+                              }
+                            }
+                          }}
+                          onBlur={(e) => {
+                            if (e.target.value === "") {
+                              handleUpdateWaitHours(segment.id, 0);
+                            }
+                          }}
+                          className="w-full px-3 py-2 text-sm hover:bg-gray-100 focus:bg-gray-50"
+                          style={{
+                            border: "none",
+                            outline: "none",
+                            background: "transparent",
+                            boxShadow: "none"
+                          }}
+                        />
+                      </td>
+                      {(formData.campaign_type === "ab_test" ||
+                        formData.campaign_type === "champion_challenger") && (
+                        <td className="px-4 py-3">
+                          <input
+                            type="text"
+                            value={flowState.allocation || ""}
+                            onChange={(e) =>
+                              handleUpdateAllocation(segment.id, e.target.value)
+                            }
+                            placeholder={
+                              formData.campaign_type === "ab_test"
+                                ? "50-50"
+                                : "70-30"
+                            }
+                            className="w-full px-3 py-2 text-sm hover:bg-gray-100 focus:bg-gray-50"
+                            style={{
+                              border: "none",
+                              outline: "none",
+                              background: "transparent",
+                              boxShadow: "none"
+                            }}
+                          />
+                        </td>
+                      )}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => handlePreviewOffer(offer)}
+                            className="p-1.5 text-gray-900 rounded transition-colors cursor-pointer hover:bg-gray-100"
+                            title="Preview Offer"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleSelectOffers(segment.id)}
+                            className="p-1.5 text-gray-900 rounded transition-colors cursor-pointer hover:bg-gray-100"
+                            title="Add More Offers"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
                           <button
                             onClick={() =>
                               handleRemoveOffer(segment.id, offer.id)
                             }
-                            className={`${tw.borderedButton} inline-flex items-center gap-1 p-2`}
-                            style={{
-                              borderColor: "#DC2626",
-                              color: "#DC2626",
-                            }}
+                            className="p-1.5 text-red-600 rounded transition-colors cursor-pointer hover:bg-red-50"
+                            title="Remove This Offer"
                           >
-                            <X className="w-4 h-4" />
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Flow Configuration */}
-                <div
-                  className="grid grid-cols-2 gap-4 pt-4"
-                  style={{ borderTop: `1px solid ${color.border.default}` }}
-                >
-                  <div>
-                    <label
-                      className={`block text-sm font-medium ${tw.textSecondary} mb-2`}
-                    >
-                      Wait Interval (hours)
-                    </label>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      min="0"
-                      placeholder="0"
-                      value={flowState.waitHours}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        // Allow empty string or numeric values
-                        if (value === "") {
-                          handleUpdateWaitHours(segment.id, 0);
-                        } else {
-                          const numValue = parseInt(value, 10);
-                          if (!isNaN(numValue) && numValue >= 0) {
-                            handleUpdateWaitHours(segment.id, numValue);
-                          }
-                        }
-                      }}
-                      onBlur={(e) => {
-                        // Ensure a valid number on blur
-                        if (e.target.value === "") {
-                          handleUpdateWaitHours(segment.id, 0);
-                        }
-                      }}
-                      className={`w-full px-3 py-2 border ${tw.rounded} text-sm`}
-                      style={{ borderColor: color.border.default }}
-                    />
-                  </div>
-
-                  {/* Show allocation for A/B test or champion-challenger */}
-                  {(formData.campaign_type === "ab_test" ||
-                    formData.campaign_type === "champion_challenger") && (
-                    <div>
-                      <label
-                        className={`block text-sm font-medium ${tw.textSecondary} mb-2`}
-                      >
-                        Bucket Allocation
-                      </label>
-                      <input
-                        type="text"
-                        value={flowState.allocation || ""}
-                        onChange={(e) =>
-                          handleUpdateAllocation(segment.id, e.target.value)
-                        }
-                        placeholder={
-                          formData.campaign_type === "ab_test"
-                            ? "50-50"
-                            : "70-30"
-                        }
-                        className={`w-full px-3 py-2 border ${tw.rounded} text-sm`}
-                        style={{ borderColor: color.border.default }}
-                      />
-                    </div>
-                  )}
-                </div>
-
-                {/* Conversion Tracking Section */}
-                <div className="mt-4 pt-4">
-                  <h5 className={`text-sm font-medium ${tw.textPrimary} mb-3`}>
-                    Conversion Tracking
-                  </h5>
-                  {offers.length === 0 ? (
-                    <p className={`text-xs ${tw.textSecondary}`}>
-                      Select offers to view tracking configuration
-                    </p>
-                  ) : (
-                    <div className="space-y-3">
-                      {offers.map((offer) => (
-                        <div
-                          key={`tracking-${offer.id}`}
-                          className={`p-3 ${tw.rounded}`}
-                          style={{ backgroundColor: color.surface.cards }}
-                        >
-                          <div
-                            className={`text-xs font-medium ${tw.textPrimary} mb-2`}
-                          >
-                            {offer.name}
-                          </div>
-                          <div
-                            className={`text-xs ${tw.textSecondary} space-y-1`}
-                          >
-                            <p>
-                              • Tracking Type:{" "}
-                              <span className="font-medium">
-                                Not configured
-                              </span>
-                            </p>
-                            <p>
-                              • Rules: <span className="font-medium">0</span>
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })
+                      </td>
+                    </tr>
+                  ));
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
@@ -452,6 +494,16 @@ export default function CampaignFlowsStep({
         selectedOffers={
           editingSegmentId ? getOffersForSegment(editingSegmentId) : []
         }
+      />
+
+      {/* Offer Preview Modal */}
+      <OfferPreviewModal
+        isOpen={showPreviewModal}
+        offer={previewOffer}
+        onClose={() => {
+          setShowPreviewModal(false);
+          setPreviewOffer(null);
+        }}
       />
     </div>
   );

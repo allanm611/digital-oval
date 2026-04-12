@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Trash2 } from "lucide-react";
+import { Trash2, ChevronDown, Edit } from "lucide-react";
 import { ComboType, comboTypeService } from "../services/comboTypeService";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
@@ -67,30 +67,22 @@ export default function ComboTypeFormPage() {
     name: "",
     description: "",
     isActive: true,
-    comboResources: [
-      {
-        id: 1,
-        type: RESOURCE_TYPE_OPTIONS[0]?.value || "",
-        value: "",
-        unit: "",
-        hasPriceEnabled: false,
-        price: "",
-        sharedValidity: false,
-        sharedValidityHours: "",
-      },
-    ],
+    comboResources: [],
   });
 
   const [selectedResourceType, setSelectedResourceType] = useState<string>("");
   const [selectedUtility, setSelectedUtility] = useState<string>("");
 
+  const [comboSettings, setComboSettings] = useState({
+    sharedValidity: true,
+    sharedPrice: true,
+  });
+
   const [tempResourceData, setTempResourceData] = useState({
     value: "",
     unit: "",
-    hasPriceEnabled: false,
     price: "",
-    sharedValidity: false,
-    sharedValidityHours: "",
+    validityHours: "",
   });
 
   const [isLoading, setIsLoading] = useState(!!id);
@@ -98,6 +90,9 @@ export default function ComboTypeFormPage() {
   const [error, setError] = useState<string | null>(null);
   const [isCreateUtilityModalOpen, setIsCreateUtilityModalOpen] = useState(false);
   const [customUtilities, setCustomUtilities] = useState<Array<{ value: string; label: string }>>([]);
+  const [isAddResourceExpanded, setIsAddResourceExpanded] = useState(false);
+  const [editingCardResourceId, setEditingCardResourceId] = useState<number | null>(null);
+  const [editingCardData, setEditingCardData] = useState<any>(null);
 
   useEffect(() => {
     if (id) {
@@ -117,28 +112,22 @@ export default function ComboTypeFormPage() {
                       ? String(r.unit_value)
                       : "",
                   unit: r.unit,
-                  hasPriceEnabled: !!r.price,
                   price: r.price ? String(r.price) : "",
-                  sharedValidity: r.shared_validity,
-                  sharedValidityHours:
+                  validityHours:
                     r.shared_validity_hours !== undefined &&
                     r.shared_validity_hours !== null
                       ? String(r.shared_validity_hours)
                       : "",
                 }))
-              : [
-                  {
-                    id: 1,
-                    type: RESOURCE_TYPE_OPTIONS[0]?.value || "",
-                    value: "",
-                    unit: "",
-                    hasPriceEnabled: false,
-                    price: "",
-                    sharedValidity: false,
-                    sharedValidityHours: "",
-                  },
-                ],
+              : [],
           });
+          // Set combo settings from the first resource if available
+          if (data.combo_resources && data.combo_resources.length > 0) {
+            setComboSettings({
+              sharedValidity: data.combo_resources[0]?.shared_validity ?? true,
+              sharedPrice: !!data.combo_resources[0]?.price || false,
+            });
+          }
         } catch (err) {
           console.error("Failed to load combo type:", err);
           showError("Error", "Failed to load combo type");
@@ -178,22 +167,19 @@ export default function ComboTypeFormPage() {
           type: selectedResourceType,
           value: tempResourceData.value,
           unit: tempResourceData.unit,
-          hasPriceEnabled: tempResourceData.hasPriceEnabled,
           price: tempResourceData.price,
-          sharedValidity: tempResourceData.sharedValidity,
-          sharedValidityHours: tempResourceData.sharedValidityHours,
+          validityHours: tempResourceData.validityHours,
         },
       ],
     }));
 
     setSelectedResourceType("");
+    setSelectedUtility("");
     setTempResourceData({
       value: "",
       unit: "",
-      hasPriceEnabled: false,
       price: "",
-      sharedValidity: false,
-      sharedValidityHours: "",
+      validityHours: "",
     });
   };
 
@@ -238,14 +224,14 @@ export default function ComboTypeFormPage() {
               ? parseFloat(String(resource.value))
               : undefined,
           unit: resource.unit,
-          price: resource.hasPriceEnabled && resource.price
+          price: !comboSettings.sharedPrice && resource.price
             ? parseFloat(String(resource.price))
             : undefined,
-          shared_validity: resource.sharedValidity,
+          shared_validity: comboSettings.sharedValidity,
           shared_validity_hours:
-            resource.sharedValidity && resource.sharedValidityHours !== "" &&
-            resource.sharedValidityHours !== null
-              ? parseInt(String(resource.sharedValidityHours))
+            comboSettings.sharedValidity && tempResourceData.validityHours !== "" &&
+            tempResourceData.validityHours !== null
+              ? parseInt(String(tempResourceData.validityHours))
               : undefined,
         })),
       };
@@ -411,10 +397,10 @@ export default function ComboTypeFormPage() {
                 <div className="flex items-center gap-2">
                   <Checkbox
                     id="shared-validity"
-                    checked={tempResourceData.sharedValidity}
+                    checked={comboSettings.sharedValidity}
                     onChange={(e) =>
-                      setTempResourceData({
-                        ...tempResourceData,
+                      setComboSettings({
+                        ...comboSettings,
                         sharedValidity: e.target.checked,
                       })
                     }
@@ -431,11 +417,11 @@ export default function ComboTypeFormPage() {
                 <div className="flex items-center gap-2">
                   <Checkbox
                     id="shared-price"
-                    checked={tempResourceData.hasPriceEnabled}
+                    checked={comboSettings.sharedPrice}
                     onChange={(e) =>
-                      setTempResourceData({
-                        ...tempResourceData,
-                        hasPriceEnabled: e.target.checked,
+                      setComboSettings({
+                        ...comboSettings,
+                        sharedPrice: e.target.checked,
                       })
                     }
                     disabled={isSaving}
@@ -452,7 +438,7 @@ export default function ComboTypeFormPage() {
               {/* Validity and Price Fields */}
               <div className="grid gap-4 md:grid-cols-2">
                 {/* Shared Validity Hours */}
-                {tempResourceData.sharedValidity && (
+                {comboSettings.sharedValidity && (
                   <div>
                     <label
                       className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
@@ -461,11 +447,11 @@ export default function ComboTypeFormPage() {
                     </label>
                     <input
                       type="text"
-                      value={tempResourceData.sharedValidityHours}
+                      value={tempResourceData.validityHours}
                       onChange={(e) =>
                         setTempResourceData({
                           ...tempResourceData,
-                          sharedValidityHours: e.target.value,
+                          validityHours: e.target.value,
                         })
                       }
                       className={`w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
@@ -476,7 +462,7 @@ export default function ComboTypeFormPage() {
                 )}
 
                 {/* Shared Combo Price */}
-                {tempResourceData.hasPriceEnabled && (
+                {comboSettings.sharedPrice && (
                   <div>
                     <label
                       className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
@@ -503,171 +489,219 @@ export default function ComboTypeFormPage() {
               </div>
             </div>
 
-            {/* Resource Selection and Input Section */}
-            <div className={`border border-gray-200 ${tw.rounded} p-4 space-y-3`}>
-              <div className="grid gap-3 md:grid-cols-4">
-                <div>
-                  <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
-                    Resource Type
-                  </label>
-                  <HeadlessSelect
-                    options={availableResourceTypes}
-                    value={selectedResourceType}
-                    onChange={(value: string | number) => {
-                      const newType = value as string;
-                      setSelectedResourceType(newType);
-
-                      // Auto-select the mapped unit for the selected resource type
-                      const resourceType = resourceTypesConfig.initialData.find(
-                        (rt: any) => rt.value === newType
-                      ) as any;
-                      const defaultUnit = resourceType?.validUnits?.[0] || "";
-
-                      setTempResourceData({
-                        ...tempResourceData,
-                        unit: defaultUnit,
-                      });
-                      if (newType !== "utility") {
-                        setSelectedUtility("");
-                      }
-                    }}
-                    disabled={isSaving || availableResourceTypes.length === 0}
-                    placeholder={
-                      availableResourceTypes.length === 0
-                        ? "All types added"
-                        : "Select resource type"
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
-                    Unit
-                  </label>
-                  <HeadlessSelect
-                    options={validUnitsForSelected}
-                    value={tempResourceData.unit}
-                    onChange={(value: string | number) =>
-                      setTempResourceData({
-                        ...tempResourceData,
-                        unit: value as string,
-                      })
-                    }
-                    disabled={isSaving || !selectedResourceType}
-                    placeholder={
-                      !selectedResourceType
-                        ? "Select resource first"
-                        : "Select unit"
-                    }
-                  />
-                </div>
-
-                {/* Utility Selection - show when Utility resource type is selected */}
-                {selectedResourceType === "utility" && (
-                  <div>
-                    <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
-                      Utility *
-                    </label>
-                    <HeadlessSelect
-                      options={getUtilitiesOptions()}
-                      value={selectedUtility}
-                      onChange={(value: string | number) => {
-                        const val = value as string;
-                        if (val === "create-custom") {
-                          setIsCreateUtilityModalOpen(true);
-                          setSelectedUtility(""); // Reset selection
-                        } else {
-                          setSelectedUtility(val);
-                        }
-                      }}
-                      disabled={isSaving}
-                      placeholder="Select utility"
-                    />
-                  </div>
-                )}
-
-                <div>
-                  <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
-                    Value
-                  </label>
-                  <input
-                    type="text"
-                    value={tempResourceData.value}
-                    onChange={(e) =>
-                      setTempResourceData({
-                        ...tempResourceData,
-                        value: e.target.value,
-                      })
-                    }
-                    className={`w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                    placeholder="Enter value"
-                    disabled={isSaving}
-                  />
-                </div>
-
-                {!tempResourceData.hasPriceEnabled && (
-                  <div>
-                    <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
-                      Price
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={tempResourceData.price}
-                      onChange={(e) =>
-                        setTempResourceData({
-                          ...tempResourceData,
-                          price: e.target.value,
-                        })
-                      }
-                      className={`w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                      placeholder="Enter price"
-                      disabled={isSaving}
-                    />
-                  </div>
-                )}
-
-                {!tempResourceData.sharedValidity && (
-                  <div>
-                    <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
-                      Validity Hours
-                    </label>
-                    <input
-                      type="text"
-                      value={tempResourceData.sharedValidityHours}
-                      onChange={(e) =>
-                        setTempResourceData({
-                          ...tempResourceData,
-                          sharedValidityHours: e.target.value,
-                        })
-                      }
-                      className={`w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                      placeholder="Enter validity hours"
-                      disabled={isSaving}
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* Add Resource Button */}
+            {/* Add Resource Accordion */}
+            <div
+              className={`border border-gray-200 ${tw.rounded} overflow-hidden`}
+            >
+              {/* Accordion Header */}
               <button
                 type="button"
-                onClick={handleAddResource}
-                disabled={!selectedResourceType || isSaving}
+                onClick={() =>
+                  setIsAddResourceExpanded(!isAddResourceExpanded)
+                }
+                className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
                 style={{
-                  background: buttons.bordered.background,
-                  color: "#000000",
-                  border: buttons.bordered.border,
-                  padding: `${buttons.bordered.paddingY} ${buttons.bordered.paddingX}`,
-                  borderRadius: buttons.bordered.borderRadius,
-                  fontSize: buttons.bordered.fontSize,
-                  fontWeight: 500,
-                  cursor: selectedResourceType && !isSaving ? "pointer" : "not-allowed",
-                  opacity: selectedResourceType && !isSaving ? 1 : 0.5,
+                  backgroundColor: isAddResourceExpanded
+                    ? color.surface.cards
+                    : "transparent",
                 }}
               >
-                Add Resource
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`text-sm font-medium ${tw.textPrimary}`}
+                  >
+                    Add Resource
+                  </span>
+                </div>
+                <ChevronDown
+                  className={`w-5 h-5 transition-transform ${
+                    isAddResourceExpanded ? "rotate-180" : ""
+                  }`}
+                  style={{ color: color.text.secondary }}
+                />
               </button>
+
+              {/* Accordion Content */}
+              {isAddResourceExpanded && (
+                <div className="border-t border-gray-200 p-4 space-y-3">
+                  <div className="grid gap-3 md:grid-cols-4">
+                    <div>
+                      <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
+                        Resource Type
+                      </label>
+                      <HeadlessSelect
+                        options={availableResourceTypes}
+                        value={selectedResourceType}
+                        onChange={(value: string | number) => {
+                          const newType = value as string;
+                          setSelectedResourceType(newType);
+
+                          // Auto-select the mapped unit for the selected resource type
+                          const resourceType = resourceTypesConfig.initialData.find(
+                            (rt: any) => rt.value === newType
+                          ) as any;
+                          const defaultUnit = resourceType?.validUnits?.[0] || "";
+
+                          setTempResourceData({
+                            ...tempResourceData,
+                            unit: defaultUnit,
+                          });
+                          if (newType !== "utility") {
+                            setSelectedUtility("");
+                          }
+                        }}
+                        disabled={isSaving || availableResourceTypes.length === 0}
+                        placeholder={
+                          availableResourceTypes.length === 0
+                            ? "All types added"
+                            : "Select resource type"
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
+                        Unit
+                      </label>
+                      <HeadlessSelect
+                        options={validUnitsForSelected}
+                        value={tempResourceData.unit}
+                        onChange={(value: string | number) =>
+                          setTempResourceData({
+                            ...tempResourceData,
+                            unit: value as string,
+                          })
+                        }
+                        disabled={isSaving || !selectedResourceType}
+                        placeholder={
+                          !selectedResourceType
+                            ? "Select resource first"
+                            : "Select unit"
+                        }
+                      />
+                    </div>
+
+                    {/* Utility Selection - show when Utility resource type is selected */}
+                    {selectedResourceType === "utility" && (
+                      <div>
+                        <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
+                          Utility *
+                        </label>
+                        <HeadlessSelect
+                          options={getUtilitiesOptions()}
+                          value={selectedUtility}
+                          onChange={(value: string | number) => {
+                            const val = value as string;
+                            if (val === "create-custom") {
+                              setIsCreateUtilityModalOpen(true);
+                              setSelectedUtility(""); // Reset selection
+                            } else {
+                              setSelectedUtility(val);
+                            }
+                          }}
+                          disabled={isSaving}
+                          placeholder="Select utility"
+                        />
+                      </div>
+                    )}
+
+                    <div>
+                      <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
+                        Value
+                      </label>
+                      <input
+                        type="text"
+                        value={tempResourceData.value}
+                        onChange={(e) =>
+                          setTempResourceData({
+                            ...tempResourceData,
+                            value: e.target.value,
+                          })
+                        }
+                        className={`w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                        placeholder="Enter value"
+                        disabled={isSaving}
+                      />
+                    </div>
+
+                    {!comboSettings.sharedPrice && (
+                      <div>
+                        <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
+                          Price
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={tempResourceData.price}
+                          onChange={(e) =>
+                            setTempResourceData({
+                              ...tempResourceData,
+                              price: e.target.value,
+                            })
+                          }
+                          className={`w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                          placeholder="Enter price"
+                          disabled={isSaving}
+                        />
+                      </div>
+                    )}
+
+                    {!comboSettings.sharedValidity && (
+                      <div>
+                        <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
+                          Validity Hours
+                        </label>
+                        <input
+                          type="text"
+                          value={tempResourceData.validityHours}
+                          onChange={(e) =>
+                            setTempResourceData({
+                              ...tempResourceData,
+                              validityHours: e.target.value,
+                            })
+                          }
+                          className={`w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                          placeholder="Enter validity hours"
+                          disabled={isSaving}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Save Resource Button - At Bottom */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Validate utility selection if utility resource type is selected
+                      if (selectedResourceType === "utility" && !selectedUtility) {
+                        showError("Validation Error", "Please select a utility");
+                        return;
+                      }
+
+                      // Add resource
+                      handleAddResource();
+                      // Collapse accordion after adding
+                      setIsAddResourceExpanded(false);
+                    }}
+                    disabled={!selectedResourceType || !tempResourceData.value || isSaving}
+                    style={{
+                      background: buttons.bordered.background,
+                      color: "#000000",
+                      border: buttons.bordered.border,
+                      padding: `${buttons.bordered.paddingY} ${buttons.bordered.paddingX}`,
+                      borderRadius: buttons.bordered.borderRadius,
+                      fontSize: buttons.bordered.fontSize,
+                      fontWeight: 500,
+                      cursor: (selectedResourceType && tempResourceData.value && !isSaving)
+                        ? "pointer"
+                        : "not-allowed",
+                      opacity: (selectedResourceType && tempResourceData.value && !isSaving) ? 1 : 0.5,
+                    }}
+                  >
+                    Save Resource
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Added Resources List */}
@@ -688,21 +722,104 @@ export default function ComboTypeFormPage() {
                           (opt) => opt.value === resource.type
                         )?.label || resource.type}
                       </span>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveResource(resource.id)}
-                        className="text-red-500 hover:text-red-700 transition-colors"
-                        disabled={isSaving}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      <div className="flex gap-2">
+                        {editingCardResourceId === resource.id ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  comboResources: prev.comboResources.map((r) =>
+                                    r.id === resource.id
+                                      ? {
+                                          ...r,
+                                          value: editingCardData.value,
+                                          unit: editingCardData.unit,
+                                          price: editingCardData.price,
+                                          validityHours: editingCardData.validityHours,
+                                        }
+                                      : r
+                                  ),
+                                }));
+                                setEditingCardResourceId(null);
+                                setEditingCardData(null);
+                              }}
+                              disabled={isSaving}
+                              style={{
+                                background: buttons.action?.background || color.primary.action,
+                                color: buttons.action?.color || "#FFFFFF",
+                                padding: `${buttons.action?.paddingY || "0.625rem"} ${buttons.action?.paddingX || "1rem"}`,
+                                borderRadius: buttons.action?.borderRadius || "0.375rem",
+                                fontSize: buttons.action?.fontSize || "0.875rem",
+                                fontWeight: "500",
+                                border: "none",
+                                cursor: isSaving ? "not-allowed" : "pointer",
+                                opacity: isSaving ? 0.5 : 1,
+                              }}
+                            >
+                              Save
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingCardResourceId(null);
+                                setEditingCardData(null);
+                              }}
+                              disabled={isSaving}
+                              style={{
+                                background: buttons.bordered?.background || "transparent",
+                                color: buttons.bordered?.color || "#000000",
+                                border: buttons.bordered?.border || `1px solid ${color.border.default}`,
+                                padding: `${buttons.bordered?.paddingY || "0.625rem"} ${buttons.bordered?.paddingX || "1rem"}`,
+                                borderRadius: buttons.bordered?.borderRadius || "0.375rem",
+                                fontSize: buttons.bordered?.fontSize || "0.875rem",
+                                fontWeight: "500",
+                                cursor: isSaving ? "not-allowed" : "pointer",
+                                opacity: isSaving ? 0.5 : 1,
+                              }}
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingCardResourceId(resource.id);
+                                setEditingCardData({
+                                  value: resource.value,
+                                  unit: resource.unit,
+                                  price: resource.price,
+                                  validityHours: resource.validityHours,
+                                });
+                              }}
+                              className="text-gray-500 hover:text-gray-700 transition-colors"
+                              disabled={isSaving}
+                              title="Edit resource"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveResource(resource.id)}
+                              className="text-red-500 hover:text-red-700 transition-colors"
+                              disabled={isSaving}
+                              title="Delete resource"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
 
                     <div
                       className={`grid gap-3 ${
-                        !tempResourceData.sharedValidity && !tempResourceData.hasPriceEnabled
+                        !comboSettings.sharedValidity && !comboSettings.sharedPrice
                           ? "md:grid-cols-4"
-                          : (!tempResourceData.sharedValidity || !tempResourceData.hasPriceEnabled)
+                          : (!comboSettings.sharedValidity || !comboSettings.sharedPrice)
                           ? "md:grid-cols-3"
                           : "md:grid-cols-2"
                       }`}
@@ -713,12 +830,20 @@ export default function ComboTypeFormPage() {
                         </label>
                         <input
                           type="text"
-                          value={resource.unit}
-                          disabled
-                          className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm bg-gray-50`}
+                          value={editingCardResourceId === resource.id ? editingCardData.unit : resource.unit}
+                          disabled={editingCardResourceId !== resource.id}
+                          onChange={(e) =>
+                            setEditingCardData({
+                              ...editingCardData,
+                              unit: e.target.value,
+                            })
+                          }
+                          className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm ${
+                            editingCardResourceId === resource.id ? "" : "bg-gray-50"
+                          }`}
                           style={{
                             borderColor: color.border.default,
-                            color: color.text.secondary,
+                            color: editingCardResourceId === resource.id ? "auto" : color.text.secondary,
                           }}
                         />
                       </div>
@@ -729,47 +854,71 @@ export default function ComboTypeFormPage() {
                         </label>
                         <input
                           type="text"
-                          value={resource.value}
-                          disabled
-                          className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm bg-gray-50`}
+                          value={editingCardResourceId === resource.id ? editingCardData.value : resource.value}
+                          disabled={editingCardResourceId !== resource.id}
+                          onChange={(e) =>
+                            setEditingCardData({
+                              ...editingCardData,
+                              value: e.target.value,
+                            })
+                          }
+                          className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm ${
+                            editingCardResourceId === resource.id ? "" : "bg-gray-50"
+                          }`}
                           style={{
                             borderColor: color.border.default,
-                            color: color.text.secondary,
+                            color: editingCardResourceId === resource.id ? "auto" : color.text.secondary,
                           }}
                         />
                       </div>
 
-                      {tempResourceData.sharedValidity && (
+                      {!comboSettings.sharedValidity && (
                         <div>
                           <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
                             Validity (Hours)
                           </label>
                           <input
                             type="text"
-                            value={resource.sharedValidityHours}
-                            disabled
-                            className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm bg-gray-50`}
+                            value={editingCardResourceId === resource.id ? editingCardData.validityHours : resource.validityHours}
+                            disabled={editingCardResourceId !== resource.id}
+                            onChange={(e) =>
+                              setEditingCardData({
+                                ...editingCardData,
+                                validityHours: e.target.value,
+                              })
+                            }
+                            className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm ${
+                              editingCardResourceId === resource.id ? "" : "bg-gray-50"
+                            }`}
                             style={{
                               borderColor: color.border.default,
-                              color: color.text.secondary,
+                              color: editingCardResourceId === resource.id ? "auto" : color.text.secondary,
                             }}
                           />
                         </div>
                       )}
 
-                      {tempResourceData.hasPriceEnabled && (
+                      {!comboSettings.sharedPrice && (
                         <div>
                           <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
                             Price
                           </label>
                           <input
                             type="text"
-                            value={resource.price}
-                            disabled
-                            className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm bg-gray-50`}
+                            value={editingCardResourceId === resource.id ? editingCardData.price : resource.price}
+                            disabled={editingCardResourceId !== resource.id}
+                            onChange={(e) =>
+                              setEditingCardData({
+                                ...editingCardData,
+                                price: e.target.value,
+                              })
+                            }
+                            className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm ${
+                              editingCardResourceId === resource.id ? "" : "bg-gray-50"
+                            }`}
                             style={{
                               borderColor: color.border.default,
-                              color: color.text.secondary,
+                              color: editingCardResourceId === resource.id ? "auto" : color.text.secondary,
                             }}
                           />
                         </div>
