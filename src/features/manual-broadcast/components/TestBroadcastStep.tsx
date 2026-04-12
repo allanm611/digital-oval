@@ -9,6 +9,7 @@ import {
   Loader,
 } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
+import Input from "../../../shared/components/ui/Input";
 import { validatePhoneOnly, isValidEmail } from "../../../shared/utils/validation";
 import { ManualBroadcastData } from "../pages/CreateManualBroadcastPage";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -203,20 +204,14 @@ export default function TestBroadcastStep({
               : t.manualBroadcast.testInputLabelGeneric}
           </label>
           <div className="flex flex-col sm:flex-row gap-2">
-            <input
-              type="text"
+            <Input
               value={currentContact}
-              onChange={(e) => setCurrentContact(e.target.value)}
-              onKeyPress={(e) => {
+              onChange={setCurrentContact}
+              onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault();
                   handleAddContact();
                 }
-              }}
-              className="flex-1 px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2"
-              style={{
-                borderColor: color.border.default,
-                color: color.text.primary,
               }}
               placeholder={
                 data.channel === "EMAIL"
@@ -226,6 +221,7 @@ export default function TestBroadcastStep({
                   : t.manualBroadcast.testPlaceholderGeneric
               }
               disabled={isTesting}
+              className="flex-1"
             />
             <button
               onClick={handleAddContact}

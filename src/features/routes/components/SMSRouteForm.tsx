@@ -3,6 +3,7 @@ import { ArrowLeft, Save } from "lucide-react";
 import { SMSRoute, CreateSMSRouteRequest, RequestMethod, RequestFormat } from "../types/smsRoute";
 import { color, tw, components, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import Input from "../../../shared/components/ui/Input";
 import Radio from "../../../shared/components/ui/Radio";
 
 // Dummy sender IDs data
@@ -175,18 +176,12 @@ export default function SMSRouteForm({
               <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
                 Route Name *
               </label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
+              <Input
                 placeholder="e.g., Primary SMS Gateway"
-                className={`w-full px-4 py-2 border ${tw.rounded} text-sm transition-colors ${
-                  errors.name ? "border-red-500" : `border-[${color.border.default}]`
-                }`}
-                style={{
-                  borderColor: errors.name ? "#EF4444" : color.border.default,
-                }}
+                value={formData.name}
+                onChange={(value) => handleChange({ target: { name: "name", value } } as any)}
+                hasError={!!errors.name}
+                variant="medium"
                 disabled={isLoading}
               />
               {errors.name && (
@@ -198,18 +193,12 @@ export default function SMSRouteForm({
               <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
                 Gateway Type *
               </label>
-              <input
-                type="text"
-                name="gatewayType"
-                value={formData.gatewayType}
-                onChange={handleChange}
+              <Input
                 placeholder="e.g., Twilio, AWS SNS, Custom"
-                className={`w-full px-4 py-2 border ${tw.rounded} text-sm transition-colors ${
-                  errors.gatewayType ? "border-red-500" : `border-[${color.border.default}]`
-                }`}
-                style={{
-                  borderColor: errors.gatewayType ? "#EF4444" : color.border.default,
-                }}
+                value={formData.gatewayType}
+                onChange={(value) => handleChange({ target: { name: "gatewayType", value } } as any)}
+                hasError={!!errors.gatewayType}
+                variant="medium"
                 disabled={isLoading}
               />
               {errors.gatewayType && (
@@ -223,18 +212,13 @@ export default function SMSRouteForm({
             <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
               API Endpoint *
             </label>
-            <input
+            <Input
               type="url"
-              name="apiEndpoint"
-              value={formData.apiEndpoint}
-              onChange={handleChange}
               placeholder="https://api.gateway.com/sms"
-              className={`w-full px-4 py-2 border ${tw.rounded} text-sm transition-colors ${
-                errors.apiEndpoint ? "border-red-500" : `border-[${color.border.default}]`
-              }`}
-              style={{
-                borderColor: errors.apiEndpoint ? "#EF4444" : color.border.default,
-              }}
+              value={formData.apiEndpoint}
+              onChange={(value) => handleChange({ target: { name: "apiEndpoint", value } } as any)}
+              hasError={!!errors.apiEndpoint}
+              variant="medium"
               disabled={isLoading}
             />
             {errors.apiEndpoint && (
@@ -248,18 +232,13 @@ export default function SMSRouteForm({
               <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
                 API Key *
               </label>
-              <input
+              <Input
                 type="password"
-                name="apiKey"
-                value={formData.apiKey}
-                onChange={handleChange}
                 placeholder="Your API key"
-                className={`w-full px-4 py-2 border ${tw.rounded} text-sm transition-colors ${
-                  errors.apiKey ? "border-red-500" : `border-[${color.border.default}]`
-                }`}
-                style={{
-                  borderColor: errors.apiKey ? "#EF4444" : color.border.default,
-                }}
+                value={formData.apiKey}
+                onChange={(value) => handleChange({ target: { name: "apiKey", value } } as any)}
+                hasError={!!errors.apiKey}
+                variant="medium"
                 disabled={isLoading}
               />
               {errors.apiKey && (
@@ -271,18 +250,13 @@ export default function SMSRouteForm({
               <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
                 API Secret *
               </label>
-              <input
+              <Input
                 type="password"
-                name="apiSecret"
-                value={formData.apiSecret}
-                onChange={handleChange}
                 placeholder="Your API secret"
-                className={`w-full px-4 py-2 border ${tw.rounded} text-sm transition-colors ${
-                  errors.apiSecret ? "border-red-500" : `border-[${color.border.default}]`
-                }`}
-                style={{
-                  borderColor: errors.apiSecret ? "#EF4444" : color.border.default,
-                }}
+                value={formData.apiSecret}
+                onChange={(value) => handleChange({ target: { name: "apiSecret", value } } as any)}
+                hasError={!!errors.apiSecret}
+                variant="medium"
                 disabled={isLoading}
               />
               {errors.apiSecret && (

@@ -10,6 +10,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { color, tw, button } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import Input from "../../../shared/components/ui/Input";
 import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function UserProfilePage() {
@@ -469,12 +470,12 @@ export default function UserProfilePage() {
                 {t.profile.firstName}
               </label>
               {isEditing ? (
-                <input
-                  type="text"
+                <Input
+                  placeholder={t.profile.firstName}
                   name="first_name"
                   value={formData.first_name}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                  onChange={(val) => setFormData({ ...formData, first_name: val })}
+                  variant="medium"
                 />
               ) : (
                 <p className={`text-sm ${tw.textPrimary}`}>
@@ -511,12 +512,12 @@ export default function UserProfilePage() {
                 {t.profile.lastName}
               </label>
               {isEditing ? (
-                <input
-                  type="text"
+                <Input
+                  placeholder={t.profile.lastName}
                   name="last_name"
                   value={formData.last_name}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                  onChange={(val) => setFormData({ ...formData, last_name: val })}
+                  variant="medium"
                 />
               ) : (
                 <p className={`text-sm ${tw.textPrimary}`}>
@@ -532,12 +533,12 @@ export default function UserProfilePage() {
                 Middle Name
               </label>
               {isEditing ? (
-                <input
-                  type="text"
+                <Input
+                  placeholder="Middle Name"
                   name="middle_name"
                   value={formData.middle_name || ""}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                  onChange={(val) => setFormData({ ...formData, middle_name: val || null })}
+                  variant="medium"
                 />
               ) : (
                 <p className={`text-sm ${tw.textPrimary}`}>
@@ -553,12 +554,12 @@ export default function UserProfilePage() {
                 Preferred Name
               </label>
               {isEditing ? (
-                <input
-                  type="text"
+                <Input
+                  placeholder="Preferred Name"
                   name="preferred_name"
                   value={formData.preferred_name || ""}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                  onChange={(val) => setFormData({ ...formData, preferred_name: val || null })}
+                  variant="medium"
                 />
               ) : (
                 <p className={`text-sm ${tw.textPrimary}`}>
@@ -574,12 +575,13 @@ export default function UserProfilePage() {
                 {t.profile.phoneNumber}
               </label>
               {isEditing ? (
-                <input
+                <Input
+                  placeholder={t.profile.phoneNumber}
                   type="tel"
                   name="phone_number"
                   value={formData.phone_number || ""}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                  onChange={(val) => setFormData({ ...formData, phone_number: val || null })}
+                  variant="medium"
                 />
               ) : (
                 <p className={`text-sm ${tw.textPrimary}`}>
@@ -617,12 +619,12 @@ export default function UserProfilePage() {
                 {t.profile.department}
               </label>
               {isEditing ? (
-                <input
-                  type="text"
+                <Input
+                  placeholder={t.profile.department}
                   name="department"
                   value={formData.department || ""}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                  onChange={(val) => setFormData({ ...formData, department: val || null })}
+                  variant="medium"
                 />
               ) : (
                 <p className={`text-sm ${tw.textPrimary}`}>
@@ -638,12 +640,12 @@ export default function UserProfilePage() {
                 {t.profile.jobTitle}
               </label>
               {isEditing ? (
-                <input
-                  type="text"
+                <Input
+                  placeholder={t.profile.jobTitle}
                   name="job_title"
                   value={formData.job_title || ""}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                  onChange={(val) => setFormData({ ...formData, job_title: val || null })}
+                  variant="medium"
                 />
               ) : (
                 <p className={`text-sm ${tw.textPrimary}`}>
@@ -659,13 +661,12 @@ export default function UserProfilePage() {
                 {t.profile.timezone}
               </label>
               {isEditing ? (
-                <input
-                  type="text"
+                <Input
+                  placeholder={t.profile.timezonePlaceholder}
                   name="timezone"
                   value={formData.timezone}
-                  onChange={handleInputChange}
-                  placeholder={t.profile.timezonePlaceholder}
-                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                  onChange={(val) => setFormData({ ...formData, timezone: val })}
+                  variant="medium"
                 />
               ) : (
                 <p className={`text-sm ${tw.textPrimary}`}>

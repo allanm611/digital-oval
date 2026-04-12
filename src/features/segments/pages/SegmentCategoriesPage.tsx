@@ -17,6 +17,7 @@ import {
   PowerOff,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
+import Input from "../../../shared/components/ui/Input";
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
@@ -181,17 +182,13 @@ function CategoryModal({
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Segment Catalog Name *
                   </label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, name: e.target.value }))
-                    }
-                    className={`w-full px-3 py-2 border ${
-                      nameValidationError ? "border-red-400" : "border-gray-300"
-                    } ${tw.rounded} focus:outline-none text-sm`}
+                  <Input
                     placeholder="e.g., Marketing Segments, Retention Campaigns"
-                    required
+                    value={formData.name}
+                    onChange={(value) =>
+                      setFormData((prev) => ({ ...prev, name: value }))
+                    }
+                    hasError={!!nameValidationError}
                   />
                   {nameValidationError && (
                     <p className="mt-1 text-sm text-red-600">{nameValidationError}</p>

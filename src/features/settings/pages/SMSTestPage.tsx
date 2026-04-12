@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import {  AlertCircle, CheckCircle, Loader, ChevronDown } from "lucide-react";
 import { Listbox } from "@headlessui/react";
 import { color, tw } from "../../../shared/utils/utils";
+import Input from "../../../shared/components/ui/Input";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { useToast } from "../../../contexts/ToastContext";
 import { smsTestService } from "../../routes/services/smsTestService";
@@ -202,11 +203,10 @@ export default function SMSTestPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Phone Number (MSISDN) *
                 </label>
-                <input
-                  type="text"
+                <Input
+                  placeholder="e.g., 254764555247"
                   value={msisdn}
-                  onChange={(e) => setMsisdn(e.target.value)}
-                  className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm`}
+                  onChange={setMsisdn}
                 />
               </div>
 

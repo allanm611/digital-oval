@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Edit, Trash2, Eye, Activity } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
+import Input from "../../../shared/components/ui/Input";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -162,17 +163,13 @@ export default function UsageMetricsPage() {
 
       {/* Search and Filters */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:flex-wrap">
-        <div className="relative flex-1 min-w-[250px]">
-          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search metrics..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            disabled={loading}
-            className={`w-full ${tw.rounded} border border-gray-200 bg-white py-3 pl-10 pr-4 text-sm focus:border-gray-300 focus:outline-none focus:ring-0`}
-          />
-        </div>
+        <Input
+          placeholder="Search metrics..."
+          value={searchTerm}
+          onChange={setSearchTerm}
+          disabled={loading}
+          className="flex-1 min-w-[250px]"
+        />
 
         <HeadlessSelect
           options={categoryOptions}

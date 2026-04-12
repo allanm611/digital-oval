@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
+import Input from "../../../shared/components/ui/Input";
 import { Program } from "../types/program";
 import { useToast } from "../../../contexts/ToastContext";
 
@@ -132,16 +133,12 @@ export default function ProgramModal({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Program Name *
               </label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, name: e.target.value }))
-                }
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+              <Input
                 placeholder="Enter program name"
-                maxLength={128}
-                required
+                value={formData.name}
+                onChange={(value) =>
+                  setFormData((prev) => ({ ...prev, name: value }))
+                }
               />
             </div>
 
@@ -149,15 +146,12 @@ export default function ProgramModal({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Program Code *
               </label>
-              <input
-                type="text"
-                value={formData.code}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, code: e.target.value }))
-                }
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+              <Input
                 placeholder="Enter program code (e.g., PROG-Q4-2024)"
-                required
+                value={formData.code}
+                onChange={(value) =>
+                  setFormData((prev) => ({ ...prev, code: value }))
+                }
               />
             </div>
 

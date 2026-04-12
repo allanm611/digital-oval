@@ -16,6 +16,7 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 
@@ -241,12 +242,12 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
               <label className="text-sm font-medium text-gray-700">
                 Name<span className="text-red-500">*</span>
               </label>
-              <input
-                type="text"
-                name="name"
+              <Input
+                placeholder="Server name"
                 value={form.name}
-                onChange={handleChange}
-                className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
+                onChange={(val) => setForm((prev) => ({...prev, name: val}))}
+                hasError={!!errors.name}
+                variant="medium"
               />
               {errors.name && (
                 <p className="mt-1 text-xs text-red-500">{errors.name}</p>
@@ -257,12 +258,12 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
               <label className="text-sm font-medium text-gray-700">
                 Code<span className="text-red-500">*</span>
               </label>
-              <input
-                type="text"
-                name="code"
+              <Input
+                placeholder="Server code"
                 value={form.code}
-                onChange={handleChange}
-                className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
+                onChange={(val) => setForm((prev) => ({...prev, code: val}))}
+                hasError={!!errors.code}
+                variant="medium"
               />
               {errors.code && (
                 <p className="mt-1 text-xs text-red-500">{errors.code}</p>
@@ -300,12 +301,12 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
               <label className="text-sm font-medium text-gray-700">
                 Host<span className="text-red-500">*</span>
               </label>
-              <input
-                type="text"
-                name="host"
+              <Input
+                placeholder="Host address"
                 value={form.host}
-                onChange={handleChange}
-                className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
+                onChange={(val) => setForm((prev) => ({...prev, host: val}))}
+                hasError={!!errors.host}
+                variant="medium"
               />
               {errors.host && (
                 <p className="mt-1 text-xs text-red-500">{errors.host}</p>
@@ -343,12 +344,11 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
                 The physical or logical location of the server (e.g. Uganda,
                 EU-West).
               </p>
-              <input
-                type="text"
-                name="region"
+              <Input
+                placeholder="Region"
                 value={form.region}
-                onChange={handleChange}
-                className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
+                onChange={(val) => setForm((prev) => ({...prev, region: val}))}
+                variant="medium"
               />
             </div>
 
@@ -374,12 +374,11 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
               <p className="text-xs text-gray-500 mb-1">
                 The starting path for API calls (e.g. /api/v1).
               </p>
-              <input
-                type="text"
-                name="base_path"
+              <Input
+                placeholder="Base path"
                 value={form.base_path}
-                onChange={handleChange}
-                className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
+                onChange={(val) => setForm((prev) => ({...prev, base_path: val}))}
+                variant="medium"
               />
             </div>
 
@@ -391,12 +390,11 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
                 Classification of server type (e.g. database, api,
                 file-storage).
               </p>
-              <input
-                type="text"
-                name="server_type"
+              <Input
+                placeholder="Server type"
                 value={form.server_type}
-                onChange={handleChange}
-                className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
+                onChange={(val) => setForm((prev) => ({...prev, server_type: val}))}
+                variant="medium"
               />
             </div>
           </div>
@@ -464,12 +462,11 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
                 <label className="text-sm font-medium text-gray-700">
                   Health Check URL
                 </label>
-                <input
-                  type="text"
-                  name="health_check_url"
+                <Input
+                  placeholder="Health check URL"
                   value={form.health_check_url}
-                  onChange={handleChange}
-                  className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
+                  onChange={(val) => setForm((prev) => ({...prev, health_check_url: val}))}
+                  variant="medium"
                 />
               </div>
 
@@ -576,12 +573,11 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
             <label className="text-sm font-medium text-gray-700">
               Authentication Type
             </label>
-            <input
-              type="text"
-              name="authentication_type"
+            <Input
+              placeholder="Authentication type"
               value={form.authentication_type}
-              onChange={handleChange}
-              className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
+              onChange={(val) => setForm((prev) => ({...prev, authentication_type: val}))}
+              variant="medium"
             />
           </div>
         </div>

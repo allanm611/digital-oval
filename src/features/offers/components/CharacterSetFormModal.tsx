@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { tw, color } from "../../../shared/utils/utils";
+import Input from "../../../shared/components/ui/Input";
 import type { CharacterSet } from "../../configurations/types/characterSetType";
 
 interface CharacterSetFormModalProps {
@@ -142,15 +143,15 @@ export default function CharacterSetFormModal({
               Name
               <span className="text-red-600">*</span>
             </label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              className={`w-full px-3 py-2 border ${
-                errors.name ? "border-red-500" : "border-gray-300"
-              } ${tw.rounded} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            <Input
               placeholder="Enter character set name"
+              value={formData.name}
+              onChange={(value) => {
+                const event = { target: { name: "name", value } } as any;
+                handleChange(event);
+              }}
+              hasError={!!errors.name}
+              variant="medium"
             />
             {errors.name && (
               <p className="mt-1 text-sm text-red-600">{errors.name}</p>

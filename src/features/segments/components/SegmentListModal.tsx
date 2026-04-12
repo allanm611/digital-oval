@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { X, Upload, FileText, AlertCircle } from "lucide-react";
 import { button as buttonTokens, color, tw } from "../../../shared/utils/utils";
+import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 
 export type SegmentListFormValues = {
@@ -294,18 +295,14 @@ export default function SegmentListModal({
               <label className="text-sm font-medium text-black mb-1 block">
                 List Name
               </label>
-              <input
-                type="text"
-                value={form.list_label}
-                onChange={(e) =>
-                  handleInputChange("list_label", e.target.value)
-                }
+              <Input
                 placeholder="e.g., High Value Customers"
-                className={`w-full ${tw.rounded} border px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
-                  errors.list_label
-                    ? "border-red-400 focus:ring-red-200"
-                    : "border-gray-300 focus:ring-[var(--primary-color,#5EC6B1)]"
-                }`}
+                value={form.list_label}
+                onChange={(value) =>
+                  handleInputChange("list_label", value)
+                }
+                hasError={!!errors.list_label}
+                className={tw.rounded}
               />
               {errors.list_label && (
                 <p className="mt-1 text-xs text-red-500">{errors.list_label}</p>

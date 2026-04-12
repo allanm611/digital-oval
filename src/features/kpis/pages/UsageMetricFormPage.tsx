@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Save } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
+import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { UsageMetric, UsageMetricOperator } from "../types/usageMetrics";
@@ -248,15 +249,12 @@ export default function UsageMetricFormPage({ mode }: UsageMetricFormPageProps) 
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Metric Name *
                 </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
+                <Input
                   placeholder="e.g., Data 2G Usage"
-                  className={`w-full px-3 py-3 text-sm border ${tw.rounded} focus:outline-none ${
-                    errors.name ? "border-red-500" : "border-gray-300"
-                  }`}
+                  value={formData.name}
+                  onChange={(value) => handleChange({ target: { name: "name", value } } as any)}
+                  hasError={!!errors.name}
+                  variant="medium"
                   disabled={saving}
                 />
                 {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
@@ -329,15 +327,12 @@ export default function UsageMetricFormPage({ mode }: UsageMetricFormPageProps) 
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Source Table *
               </label>
-              <input
-                type="text"
-                name="source_table"
-                value={formData.source_table}
-                onChange={handleChange}
+              <Input
                 placeholder="e.g., OCS_DATA"
-                className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none ${
-                  errors.source_table ? "border-red-500" : "border-gray-300"
-                }`}
+                value={formData.source_table}
+                onChange={(value) => handleChange({ target: { name: "source_table", value } } as any)}
+                hasError={!!errors.source_table}
+                variant="medium"
                 disabled={saving}
               />
               {errors.source_table && <p className="text-red-500 text-xs mt-1">{errors.source_table}</p>}

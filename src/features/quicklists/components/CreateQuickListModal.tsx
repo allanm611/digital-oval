@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { X, Upload, FileText, AlertCircle, Download } from "lucide-react";
 import { button as buttonTokens, color, tw } from "../../../shared/utils/utils";
+import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import SubscriptionIdSelector from "../../manual-broadcast/components/SubscriptionIdSelector";
 import { CreateQuickListRequest } from "../types/quicklist";
@@ -504,17 +505,12 @@ export default function CreateQuickListModal({
               <label className="text-sm font-medium text-black mb-1 block">
                 List Name
               </label>
-              <input
-                type="text"
-                value={form.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
+              <Input
                 placeholder="e.g., High Value Customers"
+                value={form.name}
+                onChange={(value) => handleInputChange("name", value)}
                 disabled={isSubmitting}
-                className={`w-full ${tw.rounded} border px-3 py-2 text-sm focus:outline-none focus:ring-2 disabled:opacity-50 ${
-                  errors.name
-                    ? "border-red-400 focus:ring-red-200"
-                    : "border-gray-300 focus:ring-[var(--primary-color,#5EC6B1)]"
-                }`}
+                hasError={!!errors.name}
               />
               {errors.name && (
                 <p className="mt-1 text-xs text-red-500">{errors.name}</p>

@@ -15,6 +15,7 @@ import {
 import { color, tw } from "../../../shared/utils/utils";
 import { zIndex } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import Input from "../../../shared/components/ui/Input";
 import RegularModal from "../../../shared/components/ui/RegularModal";
 import {
   CreativeChannel,
@@ -1264,16 +1265,15 @@ export default function OfferCreativeStep({
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           {t.offers.subjectLine.label} <span className="text-red-500">*</span>
                         </label>
-                        <input
+                        <Input
                           ref={titleInputRef}
-                          type="text"
+                          placeholder={t.offers.subjectLine.placeholder}
                           maxLength={160}
                           value={selectedCreativeData.title}
-                          onChange={(e) => {
+                          onChange={(value) => {
                             setActiveField("title");
-                            setCursorPosition(e.target.selectionStart || 0);
                             updateCreative(selectedCreativeData.id, {
-                              title: e.target.value,
+                              title: value,
                             });
                           }}
                           onClick={(e) => {
@@ -1288,8 +1288,7 @@ export default function OfferCreativeStep({
                               e.currentTarget.selectionStart || 0,
                             );
                           }}
-                          placeholder={t.offers.subjectLine.placeholder}
-                          className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
+                          variant="medium"
                         />
                       </div>
                     )}

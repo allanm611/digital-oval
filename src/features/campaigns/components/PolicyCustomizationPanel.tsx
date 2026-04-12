@@ -11,6 +11,7 @@ import {
   DAYS_OF_WEEK,
 } from "../types/communicationPolicyConfig";
 import { color, tw, components } from "../../../shared/utils/utils";
+import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 
@@ -188,22 +189,21 @@ export default function PolicyCustomizationPanel({
                   >
                     Category Name
                   </label>
-                  <input
-                    type="text"
+                  <Input
+                    placeholder="Enter category name"
                     value={category.name}
-                    onChange={(e) => {
+                    onChange={(value) => {
                       const newCategories = [...dndConfig.categories];
                       newCategories[index] = {
                         ...category,
-                        name: e.target.value,
+                        name: value,
                       };
                       onConfigChange({
                         ...dndConfig,
                         categories: newCategories,
                       });
                     }}
-                    className={`${components.input.default} w-full px-2 py-1 ${tw.caption}`}
-                    placeholder="Enter category name"
+                    variant="compact"
                   />
                 </div>
                 <div>

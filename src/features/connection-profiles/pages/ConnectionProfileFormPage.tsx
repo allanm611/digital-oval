@@ -17,6 +17,7 @@ import {
   DataClassificationEnum,
 } from "../types/connectionProfile";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -306,28 +307,26 @@ export default function ConnectionProfileFormPage({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Profile Name *
               </label>
-              <input
-                type="text"
+              <Input
+                placeholder="Profile name"
                 value={formData.profile_name}
-                onChange={(e) =>
-                  setFormData({ ...formData, profile_name: e.target.value })
+                onChange={(val) =>
+                  setFormData({ ...formData, profile_name: val })
                 }
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
-                required
+                variant="medium"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Profile Code *
               </label>
-              <input
-                type="text"
+              <Input
+                placeholder="Profile code"
                 value={formData.profile_code}
-                onChange={(e) =>
-                  setFormData({ ...formData, profile_code: e.target.value })
+                onChange={(val) =>
+                  setFormData({ ...formData, profile_code: val })
                 }
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
-                required
+                variant="medium"
               />
             </div>
             <div>
@@ -467,16 +466,16 @@ export default function ConnectionProfileFormPage({
                   {/* <p className="text-xs text-gray-500 mb-2">
                     Name of the database to connect to.
                   </p> */}
-                  <input
-                    type="text"
+                  <Input
+                    placeholder="Database name"
                     value={formData.database_name || ""}
-                    onChange={(e) =>
+                    onChange={(val) =>
                       setFormData({
                         ...formData,
-                        database_name: e.target.value || undefined,
+                        database_name: val || undefined,
                       })
                     }
-                    className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
+                    variant="medium"
                   />
                 </div>
               </>
@@ -800,16 +799,16 @@ export default function ConnectionProfileFormPage({
                 <p className="text-xs text-gray-500 mb-2">
                   Column used for tracking changes (e.g. modified_at, id).
                 </p>
-                <input
-                  type="text"
+                <Input
+                  placeholder="Sync column name"
                   value={formData.sync_column_name || ""}
-                  onChange={(e) =>
+                  onChange={(val) =>
                     setFormData({
                       ...formData,
-                      sync_column_name: e.target.value || undefined,
+                      sync_column_name: val || undefined,
                     })
                   }
-                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
+                  variant="medium"
                 />
               </div>
               <div>
@@ -819,16 +818,16 @@ export default function ConnectionProfileFormPage({
                 <p className="text-xs text-gray-500 mb-2">
                   Data type of the sync column.
                 </p>
-                <input
-                  type="text"
+                <Input
+                  placeholder="Sync column type"
                   value={formData.sync_column_type || ""}
-                  onChange={(e) =>
+                  onChange={(val) =>
                     setFormData({
                       ...formData,
-                      sync_column_type: e.target.value || undefined,
+                      sync_column_type: val || undefined,
                     })
                   }
-                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
+                  variant="medium"
                 />
               </div>
             </div>

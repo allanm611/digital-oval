@@ -7,6 +7,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, X } from 'lucide-react';
 import { useSearch } from '../hooks/useSearch';
+import Input from '../../../shared/components/ui/Input';
 import styles from './SearchModal.module.css';
 
 interface SearchModalProps {
@@ -49,13 +50,13 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
         {/* Search Input */}
         <div className={styles.searchInputContainer}>
           <Search size={20} className={styles.searchIcon} />
-          <input
+          <Input
             ref={inputRef}
-            type="text"
             placeholder="Search documentation..."
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={setQuery}
             className={styles.searchInput}
+            variant="medium"
           />
           <button onClick={onClose} className={styles.closeButton}>
             <X size={20} />

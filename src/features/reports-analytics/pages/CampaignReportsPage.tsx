@@ -32,6 +32,7 @@ import type {
 } from "../types/ReportsAPI";
 
 import { tw } from "../../../shared/utils/utils";
+import Input from "../../../shared/components/ui/Input";
 import { campaignService } from "../../campaigns/services/campaignService";
 import { useToast } from "../../../contexts/ToastContext";
 import type { CampaignDisplay } from "../../campaigns/types/campaign";
@@ -1192,12 +1193,11 @@ export default function CampaignReportsPage() {
             </p>
           </div>
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
-            <input
-              type="text"
-              value={tableQuery}
-              onChange={(event) => setTableQuery(event.target.value)}
+            <Input
               placeholder="Search campaign"
-              className={`w-full ${tw.rounded} border border-gray-200 px-3 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:border-gray-400 focus:outline-none md:w-80`}
+              value={tableQuery}
+              onChange={setTableQuery}
+              className="w-full md:w-80"
             />
             <CsvDownloadButton
               headers={csvHeaders}

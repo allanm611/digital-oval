@@ -3,6 +3,7 @@ import { ChevronDown, Type, Sparkles, AlignLeft } from "lucide-react";
 import { tw, color } from "../../../shared/utils/utils";
 import { CommunicationChannel } from "../types/communication";
 import RichTextEditor from "./RichTextEditor";
+import Input from "../../../shared/components/ui/Input";
 import { validateInsertPosition, validateMessageSyntax } from "../../../shared/utils/variableInsertion";
 
 interface MessageEditorProps {
@@ -187,11 +188,16 @@ export default function MessageEditor({
           <label className={`${tw.label} mb-2 block`}>
             Subject Line <span className="text-red-500">*</span>
           </label>
-          <input
+          <Input
             ref={titleInputRef}
-            type="text"
+            placeholder="Enter email subject..."
             value={title}
-            onChange={handleTitleChange}
+            onChange={(value) => {
+              onTitleChange(value);
+              // Also validate on change
+              const error = validateMessageSyntax(value);
+              if (error) setVariableError(error);
+            }}
             onClick={(e) => {
               setActiveField("title");
               setCursorPosition(e.currentTarget.selectionStart || 0);
@@ -199,19 +205,12 @@ export default function MessageEditor({
             onKeyUp={(e) =>
               setCursorPosition(e.currentTarget.selectionStart || 0)
             }
-            placeholder="Enter email subject..."
-            className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:border-transparent transition-all`}
-            style={{
-              boxShadow: "none",
-            }}
             onFocus={(e) => {
               setActiveField("title");
               setCursorPosition(e.currentTarget.selectionStart || 0);
-              e.currentTarget.style.boxShadow = `0 0 0 2px ${color.primary.accent}40`;
             }}
-            onBlur={(e) => {
-              e.currentTarget.style.boxShadow = "none";
-            }}
+            onBlur={() => {}}
+            variant="medium"
           />
         </div>
       )}

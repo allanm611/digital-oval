@@ -21,6 +21,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
+import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import TagInput from "../../../shared/components/ui/TagInput";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -340,18 +341,12 @@ export default function ObjectiveModal({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Objective Name <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => handleInputChange("name", e.target.value)}
-                  className={`w-full px-4 py-3 border ${
-                    tw.rounded
-                  } focus:outline-none focus:ring-2 focus:ring-[${
-                    color.primary.action
-                  }] focus:border-transparent ${
-                    errors.name ? "border-red-500" : "border-gray-300"
-                  }`}
+                <Input
                   placeholder="Enter objective name..."
+                  value={formData.name}
+                  onChange={(value) => handleInputChange("name", value)}
+                  hasError={!!errors.name}
+                  variant="medium"
                 />
                 {errors.name && (
                   <div className="flex items-center mt-1 text-sm text-red-600">

@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import Input from "../../../shared/components/ui/Input";
 
 const CreateProductModalWrapper = lazy(
   () => import("../../products/components/CreateProductModalWrapper"),
@@ -2795,17 +2796,16 @@ export default function OfferDetailsPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Subject Line
                   </label>
-                  <input
+                  <Input
                     ref={titleInputRefAdd}
-                    type="text"
+                    placeholder="Enter email subject..."
                     maxLength={160}
                     value={newCreativeForm.title}
-                    onChange={(e) => {
+                    onChange={(value) => {
                       setActiveFieldAdd("title");
-                      setCursorPositionAdd(e.target.selectionStart || 0);
                       setNewCreativeForm((prev) => ({
                         ...prev,
-                        title: e.target.value,
+                        title: value,
                       }));
                     }}
                     onClick={(e) => {
@@ -2816,8 +2816,7 @@ export default function OfferDetailsPage() {
                       setActiveFieldAdd("title");
                       setCursorPositionAdd(e.currentTarget.selectionStart || 0);
                     }}
-                    placeholder="Enter email subject..."
-                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    variant="medium"
                   />
                 </div>
               )}

@@ -26,6 +26,7 @@ import Pagination from "../../../shared/components/ui/Pagination";
 import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { tw } from "../../../shared/utils/utils";
+import Input from "../../../shared/components/ui/Input";
 import { useToast } from "../../../contexts/ToastContext";
 import type { RangeOption } from "../types/ReportsAPI";
 
@@ -1053,12 +1054,11 @@ export default function SegmentReportsPage() {
             </p>
           </div>
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
-            <input
-              type="text"
-              value={tableQuery}
-              onChange={(event) => setTableQuery(event.target.value)}
+            <Input
               placeholder="Search segment"
-              className={`w-full ${tw.rounded} border border-gray-200 px-3 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:border-gray-400 focus:outline-none md:w-80`}
+              value={tableQuery}
+              onChange={setTableQuery}
+              className="w-full md:w-80"
             />
             <HeadlessSelect
               value={statusFilter}

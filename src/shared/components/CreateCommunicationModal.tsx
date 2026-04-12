@@ -29,6 +29,7 @@ import {
 import { QuickList } from "../../features/quicklists/types/quicklist";
 import CascadingVariableSelector from "../../features/manual-broadcast/components/CascadingVariableSelector";
 import HeadlessSelect from "./ui/HeadlessSelect";
+import Input from "./ui/Input";
 import { useConfigurationData } from "../services/configurationDataService";
 import { useToast } from "../../contexts/ToastContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -961,13 +962,13 @@ export default function CreateCommunicationModal({
                         <label className="text-sm font-medium text-gray-900 mb-2 block">
                           Subject Line <span className="text-red-500">*</span>
                         </label>
-                        <input
+                        <Input
                           ref={titleInputRef}
-                          type="text"
+                          placeholder="Enter email subject..."
                           value={messageTitle}
-                          onChange={(e) => {
-                            setMessageTitle(e.target.value);
-                            setCursorPosition(e.target.selectionStart || 0);
+                          onChange={(value) => {
+                            setMessageTitle(value);
+                            setCursorPosition(value.length);
                           }}
                           onClick={(e) => {
                             setActiveField("title");
@@ -981,9 +982,7 @@ export default function CreateCommunicationModal({
                               e.currentTarget.selectionStart || 0,
                             );
                           }}
-                          placeholder="Enter email subject..."
-                          className="w-full px-4 py-2.5 border rounded-md text-sm focus:outline-none focus:ring-2 transition-all"
-                          style={{ borderColor: color.border.default }}
+                          variant="medium"
                         />
                       </div>
                     )}

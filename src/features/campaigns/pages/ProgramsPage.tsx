@@ -14,6 +14,7 @@ import {
   Filter,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
+import Input from "../../../shared/components/ui/Input";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw, button } from "../../../shared/utils/utils";
@@ -646,17 +647,15 @@ export default function ProgramsPage() {
                   >
                     Program Type
                   </label>
-                  <input
-                    type="text"
+                  <Input
+                    placeholder="Enter program type"
                     value={filters.program_type || ""}
-                    onChange={(e) =>
+                    onChange={(value) =>
                       handleFilterChange(
                         "program_type",
-                        e.target.value || undefined,
+                        value || undefined,
                       )
                     }
-                    placeholder="Enter program type"
-                    className={`w-full px-3 py-2 text-sm border ${tw.borderDefault} ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
                   />
                 </div>
 

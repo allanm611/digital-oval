@@ -14,6 +14,7 @@ import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { isValidCountryCodePhone } from "../../../shared/utils/validation";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { customerService } from "../services/customerServices";
 import type { CustomerSubscriptionRecord } from "../types/customerSubscription";
@@ -821,16 +822,12 @@ export default function CreateCustomerModal({
                   >
                     Phone Number (MSISDN) *
                   </label>
-                  <input
-                    type="text"
-                    name="msisdn"
+                  <Input
+                    placeholder=""
                     value={formData.msisdn}
-                    onChange={handleInputChange}
-                    className={`w-full px-4 py-3 border ${tw.rounded} focus:outline-none text-sm ${
-                      formErrors.msisdn
-                        ? "border-red-500"
-                        : tw.borderDefault
-                    }`}
+                    onChange={(value) => handleInputChange({ target: { name: "msisdn", value } } as any)}
+                    hasError={!!formErrors.msisdn}
+                    variant="medium"
                   />
                   {formErrors.msisdn && (
                     <p className="text-red-600 text-sm mt-1">
@@ -853,17 +850,12 @@ export default function CreateCustomerModal({
                     >
                       First Name *
                     </label>
-                    <input
-                      type="text"
-                      name="firstName"
-                      value={formData.firstName}
-                      onChange={handleInputChange}
+                    <Input
                       placeholder="First Name"
-                      className={`w-full px-4 py-3 border ${tw.rounded} focus:outline-none text-sm ${
-                        formErrors.firstName
-                          ? "border-red-500"
-                          : tw.borderDefault
-                      }`}
+                      value={formData.firstName}
+                      onChange={(value) => handleInputChange({ target: { name: "firstName", value } } as any)}
+                      hasError={!!formErrors.firstName}
+                      variant="medium"
                     />
                     {formErrors.firstName && (
                       <p className="text-red-600 text-sm mt-1">
@@ -877,17 +869,12 @@ export default function CreateCustomerModal({
                     >
                       Last Name *
                     </label>
-                    <input
-                      type="text"
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={handleInputChange}
+                    <Input
                       placeholder="Last Name"
-                      className={`w-full px-4 py-3 border ${tw.rounded} focus:outline-none text-sm ${
-                        formErrors.lastName
-                          ? "border-red-500"
-                          : tw.borderDefault
-                      }`}
+                      value={formData.lastName}
+                      onChange={(value) => handleInputChange({ target: { name: "lastName", value } } as any)}
+                      hasError={!!formErrors.lastName}
+                      variant="medium"
                     />
                     {formErrors.lastName && (
                       <p className="text-red-600 text-sm mt-1">
@@ -904,16 +891,12 @@ export default function CreateCustomerModal({
                     >
                       Alternate Phone Numbers (MSISDN)
                     </label>
-                    <input
-                      type="text"
-                      name="alternatemsisdns"
+                    <Input
+                      placeholder=""
                       value={formData.alternatemsisdns}
-                      onChange={handleInputChange}
-                      className={`w-full px-4 py-3 border ${tw.rounded} focus:outline-none text-sm ${
-                        alternatePhoneError
-                          ? "border-red-500"
-                          : tw.borderDefault
-                      }`}
+                      onChange={(value) => handleInputChange({ target: { name: "alternatemsisdns", value } } as any)}
+                      hasError={!!alternatePhoneError}
+                      variant="medium"
                     />
                     {alternatePhoneError && (
                       <p className="text-red-600 text-sm mt-1">
@@ -948,16 +931,13 @@ export default function CreateCustomerModal({
                     >
                       Email
                     </label>
-                    <input
+                    <Input
                       type="email"
-                      name="email"
+                      placeholder=""
                       value={formData.email}
-                      onChange={handleInputChange}
-                      className={`w-full px-4 py-3 border ${tw.rounded} focus:outline-none text-sm ${
-                        formErrors.email
-                          ? "border-red-500"
-                          : tw.borderDefault
-                      }`}
+                      onChange={(value) => handleInputChange({ target: { name: "email", value } } as any)}
+                      hasError={!!formErrors.email}
+                      variant="medium"
                     />
                     {formErrors.email && (
                       <p className="text-red-600 text-sm mt-1">

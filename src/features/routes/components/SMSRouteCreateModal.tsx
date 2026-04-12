@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import { CreateSMSRouteRequest, SMSRoute } from "../types/smsRoute";
 import { smsRouteService } from "../services/smsRouteService";
 import { useToast } from "../../../contexts/ToastContext";
+import Input from "../../../shared/components/ui/Input";
 import { color, tw } from "../../../shared/utils/utils";
 
 interface SMSRouteCreateModalProps {
@@ -157,14 +158,12 @@ export default function SMSRouteCreateModal({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Route Name *
             </label>
-            <input
-              type="text"
-              name="name"
+            <Input
+              placeholder=""
               value={formData.name}
-              onChange={handleChange}
-              className={`w-full px-3 py-2 border ${tw.rounded} text-sm focus:outline-none ${
-                errors.name ? "border-red-500" : "border-gray-300"
-              }`}
+              onChange={(value) => handleChange({ target: { name: "name", value } } as any)}
+              hasError={!!errors.name}
+              variant="medium"
               disabled={loading}
             />
             {errors.name && (

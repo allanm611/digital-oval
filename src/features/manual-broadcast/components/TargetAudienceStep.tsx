@@ -4,6 +4,7 @@ import { color, tw, button as buttonTokens } from "../../../shared/utils/utils";
 import { isValidCountryCodePhone, validateContacts } from "../../../shared/utils/validation";
 import { ManualBroadcastData } from "../pages/CreateManualBroadcastPage";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import QuickListPickerModal from "../../segments/components/QuickListPickerModal";
 import CreateQuickListModal from "../../quicklists/components/CreateQuickListModal";
@@ -295,16 +296,14 @@ export default function TargetAudienceStep({
           <label className="text-sm font-medium text-gray-900 block mb-1">
             Broadcast Name *
           </label>
-          <input
-            type="text"
+          <Input
+            placeholder="e.g., Q4 Campaign Audience"
             value={listName}
-            onChange={(e) => {
-              setListName(e.target.value);
+            onChange={(value) => {
+              setListName(value);
               setError("");
             }}
-            placeholder="e.g., Q4 Campaign Audience"
             disabled={isSubmitting}
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary-color,#5EC6B1)] disabled:opacity-50"
           />
         </div>
 

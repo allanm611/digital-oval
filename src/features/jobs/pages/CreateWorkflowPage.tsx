@@ -5,6 +5,7 @@ import { workflowService } from "../services/workflowService";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import Input from "../../../shared/components/ui/Input";
 import { color, tw } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import type { CreateWorkflowPayload, UpdateWorkflowPayload } from "../types/workflow";
@@ -134,16 +135,14 @@ export default function CreateWorkflowPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {t.common.name} <span className="text-red-500">*</span>
               </label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                className={`w-full ${tw.rounded} border ${
-                  errors.name ? "border-red-300" : "border-gray-300"
-                } px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
+              <Input
                 placeholder={t.workflows.enterWorkflowName}
+                value={formData.name}
+                onChange={(val) =>
+                  setFormData({ ...formData, name: val })
+                }
+                hasError={!!errors.name}
+                variant="medium"
               />
               {errors.name && (
                 <p className="mt-1 text-sm text-red-600">{errors.name}</p>
@@ -172,17 +171,16 @@ export default function CreateWorkflowPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {t.common.type}
               </label>
-              <input
-                type="text"
+              <Input
+                placeholder={t.workflows.enterWorkflowType}
                 value={formData.workflow_type || ""}
-                onChange={(e) =>
+                onChange={(val) =>
                   setFormData({
                     ...formData,
-                    workflow_type: e.target.value || null,
+                    workflow_type: val || null,
                   })
                 }
-                className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
-                placeholder={t.workflows.enterWorkflowType}
+                variant="medium"
               />
             </div>
           </div>

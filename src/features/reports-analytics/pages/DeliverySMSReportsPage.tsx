@@ -21,6 +21,7 @@ import {
   UserMinus,
 } from "lucide-react";
 import { colors } from "../../../shared/utils/tokens";
+import Input from "../../../shared/components/ui/Input";
 import { color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
@@ -810,12 +811,11 @@ export default function DeliverySMSReportsPage() {
             </p>
           </div>
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
-            <input
-              type="text"
-              value={campaignQuery}
-              onChange={(event) => setCampaignQuery(event.target.value)}
+            <Input
               placeholder="Search campaign"
-              className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-gray-400 focus:outline-none md:w-80`}
+              value={campaignQuery}
+              onChange={setCampaignQuery}
+              className="w-full md:w-80"
             />
             <HeadlessSelect
               value={statusFilter}

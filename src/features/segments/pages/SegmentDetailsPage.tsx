@@ -19,6 +19,7 @@ import {
   Loader2,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
+import Input from "../../../shared/components/ui/Input";
 import { ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import {
   LineChart,
@@ -1547,17 +1548,15 @@ export default function SegmentDetailsPage() {
                 ) : null}
                 {showAddTagInput ? (
                   <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={newTag}
-                      onChange={(e) => setNewTag(e.target.value)}
+                    <Input
                       placeholder="Enter tag name"
-                      className={`flex-1 px-3 py-1.5 border ${tw.borderDefault} ${tw.rounded} text-sm focus:outline-none focus:ring-1`}
+                      value={newTag}
+                      onChange={setNewTag}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") handleAddTag();
                         if (e.key === "Escape") setShowAddTagInput(false);
                       }}
-                      autoFocus
+                      className="flex-1"
                     />
                     <button
                       onClick={handleAddTag}

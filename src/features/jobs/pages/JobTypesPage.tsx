@@ -9,6 +9,7 @@ import {
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import Input from "../../../shared/components/ui/Input";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import Pagination from "../../../shared/components/ui/Pagination";
@@ -217,12 +218,12 @@ function JobTypeModal({
             <label className="block text-sm font-medium text-gray-700">
               Name
             </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className={`mt-1 w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
+            <Input
               placeholder="e.g. ETL Pipeline"
+              value={name}
+              onChange={setName}
+              hasError={false}
+              variant="medium"
               maxLength={255}
               required
             />
@@ -233,18 +234,12 @@ function JobTypeModal({
               Code
             </label>
             <div className="relative">
-              <input
-                type="text"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                className={`mt-1 w-full ${
-                  tw.rounded
-                } border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 ${
-                  codeValidationError
-                    ? "border-red-300 focus:border-red-500 focus:ring-red-500"
-                    : "border-gray-300 focus:border-[#3b8169] focus:ring-[#3b8169]"
-                }`}
+              <Input
                 placeholder="e.g. etl_pipeline"
+                value={code}
+                onChange={setCode}
+                hasError={!!codeValidationError}
+                variant="medium"
                 maxLength={100}
                 required
               />

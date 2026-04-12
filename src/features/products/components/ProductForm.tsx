@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Save, HelpCircle, Plus, Trash2, X } from "lucide-react";
+import { Save, HelpCircle, Plus, Trash2, X, ChevronDown } from "lucide-react";
 import {
   CreateProductRequest,
   UpdateProductRequest,
@@ -20,6 +20,8 @@ import { useBackendProductTypeData } from "../../../shared/hooks/useBackendProdu
 import { useBackendComboTypeData } from "../../../shared/hooks/useBackendComboTypeData";
 import { ComboType } from "../services/comboTypeService";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import { utilitiesConfig } from "../../configurations/configs/configurationPageConfigs";
+import CreateUtilityModal from "../../configurations/components/CreateUtilityModal";
 
 interface ProductFormProps {
   formData: CreateProductRequest | UpdateProductRequest;
@@ -62,8 +64,14 @@ export default function ProductForm({
   const { data: comboTypes, loading: comboTypesLoading } =
     useBackendComboTypeData();
 
+  // Get resource types from configuration
+  const { data: resourceTypesData } = useConfigurationData("resourceTypes");
+
   // Error state
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Focus state for inputs
+  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   // Combo data state
   const [comboData, setComboData] = useState<ComboProductData>(() => {
@@ -92,11 +100,23 @@ export default function ProductForm({
   // Temporary resource data being configured
   const [tempResourceData, setTempResourceData] = useState({
     unit_value: 0,
-    unit: "MB" as string,
+    unit: "" as string,
     validity_hours: undefined as number | undefined,
     price: undefined as number | undefined,
     daid_account: undefined as string | undefined,
   });
+
+  // Add Resource accordion state
+  const [isAddResourceExpanded, setIsAddResourceExpanded] = useState(false);
+
+  // Utility selection state (for when utility resource type is selected)
+  const [selectedUtility, setSelectedUtility] = useState<string>("");
+
+  // Custom utilities state
+  const [customUtilities, setCustomUtilities] = useState<Array<{ value: string; label: string }>>([]);
+
+  // Create utility modal state
+  const [isCreateUtilityModalOpen, setIsCreateUtilityModalOpen] = useState(false);
 
   // Tags input state
   const [tagInput, setTagInput] = useState("");
@@ -292,43 +312,58 @@ export default function ProductForm({
     { label: "Others", value: "other" },
   ];
 
-  // Resource type options for dropdown
+  // Resource type options from configuration
   const resourceTypeOptions: {
     label: string;
     value: ProductUnit;
     category: string;
-  }[] = [
-    { label: "Data", value: "data_mb", category: "Data" },
-    { label: "On-net Minutes", value: "onnet_minutes", category: "Voice" },
-    { label: "Off-net Minutes", value: "offnet_minutes", category: "Voice" },
-    { label: "All-net Minutes", value: "allnet_minutes", category: "Voice" },
-    { label: "Voice Bundles", value: "voice_bundles", category: "Voice" },
-    { label: "SMS Bundles", value: "sms_count", category: "SMS" },
-    { label: "Roaming Data", value: "roaming_data_mb", category: "Roaming" },
-    { label: "Roaming Minutes", value: "roaming_minutes", category: "Roaming" },
-    {
-      label: "Roaming SMS Count",
-      value: "roaming_sms_count",
-      category: "Roaming",
-    },
-    { label: "Airtime", value: "airtime", category: "Other" },
-    { label: "Utility", value: "utility", category: "Other" },
-    { label: "Points", value: "points", category: "Other" },
-  ];
+    validUnits?: string[];
+  }[] = (resourceTypesData || []).map((rt: any) => ({
+    label: rt.name,
+    value: rt.value,
+    category: rt.category,
+    validUnits: rt.validUnits,
+  })) || [];
 
-  // Unit options for combo resources
-  const comboUnitOptions: { label: string; value: string }[] = [
-    { label: "MB", value: "MB" },
-    { label: "GB", value: "GB" },
-    { label: "Minutes", value: "minutes" },
-    { label: "Seconds", value: "seconds" },
-    { label: "Count", value: "count" },
-  ];
+  // Get valid units for a selected resource type
+  const getValidUnitsForResource = (resourceValue: ProductUnit) => {
+    const resource = resourceTypeOptions.find((opt) => opt.value === resourceValue);
+    return resource?.validUnits || [];
+  };
+
+  // Unit options for combo resources (dynamic based on selected resource)
+  const comboUnitOptions: { label: string; value: string }[] = selectedResourceType
+    ? getValidUnitsForResource(selectedResourceType).map((unit) => ({
+        label: unit,
+        value: unit,
+      }))
+    : [];
 
   // Filter out already-selected resource types
   const availableResourceTypeOptions = resourceTypeOptions.filter(
     (opt) => !existingResourceTypes.includes(opt.value),
   );
+
+  // Helper to get utilities from config
+  const getUtilitiesOptions = () => {
+    const configUtilities = (utilitiesConfig?.initialData || [])
+      .filter((u: any) => u.isActive)
+      .map((u: any) => ({
+        value: u.value,
+        label: u.name,
+      }));
+
+    // Add "Create custom" option at the beginning, followed by config utilities, then custom utilities
+    return [
+      {
+        value: "create-custom",
+        label: "Create custom",
+        isCreateCustom: true,
+      },
+      ...configUtilities,
+      ...customUtilities,
+    ] as any[];
+  };
 
   // Check if a unit is a data type (needs size selector)
   const isDataType = (unit: ProductUnit | undefined | ""): boolean => {
@@ -396,7 +431,7 @@ export default function ProductForm({
     setSelectedResourceType(""); // Reset dropdown
     setTempResourceData({
       unit_value: 0,
-      unit: "MB",
+      unit: "",
       validity_hours: undefined,
       price: undefined,
       daid_account: undefined,
@@ -463,26 +498,18 @@ export default function ProductForm({
                       });
                     }
                   }}
-                  className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
-                  style={{
-                    borderColor: errors.name
-                      ? color.status.danger
-                      : color.border.default,
-                    outline: "none",
-                  }}
+                  className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all outline-none ${
+                    focusedField === "name"
+                      ? errors.name
+                        ? "border-red-500 ring-2 ring-red-500/20"
+                        : "border-blue-500 ring-2 ring-blue-500/20"
+                      : errors.name
+                        ? "border-red-500"
+                        : "border-gray-300"
+                  }`}
                   placeholder={t.products.form.enterProductName}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = errors.name
-                      ? color.status.danger
-                      : color.primary.accent;
-                    e.target.style.boxShadow = `0 0 0 3px ${errors.name ? color.status.danger : color.primary.accent}20`;
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = errors.name
-                      ? color.status.danger
-                      : color.border.default;
-                    e.target.style.boxShadow = "none";
-                  }}
+                  onFocus={() => setFocusedField("name")}
+                  onBlur={() => setFocusedField(null)}
                 />
                 {errors.name && (
                   <p
@@ -523,26 +550,18 @@ export default function ProductForm({
                   onChange={(e) =>
                     onInputChange("product_code", e.target.value)
                   }
-                  className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
-                  style={{
-                    borderColor: errors.product_code
-                      ? color.status.danger
-                      : color.border.default,
-                    outline: "none",
-                  }}
+                  className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all outline-none ${
+                    focusedField === "product_code"
+                      ? errors.product_code
+                        ? "border-red-500 ring-2 ring-red-500/20"
+                        : "border-blue-500 ring-2 ring-blue-500/20"
+                      : errors.product_code
+                        ? "border-red-500"
+                        : "border-gray-300"
+                  }`}
                   placeholder={t.products.form.enterProductCode}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = errors.product_code
-                      ? color.status.danger
-                      : color.primary.accent;
-                    e.target.style.boxShadow = `0 0 0 3px ${errors.product_code ? color.status.danger : color.primary.accent}20`;
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = errors.product_code
-                      ? color.status.danger
-                      : color.border.default;
-                    e.target.style.boxShadow = "none";
-                  }}
+                  onFocus={() => setFocusedField("product_code")}
+                  onBlur={() => setFocusedField(null)}
                 />
                 {errors.product_code && (
                   <p
@@ -584,26 +603,18 @@ export default function ProductForm({
                   required
                   value={formData.da_id || ""}
                   onChange={(e) => onInputChange("da_id", e.target.value)}
-                  className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
-                  style={{
-                    borderColor: errors.da_id
-                      ? color.status.danger
-                      : color.border.default,
-                    outline: "none",
-                  }}
+                  className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all outline-none ${
+                    focusedField === "da_id"
+                      ? errors.da_id
+                        ? "border-red-500 ring-2 ring-red-500/20"
+                        : "border-blue-500 ring-2 ring-blue-500/20"
+                      : errors.da_id
+                        ? "border-red-500"
+                        : "border-gray-300"
+                  }`}
                   placeholder="Enter DA ID"
-                  onFocus={(e) => {
-                    e.target.style.borderColor = errors.da_id
-                      ? color.status.danger
-                      : color.primary.accent;
-                    e.target.style.boxShadow = `0 0 0 3px ${errors.da_id ? color.status.danger : color.primary.accent}20`;
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = errors.da_id
-                      ? color.status.danger
-                      : color.border.default;
-                    e.target.style.boxShadow = "none";
-                  }}
+                  onFocus={() => setFocusedField("da_id")}
+                  onBlur={() => setFocusedField(null)}
                 />
                 {errors.da_id && (
                   <p
@@ -653,26 +664,18 @@ export default function ProductForm({
                     });
                   }
                 }}
-                className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all resize-none`}
-                style={{
-                  borderColor: errors.description
-                    ? color.status.danger
-                    : color.border.default,
-                  outline: "none",
-                }}
+                className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all resize-none outline-none ${
+                  focusedField === "description"
+                    ? errors.description
+                      ? "border-red-500 ring-2 ring-red-500/20"
+                      : "border-blue-500 ring-2 ring-blue-500/20"
+                    : errors.description
+                      ? "border-red-500"
+                      : "border-gray-300"
+                }`}
                 placeholder={t.products.form.enterProductDescription}
-                onFocus={(e) => {
-                  e.target.style.borderColor = errors.description
-                    ? color.status.danger
-                    : color.primary.accent;
-                  e.target.style.boxShadow = `0 0 0 3px ${errors.description ? color.status.danger : color.primary.accent}20`;
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = errors.description
-                    ? color.status.danger
-                    : color.border.default;
-                  e.target.style.boxShadow = "none";
-                }}
+                onFocus={() => setFocusedField("description")}
+                onBlur={() => setFocusedField(null)}
               />
               {errors.description && (
                 <p
@@ -716,26 +719,18 @@ export default function ProductForm({
                   onChange={(e) =>
                     onInputChange("price", parseFloat(e.target.value) || 0)
                   }
-                  className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
-                  style={{
-                    borderColor: errors.price
-                      ? color.status.danger
-                      : color.border.default,
-                    outline: "none",
-                  }}
+                  className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all outline-none ${
+                    focusedField === "price"
+                      ? errors.price
+                        ? "border-red-500 ring-2 ring-red-500/20"
+                        : "border-blue-500 ring-2 ring-blue-500/20"
+                      : errors.price
+                        ? "border-red-500"
+                        : "border-gray-300"
+                  }`}
                   placeholder="0.00"
-                  onFocus={(e) => {
-                    e.target.style.borderColor = errors.price
-                      ? color.status.danger
-                      : color.primary.accent;
-                    e.target.style.boxShadow = `0 0 0 3px ${errors.price ? color.status.danger : color.primary.accent}20`;
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = errors.price
-                      ? color.status.danger
-                      : color.border.default;
-                    e.target.style.boxShadow = "none";
-                  }}
+                  onFocus={() => setFocusedField("price")}
+                  onBlur={() => setFocusedField(null)}
                 />
                 {errors.price && (
                   <p
@@ -795,17 +790,14 @@ export default function ProductForm({
                         handleAddTag(e);
                       }}
                       placeholder="Type tags separated by commas"
-                      className={`flex-1 px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
-                      style={{
-                        borderColor: color.border.default,
-                        outline: "none",
-                      }}
-                      onFocus={(e) => {
-                        e.target.style.borderColor = color.primary.accent;
-                        e.target.style.boxShadow = `0 0 0 3px ${color.primary.accent}20`;
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = color.border.default;
+                      className={`flex-1 px-4 py-2.5 border ${tw.rounded} text-sm transition-all outline-none ${
+                        focusedField === "tags"
+                          ? "border-blue-500 ring-2 ring-blue-500/20"
+                          : "border-gray-300"
+                      }`}
+                      onFocus={() => setFocusedField("tags")}
+                      onBlur={() => {
+                        setFocusedField(null);
                         e.target.style.boxShadow = "none";
                       }}
                     />
@@ -1162,9 +1154,306 @@ export default function ProductForm({
                   </div>
                 </div>
 
+                {/* Add Resource Accordion - Shows for custom combos */}
+                {isCustomComboMode && !comboData.combo_type_id && (
+                  <div
+                    className={`border border-gray-200 ${tw.rounded} overflow-hidden`}
+                  >
+                    {/* Accordion Header */}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setIsAddResourceExpanded(!isAddResourceExpanded)
+                      }
+                      className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+                      style={{
+                        backgroundColor: isAddResourceExpanded
+                          ? color.surface.cards
+                          : "transparent",
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`text-sm font-medium ${tw.textPrimary}`}
+                        >
+                          Add Resource
+                        </span>
+                      </div>
+                      <ChevronDown
+                        className={`w-5 h-5 transition-transform ${
+                          isAddResourceExpanded ? "rotate-180" : ""
+                        }`}
+                        style={{ color: color.text.secondary }}
+                      />
+                    </button>
+
+                    {/* Accordion Content */}
+                    {isAddResourceExpanded && (
+                      <div className="border-t border-gray-200 p-4 space-y-3">
+                        <div
+                          className={`grid gap-3 ${
+                            !comboData.shared_validity &&
+                            !comboData.shared_price &&
+                            !comboData.shared_daid
+                              ? "md:grid-cols-6"
+                              : !comboData.shared_validity &&
+                                  !comboData.shared_price
+                                ? "md:grid-cols-5"
+                                : !comboData.shared_validity ||
+                                    !comboData.shared_price ||
+                                    !comboData.shared_daid
+                                  ? "md:grid-cols-4"
+                                  : "md:grid-cols-3"
+                          }`}
+                        >
+                          {/* Resource Type Dropdown */}
+                          <div>
+                            <label
+                              className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
+                            >
+                              Resource Type
+                            </label>
+                            <HeadlessSelect
+                              value={selectedResourceType}
+                              onChange={(value) => {
+                                const newType = value as ProductUnit;
+                                setSelectedResourceType(newType);
+                                // Auto-populate unit with first valid unit for this resource
+                                const validUnits = getValidUnitsForResource(newType);
+                                setTempResourceData({
+                                  unit_value: 0,
+                                  unit: validUnits.length > 0 ? validUnits[0] : "",
+                                  validity_hours: undefined,
+                                  price: undefined,
+                                  daid_account: undefined,
+                                });
+                                // Reset utility selection if switching away from utility type
+                                if (newType !== "utility") {
+                                  setSelectedUtility("");
+                                }
+                              }}
+                              options={availableResourceTypeOptions}
+                              placeholder={
+                                availableResourceTypeOptions.length === 0
+                                  ? "All resources added"
+                                  : "Select resource"
+                              }
+                              className="w-full"
+                              disabled={availableResourceTypeOptions.length === 0}
+                            />
+                          </div>
+
+                          {/* Unit Dropdown */}
+                          <div>
+                            <label
+                              className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
+                            >
+                              Unit
+                            </label>
+                            <HeadlessSelect
+                              value={tempResourceData.unit}
+                              onChange={(value) => {
+                                setTempResourceData({
+                                  ...tempResourceData,
+                                  unit: value as string,
+                                });
+                              }}
+                              options={comboUnitOptions}
+                              placeholder="Select unit"
+                              className="w-full"
+                            />
+                          </div>
+
+                          {/* Utility Selection - show when Utility resource type is selected */}
+                          {selectedResourceType === "utility" && (
+                            <div>
+                              <label
+                                className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
+                              >
+                                Utility *
+                              </label>
+                              <HeadlessSelect
+                                options={getUtilitiesOptions()}
+                                value={selectedUtility}
+                                onChange={(value: string | number) => {
+                                  const val = value as string;
+                                  if (val === "create-custom") {
+                                    setIsCreateUtilityModalOpen(true);
+                                    setSelectedUtility(""); // Reset selection
+                                  } else {
+                                    setSelectedUtility(val);
+                                  }
+                                }}
+                                placeholder="Select utility"
+                                className="w-full"
+                              />
+                            </div>
+                          )}
+
+                          {/* Unit Value */}
+                          <div>
+                            <label
+                              className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
+                            >
+                              Value{" "}
+                              {tempResourceData.unit &&
+                                `(${tempResourceData.unit})`}
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              step="1"
+                              value={
+                                tempResourceData.unit_value === 0
+                                  ? ""
+                                  : tempResourceData.unit_value
+                              }
+                              onChange={(e) => {
+                                const val =
+                                  e.target.value === ""
+                                    ? 0
+                                    : parseFloat(e.target.value);
+                                setTempResourceData({
+                                  ...tempResourceData,
+                                  unit_value: isNaN(val) ? 0 : val,
+                                });
+                              }}
+                              className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm transition-all`}
+                              style={{ borderColor: color.border.default }}
+                              placeholder="Enter value"
+                            />
+                          </div>
+
+                          {/* Validity (if not shared) */}
+                          {!comboData.shared_validity && (
+                            <div>
+                              <label
+                                className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
+                              >
+                                Validity (Hours)
+                              </label>
+                              <input
+                                type="number"
+                                min="1"
+                                step="1"
+                                value={tempResourceData.validity_hours ?? ""}
+                                onChange={(e) =>
+                                  setTempResourceData({
+                                    ...tempResourceData,
+                                    validity_hours: e.target.value
+                                      ? parseInt(e.target.value, 10)
+                                      : undefined,
+                                  })
+                                }
+                                className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm transition-all`}
+                                style={{ borderColor: color.border.default }}
+                                placeholder="e.g., 72"
+                              />
+                            </div>
+                          )}
+
+                          {/* Price (if not shared) */}
+                          {!comboData.shared_price && (
+                            <div>
+                              <label
+                                className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
+                              >
+                                Price
+                              </label>
+                              <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={tempResourceData.price ?? ""}
+                                onChange={(e) =>
+                                  setTempResourceData({
+                                    ...tempResourceData,
+                                    price: e.target.value
+                                      ? parseFloat(e.target.value)
+                                      : undefined,
+                                  })
+                                }
+                                className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm transition-all`}
+                                style={{ borderColor: color.border.default }}
+                                placeholder="Enter price"
+                              />
+                            </div>
+                          )}
+
+                          {/* DAID (if not shared) */}
+                          {!comboData.shared_daid && (
+                            <div>
+                              <label
+                                className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
+                              >
+                                DAID Account
+                              </label>
+                              <input
+                                type="text"
+                                value={tempResourceData.daid_account ?? ""}
+                                onChange={(e) =>
+                                  setTempResourceData({
+                                    ...tempResourceData,
+                                    daid_account: e.target.value || undefined,
+                                  })
+                                }
+                                className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm transition-all`}
+                                style={{ borderColor: color.border.default }}
+                                placeholder="Enter DAID"
+                              />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Save Resource Button - At Bottom */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            // Validate utility selection if utility resource type is selected
+                            if (selectedResourceType === "utility" && !selectedUtility) {
+                              alert("Please select a utility");
+                              return;
+                            }
+
+                            // Add resource with all temp data at once
+                            addComboResource(
+                              selectedResourceType,
+                              tempResourceData.unit_value,
+                              tempResourceData.unit,
+                              tempResourceData.validity_hours,
+                              tempResourceData.price,
+                              tempResourceData.daid_account,
+                            );
+                            // Reset utility selection
+                            setSelectedUtility("");
+                            // Collapse accordion after adding
+                            setIsAddResourceExpanded(false);
+                          }}
+                          disabled={!selectedResourceType || tempResourceData.unit_value === 0 || tempResourceData.unit_value === undefined}
+                          style={{
+                            background: buttons.bordered.background,
+                            color: "#000000",
+                            border: buttons.bordered.border,
+                            padding: `${buttons.bordered.paddingY} ${buttons.bordered.paddingX}`,
+                            borderRadius: buttons.bordered.borderRadius,
+                            fontSize: buttons.bordered.fontSize,
+                            fontWeight: 500,
+                            cursor: (selectedResourceType && tempResourceData.unit_value && tempResourceData.unit_value > 0)
+                              ? "pointer"
+                              : "not-allowed",
+                            opacity: (selectedResourceType && tempResourceData.unit_value && tempResourceData.unit_value > 0) ? 1 : 0.5,
+                          }}
+                        >
+                          Save Resource
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Resources List */}
                 {comboData.resources.length > 0 && (
-                  <div className="space-y-3 mb-3">
+                  <div className="space-y-3 mb-3 mt-6">
                     {comboData.resources.map((resource, index) => (
                       <div
                         key={index}
@@ -1343,228 +1632,6 @@ export default function ProductForm({
                     ))}
                   </div>
                 )}
-
-                {/* Add Resource Section - Shows for custom combos */}
-                {isCustomComboMode && !comboData.combo_type_id && (
-                  <div
-                    className={`border border-gray-200 ${tw.rounded} p-4 space-y-3`}
-                  >
-                    <div
-                      className={`grid gap-3 ${
-                        !comboData.shared_validity &&
-                        !comboData.shared_price &&
-                        !comboData.shared_daid
-                          ? "md:grid-cols-6"
-                          : !comboData.shared_validity &&
-                              !comboData.shared_price
-                            ? "md:grid-cols-5"
-                            : !comboData.shared_validity ||
-                                !comboData.shared_price ||
-                                !comboData.shared_daid
-                              ? "md:grid-cols-4"
-                              : "md:grid-cols-3"
-                      }`}
-                    >
-                      {/* Resource Type Dropdown */}
-                      <div>
-                        <label
-                          className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
-                        >
-                          Resource Type
-                        </label>
-                        <HeadlessSelect
-                          value={selectedResourceType}
-                          onChange={(value) => {
-                            const newType = value as ProductUnit;
-                            setSelectedResourceType(newType);
-                            setTempResourceData({
-                              unit_value: 0,
-                              unit: "MB",
-                              validity_hours: undefined,
-                              price: undefined,
-                              daid_account: undefined,
-                            });
-                          }}
-                          options={availableResourceTypeOptions}
-                          placeholder={
-                            availableResourceTypeOptions.length === 0
-                              ? "All resources added"
-                              : "Select resource"
-                          }
-                          className="w-full"
-                          disabled={availableResourceTypeOptions.length === 0}
-                        />
-                      </div>
-
-                      {/* Unit Dropdown */}
-                      <div>
-                        <label
-                          className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
-                        >
-                          Unit
-                        </label>
-                        <HeadlessSelect
-                          value={tempResourceData.unit}
-                          onChange={(value) => {
-                            setTempResourceData({
-                              ...tempResourceData,
-                              unit: value as string,
-                            });
-                          }}
-                          options={comboUnitOptions}
-                          placeholder="Select unit"
-                          className="w-full"
-                        />
-                      </div>
-
-                      {/* Unit Value */}
-                      <div>
-                        <label
-                          className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
-                        >
-                          Value{" "}
-                          {tempResourceData.unit &&
-                            `(${tempResourceData.unit})`}
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          step="1"
-                          value={
-                            tempResourceData.unit_value === 0
-                              ? ""
-                              : tempResourceData.unit_value
-                          }
-                          onChange={(e) => {
-                            const val =
-                              e.target.value === ""
-                                ? 0
-                                : parseFloat(e.target.value);
-                            setTempResourceData({
-                              ...tempResourceData,
-                              unit_value: isNaN(val) ? 0 : val,
-                            });
-                          }}
-                          className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm transition-all`}
-                          style={{ borderColor: color.border.default }}
-                          placeholder="Enter value"
-                        />
-                      </div>
-
-                      {/* Validity (if not shared) */}
-                      {!comboData.shared_validity && (
-                        <div>
-                          <label
-                            className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
-                          >
-                            Validity (Hours)
-                          </label>
-                          <input
-                            type="number"
-                            min="1"
-                            step="1"
-                            value={tempResourceData.validity_hours ?? ""}
-                            onChange={(e) =>
-                              setTempResourceData({
-                                ...tempResourceData,
-                                validity_hours: e.target.value
-                                  ? parseInt(e.target.value, 10)
-                                  : undefined,
-                              })
-                            }
-                            className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm transition-all`}
-                            style={{ borderColor: color.border.default }}
-                            placeholder="e.g., 72"
-                          />
-                        </div>
-                      )}
-
-                      {/* Price (if not shared) */}
-                      {!comboData.shared_price && (
-                        <div>
-                          <label
-                            className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
-                          >
-                            Price
-                          </label>
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={tempResourceData.price ?? ""}
-                            onChange={(e) =>
-                              setTempResourceData({
-                                ...tempResourceData,
-                                price: e.target.value
-                                  ? parseFloat(e.target.value)
-                                  : undefined,
-                              })
-                            }
-                            className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm transition-all`}
-                            style={{ borderColor: color.border.default }}
-                            placeholder="Enter price"
-                          />
-                        </div>
-                      )}
-
-                      {/* DAID (if not shared) */}
-                      {!comboData.shared_daid && (
-                        <div>
-                          <label
-                            className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
-                          >
-                            DAID Account
-                          </label>
-                          <input
-                            type="text"
-                            value={tempResourceData.daid_account ?? ""}
-                            onChange={(e) =>
-                              setTempResourceData({
-                                ...tempResourceData,
-                                daid_account: e.target.value || undefined,
-                              })
-                            }
-                            className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm transition-all`}
-                            style={{ borderColor: color.border.default }}
-                            placeholder="Enter DAID"
-                          />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Add Resource Button - Below fields */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        // Add resource with all temp data at once
-                        addComboResource(
-                          selectedResourceType,
-                          tempResourceData.unit_value,
-                          tempResourceData.unit,
-                          tempResourceData.validity_hours,
-                          tempResourceData.price,
-                          tempResourceData.daid_account,
-                        );
-                      }}
-                      disabled={!selectedResourceType}
-                      style={{
-                        background: buttons.bordered.background,
-                        color: "#000000",
-                        border: buttons.bordered.border,
-                        padding: `${buttons.bordered.paddingY} ${buttons.bordered.paddingX}`,
-                        borderRadius: buttons.bordered.borderRadius,
-                        fontSize: buttons.bordered.fontSize,
-                        fontWeight: 500,
-                        cursor: selectedResourceType
-                          ? "pointer"
-                          : "not-allowed",
-                        opacity: selectedResourceType ? 1 : 0.5,
-                      }}
-                    >
-                      Add Resource
-                    </button>
-                  </div>
-                )}
               </div>
             )}
 
@@ -1741,6 +1808,18 @@ export default function ProductForm({
         isOpen={showCreateModal}
         onClose={() => onShowCreateModal(false)}
         onCategoryCreated={onCategoryCreated}
+      />
+
+      {/* Create Utility Modal */}
+      <CreateUtilityModal
+        isOpen={isCreateUtilityModalOpen}
+        onClose={() => setIsCreateUtilityModalOpen(false)}
+        onUtilityCreated={(utility: any) => {
+          // Add to custom utilities
+          const newUtility = { value: utility.value, label: utility.name };
+          setCustomUtilities([...customUtilities, newUtility]);
+          setIsCreateUtilityModalOpen(false);
+        }}
       />
     </>
   );

@@ -28,6 +28,7 @@ import {
 } from "../../../shared/utils/variableInsertion";
 import { useConfigurationData } from "../../../shared/services/configurationDataService";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import Input from "../../../shared/components/ui/Input";
 import { CommunicationPolicyConfiguration } from "../../campaigns/types/communicationPolicyConfig";
 import { communicationPolicyService } from "../../campaigns/services/communicationPolicyService";
 import CommunicationPolicyModal from "../../campaigns/components/CommunicationPolicyModal";
@@ -975,13 +976,13 @@ export default function DefineCommunicationStep({
                 >
                   Subject Line <span className="text-red-500">*</span>
                 </label>
-                <input
+                <Input
                   ref={titleInputRef}
-                  type="text"
+                  placeholder="Enter email subject..."
                   value={messageTitle}
-                  onChange={(e) => {
-                    setMessageTitle(e.target.value);
-                    setCursorPosition(e.target.selectionStart || 0);
+                  onChange={(value) => {
+                    setMessageTitle(value);
+                    setCursorPosition(value.length);
                   }}
                   onClick={(e) => {
                     setActiveField("title");
@@ -991,9 +992,7 @@ export default function DefineCommunicationStep({
                     setActiveField("title");
                     setCursorPosition(e.currentTarget.selectionStart || 0);
                   }}
-                  placeholder="Enter email subject..."
-                  className="w-full px-4 py-2.5 border rounded-md text-sm  focus:outline-none focus:ring-2 transition-all"
-                  style={{ borderColor: color.border.default }}
+                  variant="medium"
                 />
               </div>
             )}

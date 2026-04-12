@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
+import Input from "../../../shared/components/ui/Input";
 import { segmentService } from "../services/segmentService";
 import Pagination from "../../../shared/components/ui/Pagination";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -135,12 +136,10 @@ export default function ViewMembersModal({
                 <label className="block text-sm font-medium text-black mb-2">
                   Add Customer IDs (comma-separated)
                 </label>
-                <input
-                  type="text"
-                  value={customerIdsInput}
-                  onChange={(e) => setCustomerIdsInput(e.target.value)}
+                <Input
                   placeholder="e.g., 12345, 67890, 11111"
-                  className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded} text-sm focus:outline-none`}
+                  value={customerIdsInput}
+                  onChange={setCustomerIdsInput}
                 />
               </div>
               <button

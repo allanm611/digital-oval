@@ -1,7 +1,8 @@
-import React, { useState, useRef, KeyboardEvent } from "react";
+import React, { useState, useRef, KeyboardEvent, forwardRef } from "react";
 import { X, Plus } from "lucide-react";
 
 import { tw } from "../../../shared/utils/utils";
+import Input from "./Input";
 interface TagInputProps {
   value: string[];
   onChange: (value: string[]) => void;
@@ -97,16 +98,16 @@ export default function TagInput({
 
           {(!maxTags || value.length < maxTags) && !disabled && (
             <div className="flex items-center flex-1 min-w-[120px]">
-              <input
+              <Input
                 ref={inputRef}
-                type="text"
+                placeholder={value.length === 0 ? placeholder : ""}
                 value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
+                onChange={setInputValue}
                 onKeyDown={handleKeyDown}
                 onBlur={handleInputBlur}
-                placeholder={value.length === 0 ? placeholder : ""}
-                className="flex-1 outline-none bg-transparent text-sm placeholder-gray-500"
                 disabled={disabled}
+                variant="compact"
+                className="flex-1 outline-none bg-transparent text-sm placeholder-gray-500"
               />
               {inputValue.trim() && (
                 <button

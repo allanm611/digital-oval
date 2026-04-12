@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
+import Input from "../../../shared/components/ui/Input";
 
 interface EditQuickListModalProps {
   isOpen: boolean;
@@ -95,14 +96,10 @@ export default function EditQuickListModal({
             >
               Name <span className="text-red-500">*</span>
             </label>
-            <input
-              id="edit-name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 ${tw.textPrimary}`}
+            <Input
               placeholder="Enter QuickList name"
-              required
+              value={name}
+              onChange={setName}
             />
           </div>
 

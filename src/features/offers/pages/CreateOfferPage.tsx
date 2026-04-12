@@ -22,6 +22,7 @@ import {
   XCircle,
 } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
+import Input from "../../../shared/components/ui/Input";
 import {
   useFormDataPersistence,
   clearPersistedFormData,
@@ -298,19 +299,17 @@ function BasicInfoStep({
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Offer Name *
           </label>
-          <input
-            type="text"
+          <Input
+            placeholder="e.g., Summer Data Bundle"
             value={formData.name}
-            onChange={(e) => {
-              setFormData({ ...formData, name: e.target.value });
+            onChange={(value) => {
+              setFormData({ ...formData, name: value });
               if (validationErrors?.name && clearValidationErrors) {
                 clearValidationErrors();
               }
             }}
-            placeholder="e.g., Summer Data Bundle"
-            className={`w-full px-3 py-1.5 border ${tw.rounded} focus:outline-none transition-all duration-200 text-sm placeholder:text-sm ${
-              validationErrors?.name ? "border-red-500" : "border-gray-300"
-            }`}
+            hasError={!!validationErrors?.name}
+            variant="medium"
             required
           />
           {validationErrors?.name && (
@@ -322,19 +321,17 @@ function BasicInfoStep({
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Offer Code *
           </label>
-          <input
-            type="text"
+          <Input
+            placeholder="e.g., SUMMER_DATA_2024"
             value={formData.code || ""}
-            onChange={(e) => {
-              setFormData({ ...formData, code: e.target.value });
+            onChange={(value) => {
+              setFormData({ ...formData, code: value });
               if (validationErrors?.code && clearValidationErrors) {
                 clearValidationErrors();
               }
             }}
-            placeholder="e.g., SUMMER_DATA_2024"
-            className={`w-full px-3 py-1.5 border ${tw.rounded} focus:outline-none transition-all duration-200 text-sm placeholder:text-sm ${
-              validationErrors?.code ? "border-red-500" : "border-gray-300"
-            }`}
+            hasError={!!validationErrors?.code}
+            variant="medium"
             required
           />
           {validationErrors?.code && (
@@ -428,15 +425,16 @@ function BasicInfoStep({
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Max Usage Per Customer
           </label>
-          <input
+          <Input
             type="number"
             min="0"
-            value={formData.max_usage_per_customer || ""}
-            onChange={(e) => {
+            placeholder="e.g., 1, 5, 10"
+            value={(formData.max_usage_per_customer || "").toString()}
+            onChange={(value) => {
               setFormData({
                 ...formData,
-                max_usage_per_customer: e.target.value
-                  ? Number(e.target.value)
+                max_usage_per_customer: value
+                  ? Number(value)
                   : 0,
               });
               if (
@@ -446,12 +444,8 @@ function BasicInfoStep({
                 clearValidationErrors();
               }
             }}
-            placeholder="e.g., 1, 5, 10"
-            className={`w-full px-3 py-1.5 border ${tw.rounded} focus:outline-none transition-all duration-200 text-sm placeholder:text-sm ${
-              validationErrors?.max_usage_per_customer
-                ? "border-red-500"
-                : "border-gray-300"
-            }`}
+            hasError={!!validationErrors?.max_usage_per_customer}
+            variant="medium"
           />
           {validationErrors?.max_usage_per_customer && (
             <p className="mt-1 text-sm text-red-600">

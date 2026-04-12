@@ -10,6 +10,7 @@ import {
 import { serverService } from "../services/serverService";
 import { useToast } from "../../../contexts/ToastContext";
 import { tw, zIndex } from "../../../shared/utils/utils";
+import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 
@@ -143,12 +144,13 @@ export default function CreateServerModal({
               <label className="text-sm font-medium text-gray-700">
                 Name<span className="text-red-500">*</span>
               </label>
-              <input
-                type="text"
+              <Input
+                placeholder="Server name"
                 name="name"
                 value={form.name}
-                onChange={handleChange}
-                className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
+                onChange={(val) => setForm((prev) => ({...prev, name: val}))}
+                hasError={!!errors.name}
+                variant="medium"
               />
               {errors.name && (
                 <p className="mt-1 text-xs text-red-500">{errors.name}</p>
@@ -159,12 +161,13 @@ export default function CreateServerModal({
               <label className="text-sm font-medium text-gray-700">
                 Code<span className="text-red-500">*</span>
               </label>
-              <input
-                type="text"
+              <Input
+                placeholder="Server code"
                 name="code"
                 value={form.code}
-                onChange={handleChange}
-                className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
+                onChange={(val) => setForm((prev) => ({...prev, code: val}))}
+                hasError={!!errors.code}
+                variant="medium"
               />
               {errors.code && (
                 <p className="mt-1 text-xs text-red-500">{errors.code}</p>
@@ -198,12 +201,13 @@ export default function CreateServerModal({
               <label className="text-sm font-medium text-gray-700">
                 Host<span className="text-red-500">*</span>
               </label>
-              <input
-                type="text"
+              <Input
+                placeholder="Host address"
                 name="host"
                 value={form.host}
-                onChange={handleChange}
-                className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
+                onChange={(val) => setForm((prev) => ({...prev, host: val}))}
+                hasError={!!errors.host}
+                variant="medium"
               />
               {errors.host && (
                 <p className="mt-1 text-xs text-red-500">{errors.host}</p>
@@ -237,12 +241,12 @@ export default function CreateServerModal({
               <label className="text-sm font-medium text-gray-700">
                 Region
               </label>
-              <input
-                type="text"
+              <Input
+                placeholder="Region"
                 name="region"
                 value={form.region}
-                onChange={handleChange}
-                className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
+                onChange={(val) => setForm((prev) => ({...prev, region: val}))}
+                variant="medium"
               />
             </div>
 
@@ -261,12 +265,12 @@ export default function CreateServerModal({
               <label className="text-sm font-medium text-gray-700">
                 Base Path
               </label>
-              <input
-                type="text"
+              <Input
+                placeholder="Base path"
                 name="base_path"
                 value={form.base_path}
-                onChange={handleChange}
-                className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
+                onChange={(val) => setForm((prev) => ({...prev, base_path: val}))}
+                variant="medium"
               />
             </div>
           </div>
@@ -324,12 +328,12 @@ export default function CreateServerModal({
                   <label className="text-sm font-medium text-gray-700">
                     Health Check URL
                   </label>
-                  <input
-                    type="text"
+                  <Input
+                    placeholder="Health check URL"
                     name="health_check_url"
                     value={form.health_check_url}
-                    onChange={handleChange}
-                    className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
+                    onChange={(val) => setForm((prev) => ({...prev, health_check_url: val}))}
+                    variant="medium"
                   />
                 </div>
 
@@ -406,12 +410,12 @@ export default function CreateServerModal({
             <label className="text-sm font-medium text-gray-700">
               Authentication Type
             </label>
-            <input
-              type="text"
+            <Input
+              placeholder="Authentication type"
               name="authentication_type"
               value={form.authentication_type}
-              onChange={handleChange}
-              className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
+              onChange={(val) => setForm((prev) => ({...prev, authentication_type: val}))}
+              variant="medium"
             />
           </div>
 
