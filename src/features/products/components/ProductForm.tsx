@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Save, HelpCircle, Plus, Trash2, X, ChevronDown } from "lucide-react";
+import { Save, HelpCircle, Plus, Trash2, X, ChevronDown, Edit } from "lucide-react";
 import {
   CreateProductRequest,
   UpdateProductRequest,
@@ -107,8 +107,19 @@ export default function ProductForm({
     daid_account: undefined as string | undefined,
   });
 
+  // Combo checkbox settings (persists across resource additions)
+  const [comboSettings, setComboSettings] = useState({
+    shared_validity: true,
+    shared_price: true,
+    shared_daid: true,
+  });
+
   // Add Resource accordion state
   const [isAddResourceExpanded, setIsAddResourceExpanded] = useState(false);
+
+  // Inline card editing state
+  const [editingCardResourceIndex, setEditingCardResourceIndex] = useState<number | null>(null);
+  const [editingCardData, setEditingCardData] = useState<any>(null);
 
   // Utility selection state (for when utility resource type is selected)
   const [selectedUtility, setSelectedUtility] = useState<string>("");
@@ -966,10 +977,10 @@ export default function ProductForm({
                     <div className="flex items-center gap-2">
                       <Checkbox
                         id="shared-validity-combo"
-                        checked={comboData.shared_validity ?? true}
+                        checked={comboSettings.shared_validity}
                         onChange={(e) =>
-                          setComboData({
-                            ...comboData,
+                          setComboSettings({
+                            ...comboSettings,
                             shared_validity: e.target.checked,
                           })
                         }
@@ -984,10 +995,10 @@ export default function ProductForm({
                     <div className="flex items-center gap-2">
                       <Checkbox
                         id="shared-price-combo"
-                        checked={comboData.shared_price ?? true}
+                        checked={comboSettings.shared_price}
                         onChange={(e) =>
-                          setComboData({
-                            ...comboData,
+                          setComboSettings({
+                            ...comboSettings,
                             shared_price: e.target.checked,
                           })
                         }
@@ -1002,10 +1013,10 @@ export default function ProductForm({
                     <div className="flex items-center gap-2">
                       <Checkbox
                         id="shared-daid-combo"
-                        checked={comboData.shared_daid ?? true}
+                        checked={comboSettings.shared_daid}
                         onChange={(e) =>
-                          setComboData({
-                            ...comboData,
+                          setComboSettings({
+                            ...comboSettings,
                             shared_daid: e.target.checked,
                           })
                         }
@@ -1022,7 +1033,7 @@ export default function ProductForm({
                   {/* Validity and Price Fields */}
                   <div className="grid gap-4 md:grid-cols-3">
                     {/* Shared Validity Hours */}
-                    {comboData.shared_validity && (
+                    {comboSettings.shared_validity && (
                       <div>
                         <label
                           className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
@@ -1051,7 +1062,7 @@ export default function ProductForm({
                     )}
 
                     {/* Shared Combo Price */}
-                    {comboData.shared_price && (
+                    {comboSettings.shared_price && (
                       <div>
                         <label
                           className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
@@ -1080,7 +1091,7 @@ export default function ProductForm({
                     )}
 
                     {/* Shared DAID Account */}
-                    {comboData.shared_daid && (
+                    {comboSettings.shared_daid && (
                       <div>
                         <label
                           className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
@@ -1144,16 +1155,16 @@ export default function ProductForm({
                           className={`grid gap-3 ${
                             selectedResourceType === "utility"
                               ? "md:grid-cols-4"
-                              : !comboData.shared_validity &&
-                                  !comboData.shared_price &&
-                                  !comboData.shared_daid
+                              : !comboSettings.shared_validity &&
+                                  !comboSettings.shared_price &&
+                                  !comboSettings.shared_daid
                                 ? "md:grid-cols-6"
-                                : !comboData.shared_validity &&
-                                    !comboData.shared_price
+                                : !comboSettings.shared_validity &&
+                                    !comboSettings.shared_price
                                   ? "md:grid-cols-5"
-                                  : !comboData.shared_validity ||
-                                      !comboData.shared_price ||
-                                      !comboData.shared_daid
+                                  : !comboSettings.shared_validity ||
+                                      !comboSettings.shared_price ||
+                                      !comboSettings.shared_daid
                                     ? "md:grid-cols-4"
                                     : "md:grid-cols-3"
                           }`}
@@ -1277,7 +1288,7 @@ export default function ProductForm({
                           </div>
 
                           {/* Validity (if not shared) */}
-                          {!comboData.shared_validity && (
+                          {!comboSettings.shared_validity && (
                             <div>
                               <label
                                 className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
@@ -1305,7 +1316,7 @@ export default function ProductForm({
                           )}
 
                           {/* Price (if not shared) */}
-                          {!comboData.shared_price && (
+                          {!comboSettings.shared_price && (
                             <div>
                               <label
                                 className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
@@ -1333,7 +1344,7 @@ export default function ProductForm({
                           )}
 
                           {/* DAID (if not shared) */}
-                          {!comboData.shared_daid && (
+                          {!comboSettings.shared_daid && (
                             <div>
                               <label
                                 className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
@@ -1422,28 +1433,112 @@ export default function ProductForm({
                             </span>
                           </div>
                           {!comboData.combo_type_id && (
-                            <button
-                              type="button"
-                              onClick={() => removeComboResource(index)}
-                              className="text-red-500 hover:text-red-700 transition-colors"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            <div className="flex gap-2">
+                              {editingCardResourceIndex === index ? (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setComboData((prev) => ({
+                                        ...prev,
+                                        resources: prev.resources.map((r, i) =>
+                                          i === index
+                                            ? {
+                                                ...r,
+                                                unit_value: editingCardData.unit_value,
+                                                unit: editingCardData.unit,
+                                                validity_hours: editingCardData.validity_hours,
+                                                price: editingCardData.price,
+                                                daid_account: editingCardData.daid_account,
+                                              }
+                                            : r
+                                        ),
+                                      }));
+                                      setEditingCardResourceIndex(null);
+                                      setEditingCardData(null);
+                                    }}
+                                    disabled={isLoading}
+                                    style={{
+                                      background: buttons.action?.background || color.primary.action,
+                                      color: buttons.action?.color || "#FFFFFF",
+                                      padding: `${buttons.action?.paddingY || "0.625rem"} ${buttons.action?.paddingX || "1rem"}`,
+                                      borderRadius: buttons.action?.borderRadius || "0.375rem",
+                                      fontSize: buttons.action?.fontSize || "0.875rem",
+                                      fontWeight: "500",
+                                      border: "none",
+                                      cursor: isLoading ? "not-allowed" : "pointer",
+                                      opacity: isLoading ? 0.5 : 1,
+                                    }}
+                                  >
+                                    Save
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setEditingCardResourceIndex(null);
+                                      setEditingCardData(null);
+                                    }}
+                                    disabled={isLoading}
+                                    style={{
+                                      background: buttons.bordered?.background || "transparent",
+                                      color: buttons.bordered?.color || "#000000",
+                                      border: buttons.bordered?.border || `1px solid ${color.border.default}`,
+                                      padding: `${buttons.bordered?.paddingY || "0.625rem"} ${buttons.bordered?.paddingX || "1rem"}`,
+                                      borderRadius: buttons.bordered?.borderRadius || "0.375rem",
+                                      fontSize: buttons.bordered?.fontSize || "0.875rem",
+                                      fontWeight: "500",
+                                      cursor: isLoading ? "not-allowed" : "pointer",
+                                      opacity: isLoading ? 0.5 : 1,
+                                    }}
+                                  >
+                                    Cancel
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setEditingCardResourceIndex(index);
+                                      setEditingCardData({
+                                        unit_value: resource.unit_value,
+                                        unit: resource.unit,
+                                        validity_hours: resource.validity_hours,
+                                        price: resource.price,
+                                        daid_account: resource.daid_account,
+                                      });
+                                    }}
+                                    className="text-gray-500 hover:text-gray-700 transition-colors"
+                                    disabled={isLoading}
+                                    title="Edit resource"
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => removeComboResource(index)}
+                                    className="text-red-500 hover:text-red-700 transition-colors"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </>
+                              )}
+                            </div>
                           )}
                         </div>
 
                         <div
                           className={`grid gap-3 ${
-                            !comboData.shared_validity &&
-                            !comboData.shared_price &&
-                            !comboData.shared_daid
+                            !comboSettings.shared_validity &&
+                            !comboSettings.shared_price &&
+                            !comboSettings.shared_daid
                               ? "md:grid-cols-5"
-                              : !comboData.shared_validity &&
-                                  !comboData.shared_price
+                              : !comboSettings.shared_validity &&
+                                  !comboSettings.shared_price
                                 ? "md:grid-cols-4"
-                              : !comboData.shared_validity ||
-                                  !comboData.shared_price ||
-                                  !comboData.shared_daid
+                              : !comboSettings.shared_validity ||
+                                  !comboSettings.shared_price ||
+                                  !comboSettings.shared_daid
                                 ? "md:grid-cols-3"
                                 : "md:grid-cols-2"
                           } mb-3`}
@@ -1454,12 +1549,23 @@ export default function ProductForm({
                             >
                               Unit
                             </label>
-                            <Input
-                              placeholder="Unit"
-                              value={getResourceTypeLabel(resource.unit)}
-                              disabled
-                              onChange={() => {}}
-                              variant="medium"
+                            <input
+                              type="text"
+                              value={editingCardResourceIndex === index ? editingCardData.unit : getResourceTypeLabel(resource.unit)}
+                              disabled={editingCardResourceIndex !== index}
+                              onChange={(e) =>
+                                setEditingCardData({
+                                  ...editingCardData,
+                                  unit: e.target.value,
+                                })
+                              }
+                              className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm ${
+                                editingCardResourceIndex === index ? "" : "bg-gray-50"
+                              }`}
+                              style={{
+                                borderColor: color.border.default,
+                                color: editingCardResourceIndex === index ? "auto" : color.text.secondary,
+                              }}
                             />
                           </div>
 
@@ -1474,28 +1580,37 @@ export default function ProductForm({
                               min="0"
                               step="1"
                               value={
-                                resource.unit_value === 0
+                                editingCardResourceIndex === index
+                                  ? editingCardData.unit_value === 0
+                                    ? ""
+                                    : editingCardData.unit_value ?? ""
+                                  : resource.unit_value === 0
                                   ? ""
                                   : (resource.unit_value ?? "")
                               }
+                              disabled={editingCardResourceIndex !== index}
                               onChange={(e) => {
                                 const val =
                                   e.target.value === ""
                                     ? 0
                                     : parseFloat(e.target.value);
-                                updateComboResource(
-                                  index,
-                                  "unit_value",
-                                  isNaN(val) ? 0 : val,
-                                );
+                                setEditingCardData({
+                                  ...editingCardData,
+                                  unit_value: isNaN(val) ? 0 : val,
+                                });
                               }}
-                              className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm transition-all`}
-                              style={{ borderColor: color.border.default }}
+                              className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm ${
+                                editingCardResourceIndex === index ? "" : "bg-gray-50"
+                              }`}
+                              style={{
+                                borderColor: color.border.default,
+                                color: editingCardResourceIndex === index ? "auto" : color.text.secondary,
+                              }}
                               placeholder="Enter value"
                             />
                           </div>
 
-                          {!comboData.shared_validity && (
+                          {!comboSettings.shared_validity && (
                             <div>
                               <label
                                 className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
@@ -1506,24 +1621,33 @@ export default function ProductForm({
                                 type="number"
                                 min="1"
                                 step="1"
-                                value={resource.validity_hours ?? ""}
+                                value={
+                                  editingCardResourceIndex === index
+                                    ? editingCardData.validity_hours ?? ""
+                                    : resource.validity_hours ?? ""
+                                }
+                                disabled={editingCardResourceIndex !== index}
                                 onChange={(e) =>
-                                  updateComboResource(
-                                    index,
-                                    "validity_hours",
-                                    e.target.value
+                                  setEditingCardData({
+                                    ...editingCardData,
+                                    validity_hours: e.target.value
                                       ? parseInt(e.target.value, 10)
                                       : (0 as number),
-                                  )
+                                  })
                                 }
-                                className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm transition-all`}
-                                style={{ borderColor: color.border.default }}
+                                className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm ${
+                                  editingCardResourceIndex === index ? "" : "bg-gray-50"
+                                }`}
+                                style={{
+                                  borderColor: color.border.default,
+                                  color: editingCardResourceIndex === index ? "auto" : color.text.secondary,
+                                }}
                                 placeholder="e.g., 72"
                               />
                             </div>
                           )}
 
-                          {!comboData.shared_price && (
+                          {!comboSettings.shared_price && (
                             <div>
                               <label
                                 className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
@@ -1534,41 +1658,61 @@ export default function ProductForm({
                                 type="number"
                                 min="0"
                                 step="0.01"
-                                value={resource.price ?? ""}
+                                value={
+                                  editingCardResourceIndex === index
+                                    ? editingCardData.price ?? ""
+                                    : resource.price ?? ""
+                                }
+                                disabled={editingCardResourceIndex !== index}
                                 onChange={(e) =>
-                                  updateComboResource(
-                                    index,
-                                    "price",
-                                    e.target.value
+                                  setEditingCardData({
+                                    ...editingCardData,
+                                    price: e.target.value
                                       ? parseFloat(e.target.value)
                                       : (0 as number),
-                                  )
+                                  })
                                 }
-                                className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm transition-all`}
-                                style={{ borderColor: color.border.default }}
+                                className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm ${
+                                  editingCardResourceIndex === index ? "" : "bg-gray-50"
+                                }`}
+                                style={{
+                                  borderColor: color.border.default,
+                                  color: editingCardResourceIndex === index ? "auto" : color.text.secondary,
+                                }}
                                 placeholder="Enter price"
                               />
                             </div>
                           )}
 
-                          {!comboData.shared_daid && (
+                          {!comboSettings.shared_daid && (
                             <div>
                               <label
                                 className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
                               >
                                 DAID Account
                               </label>
-                              <Input
-                                placeholder="Enter DAID"
-                                value={resource.daid_account ?? ""}
-                                onChange={(value) =>
-                                  updateComboResource(
-                                    index,
-                                    "daid_account",
-                                    value || undefined,
-                                  )
+                              <input
+                                type="text"
+                                value={
+                                  editingCardResourceIndex === index
+                                    ? editingCardData.daid_account ?? ""
+                                    : resource.daid_account ?? ""
                                 }
-                                variant="medium"
+                                disabled={editingCardResourceIndex !== index}
+                                onChange={(e) =>
+                                  setEditingCardData({
+                                    ...editingCardData,
+                                    daid_account: e.target.value,
+                                  })
+                                }
+                                className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm ${
+                                  editingCardResourceIndex === index ? "" : "bg-gray-50"
+                                }`}
+                                style={{
+                                  borderColor: color.border.default,
+                                  color: editingCardResourceIndex === index ? "auto" : color.text.secondary,
+                                }}
+                                placeholder="Enter DAID"
                               />
                             </div>
                           )}
