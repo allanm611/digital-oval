@@ -401,22 +401,27 @@ export default function SegmentConditionsBuilder({
     // Add field categories (360_profile)
     const categoriesArray = Array.isArray(categories) ? categories : [];
     categoriesArray.forEach((cat) => {
+      // Determine condition type based on category value
+      let condType: SegmentCondition["conditionType"] = "360_profile";
+      if (cat.value === "segments") {
+        condType = "segment";
+      } else if (cat.value === "quicklists") {
+        condType = "list";
+      }
+
       options.push({
-        value: `360_profile:${cat.id}`,
+        value: `${condType}:${cat.id}`,
         label: cat.name || cat.category || "Unknown",
-        type: "360_profile",
+        type: condType,
       });
     });
 
-    // Only hardcode system_event (backend doesn't support it yet)
+    // Add system event option
     options.push({
       value: "system_event",
       label: "System Event",
       type: "system_event",
     });
-
-    // TODO: Backend will return segment and list options like revenue/usage
-    // Once backend is ready, remove hardcoding and fetch from API
 
     return options;
   };
@@ -1998,7 +2003,9 @@ export default function SegmentConditionsBuilder({
                             value={
                               condition.conditionType === "360_profile"
                                 ? `360_profile:${condition.category}`
-                                : condition.conditionType
+                                : condition.conditionType === "segment" || condition.conditionType === "list"
+                                  ? `${condition.conditionType}:${condition.category}`
+                                  : condition.conditionType
                             }
                             onChange={(value) => {
                               const selectedOption =
@@ -2008,15 +2015,15 @@ export default function SegmentConditionsBuilder({
                               if (!selectedOption) return;
 
                               const condType = selectedOption.type;
+                              const categoryId = parseInt(
+                                value.split(":")[1] || "1",
+                              );
 
                               // Reset condition based on type
                               if (condType === "360_profile") {
                                 const fieldsArray = Array.isArray(allFields)
                                   ? allFields
                                   : [];
-                                const categoryId = parseInt(
-                                  value.split(":")[1] || "1",
-                                );
                                 const categoriesArray = Array.isArray(
                                   categories,
                                 )
@@ -2065,9 +2072,9 @@ export default function SegmentConditionsBuilder({
                               } else if (condType === "segment") {
                                 updateCondition(group.id, condition.id, {
                                   conditionType: condType,
+                                  category: categoryId,
                                   operator: "in",
                                   value: "",
-                                  category: undefined,
                                   field: undefined,
                                   field_id: undefined,
                                   list_id: undefined,
@@ -2082,9 +2089,9 @@ export default function SegmentConditionsBuilder({
                               } else if (condType === "list") {
                                 updateCondition(group.id, condition.id, {
                                   conditionType: condType,
+                                  category: categoryId,
                                   operator: "in",
                                   value: "",
-                                  category: undefined,
                                   field: undefined,
                                   field_id: undefined,
                                   segment_id: undefined,
@@ -2099,9 +2106,9 @@ export default function SegmentConditionsBuilder({
                               } else if (condType === "system_event") {
                                 updateCondition(group.id, condition.id, {
                                   conditionType: condType,
+                                  category: undefined,
                                   operator: "equals",
                                   value: "",
-                                  category: undefined,
                                   field: undefined,
                                   field_id: undefined,
                                   segment_id: undefined,
