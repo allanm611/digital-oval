@@ -585,6 +585,7 @@ export interface CampaignOffer {
   personalization?: OfferPersonalization;
   code?: string;
   category_id?: number;
+  product_ids?: number[];
 }
 
 export interface OfferPersonalization {
