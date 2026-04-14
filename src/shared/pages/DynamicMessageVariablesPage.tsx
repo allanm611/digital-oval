@@ -24,6 +24,7 @@ interface CategoryConfig {
   name: string;
   is_active: boolean;
   fields: MessageVariableFieldConfig[];
+  sub_categories?: CategoryConfig[];
 }
 
 export default function DynamicMessageVariablesPage() {
@@ -69,16 +70,31 @@ export default function DynamicMessageVariablesPage() {
         });
         setFieldConfigs(configs);
 
-        // Build category configs
-        const catConfigs: CategoryConfig[] = categories.map((cat) => ({
-          id: cat.name || cat.category || 'General',
-          name: cat.name || cat.category || 'General',
-          is_active: true,
-          fields: configs.filter((field) => {
-            const catFields = cat.fields || [];
-            return catFields.some((f) => f.id === field.id);
-          }),
-        }));
+        // Build category configs with sub-categories support
+        const buildCategoryConfigs = (categories: any[]): CategoryConfig[] => {
+          return categories.map((cat) => {
+            // Get direct fields
+            const catFieldIds = new Set<number>();
+            if (cat.fields && Array.isArray(cat.fields)) {
+              cat.fields.forEach((f: any) => catFieldIds.add(f.id));
+            }
+
+            // Build sub-categories if they exist
+            const subCategoryConfigs = cat.sub_categories
+              ? buildCategoryConfigs(cat.sub_categories)
+              : undefined;
+
+            return {
+              id: cat.name || cat.category || 'General',
+              name: cat.name || cat.category || 'General',
+              is_active: true,
+              fields: configs.filter((field) => catFieldIds.has(field.id)),
+              sub_categories: subCategoryConfigs,
+            };
+          });
+        };
+
+        const catConfigs = buildCategoryConfigs(categories);
         setCategoryConfigs(catConfigs);
       } catch (error) {
         console.error('Failed to load configurations:', error);
@@ -161,8 +177,30 @@ export default function DynamicMessageVariablesPage() {
     }
   };
 
+  // Flatten categories to show sub-categories instead of parents with no direct fields
+  const getFlattenedCategories = (cats: CategoryConfig[]): CategoryConfig[] => {
+    const flattened: CategoryConfig[] = [];
+
+    cats.forEach((cat) => {
+      // If category has no direct fields but has sub-categories, show the sub-categories instead
+      const fieldCount = cat.fields?.length ?? 0;
+      const hasSubCategories = cat.sub_categories && cat.sub_categories.length > 0;
+
+      if (fieldCount === 0 && hasSubCategories) {
+        flattened.push(...getFlattenedCategories(cat.sub_categories));
+      } else {
+        // Otherwise, include the category as-is
+        flattened.push(cat);
+      }
+    });
+
+    return flattened;
+  };
+
+  const flatCategories = getFlattenedCategories(categoryConfigs);
+
   // Filter categories by search term and selected category
-  const filteredCategories = categoryConfigs
+  const filteredCategories = flatCategories
     .filter((cat) => selectedCategory === 'all' || cat.id === selectedCategory)
     .filter((cat) =>
       cat.name.toLowerCase().includes(debouncedSearchTerm) ||
@@ -199,7 +237,7 @@ export default function DynamicMessageVariablesPage() {
           <HeadlessSelect
             options={[
               { value: 'all', label: 'All Categories' },
-              ...categoryConfigs.map((cat) => ({
+              ...flatCategories.map((cat) => ({
                 value: cat.id || cat.name,
                 label: cat.name,
               })),
@@ -257,7 +295,7 @@ export default function DynamicMessageVariablesPage() {
               {/* Divider with Count and Button */}
               <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                 <span className="text-sm text-gray-600">
-                  {category.fields.length} field{category.fields.length !== 1 ? 's' : ''}
+                  {(category.fields?.length ?? 0)} field{(category.fields?.length ?? 0) !== 1 ? 's' : ''}
                 </span>
                 <button
                   onClick={() => {

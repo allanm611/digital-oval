@@ -133,7 +133,7 @@ export function getOperatorsForFieldType(fieldType: string): OperatorType[] {
       ];
 
     // Regular numeric fields (no date operators)
-    case "numeric":
+    
     case "number":
     case "integer":
     case "int":
@@ -154,9 +154,10 @@ export function getOperatorsForFieldType(fieldType: string): OperatorType[] {
         OPERATORS.IS_NOT_NULL,
       ];
 
-    // KPI metric fields (money, decimal) - includes date operators for date range filtering
-    // Backend uses these types for metrics like revenue, usage, etc.
+    // KPI metric fields (money, decimal,numeric) - includes date operators for date range filtering
+    // Backend uses these types for metrics like revenue, usage.
     case "money":
+    case "numeric":
     case "decimal":
       return [
         OPERATORS.EQUALS,
@@ -218,34 +219,6 @@ export function getOperatorsForFieldType(fieldType: string): OperatorType[] {
         OPERATORS.IS_NOT_NULL,
       ];
   }
-}
-
-/**
- * Get a single operator by ID
- */
-export function getOperatorById(id: number): OperatorType | undefined {
-  return Object.values(OPERATORS).find((op) => op.id === id);
-}
-
-/**
- * Get a single operator by symbol
- */
-export function getOperatorBySymbol(symbol: string): OperatorType | undefined {
-  return Object.values(OPERATORS).find((op) => op.symbol === symbol);
-}
-
-/**
- * Get a single operator by label
- */
-export function getOperatorByLabel(label: string): OperatorType | undefined {
-  return Object.values(OPERATORS).find((op) => op.label === label);
-}
-
-/**
- * Get all operators
- */
-export function getAllOperators(): OperatorType[] {
-  return Object.values(OPERATORS);
 }
 
 /**

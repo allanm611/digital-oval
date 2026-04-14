@@ -40,10 +40,11 @@ export type FieldCategory = {
   id: number;
   name: string;
   value: string;
-  description: string;
-  parent_category_id: number | null;
-  display_order: number;
-  fields: CustomerIdentityField[];
+  description?: string;
+  parent_category_id?: number | null;
+  display_order?: number;
+  fields?: CustomerIdentityField[];
+  sub_categories?: FieldCategory[];
 };
 
 export type SegmentationProfile = {

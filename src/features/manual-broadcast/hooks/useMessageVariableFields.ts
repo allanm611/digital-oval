@@ -32,7 +32,8 @@ interface MessageVariableCategory {
   name?: string;
   value?: string;
   description?: string;
-  fields: MessageVariableField[];
+  fields?: MessageVariableField[];
+  sub_categories?: MessageVariableCategory[];
 }
 
 interface UseMessageVariableFieldsReturn {
@@ -60,13 +61,23 @@ export function useMessageVariableFields(): UseMessageVariableFieldsReturn {
         const profiles = await customerIdentityService.getProfiles(true);
         const allCategories = profiles.data?.[0]?.field_selector_config ?? [];
 
-        // Extract all fields across all categories
+        // Extract all fields across all categories (including sub-categories)
         const allFieldsList: MessageVariableField[] = [];
-        allCategories.forEach((cat) => {
+        const extractFieldsFromCategory = (cat: any) => {
+          // Extract fields from the category itself
           if (cat.fields && Array.isArray(cat.fields)) {
             allFieldsList.push(...cat.fields);
           }
-        });
+          // Extract fields from sub-categories
+          if (cat.sub_categories && Array.isArray(cat.sub_categories)) {
+            cat.sub_categories.forEach((subCat: any) => {
+              if (subCat.fields && Array.isArray(subCat.fields)) {
+                allFieldsList.push(...subCat.fields);
+              }
+            });
+          }
+        };
+        allCategories.forEach(extractFieldsFromCategory);
 
         // Set categories and all fields
         setCategories(allCategories as MessageVariableCategory[]);

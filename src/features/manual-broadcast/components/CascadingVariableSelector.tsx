@@ -37,39 +37,69 @@ export default function CascadingVariableSelector({
   const [searchQuery, setSearchQuery] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Transform categories to ProfileSource format
-  const profileSources: ProfileSource[] = useMemo(() => {
-    return categories
-      .map((category, index) => ({
-        id: index, // Use index as stable ID
-        name: category.category || category.name || "Unknown",
-        value:
-          category.value ||
-          category.category?.toLowerCase().replace(/\s+/g, "_") ||
-          "",
-        description: "",
-        fieldCount: category.fields?.length || 0,
-      }))
-      .filter((source) => source.name); // Filter out any sources without names
+  // Transform categories to ProfileSource format, flattening categories with only sub-categories
+  const { profileSources, categoryMap } = useMemo(() => {
+    let sourceIndex = 0;
+    const flattenedSources: ProfileSource[] = [];
+    const sourceToCategory = new Map<number, any>();
+
+    const processCategoryRecursive = (category: any) => {
+      // Count direct fields
+      const directFieldCount = category.fields?.length || 0;
+      const hasSubCategories = category.sub_categories && category.sub_categories.length > 0;
+
+      // If category has no direct fields but has sub-categories, process sub-categories instead
+      if (directFieldCount === 0 && hasSubCategories) {
+        category.sub_categories.forEach(processCategoryRecursive);
+      } else {
+        // Count all fields (direct + from sub-categories)
+        let totalFieldCount = directFieldCount;
+        if (hasSubCategories) {
+          category.sub_categories.forEach((subCat: any) => {
+            totalFieldCount += subCat.fields?.length || 0;
+          });
+        }
+
+        const source: ProfileSource = {
+          id: sourceIndex,
+          name: category.category || category.name || "Unknown",
+          value:
+            category.value ||
+            category.category?.toLowerCase().replace(/\s+/g, "_") ||
+            "",
+          description: "",
+          fieldCount: totalFieldCount,
+        };
+
+        flattenedSources.push(source);
+        sourceToCategory.set(sourceIndex, category);
+        sourceIndex++;
+      }
+    };
+
+    categories.forEach(processCategoryRecursive);
+    return {
+      profileSources: flattenedSources.filter((source) => source.name),
+      categoryMap: sourceToCategory,
+    };
   }, [categories]);
 
   // Get fields for hovered source
   const hoveredSourceFields: ProfileField[] = useMemo(() => {
-    if (hoveredSourceId === null || hoveredSourceId >= categories.length)
-      return [];
+    if (hoveredSourceId === null) return [];
 
-    const category = categories[hoveredSourceId];
+    const category = categoryMap.get(hoveredSourceId);
     if (!category || !category.fields) return [];
 
-    return category.fields.map((field) => ({
-      id: field.id,
-      name: field.field_name,
-      value: field.field_value,
-      description: field.description,
-      fieldType: field.field_type,
-      sourceTable: field.source_table,
+    return (category.fields || []).map((field: any) => ({
+      id: field?.id,
+      name: field?.field_name || "Unknown",
+      value: field?.field_value || "",
+      description: field?.description || "",
+      fieldType: field?.field_type || "text",
+      sourceTable: field?.source_table,
     }));
-  }, [categories, hoveredSourceId]);
+  }, [categoryMap, hoveredSourceId]);
 
   // Filter fields by search query
   const filteredFields = useMemo(() => {
