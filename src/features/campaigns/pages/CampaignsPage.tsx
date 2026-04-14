@@ -1157,7 +1157,8 @@ export default function CampaignsPage() {
                       className="px-6 py-4 cursor-pointer"
                       style={{ backgroundColor: color.surface.tablebodybg }}
                       onClick={() => {
-                        if ((campaign.offer_count ?? 0) > 0) {
+                        // Check if offers is an array before opening modal
+                        if (Array.isArray(campaign.offers) && campaign.offers.length > 0) {
                           setSelectedCampaignForModal(campaign);
                           setShowOffersModal(true);
                         }
@@ -1171,7 +1172,8 @@ export default function CampaignsPage() {
                       className="px-6 py-4 cursor-pointer"
                       style={{ backgroundColor: color.surface.tablebodybg }}
                       onClick={() => {
-                        if ((campaign.segment_count ?? 0) > 0) {
+                        // Check if segments is an array before opening modal
+                        if (Array.isArray(campaign.segments) && campaign.segments.length > 0) {
                           setSelectedCampaignForModal(campaign);
                           setShowSegmentsModal(true);
                         }
@@ -2005,7 +2007,7 @@ export default function CampaignsPage() {
             setShowOffersModal(false);
             setSelectedCampaignForModal(null);
           }}
-          offers={selectedCampaignForModal.offers || []}
+          offers={Array.isArray(selectedCampaignForModal.offers) ? selectedCampaignForModal.offers : undefined}
           campaignName={selectedCampaignForModal.name}
         />
       )}
@@ -2018,7 +2020,7 @@ export default function CampaignsPage() {
             setShowSegmentsModal(false);
             setSelectedCampaignForModal(null);
           }}
-          segments={selectedCampaignForModal.segments || []}
+          segments={Array.isArray(selectedCampaignForModal.segments) ? selectedCampaignForModal.segments : undefined}
           campaignName={selectedCampaignForModal.name}
         />
       )}

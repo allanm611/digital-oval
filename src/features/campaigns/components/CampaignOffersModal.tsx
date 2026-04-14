@@ -12,7 +12,7 @@ interface Offer {
 interface CampaignOffersModalProps {
   isOpen: boolean;
   onClose: () => void;
-  offers: Offer[];
+  offers: Offer[] | undefined;
   campaignName: string;
 }
 
@@ -61,11 +61,8 @@ export default function CampaignOffersModal({
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-6 py-4">
-          {offers.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-500">No offers associated with this campaign</p>
-            </div>
-          ) : (
+          {/* Check if offers is an array before attempting to map */}
+          {Array.isArray(offers) && offers.length > 0 ? (
             <div className="space-y-2">
               {offers.map((offer) => (
                 <div
@@ -86,6 +83,10 @@ export default function CampaignOffersModal({
                   </button>
                 </div>
               ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500">No offers associated with this campaign</p>
             </div>
           )}
         </div>

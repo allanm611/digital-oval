@@ -1,10 +1,12 @@
 import { buildApiUrl, getAuthHeaders } from "./api";
 
-export interface NotificationType {
+export interface NotificationRule {
   id: number;
   name: string;
   description?: string;
-  notification_key: string;
+  table_name: string;
+  action_type: string;
+  message_template: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -12,23 +14,27 @@ export interface NotificationType {
   updated_by?: number;
 }
 
-export interface CreateNotificationTypeRequest {
+export interface CreateNotificationRuleRequest {
   name: string;
   description?: string;
-  notification_key: string;
+  table_name: string;
+  action_type: string;
+  message_template: string;
   is_active?: boolean;
 }
 
-export interface UpdateNotificationTypeRequest {
+export interface UpdateNotificationRuleRequest {
   name?: string;
   description?: string;
-  notification_key?: string;
+  table_name?: string;
+  action_type?: string;
+  message_template?: string;
   is_active?: boolean;
 }
 
-const BASE_URL = buildApiUrl("/notifications/types");
+const BASE_URL = buildApiUrl("/notifications/rules");
 
-class NotificationTypeService {
+class NotificationRuleService {
   private async request<T>(
     endpoint: string,
     options: RequestInit = {},
@@ -50,19 +56,19 @@ class NotificationTypeService {
   }
 
   async getAll() {
-    const data = await this.request<{ success: boolean; data: NotificationType[] }>("");
+    const data = await this.request<{ success: boolean; data: NotificationRule[] }>("");
     return data.data;
   }
 
   async getById(id: number) {
-    const data = await this.request<{ success: boolean; data: NotificationType }>(
+    const data = await this.request<{ success: boolean; data: NotificationRule }>(
       `/${id}`
     );
     return data.data;
   }
 
-  async create(data: CreateNotificationTypeRequest) {
-    const response = await this.request<{ success: boolean; data: NotificationType }>(
+  async create(data: CreateNotificationRuleRequest) {
+    const response = await this.request<{ success: boolean; data: NotificationRule }>(
       "",
       {
         method: "POST",
@@ -72,8 +78,8 @@ class NotificationTypeService {
     return response.data;
   }
 
-  async update(id: number, data: UpdateNotificationTypeRequest) {
-    const response = await this.request<{ success: boolean; data: NotificationType }>(
+  async update(id: number, data: UpdateNotificationRuleRequest) {
+    const response = await this.request<{ success: boolean; data: NotificationRule }>(
       `/${id}`,
       {
         method: "PUT",
@@ -92,6 +98,20 @@ class NotificationTypeService {
     );
     return response;
   }
+
+  async getTables() {
+    const url = buildApiUrl("/notifications/tables");
+    const response = await fetch(url, {
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch notification tables: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return Array.isArray(data) ? data : (data as any).data || [];
+  }
 }
 
-export const notificationTypeService = new NotificationTypeService();
+export const notificationTypeService = new NotificationRuleService();

@@ -136,7 +136,7 @@ export default function UnifiedPickerModal<T = unknown>({
                   <button
                     key={item.id}
                     onClick={() => onSelect(item)}
-                    className={`w-full p-3 ${tw.rounded} border transition-all text-left hover:border-gray-400`}
+                    className={`w-full p-3 ${tw.rounded} border transition-all text-left`}
                     style={{
                       backgroundColor: color.surface.background,
                       borderColor: isSelected

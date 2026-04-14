@@ -104,13 +104,13 @@ export default function CreateProductPage({
       setIsLoading(true);
 
       // Map unit to unit_of_measure and exclude frontend-only fields
-      // Backend doesn't accept: unit, unit_value, combo_data, product_type_id, validity_hours
+      // Backend doesn't accept: unit, unit_value, combo_data, validity_hours
+      // Note: product_type_id is sent to backend as-is
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const {
         unit,
         unit_value,
         combo_data,
-        product_type_id,
         validity_hours,
         ...submitData
       } = formData;
@@ -132,6 +132,7 @@ export default function CreateProductPage({
       if (unit) {
         finalSubmitData.unit_of_measure = unit;
       }
+
 
       // Note: combo_data is kept for frontend only, not sent to backend yet
       // Backend support will be added later

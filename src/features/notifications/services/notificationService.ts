@@ -151,7 +151,7 @@ class NotificationService {
           ...getAuthHeaders(),
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ subscriptions }),
+        body: JSON.stringify({ rules: subscriptions }),
       });
 
       if (!response.ok) {

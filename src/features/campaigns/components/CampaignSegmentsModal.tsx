@@ -14,7 +14,7 @@ interface Segment {
 interface CampaignSegmentsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  segments: Segment[];
+  segments: Segment[] | undefined;
   campaignName: string;
 }
 
@@ -63,11 +63,8 @@ export default function CampaignSegmentsModal({
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-6 py-4">
-          {segments.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-500">No segments associated with this campaign</p>
-            </div>
-          ) : (
+          {/* Check if segments is an array before attempting to map */}
+          {Array.isArray(segments) && segments.length > 0 ? (
             <div className="space-y-2">
               {segments.map((segment) => (
                 <div
@@ -88,6 +85,10 @@ export default function CampaignSegmentsModal({
                   </button>
                 </div>
               ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500">No segments associated with this campaign</p>
             </div>
           )}
         </div>

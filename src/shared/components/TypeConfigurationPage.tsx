@@ -32,6 +32,7 @@ import { rewardTypeService } from "../../features/offers/services/rewardTypeServ
 import { offerTypeService } from "../../features/offers/services/offerTypeService";
 import { segmentTypeService } from "../../features/segments/services/segmentTypeService";
 import { productTypeService } from "../../features/products/services/productTypeService";
+import { notificationTypeService } from "../../shared/services/notificationTypeService";
 import HeadlessSelect from "./ui/HeadlessSelect";
 import Pagination from "./ui/Pagination";
 import BackButton from "./ui/BackButton";
@@ -196,6 +197,8 @@ function TypeConfigurationModal({
   const [variablesText, setVariablesText] = useState("");
   const [locale, setLocale] = useState<string>("");
   const [error, setError] = useState("");
+  const [templateValidationError, setTemplateValidationError] = useState("");
+  const [templatePreview, setTemplatePreview] = useState("");
   const { t } = useLanguage();
 
   const isCreativeTemplate = config.configType === "creativeTemplates";
@@ -224,6 +227,92 @@ function TypeConfigurationModal({
   };
 
   const resourceTypeOptions = getResourceTypeOptions();
+
+  // Notification template validation and preview
+  const SUPPORTED_PLACEHOLDERS = [
+    "record_id",
+    "actor_id",
+    "table_name",
+    "action_type",
+  ];
+
+  const validateMessageTemplate = (template: string): string => {
+    // Find all placeholders in format {placeholder_name}
+    const placeholderRegex = /{([^}]+)}/g;
+    let match;
+    const invalidPlaceholders = new Set<string>();
+
+    while ((match = placeholderRegex.exec(template)) !== null) {
+      const placeholderName = match[1];
+      if (!SUPPORTED_PLACEHOLDERS.includes(placeholderName)) {
+        invalidPlaceholders.add(placeholderName);
+      }
+    }
+
+    if (invalidPlaceholders.size > 0) {
+      const unsupported = Array.from(invalidPlaceholders).join(", ");
+      return `Invalid placeholders: {${unsupported}}. Supported: {${SUPPORTED_PLACEHOLDERS.join("}, {")}}`;
+    }
+    return "";
+  };
+
+  const generateTemplatePreview = (
+    template: string,
+    tableValue?: string,
+    actionValue?: string
+  ): string => {
+    const previewValues: Record<string, string> = {
+      record_id: "123",
+      actor_id: "456",
+      table_name: tableValue || "table_name",
+      action_type: actionValue || "action_type",
+    };
+
+    let preview = template;
+    for (const [placeholder, value] of Object.entries(previewValues)) {
+      preview = preview.replace(new RegExp(`{${placeholder}}`, "g"), value);
+    }
+    return preview;
+  };
+
+  // Update validation and preview when message_template changes
+  const handleTemplateFieldChange = (value: string) => {
+    setCustomFields((prev) => ({
+      ...prev,
+      message_template: value,
+    }));
+
+    // Validate and update preview
+    if (isNotificationType) {
+      const error = validateMessageTemplate(value);
+      setTemplateValidationError(error);
+      const tableValue = customFields.table_name || "";
+      const actionValue = customFields.action_type || "";
+      setTemplatePreview(
+        generateTemplatePreview(value, tableValue, actionValue)
+      );
+    }
+  };
+
+  // Regenerate preview when template, table_name, or action_type changes
+  useEffect(() => {
+    if (isNotificationType && customFields.message_template) {
+      const tableValue = customFields.table_name || "";
+      const actionValue = customFields.action_type || "";
+      setTemplatePreview(
+        generateTemplatePreview(
+          customFields.message_template,
+          tableValue,
+          actionValue
+        )
+      );
+    }
+  }, [
+    customFields.message_template,
+    customFields.table_name,
+    customFields.action_type,
+    isNotificationType,
+  ]);
 
   // Combo types fields
   const [comboResources, setComboResources] = useState<
@@ -256,6 +345,9 @@ function TypeConfigurationModal({
     Array<{ value: string; label: string }>
   >([]);
   const [templateLocaleOptions, setTemplateLocaleOptions] = useState<
+    Array<{ value: string; label: string }>
+  >([]);
+  const [notificationTableOptions, setNotificationTableOptions] = useState<
     Array<{ value: string; label: string }>
   >([]);
 
@@ -311,6 +403,27 @@ function TypeConfigurationModal({
     loadTemplateLocales();
   }, [isOpen, isCreativeTemplate]);
 
+  useEffect(() => {
+    const loadNotificationTables = async () => {
+      if (!isOpen || !isNotificationType) return;
+      try {
+        const tables = await notificationTypeService.getTables();
+        const options = (tables || [])
+          .map((table: any) => ({
+            value: String(table.table_name || ""),
+            label: String(table.table_name || ""),
+          }))
+          .filter((opt: { value: string }) => opt.value);
+
+        setNotificationTableOptions(options);
+      } catch {
+        setNotificationTableOptions([]);
+      }
+    };
+
+    loadNotificationTables();
+  }, [isOpen, isNotificationType]);
+
   // Load character sets dynamically for language configuration
   const getCharacterSetsOptions = () => {
     if (!isLanguage || !config.customFields) return [];
@@ -329,6 +442,20 @@ function TypeConfigurationModal({
           value: cs.name,
           label: cs.name,
         }));
+    }
+    return [];
+  };
+
+  const getNotificationTablesOptions = () => {
+    if (!isNotificationType || !config.customFields) return [];
+    const tableNameField = config.customFields.find(
+      (f) =>
+        f.fieldKey === "table_name" && f.dynamicOptions === "notificationTables",
+    );
+    if (tableNameField) {
+      if (notificationTableOptions.length > 0) {
+        return notificationTableOptions;
+      }
     }
     return [];
   };
@@ -461,6 +588,8 @@ function TypeConfigurationModal({
       }
     }
     setError("");
+    setTemplateValidationError("");
+    setTemplatePreview("");
   }, [
     item,
     isOpen,
@@ -591,6 +720,12 @@ function TypeConfigurationModal({
         isResourceTypes) &&
       config.customFields
     ) {
+      // Check for template validation errors before proceeding
+      if (isNotificationType && templateValidationError) {
+        setError(templateValidationError);
+        return;
+      }
+
       for (const field of config.customFields) {
         const value = customFields[field.fieldKey]?.trim() || "";
         if (field.required && !value) {
@@ -798,12 +933,15 @@ function TypeConfigurationModal({
                           options={
                             field.dynamicOptions === "characterSets"
                               ? getCharacterSetsOptions()
-                              : field.options || []
+                              : field.dynamicOptions === "notificationTables"
+                                ? getNotificationTablesOptions()
+                                : field.options || []
                           }
                           placeholder={field.placeholder}
                           zIndex={
                             10020 + (config.customFields!.length - index) * 10
                           }
+                          searchable={field.dynamicOptions === "notificationTables"}
                         />
                       ) : field.type === "number" ? (
                         <input
@@ -820,19 +958,66 @@ function TypeConfigurationModal({
                           required={field.required}
                         />
                       ) : field.type === "textarea" ? (
-                        <textarea
-                          value={customFields[field.fieldKey] || ""}
-                          onChange={(e) =>
-                            setCustomFields((prev) => ({
-                              ...prev,
-                              [field.fieldKey]: e.target.value,
-                            }))
-                          }
-                          rows={3}
-                          className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-vertical`}
-                          placeholder={field.placeholder}
-                          required={field.required}
-                        />
+                        <>
+                          <textarea
+                            value={customFields[field.fieldKey] || ""}
+                            onChange={(e) =>
+                              field.fieldKey === "message_template"
+                                ? handleTemplateFieldChange(e.target.value)
+                                : setCustomFields((prev) => ({
+                                    ...prev,
+                                    [field.fieldKey]: e.target.value,
+                                  }))
+                            }
+                            rows={3}
+                            className={`w-full px-3 py-2 text-sm border ${
+                              field.fieldKey === "message_template" &&
+                              templateValidationError
+                                ? "border-red-500"
+                                : "border-gray-300"
+                            } ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-vertical`}
+                            placeholder={field.placeholder}
+                            required={field.required}
+                          />
+                          {field.fieldKey === "message_template" && (
+                            <>
+                              {templateValidationError && (
+                                <p className="text-sm text-red-600 mt-2 font-medium">
+                                  {templateValidationError}
+                                </p>
+                              )}
+                              {!templateValidationError &&
+                                customFields[field.fieldKey] && (
+                                  <div
+                                    className="mt-3 p-3 rounded-lg"
+                                    style={{
+                                      border: `1px solid ${color.border.accent}`,
+                                      backgroundColor: "#FFFFFF",
+                                    }}
+                                  >
+                                    <p
+                                      className="text-xs font-semibold mb-1"
+                                      style={{ color: "#000000" }}
+                                    >
+                                      Preview:
+                                    </p>
+                                    <p
+                                      className="text-sm break-words"
+                                      style={{ color: "#000000" }}
+                                    >
+                                      {templatePreview}
+                                    </p>
+                                  </div>
+                                )}
+                              {!templateValidationError && (
+                                <p className="text-xs text-gray-600 mt-2">
+                                  Supported placeholders: {"{record_id}"}, {"{actor_id}"},
+                                  {"{table_name}"}, {"{action_type}"}
+                                </p>
+                              )}
+                            </>
+                          )}
+                        </>
                       ) : (
                         <Input
                           placeholder={field.placeholder}
@@ -1485,7 +1670,7 @@ function TypeConfigurationModal({
             </button>
             <button
               type="submit"
-              disabled={isSaving}
+              disabled={isSaving || (isNotificationType && !!templateValidationError)}
               style={{
                 background: button.action.background,
                 color: button.action.color,
@@ -1497,20 +1682,20 @@ function TypeConfigurationModal({
                 borderRadius: button.action.borderRadius,
                 fontSize: button.action.fontSize,
                 fontWeight: "500",
-                cursor: isSaving ? "not-allowed" : "pointer",
+                cursor: isSaving || (isNotificationType && !!templateValidationError) ? "not-allowed" : "pointer",
                 transition: "all 0.2s",
-                opacity: isSaving ? 0.5 : 1,
+                opacity: isSaving || (isNotificationType && !!templateValidationError) ? 0.5 : 1,
                 display: "flex",
                 alignItems: "center",
                 gap: "8px",
               }}
               onMouseEnter={(e) => {
-                if (!isSaving) {
+                if (!isSaving && !(isNotificationType && !!templateValidationError)) {
                   e.currentTarget.style.opacity = "0.9";
                 }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.opacity = isSaving ? "0.5" : "1";
+                e.currentTarget.style.opacity = isSaving || (isNotificationType && !!templateValidationError) ? "0.5" : "1";
               }}
             >
               {isSaving ? (
@@ -1548,7 +1733,7 @@ export default function TypeConfigurationPage({
   const normalizeItems = (data: TypeConfigurationItem[]) =>
     (data || []).map((item) => ({
       ...item,
-      isActive: item.isActive ?? true,
+      isActive: item.isActive !== undefined ? item.isActive : (item.is_active ?? true),
     }));
 
   // Determine if this config type uses backend API

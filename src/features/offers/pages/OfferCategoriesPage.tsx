@@ -283,41 +283,33 @@ function OffersModal({
     try {
       setLoading(true);
       setModalError(null);
-      const catalogTag = buildCatalogTag(category.id);
 
-      const [primaryResponse, allOffers] = await Promise.all([
-        offerCategoryService.getCategoryOffers(category.id, {
-          limit: 100,
-          skipCache: true,
-        }),
-        fetchAllOffers().catch(() => []),
-      ]);
+      // Fetch offers in this category using the dedicated endpoint
+      // Backend handles both primary category and tag-based assignments
+      let allOffers: BasicOffer[] = [];
+      let offset = 0;
+      const limit = 100;
+      let hasMore = true;
 
-      const primaryOffers =
-        ((primaryResponse?.data || []) as BasicOffer[]) ?? [];
+      while (hasMore) {
+        const response = await offerCategoryService.getCategoryOffers(
+          category.id,
+          {
+            limit: limit,
+            offset: offset,
+            skipCache: true,
+          },
+        );
 
-      let taggedOffers: BasicOffer[] = [];
-      taggedOffers = (allOffers as Offer[])
-        .filter(
-          (offer) =>
-            Array.isArray(offer.tags) && offer.tags.includes(catalogTag),
-        )
-        .map((offer) => ({
-          id: offer.id,
-          name: offer.name,
-          description: offer.description,
-          status: offer.status,
-        }));
+        const offers = ((response?.data || []) as BasicOffer[]) ?? [];
+        allOffers = [...allOffers, ...offers];
 
-      const combinedOffersMap = new Map<string | number, BasicOffer>();
-      [...primaryOffers, ...taggedOffers].forEach((offer) => {
-        if (!offer?.id) {
-          return;
-        }
-        combinedOffersMap.set(offer.id, offer);
-      });
+        const total = response?.pagination?.total || 0;
+        hasMore = allOffers.length < total && offers.length === limit;
+        offset += limit;
+      }
 
-      setOffers(Array.from(combinedOffersMap.values()));
+      setOffers(allOffers);
     } catch (err) {
       console.error("Failed to load offers:", err);
       const errorMsg1 = extractBackendError(err, "Failed to load offers");

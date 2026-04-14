@@ -861,7 +861,7 @@ export default function ProductForm({
                       | CreateProductRequest
                       | UpdateProductRequest
                     ),
-                    value as string,
+                    value ? Number(value) : undefined,
                   )
                 }
                 placeholder={t.products.form.selectProductType}

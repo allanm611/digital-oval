@@ -41,6 +41,8 @@ import { offerCategoryService } from "../services/offerCategoryService";
 import { productService } from "../../products/services/productService";
 import { offerCreativeService } from "../services/offerCreativeService";
 import { campaignFlowService } from "../../campaigns/services/campaignFlowService";
+import { senderIdService, SenderId } from "../../configurations/services/senderIdService";
+import { smsRouteService } from "../../routes/services/smsRouteService";
 import {
   OfferCreative,
   CreativeChannel,
@@ -295,11 +297,50 @@ export default function OfferDetailsPage() {
 
   // Load creative templates from configuration
   const { data: templates } = useConfigurationData("creativeTemplates");
-  // Load sender IDs and SMS routes from configuration
-  const { data: senderIds } = useConfigurationData("senderIds");
-  const { data: smsRoutes } = useConfigurationData("smsRoutes");
   // Load languages from configuration
   const { data: languages } = useConfigurationData("languages");
+
+  // Load sender IDs and SMS routes from API
+  const [senderIds, setSenderIds] = useState<SenderId[]>([]);
+  const [senderIdsLoading, setSenderIdsLoading] = useState(true);
+  const [smsRoutes, setSmsRoutes] = useState<any[]>([]);
+  const [smsRoutesLoading, setSmsRoutesLoading] = useState(true);
+
+  // Fetch sender IDs on component mount
+  useEffect(() => {
+    const fetchSenderIds = async () => {
+      try {
+        setSenderIdsLoading(true);
+        const response = await senderIdService.getSenderIds();
+        const senderIdData = response.data || [];
+        setSenderIds(Array.isArray(senderIdData) ? senderIdData : []);
+      } catch (error) {
+        console.error("Failed to fetch sender IDs:", error);
+        setSenderIds([]);
+      } finally {
+        setSenderIdsLoading(false);
+      }
+    };
+    fetchSenderIds();
+  }, []);
+
+  // Fetch SMS routes on component mount
+  useEffect(() => {
+    const fetchSmsRoutes = async () => {
+      try {
+        setSmsRoutesLoading(true);
+        const response = await smsRouteService.getAllRoutes();
+        const routesData = response.data || [];
+        setSmsRoutes(Array.isArray(routesData) ? routesData : []);
+      } catch (error) {
+        console.error("Failed to fetch SMS routes:", error);
+        setSmsRoutes([]);
+      } finally {
+        setSmsRoutesLoading(false);
+      }
+    };
+    fetchSmsRoutes();
+  }, []);
 
   // Helper function to calculate SMS segments
   const calculateSMSSegments = (
@@ -2775,12 +2816,8 @@ export default function OfferDetailsPage() {
                     }
                     options={[
                       { label: "Select Sender ID", value: "" },
-                      ...((senderIds as TypeConfigurationItem[]) || [])
-                        .filter(
-                          (senderId) =>
-                            senderId.isActive &&
-                            senderId.metadataValue === "active",
-                        )
+                      ...((senderIds as SenderId[]) || [])
+                        .filter((senderId) => senderId.is_active)
                         .map((senderId) => ({
                           label: senderId.name,
                           value: senderId.name,
@@ -2789,6 +2826,7 @@ export default function OfferDetailsPage() {
                     placeholder="Select Sender ID..."
                     className="w-full"
                     zIndex={zIndex.popover}
+                    disabled={senderIdsLoading}
                   />
                 </div>
               ) : (
@@ -2837,7 +2875,7 @@ export default function OfferDetailsPage() {
                     }}
                     options={
                       smsRoutes
-                        ?.filter((route) => route.isActive)
+                        ?.filter((route) => route.is_active)
                         .map((route) => ({
                           value: route.id?.toString() || "",
                           label: route.name,
@@ -2845,6 +2883,7 @@ export default function OfferDetailsPage() {
                     }
                     placeholder="Select SMS Route"
                     zIndex={zIndex.popover}
+                    disabled={smsRoutesLoading}
                   />
                 </div>
               )}

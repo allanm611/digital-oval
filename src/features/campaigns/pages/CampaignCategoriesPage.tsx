@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { Edit, Trash2, MessageSquare, Grid, List } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
-import { color, tw, button } from "../../../shared/utils/utils";
+import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -195,6 +195,7 @@ function CategoryModal({
 }
 
 export default function CampaignCategoriesPage() {
+  const navigate = useNavigate();
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
   const { user } = useAuth();
@@ -237,6 +238,10 @@ export default function CampaignCategoriesPage() {
     name: string;
     count: number;
   } | null>(null);
+
+  // Primary category warning modal states
+  const [showPrimaryCategoryModal, setShowPrimaryCategoryModal] = useState(false);
+  const [primaryCategoryItemId, setPrimaryCategoryItemId] = useState<number | string | null>(null);
 
   // Campaigns modal state
   const [isCampaignsModalOpen, setIsCampaignsModalOpen] = useState(false);
@@ -625,19 +630,22 @@ export default function CampaignCategoriesPage() {
         setIsCampaignsModalOpen(true);
         setCampaignsLoading(true);
 
-        // Fetch all campaigns and filter by category_id OR tags (same logic as count)
-        // This ensures campaigns assigned via tags are shown correctly
+        // Fetch campaigns for this category using the dedicated endpoint
+        // Backend handles both primary category_id and tag-based assignments
         let allCampaigns: BackendCampaignType[] = [];
         let offset = 0;
         const limit = 100;
         let hasMore = true;
 
         while (hasMore) {
-          const response = await campaignService.getCampaigns({
-            limit: limit,
-            offset: offset,
-            skipCache: true,
-          });
+          const response = await campaignService.getCampaignsByCategory(
+            categoryId,
+            {
+              limit: limit,
+              offset: offset,
+              skipCache: true,
+            },
+          );
 
           const campaigns = (response.data || []) as BackendCampaignType[];
           allCampaigns = [...allCampaigns, ...campaigns];
@@ -647,29 +655,7 @@ export default function CampaignCategoriesPage() {
           offset += limit;
         }
 
-        // Filter campaigns by category_id OR tags (same logic as getCampaignCountForCategory)
-        // Same logic as segments - supports multi-catalog assignment via tags
-        const catalogTag = buildCatalogTag(categoryId);
-        const categoryCampaigns = allCampaigns.filter((campaign) => {
-          // Check if category_id matches (handle string/number conversion like segments)
-          const campaignCategoryId =
-            typeof campaign.category_id === "string"
-              ? parseInt(campaign.category_id, 10)
-              : campaign.category_id;
-          const matchesPrimary =
-            campaignCategoryId !== null &&
-            campaignCategoryId !== undefined &&
-            !isNaN(campaignCategoryId) &&
-            Number(campaignCategoryId) === categoryId;
-
-          // Check if tags include the catalog tag
-          const tags = Array.isArray(campaign.tags) ? campaign.tags : [];
-          const matchesTag = tags.includes(catalogTag);
-
-          return matchesPrimary || matchesTag;
-        });
-
-        const formattedCampaigns = categoryCampaigns.map((campaign) => ({
+        const formattedCampaigns = allCampaigns.map((campaign) => ({
           id: String(campaign.id),
           name: campaign.name,
           description: campaign.description || undefined,
@@ -693,6 +679,13 @@ export default function CampaignCategoriesPage() {
     [showError],
   );
 
+  const handleNavigateToCampaignDetails = () => {
+    if (!primaryCategoryItemId) return;
+    setShowPrimaryCategoryModal(false);
+    setPrimaryCategoryItemId(null);
+    navigate(`/dashboard/campaigns/${primaryCategoryItemId}`);
+  };
+
   const handleRemoveCampaign = useCallback(
     async (campaignId: number | string) => {
       if (!selectedCategory) return;
@@ -714,6 +707,10 @@ export default function CampaignCategoriesPage() {
           await campaignService.getCampaignById(id, true),
         updateEntity: async (id, updates) => {
           await campaignService.updateCampaign(id, updates);
+        },
+        onShowPrimaryCategoryWarning: async (id) => {
+          setPrimaryCategoryItemId(id);
+          setShowPrimaryCategoryModal(true);
         },
       });
     },
@@ -1160,6 +1157,43 @@ export default function CampaignCategoriesPage() {
           </span>
         )}
       />
+
+      {/* Primary Category Warning Modal */}
+      {showPrimaryCategoryModal && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+          style={{ zIndex: zIndex.popover }}
+        >
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Primary Catalog
+            </h3>
+            <p className="text-gray-600 text-sm mb-6">
+              This catalog is the campaign's primary catalog. Update the
+              campaign to use a different primary catalog before removing it
+              here.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setShowPrimaryCategoryModal(false);
+                  setPrimaryCategoryItemId(null);
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleNavigateToCampaignDetails}
+                className="px-4 py-2 text-sm font-medium text-white rounded-md transition-colors"
+                style={{ backgroundColor: color.primary.action }}
+              >
+                Change Primary Catalog
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal

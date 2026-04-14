@@ -13,8 +13,11 @@ import {
 } from "../types/segment";
 import SegmentConditionsBuilder from "./SegmentConditionsBuilder";
 import { segmentService } from "../services/segmentService";
+import { segmentTypeService, SegmentType } from "../services/segmentTypeService";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import MultiCategorySelector from "../../../shared/components/MultiCategorySelector";
+import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import Input from "../../../shared/components/ui/Input";
 
 interface SegmentModalProps {
   isOpen: boolean;
@@ -60,6 +63,8 @@ export default function SegmentModal({
     null,
   );
   const [fieldSelectorConfig, setFieldSelectorConfig] = useState<any[]>([]);
+  const [segmentTypes, setSegmentTypes] = useState<SegmentType[]>([]);
+  const [loadingTypes, setLoadingTypes] = useState(false);
   const isUserInteractionRef = useRef(false);
 
   // Load field selector config once on component mount
@@ -81,6 +86,25 @@ export default function SegmentModal({
       }
     };
     loadFieldSelectorConfig();
+  }, []);
+
+  // Load segment types on component mount
+  useEffect(() => {
+    const loadSegmentTypes = async () => {
+      setLoadingTypes(true);
+      try {
+        const response = await segmentTypeService.getAllSegmentTypes();
+        if (response.success && response.data) {
+          setSegmentTypes(response.data);
+        }
+      } catch (err) {
+        console.error("Failed to load segment types:", err);
+        // Silently handle - continue without types
+      } finally {
+        setLoadingTypes(false);
+      }
+    };
+    loadSegmentTypes();
   }, []);
 
   // Update formData.category when selectedCategoryIds changes (use first one)
@@ -138,7 +162,7 @@ export default function SegmentModal({
                 typeof tag === "string" ? tag : tag?.name || String(tag),
               ),
               conditions: conditions,
-              type: "dynamic",
+              type: fullSegment.type || "dynamic",
               category,
             });
             // Store existing queries (not displayed in edit mode, but kept for reference)
@@ -878,6 +902,7 @@ export default function SegmentModal({
           name: formData.name,
           description: formData.description,
           tags: formData.tags,
+          type: formData.type || "dynamic",
           category: formData.category,
           query: queries.segment_query,
           count_query: queries.count_query,
@@ -926,7 +951,7 @@ export default function SegmentModal({
           code: code,
           description: formData.description,
           tags: formData.tags,
-          type: "dynamic",
+          type: formData.type || "dynamic",
           category: formData.category,
           query: queries.segment_query,
           count_query: queries.count_query,
@@ -1035,7 +1060,7 @@ export default function SegmentModal({
             style={{ zIndex: zIndex.modal }}
           >
             <div
-              className={`relative bg-white ${tw.rounded} shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden`}
+              className={`relative bg-white ${tw.rounded} shadow-2xl w-full max-w-6xl max-h-[95vh] flex flex-col overflow-hidden`}
             >
               {/* Header */}
               <div
@@ -1074,18 +1099,17 @@ export default function SegmentModal({
                       >
                         Segment Name *
                       </label>
-                      <input
-                        type="text"
+                      <Input
                         value={formData.name}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setFormData((prev) => ({
                             ...prev,
-                            name: e.target.value,
+                            name: value,
                           }))
                         }
                         placeholder="Enter segment name"
-                        className={`w-full px-3 py-3 border border-[${tw.borderDefault}] ${tw.rounded} focus:outline-none text-sm`}
                         required
+                        variant="default"
                       />
                     </div>
 
@@ -1121,38 +1145,38 @@ export default function SegmentModal({
                       </label>
                       <div className="space-y-2">
                         <div className="flex gap-2">
-                          <input
-                            type="text"
-                            value={tagInput}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              setTagInput(value);
+                          <div className="flex-1">
+                            <Input
+                              value={tagInput}
+                              onChange={(value) => {
+                                setTagInput(value);
 
-                              // Auto-add tag when comma is typed
-                              if (value.includes(",")) {
-                                const tag = value.replace(",", "").trim();
-                                if (
-                                  tag &&
-                                  !formData.tags.includes(tag.toLowerCase())
-                                ) {
-                                  const updatedTags = [
-                                    ...formData.tags,
-                                    tag.toLowerCase(),
-                                  ];
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    tags: updatedTags,
-                                  }));
-                                  setTagInput("");
+                                // Auto-add tag when comma is typed
+                                if (value.includes(",")) {
+                                  const tag = value.replace(",", "").trim();
+                                  if (
+                                    tag &&
+                                    !formData.tags.includes(tag.toLowerCase())
+                                  ) {
+                                    const updatedTags = [
+                                      ...formData.tags,
+                                      tag.toLowerCase(),
+                                    ];
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      tags: updatedTags,
+                                    }));
+                                    setTagInput("");
+                                  }
                                 }
-                              }
-                            }}
-                            onKeyDown={(e) => {
-                              handleAddTag(e);
-                            }}
-                            placeholder="Type tags separated by commas (e.g., premium, high-value)"
-                            className={`flex-1 px-4 py-3 border border-[${tw.borderDefault}] ${tw.rounded} focus:outline-none text-sm`}
-                          />
+                              }}
+                              onKeyDown={(e) => {
+                                handleAddTag(e);
+                              }}
+                              placeholder="Type tags separated by commas (e.g., premium, high-value)"
+                              variant="default"
+                            />
+                          </div>
                           <button
                             type="button"
                             onClick={() => {
@@ -1205,6 +1229,41 @@ export default function SegmentModal({
                         )}
                       </div>
                     </div>
+
+                    <div>
+                      <label
+                        className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                      >
+                        Segment Type
+                      </label>
+                      <HeadlessSelect
+                        value={formData.type}
+                        onChange={(value) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            type: value,
+                          }))
+                        }
+                        options={
+                          segmentTypes && segmentTypes.length > 0
+                            ? segmentTypes.map((type) => {
+                                const typeName = type?.name;
+                                return {
+                                  value: typeName
+                                    ? typeName.toLowerCase()
+                                    : "",
+                                  label: typeName || "Unknown Type",
+                                };
+                              })
+                            : []
+                        }
+                        placeholder={
+                          loadingTypes ? "Loading..." : "Select segment type"
+                        }
+                        disabled={loadingTypes || !segmentTypes || segmentTypes.length === 0}
+                        searchable={true}
+                      />
+                    </div>
                   </div>
 
                   <div>
@@ -1251,37 +1310,8 @@ export default function SegmentModal({
                     )}
                   </div>
 
-                  {/* Segment Conditions */}
+                  {/* Segment Conditions - Builder now includes title and preview button */}
                   <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <label
-                        className={`block text-sm font-medium ${tw.textPrimary}`}
-                      >
-                        Segment Conditions *
-                      </label>
-                      <div className="flex items-center space-x-3">
-                        {previewCount !== null && (
-                          <span className={`text-sm ${tw.textSecondary}`}>
-                            {previewCount.toLocaleString()} customers
-                          </span>
-                        )}
-                        <button
-                          type="button"
-                          onClick={handlePreview}
-                          disabled={
-                            isPreviewLoading || formData.conditions.length === 0
-                          }
-                          className={`inline-flex items-center px-4 py-2 text-sm text-white ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-                          style={{
-                            backgroundColor: color.primary.action,
-                          }}
-                        >
-                          {isPreviewLoading ? "Loading..." : "Preview"}
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Query display removed in edit mode - now showing conditions instead */}
                     <div
                       className={`${tw.rounded} p-4`}
                       style={{
@@ -1304,6 +1334,7 @@ export default function SegmentModal({
                         }
                         // onSegmentValidate={validateSegmentNotSelectStar}
                         onValidationError={(errorMsg) => setError(errorMsg)}
+                        showPreview={true}
                       />
                     </div>
                     {fieldErrors.conditions && (

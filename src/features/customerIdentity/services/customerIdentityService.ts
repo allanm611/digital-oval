@@ -38,14 +38,31 @@ class CustomerIdentityService {
     const categories =
       profiles.data?.[0]?.field_selector_config ?? ([] as FieldCategory[]);
 
-    // Support both old structure (value field) and new structure (category field)
-    const customerIdentityCategory = categories.find(
+    // Find Customer 360 category
+    const customer360Category = categories.find(
       (category) =>
-        category.value === "customer_identity" ||
-        (category.category && category.category.toLowerCase().includes("customer identity"))
+        category.value === "customer_360" ||
+        (category.name && category.name.toLowerCase().includes("customer 360"))
     );
 
-    return customerIdentityCategory?.fields ?? [];
+    // Find Customer Identity subcategory within Customer 360
+    if (customer360Category?.sub_categories && customer360Category.sub_categories.length > 0) {
+      const customerIdentitySubcategory = customer360Category.sub_categories.find(
+        (subcategory: any) =>
+          subcategory.name && subcategory.name.toLowerCase().includes("customer identity")
+      );
+
+      if (customerIdentitySubcategory?.fields) {
+        return customerIdentitySubcategory.fields;
+      }
+    }
+
+    // Fallback: try the old structure (direct fields on category)
+    if (customer360Category?.fields) {
+      return customer360Category.fields;
+    }
+
+    return [];
   }
 }
 

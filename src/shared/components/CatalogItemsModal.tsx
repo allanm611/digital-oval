@@ -247,7 +247,7 @@ export default function CatalogItemsModal<T extends CatalogItem>({
                         renderItem(item)
                       ) : (
                         <div>
-                          <h4 className="font-medium text-gray-900">
+                          <h4 className="text-sm font-medium text-gray-900">
                             {item.name || `Unknown ${entityName}`}
                           </h4>
                           <p className="text-sm text-gray-600">

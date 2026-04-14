@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useNavigate } from "react-router-dom";
 import {
   X,
   Check,
@@ -9,9 +10,11 @@ import {
   Users,
 } from "lucide-react";
 import SearchInput from "./ui/SearchInput";
+import Checkbox from "./ui/Checkbox";
 import { color, tw, zIndex } from "../utils/utils";
 import { useToast } from "../../contexts/ToastContext";
 import { useConfirm } from "../../contexts/ConfirmContext";
+import { useRemoveFromCatalog } from "../hooks/useRemoveFromCatalog";
 import LoadingSpinner from "./ui/LoadingSpinner";
 import HeadlessSelect from "./ui/HeadlessSelect";
 import { offerService } from "../../features/offers/services/offerService";
@@ -51,8 +54,10 @@ function AssignItemsModal({
   itemType,
   onAssignComplete,
 }: AssignItemsModalProps) {
+  const navigate = useNavigate();
   const { success: showSuccess, error: showError } = useToast();
   const { confirm } = useConfirm();
+  const { removeFromCatalog, removingId } = useRemoveFromCatalog();
 
   const [items, setItems] = useState<
     (Offer | Product | Segment | BackendCampaignType)[]
@@ -65,14 +70,15 @@ function AssignItemsModal({
   );
   const [loading, setLoading] = useState(true);
   const [assigning, setAssigning] = useState(false);
-  const [removingItemId, setRemovingItemId] = useState<number | string | null>(
-    null
-  );
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredItems, setFilteredItems] = useState<
     (Offer | Product | Segment | BackendCampaignType)[]
   >([]);
   const [catalogName, setCatalogName] = useState("");
+  const [showPrimaryCategoryModal, setShowPrimaryCategoryModal] = useState(false);
+  const [primaryCategoryItemId, setPrimaryCategoryItemId] = useState<
+    number | string | null
+  >(null);
 
   // Filter states
   const [filters, setFilters] = useState<{
@@ -733,139 +739,59 @@ function AssignItemsModal({
     }
   };
 
-  // Handle removal
+  // Handle removal - uses confirmation modal first
   const handleRemoveItem = async (itemId: number | string) => {
-    if (!catalogId) return;
+    if (!catalogId || !typeInfo) return;
 
-    try {
-      setRemovingItemId(itemId);
-      const catalogIdNumber = Number(catalogId);
-      const catalogTag = buildCatalogTag(
-        Number.isNaN(catalogIdNumber) ? catalogId || "" : catalogIdNumber
-      );
+    const catalogIdNumber = Number(catalogId);
+    const catalogTag = buildCatalogTag(
+      Number.isNaN(catalogIdNumber) ? catalogId || "" : catalogIdNumber
+    );
 
-      // Fetch item details to check if it's a primary category
-      let itemData: Offer | Product | Segment | BackendCampaignType | null =
-        null;
-      let primaryCategoryId: number | null = null;
-
+    // Get the appropriate service methods based on item type
+    const getEntityById = async (id: number) => {
       switch (itemType) {
-        case "offers": {
-          const response = await offerService.getOfferById(Number(itemId));
-          itemData = (response.data as Offer | undefined) || null;
-          if (itemData) {
-            primaryCategoryId = Number((itemData as Offer).category_id) || null;
-          }
-          break;
-        }
-        case "products": {
-          const response = await productService.getProductById(
-            Number(itemId),
-            true
-          );
-          itemData = (response.data as Product | undefined) || null;
-          if (itemData) {
-            primaryCategoryId =
-              Number((itemData as Product).category_id) || null;
-          }
-          break;
-        }
-        case "segments": {
-          const response = await segmentService.getSegmentById(Number(itemId));
-          itemData = (response.data as Segment | undefined) || null;
-          if (itemData) {
-            primaryCategoryId =
-              Number((itemData as Segment).category_id) || null;
-          }
-          break;
-        }
-        case "campaigns": {
-          const response = await campaignService.getCampaignById(
-            Number(itemId)
-          );
-          itemData = (response.data as BackendCampaignType | undefined) || null;
-          if (itemData) {
-            primaryCategoryId =
-              Number((itemData as BackendCampaignType).category_id) || null;
-          }
-          break;
-        }
+        case "offers":
+          return offerService.getOfferById(id);
+        case "products":
+          return productService.getProductById(id, true);
+        case "segments":
+          return segmentService.getSegmentById(id);
+        case "campaigns":
+          return campaignService.getCampaignById(id, true);
       }
+    };
 
-      if (!itemData) {
-        showError(`${typeInfo.singular} details not found`);
-        return;
-      }
-
-      // Check if it's a primary category
-      if (
-        primaryCategoryId !== null &&
-        !Number.isNaN(primaryCategoryId) &&
-        primaryCategoryId === catalogIdNumber
-      ) {
-        await confirm({
-          title: "Primary Category",
-          message: `This catalog is the ${typeInfo.singular}'s primary category. Update the ${typeInfo.singular} to use a different primary category before removing it here.`,
-          type: "info",
-          confirmText: "Got it",
-          cancelText: "Close",
-        });
-        return;
-      }
-
-      // Check if item has the catalog tag
-      const hasCatalogTag =
-        Array.isArray(itemData.tags) && itemData.tags.includes(catalogTag);
-
-      if (!hasCatalogTag) {
-        showError(
-          `${
-            typeInfo.singular.charAt(0).toUpperCase() +
-            typeInfo.singular.slice(1)
-          } is not tagged to this catalog`
-        );
-        return;
-      }
-
-      // Remove the catalog tag
+    const updateEntity = async (id: number, updates: Record<string, unknown>) => {
       switch (itemType) {
-        case "offers": {
-          const updatedTags = ((itemData as Offer).tags || []).filter(
-            (tag) => tag !== catalogTag
-          );
-          await offerService.updateOffer(Number(itemId), {
-            tags: updatedTags,
-          } as UpdateOfferRequest);
-          break;
-        }
-        case "products": {
-          await productService.removeProductTag(Number(itemId), catalogTag);
-          break;
-        }
-        case "segments": {
-          const updatedTags = ((itemData as Segment).tags || []).filter(
-            (tag) => tag !== catalogTag
-          );
-          await segmentService.updateSegment(Number(itemId), {
-            tags: updatedTags,
-          } as UpdateSegmentRequest);
-          break;
-        }
-        case "campaigns": {
-          const updatedTags = (
-            (itemData as BackendCampaignType).tags || []
-          ).filter((tag) => tag !== catalogTag);
-          await campaignService.updateCampaign(Number(itemId), {
-            tags: updatedTags,
-          } as Partial<BackendCampaignType>);
-          break;
-        }
+        case "offers":
+          return offerService.updateOffer(id, updates as UpdateOfferRequest);
+        case "products":
+          return productService.updateProduct(id, updates);
+        case "segments":
+          return segmentService.updateSegment(id, updates as UpdateSegmentRequest);
+        case "campaigns":
+          return campaignService.updateCampaign(id, updates as Partial<BackendCampaignType>);
       }
+    };
 
-      // Update local state - remove from assigned list but keep in items
+    const removeEntityTag = async (id: number, tag: string) => {
+      if (itemType === "products") {
+        return productService.removeProductTag(id, tag);
+      }
+    };
+
+    // Callback to show the custom primary category warning modal
+    const handleShowPrimaryCategoryWarning = async (
+      entityId: number | string
+    ) => {
+      setShowPrimaryCategoryModal(true);
+      setPrimaryCategoryItemId(entityId);
+    };
+
+    // Callback to update local state after successful removal
+    const handleRemoveSuccess = () => {
       setAssignedItemIds((prev) => prev.filter((id) => id !== itemId));
-
-      // Also update the item's tags in the local state
       setItems((prev) =>
         prev.map((item) => {
           if (item.id === itemId) {
@@ -879,22 +805,38 @@ function AssignItemsModal({
           return item;
         })
       );
-
-      showSuccess(
-        `${
-          typeInfo.singular.charAt(0).toUpperCase() + typeInfo.singular.slice(1)
-        } removed from catalog successfully`
-      );
       onAssignComplete?.();
-    } catch (err) {
-      const message =
-        err instanceof Error
-          ? err.message
-          : `Failed to remove ${typeInfo.singular} from catalog`;
-      showError(message);
-    } finally {
-      setRemovingItemId(null);
-    }
+    };
+
+    // Call the hook's removeFromCatalog function
+    await removeFromCatalog({
+      entityType: itemType as "offer" | "product" | "segment" | "campaign",
+      entityId: itemId,
+      categoryId: catalogId,
+      categoryName: catalogName || "Catalog",
+      getEntityById,
+      updateEntity,
+      removeEntityTag,
+      onSuccess: handleRemoveSuccess,
+      onShowPrimaryCategoryWarning: handleShowPrimaryCategoryWarning,
+    });
+  };
+
+  // Handle navigation to item details page to change primary category
+  const handleNavigateToChangeCategory = () => {
+    if (!primaryCategoryItemId) return;
+
+    const detailsRoute = {
+      offers: `/dashboard/offers/${primaryCategoryItemId}`,
+      products: `/dashboard/products/${primaryCategoryItemId}`,
+      segments: `/dashboard/segments/${primaryCategoryItemId}`,
+      campaigns: `/dashboard/campaigns/${primaryCategoryItemId}`,
+    };
+
+    setShowPrimaryCategoryModal(false);
+    setPrimaryCategoryItemId(null);
+    onClose(); // Close the assign modal
+    navigate(detailsRoute[itemType]);
   };
 
   // Get status display
@@ -1218,24 +1160,16 @@ function AssignItemsModal({
                         className="px-3 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
                         style={{ color: color.surface.tableHeaderText }}
                       >
-                        <button
-                          onClick={handleSelectAll}
-                          disabled={availableItems.length === 0}
-                          className="flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <div
-                            className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
-                              allSelected
-                                ? "border-blue-600 bg-blue-600"
-                                : "border-gray-300 hover:border-gray-400"
-                            }`}
-                          >
-                            {allSelected && (
-                              <Check className="w-3.5 h-3.5 text-white" />
-                            )}
-                          </div>
-                          <span className="hidden sm:inline">Select All</span>
-                        </button>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <Checkbox
+                            checked={allSelected}
+                            onChange={handleSelectAll}
+                            disabled={availableItems.length === 0}
+                          />
+                          <span className="hidden sm:inline text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
+                            Select All
+                          </span>
+                        </label>
                       </th>
                       <th
                         className="px-3 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
@@ -1299,28 +1233,11 @@ function AssignItemsModal({
                           }`}
                         >
                           <td className="px-3 sm:px-6 py-4">
-                            <button
-                              onClick={() => handleToggleSelection(item.id)}
+                            <Checkbox
+                              checked={isSelected}
+                              onChange={() => handleToggleSelection(item.id)}
                               disabled={isAssigned}
-                              className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
-                                isAssigned
-                                  ? "border-gray-300 bg-gray-100 cursor-not-allowed"
-                                  : isSelected
-                                  ? "border-blue-600 bg-blue-600"
-                                  : "border-gray-300 hover:border-gray-400"
-                              }`}
-                              title={
-                                isAssigned
-                                  ? "Already in catalog"
-                                  : isSelected
-                                  ? "Deselect"
-                                  : "Select"
-                              }
-                            >
-                              {isSelected && (
-                                <Check className="w-3.5 h-3.5 text-white" />
-                              )}
-                            </button>
+                            />
                           </td>
                           <td
                             className={`px-3 sm:px-6 py-4 ${
@@ -1380,11 +1297,11 @@ function AssignItemsModal({
                             {isAssigned && (
                               <button
                                 onClick={() => handleRemoveItem(item.id)}
-                                disabled={removingItemId === item.id}
+                                disabled={removingId === item.id}
                                 className={`px-3 py-1 text-red-600 hover:bg-red-50 ${tw.rounded} transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed`}
                                 title={`Remove ${typeInfo.singular} from catalog`}
                               >
-                                {removingItemId === item.id
+                                {removingId === item.id
                                   ? "Removing..."
                                   : "Remove"}
                               </button>
@@ -1400,6 +1317,43 @@ function AssignItemsModal({
           </div>
         </div>
       </div>
+
+      {/* Primary Category Warning Modal */}
+      {showPrimaryCategoryModal && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+          style={{ zIndex: zIndex.popover }}
+        >
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Primary Catalog
+            </h3>
+            <p className="text-gray-600 text-sm mb-6">
+              This catalog is the {typeInfo?.singular}'s primary catalog.
+              Update the {typeInfo?.singular} to use a different primary
+              catalog before removing it here.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setShowPrimaryCategoryModal(false);
+                  setPrimaryCategoryItemId(null);
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleNavigateToChangeCategory}
+                className="px-4 py-2 text-sm font-medium text-white rounded-md transition-colors"
+                style={{ backgroundColor: color.primary.action }}
+              >
+                Change Primary Catalog
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>,
     document.body
   );

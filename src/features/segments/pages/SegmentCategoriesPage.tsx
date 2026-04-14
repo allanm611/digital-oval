@@ -279,27 +279,35 @@ function SegmentsModal({
   const loadCategorySegments = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await segmentService.getSegments({ skipCache: true });
-      const segmentsData = (response as { data?: Segment[] }).data || [];
-
-      // Filter segments that belong to this category
       const categoryId =
         typeof category.id === "string"
           ? parseInt(category.id, 10)
           : category.id;
-      const catalogTag = buildSegmentCatalogTag(categoryId);
 
-      const categorySegments = segmentsData.filter((s: Segment) => {
-        const segmentCategory =
-          typeof s.category === "string"
-            ? parseInt(s.category, 10)
-            : s.category;
-        const matchesPrimary = segmentCategory === categoryId;
-        const matchesTag = (s.tags || []).includes(catalogTag);
-        return matchesPrimary || matchesTag;
-      });
+      // Fetch segments for this category using the dedicated endpoint
+      // Backend handles both primary category and tag-based assignments
+      let allSegments: Segment[] = [];
+      let offset = 0;
+      const limit = 100;
+      let hasMore = true;
 
-      setSegments(categorySegments);
+      while (hasMore) {
+        const response = await segmentService.getSegmentsByCategory(categoryId, {
+          limit: limit,
+          offset: offset,
+          skipCache: true,
+        });
+
+        const segments = (response as { data?: Segment[] }).data || [];
+        allSegments = [...allSegments, ...segments];
+
+        const total = (response as { pagination?: { total: number } })
+          .pagination?.total || 0;
+        hasMore = allSegments.length < total && segments.length === limit;
+        offset += limit;
+      }
+
+      setSegments(allSegments);
     } catch (err) {
       // Failed to load segments
       setSegments([]);

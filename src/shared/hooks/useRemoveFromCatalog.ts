@@ -18,6 +18,7 @@ interface RemoveFromCatalogOptions {
   updateEntity: (id: number, updates: Record<string, unknown>) => Promise<void>;
   removeEntityTag?: (id: number, tag: string) => Promise<void>;
   buildCatalogTagFn?: (categoryId: number | string) => string;
+  onShowPrimaryCategoryWarning?: (entityId: number | string, entityType: EntityType) => Promise<void>;
 }
 
 export function useRemoveFromCatalog() {
@@ -39,6 +40,7 @@ export function useRemoveFromCatalog() {
       updateEntity,
       removeEntityTag,
       buildCatalogTagFn = buildCatalogTag,
+      onShowPrimaryCategoryWarning,
     } = options;
 
     // Show confirmation modal
@@ -97,13 +99,20 @@ export function useRemoveFromCatalog() {
       if (isPrimaryCategory) {
         setConfirmLoading(false);
         closeConfirm();
-        await confirm({
-          title: "Primary Category",
-          message: `This catalog is the ${entityType}'s primary category. Change the ${entityType}'s primary category before removing it from this catalog.`,
-          type: "info",
-          confirmText: "Got it",
-          cancelText: "Close",
-        });
+
+        // If a callback is provided, use it instead of the generic confirm
+        if (onShowPrimaryCategoryWarning) {
+          await onShowPrimaryCategoryWarning(entityId, entityType);
+        } else {
+          // Fallback to the generic confirm if no callback provided
+          await confirm({
+            title: "Primary Category",
+            message: `This catalog is the ${entityType}'s primary category. Change the ${entityType}'s primary category before removing it from this catalog.`,
+            type: "info",
+            confirmText: "Got it",
+            cancelText: "Close",
+          });
+        }
         setRemovingId(null);
         return;
       }

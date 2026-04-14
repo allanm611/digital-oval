@@ -306,24 +306,24 @@ export default function SettingsPage() {
 
   // Handle subscription toggle
   const handleSubscriptionToggle = async (
-    subscriptionId: number,
-    currentEnabled: boolean
+    ruleId: number,
+    currentSubscribed: boolean
   ) => {
     try {
-      setSubscriptionsSavingId(subscriptionId);
+      setSubscriptionsSavingId(ruleId);
       // Update local state optimistically
       setSubscriptions((prev) =>
         prev.map((sub) =>
-          sub.id === subscriptionId
-            ? { ...sub, is_enabled: !currentEnabled }
+          sub.rule_id === ruleId
+            ? { ...sub, is_subscribed: !currentSubscribed }
             : sub
         )
       );
       // Call API
       const updatedSubscriptions = subscriptions.map((sub) =>
-        sub.id === subscriptionId
-          ? { notification_rule_id: sub.notification_rule_id, is_enabled: !currentEnabled }
-          : { notification_rule_id: sub.notification_rule_id, is_enabled: sub.is_enabled }
+        sub.rule_id === ruleId
+          ? { rule_id: sub.rule_id, is_subscribed: !currentSubscribed }
+          : { rule_id: sub.rule_id, is_subscribed: sub.is_subscribed }
       );
       await notificationService.updateNotificationSubscriptions(updatedSubscriptions);
       showToast("Notification preference updated");
@@ -332,8 +332,8 @@ export default function SettingsPage() {
       // Revert optimistic update
       setSubscriptions((prev) =>
         prev.map((sub) =>
-          sub.id === subscriptionId
-            ? { ...sub, is_enabled: currentEnabled }
+          sub.rule_id === ruleId
+            ? { ...sub, is_subscribed: currentSubscribed }
             : sub
         )
       );
@@ -1201,24 +1201,24 @@ export default function SettingsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {subscriptions.map((subscription) => (
                   <div
-                    key={subscription.id}
+                    key={subscription.rule_id}
                     className="flex items-start gap-3 cursor-pointer p-3 hover:bg-gray-50 rounded-lg transition-colors"
                   >
                     <Checkbox
-                      id={`notification-${subscription.id}`}
-                      checked={subscription.is_enabled}
+                      id={`notification-${subscription.rule_id}`}
+                      checked={subscription.is_subscribed}
                       onChange={() =>
-                        handleSubscriptionToggle(subscription.id, subscription.is_enabled)
+                        handleSubscriptionToggle(subscription.rule_id, subscription.is_subscribed)
                       }
-                      disabled={subscriptionsSavingId === subscription.id}
+                      disabled={subscriptionsSavingId === subscription.rule_id}
                     />
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-900">
-                        {subscription.rule_name}
+                        {subscription.name}
                       </p>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        {subscription.rule_template}
-                      </p>
+                      {/* <p className="text-xs text-gray-500 mt-0.5">
+                        {subscription.description || `${subscription.table_name} - ${subscription.action_type}`}
+                      </p> */}
                     </div>
                   </div>
                 ))}

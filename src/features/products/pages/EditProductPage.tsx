@@ -174,13 +174,12 @@ export default function EditProductPage() {
       setIsLoading(true);
 
       // Map unit to unit_of_measure and exclude backend-unsupported fields
-      // Backend doesn't accept: product_type_id, unit, unit_value, combo_data, validity_hours
+      // Backend doesn't accept: unit, unit_value, combo_data, validity_hours
+      // Note: product_type_id is sent to backend as-is
       const {
-        is_active,
         unit,
         unit_value,
         combo_data,
-        product_type_id,
         validity_hours,
         ...updateData
       } = formData;
@@ -204,6 +203,7 @@ export default function EditProductPage() {
       if (unit) {
         finalUpdateData.unit_of_measure = unit;
       }
+
 
       // Include combo_data if provided (for combo products)
       if (combo_data && combo_data.resources.length > 0) {

@@ -534,9 +534,25 @@ export default function DashboardHome() {
 
             setCampaignsStats({ total, active, completed });
 
+            // Fetch actual pending approval count with fresh data
+            let pendingApprovalCount = 0;
+            try {
+              const pendingApprovalResponse =
+                await campaignService.getPendingApprovalCampaigns({
+                  skipCache: true,
+                });
+              if ("pagination" in pendingApprovalResponse) {
+                pendingApprovalCount =
+                  pendingApprovalResponse.pagination?.total ?? 0;
+              }
+            } catch {
+              // Fallback to stats data if fetch fails
+              pendingApprovalCount = parseMetric(statsData.pending_approval ?? 0);
+            }
+
             const initialStatusCounts: Record<string, number> = {
               draft: parseMetric(statsData.in_draft ?? 0),
-              pending_approval: parseMetric(statsData.pending_approval ?? 0),
+              pending_approval: pendingApprovalCount,
               active,
               completed: parseMetric(statsData.completed ?? 0),
               archived: parseMetric(statsData.archived ?? 0),
@@ -1547,20 +1563,25 @@ export default function DashboardHome() {
         // Fetch ONE campaign pending approval
         try {
           const pendingCampaigns =
-            await campaignService.getPendingApprovalCampaigns();
-          const pendingCampaign = (pendingCampaigns.data || [])[0];
-          if (pendingCampaign) {
-            results.push({
-              id: "campaigns-pending",
-              title: t.dashboard.pendingApproval,
-              description: `${pendingCampaign.name}`,
-              type: "campaign",
-              action: t.dashboard.approve,
-              priority: "medium",
-              count: (pendingCampaigns.meta?.total || 0),
-              itemId: pendingCampaign.id,
-              itemName: pendingCampaign.name,
-            });
+            await campaignService.getPendingApprovalCampaigns({ skipCache: true });
+          if ("success" in pendingCampaigns && !pendingCampaigns.success) {
+            console.error("Error response:", pendingCampaigns);
+          } else if ("data" in pendingCampaigns && pendingCampaigns.data) {
+            const pendingCampaign = pendingCampaigns.data[0];
+            const totalCount = pendingCampaigns.pagination?.total || 0;
+            if (pendingCampaign) {
+              results.push({
+                id: "campaigns-pending",
+                title: t.dashboard.pendingApproval,
+                description: `${pendingCampaign.name}`,
+                type: "campaign",
+                action: t.dashboard.approve,
+                priority: "medium",
+                count: totalCount,
+                itemId: pendingCampaign.id,
+                itemName: pendingCampaign.name,
+              });
+            }
           }
         } catch (err) {
           console.error("Failed to fetch pending approval campaigns:", err);
@@ -1569,20 +1590,25 @@ export default function DashboardHome() {
         // Fetch ONE offer - upcoming offers
         try {
           const upcomingOffers =
-            await offerService.getUpcomingOffers();
-          const upcomingOffer = (upcomingOffers.data || [])[0];
-          if (upcomingOffer) {
-            results.push({
-              id: "offers-upcoming",
-              title: "Upcoming Offers",
-              description: `${upcomingOffer.name}`,
-              type: "offer",
-              action: t.dashboard.review,
-              priority: "medium",
-              count: (upcomingOffers.meta?.total || 0),
-              itemId: upcomingOffer.id,
-              itemName: upcomingOffer.name,
-            });
+            await offerService.getUpcomingOffers({ skipCache: true });
+          if ("success" in upcomingOffers && !upcomingOffers.success) {
+            console.error("Error response:", upcomingOffers);
+          } else if ("data" in upcomingOffers && upcomingOffers.data) {
+            const upcomingOffer = upcomingOffers.data[0];
+            const totalCount = upcomingOffers.pagination?.total || 0;
+            if (upcomingOffer) {
+              results.push({
+                id: "offers-upcoming",
+                title: "Upcoming Offers",
+                description: `${upcomingOffer.name}`,
+                type: "offer",
+                action: t.dashboard.review,
+                priority: "medium",
+                count: totalCount,
+                itemId: upcomingOffer.id,
+                itemName: upcomingOffer.name,
+              });
+            }
           }
         } catch (err) {
           console.error("Failed to fetch upcoming offers:", err);
@@ -1591,20 +1617,25 @@ export default function DashboardHome() {
         // Fetch ONE offer - expired offers
         try {
           const expiredOffers =
-            await offerService.getExpiredOffers();
-          const expiredOffer = (expiredOffers.data || [])[0];
-          if (expiredOffer) {
-            results.push({
-              id: "offers-expired",
-              title: "Expired Offers",
-              description: `${expiredOffer.name}`,
-              type: "offer",
-              action: t.dashboard.review,
-              priority: "medium",
-              count: (expiredOffers.meta?.total || 0),
-              itemId: expiredOffer.id,
-              itemName: expiredOffer.name,
-            });
+            await offerService.getExpiredOffers({ skipCache: true });
+          if ("success" in expiredOffers && !expiredOffers.success) {
+            console.error("Error response:", expiredOffers);
+          } else if ("data" in expiredOffers && expiredOffers.data) {
+            const expiredOffer = expiredOffers.data[0];
+            const totalCount = expiredOffers.pagination?.total || 0;
+            if (expiredOffer) {
+              results.push({
+                id: "offers-expired",
+                title: "Expired Offers",
+                description: `${expiredOffer.name}`,
+                type: "offer",
+                action: t.dashboard.review,
+                priority: "medium",
+                count: totalCount,
+                itemId: expiredOffer.id,
+                itemName: expiredOffer.name,
+              });
+            }
           }
         } catch (err) {
           console.error("Failed to fetch expired offers:", err);
@@ -2643,8 +2674,7 @@ export default function DashboardHome() {
                         <p className="font-semibold text-base text-black">
                           {item.title}
                         </p>
-                        {/* Count badge - TODO: Enable when TS errors resolved */}
-                        {/* <span
+                        <span
                           className={`px-3 py-1 rounded-full text-xs font-medium border ${
                             item.priority === "high"
                               ? "bg-red-100 text-red-700 border-red-200"
@@ -2652,7 +2682,7 @@ export default function DashboardHome() {
                           }`}
                         >
                           {item.count > 0 ? `${item.count} item${item.count !== 1 ? 's' : ''}` : 'No items'}
-                        </span> */}
+                        </span>
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-medium border text-white`}
                           style={{

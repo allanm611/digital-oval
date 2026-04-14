@@ -2476,10 +2476,11 @@ export const notificationTypesConfig: TypeConfigurationPageConfig = {
   customFields: [
     {
       label: "Table Name",
-      type: "text",
+      type: "select",
       fieldKey: "table_name",
       required: true,
-      placeholder: "e.g., users, campaigns, orders",
+      placeholder: "Select a table",
+      dynamicOptions: "notificationTables",
     },
     {
       label: "Action Type",

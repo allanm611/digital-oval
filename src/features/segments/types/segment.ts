@@ -155,9 +155,7 @@ export type CreateSegmentRequest = {
     | "dynamic"
     | "predictive"
     | "behavioral"
-    | "demographic"
-    | "geographic"
-    | "transactional"; // Required
+    | "lookalike"; // Required
   category?: number; // Optional
   parent_segment?: number; // Optional
   description?: string; // Optional
@@ -174,6 +172,12 @@ export type CreateSegmentRequest = {
 export type UpdateSegmentRequest = {
   name?: string; // Optional
   code?: string; // Optional
+  type?:
+    | "static"
+    | "dynamic"
+    | "predictive"
+    | "behavioral"
+    | "lookalike"; // Optional
   category?: number; // Optional
   parent_segment?: number; // Optional
   description?: string; // Optional
@@ -589,6 +593,8 @@ export interface SegmentCondition {
 
   // For 360 Profile conditions
   category?: number; // Category ID for filtering fields
+  subcategory_id?: number; // Subcategory ID (for hierarchical categories like Customer 360)
+  subcategory_name?: string; // Subcategory name (for display)
   field?: string; // field_value (e.g., "p_msisdn")
   field_name?: string; // field_name - actual DB column (e.g., "msisdn") - used for API payloads
   field_id?: number; // Backend field ID - used for API calls

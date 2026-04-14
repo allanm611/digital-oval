@@ -492,7 +492,7 @@ export default function CreateControlGroupPage() {
 
     setIsCreating(true);
     try {
-      let definition: SegmentPayload | undefined;
+      let customConditions: SegmentPayload | undefined;
 
       if (selectedCustomerBase === "custom_conditions") {
         if (segmentConditions.length === 0) {
@@ -500,7 +500,7 @@ export default function CreateControlGroupPage() {
           setIsCreating(false);
           return;
         }
-        definition = convertConditionsToPayload(segmentConditions);
+        customConditions = convertConditionsToPayload(segmentConditions);
       }
 
       const targetRenderConfig: TargetRenderTime = {
@@ -522,7 +522,7 @@ export default function CreateControlGroupPage() {
         is_universal: isUniversal,
         is_active: isActive,
         target_render_config: targetRenderConfig,
-        ...(definition && { definition }),
+        ...(customConditions && { custom_conditions: customConditions }),
       };
 
       if (isEditMode && id) {

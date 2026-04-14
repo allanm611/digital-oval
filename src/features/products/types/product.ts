@@ -85,7 +85,8 @@ export interface CreateProductRequest {
   name: string;
   description?: string;
   category_id?: number;
-  product_type_id?: number;
+  product_type_id?: number; // Frontend only - ID of selected product type
+  product_type?: string; // Backend field - string value of product type
   price: number;
   currency?: string;
   scope?: ProductScope;
@@ -110,7 +111,8 @@ export interface UpdateProductRequest {
   name?: string;
   description?: string;
   category_id?: number;
-  product_type_id?: number;
+  product_type_id?: number; // Frontend only - ID of selected product type
+  product_type?: string; // Backend field - string value of product type
   price?: number;
   currency?: string;
   scope?: ProductScope;

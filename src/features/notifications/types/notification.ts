@@ -52,25 +52,21 @@ export interface InboxNotification {
   created_at: string;
 }
 
-// Subscription rule metadata
-export interface SubscriptionRule {
-  id: number;
-  notification_rule_id: number;
-  rule_name: string;
-  rule_template: string;
-}
-
-// User's subscription to a notification rule
-export interface NotificationSubscription extends SubscriptionRule {
-  user_id: number;
-  is_enabled: boolean;
+// User's subscription to a notification rule (from API)
+export interface NotificationSubscription {
+  rule_id: number;
+  name: string;
+  description?: string;
+  table_name: string;
+  action_type: string;
+  is_subscribed: boolean;
 }
 
 // Request body for updating subscriptions (PUT /notifications/subscriptions)
 export interface UpdateSubscriptionsRequest {
   subscriptions: Array<{
-    notification_rule_id: number;
-    is_enabled: boolean;
+    rule_id: number;
+    is_subscribed: boolean;
   }>;
 }
 
