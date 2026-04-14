@@ -132,8 +132,23 @@
 }
 
 .versionItem {
-  padding: 16px;
+  padding: 12px 16px;
   background-color: #111827;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.versionItem:hover {
+  background-color: #1f2937;
+}
+
+.versionItemActive {
+  background-color: #0f4c3a;
+  border-left: 3px solid #25c2a0;
+  padding-left: 13px;
 }
 
 .versionItemTitle {

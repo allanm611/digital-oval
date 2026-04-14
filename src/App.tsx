@@ -13,6 +13,7 @@ import { NotificationProvider } from "./contexts/NotificationContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { NotificationSettingsProvider } from "./contexts/NotificationSettingsContext";
 import { GlobalLoadingProvider } from "./contexts/GlobalLoadingContext";
+import { DocsVersionProvider } from "./features/docs/contexts/DocsVersionContext";
 import { color } from "./shared/utils/utils";
 import GlobalLoader from "./shared/components/GlobalLoader";
 import { AppErrorBoundary } from "./shared/components/AppErrorBoundary";
@@ -106,15 +107,17 @@ function App() {
                 <ConfirmProvider>
                   <NotificationProvider>
                     <NotificationSettingsProvider>
-                      <Router>
-                        <div
-                          className="min-h-screen"
-                          style={{ backgroundColor: color.primary.background }}
-                        >
-                          <GlobalLoader />
-                          <AppRoutes />
-                        </div>
-                      </Router>
+                      <DocsVersionProvider>
+                        <Router>
+                          <div
+                            className="min-h-screen"
+                            style={{ backgroundColor: color.primary.background }}
+                          >
+                            <GlobalLoader />
+                            <AppRoutes />
+                          </div>
+                        </Router>
+                      </DocsVersionProvider>
                     </NotificationSettingsProvider>
                   </NotificationProvider>
                 </ConfirmProvider>

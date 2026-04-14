@@ -10,18 +10,23 @@ export interface DocMetadata {
   path: string;
 }
 
-// Load all markdown files using Vite's glob - eager load for instant access
-const markdownModules = import.meta.glob<string>('../markdown/**/*.md', { as: 'raw', eager: true });
+// Load all markdown files for each version using Vite's glob - eager load for instant access
+const markdownV1_0Modules = import.meta.glob<string>('../markdown-v1.0/**/*.md', { as: 'raw', eager: true });
+const markdownV1_1Modules = import.meta.glob<string>('../markdown-v1.1/**/*.md', { as: 'raw', eager: true });
 
 class DocsService {
   /**
-   * Load markdown file by slug
+   * Load markdown file by slug and version
    * Slug format: "intro", "authentication/login", "campaigns/create-campaign", etc.
+   * Version format: "v1.0", "v1.1", etc.
    */
-  loadMarkdown(slug: string): string {
+  loadMarkdown(slug: string, version: string = 'v1.0'): string {
     try {
+      // Select the correct module set based on version
+      const markdownModules = version === 'v1.1' ? markdownV1_1Modules : markdownV1_0Modules;
+
       // Normalize slug: "intro" or "authentication/login"
-      const path = slug === 'intro' ? '../markdown/intro.md' : `../markdown/${slug}.md`;
+      const path = slug === 'intro' ? `../markdown-${version}/intro.md` : `../markdown-${version}/${slug}.md`;
 
       const content = markdownModules[path];
       if (!content) {

@@ -11,6 +11,7 @@ import { Link as LinkIcon } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { PermissionGate } from '../../auth/components/PermissionGate';
 import { useDocumentation } from '../hooks/useDocumentation';
+import { useDocsVersion } from '../contexts/DocsVersionContext';
 import { DocsLayout } from '../components/DocsLayout';
 import { DocsSidebar } from '../components/DocsSidebar';
 import { DocsTOC } from '../components/DocsTOC';
@@ -26,6 +27,7 @@ export function DocsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { activeVersion } = useDocsVersion();
 
   // Extract slug from URL path (e.g., /documentation/authentication/login → authentication/login)
   const slug = location.pathname.replace(/^\/documentation\/?/, '') || 'intro';
@@ -43,7 +45,7 @@ export function DocsPage() {
     return [];
   }, []);
 
-  const { content, isLoading, error } = useDocumentation(slug);
+  const { content, isLoading, error } = useDocumentation(slug, activeVersion);
 
   // Redirect to login if not authenticated
   if (!user) {

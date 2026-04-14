@@ -13,7 +13,7 @@ export interface UseDocumentationReturn {
   reload: () => void;
 }
 
-export function useDocumentation(slug?: string): UseDocumentationReturn {
+export function useDocumentation(slug?: string, version: string = 'v1.0'): UseDocumentationReturn {
   const [content, setContent] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +23,7 @@ export function useDocumentation(slug?: string): UseDocumentationReturn {
 
     try {
       // Synchronous load - markdown files are eagerly loaded by Vite
-      const markdown = docsService.loadMarkdown(slug);
+      const markdown = docsService.loadMarkdown(slug, version);
       const { body } = docsService.parseFrontmatter(markdown);
       setContent(body);
       setError(null);
@@ -46,7 +46,7 @@ export function useDocumentation(slug?: string): UseDocumentationReturn {
     // }, 0);
 
     // return () => clearTimeout(timer);
-  }, [slug]);
+  }, [slug, version]);
 
   return {
     content,

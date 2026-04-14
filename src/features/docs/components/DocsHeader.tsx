@@ -3,10 +3,11 @@
  * Fixed navbar at top with logo and Documentation navigation
  */
 
-import React, { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Search, ChevronDown } from 'lucide-react';
 import { SearchModal } from './SearchModal';
+import { useDocsVersion } from '../contexts/DocsVersionContext';
 import styles from './DocsHeader.module.css';
 import logo from '../../../assets/logo.png';
 
@@ -15,10 +16,28 @@ export function DocsHeader() {
   const navigate = useNavigate();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isVersionOpen, setIsVersionOpen] = useState(false);
+  const { activeVersion, setActiveVersion } = useDocsVersion();
   const isDocsActive = location.pathname.startsWith('/documentation');
+  const versionDropdownRef = useRef<HTMLDivElement>(null);
 
-  const currentVersion = 'v1.0';
-  const releaseDate = 'April 2026';
+  const versions = [
+    { version: 'v1.1' },
+    { version: 'v1.0' },
+  ];
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (versionDropdownRef.current && !versionDropdownRef.current.contains(event.target as Node)) {
+        setIsVersionOpen(false);
+      }
+    }
+
+    if (isVersionOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isVersionOpen]);
 
   return (
     <>
@@ -38,12 +57,12 @@ export function DocsHeader() {
           {/* Center: Release Notes + Version Dropdown */}
           <div className={styles.centerSection}>
             <span className={styles.releaseLabel}>Release Notes</span>
-            <div className={styles.versionDropdownContainer}>
+            <div ref={versionDropdownRef} className={styles.versionDropdownContainer}>
               <button
                 onClick={() => setIsVersionOpen(!isVersionOpen)}
                 className={styles.versionButton}
               >
-                <span className={styles.versionText}>{currentVersion}</span>
+                <span className={styles.versionText}>{activeVersion}</span>
                 <ChevronDown
                   size={16}
                   className={`${styles.chevron} ${isVersionOpen ? styles.chevronOpen : ''}`}
@@ -52,11 +71,18 @@ export function DocsHeader() {
 
               {isVersionOpen && (
                 <div className={styles.versionDropdown}>
-                  <div className={styles.versionItem}>
-                    <div className={styles.versionItemTitle}>{currentVersion}</div>
-                    <div className={styles.versionItemSubtitle}>Current Release</div>
-                    <div className={styles.versionItemDate}>{releaseDate}</div>
-                  </div>
+                  {versions.map((versionInfo) => (
+                    <button
+                      key={versionInfo.version}
+                      onClick={() => {
+                        setActiveVersion(versionInfo.version);
+                        setIsVersionOpen(false);
+                      }}
+                      className={`${styles.versionItem} ${activeVersion === versionInfo.version ? styles.versionItemActive : ''}`}
+                    >
+                      <div className={styles.versionItemTitle}>{versionInfo.version}</div>
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
