@@ -6,7 +6,7 @@ Campaign Catalogs are organizational structures that group and organize campaign
 
 <!-- **Note:** Campaign Catalogs are configured in the system configuration. For detailed information on creating and managing catalogs, see [Campaign Catalogs Configuration](/documentation/configuration/campaign-catalog). -->
 
-![Campaign Catalogs List](/img/configuration/campaigncatalogslist.png)
+![Campaign Catalogs List](/img/v1.0/configuration/campaigncatalogslist.png)
 
 ## Summary Statistics
 
@@ -40,7 +40,7 @@ Click **Create** button to add a new catalog:
 
 The new catalog is created and appears in the list.
 
-![Create Campaign Catalog](/img/configuration/createcampaigncatalog.png)
+![Create Campaign Catalog](/img/v1.0/configuration/createcampaigncatalog.png)
 
 ### Edit Catalog
 
@@ -69,7 +69,7 @@ Click the **Power** button (activate/deactivate) on any catalog card:
 
 Click the **View Campaigns** button on any catalog card to open a modal showing all campaigns assigned to this catalog.
 
-![View Campaigns in Catalog](/img/configuration/viewcampaignsincatalog.png)
+![View Campaigns in Catalog](/img/v1.0/configuration/viewcampaignsincatalog.png)
 
 ### Campaigns Modal
 
@@ -109,7 +109,7 @@ In the View Campaigns modal, click the **Add campaigns to this catalog** button 
 
 When you click "Add campaigns to this catalog", an assignment modal opens displaying all available campaigns in the system.
 
-![Assign Campaigns to Catalog](/img/configuration/assigncampaignstocatalog.png)
+![Assign Campaigns to Catalog](/img/v1.0/configuration/assigncampaignstocatalog.png)
 
 **Header**
 

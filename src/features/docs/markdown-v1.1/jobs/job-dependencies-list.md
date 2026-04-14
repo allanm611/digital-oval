@@ -16,7 +16,7 @@ Job Dependencies List is the table view for dependency records.
 
 Search and filter options are available for dependency type, wait status, and active-only views.
 
-![Job dependencies list page](/img/jobmanagement-images/jobdepencieslistpage.png)
+![Job dependencies list page](/img/v1.1/jobmanagement-images/jobdepencieslistpage.png)
 
 ## Actions
 
@@ -26,9 +26,9 @@ Search and filter options are available for dependency type, wait status, and ac
 - Delete
 - critical-path and analytics actions where available
 
-![Job dependency list page showing actions dropdown](/img/jobmanagement-images/jobdepencylistpageshowingtheactionsdropdown.png)
+![Job dependency list page showing actions dropdown](/img/v1.1/jobmanagement-images/jobdepencylistpageshowingtheactionsdropdown.png)
 
-![Job dependencies bulk operations](/img/jobmanagement-images/jobdepenciesbulkopeartiosn.png)
+![Job dependencies bulk operations](/img/v1.1/jobmanagement-images/jobdepenciesbulkopeartiosn.png)
 
 ## Related Pages
 

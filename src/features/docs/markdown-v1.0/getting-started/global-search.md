@@ -10,7 +10,7 @@ Global Search is a powerful app-wide search feature that lets you quickly find a
 
 The search modal will open with a search input field ready for your query.
 
-![Global Search Dropdown](/img/getstarted/search.png)
+![Global Search Dropdown](/img/v1.0/getstarted/search.png)
 
 ## Live Search Dropdown
 
@@ -64,7 +64,7 @@ As you type, the dropdown shows matching results organized by category:
 
 Click "View Results" in the dropdown to access the full search results page with filtering and advanced search capabilities.
 
-![Search Results Page](/img/getstarted/searchresults.png)
+![Search Results Page](/img/v1.0/getstarted/searchresults.png)
 
 ### Results Display
 

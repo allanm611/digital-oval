@@ -22,7 +22,7 @@ The page shows a table with the following columns:
 
 The page displays all customer identity fields in a searchable, filterable list.
 
-![Customer Identity List](/img/customer360-images/customeridentitylistpage.png)
+![Customer Identity List](/img/v1.1/customer360-images/customeridentitylistpage.png)
 
 ## Search & Filter
 

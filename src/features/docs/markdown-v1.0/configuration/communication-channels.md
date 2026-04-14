@@ -51,7 +51,7 @@ Communication Channels define:
 
 Navigate to **Configuration → Communication Channels** to manage all communication channels.
 
-![Communication Channels List](/img/configuration/communicationchannelslist.png)
+![Communication Channels List](/img/v1.0/configuration/communicationchannelslist.png)
 
 The list displays all configured channels with options to:
 - View complete configuration
@@ -104,7 +104,7 @@ The list displays all configured channels with options to:
 6. Set **Status** - Active or Inactive
 7. Click **Save** to create the channel
 
-![Create Communication Channel](/img/configuration/create-communication-channel.png)
+![Create Communication Channel](/img/v1.0/configuration/create-communication-channel.png)
 
 --- -->
 
@@ -121,7 +121,7 @@ Click **Edit**  to modify:
 4. **Status** - Enable or disable the channel -->
 3. Click **Save** to apply changes
 
-![Edit Communication Channel](/img/configuration/editcommunicationchannel.png)
+![Edit Communication Channel](/img/v1.0/configuration/editcommunicationchannel.png)
 
 <!-- **Note:** 
 - Changes apply to future communications only

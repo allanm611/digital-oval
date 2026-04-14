@@ -9,7 +9,7 @@ title: Login
 
 The login page allows users to authenticate with their email and password to access the Sentra CVM platform.
 
-![Login Page](/img/auth-images/login.png)
+![Login Page](/img/v1.0/auth-images/login.png)
 
 
 ## Login Form

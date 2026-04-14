@@ -2,9 +2,9 @@
 
 VIP List Management allows you to organize and manage your most valuable customers by creating VIP lists and adding customers to them. You can then reference these VIP lists in communication policies to provide special treatment or exclusions for your high-value customers.
 
-![VIP Customers Tab](/img/configuration/viplistmanagementvipcustomerstab.png)
+![VIP Customers Tab](/img/v1.0/configuration/viplistmanagementvipcustomerstab.png)
 
-![VIP Lists Tab](/img/configuration/viplistmanagentvipliststab.png)
+![VIP Lists Tab](/img/v1.0/configuration/viplistmanagentvipliststab.png)
 
 ## What are VIP Lists?
 
@@ -55,9 +55,9 @@ View and manage VIP list definitions.
 
 From the **VIP Customers** tab, click the **Add Customer** button.
 
-![Add VIP Customer Modal - Part 1](/img/configuration/addvipcustomermodalimage1.png)
+![Add VIP Customer Modal - Part 1](/img/v1.0/configuration/addvipcustomermodalimage1.png)
 
-![Add VIP Customer Modal - Part 2](/img/configuration/addvipcustomermodalimage2.png)
+![Add VIP Customer Modal - Part 2](/img/v1.0/configuration/addvipcustomermodalimage2.png)
 
 **Required Fields:**
 

@@ -2,7 +2,7 @@
 
 System Events List shows KPI definitions based on operational/system event signals.
 
-![System Events List](/img/infrastructure/systemeventsallpage.png)
+![System Events List](/img/v1.1/infrastructure/systemeventsallpage.png)
 
 ## What This Page Is For
 

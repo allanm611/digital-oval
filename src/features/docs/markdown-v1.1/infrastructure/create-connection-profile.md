@@ -4,7 +4,7 @@ Create Connection Profile is used to register a new source-connection configurat
 
 The system uses the same form for both **Create** and **Edit**. So this page is the single field guide for both.
 
-![Create Connection Profile - Basic Information](/img/infrastructure/createconnectionprofilebasicinfo.png)
+![Create Connection Profile - Basic Information](/img/v1.1/infrastructure/createconnectionprofilebasicinfo.png)
 
 ## Required Fields
 
@@ -30,7 +30,7 @@ The system uses the same form for both **Create** and **Edit**. So this page is 
 - **Contains PII**: marks that personal data is present and stricter handling is required.
 - **GDPR Applicable**: flags records that must follow GDPR processes such as retention and access handling.
 
-![Create Connection Profile - Classification and Metadata](/img/infrastructure/createconnecitonprofiledatagovernnace.png)
+![Create Connection Profile - Classification and Metadata](/img/v1.1/infrastructure/createconnecitonprofiledatagovernnace.png)
 
 ### Validity
 
@@ -49,10 +49,10 @@ The system uses the same form for both **Create** and **Edit**. So this page is 
 - **Backoff**: wait strategy between retries to reduce pressure during failure.
 - **Circuit Threshold**: failure count that triggers protective cut-off behavior.
 
-![Create Connection Profile - Performance and Reliability](/img/infrastructure/createconnectionprofileperfomancesettings.png)
+![Create Connection Profile - Performance and Reliability](/img/v1.1/infrastructure/createconnectionprofileperfomancesettings.png)
 
 
-![Create Connection Profile - Health Checks and Advanced](/img/infrastructure/createconnecitonprofilehealthchecksandadvanced.png)
+![Create Connection Profile - Health Checks and Advanced](/img/v1.1/infrastructure/createconnecitonprofilehealthchecksandadvanced.png)
 
 ### Optional Technical Fields
 

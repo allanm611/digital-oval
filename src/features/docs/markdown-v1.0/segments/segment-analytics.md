@@ -8,7 +8,7 @@ The Segment Analytics page provides comprehensive insights into your segment por
 
 At the top of the page, four key metric cards give you a quick health overview:
 
-![Analytics Summary Statistics](/img/segments-img/segmentanalyticsstatcards.png)
+![Analytics Summary Statistics](/img/v1.0/segments-img/segmentanalyticsstatcards.png)
 
 ### Total Segments
 
@@ -79,7 +79,7 @@ At the top of the page, four key metric cards give you a quick health overview:
 - Too many static segments? Opportunities to automate with dynamic rules
 - All one type? Risk of limited flexibility in audience targeting -->
 
-![Type Distribution & Category Distribution](/img/segments-img/segmentanalyticstypeandcategorydistribution.png)
+![Type Distribution & Category Distribution](/img/v1.0/segments-img/segmentanalyticstypeandcategorydistribution.png)
 
 ### 2. Category Distribution (Bar Chart)
 
@@ -106,7 +106,7 @@ At the top of the page, four key metric cards give you a quick health overview:
 
 ### 3. Creation Trend (Line Chart - Last 30 Days)
 
-![Creation Trend Chart](/img/segments-img/segmentanalyticscreationtrend.png)
+![Creation Trend Chart](/img/v1.0/segments-img/segmentanalyticscreationtrend.png)
 
 **What It Shows:**
 
@@ -138,7 +138,7 @@ At the top of the page, four key metric cards give you a quick health overview:
 
 ### 4. Top 10 Largest Segments (Horizontal Bar Chart)
 
-![Top Largest Segments](/img/segments-img/segmentanaltyicstoplargest.png)
+![Top Largest Segments](/img/v1.0/segments-img/segmentanaltyicstoplargest.png)
 
 **What It Shows:**
 
@@ -168,7 +168,7 @@ At the top of the page, four key metric cards give you a quick health overview:
 
 ### 5. Top Segments by Campaign Usage (Horizontal Bar Chart)
 
-![Campaign Usage Chart](/img/segments-img/segmentanalyticscampaignusage.png)
+![Campaign Usage Chart](/img/v1.0/segments-img/segmentanalyticscampaignusage.png)
 
 **What It Shows:**
 
@@ -201,7 +201,7 @@ At the top of the page, four key metric cards give you a quick health overview:
 
 ## Stale Segments Table
 
-![Stale Segments Table](/img/segments-img/segmentanalyticsstalesegments.png)
+![Stale Segments Table](/img/v1.0/segments-img/segmentanalyticsstalesegments.png)
 
 **What It Shows:**
 

@@ -13,7 +13,7 @@ Go to `Jobs -> Job Dependencies`.
 - how long a dependent job should wait
 - whether dependency is active
 
-![Job dependencies list page](/img/jobmanagement-images/jobdepencieslistpage.png)
+![Job dependencies list page](/img/v1.1/jobmanagement-images/jobdepencieslistpage.png)
 
 ## Core Field Meaning
 
@@ -24,7 +24,7 @@ Go to `Jobs -> Job Dependencies`.
 - **Max Wait Minutes**: timeout for dependency wait.
 - **Lookback Days**: historical dependency lookup window.
 
-![Job dependency details page](/img/jobmanagement-images/jobdepencydetails.png)
+![Job dependency details page](/img/v1.1/jobmanagement-images/jobdepencydetails.png)
 
 ## Related Pages
 

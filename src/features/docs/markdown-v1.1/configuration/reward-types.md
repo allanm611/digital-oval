@@ -2,7 +2,7 @@
 
 Reward Types are categories used to classify and organize the different kinds of rewards you can offer to customers. Reward types help standardize how rewards are defined and managed in the system.
 
-![Reward Types List](/img/configuration/rewardtypeslist.png)
+![Reward Types List](/img/v1.1/configuration/rewardtypeslist.png)
 
 ## What are Reward Types?
 

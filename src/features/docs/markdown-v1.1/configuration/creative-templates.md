@@ -2,7 +2,7 @@
 
 Creative Templates are reusable content definitions used when teams build offer creatives. They help keep messaging consistent while still allowing channel-specific and language-specific content.
 
-![Creative Templates List](/img/configuration/creativetemplatelistimage.png)
+![Creative Templates List](/img/v1.1/configuration/creativetemplatelistimage.png)
 
 ## Open The Page
 
@@ -26,11 +26,11 @@ The list shows each template with name, description, and status. Search helps wh
 
 Click **Create** to open the form.
 
-![Create Creative Template - Name and Description](/img/configuration/createcreativetemplatename-decsriptionimage.png)
+![Create Creative Template - Name and Description](/img/v1.1/configuration/createcreativetemplatename-decsriptionimage.png)
 
-![Create Creative Template - Template Configuration](/img/configuration/createcreativetemplate-templateconfigsection.png)
+![Create Creative Template - Template Configuration](/img/v1.1/configuration/createcreativetemplate-templateconfigsection.png)
 
-![Create Creative Template - Template Content](/img/configuration/createcreativetemplate-templatecontentsection.png)
+![Create Creative Template - Template Content](/img/v1.1/configuration/createcreativetemplate-templatecontentsection.png)
 
 Common fields include template name, description, channel/locale, and content sections.
 

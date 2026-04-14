@@ -10,7 +10,7 @@ Go to `Jobs -> Job Types`.
 
 Consistent job typing makes filtering, reporting, and ownership handoff easier across teams.
 
-![Job types list page](/img/jobmanagement-images/jobtypeslistimage.png)
+![Job types list page](/img/v1.0/jobmanagement-images/jobtypeslistimage.png)
 
 ## Core Field Meaning
 
@@ -18,7 +18,7 @@ Consistent job typing makes filtering, reporting, and ownership handoff easier a
 - **Code**: stable machine-friendly identifier.
 - **Description**: practical context for when to use this type.
 
-![Job type details](/img/jobmanagement-images/jobtypedetails.png)
+![Job type details](/img/v1.0/jobmanagement-images/jobtypedetails.png)
 
 ## Related Pages
 

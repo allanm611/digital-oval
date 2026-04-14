@@ -10,7 +10,7 @@ This is a role-first workflow: choose one role, review the available permission 
 
 The first step is to choose the role you want to work on from the **Select Role** dropdown.
 
-![Assign Permissions Select Role Dropdown](/img/usermanagement-images/assignpermissionsselectroledropdownimage.png)
+![Assign Permissions Select Role Dropdown](/img/v1.0/usermanagement-images/assignpermissionsselectroledropdownimage.png)
 
 Once a role is selected, a badge shows the current assignment summary in the form `assigned / total permissions`. This gives immediate context before any edits are made.
 
@@ -18,7 +18,7 @@ Once a role is selected, a badge shows the current assignment summary in the for
 
 After a role is selected, the tab shows the permission catalogue with a search field above it. The search matches permission name, code, or action, which makes it practical to narrow the list before assigning or removing anything.
 
-![Assign Permissions Table](/img/usermanagement-images/assignpermissionstable.png)
+![Assign Permissions Table](/img/v1.0/usermanagement-images/assignpermissionstable.png)
 
 The table shows the permission name, code, action, sensitive flag, and the current assignment control for that row. The row action changes depending on whether the permission is already assigned to the role.
 
@@ -41,7 +41,7 @@ When selection mode is active:
 - visible permissions can be selected individually or through the header checkbox
 - a bulk toolbar appears when there is an active selection
 
-![Assign Permissions Bulk Operations](/img/usermanagement-images/assignpermissionsbulkoperationimage.png)
+![Assign Permissions Bulk Operations](/img/v1.0/usermanagement-images/assignpermissionsbulkoperationimage.png)
 
 The toolbar is context-aware:
 
@@ -55,7 +55,7 @@ This makes the bulk workflow useful for both initial setup and cleanup work.
 
 When permissions are assigned successfully, the page updates the local role assignment state and shows a success message so the administrator can confirm the change immediately.
 
-![Assign Permission to Role Success](/img/usermanagement-images/assignpermissiontorolesuccessimage.png)
+![Assign Permission to Role Success](/img/v1.0/usermanagement-images/assignpermissiontorolesuccessimage.png)
 
 ## Related Documentation
 

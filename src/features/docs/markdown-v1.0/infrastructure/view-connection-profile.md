@@ -2,7 +2,7 @@
 
 Connection Profile Details gives a full read view of one profile, including technical, governance, and lifecycle settings.
 
-![Connection Profile Details](/img/infrastructure/connectionprofiledetailspage.png)
+![Connection Profile Details](/img/v1.0/infrastructure/connectionprofiledetailspage.png)
 
 ## What The Page Shows
 

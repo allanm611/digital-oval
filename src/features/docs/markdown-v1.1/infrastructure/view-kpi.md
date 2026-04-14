@@ -2,13 +2,13 @@
 
 KPI Details shows the full definition of a metric in read mode.
 
-![Revenue Metric Details](/img/infrastructure/kpisrevenuemtericsdetailspage.png)
-![Revenue Metric - Basic Information](/img/infrastructure/revenuemetricsdetailbasicinfo.png)
-![Revenue Metric - Data Sources](/img/infrastructure/revenuemetricsdetaildatasources.png)
-![Usage Metric - Basic Information](/img/infrastructure/usagemetricdetailpagebasicinfo.png)
-![Usage Metric - Data Source and Operators](/img/infrastructure/usagemetricdetaildatasourceand%20operators.png)
-![System Events - Basic Information](/img/infrastructure/systemeventsdetailbasicinfo.png)
-![System Events - Source Info and Operators](/img/infrastructure/systemeventsdetailsourceinfoandopearators.png)
+![Revenue Metric Details](/img/v1.1/infrastructure/kpisrevenuemtericsdetailspage.png)
+![Revenue Metric - Basic Information](/img/v1.1/infrastructure/revenuemetricsdetailbasicinfo.png)
+![Revenue Metric - Data Sources](/img/v1.1/infrastructure/revenuemetricsdetaildatasources.png)
+![Usage Metric - Basic Information](/img/v1.1/infrastructure/usagemetricdetailpagebasicinfo.png)
+![Usage Metric - Data Source and Operators](/img/v1.1/infrastructure/usagemetricdetaildatasourceand%20operators.png)
+![System Events - Basic Information](/img/v1.1/infrastructure/systemeventsdetailbasicinfo.png)
+![System Events - Source Info and Operators](/img/v1.1/infrastructure/systemeventsdetailsourceinfoandopearators.png)
 
 ## What You See
 

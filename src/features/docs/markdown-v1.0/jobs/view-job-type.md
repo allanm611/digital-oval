@@ -9,7 +9,7 @@ Job Type details show the configured values for one type record.
 - Description
 - timestamps/metadata where available
 
-![Job type details](/img/jobmanagement-images/jobtypedetails.png)
+![Job type details](/img/v1.0/jobmanagement-images/jobtypedetails.png)
 
 ## Actions
 

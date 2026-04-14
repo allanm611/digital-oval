@@ -23,7 +23,7 @@ Editing a communication follows **the exact same 3-step process** as creating. T
 
 ## Step 1: Define Target Audience
 
-![Step 1 - Define Target Audience](/img/manual-actions/step1-communications.png)
+![Step 1 - Define Target Audience](/img/v1.1/manual-actions/step1-communications.png)
 
 Configure your communication audience using three fields:
 
@@ -63,7 +63,7 @@ Before proceeding to Step 2:
 
 ## Step 2: Define Communication & Test
 
-![Step 2 - Define Communication](/img/manual-actions/step2-communications.png)
+![Step 2 - Define Communication](/img/v1.1/manual-actions/step2-communications.png)
 
 Configure your message, then test it before sending.
 
@@ -141,9 +141,9 @@ Once satisfied with test results, click **Next** to proceed to Step 3.
 
 ## Step 3: Schedule & Execute
 
-![Schedule Execution Part 1](/img/manual-actions/manualcommunciationscheduleimage1.png)
+![Schedule Execution Part 1](/img/v1.1/manual-actions/manualcommunciationscheduleimage1.png)
 
-![Schedule Execution Part 2](/img/manual-actions/manualcommunciationscheduleimage2.png)
+![Schedule Execution Part 2](/img/v1.1/manual-actions/manualcommunciationscheduleimage2.png)
 
 Configure detailed scheduling for your message execution.
 
@@ -200,7 +200,7 @@ Before confirming, review all settings:
    - **Scheduled** - Waiting to send
 3. Click **View** to see detailed results:
 
-![View Communication Details](/img/manual-actions/detailscommunicationpage.png)
+![View Communication Details](/img/v1.1/manual-actions/detailscommunicationpage.png)
 
 You'll see:
    - Delivery metrics

@@ -4,7 +4,7 @@
 
 QuickLists are predefined customer lists that you upload or import into the system. They can be used in segments, and for sending targeted communications. You can create a QuickList by uploading a CSV, TXT, TSV, or XLSX file with customer data, or edit an existing QuickList's metadata (name and description).
 
-![Create QuickList Form](/img/segments-img/createquicklistimage1.png)
+![Create QuickList Form](/img/v1.0/segments-img/createquicklistimage1.png)
 
 ## Create QuickList
 
@@ -42,7 +42,7 @@ QuickLists are predefined customer lists that you upload or import into the syst
 
 ### File Upload
 
-![File Upload and Configuration](/img/segments-img/createquicklistimage2.png)
+![File Upload and Configuration](/img/v1.0/segments-img/createquicklistimage2.png)
 
 #### Uploading Your File
 
@@ -163,7 +163,7 @@ After uploading your file and configuring it:
 
 When editing an existing QuickList, you can change the **metadata** (name and description).
 
-![Edit QuickList Modal](/img/segments-img/editquicklist.png)
+![Edit QuickList Modal](/img/v1.0/segments-img/editquicklist.png)
 
 ### Editable Fields
 

@@ -6,7 +6,7 @@ View all customers in the system in a unified table. Search, filter, and manage 
 
 ## Customer List View
 
-![Customer List](/img/customer360-images/customer360list.png)
+![Customer List](/img/v1.0/customer360-images/customer360list.png)
 
 The page displays all customers in a table with columns for key information and action buttons.
 
@@ -23,13 +23,13 @@ Use the search box to find customers by name, phone, email, customer ID, or cust
 
 ### Filter by Field Type
 
-![Filter by Field Type](/img/customer360-images/customer360typefilter.png)
+![Filter by Field Type](/img/v1.0/customer360-images/customer360typefilter.png)
 
 Narrow results by customer classification or custom field values.
 
 ### Filter by Channel
 
-![Filter by Channel](/img/customer360-images/customer360channelsfilter.png)
+![Filter by Channel](/img/v1.0/customer360-images/customer360channelsfilter.png)
 
 Filter to show only customers with specific communication channel preferences.
 
@@ -64,9 +64,9 @@ Click the **View** (eye icon) to open the customer's complete profile.
 
 Click the **Edit** (pencil icon) to update customer information.
 
-![Edit Customer Form Part 1](/img/customer360-images/editcustomerimage1.png)
+![Edit Customer Form Part 1](/img/v1.0/customer360-images/editcustomerimage1.png)
 
-![Edit Customer Form Part 2](/img/customer360-images/editcustomerimage2.png)
+![Edit Customer Form Part 2](/img/v1.0/customer360-images/editcustomerimage2.png)
 
 **Editable Fields:**
 

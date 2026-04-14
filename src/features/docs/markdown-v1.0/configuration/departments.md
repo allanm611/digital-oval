@@ -18,13 +18,13 @@ Departments are:
 
 Navigate to **Configuration → Departments** to see all configured departments.
 
-![Departments List](/img/configuration/departmentslist.png)
+![Departments List](/img/v1.0/configuration/departmentslist.png)
 
 ### Create Department
 
 Click the **Create** button to add a new department.
 
-![Create Department](/img/configuration/createdepartment.png)
+![Create Department](/img/v1.0/configuration/createdepartment.png)
 
 ## Using Departments in Campaigns
 

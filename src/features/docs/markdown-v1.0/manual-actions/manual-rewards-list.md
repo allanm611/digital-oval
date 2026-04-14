@@ -10,7 +10,7 @@ The Manual Rewards list displays all rewards you've created and applied to custo
 2. Select **Manual Rewards**
 3. The system displays all rewards in a paginated list
 
-![Manual Rewards List](/img/manual-actions/manualrewardslist.png)
+![Manual Rewards List](/img/v1.0/manual-actions/manualrewardslist.png)
 
 ## List View Features
 

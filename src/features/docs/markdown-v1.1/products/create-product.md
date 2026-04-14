@@ -4,7 +4,7 @@
 
 The Create Product form guides you through setting up a new product that can be used in the system. The same form is used for both creating new products and editing existing ones when editing, all fields are pre-filled with current values based on your edit permissions.
 
-![Create Product Form](/img/product-images/createproductimage1.png)
+![Create Product Form](/img/v1.1/product-images/createproductimage1.png)
 
 ## Product Type Selection
 
@@ -78,24 +78,24 @@ When you select **Combo** as the product type, additional sections become availa
 
 ### Product Type Dropdown
 
-![Product Type Selection](/img/product-images/createproduct-productypedropdown.png)
+![Product Type Selection](/img/v1.1/product-images/createproduct-productypedropdown.png)
 
 ### Combo-Specific Fields
 
 #### Shared Checkboxes (When Combo Type Selected)
 
-![Combo Type - Unchecked Resources](/img/product-images/createproduct-combotypeuncheckedresources.png)
+![Combo Type - Unchecked Resources](/img/v1.1/product-images/createproduct-combotypeuncheckedresources.png)
 
 **Shared Resource Management:**
 
 - Toggle checkboxes to mark resources as shared across all bundle components
 - Shared resources apply uniformly to all items in the combo
 
-![Combo Type - Shared Checkboxes](/img/product-images/createproduct-combotypewith%20sharedcheckoxes.png)
+![Combo Type - Shared Checkboxes](/img/v1.1/product-images/createproduct-combotypewith%20sharedcheckoxes.png)
 
 #### Add Combo Resources
 
-![Combo Type Selected](/img/product-images/createproduct-combotypeselected.png)
+![Combo Type Selected](/img/v1.1/product-images/createproduct-combotypeselected.png)
 
 When Combo type is selected:
 
@@ -106,7 +106,7 @@ When Combo type is selected:
 
 ### Product Category Selection
 
-![Product Category Dropdown](/img/product-images/createproductimage2-productcategorydrodpodown.png)
+![Product Category Dropdown](/img/v1.1/product-images/createproductimage2-productcategorydrodpodown.png)
 
 ## Creating a Product
 
@@ -125,7 +125,7 @@ When Combo type is selected:
 
 The product creation form is also used for editing existing products. When you edit a product:
 
-![Edit Product Form](/img/product-images/editproduct.png)
+![Edit Product Form](/img/v1.1/product-images/editproduct.png)
 
 - All fields are pre-filled with the product's current values
 - You can modify any field based on your edit permissions

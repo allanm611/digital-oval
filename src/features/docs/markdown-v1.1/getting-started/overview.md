@@ -4,7 +4,6 @@
 
 Getting Started guides help you learn the fundamentals of the Sentra CVM platform. Whether you're new to the system or need a quick refresher, these guides explain core features and how to navigate the systemlication.
 
----
 
 ## Essential Guides
 
@@ -16,7 +15,6 @@ Learn about the main landing page you see after logging in. Understand the dashb
 
 Master the platform-wide search feature that helps you quickly find campaigns, offers, products, segments, users, and configurations from anywhere in the system. Discover how to use the search dropdown, access the results page, and filter by type.
 
----
 
 ## Quick Tips
 

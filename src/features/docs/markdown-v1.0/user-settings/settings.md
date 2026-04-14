@@ -8,7 +8,7 @@ Settings is where you configure your personal preferences for the platform. Thes
 
 ## Language & Localization
 
-![Location & Localization Settings](/img/usersettings/location&localizationsetitngs.png)
+![Location & Localization Settings](/img/v1.0/usersettings/location&localizationsetitngs.png)
 
 ### Language Preference
 
@@ -28,7 +28,7 @@ Select the language for the user interface:
 
 ### Regional Format
 
-![Date & Currency Settings](/img/usersettings/dateandcurrencysetting.png)
+![Date & Currency Settings](/img/v1.0/usersettings/dateandcurrencysetting.png)
 
 Configure how dates and numbers display:
 
@@ -56,9 +56,9 @@ Configure how dates and numbers display:
 
 ## Communication Preferences
 
-![Character Set & Default Channel Setting](/img/usersettings/characteranddefaultchannelsetting.png)
+![Character Set & Default Channel Setting](/img/v1.0/usersettings/characteranddefaultchannelsetting.png)
 
-![Sender ID & Route Setting](/img/usersettings/senderidandroutesetting.png)
+![Sender ID & Route Setting](/img/v1.0/usersettings/senderidandroutesetting.png)
 
 ### Default Communication Settings
 
@@ -120,7 +120,7 @@ Choose the encoding that best fits your message content:
 
 ## Do Not Disturb (DND)
 
-![Do Not Disturb Settings](/img/usersettings/dndsettings.png)
+![Do Not Disturb Settings](/img/v1.0/usersettings/dndsettings.png)
 
 ### Enable Do Not Disturb
 
@@ -157,7 +157,7 @@ Set quiet hours when you don't want to be bothered with notifications. Notificat
 
 ## Notification Types & Channels
 
-![Notification Settings](/img/usersettings/notificationsetting.png)
+![Notification Settings](/img/v1.0/usersettings/notificationsetting.png)
 
 ### Enabled Notification Types
 
@@ -191,7 +191,7 @@ Select which channels to use for notifications:
 
 ### Theme Selection
 
-![Display Theme Setting](/img/usersettings/themesetting.png)
+![Display Theme Setting](/img/v1.0/usersettings/themesetting.png)
 
 Choose how the interface appears:
 

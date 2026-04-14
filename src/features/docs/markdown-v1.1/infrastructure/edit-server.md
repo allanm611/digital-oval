@@ -2,7 +2,7 @@
 
 Edit Server uses the exact same form as Create Server.
 
-![Edit Server Page](/img/infrastructure/addserverbasicinfoimage1.png)
+![Edit Server Page](/img/v1.1/infrastructure/addserverbasicinfoimage1.png)
 
 ## Practical Note
 

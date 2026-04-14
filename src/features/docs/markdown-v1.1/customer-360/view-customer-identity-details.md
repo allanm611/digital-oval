@@ -4,7 +4,7 @@
 
 View detailed information about a specific customer identity field. Customer identity fields are the unique fields used to uniquely identify customers in the system. Each field includes metadata, data type information, validation rules, and supported operators for use in segmentation and filtering.
 
-![Field Details Page](/img/customer360-images/customeridentitydetailpage.png)
+![Field Details Page](/img/v1.1/customer360-images/customeridentitydetailpage.png)
 
 ## Field Overview Section
 
@@ -34,7 +34,7 @@ Three information cards displaying field metadata:
 
 **Value Length** - Maximum character length for text fields (if applicable)
 
-![Field Details Page](/img/customer360-images/customeridentitydetailsfieldinfo.png)
+![Field Details Page](/img/v1.1/customer360-images/customeridentitydetailsfieldinfo.png)
 
 ## Operator Support Section
 
@@ -50,7 +50,7 @@ Table displaying all operators available for filtering with this field:
 
 **Applicable Types** - Which field data types this operator works with (String, Integer, Date, Boolean, etc.)
 
-![Field Details Page](/img/customer360-images/customeridentitydetailopearatorssection.png)
+![Field Details Page](/img/v1.1/customer360-images/customeridentitydetailopearatorssection.png)
 
 ## Navigation
 

@@ -82,9 +82,9 @@ Configure all basic campaign details, goals, organizational structure, and timel
 - Date and time when the campaign should end
 - Automatically set to be after the start date
 
-![Step 1 - Basic Details](/img/campaign-images/step1-creation.png)
+![Step 1 - Basic Details](/img/v1.0/campaign-images/step1-creation.png)
 
-![Step 1 - Campaign Configuration](/img/campaign-images/step1.1-creation.png)
+![Step 1 - Campaign Configuration](/img/v1.0/campaign-images/step1.1-creation.png)
 
 
 
@@ -158,9 +158,9 @@ Seed lists are special contact lists used for quality assurance and testing:
 - Each segment can have its own test contacts
 - Allows segment-specific quality testing
 
-![Step 2 - Audience Configuration (Without Shared Control/Seed)](/img/campaign-images/step2campaigncreaitonnotshared.png)
+![Step 2 - Audience Configuration (Without Shared Control/Seed)](/img/v1.0/campaign-images/step2campaigncreaitonnotshared.png)
 
-![Step 2 - Audience Configuration (Shared Control Group & Seed List)](/img/campaign-images/step2campaigncreationsharedseedlistandconfig.png)
+![Step 2 - Audience Configuration (Shared Control Group & Seed List)](/img/v1.0/campaign-images/step2campaigncreationsharedseedlistandconfig.png)
 
 **Important:**
 - Campaign type selection determines segment behavior and limits
@@ -216,7 +216,7 @@ For each segment, configure:
 - Shows tracking type and parameters
 - Allows validation of offer tracking setup before campaign runs
 
-![Step 3 - Offer Configuration](/img/campaign-images/createcampaignstep3.png)
+![Step 3 - Offer Configuration](/img/v1.0/campaign-images/createcampaignstep3.png)
 
 **Important:**
 - All segments must have at least one offer assigned
@@ -279,9 +279,9 @@ Define when and how often your campaign will run, including delivery windows and
 
 **Tip:** Consider customer timezone preferences for better engagement. Set start/end times to match peak customer activity periods.
 
-![Step 4 - Campaign Scheduling](/img/campaign-images/schedulecampaign.png)
+![Step 4 - Campaign Scheduling](/img/v1.0/campaign-images/schedulecampaign.png)
 
-![Step 4 - Recurrence Pattern Configuration](/img/campaign-images/schedulecampaignrecurencepattern.png)
+![Step 4 - Recurrence Pattern Configuration](/img/v1.0/campaign-images/schedulecampaignrecurencepattern.png)
 
 
 ### Step 5: Preview & Launch
@@ -357,9 +357,9 @@ All items must be completed before campaign can be submitted for approval.
 - Required for campaigns going to live audience
 - Cannot submit with validation errors
 
-![Step 5 - Preview & Launch Summary](/img/campaign-images/preview1.png)
+![Step 5 - Preview & Launch Summary](/img/v1.0/campaign-images/preview1.png)
 
-![Step 5 - Campaign Details Review](/img/campaign-images/preview2.png)
+![Step 5 - Campaign Details Review](/img/v1.0/campaign-images/preview2.png)
 
 **Important:**
 - All validation checks must pass before submission

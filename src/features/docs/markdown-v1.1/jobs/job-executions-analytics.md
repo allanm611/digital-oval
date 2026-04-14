@@ -9,9 +9,9 @@ Job Executions Analytics focuses on execution outcomes, reliability trends, and 
 - long-running and retried execution trends
 - SLA and completion-rate signals
 
-![Job execution analytics status and trigger](/img/jobmanagement-images/jobexecutionanalyticsstatusandtriggerimage.png)
+![Job execution analytics status and trigger](/img/v1.1/jobmanagement-images/jobexecutionanalyticsstatusandtriggerimage.png)
 
-![Job execution analytics SLA, execution health score, and resource utilization](/img/jobmanagement-images/jobexecutionanalyticsslaandexecutionhealthscoreandresourceutlizationimage.png)
+![Job execution analytics SLA, execution health score, and resource utilization](/img/v1.1/jobmanagement-images/jobexecutionanalyticsslaandexecutionhealthscoreandresourceutlizationimage.png)
 
 ## How To Use It
 
@@ -19,11 +19,11 @@ Job Executions Analytics focuses on execution outcomes, reliability trends, and 
 - identify regression windows by time
 - prioritize jobs needing retry/timeout policy tuning
 
-![Job execution analytics execution trends](/img/jobmanagement-images/jobexecutionanalyticsexecutiontrendsimage.png)
+![Job execution analytics execution trends](/img/v1.1/jobmanagement-images/jobexecutionanalyticsexecutiontrendsimage.png)
 
-![Job executions analytics executions by hour](/img/jobmanagement-images/jobexecutionsanalyticsexecutionsbyhourimage.png)
+![Job executions analytics executions by hour](/img/v1.1/jobmanagement-images/jobexecutionsanalyticsexecutionsbyhourimage.png)
 
-![Job executions analytics slowest executions](/img/jobmanagement-images/jobexecutionsanalyticsslowestexecutions.png)
+![Job executions analytics slowest executions](/img/v1.1/jobmanagement-images/jobexecutionsanalyticsslowestexecutions.png)
 
 ## Related Pages
 

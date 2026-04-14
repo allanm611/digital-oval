@@ -2,7 +2,7 @@
 
 SMS Routes is where you manage outbound SMS gateway routes used by the platform. This page is specific to SMS routing, not the broader cross-channel communication routes screen.
 
-![SMS Routes List](/img/configuration/routeslist.png)
+![SMS Routes List](/img/v1.1/configuration/routeslist.png)
 
 ## Open The Page
 
@@ -32,7 +32,7 @@ Use search to quickly narrow down the list when many routes exist.
 
 Click **Create** to open the route form.
 
-![Create SMS Route - Basic Information](/img/configuration/createsmsroutebasicinfo.png)
+![Create SMS Route - Basic Information](/img/v1.1/configuration/createsmsroutebasicinfo.png)
 
 In **Basic Information**, set:
 
@@ -41,7 +41,7 @@ In **Basic Information**, set:
 - Description
 - Status
 
-![Create SMS Route - API Configuration](/img/configuration/createsmsapiconfig.png)
+![Create SMS Route - API Configuration](/img/v1.1/configuration/createsmsapiconfig.png)
 
 In **API Configuration**, set:
 
@@ -49,9 +49,9 @@ In **API Configuration**, set:
 - API Key (required)
 - API Secret (required)
 
-![Create SMS Route - Delivery Configuration Part 1](/img/configuration/createsmsroutedeliveryconfigimage1.png)
+![Create SMS Route - Delivery Configuration Part 1](/img/v1.1/configuration/createsmsroutedeliveryconfigimage1.png)
 
-![Create SMS Route - Delivery Configuration Part 2](/img/configuration/createsmsroutedeliveryconfigimage2.png)
+![Create SMS Route - Delivery Configuration Part 2](/img/v1.1/configuration/createsmsroutedeliveryconfigimage2.png)
 
 In **Delivery Configuration**, set:
 
@@ -85,7 +85,7 @@ These fields are important when troubleshooting delivery behavior:
 
 Use the **View** action (eye icon) on a row to open the route details page.
 
-![SMS Routes Details Page](/img/configuration/smsroutesdetailpage.png)
+![SMS Routes Details Page](/img/v1.1/configuration/smsroutesdetailpage.png)
 
 The details page shows the route overview, basic info, API configuration, and metadata (created/updated timestamps).
 
@@ -93,7 +93,7 @@ The details page shows the route overview, basic info, API configuration, and me
 
 From either the list or details page, open **Edit**.
 
-![Edit SMS Route](/img/configuration/editsmsrouteimage.png)
+![Edit SMS Route](/img/v1.1/configuration/editsmsrouteimage.png)
 
 Edit uses the same sections as create, then save changes.
 

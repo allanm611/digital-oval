@@ -2,7 +2,7 @@
 
 ETL Analytics is the monitoring page for ETL health, throughput, and outcome trends.
 
-![ETL Analytics Overview](/img/infrastructure/etlanalyticsstatcards.png)
+![ETL Analytics Overview](/img/v1.0/infrastructure/etlanalyticsstatcards.png)
 
 ## What The Page Focuses On
 
@@ -11,10 +11,10 @@ ETL Analytics is the monitoring page for ETL health, throughput, and outcome tre
 - operational trend indicators over time
 - queue and processing behavior visibility
 
-![ETL Analytics File Count by Status](/img/infrastructure/etlanalyticsfilecountbystatus.png)
+![ETL Analytics File Count by Status](/img/v1.0/infrastructure/etlanalyticsfilecountbystatus.png)
 
 
-![ETL Analytics Pie Chart](/img/infrastructure/etlanalyticspiechartimage.png)
+![ETL Analytics Pie Chart](/img/v1.0/infrastructure/etlanalyticspiechartimage.png)
 
 ## Stat Cards Explained
 

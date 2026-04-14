@@ -9,9 +9,9 @@ Workflows Analytics gives workflow-level visibility across orchestration definit
 - execution volume by workflow
 - failure concentration by workflow family
 
-![Job workflow analytics stat cards](/img/jobmanagement-images/jobworkflowanalticsstatcards.png)
+![Job workflow analytics stat cards](/img/v1.0/jobmanagement-images/jobworkflowanalticsstatcards.png)
 
-![Job workflow analytics status distribution](/img/jobmanagement-images/jobworkflowanalyticsstatusdistribution.png)
+![Job workflow analytics status distribution](/img/v1.0/jobmanagement-images/jobworkflowanalyticsstatusdistribution.png)
 
 ## How To Use It
 
@@ -19,7 +19,7 @@ Workflows Analytics gives workflow-level visibility across orchestration definit
 - detect orchestration groups with repeated failure
 - prioritize workflow refactoring or deactivation decisions
 
-![Job workflow analytics count by type](/img/jobmanagement-images/jobworkflowanalyticscountbytype.png)
+![Job workflow analytics count by type](/img/v1.0/jobmanagement-images/jobworkflowanalyticscountbytype.png)
 
 ## Related Pages
 

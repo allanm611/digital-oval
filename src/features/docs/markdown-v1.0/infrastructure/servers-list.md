@@ -11,7 +11,7 @@ It is the main operations view for:
 - controlled lifecycle updates: activate, deactivate, deprecate, or restore records safely
 
 
-![Servers List Table](/img/infrastructure/serversregistrypage.png)
+![Servers List Table](/img/v1.0/infrastructure/serversregistrypage.png)
 
 ## What You See In The Table
 
@@ -40,8 +40,8 @@ Use search for name/code lookup. Use filters to narrow by scope, environment, pr
 
 Filter combinations are helpful during incident response. For example, filtering by one environment and unhealthy status makes endpoint issues easier to isolate.
 
-![Servers Filters](/img/infrastructure/serverspagefilters.png)
-![Servers Health Filters](/img/infrastructure/serverspagehealthfilters.png)
+![Servers Filters](/img/v1.0/infrastructure/serverspagefilters.png)
+![Servers Health Filters](/img/v1.0/infrastructure/serverspagehealthfilters.png)
 
 ## Actions On The List
 
@@ -58,7 +58,7 @@ Use **View** when investigating an issue and **Edit** when changing behavior. Tr
 
 When selection mode is enabled, you can select multiple servers and run bulk activate/deactivate actions.
 
-![Servers Bulk Operations](/img/infrastructure/serversregistrybulkoperations.png)
+![Servers Bulk Operations](/img/v1.0/infrastructure/serversregistrybulkoperations.png)
 
 ## Related Pages
 

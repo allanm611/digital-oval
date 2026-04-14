@@ -7,7 +7,7 @@ Create Job Dependency adds a new dependency rule between two jobs.
 - **Job ID**
 - **Depends On Job ID** (must be different from Job ID)
 
-![Create job dependency form](/img/jobmanagement-images/createjobdepency.png)
+![Create job dependency form](/img/v1.1/jobmanagement-images/createjobdepency.png)
 
 ## Optional / Config Fields
 
@@ -25,7 +25,7 @@ Create Job Dependency adds a new dependency rule between two jobs.
 
 The edit flow uses the same field structure with existing values pre-filled.
 
-![Edit job dependency form](/img/jobmanagement-images/editjobdependency.png)
+![Edit job dependency form](/img/v1.1/jobmanagement-images/editjobdependency.png)
 
 ## Related Pages
 

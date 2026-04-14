@@ -4,7 +4,7 @@
 
 The Segment Details page displays complete information about a specific segment including its configuration, criteria, members, hierarchy, analytics, and campaigns that use it. This page provides a comprehensive view of segment data and allows you to manage segment members, update advanced settings, and send communications to the segment.
 
-![Segment Details Page Overview](/img/segments-img/segmentdetailstatcards.png)
+![Segment Details Page Overview](/img/v1.0/segments-img/segmentdetailstatcards.png)
 
 
 ## Page Header and Actions
@@ -24,7 +24,7 @@ The top of the page includes navigation and action buttons:
 - Allows you to select communication type and template
 - Useful for targeted messaging to specific customer groups
 
-![Send Communication Feature](/img/segments-img/segmentdetailssendcommunicaiton.png)
+![Send Communication Feature](/img/v1.0/segments-img/segmentdetailssendcommunicaiton.png)
 
 **More Menu** (⋯)
 - Additional actions including:
@@ -33,7 +33,7 @@ The top of the page includes navigation and action buttons:
   - **Validate Query** - Validates the segment's SQL query syntax
   - **Delete Segment** - Permanently removes the segment from the system (requires "segments.delete" permission)
 
-![Compute Segments Modal](/img/segments-img/computesegmentsmodal.png)
+![Compute Segments Modal](/img/v1.0/segments-img/computesegmentsmodal.png)
 
 
 ## Statistics Cards
@@ -60,7 +60,7 @@ The page displays four key metric cards at the top:
 
 Contains core segment details organized in a grid:
 
-![Basic Information Section](/img/segments-img/segmentdetailbasicinformation.png)
+![Basic Information Section](/img/v1.0/segments-img/segmentdetailbasicinformation.png)
 
 **Segment Name**
 - The name you gave this segment
@@ -108,7 +108,7 @@ Manage labels and tags for organizing segments:
 
 Displays the rules and conditions that define segment membership:
 
-![Segment Criteria Display](/img/segments-img/segmentdetailssegmentcriteria.png)
+![Segment Criteria Display](/img/v1.0/segments-img/segmentdetailssegmentcriteria.png)
 
 **Condition Display**
 - Each condition shows:
@@ -128,7 +128,7 @@ Displays the rules and conditions that define segment membership:
 
 Manage and view the members of this segment:
 
-![Segment Members Display](/img/segments-img/segmentdetailssegmentmembers.png)
+![Segment Members Display](/img/v1.0/segments-img/segmentdetailssegmentmembers.png)
 
 **Total Members Count**
 - Shows the number of customers currently in this segment
@@ -146,7 +146,7 @@ Manage and view the members of this segment:
 - Select multiple customers to add at once
 - Only available for static segments (dynamic segments are auto-calculated)
 
-![Add Members Modal](/img/segments-img/segmentdetailsaddmembertosegment.png)
+![Add Members Modal](/img/v1.0/segments-img/segmentdetailsaddmembertosegment.png)
 
 **Note**
 - For **Static Segments**: Members are manually maintained. You can add or remove members directly.
@@ -157,7 +157,7 @@ Manage and view the members of this segment:
 
 Shows relationships between segments (appears only if hierarchy exists):
 
-![Segment Hierarchy Display](/img/segments-img/segmentdetailssegmenthiercachy.png)
+![Segment Hierarchy Display](/img/v1.0/segments-img/segmentdetailssegmenthiercachy.png)
 
 **Parent Segment**
 - If this segment is a child segment, displays the parent segment name/ID
@@ -177,7 +177,7 @@ Shows relationships between segments (appears only if hierarchy exists):
 
 For technical segment configuration (requires "segments.update" permission):
 
-![Advanced Settings Section](/img/segments-img/segmentdetailsadvancedsettings.png)
+![Advanced Settings Section](/img/v1.0/segments-img/segmentdetailsadvancedsettings.png)
 
 ### Segment Query (SQL)
 - The raw SQL query that defines segment membership
@@ -223,7 +223,7 @@ Performance and growth metrics for the segment (if data is available):
 
 Shows all campaigns that currently have mappings with this segment:
 
-![Used in Campaigns](/img/segments-img/segmentdetailsusedincampaigns.png)
+![Used in Campaigns](/img/v1.0/segments-img/segmentdetailsusedincampaigns.png)
 
 **Campaign Table Columns**
 - **Campaign Name** - Name of the campaign using this segment

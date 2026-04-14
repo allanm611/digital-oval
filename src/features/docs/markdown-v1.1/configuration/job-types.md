@@ -2,7 +2,7 @@
 
 Job Types help you classify scheduled jobs in a way that is easy to search and maintain later. Instead of treating every scheduled job as a one-off entry, you define reusable categories and assign jobs to the right one.
 
-![Job Types List](/img/configuration/jobtypeslistimage.png)
+![Job Types List](/img/v1.1/configuration/jobtypeslistimage.png)
 
 ## Open The Page
 
@@ -26,7 +26,7 @@ You can search by name, code, or description.
 
 Click **Create Job Type**.
 
-![Create Job Type](/img/configuration/createjobtypeimage.png)
+![Create Job Type](/img/v1.1/configuration/createjobtypeimage.png)
 
 Common inputs:
 
@@ -40,7 +40,7 @@ Save to create the type.
 
 Click **Edit** from the row action.
 
-![Edit Job Type](/img/configuration/editjobtypeimage.png)
+![Edit Job Type](/img/v1.1/configuration/editjobtypeimage.png)
 
 You can update name, code, and description, then save.
 

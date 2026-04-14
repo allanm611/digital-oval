@@ -41,7 +41,7 @@ Real-time metrics showing campaign performance during execution:
 - Displayed in seconds
 - Helps monitor campaign duration
 
-![Execution Metrics & Stat Cards](/img/campaign-images/campaigndetailsstatcards.png)
+![Execution Metrics & Stat Cards](/img/v1.0/campaign-images/campaigndetailsstatcards.png)
 
 
 ## Campaign Information Section
@@ -81,11 +81,11 @@ Comprehensive campaign details displayed in an organized grid:
 - **Approved By** - User who approved (if applicable)
 - **Approved Date** - When approval occurred
 
-![Campaign Information Section](/img/campaign-images/campaigndetails-campindetailssection.png)
+![Campaign Information Section](/img/v1.0/campaign-images/campaigndetails-campindetailssection.png)
 
-![Budget Information](/img/campaign-images/campaigndetails-budget.png)
+![Budget Information](/img/v1.0/campaign-images/campaigndetails-budget.png)
 
-![Offers by Segment](/img/campaign-images/campaigndetails-offersbysegment.png)
+![Offers by Segment](/img/v1.0/campaign-images/campaigndetails-offersbysegment.png)
 
 
 ## Action Buttons
@@ -151,7 +151,7 @@ See [Edit Campaign](/documentation/campaigns/edit-campaign) for comprehensive in
 
 **Confirmation:** Run modal appears for final confirmation.
 
-![Run Campaign Modal](/img/campaign-images/runcampaignmodal.png)
+![Run Campaign Modal](/img/v1.0/campaign-images/runcampaignmodal.png)
 
 
 ### Archive Campaign
@@ -202,7 +202,7 @@ Campaign execution timing and recurrence:
 - **End Date** - Campaign end date (if set)
 - **Timezone** - Execution timezone for all scheduled activities
 
-![Schedule & Timeline](/img/campaign-images/campaigndetails-schedule&timeline.png)
+![Schedule & Timeline](/img/v1.0/campaign-images/campaigndetails-schedule&timeline.png)
 
 ### Targets & Performance Section
 Campaign scope and performance targets:
@@ -224,7 +224,7 @@ Track campaign creation, updates, and approvals:
 - **Approved Date** - When campaign was approved (if applicable)
 - **Approved By** - User who approved the campaign
 
-![Audit Trail](/img/campaign-images/campaigndetails-audittrail.png)
+![Audit Trail](/img/v1.0/campaign-images/campaigndetails-audittrail.png)
 
 
 ## Approval Workflow

@@ -12,7 +12,7 @@ Go to `Jobs -> Job Workflows`.
 - workflow type
 - active/inactive lifecycle state
 
-![Job workflows list page](/img/jobmanagement-images/jobworkflowlist.png)
+![Job workflows list page](/img/v1.1/jobmanagement-images/jobworkflowlist.png)
 
 ## Core Field Meaning
 
@@ -21,7 +21,7 @@ Go to `Jobs -> Job Workflows`.
 - **Workflow Type**: classification for orchestration purpose.
 - **Status**: active lifecycle state.
 
-![Job workflow details](/img/jobmanagement-images/jobworkflowdetailimage.png)
+![Job workflow details](/img/v1.1/jobmanagement-images/jobworkflowdetailimage.png)
 
 ## Related Pages
 

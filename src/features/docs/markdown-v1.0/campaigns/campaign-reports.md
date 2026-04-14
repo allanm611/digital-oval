@@ -23,14 +23,14 @@ At the top of the page, view key campaign metrics displayed in stat cards:
 - **Total Budget Allocated** - Sum of all campaign budgets
 - **Total Budget Utilized** - Total amount spent across campaigns
 
-![Campaign Analytics Stat Cards](/img/campaign-images/campaignanalyticsstatcards.png)
+![Campaign Analytics Stat Cards](/img/v1.0/campaign-images/campaignanalyticsstatcards.png)
 
 
 ## Organization Overview
 
 High-level view of your campaign organization structure:
 
-![Organization Overview](/img/campaign-images/campaignanalytics-organizationoverview.png)
+![Organization Overview](/img/v1.0/campaign-images/campaignanalytics-organizationoverview.png)
 
 
 ## Distribution Charts
@@ -48,7 +48,7 @@ Pie charts showing campaigns broken down by:
 - **With Control Group** - Campaigns using control groups for testing
 - **Without Control Group** - Campaigns delivering to 100% of audience
 
-![Approval Status & Control Group Distribution](/img/campaign-images/campaignanalyticspiecharts.png)
+![Approval Status & Control Group Distribution](/img/v1.0/campaign-images/campaignanalyticspiecharts.png)
 
 
 ### Campaign Status Distribution
@@ -59,7 +59,7 @@ Bar chart displaying campaign execution status:
 - **Completed** - Finished execution
 - **Archived** - Archived/inactive
 
-![Campaign Status Distribution](/img/campaign-images/campaignanalytics-camapignsttausdistribution.png)
+![Campaign Status Distribution](/img/v1.0/campaign-images/campaignanalytics-camapignsttausdistribution.png)
 
 
 ### Targets Distribution
@@ -68,7 +68,7 @@ Bar chart showing campaigns with specific target metrics:
 - **With Target Conversion** - Campaigns with conversion goals
 - **With Target Revenue** - Campaigns with revenue targets
 
-![Targets Distribution](/img/campaign-images/campaignanalytics-targetsdistribution.png)
+![Targets Distribution](/img/v1.0/campaign-images/campaignanalytics-targetsdistribution.png)
 
 
 ### Activity Status Overview
@@ -77,7 +77,7 @@ Bar chart showing campaign activity state:
 - **Inactive Campaigns** - Paused or archived
 - **Currently Running** - Actively sending messages
 
-![Activity Status Overview](/img/campaign-images/campaignanalytics-activitystatus.png)
+![Activity Status Overview](/img/v1.0/campaign-images/campaignanalytics-activitystatus.png)
 
 
 ### Budget Distribution
@@ -85,28 +85,28 @@ Bar chart showing campaigns grouped by budget ranges:
 - Displays how many campaigns fall into each spending category
 - Helps understand budget allocation patterns across portfolio
 
-![Budget Distribution](/img/campaign-images/campaignanalytics-budgetdistribution.png)
+![Budget Distribution](/img/v1.0/campaign-images/campaignanalytics-budgetdistribution.png)
 
 
 ## Participant Metrics
 
 Overview of audience reach and engagement:
 
-![Participant Metrics](/img/campaign-images/campaignanalytics-participantmetrics.png)
+![Participant Metrics](/img/v1.0/campaign-images/campaignanalytics-participantmetrics.png)
 
 
 ## Top Campaigns by Spend
 
 See which campaigns are consuming the most budget:
 
-![Top Campaigns by Spend](/img/campaign-images/campaignanalytics-topcamapignsbyspend.png)
+![Top Campaigns by Spend](/img/v1.0/campaign-images/campaignanalytics-topcamapignsbyspend.png)
 
 
 ## Recent Activity
 
 View recent campaign updates and changes:
 
-![Recent Campaign Activity](/img/campaign-images/campaignanalytics-recentactivity.png)
+![Recent Campaign Activity](/img/v1.0/campaign-images/campaignanalytics-recentactivity.png)
 
 
 ## How to Use

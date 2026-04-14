@@ -4,19 +4,15 @@
 
 The Dashboard is the main landing page after logging in. It provides a comprehensive overview of your platform activity including key statistics, recent items, distribution charts, and items requiring attention across all modules (Campaigns, Offers, Segments, Products).
 
----
-
 ## Dashboard Layout
 
 The dashboard is organized into several sections that give you quick insights into your platform's status and recent activity.
-
----
 
 ## Summary Statistics
 
 Quick overview cards showing the most important metrics at a glance:
 
-![Dashboard Stat Cards](/img/getstarted/statcards.png)
+![Dashboard Stat Cards](/img/v1.1/getstarted/statcards.png)
 
 **What You See:**
 - **Campaigns** - Total campaigns and count of active campaigns
@@ -26,13 +22,11 @@ Quick overview cards showing the most important metrics at a glance:
 
 **Click any stat card** to navigate directly to that module's list page.
 
----
-
 ## Quick Insights
 
 Key performance metrics and alerts that need your attention:
 
-![Quick Insights](/img/getstarted/quickinsights.png)
+![Quick Insights](/img/v1.1/getstarted/quickinsights.png)
 
 **Insights Include:**
 - Failed campaigns requiring review
@@ -43,13 +37,11 @@ Key performance metrics and alerts that need your attention:
 
 **Click any alert** to navigate to that item for further action.
 
----
-
 ## Recent Items & Quick Actions
 
 View the most recently created or modified items across all modules:
 
-![Recently Added Items](/img/getstarted/recentlyadded-quickactions.png)
+![Recently Added Items](/img/v1.1/getstarted/recentlyadded-quickactions.png)
 
 **Recent Items Section Shows:**
 - **Campaigns** - Latest campaign activity
@@ -67,13 +59,11 @@ View the most recently created or modified items across all modules:
 - Delete items
 - Navigate to the full list for each type
 
----
-
 ## Distribution Charts
 
 Visual breakdown of your content by status and type:
 
-![Distribution Charts](/img/getstarted/piecharts.png)
+![Distribution Charts](/img/v1.1/getstarted/piecharts.png)
 
 ### Campaign Status Distribution
 
@@ -109,13 +99,11 @@ View the breakdown of segments by type:
 - Predictive segments - AI-driven segmentation
 - Other custom segment types
 
----
-
 ## Items Requiring Attention
 
 Critical alerts and actions needed displayed prominently:
 
-![Bottom Section](/img/getstarted/bottomsection.png)
+![Bottom Section](/img/v1.1/getstarted/bottomsection.png)
 
 **Displays:**
 - Failed campaigns that need review
@@ -130,13 +118,11 @@ Critical alerts and actions needed displayed prominently:
 - Approve pending items
 - Address warnings and alerts
 
----
-
 ## Top Performing Items
 
 View your best-performing campaigns and offers with flexible filtering options:
 
-![Bottom Section](/img/getstarted/bottomsection.png)
+![Bottom Section](/img/v1.1/getstarted/bottomsection.png)
 
 ### Top Campaigns
 

@@ -9,9 +9,9 @@ Job Workflow Steps Analytics helps identify problematic steps and execution bott
 - slowest step types
 - parallel group performance characteristics
 
-![Job workflow step analytics stat cards](/img/jobmanagement-images/jobworkflowstepanalyticsstatcards.png)
+![Job workflow step analytics stat cards](/img/v1.1/jobmanagement-images/jobworkflowstepanalyticsstatcards.png)
 
-![Job workflow steps analytics step type graph](/img/jobmanagement-images/jobworkflowstepsanalyticsstetypegrapgh.png)
+![Job workflow steps analytics step type graph](/img/v1.1/jobmanagement-images/jobworkflowstepsanalyticsstetypegrapgh.png)
 
 ## How To Use It
 
@@ -19,9 +19,9 @@ Job Workflow Steps Analytics helps identify problematic steps and execution bott
 - optimize timeout/retry for slow steps
 - improve sequencing and dependency design
 
-![Job workflow step analytics timeout analysis by step type](/img/jobmanagement-images/jobworkflowstepanalyticstimeoutanalysisbysteptypegrapgh.png)
+![Job workflow step analytics timeout analysis by step type](/img/v1.1/jobmanagement-images/jobworkflowstepanalyticstimeoutanalysisbysteptypegrapgh.png)
 
-![Job workflow steps dependency complexity graph](/img/jobmanagement-images/jobworkflowstepsdepencycomplexitygrapgh.png)
+![Job workflow steps dependency complexity graph](/img/v1.1/jobmanagement-images/jobworkflowstepsdepencycomplexitygrapgh.png)
 
 ## Related Pages
 

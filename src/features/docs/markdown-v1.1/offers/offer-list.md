@@ -4,7 +4,7 @@
 
 The Offer List page displays all offers in the system with summary statistics, search capabilities, filtering options, and management tools for each offer.
 
-![Offer List](/img/offer-images/offerlist.png)
+![Offer List](/img/v1.1/offer-images/offerlist.png)
 
 ## Summary Statistics
 
@@ -44,7 +44,7 @@ Use the **Search** field to find offers by:
 
 - Click the **Filters** button to access additional filtering options
 
-![Offer List Filters](/img/offer-images/offerslistfilter.png)
+![Offer List Filters](/img/v1.1/offer-images/offerslistfilter.png)
 
 ## Offers Table
 

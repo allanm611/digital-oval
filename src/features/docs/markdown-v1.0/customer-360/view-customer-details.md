@@ -10,7 +10,7 @@ The customer details page has five tabs, each showing different information:
 
 ### Tab 1: Customer Information
 
-![Customer Information Tab](/img/customer360-images/customerdetailscustomerinfotab.png)
+![Customer Information Tab](/img/v1.0/customer360-images/customerdetailscustomerinfotab.png)
 
 Shows all customer profile details organized by section:
 
@@ -28,7 +28,7 @@ Shows all customer profile details organized by section:
 
 ### Tab 2: Events
 
-![Events Tab](/img/customer360-images/customerdetailseventstab.png)
+![Events Tab](/img/v1.0/customer360-images/customerdetailseventstab.png)
 
 Chronological record of all communications sent to customer:
 
@@ -46,7 +46,7 @@ Chronological record of all communications sent to customer:
 
 ### Tab 3: Subscribed Lists
 
-![Subscribed Lists Tab](/img/customer360-images/customerdetailssubscribedliststab.png)
+![Subscribed Lists Tab](/img/v1.0/customer360-images/customerdetailssubscribedliststab.png)
 
 Lists the customer is subscribed to:
 
@@ -61,7 +61,7 @@ Lists the customer is subscribed to:
 
 ### Tab 4: Analytics
 
-![Analytics Tab](/img/customer360-images/customerdetailsanalyticstab.png)
+![Analytics Tab](/img/v1.0/customer360-images/customerdetailsanalyticstab.png)
 
 Customer engagement metrics and trends:
 
@@ -76,7 +76,7 @@ Customer engagement metrics and trends:
 
 ### Tab 5: Segments & Offers
 
-![Segments & Offers Tab](/img/customer360-images/customerdetailssegments&offertab.png)
+![Segments & Offers Tab](/img/v1.0/customer360-images/customerdetailssegments&offertab.png)
 
 Customer's segment memberships and offers received:
 

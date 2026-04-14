@@ -10,7 +10,7 @@ ETL means **Extraction, Transformation, and Loading**.
 
 In this module, you track incoming files, trigger controlled fetch/reprocess actions, and monitor pipeline health. This is especially important during incidents, backlog cleanup, and post-change validation.
 
-![ETL Registry](/img/infrastructure/ETLlistpage.png)
+![ETL Registry](/img/v1.1/infrastructure/ETLlistpage.png)
 
 ## What ETL Covers
 

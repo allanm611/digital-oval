@@ -4,7 +4,6 @@
 
 Authentication is how you securely access the Sentra CVM platform. Whether you're logging in, creating a new account, or resetting your password, these guides walk you through the authentication process step by step.
 
----
 
 ## Getting Started
 
@@ -24,7 +23,6 @@ Forgot your password? Follow the guided process to reset it and regain access to
 
 Once authenticated, explore the main dashboard and learn how to access all core platform modules from the landing page.
 
----
 
 ## Quick Start
 
@@ -36,7 +34,6 @@ Once authenticated, explore the main dashboard and learn how to access all core 
 4. Explore the [Landing Page](/documentation/authentication/landing) to navigate modules
 5. If you forget your password, use [Password Reset](/documentation/authentication/password-reset)
 
----
 
 ## Security Tips
 

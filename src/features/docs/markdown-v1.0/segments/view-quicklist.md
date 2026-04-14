@@ -4,7 +4,7 @@
 
 The QuickList Details page displays complete information about a specific QuickList including its metadata, member data, import history, and actions you can take. This page provides a comprehensive view of your QuickList and allows you to manage its usage.
 
-![QuickList Details Page](/img/segments-img/quicklistdetailsoverviewtab.png)
+![QuickList Details Page](/img/v1.0/segments-img/quicklistdetailsoverviewtab.png)
 
 ## Page Header and Actions
 
@@ -81,7 +81,7 @@ Displays the basic information above plus a summary of the list:
 
 ### Data Tab
 
-![QuickList Data Tab](/img/segments-img/quicklistdetaildatatab.png)
+![QuickList Data Tab](/img/v1.0/segments-img/quicklistdetaildatatab.png)
 
 Displays a paginated table of all members in the QuickList:
 
@@ -111,7 +111,7 @@ Displays a paginated table of all members in the QuickList:
 
 ### Import Logs Tab
 
-![Import Logs Tab](/img/segments-img/quicklistsdetailimportlogstab.png)
+![Import Logs Tab](/img/v1.0/segments-img/quicklistsdetailimportlogstab.png)
 
 Displays the history of imports and updates for this QuickList:
 
@@ -139,7 +139,7 @@ Displays the history of imports and updates for this QuickList:
 
 ### Send Communication to QuickList
 
-![Send Communication to QuickList](/img/segments-img/quicklistdetailsendcommunicaiton.png)
+![Send Communication to QuickList](/img/v1.0/segments-img/quicklistdetailsendcommunicaiton.png)
 
 Send a bulk message (SMS, Email, Push Notification) to all members of this QuickList.
 

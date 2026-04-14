@@ -10,7 +10,7 @@ The Notifications page allows you to view, filter, and manage all notifications 
 
 ### From the Header Notification Dropdown
 
-![Notification Dropdown](/img/usersettings/notificationsdropdown.png)
+![Notification Dropdown](/img/v1.0/usersettings/notificationsdropdown.png)
 
 **Step 1: Open Notification Center**
 - Click the **bell icon** in the top-right header
@@ -34,7 +34,7 @@ The Notifications page allows you to view, filter, and manage all notifications 
 
 ## Notification Center
 
-![Notifications Page](/img/usersettings/notificationspage.png)
+![Notifications Page](/img/v1.0/usersettings/notificationspage.png)
 
 ### Notification List
 

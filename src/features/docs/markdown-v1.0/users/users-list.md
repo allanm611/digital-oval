@@ -4,7 +4,7 @@
 
 The Users page is the operational view for day-to-day account administration. It combines headline user statistics, a tabbed workspace for active users and onboarding requests, and the actions needed to create accounts, review pending requests, open analytics, and make updates in bulk.
 
-![Users Management List](/img/usermanagement-images/usermanagementlistimage.png)
+![Users Management List](/img/v1.0/usermanagement-images/usermanagementlistimage.png)
 
 ## Page Layout
 
@@ -63,7 +63,7 @@ These actions are intended for individual account maintenance when you are worki
 
 The **Pending Requests** tab is the queue for account requests that are moving through onboarding. It brings submitted, under-review, and pending-approval requests into one working table so the reviewer can see who requested access, which role was requested, the current request status, and when the request was raised.
 
-![Pending Users Tab](/img/usermanagement-images/usermanagementpendingliststab.png)
+![Pending Users Tab](/img/v1.0/usermanagement-images/usermanagementpendingliststab.png)
 
 The request table includes these columns:
 
@@ -89,7 +89,7 @@ When you click **Select Users**, the users table enters selection mode and check
 
 Once one or more users are selected, the bulk action bar appears.
 
-![Users List Bulk Operations](/img/usermanagement-images/usermanagementlistbulkoperation.png)
+![Users List Bulk Operations](/img/v1.0/usermanagement-images/usermanagementlistbulkoperation.png)
 
 From this bar you can:
 

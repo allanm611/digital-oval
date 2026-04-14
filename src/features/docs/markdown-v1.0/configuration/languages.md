@@ -2,7 +2,7 @@
 
 The Languages page controls which language records are available for creative and message localization workflows. It is where teams maintain readable language names, codes, and supporting metadata used by content teams.
 
-![Languages List](/img/configuration/languageslistimage.png)
+![Languages List](/img/v1.0/configuration/languageslistimage.png)
 
 ## Open The Page
 
@@ -26,7 +26,7 @@ Use this view to quickly confirm whether a language is active and available for 
 
 Click **Create** to open the add-language modal.
 
-![Add Language Modal](/img/configuration/addlanguagemodal.png)
+![Add Language Modal](/img/v1.0/configuration/addlanguagemodal.png)
 
 Common fields include:
 
@@ -42,7 +42,7 @@ Save to create the language record.
 
 Click **Edit** from the row action.
 
-![Edit Language Modal](/img/configuration/editlanguagemodal.png)
+![Edit Language Modal](/img/v1.0/configuration/editlanguagemodal.png)
 
 The edit modal uses the same main fields as create.
 

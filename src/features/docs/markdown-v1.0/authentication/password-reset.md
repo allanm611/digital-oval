@@ -15,7 +15,7 @@ Password reset is initiated from the login page:
 4. Check your email for a password reset link
 5. Click the link to access the Password Reset page
 
-![Forgot Password Modal](/img/auth-images/forgot-password.png)
+![Forgot Password Modal](/img/v1.0/auth-images/forgot-password.png)
 
 
 ## Password Requirements

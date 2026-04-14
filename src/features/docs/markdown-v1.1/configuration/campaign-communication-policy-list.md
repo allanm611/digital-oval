@@ -8,7 +8,7 @@ Manage communication policies that control how and when customers are contacted 
 
 Navigate to **Configuration → Campaign Communication Policy** to manage all policies.
 
-![Communication Policy List](/img/configuration/communicaitonpolicylist.png)
+![Communication Policy List](/img/v1.1/configuration/communicaitonpolicylist.png)
 
 The policy list displays all configured communication policies with:
 - **Policy Name** - Unique identifier
@@ -69,10 +69,10 @@ Special handling for high-value customers:
 
 1. Click **Create Policy** button in the top right
 
-![Create Policy Button](/img/configuration/communicaitonpolicylist.png)
+![Create Policy Button](/img/v1.1/configuration/communicaitonpolicylist.png)
 
 
-![Create Policy Form](/img/configuration/createpolicy.png)
+![Create Policy Form](/img/v1.1/configuration/createpolicy.png)
 
 
 2. **Enter Basic Information:**
@@ -86,7 +86,7 @@ Special handling for high-value customers:
 
 Click the **Time Window** section to expand:
 
-![Policy Type Selection](/img/configuration/createpolicy-policydropdown.png)
+![Policy Type Selection](/img/v1.1/configuration/createpolicy-policydropdown.png)
 
 - Set **Start Time** (e.g., 09:00)
 - Set **End Time** (e.g., 18:00)
@@ -96,7 +96,7 @@ Click the **Time Window** section to expand:
 
 Click the **Maximum Communication** section to expand:
 
-![Maximum Communication Policy](/img/configuration/createpolicy-maximum.png)
+![Maximum Communication Policy](/img/v1.1/configuration/createpolicy-maximum.png)
 
 - Click **Add Period** to add frequency limits
 - For each period:
@@ -113,7 +113,7 @@ Example configurations:
 
 Click the **DND** section to expand:
 
-![DND Policy](/img/configuration/createpolicy-dnd.png)
+![DND Policy](/img/v1.1/configuration/createpolicy-dnd.png)
 
 - Click **Add Category** to add a preference restriction
 - For each category:
@@ -125,7 +125,7 @@ Click the **DND** section to expand:
 
 Click the **VIP List** section to expand:
 
-![VIP Policy](/img/configuration/createpolicy-vip.png)
+![VIP Policy](/img/v1.1/configuration/createpolicy-vip.png)
 
 - Select **Action**: 
   - Include VIP List - VIP customers get special treatment

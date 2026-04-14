@@ -16,7 +16,7 @@ My Profile is your personal account page where you can view and edit your profil
 
 ## Profile Information
 
-![My Profile Page](/img/usersettings/profilepage.png)
+![My Profile Page](/img/v1.1/usersettings/profilepage.png)
 
 Your profile displays the following sections:
 

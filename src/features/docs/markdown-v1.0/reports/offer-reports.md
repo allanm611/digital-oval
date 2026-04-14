@@ -20,7 +20,7 @@ Offer Reports provide comprehensive analytics on offer performance, redemption r
 
 ## Key Metrics Overview
 
-![Offer Reports Stats](/img/reports/offerreportststats.png)
+![Offer Reports Stats](/img/v1.0/reports/offerreportststats.png)
 
 Six key metrics provide quick insights into offer performance:
 
@@ -108,7 +108,7 @@ Six key metrics provide quick insights into offer performance:
 
 ## Offer Performance Stages & Redemption Timeline
 
-![Offer Performance & Redemption](/img/reports/offerperformance&redemption.png)
+![Offer Performance & Redemption](/img/v1.0/reports/offerperformance&redemption.png)
 
 Two complementary views of offer performance:
 
@@ -135,7 +135,7 @@ Two complementary views of offer performance:
 
 ## Offer Performance Table
 
-![Offer Performance Table](/img/reports/offerperformancetable.png)
+![Offer Performance Table](/img/v1.0/reports/offerperformancetable.png)
 
 Detailed view of individual offer performance:
 
@@ -168,7 +168,7 @@ Detailed view of individual offer performance:
 
 ## Offer Type Comparison
 
-![Offer Type Comparison](/img/reports/offertypecomparison.png)
+![Offer Type Comparison](/img/v1.0/reports/offertypecomparison.png)
 
 Compare performance across different offer types:
 

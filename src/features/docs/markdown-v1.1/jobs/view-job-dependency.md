@@ -10,7 +10,7 @@ Job Dependency details shows one dependency rule in read mode.
 - wait and lookback limits
 - active state
 
-![Job dependency details page](/img/jobmanagement-images/jobdepencydetails.png)
+![Job dependency details page](/img/v1.1/jobmanagement-images/jobdepencydetails.png)
 
 ## Actions
 

@@ -19,7 +19,7 @@ Customer Profile Reports provide deep insights into your customer base, includin
 
 ## Key Metrics Overview
 
-![Customer Profile Stat Cards](/img/reports/customerprofilestatcards.png)
+![Customer Profile Stat Cards](/img/v1.0/reports/customerprofilestatcards.png)
 
 Six key metrics provide a quick snapshot of your customer health:
 
@@ -96,7 +96,7 @@ Six key metrics provide a quick snapshot of your customer health:
 
 ## Customer Detail Table
 
-![Customer Detail Table](/img/reports/customertable.png)
+![Customer Detail Table](/img/v1.0/reports/customertable.png)
 
 View and analyze individual customer records:
 
@@ -171,7 +171,7 @@ View and analyze individual customer records:
 
 ### Customer Value Matrix & CLV Distribution
 
-![Customer Value Matrix & Customer Lifetime Value Distribution](/img/reports/matrix&lifetimedistribution.png)
+![Customer Value Matrix & Customer Lifetime Value Distribution](/img/v1.0/reports/matrix&lifetimedistribution.png)
 
 Two complementary charts for understanding customer value:
 
@@ -194,7 +194,7 @@ Two complementary charts for understanding customer value:
 
 ### Lifecycle Distribution
 
-![Lifecycle Distribution Chart](/img/reports/lifecycledistribution.png)
+![Lifecycle Distribution Chart](/img/v1.0/reports/lifecycledistribution.png)
 
 Track how customers move through different lifecycle stages over time:
 

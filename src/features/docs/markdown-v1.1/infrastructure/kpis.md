@@ -8,7 +8,7 @@ KPIs are performance indicators, and these same KPI categories are reused in oth
 
 Go to `Infrastructure -> KPIs`.
 
-![KPI Hub - All KPIs](/img/infrastructure/allkpisimage.png)
+![KPI Hub - All KPIs](/img/v1.1/infrastructure/allkpisimage.png)
 
 ## KPI Areas In The Hub
 
@@ -17,10 +17,10 @@ Go to `Infrastructure -> KPIs`.
 - **Usage Metrics**: usage-focused definitions
 - **System Events**: event-oriented monitoring metrics
 
-![All KPIs List](/img/infrastructure/allkpislistimage.png)
-![Revenue Metrics](/img/infrastructure/revenuemetricslistpage.png)
-![Usage Metrics](/img/infrastructure/usagemetricslistpage.png)
-![System Events](/img/infrastructure/systemeventsallpage.png)
+![All KPIs List](/img/v1.1/infrastructure/allkpislistimage.png)
+![Revenue Metrics](/img/v1.1/infrastructure/revenuemetricslistpage.png)
+![Usage Metrics](/img/v1.1/infrastructure/usagemetricslistpage.png)
+![System Events](/img/v1.1/infrastructure/systemeventsallpage.png)
 
 ## Core Field Meaning
 

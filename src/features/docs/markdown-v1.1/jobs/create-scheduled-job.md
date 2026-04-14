@@ -16,7 +16,7 @@ From Scheduled Jobs List, clicking **Create** opens a selection modal asking wha
 
 This choice affects how the create form behaves.
 
-![Scheduled job create type selection modal](/img/jobmanagement-images/selectwhichjobtorunmodalscheduledjobscreate.png)
+![Scheduled job create type selection modal](/img/v1.1/jobmanagement-images/selectwhichjobtorunmodalscheduledjobscreate.png)
 
 ## ETL Form Vs Campaign Form (Actual Difference)
 
@@ -36,9 +36,9 @@ This choice affects how the create form behaves.
 
 In the frontend, campaign mode is detected from `type=campaign` (or campaign metadata in edit mode), and additional campaign blocks are loaded only in that mode.
 
-![Scheduled job create form with basic info and campaign configuration](/img/jobmanagement-images/createformscheduledjobimage1basicinfoand%20campaignconfiguration.png)
+![Scheduled job create form with basic info and campaign configuration](/img/v1.1/jobmanagement-images/createformscheduledjobimage1basicinfoand%20campaignconfiguration.png)
 
-![Scheduled job create form additional configuration](/img/jobmanagement-images/createscheduledjobimage2.png)
+![Scheduled job create form additional configuration](/img/v1.1/jobmanagement-images/createscheduledjobimage2.png)
 
 ## Required Fields
 
@@ -54,7 +54,7 @@ In the frontend, campaign mode is detected from `type=campaign` (or campaign met
 - **Interval Seconds**: required for interval mode, minimum constrained.
 - **Execution Window**: optional run-time boundaries.
 
-![Scheduled job schedule configuration](/img/jobmanagement-images/scheduledetailscheduleconfiguration.png)
+![Scheduled job schedule configuration](/img/v1.1/jobmanagement-images/scheduledetailscheduleconfiguration.png)
 
 ## Execution And Control Fields
 

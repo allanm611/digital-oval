@@ -2,7 +2,7 @@
 
 Seed List Management allows you to maintain a list of internal staff members who receive test copies of campaigns for quality assurance before sending to actual customers. This enables you to validate content, test delivery, and verify personalization before customer launch.
 
-![Seed List Management Page](/img/configuration/seedlistmanagementpage.png)
+![Seed List Management Page](/img/v1.1/configuration/seedlistmanagementpage.png)
 
 ## What are Seed Lists?
 
@@ -41,9 +41,9 @@ You can:
 
 Click the **Add Recipient** button to add a staff member to the seed list.
 
-![Add Seed Recipient Modal - Part 1](/img/configuration/addseedlistmodalimage1.png)
+![Add Seed Recipient Modal - Part 1](/img/v1.1/configuration/addseedlistmodalimage1.png)
 
-![Add Seed Recipient Modal - Part 2](/img/configuration/addseedlistmodalimage2.png)
+![Add Seed Recipient Modal - Part 2](/img/v1.1/configuration/addseedlistmodalimage2.png)
 
 **Required Fields:**
 

@@ -10,9 +10,9 @@ Workflow Step Details gives a full read view of one step definition.
 - dependency and condition logic
 - validation and expected row count constraints
 
-![Job workflow step details](/img/jobmanagement-images/jobworkflowdetailsimage1.png)
+![Job workflow step details](/img/v1.1/jobmanagement-images/jobworkflowdetailsimage1.png)
 
-![Job workflow step details (extended)](/img/jobmanagement-images/jobworkflowdetailimage2.png)
+![Job workflow step details (extended)](/img/v1.1/jobmanagement-images/jobworkflowdetailimage2.png)
 
 ## Key Fields Explained
 

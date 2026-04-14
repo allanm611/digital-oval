@@ -36,7 +36,7 @@ At the top of the dashboard:
 
 ## Channel Performance Snapshot
 
-![Channel Performance Snapshot](/img/reports/channelperformnaceoverolldash.png)
+![Channel Performance Snapshot](/img/v1.0/reports/channelperformnaceoverolldash.png)
 
 Quick overview of your selected channel's key metrics:
 
@@ -67,7 +67,7 @@ Quick overview of your selected channel's key metrics:
 
 ## Performance by Channel
 
-![Performance by Channel](/img/reports/performancebychanneloverolldash.png)
+![Performance by Channel](/img/v1.0/reports/performancebychanneloverolldash.png)
 
 Compare performance across SMS, Email, Push, and Social channels:
 
@@ -104,7 +104,7 @@ Compare performance across SMS, Email, Push, and Social channels:
 
 ## SMS Delivery Performance
 
-![SMS Delivery Performance](/img/reports/smsdeliveryoverolldash.png)
+![SMS Delivery Performance](/img/v1.0/reports/smsdeliveryoverolldash.png)
 
 Detailed tracking of SMS delivery metrics over time:
 
@@ -136,7 +136,7 @@ Detailed tracking of SMS delivery metrics over time:
 
 ## Performance Trends Over Time
 
-![Performance Trends Over Time](/img/reports/trendsovertimeoveroll.png)
+![Performance Trends Over Time](/img/v1.0/reports/trendsovertimeoveroll.png)
 
 Track overall business metrics and trends across your selected time period:
 

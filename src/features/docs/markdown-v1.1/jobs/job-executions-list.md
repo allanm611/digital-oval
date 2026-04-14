@@ -16,7 +16,7 @@ Job Executions List is the operational table for filtering and acting on executi
 
 Common filters include status, job ID, date range, trace ID, correlation ID, and quick views such as long-running or currently-running executions.
 
-![Job executions list page](/img/jobmanagement-images/jobexecutionslistpage.png)
+![Job executions list page](/img/v1.1/jobmanagement-images/jobexecutionslistpage.png)
 
 ## Actions
 
@@ -26,7 +26,7 @@ Common filters include status, job ID, date range, trace ID, correlation ID, and
 - **Archive** records where supported
 - batch operations via selection mode
 
-![Job executions batch operations page](/img/jobmanagement-images/jobexecutionsbatchoperationspage.png)
+![Job executions batch operations page](/img/v1.1/jobmanagement-images/jobexecutionsbatchoperationspage.png)
 
 ## Related Pages
 

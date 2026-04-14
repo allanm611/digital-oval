@@ -14,9 +14,9 @@ Add new customers to the system. Choose the method that fits your workflow:
 
 Navigate to **Customer 360 → Customers → Create Customer**
 
-![Single Entry Form Part 1](/img/customer360-images/addcustomermanuallyimage1.png)
+![Single Entry Form Part 1](/img/v1.0/customer360-images/addcustomermanuallyimage1.png)
 
-![Single Entry Form Part 2](/img/customer360-images/addcustomermanuallyimage2.png)
+![Single Entry Form Part 2](/img/v1.0/customer360-images/addcustomermanuallyimage2.png)
 
 ### Required Fields
 
@@ -64,7 +64,7 @@ Navigate to **Customer 360 → Customers → Create Customer**
 
 Paste comma-separated customer data to import multiple customers.
 
-![Bulk CSV Entry](/img/customer360-images/addcustomerbulkimage.png)
+![Bulk CSV Entry](/img/v1.0/customer360-images/addcustomerbulkimage.png)
 
 ### Steps
 
@@ -95,17 +95,17 @@ Upload Excel or CSV files with automatic column detection.
 2. Click **Choose File** and select your file
 3. Map your file columns to the three required fields displayed: first name, last name, and phone number
 
-![Column Mapping](/img/customer360-images/addcustomerimportimage1.png)
+![Column Mapping](/img/v1.0/customer360-images/addcustomerimportimage1.png)
 
 If mapping is incorrect, you'll see an error and have an option to go back and fix it :
 
-![Column Mapping Error](/img/customer360-images/addcustomerimportinvalidmappingimageerror.png)
+![Column Mapping Error](/img/v1.0/customer360-images/addcustomerimportinvalidmappingimageerror.png)
 
 4. Review preview of data to import
 
-![File Import Preview](/img/customer360-images/addcustomerimportvalidmappingimage.png)
+![File Import Preview](/img/v1.0/customer360-images/addcustomerimportvalidmappingimage.png)
 
-![File Import Valid Preview](/img/customer360-images/addcustomerimportvalidmappingimage.png)
+![File Import Valid Preview](/img/v1.0/customer360-images/addcustomerimportvalidmappingimage.png)
 
 5. Click **Confirm Import** to add customers
 

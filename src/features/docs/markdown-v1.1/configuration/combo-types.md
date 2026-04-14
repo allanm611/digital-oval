@@ -4,7 +4,7 @@
 
 Combo Types is used to define reusable bundle templates that combine data, voice, and SMS into one offer unit. The page is designed for product and commercial teams that need to shape bundle structures before those bundles are used in products and offers.
 
-![Combo Types List](/img/configuration/combotypeslist.png)
+![Combo Types List](/img/v1.1/configuration/combotypeslist.png)
 
 ## Accessing Combo Types
 
@@ -22,9 +22,9 @@ Click **Create** to open the combo type modal.
 
 **Modal title:** Create New Combo Type
 
-![Create Combo Type Form - Part 1](/img/configuration/createcombotypeimage1.png)
+![Create Combo Type Form - Part 1](/img/v1.1/configuration/createcombotypeimage1.png)
 
-![Create Combo Type Form - Part 2](/img/configuration/createcombotypeimage2.png)
+![Create Combo Type Form - Part 2](/img/v1.1/configuration/createcombotypeimage2.png)
 
 ### Basic Fields
 

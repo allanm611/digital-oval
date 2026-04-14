@@ -4,7 +4,7 @@
 
 Offer Catalogs organize offers into categories for easier management and organization. Catalogs help you group related offers together and manage them as a collection.
 
-![Offer Catalogs List](/img/configuration/offercataloglist.png)
+![Offer Catalogs List](/img/v1.1/configuration/offercataloglist.png)
 
 ## Summary Statistics
 
@@ -45,7 +45,7 @@ Click the **Create** button to open the create catalog modal:
 - **Catalog Name\*** (required) - Descriptive name for your catalog
 - **Description** (optional) - Additional details about the catalog
 
-![Create Offer Catalog](/img/configuration/createoffercatalog.png)
+![Create Offer Catalog](/img/v1.1/configuration/createoffercatalog.png)
 
 ### Edit Catalog
 
@@ -74,13 +74,13 @@ Click the **View Offers** button on any catalog card to open the View Offers mod
 - Offer status badge (Active, Draft, Paused, etc.)
 - Option to remove offers from the catalog individually
 
-![View Offers in Catalog](/img/configuration/viewoffersinacatalog.png)
+![View Offers in Catalog](/img/v1.1/configuration/viewoffersinacatalog.png)
 
 ## Add Offers to Catalog
 
 Click the **Add Offers** action button within the View Offers modal to open the Add Offers to Catalog modal.
 
-![Assign Offers to Catalog](/img/configuration/assignofferstoacatalog.png)
+![Assign Offers to Catalog](/img/v1.1/configuration/assignofferstoacatalog.png)
 
 **Search and Filters:**
 

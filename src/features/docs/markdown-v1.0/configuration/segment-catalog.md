@@ -4,7 +4,7 @@
 
 Segment Catalogs organize segments into categories for easier management and organization. Catalogs help you group related segments together and manage them as a collection.
 
-![Segment Catalogs List](/img/segments-img/segmentcatalogslist.png)
+![Segment Catalogs List](/img/v1.0/segments-img/segmentcatalogslist.png)
 
 ## Summary Statistics
 
@@ -40,7 +40,7 @@ Catalogs are displayed as cards in a grid or list view with the following inform
 
 ### Create Catalog
 
-![Create Segment Catalog Modal](/img/segments-img/createsegmentcatalog.png)
+![Create Segment Catalog Modal](/img/v1.0/segments-img/createsegmentcatalog.png)
 
 Click the **Create** button to open the create catalog modal:
 
@@ -67,7 +67,7 @@ Click the **Delete** button (trash icon) to permanently remove a catalog. You wi
 
 ## View Segments in Catalog
 
-![View Segments in Catalog Modal](/img/segments-img/viewsegmentsincatalogmodal.png)
+![View Segments in Catalog Modal](/img/v1.0/segments-img/viewsegmentsincatalogmodal.png)
 
 Click the **View Segments** button on any catalog card to open the View Segments modal. This modal displays:
 
@@ -78,7 +78,7 @@ Click the **View Segments** button on any catalog card to open the View Segments
 
 ## Add Segments to Catalog
 
-![Assign Segments to Catalog Modal](/img/segments-img/assignsegmentstosegmentcatalog.png)
+![Assign Segments to Catalog Modal](/img/v1.0/segments-img/assignsegmentstosegmentcatalog.png)
 
 Click the **Add Segments** action button within the View Segments modal to open the Add Segments to Catalog modal.
 

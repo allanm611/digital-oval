@@ -4,7 +4,7 @@
 
 Segment Types are categories used to classify and organize different kinds of customer segments in the system. Each segment is assigned to a type to help organize, filter, and track segments by their methodology and data source.
 
-![Segment Types](/img/segments-img/segmenttypes.png)
+![Segment Types](/img/v1.1/segments-img/segmenttypes.png)
 
 ## Available Segment Types
 

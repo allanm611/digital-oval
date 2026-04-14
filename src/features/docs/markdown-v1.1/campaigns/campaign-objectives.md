@@ -2,7 +2,7 @@
 
 Campaign Objectives define the strategic goals and business purposes for your marketing campaigns. Each objective represents a specific target outcome you want to achieve, helping you organize campaigns, align teams, and measure success against your business strategy.
 
-![Campaign Objectives](/img/campaign-images/campaignobjectives.png)
+![Campaign Objectives](/img/v1.1/campaign-images/campaignobjectives.png)
 
 
 ## Using Objectives in Campaigns

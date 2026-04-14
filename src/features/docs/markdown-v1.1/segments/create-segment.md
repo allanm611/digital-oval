@@ -4,7 +4,7 @@
 
 Create and edit custom customer segments based on various criteria to build targeted audiences for campaigns and communications. The Create and Edit forms use the same interface the difference is that Edit mode pre-populates all fields with the segment's current data.
 
-![Create Segment Form](/img/segments-img/createsegmentimage1.png)
+![Create Segment Form](/img/v1.1/segments-img/createsegmentimage1.png)
 
 ## Form Fields
 
@@ -34,7 +34,7 @@ Create and edit custom customer segments based on various criteria to build targ
 
 The **Segment Conditions Builder** is where you define the rules that determine which customers belong to your segment. This is the core logic that powers segment membership.
 
-![Segment Conditions Builder](/img/segments-img/createsegment-segmentcondiitonsimage1.png)
+![Segment Conditions Builder](/img/v1.1/segments-img/createsegment-segmentcondiitonsimage1.png)
 
 ### Adding Your First Condition
 
@@ -60,7 +60,7 @@ Build rules based on customer profile attributes like demographics, behavior, tr
 - Choose an **Operator** to specify the comparison (equals, greater than, contains, etc.)
 - Enter a **Value** to compare against
 
-![Field Selection Modal](/img/segments-img/createsegmentimagefieldselectionmodal.png)
+![Field Selection Modal](/img/v1.1/segments-img/createsegmentimagefieldselectionmodal.png)
 
 **Example:**
 
@@ -183,7 +183,7 @@ Build rules based on custom KPIs (Key Performance Indicators) that have been con
 
 ## Condition Groups and Logic
 
-![Segment Conditions with Multiple Groups](/img/segments-img/createsegment-segmentconditions2.png)
+![Segment Conditions with Multiple Groups](/img/v1.1/segments-img/createsegment-segmentconditions2.png)
 
 ### Understanding Condition Groups
 
@@ -203,7 +203,7 @@ Conditions are organized into **groups**. Each group has its own logic operator 
 
 ### Multiple Groups
 
-![Multiple Conditions Example](/img/segments-img/createsegment-segmentconditions4.png)
+![Multiple Conditions Example](/img/v1.1/segments-img/createsegment-segmentconditions4.png)
 
 When you have more than one group, you can **choose how to combine them** using AND or OR logic between each group:
 
@@ -289,7 +289,7 @@ Organize and categorize your segment with tags:
 
 Before creating or saving your segment, you can preview how many customers match your criteria:
 
-![Segment Preview Modal](/img/segments-img/createsegment-preview%20segmentconditions.png)
+![Segment Preview Modal](/img/v1.1/segments-img/createsegment-preview%20segmentconditions.png)
 
 ### Preview Button
 

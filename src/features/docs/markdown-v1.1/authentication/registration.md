@@ -32,7 +32,7 @@ The Request Account page is a multi-step form that allows new users to request a
 **Required:** No (optional)
 - Your contact phone number
 
-![Request Access - Step 1](/img/auth-images/requestaccess-1.png)
+![Request Access - Step 1](/img/v1.1/auth-images/requestaccess-1.png)
 
 
 ## Step 2: Professional Details
@@ -56,7 +56,7 @@ The Request Account page is a multi-step form that allows new users to request a
 **Required:** Yes
 - Briefly explain why you need access to the platform
 
-![Request Access - Step 2](/img/auth-images/requestaccess-2.png)
+![Request Access - Step 2](/img/v1.1/auth-images/requestaccess-2.png)
 
 
 ## Account Request Process

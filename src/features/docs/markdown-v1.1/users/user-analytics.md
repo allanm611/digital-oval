@@ -28,7 +28,7 @@ It then expands into security and activity monitoring cards for:
 
 These cards help you spot operational pressure points quickly, such as a buildup of pending requests, a spike in locked accounts, or a cluster of users who still do not have MFA enabled.
 
-![User Analytics Stat Cards](/img/usermanagement-images/useranalyticsstatcards.png)
+![User Analytics Stat Cards](/img/v1.1/usermanagement-images/useranalyticsstatcards.png)
 
 ## Distribution Charts
 
@@ -42,9 +42,9 @@ The charts cover:
 
 The status chart shows how the overall user population is split across states such as active, inactive, pending activation, or suspended. The department and role charts make it easier to see where the user base is concentrated and whether access assignment is balanced as expected.
 
-![Users by Status Pie Chart](/img/usermanagement-images/useranalyticsusersbysttauspiechart.png)
+![Users by Status Pie Chart](/img/v1.1/usermanagement-images/useranalyticsusersbysttauspiechart.png)
 
-![Users by Department and by Role](/img/usermanagement-images/useranalyticsuserbydepartment&usersbyroleimage.png)
+![Users by Department and by Role](/img/v1.1/usermanagement-images/useranalyticsuserbydepartment&usersbyroleimage.png)
 
 ## Focus Tables
 
@@ -58,9 +58,9 @@ Below the charts, the page provides investigation tables for the user groups tha
 
 Each table resolves role information and includes a row action that opens the selected user’s details page, which makes the analytics page a practical starting point for follow-up work rather than just a passive dashboard.
 
-![MFA Disabled Users Table](/img/usermanagement-images/useranalyticsmfadisbaledusers.png)
+![MFA Disabled Users Table](/img/v1.1/usermanagement-images/useranalyticsmfadisbaledusers.png)
 
-![Inactive Users Table](/img/usermanagement-images/useranalyticsinactiveusers.png)
+![Inactive Users Table](/img/v1.1/usermanagement-images/useranalyticsinactiveusers.png)
 
 ## Data Sources
 

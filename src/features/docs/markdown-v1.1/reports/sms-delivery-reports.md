@@ -19,7 +19,7 @@ SMS Delivery Reports provide detailed analytics on SMS campaign performance, tra
 
 ## Key Metrics Overview
 
-![SMS Delivery & Stats](/img/reports/delievrery&smsstats.png)
+![SMS Delivery & Stats](/img/v1.1/reports/delievrery&smsstats.png)
 
 Eight key metrics provide quick insights into SMS performance:
 
@@ -125,7 +125,7 @@ Eight key metrics provide quick insights into SMS performance:
 
 ## SMS Delivery Funnel
 
-![SMS Delivery Funnel](/img/reports/smsdeliveryfunnel.png)
+![SMS Delivery Funnel](/img/v1.1/reports/smsdeliveryfunnel.png)
 
 Track message journey from send to conversion across time periods:
 
@@ -152,7 +152,7 @@ Track message journey from send to conversion across time periods:
 
 ## Message Delivery Log
 
-![Message Delivery Log](/img/reports/smstable.png)
+![Message Delivery Log](/img/v1.1/reports/smstable.png)
 
 Detailed view of individual SMS campaign performance:
 

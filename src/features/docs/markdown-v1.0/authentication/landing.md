@@ -4,7 +4,7 @@
 
 The Landing Page is the first page users see when visiting the Sentra CVM platform. It provides an overview of the platform's key features and modules, along with calls-to-action for logging in or requesting an account.
 
-![Landing Page](/img/auth-images/landingpage.png)
+![Landing Page](/img/v1.0/auth-images/landingpage.png)
 
 
 ## Hero Section

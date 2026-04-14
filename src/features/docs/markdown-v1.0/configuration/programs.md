@@ -13,13 +13,13 @@ Programs allow you to:
 
 Navigate to **Configuration → Programs** to manage all programs.
 
-![Programs List](/img/configuration/programslist.png)
+![Programs List](/img/v1.0/configuration/programslist.png)
 
 ### Create Program
 
 Click the **Create** button to add a new program.
 
-![Create Program](/img/configuration/createprogram.png)
+![Create Program](/img/v1.0/configuration/createprogram.png)
 
 **Required Fields:**
 - **Program Name** - The name of the program (max 100 characters)

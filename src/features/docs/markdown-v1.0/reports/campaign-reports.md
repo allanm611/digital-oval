@@ -19,7 +19,7 @@ Campaign Reports provide comprehensive performance analytics for all your campai
 
 ## Key Metrics Overview
 
-![Campaign Report Stats Cards](/img/reports/campaignreportstats.png)
+![Campaign Report Stats Cards](/img/v1.0/reports/campaignreportstats.png)
 
 Six key metrics provide quick insights into campaign performance:
 
@@ -119,7 +119,7 @@ Six key metrics provide quick insights into campaign performance:
 
 ## Campaign Performance Table
 
-![Campaign Performance Table](/img/reports/campaigntable.png)
+![Campaign Performance Table](/img/v1.0/reports/campaigntable.png)
 
 Detailed view of individual campaign performance:
 

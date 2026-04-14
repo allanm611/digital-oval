@@ -17,9 +17,9 @@ The same page is used for both create and edit:
 - **Step Type**
 - **Step Action**
 
-![Create job workflow step form - part 1](/img/jobmanagement-images/createjobworkflowimage1.png)
+![Create job workflow step form - part 1](/img/v1.1/jobmanagement-images/createjobworkflowimage1.png)
 
-![Create job workflow step form - part 2](/img/jobmanagement-images/createjobworkflowimage2.png)
+![Create job workflow step form - part 2](/img/v1.1/jobmanagement-images/createjobworkflowimage2.png)
 
 ## Behavior Fields
 
@@ -44,7 +44,7 @@ The same page is used for both create and edit:
 
 The edit flow uses the same form fields with existing values pre-filled.
 
-![Job workflow step details](/img/jobmanagement-images/jobworkflowdetailimage2.png)
+![Job workflow step details](/img/v1.1/jobmanagement-images/jobworkflowdetailimage2.png)
 
 ## Related Pages
 

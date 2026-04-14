@@ -13,7 +13,7 @@ Go to `Jobs -> Job Workflow Steps`.
 - failure policy and skip/condition logic
 - validation queries and expected row count checks
 
-![Job workflow steps list page](/img/jobmanagement-images/jobworkflowstepslistpage.png)
+![Job workflow steps list page](/img/v1.0/jobmanagement-images/jobworkflowstepslistpage.png)
 
 ## Core Field Meaning
 
@@ -23,7 +23,7 @@ Go to `Jobs -> Job Workflow Steps`.
 - **Is Critical**: marks step importance for workflow success.
 - **Is Parallel / Parallel Group**: controls parallel execution grouping.
 
-![Job workflow step details](/img/jobmanagement-images/jobworkflowdetailsimage1.png)
+![Job workflow step details](/img/v1.0/jobmanagement-images/jobworkflowdetailsimage1.png)
 
 ## Create And Edit Behavior
 

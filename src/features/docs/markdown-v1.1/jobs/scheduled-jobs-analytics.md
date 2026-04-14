@@ -9,11 +9,11 @@ Scheduled Jobs Analytics provides aggregate visibility into job health and sched
 - stale jobs and due-for-execution counts
 - owner/type distribution summaries
 
-![Scheduled jobs analytics stats cards](/img/jobmanagement-images/scheduledjobsanalyticspagestatscards.png)
+![Scheduled jobs analytics stats cards](/img/v1.1/jobmanagement-images/scheduledjobsanalyticspagestatscards.png)
 
-![Scheduled jobs analytics status and job type distribution](/img/jobmanagement-images/scheduledjobanalyticsstatusandjobtypedistributionimage.png)
+![Scheduled jobs analytics status and job type distribution](/img/v1.1/jobmanagement-images/scheduledjobanalyticsstatusandjobtypedistributionimage.png)
 
-![Scheduled jobs analytics jobs by owner graph](/img/jobmanagement-images/scheduledjobsnaalyticsjobsbyownergrapgh.png)
+![Scheduled jobs analytics jobs by owner graph](/img/v1.1/jobmanagement-images/scheduledjobsnaalyticsjobsbyownergrapgh.png)
 
 ## How To Use It
 
@@ -21,13 +21,13 @@ Scheduled Jobs Analytics provides aggregate visibility into job health and sched
 - identify job categories with repeated misses
 - track health changes after schedule or timeout tuning
 
-![Scheduled jobs analytics execution counts graph](/img/jobmanagement-images/scheduledjobsanalyticsexecutioncountsgraph.png)
+![Scheduled jobs analytics execution counts graph](/img/v1.1/jobmanagement-images/scheduledjobsanalyticsexecutioncountsgraph.png)
 
-![Scheduled jobs analytics performance metrics graph](/img/jobmanagement-images/scheduledjobsanalyticsperformancemetricsgrapgh.png)
+![Scheduled jobs analytics performance metrics graph](/img/v1.1/jobmanagement-images/scheduledjobsanalyticsperformancemetricsgrapgh.png)
 
-![Scheduled jobs analytics resource utilization graph](/img/jobmanagement-images/scheduledjobsanalyticsresourceutilizationgrapgh.png)
+![Scheduled jobs analytics resource utilization graph](/img/v1.1/jobmanagement-images/scheduledjobsanalyticsresourceutilizationgrapgh.png)
 
-![Scheduled jobs analytics longest running job](/img/jobmanagement-images/scheduledjobsanalyticslongestrunningjob.png)
+![Scheduled jobs analytics longest running job](/img/v1.1/jobmanagement-images/scheduledjobsanalyticslongestrunningjob.png)
 
 ## Related Pages
 

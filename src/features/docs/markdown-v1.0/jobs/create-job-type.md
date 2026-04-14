@@ -7,7 +7,7 @@ Create Job Type opens a form/modal for adding a new type record.
 - **Name**
 - **Code**
 
-![Create job type form](/img/jobmanagement-images/createjobtype.png)
+![Create job type form](/img/v1.0/jobmanagement-images/createjobtype.png)
 
 ## Field Meaning
 
@@ -23,7 +23,7 @@ Create Job Type opens a form/modal for adding a new type record.
 
 The edit flow uses the same form with current values pre-filled.
 
-![Edit job type form](/img/jobmanagement-images/editjobtype.png)
+![Edit job type form](/img/v1.0/jobmanagement-images/editjobtype.png)
 
 ## Related Pages
 

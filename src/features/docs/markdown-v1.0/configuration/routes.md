@@ -8,7 +8,7 @@ Communication Routes establish the connection between your messaging channels (S
 
 Navigate to **Configuration → Routes** to manage all communication routes.
 
-![Routes List](/img/configuration/routeslist.png)
+![Routes List](/img/v1.0/configuration/routeslist.png)
 
 The routes list displays all configured routes with:
 - **Route Name** - Unique identifier for the route
@@ -55,14 +55,14 @@ The delivery pipeline:
 
 1. Click **Create Route** button in the top right
 
-![Create Route Button](/img/configuration/routeslist.png)
+![Create Route Button](/img/v1.0/configuration/routeslist.png)
 
 2. **Enter Route Information:**
    - **Route Name** - Unique identifier (e.g., "Effortel SMS Primary", "Twilio Backup")
    - **Channel** - Select which channel this route handles (SMS, Email, USSD, Push)
    - **Provider** - Select the gateway provider 
 
-![Create Communication Route Part 1](/img/configuration/createcommunicationrouteimage1.png)
+![Create Communication Route Part 1](/img/v1.0/configuration/createcommunicationrouteimage1.png)
 
 <!-- 3. **Configure Provider Credentials:**
    - Provider-specific fields based on selected provider
@@ -71,7 +71,7 @@ The delivery pipeline:
    - **Endpoint URL** - Provider API endpoint (if required)
    - Additional provider-specific settings -->
 
-![Create Communication Route Part 2](/img/configuration/createcommunicationrouteimage2.png)
+![Create Communication Route Part 2](/img/v1.0/configuration/createcommunicationrouteimage2.png)
 
 <!-- 4. **Set Route Priority:**
    - **Priority** - Numeric priority (1 = highest, 2 = secondary failover, etc.)
@@ -84,7 +84,7 @@ The delivery pipeline:
 
 3. Click **Create** to save the route
 
-<!-- ![Create Route Form](/img/configuration/createroute.png) -->
+<!-- ![Create Route Form](/img/v1.0/configuration/createroute.png) -->
 
 ## Editing a Route
 
@@ -99,7 +99,7 @@ To modify an existing route:
    - Active status -->
 4. Click **Save** to apply changes
 
-![Edit Communication Route](/img/configuration/editcommunicationroute.png)
+![Edit Communication Route](/img/v1.0/configuration/editcommunicationroute.png)
 
 <!-- **Note:** Changes apply immediately. If the route is actively being used, the system will use updated credentials for new messages. -->
 

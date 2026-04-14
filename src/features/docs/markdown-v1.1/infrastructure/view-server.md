@@ -2,9 +2,9 @@
 
 Server Details provides a read-focused view of one server configuration and its current operational state.
 
-![Server Details - Basic Info and Header](/img/infrastructure/serverdetailsbasicinfoandheaderdropdownimage.png)
-![Server Details - Connection and Profiles](/img/infrastructure/serverdetailsconnectionandprofiles.png)
-![Server Details - Metadata](/img/infrastructure/serverdetailsmetadata.png)
+![Server Details - Basic Info and Header](/img/v1.1/infrastructure/serverdetailsbasicinfoandheaderdropdownimage.png)
+![Server Details - Connection and Profiles](/img/v1.1/infrastructure/serverdetailsconnectionandprofiles.png)
+![Server Details - Metadata](/img/v1.1/infrastructure/serverdetailsmetadata.png)
 
 ## Typical Sections
 

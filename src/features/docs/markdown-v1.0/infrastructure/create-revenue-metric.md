@@ -2,8 +2,8 @@
 
 Use this page to create KPI definitions that measure revenue outcomes.
 
-![Create Revenue Metric - Basic Info and Config](/img/infrastructure/createrevenuemetricbasicinfoand%20config.png)
-![Create Revenue Metric - Operators](/img/infrastructure/createrevenuemtricoperatorssection.png)
+![Create Revenue Metric - Basic Info and Config](/img/v1.0/infrastructure/createrevenuemetricbasicinfoand%20config.png)
+![Create Revenue Metric - Operators](/img/v1.0/infrastructure/createrevenuemtricoperatorssection.png)
 
 ## Required Inputs
 

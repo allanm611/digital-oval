@@ -2,7 +2,7 @@
 
 Character Sets defines the encoding profiles used when composing message content. This page helps teams control how text is interpreted across channels, especially where character limits and encoding compatibility matter.
 
-![Character Sets List](/img/configuration/charactersetslistimage.png)
+![Character Sets List](/img/v1.0/configuration/charactersetslistimage.png)
 
 ## Open The Page
 
@@ -26,11 +26,11 @@ This makes it easier to verify what is active before mapping languages and creat
 
 Click **Create** to open the form.
 
-![Create Character Set](/img/configuration/createcharactersetimage.png)
+![Create Character Set](/img/v1.0/configuration/createcharactersetimage.png)
 
-<!-- ![Create Character Set - Name and Description](/img/configuration/createcharactersetname-decsriptionimage.png) -->
+<!-- ![Create Character Set - Name and Description](/img/v1.0/configuration/createcharactersetname-decsriptionimage.png) -->
 
-![Create Character Set - Configuration](/img/configuration/createcharactersetconfigurationtillbottomimage.png)
+![Create Character Set - Configuration](/img/v1.0/configuration/createcharactersetconfigurationtillbottomimage.png)
 
 Main inputs include:
 

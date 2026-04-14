@@ -4,7 +4,7 @@
 
 Campaign Broadcasts are execution records of campaigns. Each broadcast represents an instance of sending a campaign to its target audience. Broadcasts track delivery across channels (email, SMS, push), engagement metrics (opens, clicks), and conversion data.
 
-![Campaign Broadcasts List](/img/campaign-images/campaignbroadcastslist.png)
+![Campaign Broadcasts List](/img/v1.1/campaign-images/campaignbroadcastslist.png)
 
 
 ## What is a Broadcast?
@@ -112,7 +112,7 @@ Quick overview with 4 metric cards:
 - **Opened** - Count opened + engagement rate %
 - **Conversions** - Count converted + conversion rate %
 
-![Broadcast Details - Stat Cards](/img/campaign-images/campaignbroadcastsdetailstatcards.png)
+![Broadcast Details - Stat Cards](/img/v1.1/campaign-images/campaignbroadcastsdetailstatcards.png)
 
 ### Delivery & Engagement Breakdown
 
@@ -128,7 +128,7 @@ Detailed breakdown of message delivery and engagement:
 - **Clicked** - Links clicked
 - **Conversions** - Conversion actions completed
 
-![Delivery & Engagement Breakdown](/img/campaign-images/campaignbroadcatsdetaildelivery&engagementbreakdown.png)
+![Delivery & Engagement Breakdown](/img/v1.1/campaign-images/campaignbroadcatsdetaildelivery&engagementbreakdown.png)
 
 ### Broadcast Information
 
@@ -138,7 +138,7 @@ Core broadcast details:
 - **Status** - Current status (Scheduled, In Progress, Completed, Failed, Paused)
 - **Campaign ID** - Associated campaign ID
 
-![Broadcast Information](/img/campaign-images/campaignbroadcastdetail-broadcatsinfo.png)
+![Broadcast Information](/img/v1.1/campaign-images/campaignbroadcastdetail-broadcatsinfo.png)
 
 ### Audit Trail
 
@@ -146,7 +146,7 @@ Broadcast execution metadata:
 - **Created By** - User who ran the broadcast
 - **Created At** - Timestamp when broadcast was sent
 
-![Audit Trail](/img/campaign-images/camapignbroadcatsdetail-audittrail.png)
+![Audit Trail](/img/v1.1/campaign-images/camapignbroadcatsdetail-audittrail.png)
 
 ### Channels Used
 
@@ -155,5 +155,5 @@ Shows which delivery channels were used:
 - **SMS** - Text message channel
 - **Push** - Push notification channel
 
-![Channels Used](/img/campaign-images/campaignbroadcatsdetailschannelsused.png)
+![Channels Used](/img/v1.1/campaign-images/campaignbroadcatsdetailschannelsused.png)
 

@@ -4,7 +4,7 @@
 
 The Edit Segment page allows you to modify an existing segment's conditions, description, and configuration.
 
-![Edit Segment Form](/img/segments-img/createsegmentimage1.png)
+![Edit Segment Form](/img/v1.1/segments-img/createsegmentimage1.png)
 
 
 ## When You Can Edit a Segment
@@ -16,7 +16,7 @@ You can edit a segment at any time with proper permissions. There are no restric
 
 The following fields can be modified:
 
-![Segment Edit Form Fields](/img/segments-img/segmentconditions.png)
+![Segment Edit Form Fields](/img/v1.1/segments-img/segmentconditions.png)
 
 **Segment Name*** (required)
 - Descriptive name for your segment

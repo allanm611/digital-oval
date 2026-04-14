@@ -2,7 +2,7 @@
 
 Usage Metrics List shows KPI definitions that track customer or system usage behavior.
 
-![Usage Metrics List](/img/infrastructure/usagemetricslistpage.png)
+![Usage Metrics List](/img/v1.1/infrastructure/usagemetricslistpage.png)
 
 ## What This Page Is For
 

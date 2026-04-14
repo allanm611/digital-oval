@@ -6,7 +6,7 @@ Dynamic Message Variables is a configuration page used to manage which variable 
 
 In the Configuration page, this item is labeled **Dynamic Modal Generator**.
 
-![Dynamic Modal Generator List](/img/configuration/dynamicmodalgeneratorlist.png)
+![Dynamic Modal Generator List](/img/v1.1/configuration/dynamicmodalgeneratorlist.png)
 
 The page lets you:
 
@@ -97,7 +97,7 @@ This behavior is helpful when a full group of placeholders should be hidden quic
 
 Click **View Fields** on a category card to open a modal.
 
-![Dynamic Modal Generator Fields Example](/img/configuration/dynamicmodalgeneratormodalexample .png)
+![Dynamic Modal Generator Fields Example](/img/v1.1/configuration/dynamicmodalgeneratormodalexample .png)
 
 The modal title is:
 

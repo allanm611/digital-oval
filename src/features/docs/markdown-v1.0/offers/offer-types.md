@@ -4,7 +4,7 @@
 
 Offer Types are categories used to classify and organize promotional offers. Each offer must be assigned to a type to help organize, filter, and track offers by category.
 
-![Offer Types](/img/offer-images/offertypes.png)
+![Offer Types](/img/v1.0/offer-images/offertypes.png)
 
 ## Offer Types
 

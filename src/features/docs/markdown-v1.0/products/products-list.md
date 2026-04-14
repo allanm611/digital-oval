@@ -4,7 +4,7 @@
 
 The Product List page displays all products in the system with summary statistics, search capabilities, filtering options, and management tools for each product.
 
-![Products List Page](/img/product-images/productslistpage.png)
+![Products List Page](/img/v1.0/product-images/productslistpage.png)
 
 ## Summary Statistics
 

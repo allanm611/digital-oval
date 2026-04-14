@@ -14,7 +14,7 @@ Job Workflows List is the table view for workflow records.
 
 Search by name/description and filter by workflow status and type.
 
-![Job workflows list page](/img/jobmanagement-images/jobworkflowlist.png)
+![Job workflows list page](/img/v1.0/jobmanagement-images/jobworkflowlist.png)
 
 ## Actions
 
@@ -24,9 +24,9 @@ Search by name/description and filter by workflow status and type.
 - Delete
 - clone/activate/deactivate actions where available
 
-![Job workflows bulk operations](/img/jobmanagement-images/jobworkflowsbulkoperations.png)
+![Job workflows bulk operations](/img/v1.0/jobmanagement-images/jobworkflowsbulkoperations.png)
 
-![Job workflows list bulk operations page](/img/jobmanagement-images/workflowlistbbuulkoperation.png)
+![Job workflows list bulk operations page](/img/v1.0/jobmanagement-images/workflowlistbbuulkoperation.png)
 
 ## Related Pages
 

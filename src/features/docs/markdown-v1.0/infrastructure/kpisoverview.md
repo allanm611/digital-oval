@@ -6,7 +6,7 @@ KPIs are performance indicators used across the platform, including **segmentati
 
 When you build segments, KPI categories like **System Events**, **Usage Metrics**, and **Revenue Metrics** are available as condition inputs. So this module is where those KPI definitions are prepared and kept consistent.
 
-![All KPIs Overview](/img/infrastructure/allkpisimage.png)
+![All KPIs Overview](/img/v1.0/infrastructure/allkpisimage.png)
 
 ## Uses
 
@@ -23,13 +23,13 @@ Use this module to:
 - Usage Metrics: KPIs tied to usage behavior and volume trends.
 - System Events: KPIs tied to operational/platform events.
 
-![All KPIs List](/img/infrastructure/allkpislistimage.png)
+![All KPIs List](/img/v1.0/infrastructure/allkpislistimage.png)
 
-![Revenue Metrics List](/img/infrastructure/revenuemetricslistpage.png)
+![Revenue Metrics List](/img/v1.0/infrastructure/revenuemetricslistpage.png)
 
-![Usage Metrics List](/img/infrastructure/usagemetricslistpage.png)
+![Usage Metrics List](/img/v1.0/infrastructure/usagemetricslistpage.png)
 
-![System Events List](/img/infrastructure/systemeventsallpage.png)
+![System Events List](/img/v1.0/infrastructure/systemeventsallpage.png)
 
 <!-- ## How KPI Records Are Used
 

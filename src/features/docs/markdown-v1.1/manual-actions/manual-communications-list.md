@@ -27,7 +27,7 @@ Manual Communications allow you to send one-time messages to specific customer s
 2. Select **Manual Communications**
 3. View all previously created communications or create a new one
 
-![Manual Communications List](/img/manual-actions/communications-list.png)
+![Manual Communications List](/img/v1.1/manual-actions/communications-list.png)
 
 To create a new communication, click the **Create Communication** button. [Create Manual Communication](/documentation/manual-actions/create-manual-communication).
 

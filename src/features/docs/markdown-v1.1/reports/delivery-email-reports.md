@@ -20,7 +20,7 @@ Email Delivery Reports provide detailed analytics on email campaign performance,
 
 ## Key Metrics Overview
 
-![Email Delivery & Stats](/img/reports/delivery&emailstats.png)
+![Email Delivery & Stats](/img/v1.1/reports/delivery&emailstats.png)
 
 Eight key metrics provide quick insights into email performance:
 
@@ -114,7 +114,7 @@ Eight key metrics provide quick insights into email performance:
 
 ## Email Delivery Funnel
 
-![Email Delivery Funnel](/img/reports/emaildelieveryfunnel.png)
+![Email Delivery Funnel](/img/v1.1/reports/emaildelieveryfunnel.png)
 
 Track message journey from send to conversion across time periods:
 
@@ -141,7 +141,7 @@ Track message journey from send to conversion across time periods:
 
 ## Email Delivery Log
 
-![Email Delivery Log](/img/reports/emailtable.png)
+![Email Delivery Log](/img/v1.1/reports/emailtable.png)
 
 Detailed view of individual email campaign performance:
 

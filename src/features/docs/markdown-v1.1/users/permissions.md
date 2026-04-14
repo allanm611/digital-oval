@@ -4,7 +4,7 @@
 
 The Permissions tab is where the individual access records are maintained. If roles describe broad responsibility, permissions describe the exact actions a role is allowed to perform. This tab is where those action records are created, reviewed, and updated.
 
-![Permissions Management List](/img/usermanagement-images/permissionsmanagementlist.png)
+![Permissions Management List](/img/v1.1/usermanagement-images/permissionsmanagementlist.png)
 
 ## Permissions Table
 
@@ -43,7 +43,7 @@ The status toggle is useful when a permission should remain part of the catalogu
 
 The **Create Permission** button opens the permission form, which is also reused for edit.
 
-![Create Permission Form](/img/usermanagement-images/createpermission.png)
+![Create Permission Form](/img/v1.1/usermanagement-images/createpermission.png)
 
 The form defines both the access meaning and the security expectations of the permission:
 

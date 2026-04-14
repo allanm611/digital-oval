@@ -13,13 +13,13 @@ Line of Business allows you to:
 
 Navigate to **Configuration → Line of Business** to manage all business lines.
 
-![Line of Business List](/img/configuration/lineofbusinesslist.png)
+![Line of Business List](/img/v1.0/configuration/lineofbusinesslist.png)
 
 ### Create Line of Business
 
 Click the **Create** button to add a new business line.
 
-![Create Line of Business](/img/configuration/createlineofbusiness.png)
+![Create Line of Business](/img/v1.0/configuration/createlineofbusiness.png)
 
 **Required Fields:**
 - **Business Line Name** - The name of the business unit (max 100 characters)

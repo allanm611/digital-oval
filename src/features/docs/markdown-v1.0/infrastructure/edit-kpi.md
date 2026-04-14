@@ -2,8 +2,8 @@
 
 Edit KPI opens an existing metric definition and lets you adjust configuration without creating a new record.
 
-![Revenue Metric Form Reference](/img/infrastructure/createrevenuemetricbasicinfoand%20config.png)
-![Revenue Metric Operators Reference](/img/infrastructure/createrevenuemtricoperatorssection.png)
+![Revenue Metric Form Reference](/img/v1.0/infrastructure/createrevenuemetricbasicinfoand%20config.png)
+![Revenue Metric Operators Reference](/img/v1.0/infrastructure/createrevenuemtricoperatorssection.png)
 
 ## Commonly Updated Fields
 

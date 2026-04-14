@@ -4,7 +4,7 @@
 
 Role Management is the first tab on the Access Control page and the starting point for shaping the access hierarchy. It is used to define what kinds of user roles exist in the system, how they relate to one another, and whether each role is currently active for use.
 
-![Roles Management Page](/img/usermanagement-images/rolesmanagementpage.png)
+![Roles Management Page](/img/v1.0/usermanagement-images/rolesmanagementpage.png)
 
 ## What The Tab Shows
 
@@ -55,9 +55,9 @@ Delete removes the role after confirmation. This is intended for cleanup when a 
 
 The **Create Role** button opens the main role form. The same form is reused for editing.
 
-![Create Role Form](/img/usermanagement-images/createrole.png)
+![Create Role Form](/img/v1.0/usermanagement-images/createrole.png)
 
-![Edit Role Form](/img/usermanagement-images/editrole.png)
+![Edit Role Form](/img/v1.0/usermanagement-images/editrole.png)
 
 The form captures the structural parts of a role:
 

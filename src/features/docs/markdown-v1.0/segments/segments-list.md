@@ -4,7 +4,7 @@
 
 The Segment List page displays all segments in the system with summary statistics, search capabilities, filtering options, and management tools for each segment.
 
-![Segment List Page](/img/segments-img/segmentslist.png)
+![Segment List Page](/img/v1.0/segments-img/segmentslist.png)
 
 ## Summary Statistics
 
@@ -25,7 +25,7 @@ Use the **Search** field to find segments by:
 
 ### Advanced Filters
 
-![Segment Filters](/img/segments-img/segmentslistfilter.png)
+![Segment Filters](/img/v1.0/segments-img/segmentslistfilter.png)
 
 Click the **Filters** button to access filtering options:
 
@@ -80,7 +80,7 @@ Each segment row has action buttons with the following options:
 
 **Compute** - Calculate or refresh segment membership for a segment
 
-![Compute Segments Modal](/img/segments-img/computesegmentsmodal.png)
+![Compute Segments Modal](/img/v1.0/segments-img/computesegmentsmodal.png)
 
 When you click **Compute**, a modal appears asking how you'd like to track the computation. Choose one of the following options:
 
@@ -130,7 +130,7 @@ Click **Select Segments** to enter bulk selection mode. In this mode, you can:
 
 ### Bulk Operations
 
-![Batch Refresh Segments](/img/segments-img/segmentslistbatchrefresh.png)
+![Batch Refresh Segments](/img/v1.0/segments-img/segmentslistbatchrefresh.png)
 
 When segments are selected, the following bulk actions become available:
 

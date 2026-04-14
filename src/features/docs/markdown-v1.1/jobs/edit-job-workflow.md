@@ -10,7 +10,7 @@ This route (`/dashboard/workflows/:id/edit`) reuses the Create Job Workflow page
 - workflow type
 - active state
 
-![Job workflow details (edit context)](/img/jobmanagement-images/jobworkflowdetailimage2.png)
+![Job workflow details (edit context)](/img/v1.1/jobmanagement-images/jobworkflowdetailimage2.png)
 
 ## Save Behavior
 

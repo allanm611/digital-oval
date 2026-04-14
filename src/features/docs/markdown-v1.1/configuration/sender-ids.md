@@ -4,7 +4,7 @@
 
 Sender IDs define the name or label shown to subscribers as the SMS sender. This page is where teams manage approved sender identities for branding, routing, and compliance.
 
-![Sender IDs List](/img/configuration/senderidlist.png)
+![Sender IDs List](/img/v1.1/configuration/senderidlist.png)
 
 ## Accessing Sender IDs
 
@@ -22,9 +22,9 @@ Click **Create** to open the sender ID modal.
 
 **Modal title:** Create New Sender ID
 
-![Create Sender ID](/img/configuration/createsenderid.png)
+![Create Sender ID](/img/v1.1/configuration/createsenderid.png)
 
-![Sender ID Example](/img/configuration/senderid.png)
+![Sender ID Example](/img/v1.1/configuration/senderid.png)
 
 ### Fields
 

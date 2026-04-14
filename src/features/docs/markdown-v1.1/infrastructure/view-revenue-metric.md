@@ -2,9 +2,9 @@
 
 Revenue Metric Details shows the full read view of a revenue KPI.
 
-![Revenue Metric Details](/img/infrastructure/kpisrevenuemtericsdetailspage.png)
-![Revenue Metric - Basic Information](/img/infrastructure/revenuemetricsdetailbasicinfo.png)
-![Revenue Metric - Data Sources](/img/infrastructure/revenuemetricsdetaildatasources.png)
+![Revenue Metric Details](/img/v1.1/infrastructure/kpisrevenuemtericsdetailspage.png)
+![Revenue Metric - Basic Information](/img/v1.1/infrastructure/revenuemetricsdetailbasicinfo.png)
+![Revenue Metric - Data Sources](/img/v1.1/infrastructure/revenuemetricsdetaildatasources.png)
 
 ## What You Can Confirm Here
 

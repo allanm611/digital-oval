@@ -6,7 +6,7 @@ Servers in Infrastructure represent outbound or integration endpoints the platfo
 
 Go to `Infrastructure -> Servers`.
 
-![Servers Registry Page](/img/infrastructure/serversregistrypage.png)
+![Servers Registry Page](/img/v1.1/infrastructure/serversregistrypage.png)
 
 ## Why It Matters
 

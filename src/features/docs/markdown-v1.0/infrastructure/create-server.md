@@ -4,7 +4,7 @@ Create Server adds a new server endpoint used by infrastructure-dependent flows.
 
 the system uses the same form for both **Create** and **Edit**. In Edit mode , the form is prefilled with the informaiton of the selected server.
 
-![Create Server - Basic Information](/img/infrastructure/addserverbasicinfoimage1.png)
+![Create Server - Basic Information](/img/v1.0/infrastructure/addserverbasicinfoimage1.png)
 
 ## Required Fields
 
@@ -46,9 +46,9 @@ the system uses the same form for both **Create** and **Edit**. In Edit mode , t
 - **Internal low-latency service**: keep timeout low (for example 2-3 seconds) so upstream workflows fail fast and trigger fallback logic.
 - **Unstable legacy endpoint**: enable circuit breaker with a failure threshold so repeated errors do not cascade across jobs. -->
 
-![Create Server - Connection Settings and Health Checks](/img/infrastructure/addserverconnectionsettingsandhealthchecks.png)
-![Create Server - Circuit Breaker](/img/infrastructure/addservercircuitbreaker.png)
-![Create Server - Advanced and TLS](/img/infrastructure/adserveradvancedandtls.png)
+![Create Server - Connection Settings and Health Checks](/img/v1.0/infrastructure/addserverconnectionsettingsandhealthchecks.png)
+![Create Server - Circuit Breaker](/img/v1.0/infrastructure/addservercircuitbreaker.png)
+![Create Server - Advanced and TLS](/img/v1.0/infrastructure/adserveradvancedandtls.png)
 
 ## Save Behavior
 

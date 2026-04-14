@@ -2,10 +2,10 @@
 
 Use this page to define usage-focused KPI records.
 
-![Create Usage Metric - Form Section 1](/img/infrastructure/createusagemetricimage1.png)
+![Create Usage Metric - Form Section 1](/img/v1.1/infrastructure/createusagemetricimage1.png)
 
 
-![Create Usage Metric - Form Section 2](/img/infrastructure/createusagemetricimage2.png)
+![Create Usage Metric - Form Section 2](/img/v1.1/infrastructure/createusagemetricimage2.png)
 
 ## Required Inputs
 

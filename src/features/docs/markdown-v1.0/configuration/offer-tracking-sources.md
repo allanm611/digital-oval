@@ -2,7 +2,7 @@
 
 Offer Tracking Sources define how offer performance is measured and tracked. Each tracking source captures different types of data to understand how customers interact with your offers, helping you measure effectiveness and make data-driven decisions about your promotional strategies.
 
-![Offer Tracking Sources List](/img/configuration/offertrackingsourceslist.png)
+![Offer Tracking Sources List](/img/v1.0/configuration/offertrackingsourceslist.png)
 
 ## What are Tracking Sources?
 
@@ -50,11 +50,11 @@ You can:
 
 Click the **Create** button to add a new tracking source.
 
-![Create Offer Tracking Source](/img/configuration/createoffertrackingimage1.png)
+![Create Offer Tracking Source](/img/v1.0/configuration/createoffertrackingimage1.png)
 
-![Tracking Type Dropdown](/img/configuration/createoffertrackingtypedropdown.png)
+![Tracking Type Dropdown](/img/v1.0/configuration/createoffertrackingtypedropdown.png)
 
-![Tracking Source Dropdown](/img/configuration/createoffertrackingimagedropdownsource.png)
+![Tracking Source Dropdown](/img/v1.0/configuration/createoffertrackingimagedropdownsource.png)
 
 **Required Fields:**
 

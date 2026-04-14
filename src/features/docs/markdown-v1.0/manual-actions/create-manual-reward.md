@@ -21,7 +21,7 @@ Editing a reward follows **the exact same 4-step process** as creating. The only
 
 ## Step 1: Select Customers
 
-![Step 1 - Select Customers](/img/manual-actions/step1-rewards.png)
+![Step 1 - Select Customers](/img/v1.0/manual-actions/step1-rewards.png)
 
 Define which customers will receive this reward using three fields:
 
@@ -61,7 +61,7 @@ Before proceeding to Step 2:
 
 ## Step 2: Define Reward
 
-![Step 2 - Define Reward](/img/manual-actions/step2-reward.png)
+![Step 2 - Define Reward](/img/v1.0/manual-actions/step2-reward.png)
 
 Configure the reward type, value, and notification settings.
 
@@ -106,7 +106,7 @@ Apply policies that control when and how customers are notified:
 
 ## Step 3: Preview Reward
 
-![Step 3 - Preview Reward](/img/manual-actions/step3-reward.png)
+![Step 3 - Preview Reward](/img/v1.0/manual-actions/step3-reward.png)
 
 Review all settings before applying the reward.
 
@@ -132,9 +132,9 @@ Review all settings before applying the reward.
 
 ## Step 4: Apply Reward
 
-![Apply Reward Schedule Part 1](/img/manual-actions/manualrewardsscheduleimage1.png)
+![Apply Reward Schedule Part 1](/img/v1.0/manual-actions/manualrewardsscheduleimage1.png)
 
-![Apply Reward Schedule Part 2](/img/manual-actions/manualrewardsscheduleimage2.png)
+![Apply Reward Schedule Part 2](/img/v1.0/manual-actions/manualrewardsscheduleimage2.png)
 
 Configure detailed scheduling for when your reward will be applied.
 

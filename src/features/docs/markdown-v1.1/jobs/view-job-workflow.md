@@ -9,9 +9,9 @@ Workflow Details shows one workflow record in read mode.
 - type and description context
 - created/updated details
 
-![Job workflow details](/img/jobmanagement-images/jobworkflowdetailimage.png)
+![Job workflow details](/img/v1.1/jobmanagement-images/jobworkflowdetailimage.png)
 
-![Job workflow details (extended)](/img/jobmanagement-images/jobworkflowdetailimage2.png)
+![Job workflow details (extended)](/img/v1.1/jobmanagement-images/jobworkflowdetailimage2.png)
 
 ## Actions
 

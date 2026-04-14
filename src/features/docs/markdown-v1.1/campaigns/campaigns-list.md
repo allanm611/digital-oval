@@ -12,7 +12,7 @@ At the top of the page, you'll see quick stats showing:
 - **Draft** - Campaigns in progress
 - **Pending Approval** - Campaigns waiting for approval
 
-![Campaign List Overview](/img/campaign-images/campaign-list.png)
+![Campaign List Overview](/img/v1.1/campaign-images/campaign-list.png)
 
 ## Campaign Table
 
@@ -37,9 +37,9 @@ Click the **Filters** button to filter by:
 - **Approval Status** - Pending, Approved, etc.
 - **Date Range** - Filter by start/end date
 
-![Filter Modal](/img/campaign-images/campaign-filterbyall.png)
+![Filter Modal](/img/v1.1/campaign-images/campaign-filterbyall.png)
 
-![Filter by Status](/img/campaign-images/campaign-filterbystatus.png)
+![Filter by Status](/img/v1.1/campaign-images/campaign-filterbystatus.png)
 
 ## Page-Level Actions
 
@@ -51,7 +51,7 @@ At the top of the Campaign List page, you'll find:
 
 Click the **More** button (three dots) on each campaign row to access actions. You can also click the **Eye icon** to [view campaign details](/documentation/campaigns/view-campaign-details). The available actions depend on your campaign's current status and approval status.
 
-![Action Buttons](/img/campaign-images/campaignlist-actionbuttons.png)
+![Action Buttons](/img/v1.1/campaign-images/campaignlist-actionbuttons.png)
 
 ### Action Button Visibility
 

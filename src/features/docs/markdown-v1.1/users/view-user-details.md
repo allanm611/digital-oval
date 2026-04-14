@@ -20,7 +20,7 @@ At the top of the page, the back button returns you to the previous list context
 
 The **Overview** tab is the profile summary for the selected user. It is meant to answer the practical questions first: who the user is, where they sit in the organisation, and whether the account can currently be used.
 
-![User Details Overview Tab](/img/usermanagement-images/userdetailsoverviewtab.png)
+![User Details Overview Tab](/img/v1.1/usermanagement-images/userdetailsoverviewtab.png)
 
 The content is arranged into information blocks that cover:
 
@@ -35,11 +35,11 @@ This tab is the fastest place to validate whether the account is configured corr
 
 The **Permissions** tab explains what the user can do in the system and how that access is structured.
 
-![User Details Permissions Tab](/img/usermanagement-images/userdetailspermissionstabimage1.png)
+![User Details Permissions Tab](/img/v1.1/usermanagement-images/userdetailspermissionstabimage1.png)
 
-![User Permissions Summary And Categories](/img/usermanagement-images/userdetailspermissionstabimage2.png)
+![User Permissions Summary And Categories](/img/v1.1/usermanagement-images/userdetailspermissionstabimage2.png)
 
-![User Assigned Roles](/img/usermanagement-images/userdetailspermissionstabimage3.png)
+![User Assigned Roles](/img/v1.1/usermanagement-images/userdetailspermissionstabimage3.png)
 
 When permission data is available, the page combines a summary layer with a detailed layer:
 
@@ -54,7 +54,7 @@ This tab is useful when you are validating why a user has access, preparing a ro
 
 The **Reports** tab focuses on organisational relationships. It shows who reports to the selected user and where the user sits in the wider reporting chain.
 
-![User Details Reports Tab](/img/usermanagement-images/userdetailsreportstab.png)
+![User Details Reports Tab](/img/v1.1/usermanagement-images/userdetailsreportstab.png)
 
 The page can show:
 

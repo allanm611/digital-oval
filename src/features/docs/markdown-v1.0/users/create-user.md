@@ -8,7 +8,7 @@ User creation and user editing both happen in the same modal workflow. The form 
 
 Open the user form from **User Management → Users → Add User**. The page opens a modal rather than navigating away, which makes it easy to create an account and then return straight to the list.
 
-![Add User Form](/img/usermanagement-images/adduserimage.png)
+![Add User Form](/img/v1.0/usermanagement-images/adduserimage.png)
 
 For a new user, the modal collects the account identity first and then the access assignment.
 
@@ -30,7 +30,7 @@ When the form is submitted, the password is hashed before the create request is 
 
 Editing uses the same modal, but it opens with the existing values already filled in.
 
-![Edit User Form](/img/usermanagement-images/edituserimage.png)
+![Edit User Form](/img/v1.0/usermanagement-images/edituserimage.png)
 
 The edit flow is intentionally narrower than the create flow. It is meant for maintaining account details and role placement without recreating the whole account record.
 

@@ -18,7 +18,7 @@ The Manual Communication details page shows complete information about a communi
 
 ## Details Page
 
-![View Communication Details](/img/manual-actions/detailscommunicationpage.png)
+![View Communication Details](/img/v1.1/manual-actions/detailscommunicationpage.png)
 
 ## Summary Metrics
 

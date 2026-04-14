@@ -9,9 +9,9 @@ Job Dependencies Analytics shows dependency bottlenecks and wait-related risk in
 - blocked downstream jobs
 - dependency health trends over time
 
-![Job dependency analytics stat cards](/img/jobmanagement-images/jobdepencyanalyticsstatcards.png)
+![Job dependency analytics stat cards](/img/v1.1/jobmanagement-images/jobdepencyanalyticsstatcards.png)
 
-![Job dependency analytics distribution pie charts](/img/jobmanagement-images/jobdepencyanalyticsthreepiecharts.png)
+![Job dependency analytics distribution pie charts](/img/v1.1/jobmanagement-images/jobdepencyanalyticsthreepiecharts.png)
 
 ## How To Use It
 
@@ -19,7 +19,7 @@ Job Dependencies Analytics shows dependency bottlenecks and wait-related risk in
 - tune wait windows and dependency rules
 - verify whether optional vs blocking dependencies are configured correctly
 
-![Job dependency analytics orphaned dependencies table](/img/jobmanagement-images/jobdepencyanalyticsorphaneddepenciestable.png)
+![Job dependency analytics orphaned dependencies table](/img/v1.1/jobmanagement-images/jobdepencyanalyticsorphaneddepenciestable.png)
 
 ## Related Pages
 

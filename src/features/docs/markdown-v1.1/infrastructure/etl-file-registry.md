@@ -2,7 +2,7 @@
 
 ETL File Registry is the operations page for tracking ingested files and their processing lifecycle.
 
-![ETL File Registry](/img/infrastructure/ETLlistpage.png)
+![ETL File Registry](/img/v1.1/infrastructure/ETLlistpage.png)
 
 ## What You See In The Table
 
@@ -31,8 +31,8 @@ ETL File Registry is the operations page for tracking ingested files and their p
 - **Fetch actions**: open controls for manual fetch workflows
 - **View/Download actions**: inspect or retrieve file-related data where available
 
-![ETL Upload Modal](/img/infrastructure/etluplaodmodal.png)
-![ETL Fetch Controls Dropdown](/img/infrastructure/etllistpagefetchcontrolsdropdown.png)
+![ETL Upload Modal](/img/v1.1/infrastructure/etluplaodmodal.png)
+![ETL Fetch Controls Dropdown](/img/v1.1/infrastructure/etllistpagefetchcontrolsdropdown.png)
 
 ## Fetch Controls (From This Page)
 

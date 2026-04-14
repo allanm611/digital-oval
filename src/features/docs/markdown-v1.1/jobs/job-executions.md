@@ -13,7 +13,7 @@ Go to `Jobs -> Job Executions`.
 - failure/timeout tracking
 - trace and correlation-based troubleshooting
 
-![Job executions list page](/img/jobmanagement-images/jobexecutionslistpage.png)
+![Job executions list page](/img/v1.1/jobmanagement-images/jobexecutionslistpage.png)
 
 ## Core Field Meaning
 
@@ -23,7 +23,7 @@ Go to `Jobs -> Job Executions`.
 - **Trace ID / Correlation ID**: identifiers for end-to-end debugging.
 - **SLA Breached**: flag for delayed or out-of-threshold execution.
 
-![Job executions details execution and system info](/img/jobmanagement-images/jobexecutionsdetailexecutionandsysteinfoimage.png)
+![Job executions details execution and system info](/img/v1.1/jobmanagement-images/jobexecutionsdetailexecutionandsysteinfoimage.png)
 
 ## Related Pages
 

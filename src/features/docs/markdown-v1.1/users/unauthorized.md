@@ -4,7 +4,7 @@
 
 The Unauthorized Access page appears when a logged-in user opens a route or feature that is blocked by permission rules. It is a guard page, meaning the system has identified the request but the current account does not have the required access scope for that operation.
 
-![Unauthorized Access](/img/usermanagement-images/unauthorizedaccessimage.png)
+![Unauthorized Access](/img/v1.1/usermanagement-images/unauthorizedaccessimage.png)
 
 ## What The Message Means
 

@@ -2,7 +2,7 @@
 
 Revenue Metrics List shows KPI definitions focused on revenue performance.
 
-![Revenue Metrics List](/img/infrastructure/revenuemetricslistpage.png)
+![Revenue Metrics List](/img/v1.0/infrastructure/revenuemetricslistpage.png)
 
 ## What This Page Is For
 

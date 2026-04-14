@@ -2,8 +2,8 @@
 
 KPI creation is done through category-specific forms (Revenue Metrics, Usage Metrics, and System Events).
 
-![Create Revenue Metric - Basic Info and Config](/img/infrastructure/createrevenuemetricbasicinfoand%20config.png)
-![Create Revenue Metric - Operators Section](/img/infrastructure/createrevenuemtricoperatorssection.png)
+![Create Revenue Metric - Basic Info and Config](/img/v1.1/infrastructure/createrevenuemetricbasicinfoand%20config.png)
+![Create Revenue Metric - Operators Section](/img/v1.1/infrastructure/createrevenuemtricoperatorssection.png)
 
 ## Required Fields
 

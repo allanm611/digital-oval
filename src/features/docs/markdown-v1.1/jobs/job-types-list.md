@@ -9,7 +9,7 @@ Job Types List displays all configured job type records.
 - **Description**
 - **Created/Updated context**
 
-![Job types list page](/img/jobmanagement-images/jobtypeslistimage.png)
+![Job types list page](/img/v1.1/jobmanagement-images/jobtypeslistimage.png)
 
 ## Actions
 

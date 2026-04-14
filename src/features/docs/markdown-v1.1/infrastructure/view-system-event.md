@@ -2,8 +2,8 @@
 
 System Event Details provides a read view of one event KPI definition.
 
-![System Events - Basic Information](/img/infrastructure/systemeventsdetailbasicinfo.png)
-![System Events - Source Info and Operators](/img/infrastructure/systemeventsdetailsourceinfoandopearators.png)
+![System Events - Basic Information](/img/v1.1/infrastructure/systemeventsdetailbasicinfo.png)
+![System Events - Source Info and Operators](/img/v1.1/infrastructure/systemeventsdetailsourceinfoandopearators.png)
 
 ## What You Can Confirm Here
 

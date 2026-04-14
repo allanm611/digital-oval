@@ -10,9 +10,9 @@ The Create Offer workflow guides you through a 6-step process to set up a new pr
 
 Configure the essential details of your offer.
 
-![Step 1 - Basic Info](/img/offer-images/step1createoffer.png)
+![Step 1 - Basic Info](/img/v1.0/offer-images/step1createoffer.png)
 
-![Step 1 - Extended](/img/offer-images/step1createoffer(2).png)
+![Step 1 - Extended](/img/v1.0/offer-images/step1createoffer(2).png)
 
 ### Fields
 
@@ -45,9 +45,9 @@ Configure the essential details of your offer.
 
 Select products to include in this offer.
 
-![Step 2 - Products](/img/offer-images/step2createoffer.png)
+![Step 2 - Products](/img/v1.0/offer-images/step2createoffer.png)
 
-![Step 2 - Extended](/img/offer-images/step2createoffer(2).png)
+![Step 2 - Extended](/img/v1.0/offer-images/step2createoffer(2).png)
 
 Select one or more products that this offer applies to. These products will be available when the offer is used in campaigns.
 
@@ -56,11 +56,11 @@ Select one or more products that this offer applies to. These products will be a
 
 Add marketing content and messaging for the offer.
 
-![Step 3 - Creative](/img/offer-images/step3createoffer.png)
+![Step 3 - Creative](/img/v1.0/offer-images/step3createoffer.png)
 
-![Step 3 - Extended](/img/offer-images/step3createoffer(2).png)
+![Step 3 - Extended](/img/v1.0/offer-images/step3createoffer(2).png)
 
-![Step 3 - Preview Creative](/img/offer-images/step3createofferpreviewcreative.png)
+![Step 3 - Preview Creative](/img/v1.0/offer-images/step3createofferpreviewcreative.png)
 
 Define how the offer will be presented to customers across different channels:
 
@@ -79,9 +79,9 @@ Define how the offer will be presented to customers across different channels:
 
 Configure performance monitoring and tracking for the offer.
 
-![Step 4 - Tracking](/img/offer-images/step4createoffer-trackingimage1.png)
+![Step 4 - Tracking](/img/v1.0/offer-images/step4createoffer-trackingimage1.png)
 
-![Step 4 - Tracking Source](/img/offer-images/step4createoffertrackingsource%20image2.png)
+![Step 4 - Tracking Source](/img/v1.0/offer-images/step4createoffertrackingsource%20image2.png)
 
 Set up how the offer's performance will be tracked:
 - Tracking sources for attribution
@@ -94,9 +94,9 @@ Set up how the offer's performance will be tracked:
 
 Define reward configuration for the offer.
 
-![Step 5 - Rewards](/img/offer-images/step5createofferrewardsstepimage1.png)
+![Step 5 - Rewards](/img/v1.0/offer-images/step5createofferrewardsstepimage1.png)
 
-![Step 5 - Rewards Extended](/img/offer-images/step5createofferrewardsstepimage2.png)
+![Step 5 - Rewards Extended](/img/v1.0/offer-images/step5createofferrewardsstepimage2.png)
 
 Configure what reward or incentive is provided:
 - Reward type
@@ -109,9 +109,9 @@ Configure what reward or incentive is provided:
 
 Review all offer settings before creating.
 
-![Step 6 - Preview](/img/offer-images/previewimage1createoffer.png)
+![Step 6 - Preview](/img/v1.0/offer-images/previewimage1createoffer.png)
 
-![Step 6 - Review](/img/offer-images/previewimage2createoffer.png)
+![Step 6 - Review](/img/v1.0/offer-images/previewimage2createoffer.png)
 
 Review all the information you've entered:
 - Offer name, code, and type

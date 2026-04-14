@@ -6,7 +6,7 @@ Connection Profiles define how the platform connects to source systems and how t
 
 Go to `Infrastructure -> Connection Profiles`.
 
-![Connection Profiles List Page](/img/infrastructure/connectionprofileslistpage.png)
+![Connection Profiles List Page](/img/v1.0/infrastructure/connectionprofileslistpage.png)
 
 ## Uses
 
@@ -46,9 +46,9 @@ A profile combines technical connectivity with governance controls. It is where 
 
 ## Quick Visual Tour
 
-![Connection Profiles Analytics Overview](/img/infrastructure/connectionprofileslistpage.png)
-![Connection Profiles Analytics Cards](/img/infrastructure/connectionprofilesanalytiscsstatcards.png)
-![Connection Profiles Analytics Charts](/img/infrastructure/connectionprofileanalyticspiecharts.png)
+![Connection Profiles Analytics Overview](/img/v1.0/infrastructure/connectionprofileslistpage.png)
+![Connection Profiles Analytics Cards](/img/v1.0/infrastructure/connectionprofilesanalytiscsstatcards.png)
+![Connection Profiles Analytics Charts](/img/v1.0/infrastructure/connectionprofileanalyticspiecharts.png)
 
 ## Related Pages
 

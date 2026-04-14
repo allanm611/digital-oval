@@ -4,7 +4,7 @@
 
 The QuickList List page displays all QuickLists in the system with summary statistics, search capabilities, filtering options, and management tools for each QuickList.
 
-![QuickList List Page](/img/segments-img/quicklistslists.png)
+![QuickList List Page](/img/v1.1/segments-img/quicklistslists.png)
 
 ## Summary Statistics
 

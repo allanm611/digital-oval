@@ -4,7 +4,7 @@
 
 The Offer Details page displays complete information about a specific offer including its configuration, approval status, and available management actions.
 
-![Offer Details Overview](/img/offer-images/offerdetailsimage1%20details.png)
+![Offer Details Overview](/img/v1.0/offer-images/offerdetailsimage1%20details.png)
 
 
 ## Offer Information
@@ -24,14 +24,14 @@ The top of the page displays:
 - **Catalog** - Assigned catalog/category
 - **Max Usage Per Customer** - Redemption limit per customer
 
-![Offer Information](/img/offer-images/offerdetailsofferinformation.png)
+![Offer Information](/img/v1.0/offer-images/offerdetailsofferinformation.png)
 
 
 ## Linked Products
 
 Shows all products included in this offer with management options.
 
-![Linked Products](/img/offer-images/offerdetailslinkedproducts.png)
+![Linked Products](/img/v1.0/offer-images/offerdetailslinkedproducts.png)
 
 ### Product Information
 
@@ -63,7 +63,7 @@ Each linked product displays:
 
 Displays the marketing content for this offer across different channels and locales.
 
-![Offer Creatives](/img/offer-images/offerdetailsoffercreatives.png)
+![Offer Creatives](/img/v1.0/offer-images/offerdetailsoffercreatives.png)
 
 ### Creative Information
 
@@ -86,7 +86,7 @@ Each creative displays:
   - **Preview** - See how the creative will appear to customers
   - **Save Creative** - Save the new creative to the offer
 
-![Add Creative Modal](/img/offer-images/offercreativesaddmodal.png)
+![Add Creative Modal](/img/v1.0/offer-images/offercreativesaddmodal.png)
 
 **Edit Creative**
 - Click the **Edit** button (pencil icon) on any creative
@@ -143,7 +143,7 @@ Action buttons at the top display based on the offer's status and your permissio
 
 Shows all campaigns currently using this offer.
 
-![Used in Campaigns](/img/offer-images/offerdetailsusedincampaigns.png)
+![Used in Campaigns](/img/v1.0/offer-images/offerdetailsusedincampaigns.png)
 
 
 ## Offer Status States

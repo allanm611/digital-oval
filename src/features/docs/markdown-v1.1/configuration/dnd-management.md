@@ -2,7 +2,7 @@
 
 DND (Do Not Disturb) Management allows you to manage customer opt-outs across multiple communication channels. You can add customers to DND lists for specific message types to exclude them from receiving those messages.
 
-![DND Management Channels](/img/configuration/dndmanagementpage.png)
+![DND Management Channels](/img/v1.1/configuration/dndmanagementpage.png)
 
 ## What is DND Management?
 
@@ -57,21 +57,21 @@ You can:
 - **Filter by Type** - Filter by DND message type (Promotional, Transactional, etc.)
 - **Filter by Status** - Show active, removed, or all DND entries
 
-![SMS DND List](/img/configuration/smsdndmanagentlist.png)
+![SMS DND List](/img/v1.1/configuration/smsdndmanagentlist.png)
 
-![Email DND List](/img/configuration/emaildndmanagenetlist.png)
+![Email DND List](/img/v1.1/configuration/emaildndmanagenetlist.png)
 
-![USSD DND List](/img/configuration/dndlistpageussd.png)
+![USSD DND List](/img/v1.1/configuration/dndlistpageussd.png)
 
-![App Notification DND List](/img/configuration/dndlistpageappnotficaiton.png)
+![App Notification DND List](/img/v1.1/configuration/dndlistpageappnotficaiton.png)
 
 ### Adding Customer to DND
 
 Click the **Add Customer** button to add a customer to DND.
 
-![Add Member To SMS DND](/img/configuration/addmembertosmsdndimage1.png)
+![Add Member To SMS DND](/img/v1.1/configuration/addmembertosmsdndimage1.png)
 
-![Add Member To SMS DND Modal](/img/configuration/addmemberstosmsdndmodal.png)
+![Add Member To SMS DND Modal](/img/v1.1/configuration/addmemberstosmsdndmodal.png)
 
 **Required Fields:**
 

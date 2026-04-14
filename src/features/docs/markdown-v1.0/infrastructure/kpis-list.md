@@ -2,7 +2,7 @@
 
 All KPIs List is the consolidated page for browsing configured KPI definitions across categories.
 
-![KPI List Page](/img/infrastructure/allkpislistimage.png)
+![KPI List Page](/img/v1.0/infrastructure/allkpislistimage.png)
 
 ## What You See
 
@@ -22,21 +22,21 @@ The page surfaces quick counts such as:
 - usage metric count
 - system event count
 
-![KPI Cards Section](/img/infrastructure/allkpisimage.png)
+![KPI Cards Section](/img/v1.0/infrastructure/allkpisimage.png)
 
 ## Search And Filter
 
 - **Search** helps find KPIs by name or description.
 - **Category filters** narrow the list to relevant metric groups.
 
-![Revenue Metrics Table](/img/infrastructure/revenuemetricslistpage.png)
+![Revenue Metrics Table](/img/v1.0/infrastructure/revenuemetricslistpage.png)
 
 
-![Usage Metrics Table](/img/infrastructure/usagemetricslistpage.png)
+![Usage Metrics Table](/img/v1.0/infrastructure/usagemetricslistpage.png)
 
 
 
-![System Events Table](/img/infrastructure/systemeventsallpage.png)
+![System Events Table](/img/v1.0/infrastructure/systemeventsallpage.png)
 
 <!-- ## Why This Page Matters
 

@@ -4,7 +4,7 @@
 
 Product Types are categories used to classify and organize different kinds of products in the system. Each product must be assigned to a type to help organize, filter, and track products by category. the system supports seven distinct product types designed to accommodate different service offerings and business models.
 
-![Product Types](/img/product-images/productypes.png)
+![Product Types](/img/v1.0/product-images/productypes.png)
 
 ## Available Product Types
 

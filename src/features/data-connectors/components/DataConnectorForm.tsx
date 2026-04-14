@@ -1089,7 +1089,7 @@ const TCPConfig: React.FC<ConfigComponentProps> = ({
           />
           <span className="text-sm text-black">
             Direct Buffers
-          </label>
+          </span>
         </div>
       </div>
     </div>
