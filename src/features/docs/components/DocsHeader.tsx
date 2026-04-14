@@ -19,7 +19,7 @@ export function DocsHeader() {
   const versionDropdownRef = useRef<HTMLDivElement>(null);
 
   const versions = [
-    { version: 'v1.1' },
+    { version: 'v1.1', isLatest: true },
     { version: 'v1.0' },
   ];
 
@@ -78,7 +78,10 @@ export function DocsHeader() {
                       }}
                       className={`${styles.versionItem} ${activeVersion === versionInfo.version ? styles.versionItemActive : ''}`}
                     >
-                      <div className={styles.versionItemTitle}>{versionInfo.version}</div>
+                      <div className={styles.versionItemTitle}>
+                      {versionInfo.version}
+                      {versionInfo.isLatest && <span className={styles.latestBadge}>Latest</span>}
+                    </div>
                     </button>
                   ))}
                 </div>
