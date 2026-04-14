@@ -284,7 +284,7 @@ export default function CampaignFlowsStep({
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {selectedSegments.flatMap((segment) => {
+                {selectedSegments.flatMap((segment, segmentIndex) => {
                   const offers = getOffersForSegment(segment.id);
                   const flowState = segmentFlows[segment.id] || {
                     offers: [],
@@ -295,7 +295,7 @@ export default function CampaignFlowsStep({
                     // Show one empty row for segment with no offers
                     return (
                       <tr
-                        key={`${segment.id}-empty`}
+                        key={`${segment.id}-empty-${segmentIndex}`}
                         className="hover:bg-gray-50 transition-colors"
                       >
                         <td className="px-4 py-3">
@@ -378,9 +378,9 @@ export default function CampaignFlowsStep({
                   }
 
                   // Show one row per offer
-                  return offers.map((offer) => (
+                  return offers.map((offer, offerIndex) => (
                     <tr
-                      key={`${segment.id}-${offer.id}`}
+                      key={`${segment.id}-${offer.id}-${offerIndex}`}
                       className="hover:bg-gray-50 transition-colors"
                     >
                       <td className="px-4 py-3">

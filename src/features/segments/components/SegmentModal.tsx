@@ -1260,19 +1260,20 @@ export default function SegmentModal({
                         }
                         options={
                           segmentTypes && segmentTypes.length > 0
-                            ? segmentTypes.map((type) => {
-                                return {
-                                  value: String(type.id),
-                                  label: type.name || "Unknown Type",
-                                };
-                              })
+                            ? segmentTypes
+                                .filter((type) => type.is_active !== false)
+                                .map((type) => {
+                                  return {
+                                    value: String(type.id),
+                                    label: type.name || "Unknown Type",
+                                  };
+                                })
                             : []
                         }
                         placeholder={
                           loadingTypes ? "Loading..." : "Select segment type"
                         }
                         disabled={loadingTypes || !segmentTypes || segmentTypes.length === 0}
-                        searchable={true}
                       />
                     </div>
                   </div>

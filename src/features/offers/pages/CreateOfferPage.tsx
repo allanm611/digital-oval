@@ -184,6 +184,8 @@ interface StepProps {
   categoriesLoading?: boolean;
   onSaveDraft?: () => void;
   onCancel?: () => void;
+  offerTypes?: OfferTypeEnum[];
+  offerTypesLoading?: boolean;
 }
 
 // Step definitions for offer creation
@@ -233,6 +235,8 @@ function BasicInfoStep({
   clearValidationErrors,
   offerCategories: _offerCategories, // eslint-disable-line @typescript-eslint/no-unused-vars
   categoriesLoading,
+  offerTypes,
+  offerTypesLoading,
 }: Omit<
   StepProps,
   | "currentStep"
@@ -364,10 +368,12 @@ function BasicInfoStep({
             Offer Type *
           </label>
           <HeadlessSelect
-            options={offerTypes.map((type) => ({
-              value: String(type.id),
-              label: type.name,
-            }))}
+            options={(offerTypes || [])
+              .filter((type) => type.is_active !== false)
+              .map((type) => ({
+                value: String(type.id),
+                label: type.name,
+              }))}
             disabled={offerTypesLoading}
             value={
               formData.offer_type_id
@@ -701,6 +707,7 @@ function ReviewStep({
   offerCategories,
   validationErrors,
   selectedProducts = [],
+  offerTypes,
 }: Omit<
   StepProps,
   | "currentStep"
@@ -716,6 +723,7 @@ function ReviewStep({
   | "categoriesLoading"
   | "onSaveDraft"
   | "onCancel"
+  | "offerTypesLoading"
 > & {
   selectedProducts?: LinkedProduct[];
 }) {
@@ -2280,6 +2288,8 @@ export default function CreateOfferPage({
       categoriesLoading,
       onSaveDraft: handleSaveDraft,
       onCancel: handleCancel,
+      offerTypes,
+      offerTypesLoading,
     }),
     [
       currentStep,
@@ -2301,6 +2311,8 @@ export default function CreateOfferPage({
       categoriesLoading,
       handleSaveDraft,
       handleCancel,
+      offerTypes,
+      offerTypesLoading,
     ],
   );
 
