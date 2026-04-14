@@ -567,14 +567,18 @@ export default function DefineRewardStep({
             ) : (
               <div className="space-y-2">
                 {availableSeedContacts.map((contact) => (
-                  <label
+                  <div
                     key={contact}
-                    className="flex items-center gap-2 text-sm text-gray-700"
+                    className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer"
+                    onClick={() => toggleSeedContact(contact)}
                   >
-                    <Checkbox checked={selectedSeedContacts.has(contact)}
-                      onChange={() => toggleSeedContact(contact)} />
+                    <Checkbox
+                      id={`seed-contact-${contact}`}
+                      checked={selectedSeedContacts.has(contact)}
+                      onChange={() => toggleSeedContact(contact)}
+                    />
                     <span>{contact}</span>
-                  </label>
+                  </div>
                 ))}
               </div>
             )}

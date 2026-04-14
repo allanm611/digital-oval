@@ -1093,18 +1093,21 @@ export default function DefineCommunicationStep({
                 </p>
                 <div className="space-y-2 max-h-64 overflow-y-auto mb-4">
                   {getAvailableTestContacts().map((contact, index) => (
-                    <label
+                    <div
                       key={index}
                       className="flex items-center gap-2 p-2 rounded-md cursor-pointer hover:bg-gray-50 transition-colors"
+                      onClick={() => toggleTestContact(contact)}
                     >
-                      <Checkbox checked={selectedTestContacts.has(contact)}
+                      <Checkbox
+                        id={`test-contact-${index}`}
+                        checked={selectedTestContacts.has(contact)}
                         onChange={() => toggleTestContact(contact)}
                         disabled={isTesting}
                         className="w-4 h-4 rounded cursor-pointer" />
                       <span className={`text-sm ${tw.textPrimary} flex-1 truncate`}>
                         {contact}
                       </span>
-                    </label>
+                    </div>
                   ))}
                 </div>
 

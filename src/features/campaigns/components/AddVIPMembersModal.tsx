@@ -394,15 +394,18 @@ export default function AddVIPMembersModal({
                 <thead className="bg-gray-50 sticky top-0 z-10">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-12">
-                      <Checkbox
-                        checked={
-                          selectedMembersForCurrentList.length ===
-                            filteredCustomers.length &&
-                          filteredCustomers.length > 0
-                        }
-                        onChange={handleSelectAll}
-                        disabled={isLoading}
-                      />
+                      <div className="flex items-center gap-2 cursor-pointer" onClick={handleSelectAll}>
+                        <Checkbox
+                          id="select-all-members"
+                          checked={
+                            selectedMembersForCurrentList.length ===
+                              filteredCustomers.length &&
+                            filteredCustomers.length > 0
+                          }
+                          onChange={handleSelectAll}
+                          disabled={isLoading}
+                        />
+                      </div>
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                       Name
@@ -437,13 +440,19 @@ export default function AddVIPMembersModal({
                       >
                         <td
                           className="px-4 py-4 whitespace-nowrap"
-                          onClick={(e) => e.stopPropagation()}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleCustomer(customer);
+                          }}
                         >
-                          <Checkbox
-                            checked={isSelected}
-                            onChange={() => handleToggleCustomer(customer)}
-                            disabled={isLoading}
-                          />
+                          <div className="flex items-center gap-2 cursor-pointer">
+                            <Checkbox
+                              id={`member-${customer.customerId}`}
+                              checked={isSelected}
+                              onChange={() => handleToggleCustomer(customer)}
+                              disabled={isLoading}
+                            />
+                          </div>
                         </td>
                         <td className="px-4 py-4">
                           <div className="text-sm font-medium text-black">

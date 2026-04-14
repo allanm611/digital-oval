@@ -993,17 +993,19 @@ export default function CreateScheduledJobPage() {
                             >
                               {({ selected }) => (
                                 <>
-                                  <label className="flex items-center gap-2 cursor-pointer">
-                                    <Checkbox checked={selected}
+                                  <div className="flex items-center gap-2 cursor-pointer">
+                                    <Checkbox
+                                      id={`segment-${segment.id}`}
+                                      checked={selected}
                                       onChange={() => {}}
-                                      className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
-                                      onClick={(e) => e.stopPropagation()} />
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
                                     <span
                                       className={`${selected ? "font-semibold" : "font-normal"} block truncate`}
                                     >
                                       {segment.name}
                                     </span>
-                                  </label>
+                                  </div>
                                   {selected ? (
                                     <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-[#3b8169]">
                                       <CheckIcon className="h-4 w-4" />
@@ -1052,27 +1054,36 @@ export default function CreateScheduledJobPage() {
                               </span>
                               <div className="flex gap-4">
                                 {["EMAIL", "SMS", "PUSH"].map((channel) => (
-                                  <label
+                                  <div
                                     key={channel}
                                     className="flex items-center gap-2 cursor-pointer"
+                                    onClick={() => {
+                                      const newChannels = channels.includes(channel)
+                                        ? channels.filter((ch) => ch !== channel)
+                                        : [...channels, channel];
+                                      setSegmentChannelCodes((prev) => ({
+                                        ...prev,
+                                        [segmentId]: newChannels,
+                                      }));
+                                    }}
                                   >
-                                    <Checkbox checked={channels.includes(channel)}
-                                      onChange={(e) => {
-                                        const newChannels = e.target.checked
-                                          ? [...channels, channel]
-                                          : channels.filter(
-                                              (ch) => ch !== channel,
-                                            );
+                                    <Checkbox
+                                      id={`channel-${channel}`}
+                                      checked={channels.includes(channel)}
+                                      onChange={() => {
+                                        const newChannels = channels.includes(channel)
+                                          ? channels.filter((ch) => ch !== channel)
+                                          : [...channels, channel];
                                         setSegmentChannelCodes((prev) => ({
                                           ...prev,
                                           [segmentId]: newChannels,
                                         }));
                                       }}
-                                      className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
+                                    />
                                     <span className="text-sm text-gray-700">
                                       {channel}
                                     </span>
-                                  </label>
+                                  </div>
                                 ))}
                               </div>
                             </div>

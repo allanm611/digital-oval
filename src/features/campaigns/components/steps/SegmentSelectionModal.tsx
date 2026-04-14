@@ -268,22 +268,32 @@ export default function SegmentSelectionModal({
                 <thead style={{ backgroundColor: color.surface.cards }}>
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
-                      <Checkbox checked={
-                          tempSelectedSegments.length ===
-                            filteredSegments.length &&
-                          filteredSegments.length > 0
-                        }
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setTempSelectedSegments(filteredSegments);
-                          } else {
+                      <div
+                        className="flex items-center gap-2 cursor-pointer"
+                        onClick={() => {
+                          if (tempSelectedSegments.length === filteredSegments.length && filteredSegments.length > 0) {
                             setTempSelectedSegments([]);
+                          } else {
+                            setTempSelectedSegments(filteredSegments);
                           }
                         }}
-                        className="w-4 h-4 border-gray-400 rounded"
-                        style={{
-                          accentColor: "#111827",
-                        }} />
+                      >
+                        <Checkbox
+                          id="select-all-segments"
+                          checked={
+                            tempSelectedSegments.length ===
+                              filteredSegments.length &&
+                            filteredSegments.length > 0
+                          }
+                          onChange={() => {
+                            if (tempSelectedSegments.length === filteredSegments.length && filteredSegments.length > 0) {
+                              setTempSelectedSegments([]);
+                            } else {
+                              setTempSelectedSegments(filteredSegments);
+                            }
+                          }}
+                        />
+                      </div>
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Segment Name
@@ -312,13 +322,19 @@ export default function SegmentSelectionModal({
                         className="cursor-pointer transition-colors hover:bg-gray-50"
                       >
                         <td className="px-4 py-3">
-                          <Checkbox checked={isSelected}
-                            onChange={() => handleSegmentToggle(segment)}
-                            onClick={(e) => e.stopPropagation()}
-                            className="w-4 h-4 border-gray-400 rounded"
-                            style={{
-                              accentColor: "#111827",
-                            }} />
+                          <div
+                            className="flex items-center gap-2 cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSegmentToggle(segment);
+                            }}
+                          >
+                            <Checkbox
+                              id={`segment-${segment.id}`}
+                              checked={isSelected}
+                              onChange={() => handleSegmentToggle(segment)}
+                            />
+                          </div>
                         </td>
                         <td className="px-4 py-3">
                           <div className="text-sm font-medium text-black truncate">

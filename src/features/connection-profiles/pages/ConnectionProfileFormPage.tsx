@@ -713,13 +713,19 @@ export default function ConnectionProfileFormPage({
               />
             </div>
             <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2">
+              <div className="flex items-center gap-2 cursor-pointer" onClick={() =>
+                setFormData({
+                  ...formData,
+                  contains_pii: !formData.contains_pii,
+                })
+              }>
                 <Checkbox
+                  id="contains-pii"
                   checked={formData.contains_pii}
-                  onChange={(e) =>
+                  onChange={() =>
                     setFormData({
                       ...formData,
-                      contains_pii: e.target.checked,
+                      contains_pii: !formData.contains_pii,
                     })
                   }
                   className="w-4 h-4"
@@ -727,14 +733,20 @@ export default function ConnectionProfileFormPage({
                 <span className="text-sm font-medium text-gray-700">
                   Contains PII
                 </span>
-              </label>
-              <label className="flex items-center gap-2">
+              </div>
+              <div className="flex items-center gap-2 cursor-pointer" onClick={() =>
+                setFormData({
+                  ...formData,
+                  gdpr_applicable: !formData.gdpr_applicable,
+                })
+              }>
                 <Checkbox
+                  id="gdpr-applicable"
                   checked={formData.gdpr_applicable}
-                  onChange={(e) =>
+                  onChange={() =>
                     setFormData({
                       ...formData,
-                      gdpr_applicable: e.target.checked,
+                      gdpr_applicable: !formData.gdpr_applicable,
                     })
                   }
                   className="w-4 h-4"
@@ -846,19 +858,25 @@ export default function ConnectionProfileFormPage({
                 Monitor connection health with periodic checks.
               </p>
             </div>
-            <label className="flex items-center gap-2">
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() =>
+              setFormData({
+                ...formData,
+                health_check_enabled: !(formData.health_check_enabled || false),
+              })
+            }>
               <Checkbox
+                id="health-check-enabled"
                 checked={formData.health_check_enabled || false}
-                onChange={(e) =>
+                onChange={() =>
                   setFormData({
                     ...formData,
-                    health_check_enabled: e.target.checked,
+                    health_check_enabled: !(formData.health_check_enabled || false),
                   })
                 }
                 className="w-4 h-4"
               />
               <span className="text-sm font-medium text-gray-700">Enabled</span>
-            </label>
+            </div>
           </div>
 
           {formData.health_check_enabled && (

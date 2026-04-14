@@ -81,18 +81,20 @@ export default function SeedListConfigModal({
 
         <div className="p-6 space-y-3 max-h-96 overflow-y-auto">
           {AVAILABLE_SEED_LISTS.map((list) => (
-            <label
+            <div
               key={list.id}
               className="flex items-center gap-3 cursor-pointer p-3 rounded hover:bg-gray-50"
+              onClick={() => handleToggle(list.id)}
             >
-              <Checkbox checked={selected.includes(list.id)}
+              <Checkbox
+                id={`seed-list-${list.id}`}
+                checked={selected.includes(list.id)}
                 onChange={() => handleToggle(list.id)}
-                className="w-4 h-4"
-                style={{ accentColor: color.primary.accent }} />
+              />
               <span className="text-sm font-medium text-gray-900">
                 {list.name}
               </span>
-            </label>
+            </div>
           ))}
         </div>
 

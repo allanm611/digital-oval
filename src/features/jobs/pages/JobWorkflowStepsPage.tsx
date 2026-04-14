@@ -1281,12 +1281,16 @@ export default function JobWorkflowStepsPage() {
                         borderTopLeftRadius: "0.375rem",
                       }}
                     >
-                      <Checkbox checked={
-                          filteredSteps.length > 0 &&
-                          selectedSteps.size === filteredSteps.length
-                        }
-                        onChange={handleSelectAll}
-                        className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
+                      <div className="flex items-center gap-2 cursor-pointer" onClick={handleSelectAll}>
+                        <Checkbox
+                          id="select-all-steps"
+                          checked={
+                            filteredSteps.length > 0 &&
+                            selectedSteps.size === filteredSteps.length
+                          }
+                          onChange={handleSelectAll}
+                        />
+                      </div>
                     </th>
                   )}
                   <th
@@ -1362,9 +1366,16 @@ export default function JobWorkflowStepsPage() {
                           borderBottomLeftRadius: "0.375rem",
                         }}
                       >
-                        <Checkbox checked={selectedSteps.has(step.id)}
-                          onChange={() => handleSelectStep(step.id)}
-                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
+                        <div
+                          className="flex items-center gap-2 cursor-pointer"
+                          onClick={() => handleSelectStep(step.id)}
+                        >
+                          <Checkbox
+                            id={`step-${step.id}`}
+                            checked={selectedSteps.has(step.id)}
+                            onChange={() => handleSelectStep(step.id)}
+                          />
+                        </div>
                       </td>
                     )}
                     <td
@@ -1746,42 +1757,81 @@ export default function JobWorkflowStepsPage() {
                       <p className="text-sm font-medium text-gray-700">
                         Special Filters
                       </p>
-                      <label className="flex items-center gap-2 text-sm text-gray-700">
-                        <Checkbox checked={showValidationSteps}
-                          onChange={(e) => {
-                            setShowValidationSteps(e.target.checked);
-                            if (e.target.checked) {
+                      <div
+                        className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer"
+                        onClick={() => {
+                          const newValue = !showValidationSteps;
+                          setShowValidationSteps(newValue);
+                          if (newValue) {
+                            setShowRetrySteps(false);
+                            setShowOrphanedSteps(false);
+                          }
+                        }}
+                      >
+                        <Checkbox
+                          id="validation-steps-filter"
+                          checked={showValidationSteps}
+                          onChange={() => {
+                            const newValue = !showValidationSteps;
+                            setShowValidationSteps(newValue);
+                            if (newValue) {
                               setShowRetrySteps(false);
                               setShowOrphanedSteps(false);
                             }
                           }}
-                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
-                        Validation Steps
-                      </label>
-                      <label className="flex items-center gap-2 text-sm text-gray-700">
-                        <Checkbox checked={showRetrySteps}
-                          onChange={(e) => {
-                            setShowRetrySteps(e.target.checked);
-                            if (e.target.checked) {
+                        />
+                        <span>Validation Steps</span>
+                      </div>
+                      <div
+                        className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer"
+                        onClick={() => {
+                          const newValue = !showRetrySteps;
+                          setShowRetrySteps(newValue);
+                          if (newValue) {
+                            setShowValidationSteps(false);
+                            setShowOrphanedSteps(false);
+                          }
+                        }}
+                      >
+                        <Checkbox
+                          id="retry-steps-filter"
+                          checked={showRetrySteps}
+                          onChange={() => {
+                            const newValue = !showRetrySteps;
+                            setShowRetrySteps(newValue);
+                            if (newValue) {
                               setShowValidationSteps(false);
                               setShowOrphanedSteps(false);
                             }
                           }}
-                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
-                        Retry Steps
-                      </label>
-                      <label className="flex items-center gap-2 text-sm text-gray-700">
-                        <Checkbox checked={showOrphanedSteps}
-                          onChange={(e) => {
-                            setShowOrphanedSteps(e.target.checked);
-                            if (e.target.checked) {
+                        />
+                        <span>Retry Steps</span>
+                      </div>
+                      <div
+                        className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer"
+                        onClick={() => {
+                          const newValue = !showOrphanedSteps;
+                          setShowOrphanedSteps(newValue);
+                          if (newValue) {
+                            setShowValidationSteps(false);
+                            setShowRetrySteps(false);
+                          }
+                        }}
+                      >
+                        <Checkbox
+                          id="orphaned-steps-filter"
+                          checked={showOrphanedSteps}
+                          onChange={() => {
+                            const newValue = !showOrphanedSteps;
+                            setShowOrphanedSteps(newValue);
+                            if (newValue) {
                               setShowValidationSteps(false);
                               setShowRetrySteps(false);
                             }
                           }}
-                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
-                        Orphaned Steps
-                      </label>
+                        />
+                        <span>Orphaned Steps</span>
+                      </div>
                     </div>
 
                     {/* Failure Action Filter */}

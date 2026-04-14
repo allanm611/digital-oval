@@ -375,13 +375,15 @@ export default function RevenueMetricFormPage({ mode }: RevenueMetricFormPagePro
           <p className="text-sm text-gray-600 mb-4">Select all operators that apply to this metric</p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {OPERATORS.map((op) => (
-              <label key={op.value} className="flex items-center gap-2 cursor-pointer">
-                <Checkbox checked={formData.operators.includes(op.value)}
-                  onChange={(e) => handleOperatorChange(op.value, e.target.checked)}
+              <div key={op.value} className="flex items-center gap-2 cursor-pointer" onClick={() => handleOperatorChange(op.value, !formData.operators.includes(op.value))}>
+                <Checkbox
+                  id={`operator-${op.value}`}
+                  checked={formData.operators.includes(op.value)}
+                  onChange={() => handleOperatorChange(op.value, !formData.operators.includes(op.value))}
                   disabled={saving}
                   style={{ accentColor: color.primary.accent }} />
                 <span className="text-sm text-gray-700">{op.label}</span>
-              </label>
+              </div>
             ))}
           </div>
           {errors.operators && <p className="text-red-500 text-xs mt-3">{errors.operators}</p>}

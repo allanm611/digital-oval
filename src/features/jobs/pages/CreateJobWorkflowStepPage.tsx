@@ -1068,19 +1068,29 @@ export default function CreateJobWorkflowStepPage() {
                 </h2>
                 <div className="space-y-4">
                   <div>
-                    <label className="flex items-center gap-2">
-                      <Checkbox checked={formData.is_parallel}
-                        onChange={(e) =>
+                    <div
+                      className="flex items-center gap-2 cursor-pointer"
+                      onClick={() =>
+                        setFormData({
+                          ...formData,
+                          is_parallel: !formData.is_parallel,
+                        })
+                      }
+                    >
+                      <Checkbox
+                        id="is-parallel"
+                        checked={formData.is_parallel}
+                        onChange={() =>
                           setFormData({
                             ...formData,
-                            is_parallel: e.target.checked,
+                            is_parallel: !formData.is_parallel,
                           })
                         }
-                        className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
+                      />
                       <span className="text-sm font-medium text-gray-700">
                         {t.jobs.jobWorkflow.enableParallel}
                       </span>
-                    </label>
+                    </div>
                   </div>
 
                   {formData.is_parallel && (
@@ -1261,19 +1271,29 @@ export default function CreateJobWorkflowStepPage() {
                   {t.jobs.jobWorkflow.status}
                 </h2>
                 <div className="space-y-3">
-                  <label className="flex items-center gap-2">
-                    <Checkbox checked={formData.is_active}
-                      onChange={(e) =>
+                  <div
+                    className="flex items-center gap-2 cursor-pointer"
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        is_active: !formData.is_active,
+                      })
+                    }
+                  >
+                    <Checkbox
+                      id="is-active"
+                      checked={formData.is_active}
+                      onChange={() =>
                         setFormData({
                           ...formData,
-                          is_active: e.target.checked,
+                          is_active: !formData.is_active,
                         })
                       }
-                      className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
+                    />
                     <span className="text-sm font-medium text-gray-700">
                       {t.jobs.jobWorkflow.active}
                     </span>
-                  </label>
+                  </div>
 
                   <label className="flex items-center gap-2">
                     <Checkbox checked={formData.is_critical}

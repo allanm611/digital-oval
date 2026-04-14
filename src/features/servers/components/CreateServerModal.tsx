@@ -313,13 +313,15 @@ export default function CreateServerModal({
                   Automatically monitor availability and latency.
                 </p>
               </div>
-              <label className="inline-flex items-center gap-2 text-sm text-gray-700">
-                <Checkbox name="health_check_enabled"
+              <div className="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer" onClick={() => handleChange({ target: { name: 'health_check_enabled', checked: !form.health_check_enabled, value: !form.health_check_enabled } })}>
+                <Checkbox
+                  id="health-check-enabled"
+                  name="health_check_enabled"
                   checked={form.health_check_enabled}
                   onChange={handleChange}
                   className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black" />
-                Enabled
-              </label>
+                <span>Enabled</span>
+              </div>
             </div>
 
             {form.health_check_enabled && (
@@ -363,13 +365,15 @@ export default function CreateServerModal({
                   Pause calls after repeated failures.
                 </p>
               </div>
-              <label className="inline-flex items-center gap-2 text-sm text-gray-700">
-                <Checkbox name="circuit_breaker_enabled"
+              <div className="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer" onClick={() => handleChange({ target: { name: 'circuit_breaker_enabled', checked: !form.circuit_breaker_enabled, value: !form.circuit_breaker_enabled } })}>
+                <Checkbox
+                  id="circuit-breaker-enabled"
+                  name="circuit_breaker_enabled"
                   checked={form.circuit_breaker_enabled}
                   onChange={handleChange}
                   className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black" />
-                Enabled
-              </label>
+                <span>Enabled</span>
+              </div>
             </div>
 
             {form.circuit_breaker_enabled && (
@@ -397,13 +401,15 @@ export default function CreateServerModal({
                 Require secure transport for requests.
               </p>
             </div>
-            <label className="inline-flex items-center gap-2 text-sm text-gray-700">
-              <Checkbox name="tls_enabled"
+            <div className="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer" onClick={() => handleChange({ target: { name: 'tls_enabled', checked: !form.tls_enabled, value: !form.tls_enabled } })}>
+              <Checkbox
+                id="tls-enabled"
+                name="tls_enabled"
                 checked={form.tls_enabled}
                 onChange={handleChange}
                 className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black" />
-              Enabled
-            </label>
+              <span>Enabled</span>
+            </div>
           </div>
 
           <div>

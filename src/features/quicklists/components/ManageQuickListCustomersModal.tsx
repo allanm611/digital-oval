@@ -423,15 +423,18 @@ export default function ManageQuickListCustomersModal({
                 <thead className="bg-gray-50 sticky top-0 z-10">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-12">
-                      <Checkbox
-                        checked={
-                          selectedCustomers.length ===
-                            filteredItems.length &&
-                          filteredItems.length > 0
-                        }
-                        onChange={handleSelectAll}
-                        disabled={isLoading}
-                      />
+                      <div className="flex items-center gap-2 cursor-pointer" onClick={handleSelectAll}>
+                        <Checkbox
+                          id="select-all-items"
+                          checked={
+                            selectedCustomers.length ===
+                              filteredItems.length &&
+                            filteredItems.length > 0
+                          }
+                          onChange={handleSelectAll}
+                          disabled={isLoading}
+                        />
+                      </div>
                     </th>
                     {tableColumns.map((col) => (
                       <th
@@ -462,13 +465,19 @@ export default function ManageQuickListCustomersModal({
                       >
                         <td
                           className="px-4 py-4 whitespace-nowrap"
-                          onClick={(e) => e.stopPropagation()}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            !isLoading && handleToggleItem(item);
+                          }}
                         >
-                          <Checkbox
-                            checked={isSelected}
-                            onChange={() => handleToggleItem(item)}
-                            disabled={isLoading}
-                          />
+                          <div className="flex items-center gap-2 cursor-pointer">
+                            <Checkbox
+                              id={`item-${item.customerId}`}
+                              checked={isSelected}
+                              onChange={() => handleToggleItem(item)}
+                              disabled={isLoading}
+                            />
+                          </div>
                         </td>
                         {tableColumns.map((col) => (
                           <td

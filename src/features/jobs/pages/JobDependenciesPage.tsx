@@ -332,14 +332,16 @@ function JobDependencyModal({
             />
           </div>
 
-          <div className="flex items-center">
-            <Checkbox id="isActive"
+          <div
+            className="flex items-center gap-2 cursor-pointer"
+            onClick={() => setIsActive(!isActive)}
+          >
+            <Checkbox
+              id="isActive"
               checked={isActive}
-              onChange={(e) => setIsActive(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
-            <label htmlFor="isActive" className="ml-2 text-sm text-gray-700">
-              Active
-            </label>
+              onChange={() => setIsActive(!isActive)}
+            />
+            <span className="text-sm text-gray-700">Active</span>
           </div>
 
           {error && (
@@ -2031,13 +2033,17 @@ export default function JobDependenciesPage() {
                         borderTopLeftRadius: "0.375rem",
                       }}
                     >
-                      <Checkbox checked={
-                          filteredDependencies.length > 0 &&
-                          selectedDependencyIds.size ===
-                            filteredDependencies.length
-                        }
-                        onChange={handleSelectAll}
-                        className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
+                      <div className="flex items-center gap-2 cursor-pointer" onClick={handleSelectAll}>
+                        <Checkbox
+                          id="select-all-dependencies"
+                          checked={
+                            filteredDependencies.length > 0 &&
+                            selectedDependencyIds.size ===
+                              filteredDependencies.length
+                          }
+                          onChange={handleSelectAll}
+                        />
+                      </div>
                     </th>
                   )}
                   {/* <th
@@ -2143,9 +2149,16 @@ export default function JobDependenciesPage() {
                           borderBottomLeftRadius: "0.375rem",
                         }}
                       >
-                        <Checkbox checked={selectedDependencyIds.has(dependency.id)}
-                          onChange={() => handleToggleSelection(dependency.id)}
-                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
+                        <div
+                          className="flex items-center gap-2 cursor-pointer"
+                          onClick={() => handleToggleSelection(dependency.id)}
+                        >
+                          <Checkbox
+                            id={`dependency-${dependency.id}`}
+                            checked={selectedDependencyIds.has(dependency.id)}
+                            onChange={() => handleToggleSelection(dependency.id)}
+                          />
+                        </div>
                       </td>
                     )}
                     {/* <td

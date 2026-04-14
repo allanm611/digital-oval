@@ -266,12 +266,16 @@ export default function AddMembersModal({
                 <thead className="bg-gray-50 sticky top-0 z-10">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-12">
-                      <Checkbox checked={
-                          selectedCustomers.length === filteredCustomers.length &&
-                          filteredCustomers.length > 0
-                        }
-                        onChange={handleSelectAll}
-                      />
+                      <div className="flex items-center gap-2 cursor-pointer" onClick={handleSelectAll}>
+                        <Checkbox
+                          id="select-all-customers"
+                          checked={
+                            selectedCustomers.length === filteredCustomers.length &&
+                            filteredCustomers.length > 0
+                          }
+                          onChange={handleSelectAll}
+                        />
+                      </div>
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                       Name
@@ -306,14 +310,20 @@ export default function AddMembersModal({
                         }`}
                       >
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <Checkbox checked={isSelected || isAlreadyMember}
-                            onChange={() => !isAlreadyMember && handleToggleCustomer(customer)}
-                            onClick={(e) => e.stopPropagation()}
-                            disabled={isAlreadyMember}
-                            className="w-4 h-4 border-gray-400 rounded disabled:opacity-50"
-                            style={{
-                              accentColor: "#111827",
-                            }} />
+                          <div
+                            className="flex items-center gap-2 cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              !isAlreadyMember && handleToggleCustomer(customer);
+                            }}
+                          >
+                            <Checkbox
+                              id={`customer-${customer.customerId}`}
+                              checked={isSelected || isAlreadyMember}
+                              onChange={() => !isAlreadyMember && handleToggleCustomer(customer)}
+                              disabled={isAlreadyMember}
+                            />
+                          </div>
                         </td>
                         <td className="px-4 py-4">
                           <div className="flex items-center gap-2">

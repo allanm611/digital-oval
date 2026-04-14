@@ -844,21 +844,35 @@ export default function ConnectionProfilesPage() {
                       className="px-3 py-3 text-sm font-medium whitespace-nowrap"
                       style={{ borderTopLeftRadius: "0.375rem" }}
                     >
-                      <Checkbox
-                        checked={
-                          selectedProfileIds.size > 0 &&
-                          selectedProfileIds.size === filteredProfiles.length
-                        }
-                        onChange={(e) => {
-                          if (e.target.checked) {
+                      <div
+                        className="flex items-center gap-2 cursor-pointer"
+                        onClick={() => {
+                          if (selectedProfileIds.size > 0 && selectedProfileIds.size === filteredProfiles.length) {
+                            setSelectedProfileIds(new Set());
+                          } else {
                             setSelectedProfileIds(
                               new Set(filteredProfiles.map((p) => p.id)),
                             );
-                          } else {
-                            setSelectedProfileIds(new Set());
                           }
                         }}
-                        aria-label="Select all profiles" />
+                      >
+                        <Checkbox
+                          id="select-all-profiles"
+                          checked={
+                            selectedProfileIds.size > 0 &&
+                            selectedProfileIds.size === filteredProfiles.length
+                          }
+                          onChange={() => {
+                            if (selectedProfileIds.size > 0 && selectedProfileIds.size === filteredProfiles.length) {
+                              setSelectedProfileIds(new Set());
+                            } else {
+                              setSelectedProfileIds(
+                                new Set(filteredProfiles.map((p) => p.id)),
+                              );
+                            }
+                          }}
+                        />
+                      </div>
                     </th>
                   )}
                   <th
@@ -911,9 +925,16 @@ export default function ConnectionProfilesPage() {
                             borderBottomLeftRadius: "0.375rem",
                           }}
                         >
-                          <Checkbox checked={isSelected}
-                            onChange={() => toggleProfileSelection(profile.id)}
-                            className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black" />
+                          <div
+                            className="flex items-center gap-2 cursor-pointer"
+                            onClick={() => toggleProfileSelection(profile.id)}
+                          >
+                            <Checkbox
+                              id={`profile-${profile.id}`}
+                              checked={isSelected}
+                              onChange={() => toggleProfileSelection(profile.id)}
+                            />
+                          </div>
                         </td>
                       )}
                       <td

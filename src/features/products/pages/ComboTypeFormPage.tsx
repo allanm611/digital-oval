@@ -356,21 +356,20 @@ export default function ComboTypeFormPage() {
             </div>
 
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() =>
+              setFormData({ ...formData, isActive: !formData.isActive })
+            }>
               <Checkbox
                 id="is-active"
                 checked={formData.isActive}
-                onChange={(e) =>
-                  setFormData({ ...formData, isActive: e.target.checked })
+                onChange={() =>
+                  setFormData({ ...formData, isActive: !formData.isActive })
                 }
                 disabled={isSaving}
               />
-              <label
-                htmlFor="is-active"
-                className="text-sm font-medium text-gray-700"
-              >
+              <span className="text-sm font-medium text-gray-700">
                 Active
-              </label>
+              </span>
             </div>
           </div>
 
@@ -394,44 +393,48 @@ export default function ComboTypeFormPage() {
             {/* Shared Configuration Checkboxes */}
             <div className="mb-3 pb-1">
               <div className="grid gap-4 md:grid-cols-2 mb-4">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 cursor-pointer" onClick={() =>
+                  setComboSettings({
+                    ...comboSettings,
+                    sharedValidity: !comboSettings.sharedValidity,
+                  })
+                }>
                   <Checkbox
                     id="shared-validity"
                     checked={comboSettings.sharedValidity}
-                    onChange={(e) =>
+                    onChange={() =>
                       setComboSettings({
                         ...comboSettings,
-                        sharedValidity: e.target.checked,
+                        sharedValidity: !comboSettings.sharedValidity,
                       })
                     }
                     disabled={isSaving}
                   />
-                  <label
-                    htmlFor="shared-validity"
-                    className={`text-sm font-medium ${tw.textPrimary}`}
-                  >
+                  <span className={`text-sm font-medium ${tw.textPrimary}`}>
                     Shared Validity
-                  </label>
+                  </span>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 cursor-pointer" onClick={() =>
+                  setComboSettings({
+                    ...comboSettings,
+                    sharedPrice: !comboSettings.sharedPrice,
+                  })
+                }>
                   <Checkbox
                     id="shared-price"
                     checked={comboSettings.sharedPrice}
-                    onChange={(e) =>
+                    onChange={() =>
                       setComboSettings({
                         ...comboSettings,
-                        sharedPrice: e.target.checked,
+                        sharedPrice: !comboSettings.sharedPrice,
                       })
                     }
                     disabled={isSaving}
                   />
-                  <label
-                    htmlFor="shared-price"
-                    className={`text-sm font-medium ${tw.textPrimary}`}
-                  >
+                  <span className={`text-sm font-medium ${tw.textPrimary}`}>
                     Shared Price
-                  </label>
+                  </span>
                 </div>
               </div>
 

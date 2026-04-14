@@ -257,14 +257,19 @@ export default function EtlFetchControlsPage() {
               style={{ borderColor: color.border.default }}
             />
           </div>
-          <label className="flex items-center gap-2">
-            <Checkbox checked={forceReprocess}
-              onChange={(e) => setForceReprocess(e.target.checked)}
-              className="w-4 h-4" />
+          <div
+            className="flex items-center gap-2 cursor-pointer"
+            onClick={() => setForceReprocess(!forceReprocess)}
+          >
+            <Checkbox
+              id="force-reprocess"
+              checked={forceReprocess}
+              onChange={() => setForceReprocess(!forceReprocess)}
+            />
             <span className={`text-sm ${tw.textPrimary}`}>
               {t.etl.forceReprocessing}
             </span>
-          </label>
+          </div>
           <button
             onClick={handleFetchImmediate}
             disabled={isLoading || !jobId}

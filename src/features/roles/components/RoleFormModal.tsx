@@ -427,15 +427,17 @@ export default function RoleFormModal({
           </div>
 
           {/* Checkboxes */}
-          <div className="flex items-center gap-2">
-            <Checkbox id="is_default"
+          <div
+            className="flex items-center gap-2 cursor-pointer"
+            onClick={() => handleCheckboxChange({ target: { name: 'is_default', checked: !formData.is_default } } as any)}
+          >
+            <Checkbox
+              id="is_default"
               name="is_default"
               checked={formData.is_default}
               onChange={handleCheckboxChange}
-              className="w-4 h-4 rounded border-gray-300 focus:ring-2 focus:ring-blue-500" />
-            <label htmlFor="is_default" className="text-sm font-medium text-gray-700 cursor-pointer">
-              Set as Default
-            </label>
+            />
+            <span className="text-sm font-medium text-gray-700">Set as Default</span>
           </div>
 
           {/* Tags */}

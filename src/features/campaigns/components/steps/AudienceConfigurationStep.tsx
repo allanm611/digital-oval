@@ -558,11 +558,18 @@ export default function AudienceConfigurationStep({
             Control Group Configuration
           </h3>
           <div className="space-y-4">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <Checkbox checked={controlGroupMode === "shared"}
-                onChange={(e) => {
-                  setControlGroupMode(e.target.checked ? "shared" : "per-segment");
-                  if (e.target.checked) {
+            <div className="flex items-center gap-3 cursor-pointer" onClick={() => {
+              setControlGroupMode(controlGroupMode !== "shared" ? "shared" : "per-segment");
+              if (controlGroupMode !== "shared") {
+                setSharedControlGroupId(null);
+              }
+            }}>
+              <Checkbox
+                id="control-group-shared"
+                checked={controlGroupMode === "shared"}
+                onChange={() => {
+                  setControlGroupMode(controlGroupMode !== "shared" ? "shared" : "per-segment");
+                  if (controlGroupMode !== "shared") {
                     setSharedControlGroupId(null);
                   }
                 }}
@@ -573,7 +580,8 @@ export default function AudienceConfigurationStep({
               </span>
               {controlGroupMode === "shared" && (
                 <button
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setEditingControlGroup("all");
                     setShowControlGroupModal(true);
                   }}
@@ -583,13 +591,20 @@ export default function AudienceConfigurationStep({
                   <Settings className="w-4 h-4" />
                 </button>
               )}
-            </label>
+            </div>
 
-            <label className="flex items-center gap-3 cursor-pointer">
-              <Checkbox checked={controlGroupMode === "per-segment"}
-                onChange={(e) => {
-                  setControlGroupMode(e.target.checked ? "per-segment" : "shared");
-                  if (e.target.checked) {
+            <div className="flex items-center gap-3 cursor-pointer" onClick={() => {
+              setControlGroupMode(controlGroupMode !== "per-segment" ? "per-segment" : "shared");
+              if (controlGroupMode !== "per-segment") {
+                setSharedControlGroupId(null);
+              }
+            }}>
+              <Checkbox
+                id="control-group-per-segment"
+                checked={controlGroupMode === "per-segment"}
+                onChange={() => {
+                  setControlGroupMode(controlGroupMode !== "per-segment" ? "per-segment" : "shared");
+                  if (controlGroupMode !== "per-segment") {
                     setSharedControlGroupId(null);
                   }
                 }}
@@ -598,7 +613,7 @@ export default function AudienceConfigurationStep({
               <span className={`text-sm font-medium ${tw.textPrimary}`}>
                 Configure control group per segment
               </span>
-            </label>
+            </div>
           </div>
         </div>
       )}
@@ -610,9 +625,11 @@ export default function AudienceConfigurationStep({
             Seed List Configuration
           </h3>
           <div className="space-y-4">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <Checkbox checked={seedListMode === "all"}
-                onChange={(e) => handleSetSeedListMode(e.target.checked ? "all" : "per-segment")}
+            <div className="flex items-center gap-3 cursor-pointer" onClick={() => handleSetSeedListMode(seedListMode !== "all" ? "all" : "per-segment")}>
+              <Checkbox
+                id="seed-list-all"
+                checked={seedListMode === "all"}
+                onChange={() => handleSetSeedListMode(seedListMode !== "all" ? "all" : "per-segment")}
                 className="w-4 h-4"
                 style={{ accentColor: color.primary.accent }} />
               <span className={`text-sm font-medium ${tw.textPrimary}`}>
@@ -620,7 +637,8 @@ export default function AudienceConfigurationStep({
               </span>
               {seedListMode === "all" && (
                 <button
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setEditingSeedListSegmentId("all");
                     setShowSeedListModal(true);
                   }}
@@ -630,17 +648,19 @@ export default function AudienceConfigurationStep({
                   <Plus className="w-4 h-4" />
                 </button>
               )}
-            </label>
+            </div>
 
-            <label className="flex items-center gap-3 cursor-pointer">
-              <Checkbox checked={seedListMode === "per-segment"}
-                onChange={(e) => handleSetSeedListMode(e.target.checked ? "per-segment" : "all")}
+            <div className="flex items-center gap-3 cursor-pointer" onClick={() => handleSetSeedListMode(seedListMode !== "per-segment" ? "per-segment" : "all")}>
+              <Checkbox
+                id="seed-list-per-segment"
+                checked={seedListMode === "per-segment"}
+                onChange={() => handleSetSeedListMode(seedListMode !== "per-segment" ? "per-segment" : "all")}
                 className="w-4 h-4"
                 style={{ accentColor: color.primary.accent }} />
               <span className={`text-sm font-medium ${tw.textPrimary}`}>
                 Apply seed list per segment
               </span>
-            </label>
+            </div>
           </div>
         </div>
       )}
@@ -648,14 +668,24 @@ export default function AudienceConfigurationStep({
       {/* Mutually Exclusive Segments Checkbox */}
       {selectedSegments.length > 1 && (
         <div className={`${tw.rounded} p-3`}>
-          <label className="flex items-start space-x-3 cursor-pointer">
-            <Checkbox checked={mutuallyExclusive}
-              onChange={(e) => {
-                setMutuallyExclusive(e.target.checked);
+          <div className="flex items-start space-x-3 cursor-pointer" onClick={() => {
+            setMutuallyExclusive(!mutuallyExclusive);
+            // Update all segments with mutual exclusivity
+            const updatedSegments = selectedSegments.map((segment) => ({
+              ...segment,
+              is_mutually_exclusive: !mutuallyExclusive,
+            }));
+            setSelectedSegments(updatedSegments);
+          }}>
+            <Checkbox
+              id="mutually-exclusive"
+              checked={mutuallyExclusive}
+              onChange={() => {
+                setMutuallyExclusive(!mutuallyExclusive);
                 // Update all segments with mutual exclusivity
                 const updatedSegments = selectedSegments.map((segment) => ({
                   ...segment,
-                  is_mutually_exclusive: e.target.checked,
+                  is_mutually_exclusive: !mutuallyExclusive,
                 }));
                 setSelectedSegments(updatedSegments);
               }}
@@ -672,7 +702,7 @@ export default function AudienceConfigurationStep({
                 }
               </div>
             </div>
-          </label>
+          </div>
         </div>
       )}
 

@@ -71,13 +71,25 @@ export default function PolicyCustomizationPanel({
           </label>
           <div className="grid grid-cols-4 gap-2">
             {DAYS_OF_WEEK.map((day) => (
-              <label key={day.value} className="flex items-center space-x-2">
-                <Checkbox checked={timeConfig.days?.includes(day.value) || false}
-                  onChange={(e) => {
+              <div
+                key={day.value}
+                className="flex items-center space-x-2 cursor-pointer"
+                onClick={() => {
+                  const days = timeConfig.days || [];
+                  const newDays = days.includes(day.value)
+                    ? days.filter((d) => d !== day.value)
+                    : [...days, day.value];
+                  onConfigChange({ ...timeConfig, days: newDays });
+                }}
+              >
+                <Checkbox
+                  id={`day-${day.value}`}
+                  checked={timeConfig.days?.includes(day.value) || false}
+                  onChange={() => {
                     const days = timeConfig.days || [];
-                    const newDays = e.target.checked
-                      ? [...days, day.value]
-                      : days.filter((d) => d !== day.value);
+                    const newDays = days.includes(day.value)
+                      ? days.filter((d) => d !== day.value)
+                      : [...days, day.value];
                     onConfigChange({ ...timeConfig, days: newDays });
                   }}
                   className={`rounded ${tw.borderDefault} focus:ring-2 focus:ring-[${color.primary.action}] text-[${color.primary.action}]`}
@@ -90,7 +102,7 @@ export default function PolicyCustomizationPanel({
                 <span className={`${tw.caption} ${tw.textSecondary}`}>
                   {day.label}
                 </span>
-              </label>
+              </div>
             ))}
           </div>
         </div>

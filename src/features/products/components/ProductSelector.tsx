@@ -511,11 +511,19 @@ export default function ProductSelector({
                               className="cursor-pointer transition-colors hover:bg-gray-50"
                             >
                               <td className="px-4 py-3">
-                                <Checkbox checked={isSelected}
-                                  onChange={() => handleProductToggle(product)}
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="w-4 h-4 border-gray-400 rounded"
-                                  style={{ accentColor: "#111827" }} />
+                                <div
+                                  className="flex items-center gap-2 cursor-pointer"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleProductToggle(product);
+                                  }}
+                                >
+                                  <Checkbox
+                                    id={`product-${product.id}`}
+                                    checked={isSelected}
+                                    onChange={() => handleProductToggle(product)}
+                                  />
+                                </div>
                               </td>
                               <td className="px-4 py-3">
                                 <div className="min-w-0">

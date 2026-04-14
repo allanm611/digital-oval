@@ -857,11 +857,15 @@ export default function ServersPage() {
                         borderTopLeftRadius: "0.375rem",
                       }}
                     >
-                      <Checkbox
-                        ref={headerCheckboxRef} className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
-                        checked={allVisibleSelected}
-                        onChange={toggleSelectAllVisible}
-                        aria-label="Select visible servers" />
+                      <div className="flex items-center gap-2 cursor-pointer" onClick={toggleSelectAllVisible}>
+                        <Checkbox
+                          ref={headerCheckboxRef}
+                          id="select-all-servers"
+                          className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
+                          checked={allVisibleSelected}
+                          onChange={toggleSelectAllVisible}
+                          aria-label="Select visible servers" />
+                      </div>
                     </th>
                   )}
                   <th
@@ -923,13 +927,20 @@ export default function ServersPage() {
                             borderBottomLeftRadius: "0.375rem",
                           }}
                         >
-                          <Checkbox checked={selectedServerIds.has(server.id)}
-                            onChange={(event) => {
-                              event.stopPropagation();
-                              toggleServerSelection(server.id);
-                            }}
-                            aria-label={`Select ${server.name}`}
-                            className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black" />
+                          <div className="flex items-center gap-2 cursor-pointer" onClick={(e) => {
+                            e.stopPropagation();
+                            toggleServerSelection(server.id);
+                          }}>
+                            <Checkbox
+                              id={`row-${server.id}`}
+                              checked={selectedServerIds.has(server.id)}
+                              onChange={(event) => {
+                                event.stopPropagation();
+                                toggleServerSelection(server.id);
+                              }}
+                              aria-label={`Select ${server.name}`}
+                              className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black" />
+                          </div>
                         </td>
                       )}
                       <td

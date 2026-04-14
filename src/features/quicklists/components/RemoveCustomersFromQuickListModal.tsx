@@ -303,15 +303,18 @@ export default function RemoveCustomersFromQuickListModal({
                 <thead className="bg-gray-50 sticky top-0 z-10">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-12">
-                      <Checkbox
-                        checked={
-                          selectedCustomers.length ===
-                            filteredData.length &&
-                          filteredData.length > 0
-                        }
-                        onChange={handleSelectAll}
-                        disabled={isLoading}
-                      />
+                      <div className="flex items-center gap-2 cursor-pointer" onClick={handleSelectAll}>
+                        <Checkbox
+                          id="select-all-customers"
+                          checked={
+                            selectedCustomers.length ===
+                              filteredData.length &&
+                            filteredData.length > 0
+                          }
+                          onChange={handleSelectAll}
+                          disabled={isLoading}
+                        />
+                      </div>
                     </th>
                     {columns.slice(0, 4).map((col) => (
                       <th
@@ -340,13 +343,19 @@ export default function RemoveCustomersFromQuickListModal({
                       >
                         <td
                           className="px-4 py-4 whitespace-nowrap"
-                          onClick={(e) => e.stopPropagation()}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            !isLoading && handleToggleCustomer(item);
+                          }}
                         >
-                          <Checkbox
-                            checked={isSelected}
-                            onChange={() => handleToggleCustomer(item)}
-                            disabled={isLoading}
-                          />
+                          <div className="flex items-center gap-2 cursor-pointer">
+                            <Checkbox
+                              id={`customer-${item.customerId}`}
+                              checked={isSelected}
+                              onChange={() => handleToggleCustomer(item)}
+                              disabled={isLoading}
+                            />
+                          </div>
                         </td>
                         {columns.slice(0, 4).map((col) => (
                           <td

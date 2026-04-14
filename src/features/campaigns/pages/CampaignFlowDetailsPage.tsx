@@ -767,19 +767,26 @@ export default function CampaignFlowDetailsPage() {
 
                 {/* Status */}
                 <div>
-                  <div className="flex items-center gap-2">
-                    <Checkbox id="flowActive"
+                  <div
+                    className="flex items-center gap-2 cursor-pointer"
+                    onClick={() =>
+                      setEditedFlow({
+                        ...editedFlow,
+                        is_active: !(editedFlow.is_active !== false),
+                      })
+                    }
+                  >
+                    <Checkbox
+                      id="flowActive"
                       checked={editedFlow.is_active !== false}
-                      onChange={(e) =>
+                      onChange={() =>
                         setEditedFlow({
                           ...editedFlow,
-                          is_active: e.target.checked,
+                          is_active: !(editedFlow.is_active !== false),
                         })
                       }
-                      className="w-4 h-4" />
-                    <label htmlFor="flowActive" className={`text-sm font-medium ${tw.textPrimary}`}>
-                      Active Flow
-                    </label>
+                    />
+                    <span className={`text-sm font-medium ${tw.textPrimary}`}>Active Flow</span>
                   </div>
                 </div>
               </div>

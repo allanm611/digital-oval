@@ -335,14 +335,23 @@ export function ConfigurationModal({
                     )}
 
                     {field.type === "toggle" && (
-                      <Checkbox checked={formData[field.key] ?? false}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            [field.key]: e.target.checked,
-                          }))
-                        }
-                        className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-2 focus:ring-purple-500" />
+                      <div className="flex items-center gap-2 cursor-pointer" onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          [field.key]: !(prev[field.key] ?? false),
+                        }))
+                      }>
+                        <Checkbox
+                          id={`field-${field.key}`}
+                          checked={formData[field.key] ?? false}
+                          onChange={() =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              [field.key]: !(prev[field.key] ?? false),
+                            }))
+                          }
+                          className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-2 focus:ring-purple-500" />
+                      </div>
                     )}
                   </div>
                 );

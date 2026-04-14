@@ -248,18 +248,16 @@ export default function CharacterSetFormPage() {
         </div>
 
         {/* Active Status */}
-        <div className="flex items-center gap-2 pt-4 pb-2">
-          <Checkbox id="isActive"
+        <div
+          className="flex items-center gap-2 pt-4 pb-2 cursor-pointer"
+          onClick={() => setIsActive(!isActive)}
+        >
+          <Checkbox
+            id="isActive"
             checked={isActive}
-            onChange={(e) => setIsActive(e.target.checked)}
-            className="w-4 h-4 rounded"
-            style={{
-              accentColor: "#00BBCC",
-              cursor: "pointer",
-            }} />
-          <label htmlFor="isActive" className="text-sm font-medium text-gray-700">
-            Active
-          </label>
+            onChange={() => setIsActive(!isActive)}
+          />
+          <span className="text-sm font-medium text-gray-700">Active</span>
         </div>
 
         {/* Actions */}

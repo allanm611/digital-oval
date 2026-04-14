@@ -235,27 +235,38 @@ export default function CommunicationPolicyModal({
           </label>
           <div className="grid grid-cols-4 gap-2">
             {DAYS_OF_WEEK.map((day) => (
-              <label
+              <div
                 key={day.value}
                 className="flex items-center space-x-2 cursor-pointer"
+                onClick={() => {
+                  const days = timeConfig.days || [];
+                  const newDays = timeConfig.days?.includes(day.value)
+                    ? days.filter((d) => d !== day.value)
+                    : [...days, day.value];
+                  updateConfig("timeWindow", (prev) => ({
+                    ...prev,
+                    days: newDays,
+                  }));
+                }}
               >
-                <Checkbox checked={timeConfig.days?.includes(day.value) || false}
-                  onChange={(e) => {
+                <Checkbox
+                  id={`day-${day.value}`}
+                  checked={timeConfig.days?.includes(day.value) || false}
+                  onChange={() => {
                     const days = timeConfig.days || [];
-                    const newDays = e.target.checked
-                      ? [...days, day.value]
-                      : days.filter((d) => d !== day.value);
+                    const newDays = timeConfig.days?.includes(day.value)
+                      ? days.filter((d) => d !== day.value)
+                      : [...days, day.value];
                     updateConfig("timeWindow", (prev) => ({
                       ...prev,
                       days: newDays,
                     }));
                   }}
-                  className="rounded"
-                  style={{ accentColor: color.primary.action }} />
+                />
                 <span className={`${tw.caption} ${tw.textSecondary}`}>
                   {day.label}
                 </span>
-              </label>
+              </div>
             ))}
           </div>
         </div>
@@ -787,22 +798,32 @@ export default function CommunicationPolicyModal({
                       className={`absolute z-[10000] w-full mt-1 bg-white border border-gray-200 ${tw.rounded} max-h-64 overflow-y-auto`}
                     >
                       {COMMUNICATION_CHANNELS.map((ch) => (
-                        <label
+                        <div
                           key={ch.value}
                           className="flex items-start space-x-3 px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
+                          onClick={() => {
+                            if (channels.includes(ch.value)) {
+                              setChannels((prev) =>
+                                prev.filter((c) => c !== ch.value)
+                              );
+                            } else {
+                              setChannels((prev) => [...prev, ch.value]);
+                            }
+                          }}
                         >
-                          <Checkbox checked={channels.includes(ch.value)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setChannels((prev) => [...prev, ch.value]);
-                              } else {
+                          <Checkbox
+                            id={`channel-${ch.value}`}
+                            checked={channels.includes(ch.value)}
+                            onChange={() => {
+                              if (channels.includes(ch.value)) {
                                 setChannels((prev) =>
                                   prev.filter((c) => c !== ch.value)
                                 );
+                              } else {
+                                setChannels((prev) => [...prev, ch.value]);
                               }
                             }}
-                            className="mt-1 rounded"
-                            style={{ accentColor: color.primary.accent }} />
+                          />
                           <div className="flex-1">
                             <div className="text-sm font-medium text-gray-900">
                               {ch.label}
@@ -811,7 +832,7 @@ export default function CommunicationPolicyModal({
                               {ch.description}
                             </div>
                           </div>
-                        </label>
+                        </div>
                       ))}
                     </div>
                   )}

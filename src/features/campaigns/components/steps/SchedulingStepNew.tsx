@@ -328,17 +328,20 @@ export default function SchedulingStep({
           <div className="mb-6">
             <div className="grid grid-cols-7 gap-2">
               {daysOfWeek.map((day) => (
-                <label
+                <div
                   key={day.value}
-                  className="flex items-center justify-center"
+                  className="flex items-center justify-center cursor-pointer"
+                  onClick={() => toggleDayOfWeek(day.value)}
                 >
-                  <Checkbox checked={selectedDays.includes(day.value)}
+                  <Checkbox
+                    id={`day-${day.value}`}
+                    checked={selectedDays.includes(day.value)}
                     onChange={() => toggleDayOfWeek(day.value)}
-                    className="w-4 h-4 text-[#3b8169] border-gray-300 rounded focus:ring-[#3b8169] mr-2" />
-                  <span className="text-sm font-medium text-gray-700">
+                  />
+                  <span className="text-sm font-medium text-gray-700 ml-2">
                     {day.label}
                   </span>
-                </label>
+                </div>
               ))}
             </div>
           </div>
@@ -350,23 +353,33 @@ export default function SchedulingStep({
 
           {/* Additional Options */}
           <div className="space-y-3">
-            <label className="flex items-center">
-              <Checkbox checked={setSpecificStartTime}
-                onChange={(e) => setSetSpecificStartTime(e.target.checked)}
-                className="w-4 h-4 text-[#3b8169] border-gray-300 rounded focus:ring-[#3b8169]" />
+            <div
+              className="flex items-center cursor-pointer"
+              onClick={() => setSetSpecificStartTime(!setSpecificStartTime)}
+            >
+              <Checkbox
+                id="specific-start-time"
+                checked={setSpecificStartTime}
+                onChange={() => setSetSpecificStartTime(!setSpecificStartTime)}
+              />
               <span className="ml-3 text-sm font-medium text-gray-700">
                 Set specific start time for days
               </span>
-            </label>
+            </div>
 
-            <label className="flex items-center">
-              <Checkbox checked={startDeliveryOnCompletion}
-                onChange={(e) => setStartDeliveryOnCompletion(e.target.checked)}
-                className="w-4 h-4 text-[#3b8169] border-gray-300 rounded focus:ring-[#3b8169]" />
+            <div
+              className="flex items-center cursor-pointer"
+              onClick={() => setStartDeliveryOnCompletion(!startDeliveryOnCompletion)}
+            >
+              <Checkbox
+                id="delivery-on-completion"
+                checked={startDeliveryOnCompletion}
+                onChange={() => setStartDeliveryOnCompletion(!startDeliveryOnCompletion)}
+              />
               <span className="ml-3 text-sm font-medium text-gray-700">
                 Start delivery on completion of specific Broadcasts
               </span>
-            </label>
+            </div>
           </div>
         </div>
       </div>

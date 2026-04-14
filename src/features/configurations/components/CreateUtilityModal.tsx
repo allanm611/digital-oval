@@ -128,20 +128,19 @@ export default function CreateUtilityModal({
           </div>
 
           {/* Status Checkbox */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() =>
+            setFormData((prev) => ({ ...prev, isActive: !prev.isActive }))
+          }>
             <Checkbox
               id="active-checkbox"
               checked={formData.isActive}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, isActive: e.target.checked }))
+              onChange={() =>
+                setFormData((prev) => ({ ...prev, isActive: !prev.isActive }))
               }
             />
-            <label
-              htmlFor="active-checkbox"
-              className="text-sm font-medium text-gray-700"
-            >
+            <span className="text-sm font-medium text-gray-700">
               Active
-            </label>
+            </span>
           </div>
 
           <div className="flex gap-3 mt-6 pt-4">

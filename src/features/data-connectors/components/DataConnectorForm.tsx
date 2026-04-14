@@ -272,18 +272,20 @@ const APIConfig: React.FC<ConfigComponentProps> = ({
             </div>
           </Listbox>
         </div>
-        <div className="flex items-center">
+        <div className="flex items-center cursor-pointer" onClick={() =>
+          updateConfiguration("enable_proxy", !(config.enable_proxy || false))
+        }>
           <Checkbox
             id="enable_proxy"
             checked={config.enable_proxy || false}
-            onChange={(e) =>
-              updateConfiguration("enable_proxy", e.target.checked)
+            onChange={() =>
+              updateConfiguration("enable_proxy", !(config.enable_proxy || false))
             }
             className="mr-2 h-4 w-4 text-blue-600"
           />
-          <label htmlFor="enable_proxy" className="text-sm text-black">
+          <span className="text-sm text-black">
             Enable Proxy
-          </label>
+          </span>
         </div>
       </div>
 
@@ -730,16 +732,18 @@ const JDBCConfig: React.FC<ConfigComponentProps> = ({
       </div>
 
       {/* SSL Option */}
-      <div className="flex items-center">
+      <div className="flex items-center cursor-pointer" onClick={() =>
+        updateConfiguration("ssl_enabled", !(config.ssl_enabled || false))
+      }>
         <Checkbox
           id="ssl_enabled"
           checked={config.ssl_enabled || false}
-          onChange={(e) => updateConfiguration("ssl_enabled", e.target.checked)}
+          onChange={() => updateConfiguration("ssl_enabled", !(config.ssl_enabled || false))}
           className="mr-2 h-4 w-4 text-blue-600"
         />
-        <label htmlFor="ssl_enabled" className="text-sm text-black">
+        <span className="text-sm text-black">
           Enable SSL Connection
-        </label>
+        </span>
       </div>
     </div>
   );
@@ -1042,42 +1046,48 @@ const TCPConfig: React.FC<ConfigComponentProps> = ({
       </div>
 
       <div className="space-y-2">
-        <div className="flex items-center">
+        <div className="flex items-center cursor-pointer" onClick={() =>
+          updateConfiguration("non_blocking_io", !(config.non_blocking_io || false))
+        }>
           <Checkbox
             id="non_blocking_io"
             checked={config.non_blocking_io || false}
-            onChange={(e) =>
-              updateConfiguration("non_blocking_io", e.target.checked)
+            onChange={() =>
+              updateConfiguration("non_blocking_io", !(config.non_blocking_io || false))
             }
             className="mr-2 h-4 w-4 text-blue-600"
           />
-          <label htmlFor="non_blocking_io" className="text-sm text-black">
+          <span className="text-sm text-black">
             Non-blocking I/O
-          </label>
+          </span>
         </div>
-        <div className="flex items-center">
+        <div className="flex items-center cursor-pointer" onClick={() =>
+          updateConfiguration("reverse_lookup", !(config.reverse_lookup || false))
+        }>
           <Checkbox
             id="reverse_lookup"
             checked={config.reverse_lookup || false}
-            onChange={(e) =>
-              updateConfiguration("reverse_lookup", e.target.checked)
+            onChange={() =>
+              updateConfiguration("reverse_lookup", !(config.reverse_lookup || false))
             }
             className="mr-2 h-4 w-4 text-blue-600"
           />
-          <label htmlFor="reverse_lookup" className="text-sm text-black">
+          <span className="text-sm text-black">
             Reverse Lookup
-          </label>
+          </span>
         </div>
-        <div className="flex items-center">
+        <div className="flex items-center cursor-pointer" onClick={() =>
+          updateConfiguration("direct_buffers", !(config.direct_buffers || false))
+        }>
           <Checkbox
             id="direct_buffers"
             checked={config.direct_buffers || false}
-            onChange={(e) =>
-              updateConfiguration("direct_buffers", e.target.checked)
+            onChange={() =>
+              updateConfiguration("direct_buffers", !(config.direct_buffers || false))
             }
             className="mr-2 h-4 w-4 text-blue-600"
           />
-          <label htmlFor="direct_buffers" className="text-sm text-black">
+          <span className="text-sm text-black">
             Direct Buffers
           </label>
         </div>
@@ -1318,35 +1328,36 @@ const FilesConfig: React.FC<ConfigComponentProps> = ({
               </div>
             </div>
 
-            <div className="flex items-center">
+            <div className="flex items-center cursor-pointer" onClick={() =>
+              updateConfiguration("delete_after_process", !(config.delete_after_process || false))
+            }>
               <Checkbox
                 id="delete_after_process"
                 checked={config.delete_after_process || false}
-                onChange={(e) =>
-                  updateConfiguration("delete_after_process", e.target.checked)
+                onChange={() =>
+                  updateConfiguration("delete_after_process", !(config.delete_after_process || false))
                 }
                 className="mr-2 h-4 w-4 text-blue-600"
               />
-              <label
-                htmlFor="delete_after_process"
-                className="text-sm text-black"
-              >
+              <span className="text-sm text-black">
                 Delete files after processing
-              </label>
+              </span>
             </div>
 
-            <div className="flex items-center">
+            <div className="flex items-center cursor-pointer" onClick={() =>
+              updateConfiguration("create_backup", !(config.create_backup || true))
+            }>
               <Checkbox
                 id="create_backup"
                 checked={config.create_backup || true}
-                onChange={(e) =>
-                  updateConfiguration("create_backup", e.target.checked)
+                onChange={() =>
+                  updateConfiguration("create_backup", !(config.create_backup || true))
                 }
                 className="mr-2 h-4 w-4 text-blue-600"
               />
-              <label htmlFor="create_backup" className="text-sm text-black">
+              <span className="text-sm text-black">
                 Create backup before processing
-              </label>
+              </span>
             </div>
           </div>
         )}
@@ -1459,21 +1470,20 @@ const SMSInboxConfig: React.FC<ConfigComponentProps> = ({
       {/* Keyword Filter Section */}
       <div>
         <div className="p-3">
-          <div className="flex items-center">
+          <div className="flex items-center cursor-pointer" onClick={() =>
+            updateConfiguration("filter_by_keyword", !(config.filter_by_keyword || false))
+          }>
             <Checkbox
               id="filter_by_keyword"
               checked={config.filter_by_keyword || false}
-              onChange={(e) =>
-                updateConfiguration("filter_by_keyword", e.target.checked)
+              onChange={() =>
+                updateConfiguration("filter_by_keyword", !(config.filter_by_keyword || false))
               }
               className="mr-2 h-4 w-4 text-blue-600"
             />
-            <label
-              htmlFor="filter_by_keyword"
-              className="text-sm font-medium text-black"
-            >
+            <span className="text-sm font-medium text-black">
               Filter messages based on keyword
-            </label>
+            </span>
           </div>
         </div>
 
@@ -1640,35 +1650,36 @@ const SMSInboxConfig: React.FC<ConfigComponentProps> = ({
               </div>
             </div>
 
-            <div className="flex items-center">
+            <div className="flex items-center cursor-pointer" onClick={() =>
+              updateConfiguration("archive_messages", !(config.archive_messages || true))
+            }>
               <Checkbox
                 id="archive_messages"
                 checked={config.archive_messages || true}
-                onChange={(e) =>
-                  updateConfiguration("archive_messages", e.target.checked)
+                onChange={() =>
+                  updateConfiguration("archive_messages", !(config.archive_messages || true))
                 }
                 className="mr-2 h-4 w-4 text-blue-600"
               />
-              <label htmlFor="archive_messages" className="text-sm text-black">
+              <span className="text-sm text-black">
                 Archive processed messages
-              </label>
+              </span>
             </div>
 
-            <div className="flex items-center">
+            <div className="flex items-center cursor-pointer" onClick={() =>
+              updateConfiguration("process_unread_only", !(config.process_unread_only || true))
+            }>
               <Checkbox
                 id="process_unread_only"
                 checked={config.process_unread_only || true}
-                onChange={(e) =>
-                  updateConfiguration("process_unread_only", e.target.checked)
+                onChange={() =>
+                  updateConfiguration("process_unread_only", !(config.process_unread_only || true))
                 }
                 className="mr-2 h-4 w-4 text-blue-600"
               />
-              <label
-                htmlFor="process_unread_only"
-                className="text-sm text-black"
-              >
+              <span className="text-sm text-black">
                 Process unread messages only
-              </label>
+              </span>
             </div>
 
             <div>
@@ -1816,32 +1827,36 @@ const AdvancedSettings: React.FC<{
             </div>
           </div>
 
-          <div className="flex items-center">
+          <div className="flex items-center cursor-pointer" onClick={() =>
+            updateConfiguration("enable_monitoring", !(config.enable_monitoring || true))
+          }>
             <Checkbox
               id="enable_monitoring"
               checked={config.enable_monitoring || true}
-              onChange={(e) =>
-                updateConfiguration("enable_monitoring", e.target.checked)
+              onChange={() =>
+                updateConfiguration("enable_monitoring", !(config.enable_monitoring || true))
               }
               className="mr-2 h-4 w-4 text-blue-600"
             />
-            <label htmlFor="enable_monitoring" className="text-sm text-black">
+            <span className="text-sm text-black">
               Enable monitoring
-            </label>
+            </span>
           </div>
 
-          <div className="flex items-center">
+          <div className="flex items-center cursor-pointer" onClick={() =>
+            updateConfiguration("enable_logging", !(config.enable_logging || true))
+          }>
             <Checkbox
               id="enable_logging"
               checked={config.enable_logging || true}
-              onChange={(e) =>
-                updateConfiguration("enable_logging", e.target.checked)
+              onChange={() =>
+                updateConfiguration("enable_logging", !(config.enable_logging || true))
               }
               className="mr-2 h-4 w-4 text-blue-600"
             />
-            <label htmlFor="enable_logging" className="text-sm text-black">
+            <span className="text-sm text-black">
               Enable detailed logging
-            </label>
+            </span>
           </div>
         </div>
       )}

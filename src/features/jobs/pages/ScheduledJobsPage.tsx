@@ -742,12 +742,16 @@ export default function ScheduledJobsPage() {
                         borderTopLeftRadius: "0.375rem",
                       }}
                     >
-                      <Checkbox checked={
-                          filteredJobs.length > 0 &&
-                          selectedJobs.size === filteredJobs.length
-                        }
-                        onChange={handleSelectAll}
-                        className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
+                      <div className="flex items-center gap-2 cursor-pointer" onClick={handleSelectAll}>
+                        <Checkbox
+                          id="select-all-jobs"
+                          checked={
+                            filteredJobs.length > 0 &&
+                            selectedJobs.size === filteredJobs.length
+                          }
+                          onChange={handleSelectAll}
+                        />
+                      </div>
                     </th>
                   )}
                   <th
@@ -823,9 +827,16 @@ export default function ScheduledJobsPage() {
                           borderBottomLeftRadius: "0.375rem",
                         }}
                       >
-                        <Checkbox checked={selectedJobs.has(job.id)}
-                          onChange={() => handleSelectJob(job.id)}
-                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
+                        <div
+                          className="flex items-center gap-2 cursor-pointer"
+                          onClick={() => handleSelectJob(job.id)}
+                        >
+                          <Checkbox
+                            id={`job-${job.id}`}
+                            checked={selectedJobs.has(job.id)}
+                            onChange={() => handleSelectJob(job.id)}
+                          />
+                        </div>
                       </td>
                     )}
                     <td
@@ -1146,14 +1157,17 @@ export default function ScheduledJobsPage() {
 
                     {/* Active Jobs Filter */}
                     <div>
-                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                        <Checkbox checked={activeJobsFilter}
-                          onChange={(e) =>
-                            setActiveJobsFilter(e.target.checked)
-                          }
-                          className="w-4 h-4 text-[#3b8169] border-gray-300 rounded focus:ring-[#3b8169]" />
+                      <div
+                        className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer"
+                        onClick={() => setActiveJobsFilter(!activeJobsFilter)}
+                      >
+                        <Checkbox
+                          id="active-jobs-filter"
+                          checked={activeJobsFilter}
+                          onChange={() => setActiveJobsFilter(!activeJobsFilter)}
+                        />
                         <span>Show Only Active Jobs</span>
-                      </label>
+                      </div>
                     </div>
                   </div>
                 </div>

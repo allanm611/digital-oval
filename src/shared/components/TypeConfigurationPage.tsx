@@ -1039,18 +1039,15 @@ function TypeConfigurationModal({
 
           {/* Status Checkbox */}
           {config.statusLabel && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() => setIsActive(!isActive)}>
               <Checkbox
                 id="status-checkbox"
                 checked={isActive}
-                onChange={(e) => setIsActive(e.target.checked)}
+                onChange={() => setIsActive(!isActive)}
               />
-              <label
-                htmlFor="status-checkbox"
-                className="text-sm font-medium text-gray-700"
-              >
+              <span className="text-sm font-medium text-gray-700">
                 {config.statusLabel}
-              </label>
+              </span>
             </div>
           )}
 
@@ -1538,36 +1535,52 @@ function TypeConfigurationModal({
 
               {/* Validity & Price - 2 Column Layout */}
               <div className="mt-4">
-                <div className="flex items-center gap-2 mb-3">
+                <div className="flex items-center gap-2 mb-3 cursor-pointer" onClick={() => {
+                  setComboSharedValidity(!comboSharedValidity);
+                  setComboResources(
+                    comboResources.map((r) => ({
+                      ...r,
+                      sharedValidity: !comboSharedValidity,
+                    })),
+                  );
+                }}>
                   <Checkbox
                     id="combo-shared-validity"
                     checked={comboSharedValidity}
-                    onChange={(e) => {
-                      setComboSharedValidity(e.target.checked);
+                    onChange={() => {
+                      setComboSharedValidity(!comboSharedValidity);
                       setComboResources(
                         comboResources.map((r) => ({
                           ...r,
-                          sharedValidity: e.target.checked,
+                          sharedValidity: !comboSharedValidity,
                         })),
                       );
                     }}
                   />
-                  <label
-                    htmlFor="combo-shared-validity"
-                    className="text-sm font-medium text-gray-700"
-                  >
+                  <span className="text-sm font-medium text-gray-700">
                     Shared Validity
-                  </label>
+                  </span>
                 </div>
 
-                <div className="flex items-center gap-2 mb-3">
+                <div className="flex items-center gap-2 mb-3 cursor-pointer" onClick={() => {
+                  const newChecked = !comboSharedPrice;
+                  setComboSharedPrice(newChecked);
+                  if (newChecked) {
+                    setComboResources(
+                      comboResources.map((r) => ({
+                        ...r,
+                        price: undefined,
+                      })),
+                    );
+                  }
+                }}>
                   <Checkbox
                     id="combo-shared-price"
                     checked={comboSharedPrice}
-                    onChange={(e) => {
-                      const checked = e.target.checked;
-                      setComboSharedPrice(checked);
-                      if (checked) {
+                    onChange={() => {
+                      const newChecked = !comboSharedPrice;
+                      setComboSharedPrice(newChecked);
+                      if (newChecked) {
                         setComboResources(
                           comboResources.map((r) => ({
                             ...r,
@@ -1577,12 +1590,9 @@ function TypeConfigurationModal({
                       }
                     }}
                   />
-                  <label
-                    htmlFor="combo-shared-price"
-                    className="text-sm font-medium text-gray-700"
-                  >
+                  <span className="text-sm font-medium text-gray-700">
                     Shared Combo Price
-                  </label>
+                  </span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">

@@ -316,15 +316,18 @@ export default function AddCustomersToQuickListModal({
                 <thead className="bg-gray-50 sticky top-0 z-10">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-12">
-                      <Checkbox
-                        checked={
-                          selectedCustomers.length ===
-                            filteredCustomers.length &&
-                          filteredCustomers.length > 0
-                        }
-                        onChange={handleSelectAll}
-                        disabled={isLoading}
-                      />
+                      <div className="flex items-center gap-2 cursor-pointer" onClick={handleSelectAll}>
+                        <Checkbox
+                          id="select-all-customers"
+                          checked={
+                            selectedCustomers.length ===
+                              filteredCustomers.length &&
+                            filteredCustomers.length > 0
+                          }
+                          onChange={handleSelectAll}
+                          disabled={isLoading}
+                        />
+                      </div>
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                       Name
@@ -357,13 +360,19 @@ export default function AddCustomersToQuickListModal({
                       >
                         <td
                           className="px-4 py-4 whitespace-nowrap"
-                          onClick={(e) => e.stopPropagation()}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            !isLoading && handleToggleCustomer(customer);
+                          }}
                         >
-                          <Checkbox
-                            checked={isSelected}
-                            onChange={() => handleToggleCustomer(customer)}
-                            disabled={isLoading}
-                          />
+                          <div className="flex items-center gap-2 cursor-pointer">
+                            <Checkbox
+                              id={`customer-${customer.id}`}
+                              checked={isSelected}
+                              onChange={() => handleToggleCustomer(customer)}
+                              disabled={isLoading}
+                            />
+                          </div>
                         </td>
                         <td className="px-4 py-4">
                           <div className="text-sm font-medium text-black">

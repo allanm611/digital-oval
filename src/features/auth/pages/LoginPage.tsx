@@ -267,11 +267,17 @@ const LoginPage: React.FC = () => {
               </div>
 
               <div className="form-options">
-                <label className="remember-me">
-                  <Checkbox checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)} />
+                <div
+                  className="remember-me cursor-pointer"
+                  onClick={() => setRememberMe(!rememberMe)}
+                >
+                  <Checkbox
+                    id="remember-me"
+                    checked={rememberMe}
+                    onChange={() => setRememberMe(!rememberMe)}
+                  />
                   <span>{t.auth.login.rememberMe}</span>
-                </label>
+                </div>
                 <a
                   href="#"
                   className="forgot-password"

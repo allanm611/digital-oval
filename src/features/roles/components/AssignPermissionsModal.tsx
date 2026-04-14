@@ -681,11 +681,15 @@ export default function AssignPermissionsModal({
                         className="px-4 py-3 sm:py-4 text-left"
                         style={{ color: color.surface.tableHeaderText }}
                       >
-                        <Checkbox
-                          ref={headerCheckboxRef} checked={allVisibleSelected}
-                          onChange={toggleSelectAllVisible}
-                          aria-label="Select all visible permissions"
-                          className="cursor-pointer w-4 h-4" />
+                        <div className="flex items-center gap-2 cursor-pointer" onClick={toggleSelectAllVisible}>
+                          <Checkbox
+                            ref={headerCheckboxRef}
+                            id="select-all-permissions"
+                            checked={allVisibleSelected}
+                            onChange={toggleSelectAllVisible}
+                            aria-label="Select all visible permissions"
+                            className="cursor-pointer w-4 h-4" />
+                        </div>
                       </th>
                     )}
                     <th
@@ -735,26 +739,36 @@ export default function AssignPermissionsModal({
                               backgroundColor: color.surface.tablebodybg,
                             }}
                           >
-                            <Checkbox checked={isSelected}
-                              disabled={isAssigned}
-                              onChange={(e) => {
+                            <div
+                              className="flex items-center gap-2 cursor-pointer"
+                              onClick={(e) => {
                                 e.stopPropagation();
                                 togglePermissionSelection(permission.id);
                               }}
-                              aria-label={`Select ${permission.name}`}
-                              className={`cursor-pointer w-4 h-4 ${
-                                isAssigned
-                                  ? "opacity-50 cursor-not-allowed"
-                                  : ""
-                              }`} />
-                            {isAssigned && (
-                              <span
-                                className="ml-2 text-xs font-medium"
-                                style={{ color: color.primary.accent }}
-                              >
-                                (Already assigned)
-                              </span>
-                            )}
+                            >
+                              <Checkbox
+                                id={`row-${permission.id}`}
+                                checked={isSelected}
+                                disabled={isAssigned}
+                                onChange={(e) => {
+                                  e.stopPropagation();
+                                  togglePermissionSelection(permission.id);
+                                }}
+                                aria-label={`Select ${permission.name}`}
+                                className={`cursor-pointer w-4 h-4 ${
+                                  isAssigned
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : ""
+                                }`} />
+                              {isAssigned && (
+                                <span
+                                  className="ml-2 text-xs font-medium"
+                                  style={{ color: color.primary.accent }}
+                                >
+                                  (Already assigned)
+                                </span>
+                              )}
+                            </div>
                           </td>
                         )}
                         <td

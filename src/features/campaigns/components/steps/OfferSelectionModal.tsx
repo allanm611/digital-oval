@@ -576,11 +576,19 @@ export default function OfferSelectionModal({
                         className="cursor-pointer transition-colors hover:bg-gray-50"
                       >
                         <td className="px-4 py-3">
-                          <Checkbox checked={isSelected}
-                            onChange={() => handleOfferToggle(offer)}
-                            onClick={(e) => e.stopPropagation()}
-                            className="w-4 h-4 border-gray-400 rounded"
-                            style={{ accentColor: "#111827" }} />
+                          <div
+                            className="flex items-center gap-2 cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOfferToggle(offer);
+                            }}
+                          >
+                            <Checkbox
+                              id={`offer-${offer.id}`}
+                              checked={isSelected}
+                              onChange={() => handleOfferToggle(offer)}
+                            />
+                          </div>
                         </td>
                         <td className="px-4 py-3">
                           <div className="text-sm font-medium text-black truncate">

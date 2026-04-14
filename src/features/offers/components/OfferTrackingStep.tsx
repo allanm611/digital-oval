@@ -473,21 +473,25 @@ export default function OfferTrackingStep({
                     </div>
                   </div>
 
-                  <div className="flex items-center">
-                    <Checkbox id={`enabled-${selectedSourceData.id}`}
+                  <div
+                    className="flex items-center cursor-pointer"
+                    onClick={() =>
+                      updateTrackingSource(selectedSourceData.id, {
+                        enabled: !selectedSourceData.enabled,
+                      })
+                    }
+                  >
+                    <Checkbox
+                      id={`enabled-${selectedSourceData.id}`}
                       checked={selectedSourceData.enabled}
-                      onChange={(e) =>
+                      onChange={() =>
                         updateTrackingSource(selectedSourceData.id, {
-                          enabled: e.target.checked,
+                          enabled: !selectedSourceData.enabled,
                         })
                       }
-                      className="w-4 h-4 text-gray-600 border-gray-300 rounded focus:outline-none" />
-                    <label
-                      htmlFor={`enabled-${selectedSourceData.id}`}
-                      className="ml-2 text-sm text-gray-700"
-                    >
-                      Set as default tracking source
-                    </label>
+                    />
+                    <span className="ml-2 text-sm text-gray-700">Set as default tracking source
+                    </span>
                   </div>
 
                   {/* Rules Section */}
@@ -729,22 +733,26 @@ export default function OfferTrackingStep({
                   />
                 </div>
 
-                <div className="flex items-center">
-                  <Checkbox id="rule-enabled"
+                <div
+                  className="flex items-center cursor-pointer"
+                  onClick={() =>
+                    setEditingRule({
+                      ...editingRule,
+                      enabled: !editingRule.enabled,
+                    })
+                  }
+                >
+                  <Checkbox
+                    id="rule-enabled"
                     checked={editingRule.enabled}
-                    onChange={(e) =>
+                    onChange={() =>
                       setEditingRule({
                         ...editingRule,
-                        enabled: e.target.checked,
+                        enabled: !editingRule.enabled,
                       })
                     }
-                    className="w-4 h-4 text-gray-600 border-gray-300 rounded focus:outline-none" />
-                  <label
-                    htmlFor="rule-enabled"
-                    className="ml-2 text-sm text-gray-700"
-                  >
-                    Enable this rule
-                  </label>
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Enable this rule</span>
                 </div>
               </div>
 

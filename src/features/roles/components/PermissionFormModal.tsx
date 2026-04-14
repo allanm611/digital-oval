@@ -340,26 +340,30 @@ export default function PermissionFormModal({
 
           {/* Security Checkboxes */}
           <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Checkbox id="is_sensitive"
+            <div
+              className="flex items-center gap-2 cursor-pointer"
+              onClick={() => handleCheckboxChange({ target: { name: 'is_sensitive', checked: !formData.is_sensitive } } as any)}
+            >
+              <Checkbox
+                id="is_sensitive"
                 name="is_sensitive"
                 checked={formData.is_sensitive}
                 onChange={handleCheckboxChange}
-                className="w-4 h-4 rounded border-gray-300 focus:ring-2 focus:ring-blue-500" />
-              <label htmlFor="is_sensitive" className="text-sm font-medium text-gray-700 cursor-pointer">
-                Mark as Sensitive
-              </label>
+              />
+              <span className="text-sm font-medium text-gray-700">Mark as Sensitive</span>
             </div>
 
-            <div className="flex items-center gap-2">
-              <Checkbox id="requires_mfa"
+            <div
+              className="flex items-center gap-2 cursor-pointer"
+              onClick={() => handleCheckboxChange({ target: { name: 'requires_mfa', checked: !formData.requires_mfa } } as any)}
+            >
+              <Checkbox
+                id="requires_mfa"
                 name="requires_mfa"
                 checked={formData.requires_mfa}
                 onChange={handleCheckboxChange}
-                className="w-4 h-4 rounded border-gray-300 focus:ring-2 focus:ring-blue-500" />
-              <label htmlFor="requires_mfa" className="text-sm font-medium text-gray-700 cursor-pointer">
-                Requires MFA Authentication
-              </label>
+              />
+              <span className="text-sm font-medium text-gray-700">Requires MFA Authentication</span>
             </div>
 
             <div className="flex items-center gap-2">

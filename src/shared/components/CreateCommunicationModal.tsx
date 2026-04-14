@@ -1086,11 +1086,13 @@ export default function CreateCommunicationModal({
                           </label>
                           <div className="space-y-2 max-h-48 overflow-y-auto">
                             {getAvailableTestContacts().map((contact) => (
-                              <label
+                              <div
                                 key={contact}
                                 className="flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-gray-50"
+                                onClick={() => toggleTestContact(contact)}
                               >
                                 <Checkbox
+                                  id={`test-contact-${contact}`}
                                   checked={selectedTestContacts.has(contact)}
                                   onChange={() => toggleTestContact(contact)}
                                   className="w-4 h-4 rounded border-gray-300 cursor-pointer"
@@ -1098,7 +1100,7 @@ export default function CreateCommunicationModal({
                                 <span className="text-sm text-gray-700 flex-1">
                                   {contact}
                                 </span>
-                              </label>
+                              </div>
                             ))}
                           </div>
                         </div>

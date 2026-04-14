@@ -387,11 +387,15 @@ export default function RunCampaignModal({
                         />
                       )}
                       <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3 flex-1">
-                          <Checkbox checked={segment.selected}
+                        <div
+                          className="flex items-center gap-3 flex-1 cursor-pointer"
+                          onClick={() => toggleSegment(segment.segment_id)}
+                        >
+                          <Checkbox
+                            id={`segment-${segment.segment_id}`}
+                            checked={segment.selected}
                             onChange={() => toggleSegment(segment.segment_id)}
-                            className="w-4 h-4 rounded flex-shrink-0"
-                            style={{ accentColor: color.primary.accent }} />
+                          />
                           <div className="flex-1">
                             <div
                               className={`text-sm font-medium ${tw.textPrimary}`}

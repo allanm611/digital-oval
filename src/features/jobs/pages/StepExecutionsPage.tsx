@@ -690,12 +690,16 @@ export default function StepExecutionsPage() {
                         borderTopLeftRadius: "0.375rem",
                       }}
                     >
-                      <Checkbox checked={
-                          filteredExecutions.length > 0 &&
-                          selectedExecutions.size === filteredExecutions.length
-                        }
-                        onChange={handleSelectAll}
-                        className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
+                      <div className="flex items-center gap-2 cursor-pointer" onClick={handleSelectAll}>
+                        <Checkbox
+                          id="select-all-executions"
+                          checked={
+                            filteredExecutions.length > 0 &&
+                            selectedExecutions.size === filteredExecutions.length
+                          }
+                          onChange={handleSelectAll}
+                        />
+                      </div>
                     </th>
                   )}
                   <th
@@ -779,9 +783,16 @@ export default function StepExecutionsPage() {
                           borderBottomLeftRadius: "0.375rem",
                         }}
                       >
-                        <Checkbox checked={selectedExecutions.has(execution.id)}
-                          onChange={() => handleSelectExecution(execution.id)}
-                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
+                        <div
+                          className="flex items-center gap-2 cursor-pointer"
+                          onClick={() => handleSelectExecution(execution.id)}
+                        >
+                          <Checkbox
+                            id={`execution-${execution.id}`}
+                            checked={selectedExecutions.has(execution.id)}
+                            onChange={() => handleSelectExecution(execution.id)}
+                          />
+                        </div>
                       </td>
                     )}
                     <td

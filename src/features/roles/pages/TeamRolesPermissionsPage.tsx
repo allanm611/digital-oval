@@ -1190,18 +1190,17 @@ export default function TeamRolesPermissionsPage() {
                   disabled={deactivatingRoleId !== null}
                 />
               </div>
-              <div className="flex items-center gap-2">
-                <Checkbox id="cascadeToChildren"
+              <div
+                className="flex items-center gap-2 cursor-pointer"
+                onClick={() => deactivatingRoleId === null && setCascadeToChildren(!cascadeToChildren)}
+              >
+                <Checkbox
+                  id="cascadeToChildren"
                   checked={cascadeToChildren}
-                  onChange={(e) => setCascadeToChildren(e.target.checked)}
+                  onChange={() => deactivatingRoleId === null && setCascadeToChildren(!cascadeToChildren)}
                   disabled={deactivatingRoleId !== null}
-                  className="w-4 h-4 text-blue-600 rounded cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" />
-                <label
-                  htmlFor="cascadeToChildren"
-                  className="text-sm text-gray-700 cursor-pointer"
-                >
-                  Deactivate child roles too
-                </label>
+                />
+                <span className="text-sm text-gray-700">Deactivate child roles too</span>
               </div>
             </div>
             <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">

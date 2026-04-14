@@ -1005,17 +1005,14 @@ export default function SettingsPage() {
 
           <div className="space-y-6">
             {/* DND Enabled */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 cursor-pointer" onClick={() => handleDNDEnabledChange(!settings.dnd_enabled)}>
               <Checkbox
                 id="dnd-enabled" checked={settings.dnd_enabled}
-                onChange={(e) => handleDNDEnabledChange(e.target.checked)}
+                onChange={() => handleDNDEnabledChange(!settings.dnd_enabled)}
                 className="w-5 h-5 text-emerald-600 rounded" />
-              <label
-                htmlFor="dnd-enabled"
-                className="text-sm font-semibold text-gray-700"
-              >
+              <span className="text-sm font-semibold text-gray-700">
                 Enable Do Not Disturb
-              </label>
+              </span>
             </div>
 
             {/* DND Settings - Only show if enabled */}
@@ -1203,6 +1200,9 @@ export default function SettingsPage() {
                   <div
                     key={subscription.rule_id}
                     className="flex items-start gap-3 cursor-pointer p-3 hover:bg-gray-50 rounded-lg transition-colors"
+                    onClick={() =>
+                      handleSubscriptionToggle(subscription.rule_id, subscription.is_subscribed)
+                    }
                   >
                     <Checkbox
                       id={`notification-${subscription.rule_id}`}

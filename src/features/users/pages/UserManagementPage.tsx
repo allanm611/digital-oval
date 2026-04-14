@@ -1822,12 +1822,16 @@ export default function UserManagementPage() {
                           className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
                           style={{ color: color.surface.tableHeaderText }}
                         >
-                          <Checkbox checked={
-                              filteredUsers.length > 0 &&
-                              selectedUsers.size === filteredUsers.length
-                            }
-                            onChange={handleSelectAll}
-                            className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
+                          <div className="flex items-center gap-2 cursor-pointer" onClick={handleSelectAll}>
+                            <Checkbox
+                              id="select-all-users"
+                              checked={
+                                  filteredUsers.length > 0 &&
+                                  selectedUsers.size === filteredUsers.length
+                                }
+                              onChange={handleSelectAll}
+                              className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
+                          </div>
                         </th>
                       )}
                       <th
@@ -1890,9 +1894,13 @@ export default function UserManagementPage() {
                                 backgroundColor: color.surface.tablebodybg,
                               }}
                             >
-                              <Checkbox checked={selectedUsers.has(user.id)}
-                                onChange={() => handleSelectUser(user.id)}
-                                className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
+                              <div className="flex items-center gap-2 cursor-pointer" onClick={() => handleSelectUser(user.id)}>
+                                <Checkbox
+                                  id={`row-${user.id}`}
+                                  checked={selectedUsers.has(user.id)}
+                                  onChange={() => handleSelectUser(user.id)}
+                                  className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
+                              </div>
                             </td>
                           )}
                           <td

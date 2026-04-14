@@ -246,15 +246,16 @@ export default function AddMembersModal({
                 <thead className="bg-gray-50 sticky top-0 z-10">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-12">
-                      <Checkbox checked={
-                          selectedCustomers.length === filteredCustomers.length &&
-                          filteredCustomers.length > 0
-                        }
-                        onChange={handleSelectAll}
-                        className="w-4 h-4 border-gray-400 rounded"
-                        style={{
-                          accentColor: "#111827",
-                        }} />
+                      <div className="flex items-center gap-2 cursor-pointer" onClick={handleSelectAll}>
+                        <Checkbox
+                          id="select-all-customers"
+                          checked={
+                            selectedCustomers.length === filteredCustomers.length &&
+                            filteredCustomers.length > 0
+                          }
+                          onChange={handleSelectAll}
+                        />
+                      </div>
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                       Name
@@ -284,13 +285,19 @@ export default function AddMembersModal({
                         className="cursor-pointer transition-colors hover:bg-gray-50"
                       >
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <Checkbox checked={isSelected}
-                            onChange={() => handleToggleCustomer(customer)}
-                            onClick={(e) => e.stopPropagation()}
-                            className="w-4 h-4 border-gray-400 rounded"
-                            style={{
-                              accentColor: "#111827",
-                            }} />
+                          <div
+                            className="flex items-center gap-2 cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleCustomer(customer);
+                            }}
+                          >
+                            <Checkbox
+                              id={`customer-${customer.customerId}`}
+                              checked={isSelected}
+                              onChange={() => handleToggleCustomer(customer)}
+                            />
+                          </div>
                         </td>
                         <td className="px-4 py-4">
                           <div className="text-sm font-medium text-black">

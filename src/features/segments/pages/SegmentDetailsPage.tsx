@@ -2343,7 +2343,13 @@ export default function SegmentDetailsPage() {
                       <thead className="bg-gray-50 sticky top-0 z-10">
                         <tr>
                           <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-12">
-                            <Checkbox />
+                            <div className="flex items-center gap-2 cursor-pointer" onClick={() => {
+                              // Select/deselect all logic would go here
+                            }}>
+                              <Checkbox
+                                id="select-all-customers"
+                              />
+                            </div>
                           </th>
                           <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                             MSISDN
@@ -2397,19 +2403,31 @@ export default function SegmentDetailsPage() {
                               }}
                             >
                               <td className="px-4 py-3">
-                                <Checkbox
-                                  checked={isSelected}
-                                  onChange={() => {
-                                    setSelectedCustomers((prev) =>
-                                      prev.includes(customerId)
-                                        ? prev.filter(
-                                            (cid) => cid !== customerId,
-                                          )
-                                        : [...prev, customerId],
-                                    );
-                                  }}
-                                  className="w-4 h-4 cursor-pointer"
-                                />
+                                <div className="flex items-center gap-2 cursor-pointer" onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedCustomers((prev) =>
+                                    prev.includes(customerId)
+                                      ? prev.filter(
+                                          (cid) => cid !== customerId,
+                                        )
+                                      : [...prev, customerId],
+                                  );
+                                }}>
+                                  <Checkbox
+                                    id={`row-${customerId}`}
+                                    checked={isSelected}
+                                    onChange={() => {
+                                      setSelectedCustomers((prev) =>
+                                        prev.includes(customerId)
+                                          ? prev.filter(
+                                              (cid) => cid !== customerId,
+                                            )
+                                          : [...prev, customerId],
+                                      );
+                                    }}
+                                    className="w-4 h-4 cursor-pointer"
+                                  />
+                                </div>
                               </td>
                               <td className="px-4 py-3">
                                 <div className="text-sm text-gray-900">

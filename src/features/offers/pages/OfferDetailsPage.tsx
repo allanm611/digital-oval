@@ -3038,25 +3038,27 @@ export default function OfferDetailsPage() {
               {/* HTML Body removed per request; message body covers content */}
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() =>
+              setNewCreativeForm((prev) => ({
+                ...prev,
+                is_active: !prev.is_active,
+              }))
+            }>
               <Checkbox
                 id="new-creative-active"
                 checked={newCreativeForm.is_active}
-                onChange={(e) =>
+                onChange={() =>
                   setNewCreativeForm((prev) => ({
                     ...prev,
-                    is_active: e.target.checked,
+                    is_active: !prev.is_active,
                   }))
                 }
                 className="h-4 w-4 rounded border-gray-300"
                 style={{ accentColor: color.primary.accent }}
               />
-              <label
-                htmlFor="new-creative-active"
-                className="text-sm text-gray-700"
-              >
+              <span className="text-sm text-gray-700">
                 Mark creative as active
-              </label>
+              </span>
             </div>
 
             {/* Button Bar */}
@@ -3349,15 +3351,21 @@ export default function OfferDetailsPage() {
                           >
                             <td className="px-4 py-3">
                               {!isAlreadyLinked && (
-                                <Checkbox
-                                  checked={isSelected}
-                                  onChange={() =>
-                                    toggleProductSelection(product)
-                                  }
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="w-4 h-4 border-gray-400 rounded"
-                                  style={{ accentColor: "#111827" }}
-                                />
+                                <div className="flex items-center gap-2 cursor-pointer" onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleProductSelection(product);
+                                }}>
+                                  <Checkbox
+                                    id={`row-product-${product.id}`}
+                                    checked={isSelected}
+                                    onChange={() =>
+                                      toggleProductSelection(product)
+                                    }
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="w-4 h-4 border-gray-400 rounded"
+                                    style={{ accentColor: "#111827" }}
+                                  />
+                                </div>
                               )}
                               {isAlreadyLinked && (
                                 <Check className="w-4 h-4 text-gray-400" />

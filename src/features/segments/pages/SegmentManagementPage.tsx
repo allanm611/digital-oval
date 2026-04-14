@@ -1531,13 +1531,16 @@ export default function SegmentManagementPage() {
                         className="px-3 py-4 text-sm font-medium"
                         style={{ color: color.surface.tableHeaderText }}
                       >
-                        <Checkbox
-                          ref={headerCheckboxRef}
-                          className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
-                          checked={allVisibleSelected}
-                          onChange={toggleSelectAllVisible}
-                          aria-label="Select all visible segments"
-                        />
+                        <div className="flex items-center gap-2 cursor-pointer" onClick={toggleSelectAllVisible}>
+                          <Checkbox
+                            ref={headerCheckboxRef}
+                            id="select-all-segments"
+                            className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
+                            checked={allVisibleSelected}
+                            onChange={toggleSelectAllVisible}
+                            aria-label="Select all visible segments"
+                          />
+                        </div>
                       </th>
                     )}
                     <th
@@ -1592,15 +1595,21 @@ export default function SegmentManagementPage() {
                           className="px-3 py-4"
                           style={{ backgroundColor: color.surface.tablebodybg }}
                         >
-                          <Checkbox
-                            checked={selectedSegmentIds.has(segment.id)}
-                            onChange={(event) => {
-                              event.stopPropagation();
-                              toggleSegmentSelection(segment.id);
-                            }}
-                            aria-label={`Select ${segment.name}`}
-                            className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
-                          />
+                          <div className="flex items-center gap-2 cursor-pointer" onClick={(e) => {
+                          e.stopPropagation();
+                          toggleSegmentSelection(segment.id);
+                        }}>
+                            <Checkbox
+                              id={`row-${segment.id}`}
+                              checked={selectedSegmentIds.has(segment.id)}
+                              onChange={(event) => {
+                                event.stopPropagation();
+                                toggleSegmentSelection(segment.id);
+                              }}
+                              aria-label={`Select ${segment.name}`}
+                              className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
+                            />
+                          </div>
                         </td>
                       )}
                       <td

@@ -348,24 +348,28 @@ export default function EditCampaignFlowModal({
 
             {/* Status */}
             <div>
-              <div className="flex items-center gap-2">
+              <div
+                className="flex items-center gap-2 cursor-pointer"
+                onClick={() =>
+                  setEditedFlow({
+                    ...editedFlow,
+                    is_active: !(editedFlow.is_active !== false),
+                  })
+                }
+              >
                 <Checkbox
                   id="flowActive"
                   checked={editedFlow.is_active !== false}
-                  onChange={(e) =>
+                  onChange={() =>
                     setEditedFlow({
                       ...editedFlow,
-                      is_active: e.target.checked,
+                      is_active: !(editedFlow.is_active !== false),
                     })
                   }
-                  className="w-4 h-4"
                 />
-                <label
-                  htmlFor="flowActive"
-                  className={`text-sm font-medium ${tw.textPrimary}`}
-                >
+                <span className={`text-sm font-medium ${tw.textPrimary}`}>
                   Active Flow
-                </label>
+                </span>
               </div>
             </div>
           </div>

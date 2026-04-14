@@ -316,13 +316,20 @@ export default function NotificationsPage() {
                   >
                     <div className="flex items-start gap-3 sm:gap-4">
                       {bulkMode && (
-                        <Checkbox
-                          id={`notification-${notification.id}`}
-                          checked={isSelected}
-                          onChange={() =>
+                        <div
+                          className="flex items-center gap-2 cursor-pointer"
+                          onClick={() =>
                             handleSelectNotification(notification.id)
                           }
-                        />
+                        >
+                          <Checkbox
+                            id={`notification-${notification.id}`}
+                            checked={isSelected}
+                            onChange={() =>
+                              handleSelectNotification(notification.id)
+                            }
+                          />
+                        </div>
                       )}
                       <div
                         onClick={() =>

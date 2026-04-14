@@ -974,59 +974,65 @@ export default function ProductForm({
                 >
                   {/* Shared Configuration Checkboxes */}
                   <div className="grid gap-4 md:grid-cols-3 mb-4">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 cursor-pointer" onClick={() =>
+                      setComboSettings({
+                        ...comboSettings,
+                        shared_validity: !comboSettings.shared_validity,
+                      })
+                    }>
                       <Checkbox
                         id="shared-validity-combo"
                         checked={comboSettings.shared_validity}
-                        onChange={(e) =>
+                        onChange={() =>
                           setComboSettings({
                             ...comboSettings,
-                            shared_validity: e.target.checked,
+                            shared_validity: !comboSettings.shared_validity,
                           })
                         }
                       />
-                      <label
-                        htmlFor="shared-validity-combo"
-                        className={`text-sm font-medium ${tw.textPrimary}`}
-                      >
+                      <span className={`text-sm font-medium ${tw.textPrimary}`}>
                         Shared Validity
-                      </label>
+                      </span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 cursor-pointer" onClick={() =>
+                      setComboSettings({
+                        ...comboSettings,
+                        shared_price: !comboSettings.shared_price,
+                      })
+                    }>
                       <Checkbox
                         id="shared-price-combo"
                         checked={comboSettings.shared_price}
-                        onChange={(e) =>
+                        onChange={() =>
                           setComboSettings({
                             ...comboSettings,
-                            shared_price: e.target.checked,
+                            shared_price: !comboSettings.shared_price,
                           })
                         }
                       />
-                      <label
-                        htmlFor="shared-price-combo"
-                        className={`text-sm font-medium ${tw.textPrimary}`}
-                      >
+                      <span className={`text-sm font-medium ${tw.textPrimary}`}>
                         Shared Price
-                      </label>
+                      </span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 cursor-pointer" onClick={() =>
+                      setComboSettings({
+                        ...comboSettings,
+                        shared_daid: !comboSettings.shared_daid,
+                      })
+                    }>
                       <Checkbox
                         id="shared-daid-combo"
                         checked={comboSettings.shared_daid}
-                        onChange={(e) =>
+                        onChange={() =>
                           setComboSettings({
                             ...comboSettings,
-                            shared_daid: e.target.checked,
+                            shared_daid: !comboSettings.shared_daid,
                           })
                         }
                       />
-                      <label
-                        htmlFor="shared-daid-combo"
-                        className={`text-sm font-medium ${tw.textPrimary}`}
-                      >
+                      <span className={`text-sm font-medium ${tw.textPrimary}`}>
                         Shared DAID
-                      </label>
+                      </span>
                     </div>
                   </div>
 

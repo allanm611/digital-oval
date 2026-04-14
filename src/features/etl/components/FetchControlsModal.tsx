@@ -359,15 +359,18 @@ export default function FetchControlsModal({
                   />
                 )}
               </div>
-              <label className="flex items-center gap-2">
-                <Checkbox checked={forceReprocess}
-                  onChange={(e) => setForceReprocess(e.target.checked)}
-                  className="w-4 h-4 cursor-pointer"
-                  disabled={isLoading} />
-                <span className={`text-sm ${tw.textPrimary}`}>
-                  Force Reprocess
-                </span>
-              </label>
+              <div
+                className="flex items-center gap-2 cursor-pointer"
+                onClick={() => !isLoading && setForceReprocess(!forceReprocess)}
+              >
+                <Checkbox
+                  id="force-reprocess"
+                  checked={forceReprocess}
+                  onChange={() => !isLoading && setForceReprocess(!forceReprocess)}
+                  disabled={isLoading}
+                />
+                <span className={`text-sm ${tw.textPrimary}`}>Force Reprocess</span>
+              </div>
             </>
           )}
 

@@ -466,18 +466,19 @@ export default function SchedulingComponent({
               </label>
               <div className="flex gap-3 flex-wrap">
                 {daysOfWeek.map((day) => (
-                  <div key={day.value} className="flex items-center gap-2">
+                  <div
+                    key={day.value}
+                    className="flex items-center gap-2 cursor-pointer"
+                    onClick={() => toggleDayOfWeek(day.value)}
+                  >
                     <Checkbox
                       id={`day-${day.value}`}
                       checked={selectedDays.includes(day.value)}
                       onChange={() => toggleDayOfWeek(day.value)}
                     />
-                    <label
-                      htmlFor={`day-${day.value}`}
-                      className="text-sm text-gray-700 cursor-pointer font-medium"
-                    >
+                    <span className="text-sm text-gray-700 font-medium">
                       {day.label.substring(0, 3)}
-                    </label>
+                    </span>
                   </div>
                 ))}
               </div>
@@ -496,26 +497,34 @@ export default function SchedulingComponent({
             {(recurrencePattern === "Days" ||
               recurrencePattern === "Months") && (
               <>
-                <div className="flex items-center gap-2">
+                <div
+                  className="flex items-center gap-2 cursor-pointer"
+                  onClick={() => {
+                    const newValue = !setSpecificStartTime;
+                    setSetSpecificStartTime(newValue);
+                    if (newValue && specificDayStartTimes.length === 0) {
+                      setSpecificDayStartTimes([
+                        { id: Date.now(), day: 1, time: "08:00" },
+                      ]);
+                    }
+                  }}
+                >
                   <Checkbox
                     id="set-specific-schedule"
                     checked={setSpecificStartTime}
-                    onChange={(e) => {
-                      const checked = e.target.checked;
-                      setSetSpecificStartTime(checked);
-                      if (checked && specificDayStartTimes.length === 0) {
+                    onChange={() => {
+                      const newValue = !setSpecificStartTime;
+                      setSetSpecificStartTime(newValue);
+                      if (newValue && specificDayStartTimes.length === 0) {
                         setSpecificDayStartTimes([
                           { id: Date.now(), day: 1, time: "08:00" },
                         ]);
                       }
                     }}
                   />
-                  <label
-                    htmlFor="set-specific-schedule"
-                    className="text-sm text-gray-700 cursor-pointer font-medium"
-                  >
+                  <span className="text-sm text-gray-700 font-medium">
                     Set specific schedule
-                  </label>
+                  </span>
                 </div>
 
                 {setSpecificStartTime && recurrencePattern === "Days" && (
@@ -588,18 +597,18 @@ export default function SchedulingComponent({
               </>
             )}
 
-            <div className="flex items-center gap-2">
+            <div
+              className="flex items-center gap-2 cursor-pointer"
+              onClick={() => setStartDeliveryOnCompletion(!startDeliveryOnCompletion)}
+            >
               <Checkbox
                 id="start-delivery-completion"
                 checked={startDeliveryOnCompletion}
-                onChange={(e) => setStartDeliveryOnCompletion(e.target.checked)}
+                onChange={() => setStartDeliveryOnCompletion(!startDeliveryOnCompletion)}
               />
-              <label
-                htmlFor="start-delivery-completion"
-                className="text-sm text-gray-700 cursor-pointer font-medium"
-              >
+              <span className="text-sm text-gray-700 font-medium">
                 Start delivery on completion of specific Broadcasts
-              </label>
+              </span>
             </div>
           </div>
         </div>

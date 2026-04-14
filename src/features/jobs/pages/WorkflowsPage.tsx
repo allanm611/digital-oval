@@ -591,12 +591,16 @@ export default function WorkflowsPage() {
                       borderTopLeftRadius: "0.375rem",
                     }}
                   >
-                    <Checkbox checked={
-                        selectedWorkflows.size === workflows.length &&
-                        workflows.length > 0
-                      }
-                      onChange={handleSelectAll}
-                      className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
+                    <div className="flex items-center gap-2 cursor-pointer" onClick={handleSelectAll}>
+                      <Checkbox
+                        id="select-all-workflows"
+                        checked={
+                          selectedWorkflows.size === workflows.length &&
+                          workflows.length > 0
+                        }
+                        onChange={handleSelectAll}
+                        className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
+                    </div>
                   </th>
                 )}
                 <th
@@ -662,9 +666,13 @@ export default function WorkflowsPage() {
                         borderBottomLeftRadius: "0.375rem",
                       }}
                     >
-                      <Checkbox checked={selectedWorkflows.has(workflow.id)}
-                        onChange={() => handleToggleSelection(workflow.id)}
-                        className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
+                      <div className="flex items-center gap-2 cursor-pointer" onClick={() => handleToggleSelection(workflow.id)}>
+                        <Checkbox
+                          id={`row-${workflow.id}`}
+                          checked={selectedWorkflows.has(workflow.id)}
+                          onChange={() => handleToggleSelection(workflow.id)}
+                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
+                      </div>
                     </td>
                   )}
                   <td
