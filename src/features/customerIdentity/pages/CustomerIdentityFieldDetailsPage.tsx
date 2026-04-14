@@ -13,6 +13,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { CustomerIdentityField } from "../types/customerIdentity";
 import { customerIdentityService } from "../services/customerIdentityService";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { getOperatorsForFieldType } from "../../../shared/utils/operatorMapper";
 
 type LocationState = {
   field?: CustomerIdentityField;
@@ -196,99 +197,92 @@ export default function CustomerIdentityFieldDetailsPage() {
                 {t.customerIdentity.operatorSupport}
               </h2>
             </div>
-            {!field.operators || field.operators.length === 0 ? (
-              <div
-                className={`bg-white border border-gray-200 ${tw.rounded} p-6`}
-              >
-                <p className={`${tw.textSecondary} text-sm`}>
-                  {t.customerIdentity.noOperatorsConfigured}
-                </p>
-              </div>
-            ) : (
-              <div
-                className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
-              >
-                <div className="hidden lg:block overflow-x-auto">
-                  <table
-                    className="min-w-full"
-                    style={{
-                      borderCollapse: "separate",
-                      borderSpacing: "0 8px",
-                    }}
-                  >
-                    <thead style={{ background: color.surface.tableHeader }}>
-                      <tr>
-                        {[
-                          t.customerIdentity.label,
-                          t.customerIdentity.symbol,
-                          t.customerIdentity.requiresValue,
-                          t.customerIdentity.requiresTwoValues,
-                          t.customerIdentity.applicableTypes,
-                        ].map((header) => (
-                          <th
-                            key={header}
-                            className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                            style={{ color: color.surface.tableHeaderText }}
-                          >
-                            {header}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {field.operators.map((operator) => (
-                        <tr key={operator.id}>
-                          <td
-                            className="px-6 py-4 text-sm text-gray-900 font-medium"
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            {operator.label}
-                          </td>
-                          <td
-                            className="px-6 py-4 text-sm text-gray-700"
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            {operator.symbol}
-                          </td>
-                          <td
-                            className="px-6 py-4 text-sm text-gray-700"
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            {operator.requires_value
-                              ? t.customerIdentity.yes
-                              : t.customerIdentity.no}
-                          </td>
-                          <td
-                            className="px-6 py-4 text-sm text-gray-700"
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            {operator.requires_two_values
-                              ? t.customerIdentity.yes
-                              : t.customerIdentity.no}
-                          </td>
-                          <td
-                            className="px-6 py-4 text-sm text-gray-700"
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            {(operator.applicable_field_types || []).join(", ") || "—"}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+            {(() => {
+              const operators = getOperatorsForFieldType(field?.field_type || "text");
+              return operators.length === 0 ? (
+                <div
+                  className={`bg-white border border-gray-200 ${tw.rounded} p-6`}
+                >
+                  <p className={`${tw.textSecondary} text-sm`}>
+                    {t.customerIdentity.noOperatorsConfigured}
+                  </p>
                 </div>
-              </div>
-            )}
+              ) : (
+                <div
+                  className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
+                >
+                  <div className="hidden lg:block overflow-x-auto">
+                    <table
+                      className="min-w-full"
+                      style={{
+                        borderCollapse: "separate",
+                        borderSpacing: "0 8px",
+                      }}
+                    >
+                      <thead style={{ background: color.surface.tableHeader }}>
+                        <tr>
+                          {[
+                            t.customerIdentity.label,
+                            t.customerIdentity.symbol,
+                            t.customerIdentity.requiresValue,
+                            t.customerIdentity.requiresTwoValues,
+                          ].map((header) => (
+                            <th
+                              key={header}
+                              className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
+                              style={{ color: color.surface.tableHeaderText }}
+                            >
+                              {header}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {operators.map((operator) => (
+                          <tr key={operator.id}>
+                            <td
+                              className="px-6 py-4 text-sm text-gray-900 font-medium"
+                              style={{
+                                backgroundColor: color.surface.tablebodybg,
+                              }}
+                            >
+                              {operator.label
+                                .split("_")
+                                .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                                .join(" ")}
+                            </td>
+                            <td
+                              className="px-6 py-4 text-sm text-gray-700"
+                              style={{
+                                backgroundColor: color.surface.tablebodybg,
+                              }}
+                            >
+                              {operator.symbol}
+                            </td>
+                            <td
+                              className="px-6 py-4 text-sm text-gray-700"
+                              style={{
+                                backgroundColor: color.surface.tablebodybg,
+                              }}
+                            >
+                              {operator.requires_value ? "Yes" : "No"}
+                            </td>
+                            <td
+                              className="px-6 py-4 text-sm text-gray-700"
+                              style={{
+                                backgroundColor: color.surface.tablebodybg,
+                              }}
+                            >
+                              {operator.requires_two_values ? "Yes" : "No"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              );
+            })()}
           </section>
         </div>
       ) : null}

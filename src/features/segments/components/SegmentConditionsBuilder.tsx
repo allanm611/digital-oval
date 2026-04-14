@@ -22,8 +22,7 @@ import {
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useSegmentationFields } from "../hooks/useSegmentationFields";
-// COMMENTED OUT: Using backend operators only
-// import { getOperatorsForFieldType, DATE_OPERATORS } from "../../../shared/utils/operatorMapper";
+import { getOperatorsForFieldType, DATE_OPERATORS } from "../../../shared/utils/operatorMapper";
 import UnifiedPickerModal from "./UnifiedPickerModal";
 import SystemEventPickerModal from "./SystemEventPickerModal";
 import FieldPickerModal from "./FieldPickerModal";
@@ -300,26 +299,15 @@ export default function SegmentConditionsBuilder({
     getFieldByValue,
   } = useSegmentationFields();
 
-  // Helper: get the first operator from a backend field's operators array
+  // Helper: get the first operator for a field based on its field_type
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const getFirstBackendOperator = (
     field: Record<string, any> | null | undefined,
   ) => {
-    if (
-      field?.operators &&
-      Array.isArray(field.operators) &&
-      field.operators.length > 0
-    ) {
-      return field.operators[0];
-    }
-    // COMMENTED OUT: Fallback to operatorMapper if backend doesn't provide operators
-    // const ops = getOperatorsForFieldType(field?.field_type || "text");
-    // return ops.length > 0
-    //   ? { id: ops[0].id, label: ops[0].label }
-    //   : { id: 1, label: "equals" };
-
-    // Default when no backend operators (shouldn't happen, but safe fallback)
-    return { id: 1, label: "equals" };
+    const ops = getOperatorsForFieldType(field?.field_type || "text");
+    return ops.length > 0
+      ? { id: ops[0].id, label: ops[0].label }
+      : { id: 1, label: "equals" };
   };
 
 
@@ -806,35 +794,15 @@ export default function SegmentConditionsBuilder({
               >
                 <HeadlessSelect
                   options={(() => {
-                    // Use backend operators array if available
-                    if (actualField?.operators && Array.isArray(actualField.operators) && actualField.operators.length > 0) {
-                      return actualField.operators.map((op: any) => ({
-                        value: `${op.label}|${op.id}`,
-                        label: op.label
-                          .split("_")
-                          .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-                          .join(" "),
-                      }));
-                    }
-                    // COMMENTED OUT: Fallback to frontend operators
-                    // const operators = getOperatorsForFieldType(actualField?.field_type || "text");
-                    // return operators.map((op) => ({
-                    //   value: `${op.label}|${op.id}`,
-                    //   label: op.label
-                    //     .split("_")
-                    //     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                    //     .join(" "),
-                    // }));
-
-                    // Warning: Backend didn't provide operators for this field
-                    if (process.env.NODE_ENV === "development") {
-                      console.warn(
-                        `[SegmentConditionsBuilder] Field "${actualField?.field_name}" (${actualField?.field_value}) has no operators from backend`,
-                      );
-                    }
-
-                    // Fallback: Show default "equals" operator
-                    return [{ value: "equals|1", label: "Equals" }];
+                    // Determine operators based on field type
+                    const operators = getOperatorsForFieldType(actualField?.field_type || "text");
+                    return operators.map((op) => ({
+                      value: `${op.label}|${op.id}`,
+                      label: op.label
+                        .split("_")
+                        .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+                        .join(" "),
+                    }));
                   })()}
                   value={`${condition.operator}|${condition.operator_id}`}
                   onChange={(value) => {
@@ -920,7 +888,6 @@ export default function SegmentConditionsBuilder({
               style={{ borderColor: color.border.default }}
             />
 
-            {/* TODO: Secondary Date Range Dropdown - Commented out pending backend updates
             <div className="min-w-[140px] max-w-[170px] flex-shrink-0">
               <HeadlessSelect
                 options={DATE_OPERATORS}
@@ -1041,7 +1008,6 @@ export default function SegmentConditionsBuilder({
                 style={{ borderColor: color.border.default }}
               />
             )}
-            */}
           </div>
         </>
       );

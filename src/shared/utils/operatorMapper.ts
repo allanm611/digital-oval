@@ -65,49 +65,49 @@ const OPERATORS: Record<string, OperatorType> = {
     requiresTwoValues: false,
   },
   BETWEEN: {
-    id: 12,
+    id: 9,
     symbol: "BETWEEN",
     label: "between",
     requiresValue: true,
     requiresTwoValues: true,
   },
   IS_NULL: {
-    id: 13,
+    id: 10,
     symbol: "IS NULL",
     label: "is empty",
     requiresValue: false,
     requiresTwoValues: false,
   },
   IS_NOT_NULL: {
-    id: 14,
+    id: 11,
     symbol: "IS NOT NULL",
     label: "is not empty",
     requiresValue: false,
     requiresTwoValues: false,
   },
   ON_DATE: {
-    id: 15,
+    id: 12,
     symbol: "ON",
     label: "on_date",
     requiresValue: true,
     requiresTwoValues: false,
   },
   BETWEEN_DATES: {
-    id: 16,
+    id: 13,
     symbol: "BETWEEN",
     label: "between_dates",
     requiresValue: true,
     requiresTwoValues: true,
   },
   SINCE_DATE: {
-    id: 17,
+    id: 14,
     symbol: "SINCE",
     label: "since_date",
     requiresValue: true,
     requiresTwoValues: false,
   },
   UNTIL_DATE: {
-    id: 18,
+    id: 15,
     symbol: "UNTIL",
     label: "until_date",
     requiresValue: true,
@@ -132,17 +132,32 @@ export function getOperatorsForFieldType(fieldType: string): OperatorType[] {
         OPERATORS.IS_NOT_NULL,
       ];
 
-    // Numeric fields (backend sends "Number" and "Money")
-    // Includes both value operators and date operators for date range filtering
+    // Regular numeric fields (no date operators)
     case "numeric":
     case "number":
-    case "money":
     case "integer":
     case "int":
     case "bigint":
-    case "decimal":
     case "float":
     case "double":
+      return [
+        OPERATORS.EQUALS,
+        OPERATORS.NOT_EQUALS,
+        OPERATORS.GREATER_THAN,
+        OPERATORS.LESS_THAN,
+        OPERATORS.GREATER_THAN_OR_EQUAL,
+        OPERATORS.LESS_THAN_OR_EQUAL,
+        OPERATORS.IN,
+        OPERATORS.NOT_IN,
+        OPERATORS.BETWEEN,
+        OPERATORS.IS_NULL,
+        OPERATORS.IS_NOT_NULL,
+      ];
+
+    // KPI metric fields (money, decimal) - includes date operators for date range filtering
+    // Backend uses these types for metrics like revenue, usage, etc.
+    case "money":
+    case "decimal":
       return [
         OPERATORS.EQUALS,
         OPERATORS.NOT_EQUALS,
@@ -171,7 +186,7 @@ export function getOperatorsForFieldType(fieldType: string): OperatorType[] {
         OPERATORS.IS_NOT_NULL,
       ];
 
-    // Date/Timestamp fields — use same standard operators
+    // Date/Timestamp fields — includes date-specific operators
     // The frontend renders date pickers and sends start_date/end_date
     case "date":
     case "timestamp":
@@ -184,6 +199,10 @@ export function getOperatorsForFieldType(fieldType: string): OperatorType[] {
         OPERATORS.GREATER_THAN_OR_EQUAL,
         OPERATORS.LESS_THAN_OR_EQUAL,
         OPERATORS.BETWEEN,
+        OPERATORS.ON_DATE,
+        OPERATORS.BETWEEN_DATES,
+        OPERATORS.SINCE_DATE,
+        OPERATORS.UNTIL_DATE,
         OPERATORS.IS_NULL,
         OPERATORS.IS_NOT_NULL,
       ];
@@ -232,10 +251,11 @@ export function getAllOperators(): OperatorType[] {
 /**
  * Date range operators for numeric field conditions
  * Used as secondary dropdown when numeric operator is selected
+ * Maps to date operator IDs 12-15
  */
 export const DATE_OPERATORS = [
-  { value: "on", label: "On" },
-  { value: "between", label: "Between" },
-  { value: "since", label: "Since" },
-  { value: "until", label: "Until" },
+  { value: "on", label: "On", id: 12 },
+  { value: "between", label: "Between", id: 13 },
+  { value: "since", label: "Since", id: 14 },
+  { value: "until", label: "Until", id: 15 },
 ];
