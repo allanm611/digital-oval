@@ -37,7 +37,7 @@ export default function SegmentModal({
     description: "",
     tags: [] as string[],
     conditions: [] as SegmentConditionGroup[],
-    type: "dynamic",
+    type_id: undefined as number | undefined,
     category: undefined as number | undefined,
   });
   const [tagInput, setTagInput] = useState("");
@@ -155,6 +155,16 @@ export default function SegmentModal({
               );
             }
 
+            // Determine type_id from backend response
+            let typeId: number | undefined;
+            if ((fullSegment as any).type_id) {
+              typeId = (fullSegment as any).type_id;
+            } else if (fullSegment.type && segmentTypes?.length > 0) {
+              // Try to find the type ID by looking up the name
+              const foundType = segmentTypes.find((type) => type.name === fullSegment.type);
+              typeId = foundType?.id;
+            }
+
             setFormData({
               name: fullSegment.name,
               description: fullSegment.description || "",
@@ -162,7 +172,7 @@ export default function SegmentModal({
                 typeof tag === "string" ? tag : tag?.name || String(tag),
               ),
               conditions: conditions,
-              type: fullSegment.type || "dynamic",
+              type_id: typeId,
               category,
             });
             // Store existing queries (not displayed in edit mode, but kept for reference)
@@ -179,7 +189,7 @@ export default function SegmentModal({
             name: "",
             description: "",
             tags: [],
-            type: "dynamic",
+            type_id: undefined,
             conditions: [],
             category: undefined,
           });
@@ -902,7 +912,7 @@ export default function SegmentModal({
           name: formData.name,
           description: formData.description,
           tags: formData.tags,
-          type: formData.type || "dynamic",
+          type_id: formData.type_id,
           category: formData.category,
           query: queries.segment_query,
           count_query: queries.count_query,
@@ -951,7 +961,7 @@ export default function SegmentModal({
           code: code,
           description: formData.description,
           tags: formData.tags,
-          type: formData.type || "dynamic",
+          type_id: formData.type_id,
           category: formData.category,
           query: queries.segment_query,
           count_query: queries.count_query,
@@ -1237,22 +1247,23 @@ export default function SegmentModal({
                         Segment Type
                       </label>
                       <HeadlessSelect
-                        value={formData.type}
+                        value={
+                          formData.type_id
+                            ? String(formData.type_id)
+                            : ""
+                        }
                         onChange={(value) =>
                           setFormData((prev) => ({
                             ...prev,
-                            type: value,
+                            type_id: value ? Number(value) : undefined,
                           }))
                         }
                         options={
                           segmentTypes && segmentTypes.length > 0
                             ? segmentTypes.map((type) => {
-                                const typeName = type?.name;
                                 return {
-                                  value: typeName
-                                    ? typeName.toLowerCase()
-                                    : "",
-                                  label: typeName || "Unknown Type",
+                                  value: String(type.id),
+                                  label: type.name || "Unknown Type",
                                 };
                               })
                             : []

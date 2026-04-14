@@ -9,6 +9,7 @@ interface CheckboxProps extends Omit<
   // Controlled component - requires checked prop
   checked: boolean;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  id?: string;
 }
 
 export default function Checkbox({
@@ -16,14 +17,28 @@ export default function Checkbox({
   checked,
   onChange,
   disabled = false,
+  id,
   ...inputProps
 }: CheckboxProps) {
   const inputRef = React.useRef<HTMLInputElement>(null);
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
     if (!disabled && inputRef.current) {
-      inputRef.current.click();
+      const input = inputRef.current;
+      // Toggle the checked state
+      input.checked = !input.checked;
+
+      // Create a synthetic change event with proper target
+      const changeEvent = new Event('change', { bubbles: true });
+      Object.defineProperty(changeEvent, 'target', {
+        writable: false,
+        value: input,
+      });
+
+      // Call onChange with the event
+      onChange(changeEvent as React.ChangeEvent<HTMLInputElement>);
     }
   };
 
@@ -39,6 +54,7 @@ export default function Checkbox({
       <input
         ref={inputRef}
         {...inputProps}
+        id={id}
         type="checkbox"
         checked={checked}
         onChange={handleChange}

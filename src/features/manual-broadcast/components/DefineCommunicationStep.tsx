@@ -289,11 +289,7 @@ export default function DefineCommunicationStep({
 
   // Sync communication fields to parent data (so Next button validation works)
   useEffect(() => {
-    console.log("[DefineCommunicationStep] Syncing to parent:", {
-      channel: selectedChannel,
-      messageBodyLength: messageBody.length,
-      messageTitle: messageTitle.length > 0 ? `${messageTitle.length} chars` : "empty",
-    });
+    // ...console.log removed...
     onUpdate({
       channel: selectedChannel,
       messageTitle: messageTitle,

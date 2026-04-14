@@ -52,6 +52,7 @@ import { color, tw, components } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { useBackendOfferTypeData } from "../../../shared/hooks/useBackendOfferTypeData";
 import ProgressStepper, {
   Step,
 } from "../../../shared/components/ui/ProgressStepper";
@@ -363,30 +364,27 @@ function BasicInfoStep({
             Offer Type *
           </label>
           <HeadlessSelect
-            options={[
-              { value: "data", label: "Data" },
-              { value: "voice", label: "Voice" },
-              { value: "sms", label: "SMS" },
-              { value: "combo", label: "Combo" },
-              { value: "voucher", label: "Voucher" },
-              { value: "loyalty", label: "Loyalty" },
-              { value: "discount", label: "Discount" },
-              { value: "bundle", label: "Bundle" },
-              { value: "bonus", label: "Bonus" },
-              { value: "other", label: "Other" },
-            ]}
-            value={formData.offer_type}
+            options={offerTypes.map((type) => ({
+              value: String(type.id),
+              label: type.name,
+            }))}
+            disabled={offerTypesLoading}
+            value={
+              formData.offer_type_id
+                ? String(formData.offer_type_id)
+                : ""
+            }
             onChange={(value) => {
               if (!value) return;
               setFormData({
                 ...formData,
-                offer_type: value as OfferTypeEnum,
+                offer_type_id: Number(value),
               });
               if (validationErrors?.offer_type && clearValidationErrors) {
                 clearValidationErrors();
               }
             }}
-            placeholder="Select offer type"
+            placeholder={offerTypesLoading ? "Loading..." : "Select offer type"}
           />
           {validationErrors?.offer_type && (
             <p className="mt-1 text-sm text-red-600">
@@ -935,7 +933,11 @@ function ReviewStep({
                   Offer Type
                 </div>
                 <div className="text-sm font-medium text-gray-600">
-                  {formData.offer_type || "Not selected"}
+                  {formData.offer_type_id
+                    ? offerTypes?.find(
+                        (type) => type.id === formData.offer_type_id,
+                      )?.name || `Type ${formData.offer_type_id}`
+                    : "Not selected"}
                 </div>
               </div>
               <div>
@@ -1215,7 +1217,7 @@ function ReviewStep({
                   label: "Basic information completed",
                   complete: Boolean(
                     formData.name &&
-                    formData.offer_type &&
+                    formData.offer_type_id &&
                     formData.category_id,
                   ),
                 },
@@ -1301,7 +1303,7 @@ export default function CreateOfferPage({
     name: "",
     code: "",
     description: "",
-    offer_type: OfferTypeEnum.DATA,
+    offer_type_id: undefined,
     category_id: undefined,
     max_usage_per_customer: 1,
     eligibility_rules: {},
@@ -1320,6 +1322,7 @@ export default function CreateOfferPage({
 
   const { user } = useAuth();
   const { t } = useLanguage();
+  const { data: offerTypes, loading: offerTypesLoading } = useBackendOfferTypeData();
   const hasRestoredDataRef = useRef(false);
 
   // Persist form data to localStorage
@@ -1527,11 +1530,21 @@ export default function CreateOfferPage({
       // Extract products from response.data if wrapped
       const products = (productsData as { data?: unknown } | unknown[])?.data || productsData || [];
 
+      // Determine offer_type_id from backend response
+      let offerTypeId: number | undefined;
+      if ((offer as any).offer_type_id) {
+        offerTypeId = (offer as any).offer_type_id;
+      } else if (offer.offer_type && offerTypes?.length > 0) {
+        // Try to find the type ID by looking up the name
+        const foundType = offerTypes.find((type) => type.name === offer.offer_type);
+        offerTypeId = foundType?.id;
+      }
+
       const newFormData: CreateOfferRequest = {
         name: offer.name || "",
         code: offer.code || "",
         description: offer.description || "",
-        offer_type: offer.offer_type || OfferTypeEnum.DATA, // Use actual offer_type from backend
+        offer_type_id: offerTypeId,
         category_id: offer.category_id ? Number(offer.category_id) : undefined,
         primary_product_id: offer.primary_product_id
           ? Number(offer.primary_product_id)
@@ -1689,7 +1702,7 @@ export default function CreateOfferPage({
       errors.code = "Offer code is required";
     }
 
-    if (!formData.offer_type) {
+    if (!formData.offer_type_id_id) {
       errors.offer_type = "Offer type is required";
     }
 
@@ -1716,7 +1729,7 @@ export default function CreateOfferPage({
       case 1: // Basic Info step
         return (
           formData.name.trim() !== "" &&
-          formData.offer_type &&
+          formData.offer_type_id &&
           formData.category_id !== undefined
         );
       case 2: // Products step
@@ -1732,7 +1745,7 @@ export default function CreateOfferPage({
         return (
           formData.name.trim() !== "" &&
           formData.code.trim() !== "" &&
-          formData.offer_type &&
+          formData.offer_type_id &&
           formData.category_id !== undefined
         );
       default:
@@ -1777,7 +1790,7 @@ export default function CreateOfferPage({
       if (currentStep === 6) {
         if (!formData.name?.trim()) errors.name = "Offer name is required";
         if (!formData.code?.trim()) errors.code = "Offer code is required";
-        if (!formData.offer_type) errors.offer_type = "Offer type is required";
+        if (!formData.offer_type_id) errors.offer_type = "Offer type is required";
         if (!formData.category_id) errors.category_id = "Catalog is required";
         // Tracking sources are optional
       }
@@ -1826,7 +1839,6 @@ export default function CreateOfferPage({
       const { description, ...formDataWithoutDescription } = formData;
       const apiData: CreateOfferRequest = {
         ...formDataWithoutDescription,
-        offer_type: formData.offer_type!, // Required by validation, so safe to assert
         ...(description?.trim() ? { description: description.trim() } : {}),
       };
 
@@ -2191,7 +2203,7 @@ export default function CreateOfferPage({
       const baseDraftData = {
         name: formData.name,
         code: formData.code,
-        offer_type: formData.offer_type || OfferTypeEnum.DATA,
+        offer_type: formData.offer_type_id || OfferTypeEnum.DATA,
         max_usage_per_customer: formData.max_usage_per_customer,
         ...(formData.description && { description: formData.description }),
         ...(formData.category_id && { category_id: formData.category_id }),

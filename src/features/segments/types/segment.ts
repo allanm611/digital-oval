@@ -150,12 +150,13 @@ export type PaginatedResponse<T> = {
 export type CreateSegmentRequest = {
   name: string; // Required
   code?: string; // Optional (unique segment code)
-  type:
+  type_id?: number; // Frontend field - ID of selected segment type
+  type?:
     | "static"
     | "dynamic"
     | "predictive"
     | "behavioral"
-    | "lookalike"; // Required
+    | "lookalike"; // Backend field - string value of segment type (for API response compatibility)
   category?: number; // Optional
   parent_segment?: number; // Optional
   description?: string; // Optional
@@ -172,12 +173,13 @@ export type CreateSegmentRequest = {
 export type UpdateSegmentRequest = {
   name?: string; // Optional
   code?: string; // Optional
+  type_id?: number; // Frontend field - ID of selected segment type
   type?:
     | "static"
     | "dynamic"
     | "predictive"
     | "behavioral"
-    | "lookalike"; // Optional
+    | "lookalike"; // Backend field - string value of segment type (for API response compatibility)
   category?: number; // Optional
   parent_segment?: number; // Optional
   description?: string; // Optional

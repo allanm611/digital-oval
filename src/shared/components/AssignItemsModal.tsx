@@ -1160,8 +1160,17 @@ function AssignItemsModal({
                         className="px-3 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
                         style={{ color: color.surface.tableHeaderText }}
                       >
-                        <label className="flex items-center gap-2 cursor-pointer">
+                        <div className="flex items-center gap-2 cursor-pointer" onClick={(e) => {
+                          if (!availableItems.length > 0) return;
+                          const availableForClick = filteredItems.filter((item) => !assignedItemIds.includes(item.id));
+                          if (selectedItemIds.size === availableForClick.length) {
+                            setSelectedItemIds(new Set());
+                          } else {
+                            setSelectedItemIds(new Set(availableForClick.map((item) => item.id)));
+                          }
+                        }}>
                           <Checkbox
+                            id="select-all-items"
                             checked={allSelected}
                             onChange={handleSelectAll}
                             disabled={availableItems.length === 0}
@@ -1169,7 +1178,7 @@ function AssignItemsModal({
                           <span className="hidden sm:inline text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
                             Select All
                           </span>
-                        </label>
+                        </div>
                       </th>
                       <th
                         className="px-3 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
@@ -1233,11 +1242,14 @@ function AssignItemsModal({
                           }`}
                         >
                           <td className="px-3 sm:px-6 py-4">
-                            <Checkbox
-                              checked={isSelected}
-                              onChange={() => handleToggleSelection(item.id)}
-                              disabled={isAssigned}
-                            />
+                            <label className="flex items-center cursor-pointer">
+                              <Checkbox
+                                id={`item-${item.id}`}
+                                checked={isSelected}
+                                onChange={() => handleToggleSelection(item.id)}
+                                disabled={isAssigned}
+                              />
+                            </label>
                           </td>
                           <td
                             className={`px-3 sm:px-6 py-4 ${

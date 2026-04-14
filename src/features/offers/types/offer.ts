@@ -60,7 +60,8 @@ export interface CreateOfferRequest {
   name: string;
   code: string;
   description?: string;
-  offer_type: OfferTypeEnum;
+  offer_type_id?: number; // Frontend field - ID of selected offer type
+  offer_type?: string; // Backend field - string value of offer type (for API response compatibility)
   category_id?: number;
   primary_product_id?: number;
   discount_percentage?: number;
@@ -83,7 +84,8 @@ export interface UpdateOfferRequest {
   name?: string;
   code?: string;
   description?: string;
-  offer_type?: OfferTypeEnum;
+  offer_type_id?: number; // Frontend field - ID of selected offer type
+  offer_type?: string; // Backend field - string value of offer type (for API response compatibility)
   category_id?: number;
   primary_product_id?: number;
   discount_percentage?: number;
