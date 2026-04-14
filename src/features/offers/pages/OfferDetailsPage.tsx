@@ -64,7 +64,7 @@ import RegularModal from "../../../shared/components/ui/RegularModal";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import { Product } from "../../products/types/product";
-import { Search, Check, FileText, Eye } from "lucide-react";
+import { Search, Check, FileText, Eye, Copy } from "lucide-react";
 import { productCategoryService } from "../../products/services/productCategoryService";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import DateFormatter from "../../../shared/components/DateFormatter";
@@ -909,7 +909,11 @@ export default function OfferDetailsPage() {
       success("Creative Deleted", "Creative has been deleted successfully");
       setShowDeleteCreativeModal(false);
       setCreativeToDelete(null);
-      loadCreatives(true); // Reload with skipCache
+
+      // Optimistically remove from state instead of reloading
+      setOfferCreatives((prev) =>
+        prev.filter((c) => c.id !== creativeToDelete.id)
+      );
     } catch (err) {
       console.error("Failed to delete creative:", err);
       showError("Failed to delete creative", "Please try again later.");
@@ -1560,9 +1564,14 @@ export default function OfferDetailsPage() {
         }));
       }
 
-      // Reload products to update is_primary flags on all products
-      // Pass the primaryProductId we just set to preserve it (avoid stale data from endpoint)
-      await loadProducts(true, newPrimaryProductId);
+      // Optimistically update linkedProducts state instead of reloading
+      // This avoids reloading the entire products table
+      setLinkedProducts((prevProducts) =>
+        prevProducts.map((p) => ({
+          ...p,
+          is_primary: p.product_id === newPrimaryProductId ? true : false,
+        }))
+      );
 
       success(
         "Primary Product Set",
@@ -1906,6 +1915,20 @@ export default function OfferDetailsPage() {
                   <FileText className="w-4 h-4" />
                   View Offer Report
                 </button>
+
+                {/* Duplicate Offer */}
+                <PermissionGate permission="offers.create">
+                  <button
+                    onClick={() => {
+                      navigate(`/dashboard/offers/create?duplicateId=${id}`);
+                      setShowMoreMenu(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 flex items-center gap-2"
+                  >
+                    <Copy className="w-4 h-4" />
+                    Duplicate Offer
+                  </button>
+                </PermissionGate>
 
                 {/* Delete */}
                 <PermissionGate permission="offers.delete">

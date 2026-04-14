@@ -1098,6 +1098,13 @@ class CampaignService {
       body: JSON.stringify(request),
     });
   }
+
+  /** Duplicate a campaign */
+  async duplicateCampaign(id: string): Promise<CampaignResponse> {
+    return this.request<CampaignResponse>(`/${id}/duplicate`, {
+      method: "POST",
+    });
+  }
 }
 
 export const campaignService = new CampaignService();

@@ -20,6 +20,7 @@ import {
   Clock,
   AlertCircle,
   BarChart3,
+  Copy,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import { color, tw, button, zIndex } from "../../../shared/utils/utils";
@@ -1645,23 +1646,23 @@ export default function CampaignsPage() {
                           Clone Campaign
                         </button> */}
 
-                        {/* <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowActionMenu(null);
-                            showToast(
-                              "info",
-                              "Can't access this functionality"
-                            );
-                          }}
-                          className="w-full flex items-center px-4 py-3 text-sm text-black"
-                        >
-                          <Copy
-                            className="w-4 h-4 mr-4"
-                            style={{ color: color.primary.action }}
-                          />
-                          Duplicate Campaign
-                        </button> */}
+                        {/* Duplicate Campaign Button */}
+                        <PermissionGate permission="campaigns.create">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/dashboard/campaigns/create?duplicateId=${campaign.id}`);
+                              setShowActionMenu(null);
+                            }}
+                            className="w-full flex items-center px-4 py-3 text-sm text-black"
+                          >
+                            <Copy
+                              className="w-4 h-4 mr-4"
+                              style={{ color: color.primary.action }}
+                            />
+                            Duplicate Campaign
+                          </button>
+                        </PermissionGate>
 
                         <PermissionGate permission="campaigns.delete">
                           <button

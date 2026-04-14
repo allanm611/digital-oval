@@ -945,6 +945,13 @@ class OfferService {
     };
   }
 
+  /** Duplicate an offer */
+  async duplicateOffer(id: number): Promise<any> {
+    return this.request<any>(`/${id}/duplicate`, {
+      method: "POST",
+    });
+  }
+
   // History & Audit
   // TODO: Backend doesn't support these endpoints yet (404 Not Found)
   // async getLifecycleHistory(

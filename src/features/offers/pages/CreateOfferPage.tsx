@@ -7,7 +7,7 @@ import {
   Dispatch,
   SetStateAction,
 } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams, useLocation } from "react-router-dom";
 import {
   Target,
   DollarSign,
@@ -1277,6 +1277,7 @@ export default function CreateOfferPage({
   onSuccess,
 }: CreateOfferPageProps = {}) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const { success: showToast, error: showError } = useToast();
@@ -1285,6 +1286,7 @@ export default function CreateOfferPage({
   const returnToCampaign = searchParams.get("returnToCampaign") === "true";
   const returnUrlParam = searchParams.get("returnUrl");
   const returnUrl = returnUrlParam ? decodeURIComponent(returnUrlParam) : null;
+  const duplicateIdParam = searchParams.get("duplicateId");
 
   // Extract the path to return to (with step parameter preserved)
   const getBackButtonFallback = (): string => {
@@ -1304,6 +1306,7 @@ export default function CreateOfferPage({
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isDuplicateMode, setIsDuplicateMode] = useState(false);
   const [isLoadingOffer, setIsLoadingOffer] = useState(false);
   const totalSteps = 6;
 
@@ -1516,16 +1519,17 @@ export default function CreateOfferPage({
   }, [searchParams, isEditMode]);
 
   // Load offer data for edit mode
-  const loadOfferData = useCallback(async () => {
-    if (!id) return;
+  const loadOfferData = useCallback(async (offerId?: string | number, isDuplicate: boolean = false) => {
+    const idToLoad = offerId || id;
+    if (!idToLoad) return;
 
     setIsLoadingOffer(true);
     try {
       const [offerResponse, productsData, creativesData] = await Promise.all([
-        offerService.getOfferById(parseInt(id)),
-        offerService.getOfferProducts(parseInt(id)).catch(() => []), // Load existing products, ignore errors
+        offerService.getOfferById(parseInt(String(idToLoad))),
+        offerService.getOfferProducts(parseInt(String(idToLoad))).catch(() => []), // Load existing products, ignore errors
         offerCreativeService
-          .getByOffer(parseInt(id), { limit: 100, skipCache: true })
+          .getByOffer(parseInt(String(idToLoad)), { limit: 100, skipCache: true })
           .catch(() => ({
             data: [],
             pagination: { total: 0, limit: 100, offset: 0, hasMore: false },
@@ -1549,7 +1553,7 @@ export default function CreateOfferPage({
       }
 
       const newFormData: CreateOfferRequest = {
-        name: offer.name || "",
+        name: isDuplicate ? `Copy of ${offer.name}` : offer.name || "",
         code: offer.code || "",
         description: offer.description || "",
         offer_type_id: offerTypeId,
@@ -1692,10 +1696,13 @@ export default function CreateOfferPage({
   useEffect(() => {
     if (id) {
       setIsEditMode(true);
-      loadOfferData();
+      loadOfferData(id, false);
+    } else if (duplicateIdParam) {
+      setIsDuplicateMode(true);
+      loadOfferData(duplicateIdParam, true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [id, duplicateIdParam]);
 
   // Validation functions
   const validateForm = useCallback(() => {
@@ -1710,7 +1717,7 @@ export default function CreateOfferPage({
       errors.code = "Offer code is required";
     }
 
-    if (!formData.offer_type_id_id) {
+    if (!formData.offer_type_id) {
       errors.offer_type = "Offer type is required";
     }
 
@@ -2341,7 +2348,7 @@ export default function CreateOfferPage({
               <BackButton
                 fallbackTo={getBackButtonFallback()}
                 showBreadcrumb={true}
-                currentLabel={isEditMode ? "Edit Offer" : "Create Offer"}
+                currentLabel={isEditMode ? "Edit Offer" : isDuplicateMode ? "Duplicate Offer" : "Create Offer"}
               />
             </div>
             {currentStep !== 6 && (
@@ -2386,7 +2393,7 @@ export default function CreateOfferPage({
             <div
               className={`bg-red-50 border border-red-200 ${tw.rounded} p-4 mb-6`}
             >
-              <p className="text-red-700">{error}</p>
+              <p className="text-sm text-red-700">{error}</p>
             </div>
           )}
 
@@ -2452,10 +2459,12 @@ export default function CreateOfferPage({
                   isLoading ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      {isEditMode ? "Updating..." : "Creating..."}
+                      {isEditMode ? "Updating..." : isDuplicateMode ? "Creating Copy..." : "Creating..."}
                     </>
                   ) : isEditMode ? (
                     "Update Offer"
+                  ) : isDuplicateMode ? (
+                    "Create a Copy"
                   ) : (
                     "Create Offer"
                   )

@@ -133,6 +133,114 @@ export default function SegmentConditionsBuilder({
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewQuery, setPreviewQuery] = useState<string | null>(null);
 
+  const buildPreviewPayload = (conditionGroups: SegmentConditionGroup[]) => {
+    // Build payload in correct v2.0 format with source_layers, layer_fields, layer_filters
+    const sourceLayers = [
+      {
+        source_type: "subscribers", // Base layer (layer 0)
+      },
+    ];
+
+    // Standard layer_fields matching backend's expected columns
+    const STANDARD_LAYER_FIELDS = [
+      { layer_index: 0, column: "msisdn" },
+      { layer_index: 0, column: "customer_id" },
+      { layer_index: 0, column: "first_name" },
+      { layer_index: 0, column: "last_name" },
+      { layer_index: 0, column: "customer_type" },
+      { layer_index: 0, column: "status" },
+      { layer_index: 0, column: "activation_date" },
+      { layer_index: 0, column: "city" },
+    ];
+
+    const layerFields = STANDARD_LAYER_FIELDS;
+
+    // Build layer_filters with proper group structure
+    const layerFilterGroups: any[] = [];
+
+    for (const group of conditionGroups) {
+      const groupConditions: any[] = [];
+
+      for (const condition of group.conditions) {
+        // Only include 360_profile conditions for preview
+        if (condition.conditionType === "360_profile" && condition.field_id && condition.operator_id) {
+          const hasValue = Array.isArray(condition.value)
+            ? (condition.value as (string | number)[]).length > 0
+            : condition.value !== "" && condition.value !== undefined && condition.value !== null;
+          const hasDateRange = condition.start_date || condition.end_date;
+          const isNullOp = condition.operator_id === 13 || condition.operator_id === 14;
+
+          if (!hasValue && !hasDateRange && !isNullOp) {
+            continue;
+          }
+
+          // Format value correctly for different operator types
+          let condValue: string | number | (string | number)[] | undefined = condition.value as
+            | string
+            | number
+            | (string | number)[]
+            | undefined;
+          if ((condition.operator_id === 7 || condition.operator_id === 8) && condValue) {
+            if (typeof condValue === "string") {
+              condValue = condValue
+                .split(",")
+                .map((v: string) => v.trim())
+                .filter((v: string) => v !== "");
+            } else if (!Array.isArray(condValue)) {
+              condValue = [condValue];
+            }
+          }
+
+          const layerCond = {
+            column_ref: {
+              layer_index: 0,
+              column: condition.field_name || "",
+            },
+            operator_id: condition.operator_id,
+            ...(isNullOp
+              ? {} // IS NULL/IS NOT NULL: no value needed
+              : hasDateRange
+                ? {
+                    start_date: condition.start_date || null,
+                    end_date: condition.end_date || null,
+                  }
+                : { value: condValue || undefined }),
+          };
+          groupConditions.push(layerCond);
+        }
+      }
+
+      // Only add group if it has conditions
+      if (groupConditions.length > 0) {
+        layerFilterGroups.push({
+          logic: (group.operator || "AND").toUpperCase(),
+          conditions: groupConditions,
+        });
+      }
+    }
+
+    // Determine top-level logic
+    const topLevelLogic =
+      conditionGroups.length > 0 && conditionGroups[0].groupOperator
+        ? conditionGroups[0].groupOperator.toUpperCase()
+        : "AND";
+
+    const payload = {
+      source_layers: sourceLayers,
+      layer_fields: layerFields,
+      layer_filters:
+        layerFilterGroups.length > 0
+          ? {
+              logic: topLevelLogic,
+              groups: layerFilterGroups,
+            }
+          : undefined,
+      limit: 100, // Preview limit
+    };
+
+    return payload;
+  };
+
   const handlePreview = async () => {
     if (conditions.length === 0) {
       setPreviewCount(0);
@@ -143,7 +251,7 @@ export default function SegmentConditionsBuilder({
     try {
       setIsPreviewLoading(true);
 
-      // Build simple payload from 360_profile conditions only
+      // Check if there are any 360_profile conditions
       const profileConditions = conditions
         .flatMap((group) =>
           group.conditions.filter((c) => c.conditionType === "360_profile")
@@ -156,20 +264,7 @@ export default function SegmentConditionsBuilder({
         return;
       }
 
-      const payload = {
-        layers: [
-          {
-            id: 0,
-            name: "subscribers",
-            table: "cvm.subscribers",
-            conditions: profileConditions.map((condition) => ({
-              field_name: condition.field_name || condition.field,
-              operator_id: condition.operator_id,
-              value: condition.value,
-            })),
-          },
-        ],
-      };
+      const payload = buildPreviewPayload(conditions);
 
       const response = await segmentService.generateSegmentQueryPreview(payload);
 

@@ -1515,12 +1515,16 @@ export default function CreateCampaignPage() {
                     {currentStep === 5
                       ? isEditMode
                         ? "Updating..."
+                        : isDuplicateMode
+                        ? "Creating Copy..."
                         : "Creating..."
                       : "Loading..."}
                   </>
                 ) : currentStep === 5 ? (
                   isEditMode ? (
                     "Update Campaign"
+                  ) : isDuplicateMode ? (
+                    "Create a Copy"
                   ) : (
                     "Create Campaign"
                   )

@@ -1440,17 +1440,6 @@ export default function OffersPage() {
                         onClick={(e) => e.stopPropagation()}
                         onMouseDown={(e) => e.stopPropagation()}
                       >
-                        {/* Duplicate Offer */}
-                        {/* TODO: Re-enable when backend duplicate endpoint is available
-                              <button
-                                onClick={handleDuplicateOffer}
-                                className="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                              >
-                                <Copy className="w-4 h-4 mr-3" style={{ color: color.primary.action }} />
-                                Duplicate Offer
-                              </button>
-                              */}
-
                         {/* Approved: Activate or Archive only */}
                         {offer.status === OfferStatusEnum.APPROVED && (
                           <>

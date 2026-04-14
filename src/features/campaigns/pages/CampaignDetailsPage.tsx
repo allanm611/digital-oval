@@ -22,6 +22,7 @@ import {
   Archive,
   RotateCcw,
   FileText,
+  Copy,
 } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -1206,6 +1207,20 @@ export default function CampaignDetailsPage() {
                   <FileText className="w-4 h-4 mr-3" />
                   View Campaign Report
                 </button>
+
+                {/* Duplicate Campaign */}
+                <PermissionGate permission="campaigns.create">
+                  <button
+                    onClick={() => {
+                      navigate(`/dashboard/campaigns/create?duplicateId=${id}`);
+                      setShowMoreMenu(false);
+                    }}
+                    className="w-full flex items-center px-4 py-2 text-sm text-gray-700"
+                  >
+                    <Copy className="w-4 h-4 mr-3" />
+                    Duplicate Campaign
+                  </button>
+                </PermissionGate>
 
                 <PermissionGate permission="campaigns.delete">
                   <button
