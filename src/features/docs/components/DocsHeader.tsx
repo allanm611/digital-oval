@@ -12,12 +12,10 @@ import styles from './DocsHeader.module.css';
 import logo from '../../../assets/logo.png';
 
 export function DocsHeader() {
-  const location = useLocation();
   const navigate = useNavigate();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isVersionOpen, setIsVersionOpen] = useState(false);
   const { activeVersion, setActiveVersion } = useDocsVersion();
-  const isDocsActive = location.pathname.startsWith('/documentation');
   const versionDropdownRef = useRef<HTMLDivElement>(null);
 
   const versions = [
