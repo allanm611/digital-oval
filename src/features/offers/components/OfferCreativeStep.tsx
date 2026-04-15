@@ -20,18 +20,17 @@ import RegularModal from "../../../shared/components/ui/RegularModal";
 import {
   CreativeChannel,
   Locale,
-  COMMON_LOCALES,
   OfferCreative,
   RenderCreativeResponse,
 } from "../types/offerCreative";
 import { offerCreativeService } from "../services/offerCreativeService";
 import { useLanguage } from "../../../contexts/LanguageContext";
-import { useConfigurationData } from "../../../shared/services/configurationDataService";
 import { TypeConfigurationItem } from "../../../shared/components/TypeConfigurationPage";
 import { senderIdService, SenderId } from "../../configurations/services/senderIdService";
 import { creativeTemplateService, CreativeTemplate } from "../../configurations/services/creativeTemplateService";
 import { smsRouteService } from "../../routes/services/smsRouteService";
 import { SMSRoute } from "../../routes/types/smsRoute";
+import { languageService, Language } from "../../configurations/services/languageService";
 import {
   SMSSmartphonePreview,
   EmailLaptopPreview,
@@ -94,15 +93,15 @@ const CHANNEL_CONFIG: Array<{
   },
 ];
 
-// Locale labels for display - will use languages from config
+// Locale labels for display - will use languages from API
 const getLocaleLabel = (
   locale: Locale,
-  languages?: TypeConfigurationItem[],
+  languages?: Language[],
   t?: Record<string, any>,
 ): string => {
-  // If languages config is available, use it
+  // If languages are available, use them
   if (languages && languages.length > 0) {
-    const language = languages.find((lang) => lang.metadataValue === locale);
+    const language = languages.find((lang) => lang.language_code === locale);
     if (language) return language.name;
   }
 
@@ -497,8 +496,9 @@ export default function OfferCreativeStep({
   const [smsRoutes, setSmsRoutes] = useState<SMSRoute[]>([]);
   const [smsRoutesLoading, setSmsRoutesLoading] = useState(true);
 
-  // Load languages from configuration
-  const { data: languages } = useConfigurationData("languages");
+  // Fetch languages from backend API
+  const [languages, setLanguages] = useState<Language[]>([]);
+  const [languagesLoading, setLanguagesLoading] = useState(true);
 
   // Fetch creative templates on component mount
   useEffect(() => {
@@ -554,6 +554,78 @@ export default function OfferCreativeStep({
     };
     fetchSmsRoutes();
   }, []);
+
+  // Fetch languages from backend API
+  useEffect(() => {
+    const fetchLanguages = async () => {
+      try {
+        setLanguagesLoading(true);
+        const response = await languageService.getLanguages();
+
+        // Handle API response wrapper (success, data structure)
+        let languageData: Language[] = [];
+        if (response && typeof response === "object") {
+          // If response has a 'data' property (wrapped response)
+          if ("data" in response && Array.isArray(response.data)) {
+            languageData = response.data;
+          }
+          // If response is directly an array
+          else if (Array.isArray(response)) {
+            languageData = response;
+          }
+        }
+
+        setLanguages(languageData);
+      } catch (error) {
+        console.error("Failed to fetch languages:", error);
+        setLanguages([]);
+      } finally {
+        setLanguagesLoading(false);
+      }
+    };
+    fetchLanguages();
+  }, []);
+
+  // Compute language options with proper null checks
+  const languageOptions = useMemo(() => {
+    // Check if languages data exists and is an array
+    if (!languages || !Array.isArray(languages) || languages.length === 0) {
+      return [];
+    }
+
+    // Safely map languages to dropdown options
+    return languages
+      .filter((lang) => {
+        // Check if lang is a valid object with required properties
+        if (!lang || typeof lang !== "object") {
+          return false;
+        }
+        // Check if lang has is_active property and it's truthy
+        if (!lang.is_active) {
+          return false;
+        }
+        return true;
+      })
+      .map((lang) => {
+        // Safely access properties with null checks
+        const name = lang?.name ?? "Unknown Language";
+        const value = lang?.language_code ?? "";
+
+        // Only include in options if we have a valid value
+        if (!value) {
+          return null;
+        }
+
+        return {
+          label: name,
+          value: String(value),
+        };
+      })
+      .filter((option) => option !== null) as Array<{
+      label: string;
+      value: string;
+    }>;
+  }, [languages]);
 
   // Initialize selectedCreative from creatives if available, otherwise null
   const [selectedCreative, setSelectedCreative] = useState<string | null>(
@@ -1059,7 +1131,11 @@ export default function OfferCreativeStep({
                             </div>
                             <div className="text-xs text-gray-500 flex items-center">
                               <Globe className="w-3 h-3 mr-1" />
-                              {getLocaleLabel(creative.locale, languages as TypeConfigurationItem[], t)}
+                              {getLocaleLabel(
+                                creative.locale,
+                                Array.isArray(languages) ? languages : undefined,
+                                t
+                              )}
                             </div>
                           </div>
                         </div>
@@ -1137,29 +1213,19 @@ export default function OfferCreativeStep({
                           return updated;
                         });
                       }}
-                      options={[
-                        ...((languages as TypeConfigurationItem[]) || [])
-                          .filter((lang) => lang.isActive)
-                          .map((lang) => ({
-                            label: lang.name,
-                            value: lang.metadataValue as string,
-                          })),
-                        // Fallback to COMMON_LOCALES if languages config is empty
-                        ...((languages as TypeConfigurationItem[])?.length ===
-                        0
-                          ? COMMON_LOCALES.map((locale) => ({
-                              label: getLocaleLabel(locale, languages as TypeConfigurationItem[], t),
-                              value: locale,
-                            }))
-                          : []),
-                      ]}
-                      placeholder={t.offers.locale.placeholder}
+                      options={languageOptions}
+                      placeholder={
+                        languageOptions.length === 0
+                          ? "No languages configured"
+                          : t.offers.locale.placeholder
+                      }
+                      disabled={languageOptions.length === 0}
                       zIndex={zIndex.popover}
                     />
                   </div>
 
-                  {/* Template Selector - Temporarily Disabled
-                  availableTemplates.length > 0 && (
+                  {/* Template Selector */}
+                  {availableTemplates.length > 0 && (
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <label className="block text-sm font-medium text-gray-700">
@@ -1191,14 +1257,19 @@ export default function OfferCreativeStep({
                             ...availableTemplates.map((template) => {
                               // Get language name if template has locale
                               let languageLabel = "";
-                              if (template.locale && languages) {
-                                const language = (
-                                  languages as TypeConfigurationItem[]
-                                ).find(
+                              if (
+                                template.locale &&
+                                languages &&
+                                Array.isArray(languages) &&
+                                languages.length > 0
+                              ) {
+                                const language = languages.find(
                                   (lang) =>
-                                    lang.metadataValue === template.locale
+                                    lang &&
+                                    lang.language_code &&
+                                    lang.language_code === template.locale
                                 );
-                                if (language) {
+                                if (language && language.name) {
                                   languageLabel = ` (${language.name})`;
                                 }
                               }
@@ -1225,7 +1296,7 @@ export default function OfferCreativeStep({
                         )}
                       </div>
                     </div>
-                  )} */}
+                  )}
 
                   {/* Sender ID (SMS) or Subject (Email) */}
                   <div className="space-y-4">

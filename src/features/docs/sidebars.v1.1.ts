@@ -550,22 +550,9 @@ const sidebarsV1_1: SidebarsConfig = {
         "configuration/sender-ids",
         "configuration/sms-routes",
         {
-          type: "category",
+          type: "doc",
+          id: "configuration/languages",
           label: "Languages",
-          items: [
-            {
-              type: "doc",
-              id: "configuration/languages-overview",
-              label: "Overview",
-            },
-            {
-              type: "doc",
-              id: "configuration/languages-list",
-              label: "Language List",
-            },
-            "configuration/create-language",
-            "configuration/view-language",
-          ],
         },
         {
           type: "category",

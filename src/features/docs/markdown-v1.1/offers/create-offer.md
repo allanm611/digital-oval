@@ -71,7 +71,7 @@ Define how the offer will be presented to customers across different channels:
 **For Each Channel:**
 - **Title** - Brief headline or subject
 - **Message/Body** - Full content for the channel
-- **Locale** - Language/region for the creative
+- **Locale** - Language/region for the creative. Available languages are configured in the [Languages Configuration](/documentation/configuration/languages-list)
 - **Variables** - Custom variables that can be personalized per customer (email only)
 
 

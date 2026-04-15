@@ -178,10 +178,10 @@ export default function SMSRouteDetailsPage() {
               </div>
               <div className="space-y-1">
                 <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
-                  Communication Channel ID
+                  Communication Channel
                 </label>
                 <p className={`text-base ${tw.textPrimary}`}>
-                  {route.communication_channel_id || "—"}
+                  {route.communication_channel || "—"}
                 </p>
               </div>
               <div className="space-y-1">

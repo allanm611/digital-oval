@@ -62,7 +62,8 @@ To create a new notification type, click the **Create** button in the top right.
 - **Action Type** (required): Select the type of action that triggers the notification (CREATE, UPDATE, DELETE)
 
 You can edit or delete existing notification types using the actions in the list. Editing allows you to update any of the fields above. Deleting will permanently remove the notification type after confirmation.
-<!-- 
+
+<!--
 ## Tips
 
 - Create notification types for all important system events you want to track

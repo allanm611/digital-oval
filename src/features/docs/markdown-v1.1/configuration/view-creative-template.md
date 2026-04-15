@@ -9,18 +9,23 @@ From the [Creative Template List](/documentation/configuration/creative-template
 1. Find the template you want to view
 2. Click the **View Details** button (eye icon) on the row
 
+![Creative Template Details](/img/v1.1/configuration/creativetemplatedetailsimage.png)
+
 The details page opens showing the complete template configuration and content.
 
 ## Template Information
 
 **Template Name**
+
 - The identifier for this creative template
 - Used when referencing the template in campaigns and offers
 
 **Description**
+
 - Summary of the template's purpose and when to use it
 
 **Status**
+
 - Active or Inactive
 - Active templates are available for selection when building creatives
 - Inactive templates are not available for use
@@ -28,6 +33,7 @@ The details page opens showing the complete template configuration and content.
 ## Channel and Locale
 
 **Channel** - The communication method this template is designed for:
+
 - SMS
 - Email
 - Push Notification
@@ -40,16 +46,19 @@ The details page opens showing the complete template configuration and content.
 View the actual content configured for this template:
 
 **For SMS:**
+
 - Message text
 - Character count
 - Dynamic variables used
 
 **For Email:**
+
 - Subject line
 - Message body
 - HTML formatting (if applicable)
 
 **For Push:**
+
 - Title
 - Message body
 - Action or deep link

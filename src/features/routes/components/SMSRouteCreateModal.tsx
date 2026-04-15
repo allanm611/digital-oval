@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { CreateSMSRouteRequest, SMSRoute } from "../types/smsRoute";
+import { NOTIFICATION_CHANNEL_OPTIONS, SMS_GATEWAY_OPTIONS } from "../constants/smsRouteEnums";
 import { smsRouteService } from "../services/smsRouteService";
 import { useToast } from "../../../contexts/ToastContext";
 import Input from "../../../shared/components/ui/Input";
+import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw } from "../../../shared/utils/utils";
 
 interface SMSRouteCreateModalProps {
@@ -25,8 +27,8 @@ export default function SMSRouteCreateModal({
   const [formData, setFormData] = useState<CreateSMSRouteRequest>({
     name: "",
     description: "",
-    gateway_provider: "",
-    communication_channel_id: undefined,
+    gateway_provider: undefined,
+    communication_channel: undefined,
     is_active: true,
   });
 
@@ -41,16 +43,16 @@ export default function SMSRouteCreateModal({
       setFormData({
         name: editingRoute.name || "",
         description: editingRoute.description || "",
-        gateway_provider: editingRoute.gateway_provider || "",
-        communication_channel_id: editingRoute.communication_channel_id,
+        gateway_provider: editingRoute.gateway_provider,
+        communication_channel: editingRoute.communication_channel,
         is_active: editingRoute.is_active,
       });
     } else {
       setFormData({
         name: "",
         description: "",
-        gateway_provider: "",
-        communication_channel_id: undefined,
+        gateway_provider: undefined,
+        communication_channel: undefined,
         is_active: true,
       });
     }
@@ -64,6 +66,12 @@ export default function SMSRouteCreateModal({
     if (!formData.name.trim()) {
       newErrors.name = "Route name is required";
     }
+    if (!formData.gateway_provider) {
+      newErrors.gateway_provider = "Gateway provider is required";
+    }
+    // if (!formData.communication_channel) {
+    //   newErrors.communication_channel = "Communication channel is required";
+    // }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -105,28 +113,37 @@ export default function SMSRouteCreateModal({
     }
   };
 
-  const handleChange = (
+  const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
-    const { name, value, type } = e.target;
+    const { name, value } = e.target;
 
-    if (type === "number") {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value ? parseInt(value, 10) : undefined,
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
 
     // Clear error
     if (errors[name]) {
       setErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors[name];
+        return newErrors;
+      });
+    }
+  };
+
+  const handleSelectChange = (fieldName: string, value: string | number) => {
+    setFormData((prev) => ({
+      ...prev,
+      [fieldName]: value || undefined,
+    }));
+
+    // Clear error
+    if (errors[fieldName]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[fieldName];
         return newErrors;
       });
     }
@@ -161,13 +178,55 @@ export default function SMSRouteCreateModal({
             <Input
               placeholder=""
               value={formData.name}
-              onChange={(value) => handleChange({ target: { name: "name", value } } as any)}
+              onChange={(value) => handleInputChange({ target: { name: "name", value } } as any)}
               hasError={!!errors.name}
               variant="medium"
               disabled={loading}
             />
             {errors.name && (
               <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+            )}
+          </div>
+
+          {/* Communication Channel */}
+          {/* <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Communication Channel *
+            </label>
+            <HeadlessSelect
+              options={NOTIFICATION_CHANNEL_OPTIONS.map(opt => ({
+                value: opt.value,
+                label: opt.label
+              }))}
+              value={formData.communication_channel || ""}
+              onChange={(value) => handleSelectChange("communication_channel", value)}
+              placeholder="Select communication channel"
+              disabled={loading}
+              error={!!errors.communication_channel}
+            />
+            {errors.communication_channel && (
+              <p className="text-red-500 text-xs mt-1">{errors.communication_channel}</p>
+            )}
+          </div> */}
+
+          {/* Gateway Provider */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Gateway Provider *
+            </label>
+            <HeadlessSelect
+              options={SMS_GATEWAY_OPTIONS.map(opt => ({
+                value: opt.value,
+                label: opt.label
+              }))}
+              value={formData.gateway_provider || ""}
+              onChange={(value) => handleSelectChange("gateway_provider", value)}
+              placeholder="Select gateway provider"
+              disabled={loading}
+              error={!!errors.gateway_provider}
+            />
+            {errors.gateway_provider && (
+              <p className="text-red-500 text-xs mt-1">{errors.gateway_provider}</p>
             )}
           </div>
 
@@ -178,39 +237,9 @@ export default function SMSRouteCreateModal({
             </label>
             <textarea
               name="description"
-              value={formData.description}
-              onChange={handleChange}
+              value={formData.description || ""}
+              onChange={handleInputChange}
               rows={3}
-              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:outline-none`}
-              disabled={loading}
-            />
-          </div>
-
-          {/* Gateway Provider */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Gateway Provider
-            </label>
-            <input
-              type="text"
-              name="gateway_provider"
-              value={formData.gateway_provider}
-              onChange={handleChange}
-              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:outline-none`}
-              disabled={loading}
-            />
-          </div>
-
-          {/* Communication Channel ID */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Communication Channel ID
-            </label>
-            <input
-              type="number"
-              name="communication_channel_id"
-              value={formData.communication_channel_id || ""}
-              onChange={handleChange}
               className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:outline-none`}
               disabled={loading}
             />

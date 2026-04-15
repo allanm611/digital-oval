@@ -1,63 +1,75 @@
 # Languages
 
-The Languages page controls which language records are available for creative and message localization workflows. It is where teams maintain readable language names, codes, and supporting metadata used by content teams.
+Languages control which language records are available for creative and message localization workflows. Teams maintain readable language names, codes, and supporting metadata used by content teams.
 
 ![Languages List](/img/v1.1/configuration/languageslistimage.png)
 
-## Open The Page
+## Accessing Languages
 
-Go to `Configuration -> Languages`.
+Go to **Configuration → Languages**.
 
 ## What You Can Do
 
-- review language records in one list
-- search by language name or description
-- create a new language
-- edit an existing language
-- delete a language record
+- Review language records in one list
+- Search by language name or description
+- Create a new language
+- Edit an existing language
+- Delete a language record
 
 ## Languages List
 
-The list view shows language details such as name, description, status, language code, and actions.
+The list view shows language details such as name, description, status, language code, country, and actions. Use this view to quickly confirm whether a language is active and available for content configuration, and to see all supported languages at a glance.
 
-Use this view to quickly confirm whether a language is active and available for content configuration.
+## Key Concepts
 
-## Create A Language
+- **Language Name**: The readable display name (e.g., "English", "French", "Spanish")
+- **Description**: Additional context about the language variant
+- **Language Code**: The standard language identifier (e.g., "en", "fr", "es", "sw")
+- **Country**: The region or country for this language variant (required)
+- **Character Set Type**: The encoding standard used for this language (required)
+- **Status**: Whether the language is active and available for use
+
+## Creating a Language
 
 Click **Create** to open the add-language modal.
 
 ![Add Language Modal](/img/v1.1/configuration/addlanguagemodal.png)
 
-Common fields include:
+Fill in the following fields:
 
-- **Name** (required)
-- **Description** (optional)
-- **Language Code**
-- **Country** (required)
-- **Character Set** (required)
+- Name (required)
+- Description (optional)
+- Language Code
+- Country (required)
+- Character Set (required)
 
 Save to create the language record.
 
-## Edit A Language
+## Editing a Language
 
 Click **Edit** from the row action.
 
 ![Edit Language Modal](/img/v1.1/configuration/editlanguagemodal.png)
 
-The edit modal uses the same main fields as create.
+The edit modal uses the same main fields as create. Update the fields and save changes.
 
-## Delete A Language
+## Deleting a Language
 
-Click **Delete** from the actions column and confirm in the modal.
-
-If deletion succeeds, the language is removed from the list.
+Click **Delete** from the actions column and confirm in the modal. If deletion succeeds, the language is removed from the list.
 
 ## Validation Behavior
 
-The page enforces required fields before save, especially Name, Country, and Character Set.
+The page enforces required fields before save, especially Name, Country, and Character Set. If validation fails or save fails, an error message is shown so the user can correct the input and retry.
 
-If validation fails or save fails, an error message is shown so the user can correct the input and retry.
+## Tips
+
+- Create all language variants your customers need before launching campaigns
+- Use standard language codes so team members recognize them
+- Keep descriptions updated to indicate the target region or audience
+- Monitor active languages to ensure they have the required character sets
+- Delete unused languages to keep the list organized
 
 ## Why This Page Matters
 
 Clean language configuration improves consistency in creative setup and reduces localization mistakes when teams prepare content for different customer groups.
+

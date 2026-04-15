@@ -2,6 +2,8 @@
 
 View complete information about a character set including its encoding configuration and character definitions.
 
+![Character Set Details](/img/v1.1/configuration/charactersetsdetailspage.png)
+
 ## Accessing Character Set Details
 
 From the [Character Set List](/documentation/configuration/character-sets-list):

@@ -1,108 +1,58 @@
 # SMS Routes
 
-SMS Routes is where you manage outbound SMS gateway routes used by the platform. This page is specific to SMS routing, not the broader cross-channel communication routes screen.
-
-![SMS Routes List](/img/v1.1/configuration/routeslist.png)
-
-## Open The Page
-
-Go to `Configuration -> SMS Routes`.
-
-## What You Can Do
-
-- view all configured SMS routes
-- search routes by name or description
-- create a new route
-- view full route details
-- edit route settings
-- delete a route
+Manage SMS gateway routes for message delivery.
 
 ## SMS Routes List
 
-The list view shows:
+![SMS Routes List](/img/v1.1/configuration/smsroutespage.png)
 
-- **Route Name**
-- **Description**
-- **Status**
-- **Actions** (View, Edit, Delete)
+The list shows:
 
-Use search to quickly narrow down the list when many routes exist.
+- Route Name
+- Description
+- Status (Active or Inactive)
+- Actions
 
-## Create An SMS Route
+From the list you can:
 
-Click **Create** to open the route form.
+- Toggle status (Active/Inactive) — Use the status toggle to activate or deactivate a route. Only active routes will appear in dropdowns or selection lists elsewhere in the app (such as when sending test messages, offer creatives or manual communciaitons).
+- Edit a route
+- Delete a route
 
-![Create SMS Route - Basic Information](/img/v1.1/configuration/createsmsroutebasicinfo.png)
+Use search to find routes by name or description.
 
-In **Basic Information**, set:
+## Create an SMS Route
+
+![Create SMS Route](/img/v1.1/configuration/createsmsroute.png)
+
+Click **Create** to open the form.
+
+**Basic Information:**
 
 - Route Name (required)
-- Gateway Type (required)
-- Description
 - Status
+- Description
 
-![Create SMS Route - API Configuration](/img/v1.1/configuration/createsmsapiconfig.png)
+**Communication Configuration:**
 
-In **API Configuration**, set:
+- Gateway Provider (required)
 
-- API Endpoint (required)
-- API Key (required)
-- API Secret (required)
+Click **Save** to create the route.
 
-![Create SMS Route - Delivery Configuration Part 1](/img/v1.1/configuration/createsmsroutedeliveryconfigimage1.png)
+## Edit an SMS Route
 
-![Create SMS Route - Delivery Configuration Part 2](/img/v1.1/configuration/createsmsroutedeliveryconfigimage2.png)
+![Edit SMS Route](/img/v1.1/configuration/editsmsroute.png)
 
-In **Delivery Configuration**, set:
+Click **Edit** on a route to modify:
 
-- Sender ID (required)
-- Request Method
-- Request Format
-- Priority (1-999)
+- Route Name
+- Status
+- Description
+- Gateway Provider
+- Communication Channel
 
-Then click **Save Route**.
+Click **Save** to update the route.
 
-## What Key Fields Mean
+## Delete an SMS Route
 
-These fields are important when troubleshooting delivery behavior:
-
-- **Route Name**: Internal label for the route. 
-- **Gateway Type**: The provider/integration type (e.g custom gateway). This tells operators which backend path this route represents.
-- **Status**:
-  Active routes are available for use.
-  Inactive routes stay in the system but should not be used for active delivery.
-- **API Endpoint**: Target URL used to submit SMS requests to the provider.
-- **API Key / API Secret**: Credentials used to authenticate requests to the provider.
-- **Sender ID**: The sender identity used for outbound SMS on this route.
-- **Request Method**: HTTP method used when calling the provider API (for example `POST`, `GET`, `PUT`).
-- **Request Format**: Payload format sent to the provider (for example `JSON`, `XML`, or `FORM_DATA`).
-- **Priority (1-999)**: Route precedence value.
-  Smaller numbers mean higher priority.
-  Example: `1` is preferred before `2`, and `2` before `3`.
-  Use this to control which route is tried first when multiple routes are available.
-
-## View Route Details
-
-Use the **View** action (eye icon) on a row to open the route details page.
-
-![SMS Routes Details Page](/img/v1.1/configuration/smsroutesdetailpage.png)
-
-The details page shows the route overview, basic info, API configuration, and metadata (created/updated timestamps).
-
-## Edit An SMS Route
-
-From either the list or details page, open **Edit**.
-
-![Edit SMS Route](/img/v1.1/configuration/editsmsrouteimage.png)
-
-Edit uses the same sections as create, then save changes.
-
-## Delete An SMS Route
-
-Use **Delete** from the list or details page. A confirmation modal appears before the route is removed.
-
-## Validation Notes
-
-The form enforces required values for route name, gateway type, API endpoint, API key, API secret, and sender ID.
-
-If a required field is missing, save is blocked until the input is corrected.
+Click **Delete** on a route. Confirm deletion in the modal.

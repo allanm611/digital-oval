@@ -1,19 +1,11 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft, Save } from "lucide-react";
-import { SMSRoute, CreateSMSRouteRequest, RequestMethod, RequestFormat } from "../types/smsRoute";
-import { color, tw, components, button } from "../../../shared/utils/utils";
+import { SMSRoute, CreateSMSRouteRequest } from "../types/smsRoute";
+import { NOTIFICATION_CHANNEL_OPTIONS, SMS_GATEWAY_OPTIONS } from "../constants/smsRouteEnums";
+import { color, tw, components } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import Input from "../../../shared/components/ui/Input";
-import Radio from "../../../shared/components/ui/Radio";
-
-// Dummy sender IDs data
-const SENDER_IDS = [
-  { id: "1", name: "Effortel" },
-  { id: "3", name: "Equitel" },
-  { id: "4", name: "EquitelKE" },
-  { id: "5", name: "EquitelAlert" },
-  { id: "6", name: "EquitelPromo" },
-];
+import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 
 interface SMSRouteFormProps {
   route?: SMSRoute | null;
@@ -31,15 +23,9 @@ export default function SMSRouteForm({
   const { success, error } = useToast();
   const [formData, setFormData] = useState<CreateSMSRouteRequest>({
     name: "",
-    gatewayType: "",
-    apiEndpoint: "",
-    apiKey: "",
-    apiSecret: "",
-    senderId: "",
-    requestMethod: "POST",
-    requestFormat: "JSON",
-    priority: 1,
-    status: "active",
+    gateway_provider: undefined,
+    communication_channel: undefined,
+    is_active: true,
     description: "",
   });
 
@@ -49,15 +35,9 @@ export default function SMSRouteForm({
     if (route) {
       setFormData({
         name: route.name,
-        gatewayType: route.gatewayType,
-        apiEndpoint: route.apiEndpoint,
-        apiKey: route.apiKey,
-        apiSecret: route.apiSecret,
-        senderId: route.senderId,
-        requestMethod: route.requestMethod,
-        requestFormat: route.requestFormat,
-        priority: route.priority,
-        status: route.status,
+        gateway_provider: route.gateway_provider,
+        communication_channel: route.communication_channel,
+        is_active: route.is_active,
         description: route.description,
       });
     }
@@ -69,23 +49,11 @@ export default function SMSRouteForm({
     if (!formData.name.trim()) {
       newErrors.name = "Route name is required";
     }
-    if (!formData.gatewayType.trim()) {
-      newErrors.gatewayType = "Gateway type is required";
+    if (!formData.gateway_provider) {
+      newErrors.gateway_provider = "Gateway provider is required";
     }
-    if (!formData.apiEndpoint.trim()) {
-      newErrors.apiEndpoint = "API endpoint is required";
-    }
-    if (!formData.apiKey.trim()) {
-      newErrors.apiKey = "API key is required";
-    }
-    if (!formData.apiSecret.trim()) {
-      newErrors.apiSecret = "API secret is required";
-    }
-    if (!formData.senderId) {
-      newErrors.senderId = "Sender ID is required";
-    }
-    if (formData.priority < 1 || formData.priority > 999) {
-      newErrors.priority = "Priority must be between 1 and 999";
+    if (!formData.communication_channel) {
+      newErrors.communication_channel = "Communication channel is required";
     }
 
     setErrors(newErrors);
@@ -107,29 +75,15 @@ export default function SMSRouteForm({
     }
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    const { name, value, type } = e.target;
+    const { name, value } = e.target;
 
-    if (type === "number") {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: parseInt(value, 10),
-      }));
-    } else if (type === "checkbox") {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: (e.target as HTMLInputElement).checked,
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
 
     // Clear error for this field
     if (errors[name]) {
@@ -141,8 +95,20 @@ export default function SMSRouteForm({
     }
   };
 
-  const getSenderIdName = (id: string): string => {
-    return SENDER_IDS.find((s) => s.id === id)?.name || id;
+  const handleSelectChange = (fieldName: string, value: string | number) => {
+    setFormData((prev) => ({
+      ...prev,
+      [fieldName]: value || undefined,
+    }));
+
+    // Clear error for this field
+    if (errors[fieldName]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[fieldName];
+        return newErrors;
+      });
+    }
   };
 
   return (
@@ -162,7 +128,7 @@ export default function SMSRouteForm({
           <p className={`text-sm ${tw.textSecondary} mt-1`}>
             {route
               ? "Update the SMS route configuration"
-              : "Configure a new custom SMS gateway route"}
+              : "Configure a new SMS communication route"}
           </p>
         </div>
       </div>
@@ -170,227 +136,96 @@ export default function SMSRouteForm({
       {/* Form */}
       <form onSubmit={handleSubmit} className={`${components.card.surface} p-6`}>
         <div className="space-y-6">
-          {/* Row 1: Name and Gateway Type */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                Route Name *
-              </label>
-              <Input
-                placeholder="e.g., Primary SMS Gateway"
-                value={formData.name}
-                onChange={(value) => handleChange({ target: { name: "name", value } } as any)}
-                hasError={!!errors.name}
-                variant="medium"
-                disabled={isLoading}
-              />
-              {errors.name && (
-                <p className="text-red-500 text-sm mt-1">{errors.name}</p>
-              )}
-            </div>
-
-            <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                Gateway Type *
-              </label>
-              <Input
-                placeholder="e.g., Twilio, AWS SNS, Custom"
-                value={formData.gatewayType}
-                onChange={(value) => handleChange({ target: { name: "gatewayType", value } } as any)}
-                hasError={!!errors.gatewayType}
-                variant="medium"
-                disabled={isLoading}
-              />
-              {errors.gatewayType && (
-                <p className="text-red-500 text-sm mt-1">{errors.gatewayType}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Row 2: API Endpoint */}
+          {/* Row 1: Name */}
           <div>
             <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-              API Endpoint *
+              Route Name *
             </label>
             <Input
-              type="url"
-              placeholder="https://api.gateway.com/sms"
-              value={formData.apiEndpoint}
-              onChange={(value) => handleChange({ target: { name: "apiEndpoint", value } } as any)}
-              hasError={!!errors.apiEndpoint}
+              placeholder="e.g., Primary SMS Gateway"
+              value={formData.name}
+              onChange={(value) => handleInputChange({ target: { name: "name", value } } as any)}
+              hasError={!!errors.name}
               variant="medium"
               disabled={isLoading}
             />
-            {errors.apiEndpoint && (
-              <p className="text-red-500 text-sm mt-1">{errors.apiEndpoint}</p>
+            {errors.name && (
+              <p className="text-red-500 text-sm mt-1">{errors.name}</p>
             )}
           </div>
 
-          {/* Row 3: API Key and API Secret */}
+          {/* Row 2: Communication Channel and Gateway Provider */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                API Key *
+                Communication Channel *
               </label>
-              <Input
-                type="password"
-                placeholder="Your API key"
-                value={formData.apiKey}
-                onChange={(value) => handleChange({ target: { name: "apiKey", value } } as any)}
-                hasError={!!errors.apiKey}
-                variant="medium"
+              <HeadlessSelect
+                options={NOTIFICATION_CHANNEL_OPTIONS.map(opt => ({
+                  value: opt.value,
+                  label: opt.label
+                }))}
+                value={formData.communication_channel || ""}
+                onChange={(value) => handleSelectChange("communication_channel", value)}
+                placeholder="Select communication channel"
                 disabled={isLoading}
+                error={!!errors.communication_channel}
               />
-              {errors.apiKey && (
-                <p className="text-red-500 text-sm mt-1">{errors.apiKey}</p>
+              {errors.communication_channel && (
+                <p className="text-red-500 text-sm mt-1">{errors.communication_channel}</p>
               )}
             </div>
 
             <div>
               <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                API Secret *
+                Gateway Provider *
               </label>
-              <Input
-                type="password"
-                placeholder="Your API secret"
-                value={formData.apiSecret}
-                onChange={(value) => handleChange({ target: { name: "apiSecret", value } } as any)}
-                hasError={!!errors.apiSecret}
-                variant="medium"
+              <HeadlessSelect
+                options={SMS_GATEWAY_OPTIONS.map(opt => ({
+                  value: opt.value,
+                  label: opt.label
+                }))}
+                value={formData.gateway_provider || ""}
+                onChange={(value) => handleSelectChange("gateway_provider", value)}
+                placeholder="Select gateway provider"
                 disabled={isLoading}
+                error={!!errors.gateway_provider}
               />
-              {errors.apiSecret && (
-                <p className="text-red-500 text-sm mt-1">{errors.apiSecret}</p>
+              {errors.gateway_provider && (
+                <p className="text-red-500 text-sm mt-1">{errors.gateway_provider}</p>
               )}
             </div>
           </div>
 
-          {/* Row 4: Sender ID and Request Method */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                Sender ID *
-              </label>
-              <select
-                name="senderId"
-                value={formData.senderId}
-                onChange={handleChange}
-                className={`w-full px-4 py-2 border ${tw.rounded} text-sm transition-colors ${
-                  errors.senderId ? "border-red-500" : `border-[${color.border.default}]`
-                }`}
-                style={{
-                  borderColor: errors.senderId ? "#EF4444" : color.border.default,
-                }}
-                disabled={isLoading}
-              >
-                <option value="">Select a sender ID</option>
-                {SENDER_IDS.map((sender) => (
-                  <option key={sender.id} value={sender.id}>
-                    {sender.name}
-                  </option>
-                ))}
-              </select>
-              {errors.senderId && (
-                <p className="text-red-500 text-sm mt-1">{errors.senderId}</p>
-              )}
-            </div>
-
-            <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                Request Method
-              </label>
-              <select
-                name="requestMethod"
-                value={formData.requestMethod}
-                onChange={handleChange}
-                className={`w-full px-4 py-2 border ${tw.rounded} text-sm`}
-                style={{ borderColor: color.border.default }}
-                disabled={isLoading}
-              >
-                <option value="POST">POST</option>
-                <option value="GET">GET</option>
-                <option value="PUT">PUT</option>
-                <option value="PATCH">PATCH</option>
-                <option value="DELETE">DELETE</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Row 5: Request Format and Priority */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                Request Format
-              </label>
-              <select
-                name="requestFormat"
-                value={formData.requestFormat}
-                onChange={handleChange}
-                className={`w-full px-4 py-2 border ${tw.rounded} text-sm`}
-                style={{ borderColor: color.border.default }}
-                disabled={isLoading}
-              >
-                <option value="JSON">JSON</option>
-                <option value="XML">XML</option>
-                <option value="FORM_DATA">Form Data</option>
-              </select>
-            </div>
-
-            <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                Priority
-              </label>
-              <input
-                type="number"
-                name="priority"
-                value={formData.priority}
-                onChange={handleChange}
-                min="1"
-                max="999"
-                className={`w-full px-4 py-2 border ${tw.rounded} text-sm`}
-                style={{ borderColor: color.border.default }}
-                disabled={isLoading}
-              />
-              {errors.priority && (
-                <p className="text-red-500 text-sm mt-1">{errors.priority}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Row 6: Status */}
+          {/* Row 3: Status */}
           <div>
-            <label className={`block text-sm font-medium ${tw.textPrimary} mb-3`}>
+            <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
               Status
             </label>
             <div className="flex items-center gap-4">
               <label className="flex items-center gap-2 cursor-pointer">
-                <Radio name="status"
-                  value="active"
-                  checked={formData.status === "active"}
-                  onChange={handleChange}
-                  disabled={isLoading} />
+                <input
+                  type="checkbox"
+                  name="is_active"
+                  checked={formData.is_active || false}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, is_active: e.target.checked }))}
+                  disabled={isLoading}
+                  className="w-4 h-4"
+                />
                 <span className={`text-sm ${tw.textPrimary}`}>Active</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <Radio name="status"
-                  value="inactive"
-                  checked={formData.status === "inactive"}
-                  onChange={handleChange}
-                  disabled={isLoading} />
-                <span className={`text-sm ${tw.textPrimary}`}>Inactive</span>
               </label>
             </div>
           </div>
 
-          {/* Row 7: Description */}
+          {/* Row 4: Description */}
           <div>
             <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
               Description
             </label>
             <textarea
               name="description"
-              value={formData.description}
-              onChange={handleChange}
+              value={formData.description || ""}
+              onChange={handleInputChange}
               placeholder="Add notes about this route..."
               rows={4}
               className={`w-full px-4 py-2 border ${tw.rounded} text-sm`}
