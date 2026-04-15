@@ -100,6 +100,25 @@ Click the **Delete** (trash icon) to permanently remove the customer record.
 
 Confirmation is required before deletion.
 
+### Send Communication
+
+Click the **Send Communication** button (envelope icon) to send a message directly to the customer from the list view.
+
+![Send Communication Modal](/img/v1.1/customer360-images/sendcommunciaitonmodalcustomer.png)
+
+**Use Cases:**
+- Send urgent notifications to individual customers
+- Send test messages before campaign deployment
+- Send personalized follow-up messages
+- Reach out with special offers or important updates
+
+**Steps:**
+1. Click **Send Communication** button next to customer
+2. Select the communication channel (SMS, Email, Push, etc.)
+3. Compose or select a message template
+4. Configure delivery options
+5. Click **Send** to execute
+
 ## Creating Customers
 
 To add new customers, see [Create Customer](/documentation/customer-360/create-customer) guide which covers:

@@ -84,7 +84,8 @@ To remove a VIP list:
 
 - **Active** - The VIP list is enabled and can be used in campaigns and policies
 - **Inactive** - The VIP list is disabled and cannot be used
-<!-- 
+<!--
+
 ## Tips
 
 - Use descriptive names for VIP lists to indicate their tier or purpose

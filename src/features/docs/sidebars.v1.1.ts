@@ -521,7 +521,6 @@ const sidebarsV1_1: SidebarsConfig = {
               id: "configuration/vip-list-management-lists",
               label: "Manage VIP Lists",
             },
-
           ],
         },
         "configuration/seed-list-management",

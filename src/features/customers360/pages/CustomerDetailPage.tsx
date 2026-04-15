@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { Calendar, X, Send, Edit, Trash2, Eye } from "lucide-react";
+import { Calendar, X, Send, Edit, Trash2, Eye, Search } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -168,7 +168,7 @@ const generateCustomerRelatedData = (customer: CustomerRow) => {
       redeemedDate: isNaN(redeemedDate.getTime())
         ? new Date().toISOString().split("T")[0]
         : redeemedDate.toISOString().split("T")[0],
-      value: Math.round(customer.aov * (0.1 + index * 0.05)),
+      value: (index + 1) * 50,
     };
   });
 
@@ -295,7 +295,59 @@ const generateCustomerRelatedData = (customer: CustomerRow) => {
     };
   });
 
-  return { segments, offers, events, lists };
+  // Generate dummy campaigns data
+  const campaignNames = [
+    "Summer Sale Campaign",
+    "Flash Deal 2024",
+    "Customer Loyalty Drive",
+    "New Product Launch",
+    "Seasonal Promotion",
+  ];
+
+  const campaignTypes = ["Multiple Target Group", "Champion Challenger", "A/B Testing", "Round Robin", "Multiple Level"];
+  const campaignStatuses = ["Active", "Completed", "Active", "Completed", "Paused"];
+
+  const campaigns: any[] = campaignNames.map((name, index) => {
+    const baseDate = new Date(customer.lastInteractionDate || new Date());
+    const participationDate = new Date(baseDate);
+    participationDate.setDate(participationDate.getDate() - index * 25);
+
+    return {
+      id: `CAM-${customerId.slice(-3)}-${index + 1}`,
+      name,
+      type: campaignTypes[index],
+      participationDate: isNaN(participationDate.getTime())
+        ? new Date().toISOString().split("T")[0]
+        : participationDate.toISOString().split("T")[0],
+      status: campaignStatuses[index],
+    };
+  });
+
+  // Generate dummy quicklists data
+  const quicklistNames = [
+    "VIP Test Group",
+    "Internal Testing",
+    "Beta Testers",
+    "Premium Customers",
+  ];
+
+  const quicklists: any[] = quicklistNames.map((name, index) => {
+    const baseDate = new Date(customer.lastInteractionDate || new Date());
+    const createdDate = new Date(baseDate);
+    createdDate.setDate(createdDate.getDate() - index * 40);
+
+    return {
+      id: `QL-${customerId.slice(-3)}-${index + 1}`,
+      name,
+      recordCount: Math.floor(Math.random() * 500) + 50,
+      createdDate: isNaN(createdDate.getTime())
+        ? new Date().toISOString().split("T")[0]
+        : createdDate.toISOString().split("T")[0],
+      status: "Completed",
+    };
+  });
+
+  return { segments, offers, events, lists, campaigns, quicklists };
 };
 
 type TabType =
@@ -880,7 +932,7 @@ export default function CustomerDetailPage() {
     eventDateTo,
   ]);
 
-  const { segments, offers, events, lists, quicklists } = useMemo(() => {
+  const { segments, offers, events, lists, quicklists, campaigns } = useMemo(() => {
     if (!selectedSubscription)
       return {
         segments: [],
@@ -888,13 +940,44 @@ export default function CustomerDetailPage() {
         events: [],
         lists: [],
         quicklists: [],
+        campaigns: [],
       };
 
-    // Use actual data from API, fallback to empty arrays if not present
+    // Use actual data from API, fallback to dummy data if empty
     const data = selectedSubscription as Record<string, any>;
-    const segmentsData = Array.isArray(data.segments) ? data.segments : [];
-    const offersData = Array.isArray(data.offers) ? data.offers : [];
-    const quicklistsData = Array.isArray(data.quicklists)
+
+    // Get generated dummy data if available
+    let dummyData: any = {
+      segments: [],
+      offers: [],
+      events: [],
+      lists: [],
+      quicklists: [],
+      campaigns: [],
+    };
+
+    if (customer) {
+      const result = generateCustomerRelatedData(customer);
+      dummyData = {
+        segments: result.segments,
+        offers: result.offers,
+        events: result.events,
+        lists: result.lists,
+        quicklists: result.quicklists,
+        campaigns: result.campaigns,
+      };
+    }
+
+    // Use API data if available, fallback to dummy data if empty
+    const segmentsData = Array.isArray(data.segments) && data.segments.length > 0
+      ? data.segments
+      : dummyData.segments;
+
+    const offersData = Array.isArray(data.offers) && data.offers.length > 0
+      ? data.offers
+      : dummyData.offers;
+
+    const quicklistsData = Array.isArray(data.quicklists) && data.quicklists.length > 0
       ? data.quicklists.map((ql: Record<string, any>) => ({
           id: `QL-${ql.id}`,
           name: ql.name,
@@ -902,28 +985,15 @@ export default function CustomerDetailPage() {
           createdDate: ql.created_at,
           status: ql.processing_status,
         }))
-      : [];
-
-    // Generate mock events for now (backend doesn't return events)
-    let mockEvents: CustomerEvent[] = [];
-    let mockLists: SubscribedList[] = [];
-    if (customer) {
-      const result = generateCustomerRelatedData(customer);
-      return {
-        segments: segmentsData,
-        offers: offersData,
-        events: result.events,
-        lists: result.lists,
-        quicklists: quicklistsData,
-      };
-    }
+      : dummyData.quicklists;
 
     return {
       segments: segmentsData,
       offers: offersData,
-      events: mockEvents,
-      lists: mockLists,
+      events: dummyData.events,
+      lists: dummyData.lists,
       quicklists: quicklistsData,
+      campaigns: dummyData.campaigns,
     };
   }, [selectedSubscription, customer]);
 
@@ -2229,7 +2299,7 @@ export default function CustomerDetailPage() {
                         <tr className="text-left text-sm font-medium uppercase tracking-wider">
                           {[
                             "QuickList Name",
-                            "Records",
+                            "Total Members",
                             "Created Date",
                             "Status",
                           ].map((header) => (
@@ -2308,8 +2378,100 @@ export default function CustomerDetailPage() {
         )}
 
         {activeTab === "campaigns" && (
-          <div className="py-12 text-center">
-            <p className="text-gray-500 text-sm">No campaigns found</p>
+          <div>
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                Campaigns
+              </h3>
+              <p className="text-sm text-gray-500">
+                View all campaigns this customer has participated in
+              </p>
+            </div>
+            {campaigns.length === 0 ? (
+              <div className="py-12 text-center">
+                <p className="text-gray-500 text-sm">No campaigns found</p>
+              </div>
+            ) : (
+              <>
+                <div
+                  className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
+                >
+                  <div className="hidden lg:block overflow-x-auto">
+                    <table
+                      className="w-full"
+                      style={{
+                        borderCollapse: "separate",
+                        borderSpacing: "0 8px",
+                      }}
+                    >
+                      <thead style={{ background: color.surface.tableHeader }}>
+                        <tr className="text-left text-sm font-medium uppercase tracking-wider">
+                          {["Campaign Name", "Type", "Participation Date", "Status"].map(
+                            (header) => (
+                              <th
+                                key={header}
+                                className="px-6 py-3"
+                                style={{ color: color.surface.tableHeaderText }}
+                              >
+                                {header}
+                              </th>
+                            ),
+                          )}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {campaigns.map((campaign: any) => (
+                          <tr key={campaign.id} className="transition-colors">
+                            <td
+                              className="px-6 py-4 font-semibold text-sm text-gray-900"
+                              style={{
+                                backgroundColor: color.surface.tablebodybg,
+                              }}
+                            >
+                              {campaign.name}
+                            </td>
+                            <td
+                              className="px-6 py-4 text-sm text-gray-900"
+                              style={{
+                                backgroundColor: color.surface.tablebodybg,
+                              }}
+                            >
+                              {campaign.type}
+                            </td>
+                            <td
+                              className="px-6 py-4 text-sm text-gray-900"
+                              style={{
+                                backgroundColor: color.surface.tablebodybg,
+                              }}
+                            >
+                              {campaign.participationDate ? (
+                                <DateFormatter
+                                  date={campaign.participationDate}
+                                  useLocale
+                                  year="numeric"
+                                  month="short"
+                                  day="numeric"
+                                />
+                              ) : (
+                                "—"
+                              )}
+                            </td>
+                            <td
+                              className="px-6 py-4 text-sm text-gray-900"
+                              style={{
+                                backgroundColor: color.surface.tablebodybg,
+                              }}
+                            >
+                              {campaign.status}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         )}
 

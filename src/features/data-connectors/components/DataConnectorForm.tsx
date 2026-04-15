@@ -1881,10 +1881,10 @@ const DataConnectorForm: React.FC<DataConnectorFormProps> = ({
     configuration: {},
   });
 
-  const [testingConnection, setTestingConnection] = useState(false);
-  const [testResult, setTestResult] = useState<ConnectionTestResult | null>(
-    null,
-  );
+  // const [testingConnection, setTestingConnection] = useState(false);
+  // const [testResult, setTestResult] = useState<ConnectionTestResult | null>(
+  //   null,
+  // );
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>(
     {},
   );
@@ -1907,7 +1907,7 @@ const DataConnectorForm: React.FC<DataConnectorFormProps> = ({
       type: newType,
       configuration: defaults || {},
     }));
-    setTestResult(null);
+    // setTestResult(null);
     setShowPasswords({});
   }, []);
 
@@ -1931,7 +1931,7 @@ const DataConnectorForm: React.FC<DataConnectorFormProps> = ({
         configuration: connectorConfigDefaults.api,
       });
     }
-    setTestResult(null);
+    // setTestResult(null);
     setShowPasswords({});
   }, [connector, isOpen]);
 
@@ -1945,26 +1945,26 @@ const DataConnectorForm: React.FC<DataConnectorFormProps> = ({
     }
   };
 
-  const handleTestConnection = async () => {
-    setTestingConnection(true);
-    setTestResult(null);
-
-    try {
-      const result = await dataConnectorService.testConnectionConfig(
-        formData.type,
-        formData.configuration || {},
-      );
-      setTestResult(result);
-    } catch (err) {
-      setTestResult({
-        success: false,
-        message: "Unexpected error during test",
-        error_details: err instanceof Error ? err.message : undefined,
-      });
-    } finally {
-      setTestingConnection(false);
-    }
-  };
+  // const handleTestConnection = async () => {
+  //   setTestingConnection(true);
+  //   setTestResult(null);
+  //
+  //   try {
+  //     const result = await dataConnectorService.testConnectionConfig(
+  //       formData.type,
+  //       formData.configuration || {},
+  //     );
+  //     setTestResult(result);
+  //   } catch (err) {
+  //     setTestResult({
+  //       success: false,
+  //       message: "Unexpected error during test",
+  //       error_details: err instanceof Error ? err.message : undefined,
+  //     });
+  //   } finally {
+  //     setTestingConnection(false);
+  //   }
+  // };
 
   if (!isOpen) return null;
 
@@ -2109,6 +2109,7 @@ const DataConnectorForm: React.FC<DataConnectorFormProps> = ({
             />
 
             {/* Test Result */}
+            {/*
             {testResult && (
               <div
                 className={`p-4 rounded-md border ${testResult.success ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}`}
@@ -2139,12 +2140,14 @@ const DataConnectorForm: React.FC<DataConnectorFormProps> = ({
                 </div>
               </div>
             )}
+            */}
           </form>
         </div>
 
         {/* Footer with Actions */}
         <div className="sticky bottom-0 bg-white p-6">
           <div className="flex items-center justify-between">
+            {/*
             <button
               type="button"
               onClick={handleTestConnection}
@@ -2153,6 +2156,7 @@ const DataConnectorForm: React.FC<DataConnectorFormProps> = ({
             >
               {testingConnection ? "Testing..." : "Test Connection"}
             </button>
+            */}
 
             <div className="flex space-x-3">
               <button

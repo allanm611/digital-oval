@@ -226,16 +226,13 @@ For each segment, configure:
   - Champion Challenger: "70-30" (70% champion, 30% challenger)
 - Allocation percentages must sum to 100
 
-#### Updated UI & Actions (v1.2)
+Step 3 also uses a table-based interface for managing offers per segment. The table provides the following actions for each offer:
 
-Step 3 now uses a table-based interface for managing offers per segment. The table provides the following actions for each offer:
-
-- **Preview (Eye Icon):** View offer details. Clicking this icon navigates to the offer details page.
+- **Preview (Eye Icon):** View offer details. Clicking this icon displays few details about the offer also it has a view    details button that takes you to the details page of that offer.
 - **Add Offer (Plus Icon):** Add more offers to the segment.
 - **Remove Offer (Bin Icon):** Remove an offer from the segment.
-- **Edit (Planned):** An Edit button (coming soon) will allow direct navigation to edit the selected offer.
+- **Edit(Edit icon):** An Edit button that allows direct navigation to edit the selected offer.
 
-The creative template dropdown has been removed for a cleaner workflow. All offer management actions are now accessible directly from the table.
 
 #### Conversion Tracking
 
@@ -243,7 +240,9 @@ The creative template dropdown has been removed for a cleaner workflow. All offe
 - Shows tracking type and parameters
 - Allows validation of offer tracking setup before campaign runs
 
-![Step 3 - Offer Configuration](/img/v1.1/campaign-images/createcampaignstep3.png)
+
+![Step 3 - Offer Configuration Table](/img/v1.1/campaign-images/newcampignstep3image.png)
+![Step 3 - Offer Preview Modal](/img/v1.1/campaign-images/newcampignstep3previewoffer.png)
 
 **Important:**
 

@@ -1,6 +1,9 @@
+
 # View Data Connector Details
 
 ## Overview
+
+![Data Connector Details Page](/img/v1.1/infrastructure/viewdetailsdataconnector.png)
 
 The Data Connector Details page shows comprehensive information about a specific connector, including its configuration, connection status, and usage history.
 
@@ -19,7 +22,6 @@ The Data Connector Details page shows comprehensive information about a specific
 - Shows breadcrumb navigation
 
 **Action Buttons**
-- **Test Connection**: Verify the connector can connect to the target service
 - **Edit**: Modify the connector configuration
 - **Delete**: Remove the connector (confirmation required)
 
@@ -32,12 +34,6 @@ Displays the connector's basic information:
 - **Type Badge**: Connector type (JDBC, API, TCP, etc.)
 - **Connector Icon**: Visual representation of the connector type
 
-### Connection Test Results
-
-When you test a connection, the results are displayed here:
-- **Success State**: Shows "Connection Successful" with a green checkmark
-- **Failed State**: Shows "Test Failed" with details about the error
-- **Response Time**: How long the connection test took (in milliseconds)
 
 ### Information Section
 
@@ -73,18 +69,6 @@ Shows the connector's history:
 - Date and time the connector was last actively used
 - Only shown if the connector has been used
 
-## Testing a Connection
-
-To verify that your connector is working properly:
-
-1. Click the **Test Connection** button at the top
-2. The system will attempt to establish a connection
-3. Results are displayed in the Connection Test Results section
-4. For API and TCP connectors, response time is shown
-5. Any error details will be displayed if the test fails
-
-**Note**: The test connection button is only enabled for active connectors.
-
 ## Editing a Connector
 
 To modify a connector's configuration:
@@ -116,19 +100,12 @@ Only active connectors can be tested.
 
 ## Tips
 
-- Test your connection regularly to ensure it continues to work
 - Check the timeline to see when the connector was last modified or used
 - Monitor the connection count to understand usage patterns
 - Keep the connector description up-to-date for team reference
 - Delete unused connectors to keep your system clean
 
 ## Troubleshooting
-
-**Connection Test Failed**
-- Verify the target service is running and accessible
-- Check network connectivity and firewall rules
-- Verify all credentials are correct
-- Check the configuration for typos or invalid values
 
 **Cannot Edit Connector**
 - Ensure you have the necessary permissions

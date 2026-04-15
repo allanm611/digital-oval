@@ -33,7 +33,9 @@ There are two ways to open the create form:
 - Additional details about the connector's purpose
 - Example: "Main production database for customer data"
 
-### Configuration Fields
+
+### Create/Edit Modal
+![Create Data Connector Modal](/img/v1.1/infrastructure/createdataconnector.png)
 
 Configuration fields vary based on the selected connector type. The form will show relevant fields once you select a type.
 

@@ -36,10 +36,10 @@ export default function DataConnectorDetailsPage() {
   );
   const [loading, setLoading] = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [testResult, setTestResult] = useState<ConnectionTestResult | null>(
-    null,
-  );
-  const [isTesting, setIsTesting] = useState(false);
+  // const [testResult, setTestResult] = useState<ConnectionTestResult | null>(
+  //   null,
+  // );
+  // const [isTesting, setIsTesting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
 
@@ -74,29 +74,29 @@ export default function DataConnectorDetailsPage() {
     }
   }, [id, loadConnector]);
 
-  const handleTestConnection = async () => {
-    if (!connector) return;
-
-    try {
-      setIsTesting(true);
-      setTestResult(null);
-
-      const result = await dataConnectorService.testDataConnectorConnection(
-        connector.id,
-      );
-      setTestResult(result);
-
-      if (result.success) {
-        success("Connection OK", result.message);
-      } else {
-        showError("Connection failed", result.message);
-      }
-    } catch (err: any) {
-      showError("Test failed", err.message || "Connection test error");
-    } finally {
-      setIsTesting(false);
-    }
-  };
+  // const handleTestConnection = async () => {
+  //   if (!connector) return;
+  //
+  //   try {
+  //     setIsTesting(true);
+  //     setTestResult(null);
+  //
+  //     const result = await dataConnectorService.testDataConnectorConnection(
+  //       connector.id,
+  //     );
+  //     setTestResult(result);
+  //
+  //     if (result.success) {
+  //       success("Connection OK", result.message);
+  //     } else {
+  //       showError("Connection failed", result.message);
+  //     }
+  //   } catch (err: any) {
+  //     showError("Test failed", err.message || "Connection test error");
+  //   } finally {
+  //     setIsTesting(false);
+  //   }
+  // };
 
   const confirmDelete = async () => {
     if (!connector) return;
@@ -198,6 +198,7 @@ export default function DataConnectorDetailsPage() {
           currentLabel="Data Connector Details"
         />
         <div className="flex flex-wrap items-center gap-2">
+          {/*
           <button
             onClick={handleTestConnection}
             disabled={isTesting || !connector.is_active}
@@ -215,6 +216,7 @@ export default function DataConnectorDetailsPage() {
             )}
             {isTesting ? "Testing..." : "Test Connection"}
           </button>
+          */}
 
           <button
             onClick={() => setShowEditModal(true)}
@@ -288,6 +290,7 @@ export default function DataConnectorDetailsPage() {
           </div>
 
           {/* Test Result */}
+          {/*
           {testResult && (
             <div
               className={`border ${tw.rounded} p-6 ${
@@ -328,6 +331,7 @@ export default function DataConnectorDetailsPage() {
               </div>
             </div>
           )}
+          */}
 
           {/* Information */}
           <div
@@ -388,6 +392,7 @@ export default function DataConnectorDetailsPage() {
                 </p>
               </div>
               <div className="space-y-1">
+                {/*
                 <label
                   className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
                 >
@@ -400,6 +405,7 @@ export default function DataConnectorDetailsPage() {
                       : "Failed"
                     : "Not tested yet"}
                 </p>
+                */}
               </div>
             </div>
           </div>

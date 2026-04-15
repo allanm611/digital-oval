@@ -1,5 +1,8 @@
 # Edit Data Connector
 
+
+![Create/Edit Data Connector Modal](/img/v1.1/infrastructure/editdataconnector.png)
+
 Edit Data Connector opens an existing connector record for updates.
 
 ## What You Usually Edit
