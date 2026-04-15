@@ -97,6 +97,18 @@ When creating a campaign, you choose from the following campaign types:
 - Levels: Customers progress through offer tiers
 - Use case: Tiered loyalty programs, escalating engagement campaigns
 
+## Status and Availability
+
+**Active Campaign Types**
+- Campaign types can be enabled or disabled through the Campaign Types configuration page
+- Only active (enabled) campaign types are available for selection when creating a new campaign
+- If a campaign type is deactivated, it will no longer appear as an option in the campaign type selector
+
+**Deactivated Campaign Types**
+- Deactivated campaign types are not shown in the campaign creation flow
+- To use a deactivated campaign type again, you must first activate it in the Campaign Types configuration page
+- This prevents accidental use of deprecated campaign workflow types
+
 <!-- ---
 
 ## Key Differences

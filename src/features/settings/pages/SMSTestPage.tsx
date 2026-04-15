@@ -210,37 +210,6 @@ export default function SMSTestPage() {
                 />
               </div>
 
-              {/* Message Input */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Message *
-                </label>
-                <textarea
-                  value={message}
-                  onChange={(e) => {
-                    setMessage(e.target.value);
-                    setMessageError("");
-                  }}
-                  placeholder="Enter your test message..."
-                  rows={5}
-                  className={`w-full px-4 py-2 border ${
-                    messageError ? "border-red-400" : "border-gray-300"
-                  } ${tw.rounded} focus:ring-2 ${
-                    messageError ? "focus:ring-red-400" : "focus:ring-blue-500"
-                  } focus:border-transparent text-sm`}
-                />
-                {messageError ? (
-                  <p className="mt-2 flex items-center gap-1.5 text-sm text-red-600">
-                    <AlertCircle className="w-4 h-4" />
-                    {messageError}
-                  </p>
-                ) : (
-                  <p className="mt-1 text-xs text-gray-500">
-                    Message length: {message.length} characters
-                  </p>
-                )}
-              </div>
-
               {/* Sender ID Selection */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -248,8 +217,8 @@ export default function SMSTestPage() {
                 </label>
                 {isLoadingSenderIds ? (
                   <div className="flex items-center gap-2 text-gray-500">
-                    <Loader className="w-4 h-4 animate-spin" />
-                    Loading Sender IDs...
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
+                    Loading...
                   </div>
                 ) : senderIds.length === 0 ? (
                   <p className="text-sm text-gray-500">No Sender IDs available</p>
@@ -303,8 +272,8 @@ export default function SMSTestPage() {
                 </label>
                 {isLoadingRoutes ? (
                   <div className="flex items-center gap-2 text-gray-500">
-                    <Loader className="w-4 h-4 animate-spin" />
-                    Loading SMS routes...
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
+                    Loading...
                   </div>
                 ) : smsRoutes.length === 0 ? (
                   <p className="text-sm text-gray-500">No SMS routes available</p>
@@ -348,6 +317,37 @@ export default function SMSTestPage() {
                       </Listbox.Options>
                     </div>
                   </Listbox>
+                )}
+              </div>
+
+              {/* Message Input */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Message *
+                </label>
+                <textarea
+                  value={message}
+                  onChange={(e) => {
+                    setMessage(e.target.value);
+                    setMessageError("");
+                  }}
+                  placeholder="Enter your test message..."
+                  rows={5}
+                  className={`w-full px-4 py-2 border ${
+                    messageError ? "border-red-400" : "border-gray-300"
+                  } ${tw.rounded} focus:ring-2 ${
+                    messageError ? "focus:ring-red-400" : "focus:ring-blue-500"
+                  } focus:border-transparent text-sm`}
+                />
+                {messageError ? (
+                  <p className="mt-2 flex items-center gap-1.5 text-sm text-red-600">
+                    <AlertCircle className="w-4 h-4" />
+                    {messageError}
+                  </p>
+                ) : (
+                  <p className="mt-1 text-xs text-gray-500">
+                    Message length: {message.length} characters
+                  </p>
                 )}
               </div>
 

@@ -42,7 +42,7 @@ Segment Types are categories used to classify and organize different kinds of cu
 **Examples:**
 
 - "Age 25-34, Urban Area"
-- "High Income Band (KES 100K+)"
+- "High Income Band (Premium Tier)"
 - "East Africa Region"
 - "Professional Age Group"
 
@@ -60,7 +60,7 @@ Segment Types are categories used to classify and organize different kinds of cu
 
 **Examples:**
 
-- "Customers with Balance > KES 1000"
+- "Customers with Balance Above Threshold"
 - "Active Products Count >= 3"
 - "Churn Risk Score > 0.7"
 - "Customers in Loyalty Tier 2+"
@@ -136,7 +136,19 @@ Segment Types are categories used to classify and organize different kinds of cu
 
 **Examples:**
 
-- "High Spenders (>KES 10K last 90 days)"
+- "High Spenders (Top 20% last 90 days)"
 - "Frequent Purchasers (10+ transactions/month)"
 - "Mid-tier Revenue Customers"
 - "Regular Monthly Spenders"
+
+## Status and Availability
+
+**Active Segment Types**
+- Only active (enabled) segment types are displayed in the dropdown when creating or editing a segment
+- If a segment type is deactivated, it will no longer appear in the type selection dropdown
+- Existing segments with deactivated types will continue to function, but you cannot assign that type to new segments
+
+**Deactivated Segment Types**
+- Deactivated segment types are not shown in the dropdown selector
+- To use a deactivated segment type again, you must first activate it in the Segment Types configuration page
+- This prevents accidental use of deprecated segment types

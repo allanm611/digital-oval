@@ -2,92 +2,98 @@
 
 ## Overview
 
-Access complete customer profiles with information, interaction history, preferences, and engagement data. The customer details page is organized into five tabs that show different aspects of the customer profile.
+The customer details page provides a comprehensive profile view, organized into multiple tabs for easy navigation. Each tab displays a different aspect of the customer profile as described below.
 
-## Tabs Overview
+## Tabs
 
-The customer details page has five tabs, each showing different information:
+### Customer Information
 
-### Tab 1: Customer Information
+Displays all core customer profile details, organized by section:
 
-![Customer Information Tab](/img/v1.1/customer360-images/customerdetailscustomerinfotab.png)
+- **Identity:** Customer ID, name, gender, date of birth
+- **Contact Information:** Phone numbers, emails, preferred language/channel
+- **Address Information:** City, region, postal code, country, address
+- **Account Details:** Tier, timezone, activation date, SIM details
 
-Shows all customer profile details organized by section:
+#### Key Performance Indicators (KPIs)
 
-**Identity**
-- Customer ID, first name, last name, gender, date of birth
+- Table of KPIs with name, category, value, trend, and description
+- Search bar to filter KPIs
+- Trend indicators (up, down, stable) and percentage change
+- KPI details modal for in-depth information
 
-**Contact Information**
-- Primary and alternate phone numbers, emails, preferred language, preferred channel
+### Events
 
-**Address Information**
-- City, region, postal code, country code, physical address
+Chronological record of all communications sent to the customer:
 
-**Account Details**
-- Customer tier, timezone, activation date, SIM details (ICCID, IMSI)
-
-### Tab 2: Events
-
-![Events Tab](/img/v1.1/customer360-images/customerdetailseventstab.png)
-
-Chronological record of all communications sent to customer:
-
-**View:**
 - Date and time of each event
 - Event type (email, SMS, push, etc.)
 - Event title and description
 - Status (sent, delivered, opened, etc.)
+- Filter and search by event title, type, status, or date range
 
-**Filter & Search:**
-- Search by event title or description
-- Filter by event type (email, SMS, push)
-- Filter by status (delivered, opened, etc.)
-- Filter by date range
-
-### Tab 3: Subscribed Lists
-
-![Subscribed Lists Tab](/img/v1.1/customer360-images/customerdetailssubscribedliststab.png)
+### Subscribed Lists
 
 Lists the customer is subscribed to:
 
-**Shows:**
 - List name
 - Subscription date
 - Current status (active, unsubscribed)
+- Actions: Unsubscribe from lists, view list details
 
-**Actions:**
-- Unsubscribe from lists
-- View list details
-
-### Tab 4: Analytics
-
-![Analytics Tab](/img/v1.1/customer360-images/customerdetailsanalyticstab.png)
+### Analytics
 
 Customer engagement metrics and trends:
 
-**Engagement Metrics:**
 - Total events, total opened, total engagement rate
 - Breakdown by channel (SMS, email, push)
 - Monthly activity timeline
+- Channel distribution and engagement rates per channel
 
-**Channel Distribution:**
-- Visual breakdown of events by channel
-- Engagement rates per channel
+### Segments
 
-### Tab 5: Segments & Offers
+Shows all segment memberships for the customer:
 
-![Segments & Offers Tab](/img/v1.1/customer360-images/customerdetailssegments&offertab.png)
-
-Customer's segment memberships and offers received:
-
-**Segments:**
-- Segments customer belongs to
-- When added to each segment
+- Segment names
+- Date added to each segment
 - Option to remove from segment
 
-**Offers:**
-- Offers sent to customer
+### Offers
+
+Displays all offers sent to the customer:
+
 - Offer type (discount, cashback, voucher, etc.)
 - Status (active, redeemed)
 - Offer value and redemption date
 
+### QuickLists
+
+Lists all quicklists the customer belongs to.
+
+### Campaigns
+
+Shows campaigns the customer has participated in.
+
+### Communications
+
+Displays communication history and preferences for the customer.
+
+### Purchase History
+
+Shows a record of all purchases made by the customer.
+
+### Loyalty & Rewards
+
+Displays loyalty program status and rewards earned by the customer.
+
+### Preferences
+
+Shows customer notification and communication preferences.
+
+### Interactions
+
+Displays interaction history and engagement points.
+
+### Account & Device
+
+Shows account and device details for the customer.

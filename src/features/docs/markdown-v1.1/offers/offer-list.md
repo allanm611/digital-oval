@@ -107,6 +107,10 @@ Each offer row has an actions menu with available buttons based on the offer's c
 - **View** - View offer details (read-only)
 - **Unarchive** - Restore archived offer back to Approved or Active status
 
+**Available for All Offers (Any Status)**
+
+- **Duplicate Offer** - Create a copy of the offer with a new name (requires "create" permission)
+
 ---
 
 ## Offer Status & Approval Flow

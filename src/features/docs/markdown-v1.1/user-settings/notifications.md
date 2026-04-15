@@ -138,6 +138,18 @@ When you have notifications selected, a bulk actions bar appears:
 - **Mark As Read** - Mark selected as read
 - **Delete** - Delete selected notifications
 
+## Managing Your Notification Preferences
+
+To control which types of notifications you receive and through which channels:
+
+1. Go to **Settings** (in the sidebar under User Settings)
+2. Scroll to the **Notifications** section
+3. **Enable/Disable Notification Types** - Check or uncheck each notification type to control what you're notified about
+4. **Select Preferred Channels** - Choose which communication channels (SMS, Email, Push, etc.) you want to use for notifications
+5. **Set Do Not Disturb Hours** - Configure quiet hours when you don't want notification alerts
+
+See [Settings - Notification Preferences](/documentation/user-settings/settings) for detailed information.
+
 ## Notification Details
 
 ### Navigation to Items

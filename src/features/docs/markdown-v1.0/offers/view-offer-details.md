@@ -138,6 +138,9 @@ Action buttons at the top display based on the offer's status and your permissio
 **Edit**
 - Modify offer details and configuration
 
+**Duplicate**
+- Create a copy of the offer with a new name (requires "create" permission)
+
 
 ## Used in Campaigns
 

@@ -159,23 +159,30 @@ Set quiet hours when you don't want to be bothered with notifications. Notificat
 
 ![Notification Settings](/img/v1.1/usersettings/notificationsetting.png)
 
-### Enabled Notification Types
+### Notification Preferences
 
-Choose which notification types you want to receive:
+Manage which notifications you want to receive. The list shows all available [notification types](/documentation/configuration/notification-types-list) configured by your organization.
 
-- Campaigns
-- Offers
-- Segments
-- Products
-- Jobs
-- Users
-- System
+**Available Notification Types:**
+The notification types available depend on what your organization has set up. Examples include:
+- Campaign Approval Request
+- Campaign Execution Completed
+- Segment Computation Completed
+- Offer Status Changed
+- And others configured by your organization
 
-**Default:** All types enabled
+**How to Enable/Disable Notifications:**
+1. In the Notifications section, you'll see a list of all available notification types
+2. Each notification type has a checkbox
+3. Check the box to enable notifications for that type
+4. Uncheck the box to disable notifications for that type
+5. Changes are saved automatically
+
+**Default:** All notification types are enabled
 
 ### Preferred Notification Channels
 
-Select which channels to use for notifications:
+Select which communication channels you want to use for receiving notifications:
 
 - SMS
 - Email
@@ -185,7 +192,16 @@ Select which channels to use for notifications:
 - Voice
 - WhatsApp
 
+**How to Select Channels:**
+1. Click on the "Preferred Channels" dropdown
+2. Select one or more channels you want to use
+3. Selected channels appear as tags below the dropdown
+4. Click the × on a tag to remove a channel
+5. Changes are saved automatically
+
 **Default:** SMS and Email
+
+**Note:** Your selected channels are used as the preferred delivery method for all enabled notifications.
 
 ## Theme
 

@@ -7,13 +7,9 @@ Getting Started guides help you learn the fundamentals of the Sentra CVM platfor
 
 ## Essential Guides
 
-### [Dashboard](/documentation/getting-started/dashboard)
+**[Dashboard](/documentation/getting-started/dashboard)** - Learn about the main landing page you see after logging in. Understand the dashboard layout, key statistics, charts, recent items, and how to navigate to different modules from the dashboard.
 
-Learn about the main landing page you see after logging in. Understand the dashboard layout, key statistics, charts, recent items, and how to navigate to different modules from the dashboard.
-
-### [Global Search](/documentation/getting-started/global-search)
-
-Master the platform-wide search feature that helps you quickly find campaigns, offers, products, segments, users, and configurations from anywhere in the system. Discover how to use the search dropdown, access the results page, and filter by type.
+**[Global Search](/documentation/getting-started/global-search)** - Master the platform-wide search feature that helps you quickly find campaigns, offers, products, segments, users, and configurations from anywhere in the system. Discover how to use the search dropdown, access the results page, and filter by type.
 
 
 ## Quick Tips

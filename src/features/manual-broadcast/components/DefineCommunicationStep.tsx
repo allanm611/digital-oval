@@ -35,7 +35,10 @@ import CommunicationPolicyModal from "../../campaigns/components/CommunicationPo
 import PolicyNameModal from "../../campaigns/components/PolicyNameModal";
 import { useClickOutside } from "../../../shared/hooks/useClickOutside";
 import { useToast } from "../../../contexts/ToastContext";
-import { validatePhoneOnly, isValidEmail } from "../../../shared/utils/validation";
+import {
+  validatePhoneOnly,
+  isValidEmail,
+} from "../../../shared/utils/validation";
 import { DUMMY_RECIPIENTS } from "../../campaigns/pages/SeedListManagementPage";
 import type { SeedListRecipient } from "../../campaigns/pages/SeedListManagementPage";
 import Checkbox from "../../../shared/components/ui/Checkbox";
@@ -106,7 +109,7 @@ export default function DefineCommunicationStep({
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [testError, setTestError] = useState("");
   const [selectedTestContacts, setSelectedTestContacts] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
 
   const titleInputRef = useRef<HTMLInputElement>(null);
@@ -169,7 +172,7 @@ export default function DefineCommunicationStep({
   // Get only the selected/checked test contacts
   const getSelectedTestContacts = (): string[] => {
     return getAvailableTestContacts().filter((contact) =>
-      selectedTestContacts.has(contact)
+      selectedTestContacts.has(contact),
     );
   };
 
@@ -221,7 +224,10 @@ export default function DefineCommunicationStep({
 
         if (selectedChannel === "EMAIL") {
           errorMessage = t.manualBroadcast.errorInvalidEmail;
-        } else if (selectedChannel === "SMS" || selectedChannel === "WHATSAPP") {
+        } else if (
+          selectedChannel === "SMS" ||
+          selectedChannel === "WHATSAPP"
+        ) {
           errorMessage = t.manualBroadcast.errorInvalidPhone;
         } else {
           errorMessage = t.manualBroadcast.errorInvalidContact;
@@ -337,7 +343,10 @@ export default function DefineCommunicationStep({
       const currentText = messageTitle;
 
       // Validate cursor position
-      const positionError = validateInsertPosition(currentText, actualCursorPosition);
+      const positionError = validateInsertPosition(
+        currentText,
+        actualCursorPosition,
+      );
 
       if (positionError) {
         setVariableError(positionError);
@@ -393,7 +402,10 @@ export default function DefineCommunicationStep({
         }
 
         // Validate cursor position
-        const positionError = validateInsertPosition(currentText, actualCursorPosition);
+        const positionError = validateInsertPosition(
+          currentText,
+          actualCursorPosition,
+        );
 
         if (positionError) {
           setVariableError(positionError);
@@ -488,10 +500,8 @@ export default function DefineCommunicationStep({
 
     try {
       // Get the original policy name (remove the temporary suffix)
-      const originalPolicyName = policyToCustomize.name?.replace(
-        " - Customizing...",
-        "",
-      ) || "Unknown";
+      const originalPolicyName =
+        policyToCustomize.name?.replace(" - Customizing...", "") || "Unknown";
 
       // Validate required policy configuration
       const channels = pendingPolicyData.channels as any[];
@@ -572,7 +582,11 @@ export default function DefineCommunicationStep({
     }
 
     // Validate fileColumns availability
-    if (data.fileColumns && Array.isArray(data.fileColumns) && data.fileColumns.length > 0) {
+    if (
+      data.fileColumns &&
+      Array.isArray(data.fileColumns) &&
+      data.fileColumns.length > 0
+    ) {
       data.fileColumns.forEach((col) => {
         if (col && typeof col === "string") {
           sampleData[col] = `[${col}]`;
@@ -616,7 +630,11 @@ export default function DefineCommunicationStep({
 
   const handleNext = () => {
     // Validate messageBody
-    if (!messageBody || typeof messageBody !== "string" || !messageBody.trim()) {
+    if (
+      !messageBody ||
+      typeof messageBody !== "string" ||
+      !messageBody.trim()
+    ) {
       setError(t.manualBroadcast.errorMessageBodyRequired);
       return;
     }
@@ -636,7 +654,11 @@ export default function DefineCommunicationStep({
 
     // Validate email requirements
     if (selectedChannel === "EMAIL") {
-      if (!messageTitle || typeof messageTitle !== "string" || !messageTitle.trim()) {
+      if (
+        !messageTitle ||
+        typeof messageTitle !== "string" ||
+        !messageTitle.trim()
+      ) {
         setError(t.manualBroadcast.errorSubjectRequired);
         return;
       }
@@ -660,13 +682,15 @@ export default function DefineCommunicationStep({
     setError("");
 
     // Validate selectedVariables is an array
-    const validatedVariables = Array.isArray(selectedVariables) ? selectedVariables : [];
+    const validatedVariables = Array.isArray(selectedVariables)
+      ? selectedVariables
+      : [];
 
     // Prepare test results record
     const resultsRecord: Record<string, unknown> = {
       results: testResults,
-      successCount: testResults.filter(r => r.status === "success").length,
-      failedCount: testResults.filter(r => r.status === "failed").length,
+      successCount: testResults.filter((r) => r.status === "success").length,
+      failedCount: testResults.filter((r) => r.status === "failed").length,
     };
 
     // Update parent with validated data
@@ -889,12 +913,12 @@ export default function DefineCommunicationStep({
                 <HeadlessSelect
                   options={[
                     { value: "", label: "Select SMS Route" },
-                    ...((smsRoutes || [])
+                    ...(smsRoutes || [])
                       .filter((route) => route.is_active)
                       .map((route) => ({
                         value: route.id.toString(),
                         label: route.name,
-                      }))),
+                      })),
                   ]}
                   value={smsRoute}
                   onChange={(value) => {
@@ -1036,9 +1060,7 @@ export default function DefineCommunicationStep({
               )}
 
               {variableError && (
-                <div className="mt-3 text-sm text-red-700">
-                  {variableError}
-                </div>
+                <div className="mt-3 text-sm text-red-700">{variableError}</div>
               )}
 
               {/* Info bar */}
@@ -1065,7 +1087,6 @@ export default function DefineCommunicationStep({
                 )}
               </div>
             </div>
-
           </div>
 
           {/* Right Column - Preview & Test Contacts (2/5) */}
@@ -1089,7 +1110,8 @@ export default function DefineCommunicationStep({
                   Select Test Contacts
                 </h3>
                 <p className={`text-xs ${tw.textSecondary} mb-3`}>
-                  Check the contacts you want to test ({getSelectedTestContacts().length} selected)
+                  Check the contacts you want to test (
+                  {getSelectedTestContacts().length} selected)
                 </p>
                 <div className="space-y-2 max-h-64 overflow-y-auto mb-4">
                   {getAvailableTestContacts().map((contact, index) => (
@@ -1103,8 +1125,11 @@ export default function DefineCommunicationStep({
                         checked={selectedTestContacts.has(contact)}
                         onChange={() => toggleTestContact(contact)}
                         disabled={isTesting}
-                        className="w-4 h-4 rounded cursor-pointer" />
-                      <span className={`text-sm ${tw.textPrimary} flex-1 truncate`}>
+                        className="w-4 h-4 rounded cursor-pointer"
+                      />
+                      <span
+                        className={`text-sm ${tw.textPrimary} flex-1 truncate`}
+                      >
                         {contact}
                       </span>
                     </div>
@@ -1115,7 +1140,9 @@ export default function DefineCommunicationStep({
                 <div className="mb-4">
                   <button
                     onClick={handleSendTest}
-                    disabled={getSelectedTestContacts().length === 0 || isTesting}
+                    disabled={
+                      getSelectedTestContacts().length === 0 || isTesting
+                    }
                     className="w-auto px-4 py-2.5 text-white rounded-md text-sm font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     style={{ backgroundColor: color.primary.accent }}
                   >
@@ -1158,7 +1185,9 @@ export default function DefineCommunicationStep({
                 {/* Test Results */}
                 {testResults.length > 0 && (
                   <div>
-                    <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
+                    <label
+                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                    >
                       Test Results
                     </label>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -1211,7 +1240,6 @@ export default function DefineCommunicationStep({
             )}
           </div>
         </div>
-
       </div>
 
       {/* Communication Policy Modals */}

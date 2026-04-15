@@ -172,6 +172,24 @@ See [Edit Campaign](/documentation/campaigns/edit-campaign) for comprehensive in
 **Status Change:** Archived → Active (or previous status)
 
 
+### Duplicate Campaign
+**What it does:** Create a copy of the campaign with all its configuration.
+
+**When to use:** When you want to create a similar campaign to an existing one.
+
+**Requirements:**
+- You must have "create" permission for campaigns
+
+**Note:** The duplicated campaign will have "Copy of" prefixed to its name. All campaign details including segments, offers, schedule, and configuration are copied. The duplicated campaign starts as a new draft campaign that you can edit and customize.
+
+**How it works:**
+1. Click the **Duplicate Campaign** button from the action menu
+2. Opens the campaign creation wizard with all existing campaign data pre-filled
+3. Campaign name is automatically prefixed with "Copy of" (e.g., "Copy of Summer Sale")
+4. Modify any details as needed
+5. Save as a new campaign
+
+
 ### Delete Campaign
 **What it does:** Permanently remove campaign from system.
 

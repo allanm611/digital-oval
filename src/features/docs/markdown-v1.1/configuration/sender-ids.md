@@ -28,29 +28,34 @@ Click **Create** to open the sender ID modal.
 
 ### Fields
 
-**Sender ID Name**
+**Sender ID Name (`name`)**
 
 - Required
 - Text input
 
-**Description**
+**Description (`description`)**
 
 - Optional
 - Multi-line text area
 
-**Gateway**
+**Gateway (`gateway_key`)**
 
 - Required
-- Select field
+- Select field (enum)
 - Placeholder: `Select gateway`
+- Maps to backend values:
+  - Internal (`INTERNAL`)
+  - Mocana (`MOCANA`)
+  - SMS Gateway Hub (`SMSGW_HUB`)
+  - External Provider A (`EXTERNAL_PROVIDER_A`)
+  - External Provider B (`EXTERNAL_PROVIDER_B`)
 
-Available gateway options in the system are:
+**Active Status (`is_active`)**
 
-- Internal
-- Mocana
-- SMS Gateway Hub
-- External Provider A
-- External Provider B
+- Optional (defaults to active)
+- Checkbox: checked = active, unchecked = inactive
+
+All required fields must be filled to enable save.
 
 ### Modal Actions
 

@@ -94,7 +94,7 @@ Offer Types are categories used to classify and organize promotional offers. Eac
 - Reward vouchers
 
 **Examples:**
-- "$10 Prepaid Voucher"
+- "100 Unit Prepaid Voucher"
 - "50 Bonus Minutes Voucher"
 - "Double Data Voucher"
 
@@ -129,7 +129,7 @@ Offer Types are categories used to classify and organize promotional offers. Eac
 
 **Examples:**
 - "20% Off Data Plans"
-- "$5 Off Voice Packages"
+- "Fixed Discount Voice Packages"
 - "Flash Sale 50% Discount"
 
 
@@ -182,4 +182,17 @@ Offer Types are categories used to classify and organize promotional offers. Eac
 - "Partner Promotion"
 - "Corporate Special Offer"
 - "Beta Program Access"
+
+
+## Status and Availability
+
+**Active Offer Types**
+- Only active (enabled) offer types are displayed in the dropdown when creating or editing an offer
+- If an offer type is deactivated, it will no longer appear in the type selection dropdown
+- Existing offers with deactivated types will continue to function, but you cannot assign that type to new offers
+
+**Deactivated Offer Types**
+- Deactivated offer types are not shown in the dropdown selector
+- To use a deactivated offer type again, you must first activate it in the Offer Types configuration page
+- This prevents accidental use of deprecated or obsolete offer types
 

@@ -14,7 +14,7 @@ The top of the page includes navigation and action buttons:
 - Returns you to the QuickList List or previous location
 - Shows breadcrumb navigation
 
-**Edit QuickList**
+**Edit**
 - Opens a modal to update the QuickList name and description
 - Only the name and description can be edited
 - Requires appropriate permissions
@@ -24,10 +24,13 @@ The top of the page includes navigation and action buttons:
 - Allows you to select communication type and template
 - Useful for bulk messaging to a specific customer group
 
-**More Menu** (⋯)
+**More Menu**
 - Additional actions including:
-  - **Download Members** - Export the list of all members as a CSV file
-  - **Delete QuickList** - Permanently removes the QuickList from the system (requires confirmation)
+  - **Add Customer** - Opens a modal to add customers to this QuickList
+  - **Remove Customer** - Opens a modal to remove customers from this QuickList
+  - **Delete** - Permanently removes the QuickList from the system (requires confirmation)
+  - **Export CSV** - Export all members as a CSV file
+  - **Export JSON** - Export all members as a JSON file
 
 ## Basic Information Section
 
@@ -136,6 +139,31 @@ Displays the history of imports and updates for this QuickList:
 4. Verify the import date matches when you uploaded the file
 
 ## Actions and Features
+
+### Add/Remove Customers from QuickList
+
+Manage customer membership in your QuickList by adding new customers or removing existing ones.
+
+**Adding Customers:**
+1. Click **More** menu (⋯)
+2. Select **Add/Remove Customers**
+3. A modal opens showing available customers to add
+4. Search for customers by name, email, or phone number
+5. Check the checkbox next to each customer you want to add
+6. Click **Save** to add selected customers
+
+**Removing Customers:**
+1. Click **More** menu (⋯)
+2. Select **Add/Remove Customers**
+3. A modal opens showing current members
+4. Uncheck the checkbox next to customers you want to remove
+5. Click **Save** to update the list
+
+**Use Cases:**
+- Add new customers discovered from another source
+- Remove customers who no longer match QuickList criteria
+- Update list membership without re-uploading a file
+- Maintain dynamic QuickLists with manual adjustments
 
 ### Send Communication to QuickList
 

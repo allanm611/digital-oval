@@ -47,13 +47,16 @@ The QuickLists are displayed in a table with the following columns:
 
 Each QuickList row has action buttons with the following options:
 
-**View** - Opens the [QuickList Details](/documentation/segments/view-quicklist) page
-
 **Edit** - Opens a modal to modify the QuickList name and description
 
-**Export as CSV** - Export the quicklist as a csv
+**View** - Opens the [QuickList Details](/documentation/segments/view-quicklist) page
 
-**Delete** - Permanently remove the QuickList with confirmation
+**More Menu** (⋯) - Additional actions dropdown with the following options:
+- **Send Communication** - Opens a modal to send bulk messages (SMS, Email, etc.) to all members
+- **Add Customer** - Opens a modal to add customers to the QuickList
+- **Remove Customer** - Opens a modal to remove customers from the QuickList
+- **Export** - Export the QuickList as a CSV file
+- **Delete** - Permanently remove the QuickList with confirmation
 
 ## Next Steps
 

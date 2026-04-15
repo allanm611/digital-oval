@@ -15,7 +15,14 @@ Reward Types allow you to:
 
 ## About Reward Types
 
-Reward Types are managed by the system and backend. You can view and edit existing reward types, but creation and deletion are handled at the system level.
+Reward Types can be created, edited, and managed directly in the UI. Each reward type includes:
+
+- **Name** (required)
+- **Description** (optional)
+- **Reward Key** (required, unique)
+- **Active Status** (checkbox)
+
+You can search and filter reward types by name, description, or status.
 
 ## Managing Reward Types
 
@@ -37,13 +44,14 @@ This page is mainly a maintenance screen: keep reward type names clear, keep des
 
 ### Edit Reward Type
 
-Click **Edit** on any reward type to update:
+Click **Edit** or **Create** to open the reward type modal:
 
-- Reward Type Name
-- Description
-- Status
+- **Name** (required)
+- **Description** (optional)
+- **Reward Key** (required, unique)
+- **Active** (checkbox)
 
-Click **Save** to apply changes.
+Click **Save** to apply changes. The list will update automatically.
 
 ## Using Reward Types in Offers
 

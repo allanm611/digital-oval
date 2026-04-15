@@ -76,6 +76,7 @@ The actions available for each campaign vary based on its **Status** and **Appro
 #### For All Campaigns (Any Status)
 These actions are always available regardless of campaign status:
 - **[Edit Campaign](/documentation/campaigns/view-campaign-details)** - Modify campaign details at any point in the campaign lifecycle
+- **Duplicate Campaign** - Create a copy of the campaign with a new name (requires "create" permission)
 - **Archive Campaign** - Archive the campaign when you no longer need it
 - **Unarchive Campaign** - Restore an archived campaign back to active use (only visible for archived campaigns)
 - **Delete Campaign** - Permanently delete the campaign (requires "Delete" permission)

@@ -150,7 +150,19 @@ Product Types are categories used to classify and organize different kinds of pr
 
 When creating or editing a product:
 
-1. **Select Product Type** - Choose the systemropriate type from the available options
+1. **Select Product Type** - Choose the appropriate type from the available options
 2. **For Combo Products** - Select component resources (Data, Voice, SMS), manage shared properties, and set bundle pricing
 3. **For Other Types** - Configure standard properties like pricing, validity, and features
 4. **Save** - Product is now classified and ready to use in offers and campaigns
+
+## Status and Availability
+
+**Active Product Types**
+- Only active (enabled) product types are displayed in the dropdown when creating or editing a product
+- If a product type is deactivated, it will no longer appear in the type selection dropdown
+- Existing products with deactivated types will continue to function, but you cannot assign that type to new products
+
+**Deactivated Product Types**
+- Deactivated product types are not shown in the dropdown selector
+- To use a deactivated product type again, you must first activate it in the Product Types configuration page
+- This prevents accidental use of obsolete product types

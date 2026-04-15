@@ -80,10 +80,27 @@ Build rules based on customer profile attributes like demographics, behavior, tr
 
 **Operators Available** (varies by field type):
 
-- **Text fields**: Equals, Contains, Starts With, Ends With, Does Not Contain
-- **Numeric fields**: Equals, Greater Than, Less Than, Greater Than or Equal, Less Than or Equal, Between
-- **Date fields**: Equals, After, Before, Between, In Last (days/weeks/months)
-- **Boolean fields**: Is True, Is False
+- **Text fields**: Equals, Not Equals, In List, Not In List, Is Empty, Is Not Empty
+- **Numeric fields**: Equals, Not Equals, Greater Than, Less Than, Greater Than or Equal, Less Than or Equal, Between, In List, Not In List, Is Empty, Is Not Empty
+- **Money/Decimal/Numeric KPI fields**: All numeric operators PLUS date-based operators (On Date, Between Dates, Since Date, Until Date) for date range filtering
+- **Date fields**: Equals, Greater Than, Less Than, Between, On Date, Between Dates, Since Date, Until Date, Is Empty, Is Not Empty
+- **Boolean fields**: Equals, Not Equals, Is Empty, Is Not Empty
+
+**Special: Money/Decimal/Numeric KPI Fields with Dual-Operator UI**
+
+When you select a **Money, Decimal, or Numeric KPI field** and choose a numeric operator (like "greater than" or "equals"), you'll see a special interface with three elements on one line:
+
+1. **Numeric Value Input** — Enter the comparison value
+2. **Four-Option Date Dropdown** — Select how to filter by date:
+   - **On** — Include data from a specific date only
+   - **Between** — Include data within a date range
+   - **Since** — Include data from start date to today
+   - **Until** — Include data from the beginning to end date
+3. **Date Picker** — Select the date(s) based on your dropdown choice
+
+**Example:** "Total Spend > 10000 SINCE 2024-01-01" filters for customers who spent more than KES 10,000 from January 1st to today.
+
+**Note:** If you select a date operator directly from the main operator list (On Date, Between Dates, etc.), the four-option dropdown does **not** appear because the date operator already handles date selection.
 
 #### 2. **Segment Conditions** (Reference Other Segments)
 

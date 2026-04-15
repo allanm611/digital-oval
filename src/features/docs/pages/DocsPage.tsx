@@ -19,7 +19,7 @@ import { DocsHeader } from '../components/DocsHeader';
 import { DocsBreadcrumb } from '../components/DocsBreadcrumb';
 import { DocsNavigation } from '../components/DocsNavigation';
 import { convertDocusaurusSidebar } from '../utils/sidebarConverter';
-import sidebarsConfig from '../sidebars';
+import { getSidebar } from '../services/sidebarService';
 import styles from './DocsPage.module.css';
 
 
@@ -39,11 +39,12 @@ export function DocsPage() {
 
   // Convert Docusaurus sidebar config to React component format
   const SIDEBAR_ITEMS = useMemo(() => {
-    if (sidebarsConfig && sidebarsConfig.tutorialSidebar) {
-      return convertDocusaurusSidebar(sidebarsConfig.tutorialSidebar);
+    const sidebarConfig = getSidebar(activeVersion);
+    if (sidebarConfig) {
+      return convertDocusaurusSidebar(sidebarConfig);
     }
     return [];
-  }, []);
+  }, [activeVersion]);
 
   const { content, isLoading, error } = useDocumentation(slug, activeVersion);
 

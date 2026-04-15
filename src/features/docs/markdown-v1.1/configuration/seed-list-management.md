@@ -37,27 +37,27 @@ You can:
 - **Filter by Line of Business** - Filter by business unit
 - **Filter by Status** - Show active, inactive, or all recipients
 
-### Adding Recipient to Seed List
+### Adding Members to Seed List
 
-Click the **Add Recipient** button to add a staff member to the seed list.
+Click the **Add Members** button to add users to the seed list.
 
-![Add Seed Recipient Modal - Part 1](/img/v1.1/configuration/addseedlistmodalimage1.png)
+![Add Seed List Members Modal - Part 1](/img/v1.1/configuration/addseedlistmodalimage1.png)
 
-![Add Seed Recipient Modal - Part 2](/img/v1.1/configuration/addseedlistmodalimage2.png)
+![Add Seed List Members Modal - Part 2](/img/v1.1/configuration/addseedlistmodalimage2.png)
 
-**Required Fields:**
+**How to Add Members:**
 
-- **Name** - Staff member's full name
-- **Email** - Email address for email channel testing
-- **Phone Number** - Phone number with country code (for SMS/USSD testing)
-- **Department** - Select the staff member's department
-- **Line of Business** - Select the business unit they belong to
+1. Use the search box to find users by name, email, or phone number (pulled from the system users list).
+2. Filter users by department, line of business, or status.
+3. Select one or more users using the checkboxes (multi-select supported).
+4. Already-added users are filtered out to prevent duplicates.
+5. Click **Save** to add the selected users to the seed list.
 
-Click **Add Recipient** to add them to the seed list. The system automatically:
+The system will:
 
-- Sets status to Active
-- Records the current date and time
-- Records the user who added them
+- Set status to Active
+- Record the current date and time
+- Record the user who added them
 
 ### Removing Recipient from Seed List
 

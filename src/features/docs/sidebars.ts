@@ -250,6 +250,7 @@ const sidebars: SidebarsConfig = {
         "reports/offer-reports",
         "reports/sms-delivery-reports",
         "reports/delivery-email-reports",
+        "reports/segment-analytics",
       ],
     },
     {
@@ -490,8 +491,27 @@ const sidebars: SidebarsConfig = {
         "configuration/languages",
         "configuration/character-sets",
         "configuration/product-types",
-        "configuration/combo-types",
-
+        {
+          type: "category",
+          label: "Combo Types",
+          items: [
+            {
+              type: "doc",
+              id: "configuration/combo-types",
+              label: "Combo Types List",
+            },
+            {
+              type: "doc",
+              id: "configuration/create-combo-type",
+              label: "Create/Edit Combo Type",
+            },
+            {
+              type: "doc",
+              id: "configuration/view-combo-type",
+              label: "View Combo Type Details",
+            },
+          ],
+        },
         "configuration/product-catalog",
         "configuration/segment-types",
         "configuration/segment-catalog",

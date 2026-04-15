@@ -710,6 +710,12 @@ const OtherPages = {
         /* webpackPrefetch: true */ "../../manual-rewards/pages/ManualRewardDetailsPage"
       ),
   ),
+  ManualRewardsTestPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../manual-actions/pages/ManualRewardsTestPage"
+      ),
+  ),
   CustomerIdentityPage: lazy(
     () =>
       import(
@@ -1097,6 +1103,7 @@ export default function Dashboard() {
             element={<SettingsPages.SMSRoutesPage />}
           />
           <Route path="/sms-test" element={<SettingsPages.SMSTestPage />} />
+          <Route path="/manual-rewards-test" element={<OtherPages.ManualRewardsTestPage />} />
           <Route path="/routes" element={<SettingsPages.RoutesPage />} />
           <Route
             path="/customer-identity"
