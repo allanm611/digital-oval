@@ -4,9 +4,21 @@
 
 Product Types are categories used to classify and organize different kinds of products in the system. Each product must be assigned to a type to help organize, filter, and track products by category. the system supports seven distinct product types designed to accommodate different service offerings and business models.
 
-![Product Types](/img/v1.1/product-images/productypes.png)
+![Product Types](/img/v1.1/configuration/producttypes.png)
 
-## Available Product Types
+## Activation & Deactivation Logic
+
+**Active Product Types**
+
+- Product types can be enabled or disabled by administrators in the Product Types configuration page.
+- Only active (enabled) product types are available for selection when creating or editing products.
+- If a product type is deactivated, it will no longer appear as an option in product type dropdowns or selection lists.
+
+**Deactivated Product Types**
+
+- Deactivated product types are hidden from all product creation and editing flows until reactivated.
+- To use a deactivated product type again, activate it in the Product Types configuration page.
+- This ensures only valid, approved product categories are available to users.
 
 ### Data Products
 
@@ -166,11 +178,13 @@ When creating or editing a product:
 ## Status and Availability
 
 **Active Product Types**
+
 - Only active (enabled) product types are displayed in the dropdown when creating or editing a product
 - If a product type is deactivated, it will no longer appear in the type selection dropdown
 - Existing products with deactivated types will continue to function, but you cannot assign that type to new products
 
 **Deactivated Product Types**
+
 - Deactivated product types are not shown in the dropdown selector
 - To use a deactivated product type again, you must first activate it in the Product Types configuration page
 - This prevents accidental use of obsolete product types

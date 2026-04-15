@@ -1,128 +1,86 @@
 # Combo Types
 
-## Overview
+Manage reusable bundle templates that combine data, voice, SMS, and utility resources.
 
-Combo Types is used to define reusable bundle templates that combine data, voice, and SMS into one offer unit. The page is designed for product and commercial teams that need to shape bundle structures before those bundles are used in products and offers.
+## Combo Types List
 
-![Combo Types List](/img/v1.1/configuration/combotypeslist.png)
+![Combo Types List](/img/v1.1/configuration/combotypeslistpage.png)
 
-## Accessing Combo Types
+The list shows:
 
-**Navigation:** Configuration -> Combo Types
-
-From the main Configuration page, Combo Types appears under **Product Configuration**.
-
-## Combo Types List Page
-
-The list view gives you a quick operating snapshot of each combo type, including name, description, status, and actions. Search is available for fast narrowing by name or description, and row actions let you edit or delete without leaving the page.
-
-## Creating a Combo Type
-
-Click **Create** to open the combo type modal.
-
-**Modal title:** Create New Combo Type
-
-![Create Combo Type Form - Part 1](/img/v1.1/configuration/createcombotypeimage1.png)
-
-![Create Combo Type Form - Part 2](/img/v1.1/configuration/createcombotypeimage2.png)
-
-### Basic Fields
-
-**Combo Type Name**
-
-- Required
-- Text input
-
-**Description**
-
-- Optional
-- Multi-line text area
-
-### Resources Section
-
-The modal includes a **Resources** section where you can add resource blocks.
-
-Available resource buttons:
-
-- **+ Data**
-- **+ Voice**
-- **+ SMS**
-
-Only one block per resource type can be added in the same combo type.
-
-Each resource block shows:
-
-- Resource type label
-- Resource unit
-- Numeric value input
-- Delete resource button
-
-Resource units shown in the form are:
-
-- Data: `data_mb`
-- Voice: `onnet_minutes`
-- SMS: `sms_count`
-
-### Shared Validity
-
-The modal includes a **Shared Validity** checkbox.
-
-When shared validity is enabled:
-
-- A single **Validity Hours** field is shown
-- The shared validity hours apply across the combo resources
-
-When shared validity is disabled:
-
-- Each resource row shows its own **Hours** input
-
-### Price
-
-The modal includes a **Combo Price** numeric input used as the final bundle price.
-
-### Modal Actions
-
-- **Cancel** closes the modal without saving
-- **Save** submits the combo type
-
-## Editing a Combo Type
-
-Click the **Edit** button in the list to open the edit modal.
-
-**Modal title:** Edit Combo Type
-
-The edit modal uses the same sections as create:
-
-- Combo Type Name
+- Name
 - Description
-- Resources
-- Shared Validity
-- Validity Hours or per-resource Hours
-- Combo Price
+- Status (Active or Inactive)
+- Actions
 
-## Deleting a Combo Type
+From the list you can:
 
-Click the **Delete** button in the Actions column.
+- **Toggle Status** — Use the power icon to activate or deactivate a combo type. Only active combo types appear in dropdowns when creating products.
+- Edit a combo type
+- View details of a combo type
+- Delete a combo type
 
-A confirmation modal appears with:
+Use search to find combo types by name or description.
 
-- Title: **Delete Combo Type**
-- A confirmation message that the action cannot be undone
+## Create a Combo Type
 
-If deletion succeeds, the system shows a success message and refreshes the list.
+![Create Combo Type](/img/v1.1/configuration/createcombotype.png)
 
-## Validation and Save Behavior
+Click **Create** to open the form.
 
-The modal validates these fields:
+**Basic Information:**
 
-- **Combo Type Name** is required
-- Name length is limited by the form configuration
-- Description length is limited by the form configuration
+- Name (required)
+- Description
+- Active status
 
-If saving fails, the page shows an error message.
+**Combo Resources:**
 
-## Empty State
+Add resources (Data, Voice, SMS, Utility) to the combo type.
 
-If there are no combo types and no search term is entered, the page shows an empty state with a prompt to create the first combo type.
+**Shared Validity:**
+- When enabled, all resources share a single validity hours value
+- When disabled, each resource can have its own validity hours
 
-If a search returns no results, the page shows a no-results message.
+**Shared Price:**
+- When enabled, the combo has a single price for all resources
+- When disabled, each resource can have its own price
+
+**Resource Configuration:**
+
+Click **Add Resource** to expand the section and add a new resource:
+
+1. Select **Resource Type** (Data, Voice, SMS, or Utility)
+2. Select **Unit** (automatically updates based on resource type)
+3. **If Utility is selected**, a **Utility** dropdown appears to select which utility to include
+4. Enter **Value** (the quantity or amount)
+5. If shared price is disabled, enter **Price** for this resource
+6. If shared validity is disabled, enter **Validity Hours** for this resource
+7. Click **Save Resource** to add it
+
+The form shows all added resources below. You can edit or delete each resource.
+
+Click **Save** to create the combo type.
+
+## Edit a Combo Type
+
+![Edit Combo Type](/img/v1.1/configuration/editcombotype.png)
+
+Click **Edit** on a combo type to modify:
+
+- Name
+- Description
+- Active status
+- Combo resources
+- Shared validity and price settings
+- Validity hours and pricing
+
+Click **Save** to update the combo type.
+
+## View Combo Type Details
+
+Click **View Details** on a combo type to see the complete configuration.
+
+## Delete a Combo Type
+
+Click **Delete** on a combo type. Confirm deletion in the modal.

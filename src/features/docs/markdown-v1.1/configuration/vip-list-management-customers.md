@@ -9,7 +9,7 @@ The VIP Customers tab displays all customers assigned to VIP lists across your s
 1. Go to **Configuration → VIP List Management**
 2. Click the **VIP Customers** tab to view all VIP customers
 
-## VIP Customers List
+![VIP Customers Tab](/img/v1.1/configuration/vipcustomertabimage.png)
 
 The VIP Customers tab displays a list of all customers added to VIP lists with the following information:
 
@@ -26,14 +26,17 @@ The VIP Customers tab displays a list of all customers added to VIP lists with t
 ## Search and Filtering
 
 ### Search
+
 Use the search box to find customers by name, email, or phone number. The search is performed as you type.
 
 ### Filters
+
 Click the filter dropdowns to filter customers by:
+
 - **VIP List** - Filter by which VIP list they belong to
 - **Status** - Show Active, Inactive, or all VIP customers
 
-## Adding Customers
+![Add VIP Customers Modal](/img/v1.1/configuration/addvipcustomermodalimage1.png)
 
 Click the **Add Members** button in the top right to add customers to VIP lists:
 
@@ -44,7 +47,7 @@ Click the **Add Members** button in the top right to add customers to VIP lists:
 
 **Note**: When adding members, already-included members are filtered out to prevent duplicates.
 
-## Removing Customers
+<!-- ## Removing Customers
 
 To remove a customer from a VIP list:
 
@@ -52,7 +55,7 @@ To remove a customer from a VIP list:
 2. Click the **Remove** button on their row
 3. Confirm the removal when prompted
 4. The customer's status will change from Active to Inactive
-5. Historical records are kept for audit purposes
+5. Historical records are kept for audit purposes -->
 
 ## Customer Status
 

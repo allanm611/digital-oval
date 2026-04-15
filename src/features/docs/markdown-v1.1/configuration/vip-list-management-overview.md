@@ -13,7 +13,7 @@ VIP Lists allow you to:
 - **Track VIP Status** - Monitor which customers are in which VIP lists
 - **Use in Policies** - Reference VIP lists in communication policies for special handling
 
-## Key Features
+![VIP List Management Tabs](/img/v1.1/configuration/vipliststabimage.png)
 
 - **Two-Tab Interface**: VIP Customers tab and VIP Lists tab
 - **Search and Filtering**: Find customers and lists quickly
@@ -22,7 +22,8 @@ VIP Lists allow you to:
 - **List Details**: View member counts and import/failure statistics
 - **Status Tracking**: Monitor active and inactive VIP customers
 
-## Getting Started
+![VIP List Management Overview](/img/v1.1/configuration/viplistmanagentvipliststab.png)
+_VIP Lists tab showing all VIP lists and actions._
 
 To manage VIP lists and customers:
 
@@ -36,4 +37,3 @@ To manage VIP lists and customers:
 
 - [Browse VIP Customers List](/documentation/configuration/vip-list-management-customers)
 - [Manage VIP Lists](/documentation/configuration/vip-list-management-lists)
-- [Add Customers to VIP Lists](/documentation/configuration/add-vip-customers)

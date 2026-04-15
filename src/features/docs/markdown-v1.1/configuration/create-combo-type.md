@@ -1,133 +1,90 @@
 # Create a Combo Type
 
-Create a new combo type to define a reusable bundle template combining data, voice, and SMS services.
+Create a new combo type to define a reusable bundle template.
 
 ## Opening the Create Form
 
-From the [Combo Type List](/documentation/configuration/combo-types-list), click the **Create** button in the top right.
+From the [Combo Type List](/documentation/configuration/combo-types-list), click the **Create** button.
 
-A modal opens with the title: **Create New Combo Type**
+A form opens with the title: **Create Combo Type**
 
-![Create Combo Type Form - Part 1](/img/v1.1/configuration/createcombotypeimage1.png)
+![Create Combo Type](/img/v1.1/configuration/createcombotype.png)
 
 ## Basic Information
 
-### Combo Type Name
+**Name** (required)
+- Text input to identify this combo type
 
-**Required**
+**Description**
+- Optional multi-line text area
 
-- Text input field
-- Used to identify and reference this combo type
-- Examples: "Premium Bundle", "Standard Data+Voice", "All-in-One Combo"
+**Active**
+- Checkbox to set the combo type as active or inactive
 
-### Description
+## Combo Resources
 
-**Optional**
-
-- Multi-line text area
-- Explain the purpose and composition of the combo type
-- Examples: "Includes 10GB data, 500 minutes, 100 SMS", "Budget-friendly basic bundle"
-
-## Resources Section
-
-Define which services are included in this combo type.
-
-![Create Combo Type Form - Part 2](/img/v1.1/configuration/createcombotypeimage2.png)
-
-### Adding Resources
-
-Click one of the resource buttons to add that resource:
-
-- **+ Data** - Add a data bundle
-- **+ Voice** - Add voice minutes
-- **+ SMS** - Add SMS messages
-
-**Important:** Only one block per resource type can be added in the same combo type.
-
-### Resource Configuration
-
-Each resource block shows:
-
-- **Resource Type Label** - Displays the service type (Data, Voice, or SMS)
-- **Unit** - Shows the measurement unit:
-  - Data: `MB`
-  - Voice: `minutes`
-  - SMS: `count`
-- **Value Input** - Enter the numeric quantity
-- **Delete Button** - Remove this resource from the combo
-
-### Examples
-
-**Data Resource:**
-- Value: 5000 MB (5GB)
-
-**Voice Resource:**
-- Value: 500 minutes
-
-**SMS Resource:**
-- Value: 100 messages
-
-## Shared Validity
-
-Control how validity periods are applied to resources.
+Add the resources that make up this combo type.
 
 ### Shared Validity Checkbox
 
-When **enabled** (checked):
-- All resources share a single **Validity Hours** field
-- The same validity period applies to data, voice, and SMS
+When **enabled**:
+- All resources share a single **Validity (Hours)** field
+- Enter the hours once and it applies to all resources
 
-When **disabled** (unchecked):
-- Each resource row shows its own **Hours** input
-- Each resource can have a different validity period
+When **disabled**:
+- Each resource shows its own **Validity Hours** field
+- Each resource can have different validity
 
-### Validity Hours
+### Shared Price Checkbox
 
-Enter the number of hours the resource bundle is valid for:
-- Examples: 24, 168 (1 week), 730 (1 month)
+When **enabled**:
+- The combo has a single **Combo Price** field
+- Enter the price once for the entire bundle
 
-## Combo Price
+When **disabled**:
+- Each resource can have its own **Price** field
 
-**Combo Price**
+### Add Resource Accordion
 
-Enter the bundle price as a numeric value. This is the total price for the entire combo, not per resource.
+Click **Add Resource** to expand the section.
 
-Examples: 9.99, 15, 24.50
+**Fields to fill:**
 
-## Modal Actions
+1. **Resource Type** (required)
+   - Select from: Data, Voice, SMS, or Utility
 
-**Cancel**
-- Closes the modal without saving
-- Any entered data is lost
+2. **Unit** (required)
+   - Automatically updates based on the selected resource type
+   - Data: MB, Voice: minutes, SMS: count, Utility: units
 
-**Save**
-- Submits the combo type
-- Form validates required fields before saving
-- Shows success message on successful creation
-- Returns to the list view
+3. **Utility** (required if Resource Type is "Utility")
+   - When you select **Utility** as the resource type, a **Utility** dropdown appears
+   - Select which utility to include in the combo
+   - Option to create a new utility if needed
 
-## Validation
+4. **Value** (required)
+   - Enter the quantity or amount for this resource
 
-The form validates:
-- **Combo Type Name** is required
-- At least one resource must be added
-- Resource values must be numeric and positive
-- Validity Hours must be numeric and positive
+5. **Price** (if shared price is disabled)
+   - Enter the price for this resource
 
-If validation fails, an error message appears. Correct the issues and try again.
+6. **Validity Hours** (if shared validity is disabled)
+   - Enter how many hours this resource is valid
 
-## Save Behavior
+Click **Save Resource** to add the resource to the combo.
 
-On successful save:
-1. Combo type is created and assigned an ID
-2. Status defaults to Active
-3. You are returned to the Combo Type List
-4. The new combo type appears in the list
+### Added Resources
 
-## Tips
+Each resource appears as a card below the Add Resource section. You can:
+- **Edit** a resource by clicking the edit icon
+- **Delete** a resource by clicking the delete icon
 
-- Create combo types that represent common bundle offerings in your business
-- Use consistent naming conventions to make bundles easy to find
-- Document the purpose in the description field
-- Plan shared vs. individual validity before creating to match your business model
-- Consider the pricing carefully as it will be used across products using this combo type
+## Save the Combo Type
+
+Click **Save** to create the combo type and return to the list.
+
+Click **Cancel** to discard changes and return to the list.
+
+## Status and Visibility
+
+When you create a new combo type, it is set to **Active** by default. Only active combo types appear in dropdowns when you are creating or editing products. If you deactivate a combo type later, it will no longer be available for selection in product forms.

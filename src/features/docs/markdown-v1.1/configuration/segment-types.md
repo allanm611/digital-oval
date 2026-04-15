@@ -4,9 +4,11 @@
 
 Segment Types are categories used to classify and organize different kinds of customer segments in the system. Each segment is assigned to a type to help organize, filter, and track segments by their methodology and data source.
 
-![Segment Types](/img/v1.1/segments-img/segmenttypes.png)
+![Segment Types](/img/v1.1/configuration/segmenttypes.png)
 
-## Available Segment Types
+## Activation & Deactivation Logic
+
+Segment types can be enabled or disabled by administrators in the Segment Types configuration page. Only active types are available for selection when creating or editing segments. Deactivated types are hidden from all segment creation and editing flows until reactivated.
 
 ### Behavioral
 
@@ -144,11 +146,13 @@ Segment Types are categories used to classify and organize different kinds of cu
 ## Status and Availability
 
 **Active Segment Types**
+
 - Only active (enabled) segment types are displayed in the dropdown when creating or editing a segment
 - If a segment type is deactivated, it will no longer appear in the type selection dropdown
 - Existing segments with deactivated types will continue to function, but you cannot assign that type to new segments
 
 **Deactivated Segment Types**
+
 - Deactivated segment types are not shown in the dropdown selector
 - To use a deactivated segment type again, you must first activate it in the Segment Types configuration page
 - This prevents accidental use of deprecated segment types

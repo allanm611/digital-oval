@@ -4,7 +4,8 @@
 
 Add customers to VIP lists to segment your high-value customers. You can add customers individually or in batches from the VIP Customers tab.
 
-## Opening the Add Customers Modal
+![Add VIP Customers Modal](/img/v1.1/configuration/addvipcustomermodalimage1.png)
+_Add Members modal: select customers and VIP list._
 
 From the **VIP Customers** tab, click the **Add Members** button in the top right.
 
@@ -39,6 +40,7 @@ A modal opens showing available customers to add to VIP lists.
 ## Success Message
 
 After adding customers, you'll see a success message confirming:
+
 - Number of customers added
 - The operation completed successfully
 
@@ -49,7 +51,9 @@ The VIP Customers list will be updated to show the newly added members.
 When adding members:
 
 ### Customer Status Filter
+
 Filter available customers by:
+
 - **All Status** - Show all customers
 - **Active** - Show active customers
 - **Inactive** - Show inactive customers

@@ -1,82 +1,56 @@
 # View Combo Type Details
 
-View complete information about a combo type including its resource configuration, validity settings, and pricing.
+View complete information about a combo type including its resource configuration and settings.
 
 ## Accessing Combo Type Details
 
 From the [Combo Type List](/documentation/configuration/combo-types-list):
 
 1. Find the combo type you want to view
-2. Click the **View Details** button (eye icon) on the row
+2. Click the **View Details** button on the row
 
-The details page opens showing the complete combo type configuration.
+The details page opens showing the complete configuration.
+
+![Combo Type Details](/img/v1.1/configuration/combotypedetails.png)
 
 ## Combo Type Information
 
-**Combo Type Name**
-- The identifier for this combo type
-- Used when referencing the combo in products and offers
+**Name** - The identifier for this combo type
 
-**Description**
-- Summary of what services and quantities the combo includes
+**Description** - Summary of what the combo includes
 
-**Status**
-- Active or Inactive
-- Active combos can be used when creating products
-- Inactive combos are not available for selection
+**Status** - Active or Inactive
 
 ## Resources
 
-View all configured resources in this combo type:
+View all configured resources:
 
-**Resource Type** - Data, Voice, or SMS
+**Resource Type** - Data, Voice, SMS, or Utility
 
-**Quantity** - The amount included:
-- Data: measured in MB
-- Voice: measured in minutes
-- SMS: measured by count
+**Unit** - The measurement unit for the resource
 
-**Validity Hours** - How long the resource is valid for
+**Value** - The quantity or amount
 
-## Pricing Information
+**Validity Hours** - How long the resource is valid for (if not using shared validity)
 
-**Combo Price** - The total bundle price for all resources combined
+**Price** - The price for this resource (if not using shared price)
 
-## Editing
+## Toggle Status
 
-To modify this combo type:
+Click the power icon to activate or deactivate this combo type.
 
-1. Click the **Edit** button
-2. Update the desired fields:
-   - Name
-   - Description
-   - Resources and quantities
-   - Shared validity settings
-   - Validity hours
-   - Combo price
-3. Click **Save** to apply changes
+- When **Active**: The combo type appears in dropdowns when creating products
+- When **Inactive**: The combo type does not appear in product dropdowns and cannot be selected
 
-## Deleting
+## Edit the Combo Type
 
-To remove this combo type:
+Click **Edit** to modify:
+- Name
+- Description
+- Combo resources
+- Shared validity and price settings
+- Validity hours and pricing
 
-1. Click the **Delete** button
-2. Confirm deletion in the modal
-3. The combo type is permanently removed
+## Delete the Combo Type
 
-**Warning:** Ensure no active products are using this combo type before deleting.
-
-## Using This Combo Type
-
-Once created, this combo type can be:
-
-- Referenced in Product creation as a template
-- Used in Offers that include bundled services
-- Applied to multiple products for consistency
-
-## Tips
-
-- Keep combo type descriptions up to date as your offerings change
-- Monitor products that use this combo type before deactivating
-- Use the combo type details to verify configuration before using in products
-- Check pricing to ensure it matches your business model
+Click **Delete** to remove the combo type. Confirm deletion in the modal.
