@@ -1,9 +1,10 @@
-
 **Cancel**
+
 - Closes the form without saving
 - Any entered data is lost
 
 **Save**
+
 - Submits the notification type
 - Form validates required fields before saving
 - Shows success message on successful creation
@@ -12,6 +13,7 @@
 ## Validation
 
 The form validates:
+
 - **Notification Type Name** is required
 - **Table Name** is required
 - **Action Type** is required
@@ -22,6 +24,7 @@ If validation fails, an error message appears. Correct the issues and try again.
 ## Save Behavior
 
 On successful save:
+
 1. Notification type is created and assigned an ID
 2. Status defaults to Active
 3. You are returned to the Notification Type List

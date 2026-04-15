@@ -2,13 +2,14 @@
 
 Notification types define the different kinds of events and actions that can trigger notifications to users in the system. They control which notifications are available for users to subscribe to in their notification preferences.
 
-![Notification Types List](../../../../../../public/img/v1.1/configuration/notificationtypeslist.png)
+![Notification Types List](/img/v1.1/configuration/notificationtypeslist.png)
 
 ## Accessing Notification Types
 
 **Navigation:** Configuration → Notification Types
 
 From the main Configuration page, Notification Types is available as a dedicated section. Use this view to:
+
 - Review all available notification types at a glance
 - Understand which system actions generate notifications
 - Identify which notification types are active
@@ -23,12 +24,13 @@ From the main Configuration page, Notification Types is available as a dedicated
 - Delete a notification type
 - View detailed configuration of a notification type
 
-![Create Notification Type](../../../../../../public/img/v1.1/configuration/createnotificationtype.png)
-![Edit Notification Type](../../../../../../public/img/v1.1/configuration/editnotificationtype.png)
+![Create Notification Type](/img/v1.1/configuration/createnotificationtype.png)
+![Edit Notification Type](/img/v1.1/configuration/editnotificationtype.png)
 
 ## Why This Page Matters
 
 Notification types provide a structured way to manage which events generate notifications. They ensure users can:
+
 - Receive relevant updates based on their role and interests
 - Control their notification preferences by subscribing/unsubscribing to specific types
 - Filter the types of notifications they care about
@@ -60,7 +62,7 @@ To create a new notification type, click the **Create** button in the top right.
 - **Action Type** (required): Select the type of action that triggers the notification (CREATE, UPDATE, DELETE)
 
 You can edit or delete existing notification types using the actions in the list. Editing allows you to update any of the fields above. Deleting will permanently remove the notification type after confirmation.
-
+<!-- 
 ## Tips
 
 - Create notification types for all important system events you want to track
@@ -68,4 +70,4 @@ You can edit or delete existing notification types using the actions in the list
 - Ensure message templates are informative and include relevant details
 - Keep descriptions updated to explain when notifications are sent
 - Review inactive notification types periodically to clean up unused ones
-- Test notification delivery before activating new notification types
+- Test notification delivery before activating new notification types -->

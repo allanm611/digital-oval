@@ -1,4 +1,3 @@
-
 **Warning:** Ensure no users are actively subscribed to this notification type before deleting, or the subscription will become orphaned.
 
 ## Using This Notification Type

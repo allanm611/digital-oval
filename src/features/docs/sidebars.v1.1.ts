@@ -608,22 +608,9 @@ const sidebarsV1_1: SidebarsConfig = {
         "configuration/segment-types",
         "configuration/segment-catalog",
         {
-          type: "category",
+          type: "doc",
+          id: "configuration/notification-types-list",
           label: "Notification Types",
-          items: [
-            {
-              type: "doc",
-              id: "configuration/notification-types-overview",
-              label: "Overview",
-            },
-            {
-              type: "doc",
-              id: "configuration/notification-types-list",
-              label: "Notification Type List",
-            },
-            "configuration/create-notification-type",
-            "configuration/view-notification-type",
-          ],
         },
         "configuration/dynamic-message-variables",
       ],

@@ -45,67 +45,91 @@ When you create a segment, you start with one empty condition group. To add rule
 3. **Add More Conditions** - Click **+ Add Condition** to add additional rules within the same group
 4. **Add Condition Groups** - Click **+ Add Group** to create a new group with its own logic
 
+**How to Select the Condition Type**
+
+When you click the condition type dropdown, you'll see different options to choose from:
+
+- **Customer 360** — Base customer information (this is what you'll use most often for profile-based rules)
+- **Segments** — Reference another segment you've created to combine segment logic
+- **QuickLists** — Use a pre-made customer list you've uploaded or created
+- **System Event** — Track customer activity like purchases, logins, or form submissions
+
+Select the one that matches the rule you want to create. Once you select a type, the fields below will show options specific to that type.
+
 ### Condition Types Explained
 
-The builder supports 5 different condition types. Each type has its own configuration:
+The builder supports 4 different condition types. Each type has its own configuration:
 
-#### 1. **360 Profile Conditions** (Customer Attributes)
+#### 1. **Profile Conditions** (Customer Attributes from Customer 360)
 
-Build rules based on customer profile attributes like demographics, behavior, transaction history, etc.
+Build rules based on customer profile data stored in your system. This is the most common way to create segments.
 
 **How It Works:**
 
-- Select a **Category** first (e.g., "Personal Info", "Transaction History", "Engagement")
-- Then select a **Field** from that category (e.g., "Age", "Last Purchase Date", "Total Spend")
-- Choose an **Operator** to specify the comparison (equals, greater than, contains, etc.)
-- Enter a **Value** to compare against
+**Step 1: Select Customer 360 and Sub-Category**
+- Click the dropdown to select "Customer 360"
+- A second dropdown appears to let you choose a **sub-category** (e.g., "Personal Information", "Customer Identity")
+- This organizes fields into easy-to-browse groups
 
-![Field Selection Modal](/img/v1.1/segments-img/createsegmentimagefieldselectionmodal.png)
+![Customer 360 Sub-Category Dropdown](/img/v1.1/segments-img/customer360subcategorydrodpown.png)
+_Select the sub-category from the dropdown_
 
-**Example:**
-![Main Operator Dropdown](/img/v1.1/segments-img/mainoperatordropdown.png)
-*Main operator dropdown: choose how to compare field values*
+**Step 2: Select a Field**
+- Click "Select Field..." to open a modal
+- The field picker shows all available fields for the sub-category you selected
+- Choose the specific field you want (e.g., "Age", "Total Spent", "Last Purchase Date")
 
-- Category: Transaction History
-- Field: Total Spend
+![Field Picker Modal](/img/v1.1/segments-img/fieldmodalpickerimage.png)
+_Field picker modal showing available fields_
+
+**Step 3: Choose How to Compare**
+- Select an **Operator** — this is how you compare the field to a value
+- Example operators: "equals", "greater than", "less than", "between", "contains", etc.
+
+![Operator Selection](/img/v1.1/segments-img/mainoperatordropdown.png)
+_Operators depend on the field type (text, number, date, etc.)_
+
+**Step 4: Enter a Value**
+- Type the value you want to compare against
+- Example: if field is "Total Spent" and operator is "greater than", enter "10000"
+
+**Complete Example:**
+- Sub-Category: Transaction History
+- Field: Total Spent
 - Operator: is greater than
 - Value: 10000
-- **Result:** Customers with total spend greater than KES 10,000
+- **Result:** "Include customers who have spent more than KES 10,000"
 
-**Common Fields by Category:**
-
-- **Personal Info**: Name, Age, Gender, Location
-- **Contact Info**: Email, Phone, Address
-- **Transaction History**: Total Spend, Purchase Frequency, Average Order Value, Last Purchase Date
-- **Engagement**: Last Active Date, Email Opens, SMS Clicks, Channel Preference
-- **Status**: Account Status, Subscription Status, VIP Status
-
-**Operators Available** (varies by field type):
+**Available Operators** (depends on field type):
 
 - **Text fields**: Equals, Not Equals, In List, Not In List, Is Empty, Is Not Empty
-- **Numeric fields**: Equals, Not Equals, Greater Than, Less Than, Greater Than or Equal, Less Than or Equal, Between, In List, Not In List, Is Empty, Is Not Empty
-- **Money/Decimal/Numeric KPI fields**: All numeric operators PLUS date-based operators (On Date, Between Dates, Since Date, Until Date) for date range filtering
-- **Date fields**: Equals, Greater Than, Less Than, Between, On Date, Between Dates, Since Date, Until Date, Is Empty, Is Not Empty
-- **Boolean fields**: Equals, Not Equals, Is Empty, Is Not Empty
+- **Number fields**: Equals, Not Equals, Greater Than, Less Than, Greater Than or Equal, Less Than or Equal, Between, In List, Not In List, Is Empty, Is Not Empty
+- **Money fields**: All number operators PLUS special date filtering options
+- **Date fields**: Equals, Greater Than, Less Than, Between, Date-Based Operators, Is Empty, Is Not Empty
+- **True/False fields**: Equals, Not Equals, Is Empty, Is Not Empty
 
-**Special: Money/Decimal/Numeric KPI Fields with Dual-Operator UI**
+**Special: Money Fields with Date Filtering**
 
-When you select a **Money, Decimal, or Numeric KPI field** and choose a numeric operator (like "greater than" or "equals"), you'll see a special interface with three elements on one line:
+When you select a money, numeric,date field (like "Total Spent") and use a number operator (like "greater than"), you can optionally add a **date range** to limit the results to a specific time period:
 
-1. **Numeric Value Input** — Enter the comparison value
-2. **Four-Option Date Dropdown** — Select how to filter by date:
-   - **On** — Include data from a specific date only
+1. **Enter the money amount** — e.g., "10000"
+2. **Optional: Select a date filter** — Choose from these options:
+   - **On** — Include data from only one specific date
    - **Between** — Include data within a date range
-   - **Since** — Include data from start date to today
-   - **Until** — Include data from the beginning to end date
-3. **Date Picker** — Select the date(s) based on your dropdown choice
+   - **Since** — Include data from a start date until today
+   - **Until** — Include data from the beginning until an end date
+3. **Pick the date(s)** — Use the date picker to select your date(s)
 
-   ![Four-Option Date Dropdown](/img/v1.1/segments-img/fouroptionsoperations.png)
-   *Four-option date dropdown: select date filtering mode*
+![Money Field Date Filtering](/img/v1.1/segments-img/fouroptionsoperations.png)
+_Optional date filtering for money/spending fields_
 
-**Example:** "Total Spend > 10000 SINCE 2024-01-01" filters for customers who spent more than KES 10,000 from January 1st to today.
+**Example with Date Filtering:**
+- Field: Total Spent
+- Operator: greater than 10000
+- Date Filter: Since January 1, 2024
+- **Result:** "Customers who spent more than KES 10,000 starting from January 1, 2024 until today"
 
-**Note:** If you select a date operator directly from the main operator list (On Date, Between Dates, etc.), the four-option dropdown does **not** appear because the date operator already handles date selection.
+**Note:** The date filter is optional. If you don't need it, just skip this step.
 
 #### 2. **Segment Conditions** (Reference Other Segments)
 
@@ -176,30 +200,6 @@ Build rules based on system events that have occurred. Track customer activity l
 - SMS Delivered
 - Form Submitted
 - And many more...
-
-#### 5. **KPI Conditions** (Key Performance Indicators)
-
-Build rules based on custom KPIs (Key Performance Indicators) that have been configured in the system.
-
-**How It Works:**
-
-- Click **Select KPI** to open a picker
-- Choose from predefined KPIs (Revenue Metrics, Usage Metrics, etc.)
-- Configure the comparison operator and value
-- The condition evaluates based on the KPI calculation
-
-**Example:**
-
-- KPI: Churn Risk Score
-- Operator: Greater Than
-- Value: 0.7
-- **Result:** Customers with a churn risk score above 0.7
-
-**KPI Types:**
-
-- **Revenue Metrics**: Total Revenue, Monthly Recurring Revenue, Customer Lifetime Value
-- **Usage Metrics**: API Calls, Data Transferred, Feature Usage Count
-- **Custom KPIs**: Any KPIs you've configured in the system
 
 ---
 
