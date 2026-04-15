@@ -109,9 +109,15 @@ Each offer row has an actions menu with available buttons based on the offer's c
 
 **Available for All Offers (Any Status)**
 
-- **Duplicate Offer** - Create a copy of the offer with a new name (requires "create" permission)
+## Duplicate Offers
 
----
+To quickly create a new offer based on an existing one, use the **Duplicate Offer** action in the offer list or detail page.
+
+- On the offer list, click the duplicate icon or action next to the offer you want to copy.
+
+![Duplicate Offer on List Page](/img/v1.1/offer-images/duplicateofferonofferlist.png)
+
+This will open the offer creation form pre-filled with the selected offer's details. Make any changes needed and save to create the new offer.
 
 ## Offer Status & Approval Flow
 

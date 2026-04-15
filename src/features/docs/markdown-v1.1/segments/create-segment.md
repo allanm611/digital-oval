@@ -63,6 +63,8 @@ Build rules based on customer profile attributes like demographics, behavior, tr
 ![Field Selection Modal](/img/v1.1/segments-img/createsegmentimagefieldselectionmodal.png)
 
 **Example:**
+![Main Operator Dropdown](/img/v1.1/segments-img/mainoperatordropdown.png)
+*Main operator dropdown: choose how to compare field values*
 
 - Category: Transaction History
 - Field: Total Spend
@@ -97,6 +99,9 @@ When you select a **Money, Decimal, or Numeric KPI field** and choose a numeric 
    - **Since** — Include data from start date to today
    - **Until** — Include data from the beginning to end date
 3. **Date Picker** — Select the date(s) based on your dropdown choice
+
+   ![Four-Option Date Dropdown](/img/v1.1/segments-img/fouroptionsoperations.png)
+   *Four-option date dropdown: select date filtering mode*
 
 **Example:** "Total Spend > 10000 SINCE 2024-01-01" filters for customers who spent more than KES 10,000 from January 1st to today.
 

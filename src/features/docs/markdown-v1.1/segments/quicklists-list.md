@@ -52,11 +52,17 @@ Each QuickList row has action buttons with the following options:
 **View** - Opens the [QuickList Details](/documentation/segments/view-quicklist) page
 
 **More Menu** (⋯) - Additional actions dropdown with the following options:
-- **Send Communication** - Opens a modal to send bulk messages (SMS, Email, etc.) to all members
-- **Add Customer** - Opens a modal to add customers to the QuickList
-- **Remove Customer** - Opens a modal to remove customers from the QuickList
+- **Send Communication** - Send bulk messages to all members in the QuickList
+- **Add Customer** - Add customers to the QuickList
+- **Remove Customer** - Remove customers from the QuickList
 - **Export** - Export the QuickList as a CSV file
-- **Delete** - Permanently remove the QuickList with confirmation
+- **Delete** - Permanently remove the QuickList from the system
+
+![QuickList Actions Dropdown](/img/v1.1/segments-img/quicklistsdropdownactions.png)
+
+![Send Communication to QuickList](/img/v1.1/segments-img/quicklistdetailsendcommunicaiton.png)
+
+![Add Customer to QuickList Modal](/img/v1.1/segments-img/addcustomertoquicklistmodal.png)
 
 ## Next Steps
 

@@ -6,27 +6,25 @@ The Product Details page displays complete information about a specific product 
 
 ![Product Details Page](/img/v1.0/product-images/productdetailpage.png)
 
-
 ## Product Overview
 
 The top of the page displays:
 
 **Product Header**
+
 - Product name and icon
 - Description
 - Status badge (Active or Inactive)
 - Category badge
-
 
 ## Basic Information
 
 The Basic Information section displays:
 
 - **Product Code** - Unique identifier for the product
-- **DA ID** - Digital Assistant ID
+- **DA ID** - Dedicated Account ID
 - **Category** - The product category
 - **Requires Inventory** - Whether the product requires inventory tracking
-
 
 ## Pricing
 
@@ -34,7 +32,6 @@ The Pricing section displays:
 
 - **Price** - The product's base price
 - **Cost** (if available) - The cost of the product
-
 
 ## Validity Period
 
@@ -45,7 +42,6 @@ If the product has validity settings, this section displays:
 - **Effective From** - Start date for product validity
 - **Effective To** - End date for product validity
 
-
 ## Timeline
 
 The Timeline section shows:
@@ -53,29 +49,28 @@ The Timeline section shows:
 - **Created** - Date and time the product was created
 - **Last Updated** - Date and time the product was last modified
 
-
 ## Additional Information
 
 The Additional Information section displays:
 
 - **Available Quantity** - Current inventory available
 
-
 ## Action Buttons
 
 Action buttons at the top display based on the product's status:
 
 **Activate** (when Inactive)
+
 - Activate the product to make it available for use
 
 **Deactivate** (when Active)
+
 - Temporarily disable the product from being used in new campaigns and offers. The product remains in the system but is not available for selection when creating new offers or campaigns. Already-active campaigns using this product continue to run.
 
 **Edit**
+
 - Modify product details and configuration
 
 **Delete**
+
 - Permanently remove the product from the system
-
-
-

@@ -1,62 +1,65 @@
-# Notification Type List
+# Notification Types
 
-View all available notification types and manage notification configuration for the platform.
+Notification types define the different kinds of events and actions that can trigger notifications to users in the system. They control which notifications are available for users to subscribe to in their notification preferences.
 
-## Accessing the List
+![Notification Types List](../../../../../../public/img/v1.1/configuration/notificationtypeslist.png)
+
+## Accessing Notification Types
 
 **Navigation:** Configuration → Notification Types
 
-## List Columns
-
-**Notification Type Name** - The readable name of the notification type (e.g., "Campaign Approval Request", "Segment Computation Completed")
-
-**Description** - Additional context about the notification
-
-**Table Name** - The database table associated with this notification (e.g., "campaigns", "segments", "offers")
-
-**Action Type** - The type of action that triggers the notification (CREATE, UPDATE, DELETE)
-
-**Status** - Active or Inactive
-
-**Actions** - Available management actions
-
-## Using This View
-
-Use this view to:
+From the main Configuration page, Notification Types is available as a dedicated section. Use this view to:
 - Review all available notification types at a glance
 - Understand which system actions generate notifications
 - Identify which notification types are active
 - Manage notification type configuration
 
-## Search and Filtering
+## What You Can Do
 
-Use the **Search** field to find notification types by:
-- Notification type name
-- Description
-- Table name
-- Action type
+- Review notification types in one list
+- Search by notification type name or description
+- Create a new notification type
+- Edit an existing notification type
+- Delete a notification type
+- View detailed configuration of a notification type
 
-This is helpful when you have many notification types configured.
+![Create Notification Type](../../../../../../public/img/v1.1/configuration/createnotificationtype.png)
+![Edit Notification Type](../../../../../../public/img/v1.1/configuration/editnotificationtype.png)
 
-## Action Buttons
+## Why This Page Matters
 
-Each notification type row has the following actions:
+Notification types provide a structured way to manage which events generate notifications. They ensure users can:
+- Receive relevant updates based on their role and interests
+- Control their notification preferences by subscribing/unsubscribing to specific types
+- Filter the types of notifications they care about
 
-**Edit** - Opens the form to modify the notification type configuration
+Effective notification type management improves user engagement by delivering the right information at the right time.
 
-**View Details** - Opens the [Notification Type Details](/documentation/configuration/view-notification-type) page
+## Key Concepts
 
-**Delete** - Removes the notification type (requires confirmation)
+**Notification Type Name** - The readable display name (e.g., "Campaign Approval Request", "Segment Computation Completed")
 
-## Create New Notification Type
+**Description** - Additional context about when and why this notification is sent
 
-Click the **Create** button in the top right to open the notification type creation form.
+**Table Name** - The database table that triggers this notification (e.g., "campaigns", "segments", "offers")
 
-See [Create a Notification Type](/documentation/configuration/create-notification-type) for detailed steps.
+**Action Type** - The type of action that triggers the notification (e.g., "CREATE", "UPDATE", "DELETE")
 
-## Empty State
+**Message Template** - The message content template for this notification
 
-If no notification types exist, the list shows a message prompting you to create the first notification type.
+**Status** - Whether the notification type is active and available for users to subscribe to
+
+## Creating and Managing Notification Types
+
+To create a new notification type, click the **Create** button in the top right. Fill in the following fields:
+
+- **Notification Type Name** (required): The readable name of the notification type
+- **Description** (optional): Explain what triggers this notification and why users would care
+- **Message Template** (required): The message content template for notifications of this type
+- **Table Name** (required): Select the database table that triggers this notification
+- **Action Type** (required): Select the type of action that triggers the notification (CREATE, UPDATE, DELETE)
+
+You can edit or delete existing notification types using the actions in the list. Editing allows you to update any of the fields above. Deleting will permanently remove the notification type after confirmation.
 
 ## Tips
 

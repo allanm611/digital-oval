@@ -53,7 +53,7 @@ The products are displayed in a table with the following columns:
 
 **Product ID** - Unique product identifier
 
-**DA ID** - Digital Assistant ID
+**DA ID** - Dedicated Account ID
 
 **Category** - The category the product belongs to (badge)
 

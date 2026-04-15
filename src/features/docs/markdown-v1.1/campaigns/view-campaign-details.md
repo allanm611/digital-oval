@@ -189,6 +189,8 @@ See [Edit Campaign](/documentation/campaigns/edit-campaign) for comprehensive in
 4. Modify any details as needed
 5. Save as a new campaign
 
+![Duplicate Campaign on Detail Page](/img/v1.1/campaign-images/duplicatecampignoncamapigndetail.png)
+
 
 ### Delete Campaign
 **What it does:** Permanently remove campaign from system.

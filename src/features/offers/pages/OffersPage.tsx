@@ -480,11 +480,6 @@ export default function OffersPage() {
     navigate(`/dashboard/offers/${id}/edit`);
   };
 
-  const handleCopyOfferId = (id: number) => {
-    navigator.clipboard.writeText(id.toString());
-    success("Copied", "Offer ID copied to clipboard");
-  };
-
   // Calculate dropdown position
   const handleActionMenuToggle = (
     offerId: number,
@@ -1391,15 +1386,6 @@ export default function OffersPage() {
                             <Edit className="h-4 w-4" />
                           </button>
                         </PermissionGate>
-                        <button
-                          onClick={() =>
-                            offer.id && handleCopyOfferId(offer.id)
-                          }
-                          className={`${tw.textMuted} hover:${tw.textPrimary} p-1 rounded`}
-                          title="Copy ID"
-                        >
-                          <Copy className="h-4 w-4" />
-                        </button>
                         <div
                           className="relative"
                           ref={(el) => {
@@ -1688,6 +1674,25 @@ export default function OffersPage() {
                                 />
                                 Lifecycle History
                               </button> */}
+
+                        {/* Duplicate Offer */}
+                        <PermissionGate permission="offers.create">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (offer.id) {
+                                navigate(
+                                  `/dashboard/offers/create?duplicateId=${offer.id}`
+                                );
+                                setShowActionMenu(null);
+                              }
+                            }}
+                            className="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                          >
+                            <Copy className="w-4 h-4 mr-3" />
+                            Duplicate Offer
+                          </button>
+                        </PermissionGate>
 
                         {/* Delete - Dangerous Action */}
                         <PermissionGate permission="offers.delete">

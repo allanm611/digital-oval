@@ -33,7 +33,7 @@ When you select **Combo** type, additional sections appear to manage the bundled
 
 **DA ID\***
 
-- Digital Assistant ID for the product
+- Dedicated Account ID for the product
 
 ### Optional Fields
 

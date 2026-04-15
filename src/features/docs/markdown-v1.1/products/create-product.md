@@ -33,7 +33,7 @@ When you select **Combo** type, additional sections appear to manage the bundled
 
 **DA ID\***
 
-- Digital Assistant ID for the product
+- Dedicated Account ID for the product
 
 ### Optional Fields
 
@@ -72,37 +72,47 @@ When you select **Combo** type, additional sections appear to manage the bundled
 
 ---
 
-## Combo Product Type
-
-When you select **Combo** as the product type, additional sections become available to manage the bundled resources.
-
 ### Product Type Dropdown
 
 ![Product Type Selection](/img/v1.1/product-images/createproduct-productypedropdown.png)
 
-### Combo-Specific Fields
+## Combo Product Type
 
-#### Shared Checkboxes (When Combo Type Selected)
+When you select **Combo** as the product type, you can configure a bundle of resources (Data, Voice, SMS, Utility, etc.) as a single product. The Combo section includes:
 
-![Combo Type - Unchecked Resources](/img/v1.1/product-images/createproduct-combotypeuncheckedresources.png)
+- **Combo Type Selection:** Choose a predefined combo template or start from scratch.
+- **Add Resources:** Add multiple resources/components to the combo. Each resource can have its own unit, value, validity, price, and DA ID.
+- **Shared Fields:**
+  - **Shared DA ID:** Option to use a single DA ID for all resources, or specify DA IDs per resource.
+  - **Shared Price:** Option to set a single price for the combo or per resource.
+  - **Shared Validity:** Option to set a single validity period for all resources, or per resource.
+- **Resource Management:**
+  - Add, edit, or remove resources from the combo.
+  - Mark resources as shared or component-specific using checkboxes.
 
-**Shared Resource Management:**
+#### Combo Product UI Examples
 
-- Toggle checkboxes to mark resources as shared across all bundle components
-- Shared resources apply uniformly to all items in the combo
+![Combo Resources Card 1](/img/v1.1/product-images/comboresourcescardimage1.png)
+![Combo Resources Card 2](/img/v1.1/product-images/comboresourcescardimage2.png)
+![Select Combo Type from Existing](/img/v1.1/product-images/selectcombotypefromexisting.png)
 
-![Combo Type - Shared Checkboxes](/img/v1.1/product-images/createproduct-combotypewith%20sharedcheckoxes.png)
+**Utility Resource Type:**
 
-#### Add Combo Resources
+If you add a resource with type **Utility** to your combo, an additional dropdown appears to select the specific utility (e.g., Food, Insurance, Music Streaming, etc.).
 
-![Combo Type Selected](/img/v1.1/product-images/createproduct-combotypeselected.png)
+You can also create a custom utility directly from the form if the one you need is not listed.
 
-When Combo type is selected:
+![Utility Resource Type Dropdown](/img/v1.1/product-images/utilityreosurcetype.png)
 
-- **Add Resource** button appears to add products/components to the bundle
-- Manage which products are included in the combo
-- Define resource-specific properties for each component
-- Resources can be marked as shared or component-specific
+**How to Configure a Combo Product:**
+
+1. Select **Combo** as the product type.
+2. Choose a combo template or start from scratch.
+3. Add resources/components to the bundle.
+4. Set shared fields (DA ID, price, validity) as needed.
+5. Mark resources as shared or component-specific.
+6. Fill in other required and optional fields.
+7. Click **Create Product** to save.
 
 ### Product Category Selection
 

@@ -4,11 +4,12 @@
 
 The QuickList Details page displays complete information about a specific QuickList including its metadata, member data, import history, and actions you can take. This page provides a comprehensive view of your QuickList and allows you to manage its usage.
 
-![QuickList Details Page](/img/v1.1/segments-img/quicklistdetailsoverviewtab.png)
+![QuickList Details Page](/img/v1.1/segments-img/quicklistdetailspagedropdown.png)
+
 
 ## Page Header and Actions
 
-The top of the page includes navigation and action buttons:
+The top of the page includes navigation and action buttons to manage your QuickList:
 
 **Back Button**
 - Returns you to the QuickList List or previous location
@@ -20,17 +21,42 @@ The top of the page includes navigation and action buttons:
 - Requires appropriate permissions
 
 **Send Communication**
-- Opens a modal to send SMS, email, or other communications to all members of this QuickList
-- Allows you to select communication type and template
-- Useful for bulk messaging to a specific customer group
+Opens a modal to send bulk messages (SMS, Email, or other communication channels) to all members in the QuickList. This is useful for:
+- Testing campaign content with internal teams
+- Sending test communications before campaign deployment
+- Notifying QuickList members of important updates
 
-**More Menu**
-- Additional actions including:
-  - **Add Customer** - Opens a modal to add customers to this QuickList
-  - **Remove Customer** - Opens a modal to remove customers from this QuickList
-  - **Delete** - Permanently removes the QuickList from the system (requires confirmation)
-  - **Export CSV** - Export all members as a CSV file
-  - **Export JSON** - Export all members as a JSON file
+**More Menu** (⋯) - Additional actions dropdown with the following options:
+
+### Add Customer
+Opens a modal to add customers to the QuickList. You can:
+- Search and select users from the system
+- Specify which Line of Business the customer belongs to
+- Add multiple customers in succession
+- View the current list of members
+
+![Add Customer Modal](/img/v1.1/segments-img/addcustomertoquicklistmodal.png)
+
+### Remove Customer
+Opens a modal to remove customers from the QuickList. You can:
+- Select specific customers to remove from the list
+- Confirm the removal before execution
+- View customer history (added date and who added them)
+- See the current member count before and after removal
+
+### Export
+Export the QuickList members as a file. Options include:
+- **Export CSV** - Export all members as a CSV file for use in other systems
+- **Export JSON** - Export all members as a JSON file for programmatic access
+
+Use exports for:
+- Data backup and archiving
+- External reporting and analysis
+- Integration with other systems
+- Sharing with external partners
+
+### Delete
+Permanently remove the QuickList from the system. A confirmation dialog will appear to prevent accidental deletion. Note: Deleting a QuickList cannot be undone.
 
 ## Basic Information Section
 
@@ -238,3 +264,18 @@ Permanently remove this QuickList from the system.
 3. Consider renaming to "ARCHIVED" instead
 4. Download members first if you need a backup -->
 
+---
+
+## Actions Visual Reference
+
+### Detail Page Actions Menu
+
+The More Menu (⋯) button in the page header provides access to all customer management actions:
+
+![QuickList Detail Page Actions](/img/v1.1/segments-img/quicklistdetailspagedropdown.png)
+
+From this menu, you can quickly:
+- Add new customers to the list
+- Remove existing customers
+- Export members as CSV or JSON
+- Delete the entire QuickList
