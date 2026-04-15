@@ -6,6 +6,18 @@ Resource Types allow you to define and manage the different types of resources a
 
 Navigate to **Configuration → Resource Types**.
 
+![Resource Type List](/img/v1.1/configuration/resourcetypelist.png)
+
+The resource types table displays these columns:
+
+- **Name**
+- **Value (Key)**
+- **Category**
+- **Unit**
+- **Description**
+- **Status** (Active/Inactive)
+- **Actions** (Edit/Delete)
+
 ## What You Can Do
 
 - View all resource types
@@ -23,6 +35,9 @@ Navigate to **Configuration → Resource Types**.
 ## Creating or Editing a Resource Type
 
 1. Click **Create** or **Edit** to open the modal.
+
+![Create Resource Type Modal](/img/v1.1/configuration/createresourcetype.png)
+
 2. Fill in the required fields.
 3. Click **Save** to apply changes.
 

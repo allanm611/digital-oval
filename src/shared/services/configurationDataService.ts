@@ -19,6 +19,7 @@ import {
   languagesConfig,
   characterSetsConfig,
   resourceTypesConfig,
+  utilitiesConfig,
 } from "../../features/configurations/configs/configurationPageConfigs";
 
 // Type pour identifier les différents types de configuration
@@ -40,7 +41,8 @@ export type ConfigurationType =
   | "routes"
   | "languages"
   | "characterSets"
-  | "resourceTypes";
+  | "resourceTypes"
+  | "utilities";
 
 // Service singleton pour gérer les données de configuration
 class ConfigurationDataService {
@@ -70,6 +72,7 @@ class ConfigurationDataService {
     this.listeners.set("languages", new Set());
     this.listeners.set("characterSets", new Set());
     this.listeners.set("resourceTypes", new Set());
+    this.listeners.set("utilities", new Set());
 
     // Initialize with default data (no localStorage)
     this.initializeDefaultData();
@@ -101,6 +104,7 @@ class ConfigurationDataService {
     this.data.set("languages", [...languagesConfig.initialData]);
     this.data.set("characterSets", [...characterSetsConfig.initialData]);
     this.data.set("resourceTypes", [...resourceTypesConfig.initialData]);
+    this.data.set("utilities", [...utilitiesConfig.initialData]);
   }
 
   // Obtenir les données pour un type de configuration
@@ -249,6 +253,9 @@ class ConfigurationDataService {
         break;
       case "characterSets":
         this.setData(type, [...characterSetsConfig.initialData]);
+        break;
+      case "utilities":
+        this.setData(type, [...utilitiesConfig.initialData]);
         break;
     }
   }

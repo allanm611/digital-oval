@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import Input from "../../../shared/components/ui/Input";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 import { tw, color } from "../../../shared/utils/utils";
 
 interface CreateTestListModalProps {
@@ -19,6 +20,7 @@ interface CreateTestListModalProps {
 interface CreateTestListRequest {
   name: string;
   description?: string;
+  isActive?: boolean;
 }
 
 interface FormErrors {
@@ -37,6 +39,7 @@ export default function CreateTestListModal({
   const [formData, setFormData] = useState<CreateTestListRequest>({
     name: "",
     description: "",
+    isActive: true,
   });
   const [errors, setErrors] = useState<FormErrors>({});
 
@@ -49,9 +52,10 @@ export default function CreateTestListModal({
       setFormData({
         name: initialData.name || "",
         description: initialData.description || "",
+        isActive: true,
       });
     } else {
-      setFormData({ name: "", description: "" });
+      setFormData({ name: "", description: "", isActive: true });
     }
     setErrors({});
   }, [isOpen, mode, initialData]);
@@ -93,7 +97,7 @@ export default function CreateTestListModal({
   };
 
   const handleClose = () => {
-    setFormData({ name: "", description: "" });
+    setFormData({ name: "", description: "", isActive: true });
     setErrors({});
     onClose();
   };
@@ -168,10 +172,27 @@ export default function CreateTestListModal({
               <p className="text-xs text-red-500 mt-1">{errors.description}</p>
             )}
           </div>
+
+          {/* Active Status Checkbox */}
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() =>
+            setFormData((prev) => ({ ...prev, isActive: !prev.isActive }))
+          }>
+            <Checkbox
+              id="active-checkbox"
+              checked={formData.isActive ?? true}
+              onChange={() =>
+                setFormData((prev) => ({ ...prev, isActive: !prev.isActive }))
+              }
+            />
+            <span className="text-sm font-medium text-gray-700">
+              Active
+            </span>
+          </div>
+
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200">
+        <div className="flex items-center justify-end gap-3 p-6">
           <button
             onClick={handleClose}
             disabled={isLoading}

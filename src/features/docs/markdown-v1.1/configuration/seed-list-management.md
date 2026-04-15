@@ -2,8 +2,6 @@
 
 Seed List Management allows you to maintain a list of internal staff members who receive test copies of campaigns for quality assurance before sending to actual customers. This enables you to validate content, test delivery, and verify personalization before customer launch.
 
-![Seed List Management Page](/img/v1.1/configuration/seedlistmanagementpage.png)
-
 ## What are Seed Lists?
 
 Seed Lists allow you to:
@@ -15,35 +13,43 @@ Seed Lists allow you to:
 
 ## Managing Seed List Recipients
 
+### Creating a Seed List
+
+To create a new seed list, use the create list option:
+
+![seedlisttabimage](/img/v1.1/configuration/seedlisttabimage.png)
+
+![seedlisttabimage](/img/v1.1/configuration/createtestseedlist.png)
+
+
 Navigate to **Configuration → Seed List Management** to manage all test recipients.
+
+![recipienttablistseedlist](/img/v1.1/configuration/recipienttablistseedlist.png)
 
 ### Viewing Seed List Recipients
 
-The seed list displays all test recipients with:
+The seed list table displays these columns:
 
-- **Name** - Staff member's name
-- **Email** - Email address for email testing
-- **Phone** - Phone number with country code for SMS/USSD testing
-- **Department** - Staff member's department
-- **Line of Business** - Business unit affiliation
-- **Status** - Active (can receive tests) or Inactive (removed)
-- **Added Date** - When the recipient was added
-- **Added By** - User who added them
+![Recipient Tab List](/img/v1.1/configuration/recipienttablistseedlist.png)
+
+- **Name** – Staff member's name
+- **Email** – Email address for test messages
+- **Test List** – The list/group the staff belongs to
+- **Status** – Active or Inactive
+- **Actions** – Remove or delete recipient
 
 You can:
 
-- **Search** - Find recipients by name, email, or phone number
-- **Filter by Department** - Filter by department assignment
-- **Filter by Line of Business** - Filter by business unit
-- **Filter by Status** - Show active, inactive, or all recipients
+- **Search** by name or email
+- **Filter** by test list or status
 
 ### Adding Members to Seed List
 
+To add a recipient to a seed list, use the add member modal:
+
+![Create Seed List Modal](/img/v1.1/configuration/createrecipientseedlist.png)
+
 Click the **Add Members** button to add users to the seed list.
-
-![Add Seed List Members Modal - Part 1](/img/v1.1/configuration/addseedlistmodalimage1.png)
-
-![Add Seed List Members Modal - Part 2](/img/v1.1/configuration/addseedlistmodalimage2.png)
 
 **How to Add Members:**
 

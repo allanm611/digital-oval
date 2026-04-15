@@ -4,12 +4,11 @@
 
 Segment Analytics provides visual insights into segment health, distribution, and usage across the platform.
 
-## Summary Cards
+![Segment Reports Overview](/img/v1.1/reports/segmentreportsimage1.png)
 
-- **Total Segments**: Total number of segments
-- **Active Segments**: Currently active segments
-- **Recently Refreshed**: Segments recently updated
-- **Stale Segments**: Segments not computed recently
+![Segment Reports Visualizations](/img/v1.1/reports/segmentreportsimage2.png)
+
+## Summary Cards
 
 ## Visualizations
 

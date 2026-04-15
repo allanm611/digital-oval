@@ -209,7 +209,8 @@ export default function CustomerIdentityFieldDetailsPage() {
                 </div>
               ) : (
                 <div
-                  className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
+                  className={`${tw.rounded} border overflow-hidden`}
+                  style={{ borderColor: color.border.default }}
                 >
                   <div className="hidden lg:block overflow-x-auto">
                     <table
@@ -265,7 +266,7 @@ export default function CustomerIdentityFieldDetailsPage() {
                                 backgroundColor: color.surface.tablebodybg,
                               }}
                             >
-                              {operator.requires_value ? "Yes" : "No"}
+                              {operator.requiresValue ? "Yes" : "No"}
                             </td>
                             <td
                               className="px-6 py-4 text-sm text-gray-700"
@@ -273,7 +274,7 @@ export default function CustomerIdentityFieldDetailsPage() {
                                 backgroundColor: color.surface.tablebodybg,
                               }}
                             >
-                              {operator.requires_two_values ? "Yes" : "No"}
+                              {operator.requiresTwoValues ? "Yes" : "No"}
                             </td>
                           </tr>
                         ))}

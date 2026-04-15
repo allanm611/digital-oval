@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Plus, Trash2, Gift, Edit, X } from "lucide-react";
 import { color , tw} from "../../../shared/utils/utils";
 import { zIndex } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import { rewardTypeService, RewardType } from "../services/rewardTypeService";
 
 interface RewardRule {
   id: string;
@@ -35,24 +36,6 @@ interface OfferRewardStepProps {
   onRewardsChange: (rewards: OfferReward[]) => void;
 }
 
-const REWARD_TYPES = [
-  {
-    value: "default",
-    label: "DEFAULT (Bundle_Subscription_Track)",
-    description: "Standard bundle subscription tracking",
-  },
-  {
-    value: "sms_night",
-    label: "SMS Night (Bundle_Subscription_Track)",
-    description: "Night-time SMS bundle tracking",
-  },
-  {
-    value: "custom",
-    label: "Custom Reward",
-    description: "Custom reward configuration",
-  },
-];
-
 const BUNDLE_TRACKS = [
   "R2TPersAdjustBalCount2",
   "SelectDependantProduct",
@@ -75,14 +58,40 @@ export default function OfferRewardStep({
   );
   const [showRuleModal, setShowRuleModal] = useState(false);
   const [editingRule, setEditingRule] = useState<RewardRule | null>(null);
+  const [rewardTypes, setRewardTypes] = useState<RewardType[]>([]);
+  const [loadingRewardTypes, setLoadingRewardTypes] = useState(false);
+
+  // Fetch active reward types on mount
+  useEffect(() => {
+    const fetchRewardTypes = async () => {
+      setLoadingRewardTypes(true);
+      try {
+        const response = await rewardTypeService.getAllRewardTypes();
+        if (response.success && Array.isArray(response.data)) {
+          // Filter only active reward types
+          const activeTypes = response.data.filter((rt) => rt.is_active !== false);
+          setRewardTypes(activeTypes);
+        }
+      } catch (error) {
+        console.error("Error fetching reward types:", error);
+      } finally {
+        setLoadingRewardTypes(false);
+      }
+    };
+
+    fetchRewardTypes();
+  }, []);
 
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
   const addReward = () => {
+    // Use the first active reward type if available, otherwise default to "default"
+    const defaultType = rewardTypes.length > 0 ? rewardTypes[0].reward_key : "default";
+
     const newReward: OfferReward = {
       id: generateId(),
       name: "New Reward",
-      type: "default",
+      type: defaultType as "default" | "sms_night" | "custom",
       rules: [],
     };
 
@@ -226,8 +235,8 @@ export default function OfferRewardStep({
                           </div>
                           <div className="text-xs text-gray-500">
                             {
-                              REWARD_TYPES.find((t) => t.value === reward.type)
-                                ?.label
+                              rewardTypes.find((t) => t.reward_key === reward.type)
+                                ?.name || reward.type
                             }
                           </div>
                         </div>
@@ -279,19 +288,25 @@ export default function OfferRewardStep({
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Reward Type
                       </label>
-                      <HeadlessSelect
-                        options={REWARD_TYPES.map((type) => ({
-                          value: type.value,
-                          label: type.label,
-                        }))}
-                        value={selectedRewardData.type}
-                        onChange={(value) =>
-                          updateReward(selectedRewardData.id, {
-                            type: value as "default" | "sms_night" | "custom",
-                          })
-                        }
-                        placeholder="Select reward type"
-                      />
+                      {loadingRewardTypes ? (
+                        <div className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} bg-gray-50 text-gray-500`}>
+                          Loading reward types...
+                        </div>
+                      ) : (
+                        <HeadlessSelect
+                          options={rewardTypes.map((type) => ({
+                            value: type.reward_key,
+                            label: type.name,
+                          }))}
+                          value={selectedRewardData.type}
+                          onChange={(value) =>
+                            updateReward(selectedRewardData.id, {
+                              type: value as "default" | "sms_night" | "custom",
+                            })
+                          }
+                          placeholder="Select reward type"
+                        />
+                      )}
                     </div>
                   </div>
 

@@ -3,7 +3,7 @@ import { Plus, Mail, Trash2, Eye, X } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, zIndex } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import DateFormatter from "../../../shared/components/DateFormatter";
@@ -23,6 +23,8 @@ export interface SeedListRecipient {
   department_name?: string;
   line_of_business_id?: number;
   line_of_business_name?: string;
+  list_id?: string;
+  list_name?: string;
   status: "active" | "inactive";
   added_at: string;
   added_by?: number;
@@ -44,6 +46,8 @@ export const DUMMY_RECIPIENTS: SeedListRecipient[] = [
     department_name: "Marketing",
     line_of_business_id: 1,
     line_of_business_name: "Retail Banking",
+    list_id: "list_1",
+    list_name: "Marketing Team",
     status: "active",
     added_at: "2025-01-10T09:00:00Z",
     added_by: 1,
@@ -59,6 +63,8 @@ export const DUMMY_RECIPIENTS: SeedListRecipient[] = [
     department_name: "Sales",
     line_of_business_id: 2,
     line_of_business_name: "Corporate Banking",
+    list_id: "list_2",
+    list_name: "Sales Staff",
     status: "active",
     added_at: "2025-01-12T11:30:00Z",
     added_by: 2,
@@ -74,6 +80,8 @@ export const DUMMY_RECIPIENTS: SeedListRecipient[] = [
     department_name: "Customer Support",
     line_of_business_id: 1,
     line_of_business_name: "Retail Banking",
+    list_id: "list_3",
+    list_name: "Support Team",
     status: "active",
     added_at: "2025-01-15T14:20:00Z",
     added_by: 3,
@@ -89,6 +97,8 @@ export const DUMMY_RECIPIENTS: SeedListRecipient[] = [
     department_name: "Marketing",
     line_of_business_id: 2,
     line_of_business_name: "Corporate Banking",
+    list_id: "list_1",
+    list_name: "Marketing Team",
     status: "inactive",
     added_at: "2025-01-08T10:15:00Z",
     added_by: 1,
@@ -97,16 +107,35 @@ export const DUMMY_RECIPIENTS: SeedListRecipient[] = [
     removed_by: 1,
     removed_by_name: "Admin User",
   },
+  {
+    id: 5,
+    customer_id: 305,
+    customer_name: "Executive Staff 1",
+    customer_email: "exec.staff1@effortel.com",
+    customer_phone: "+254756789012",
+    department_id: 4,
+    department_name: "Executive Office",
+    line_of_business_id: 1,
+    line_of_business_name: "Retail Banking",
+    list_id: "list_5",
+    list_name: "Executive Team",
+    status: "active",
+    added_at: "2025-01-20T08:45:00Z",
+    added_by: 1,
+    added_by_name: "Admin User",
+  },
 ];
 
 interface AddRecipientForm {
   user_id: string;
   line_of_business_id: string;
+  list_id: string;
 }
 
 interface FormErrors {
   user_id?: string;
   line_of_business_id?: string;
+  list_id?: string;
 }
 
 interface SystemUser {
@@ -138,6 +167,7 @@ export default function SeedListManagementPage() {
   const [formData, setFormData] = useState<AddRecipientForm>({
     user_id: "",
     line_of_business_id: "",
+    list_id: "",
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [systemUsers, setSystemUsers] = useState<SystemUser[]>([]);
@@ -149,7 +179,33 @@ export default function SeedListManagementPage() {
   
   // Test list modal state
   const [isCreateListModalOpen, setIsCreateListModalOpen] = useState(false);
-  const [testLists, setTestLists] = useState<Array<{ id: string; name: string; description: string }>>([]);
+  const [testLists, setTestLists] = useState<Array<{ id: string; name: string; description: string }>>([
+    {
+      id: "list_1",
+      name: "Marketing Team",
+      description: "All marketing team members for testing campaign content",
+    },
+    {
+      id: "list_2",
+      name: "Sales Staff",
+      description: "Sales department staff members for testing promotional content",
+    },
+    {
+      id: "list_3",
+      name: "Support Team",
+      description: "Customer support team for testing communication templates",
+    },
+    {
+      id: "list_4",
+      name: "Management Group",
+      description: "Management and leadership team for senior communications testing",
+    },
+    {
+      id: "list_5",
+      name: "Executive Team",
+      description: "Executive and C-level staff for testing high-priority communications",
+    },
+  ]);
 
   // Load system users on mount
   useEffect(() => {
@@ -247,6 +303,7 @@ export default function SeedListManagementPage() {
     setFormData({
       user_id: "",
       line_of_business_id: "",
+      list_id: "",
     });
     setErrors({});
     setIsModalOpen(true);
@@ -257,6 +314,7 @@ export default function SeedListManagementPage() {
     setFormData({
       user_id: "",
       line_of_business_id: "",
+      list_id: "",
     });
     setErrors({});
   };
@@ -270,6 +328,9 @@ export default function SeedListManagementPage() {
     if (!formData.line_of_business_id) {
       newErrors.line_of_business_id = "Line of Business is required";
     }
+    if (!formData.list_id) {
+      newErrors.list_id = "Test List is required";
+    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -277,7 +338,8 @@ export default function SeedListManagementPage() {
     }
 
     const selectedUser = systemUsers.find(u => u.id.toString() === formData.user_id);
-    if (!selectedUser) return;
+    const selectedList = testLists.find(l => l.id === formData.list_id);
+    if (!selectedUser || !selectedList) return;
 
     const newRecipient: SeedListRecipient = {
       id: Math.max(...recipients.map(r => r.id), 0) + 1,
@@ -289,6 +351,8 @@ export default function SeedListManagementPage() {
       department_name: selectedUser.department,
       line_of_business_id: parseInt(formData.line_of_business_id),
       line_of_business_name: linesOfBusiness.find(l => l.id.toString() === formData.line_of_business_id)?.name,
+      list_id: selectedList.id,
+      list_name: selectedList.name,
       status: "active",
       added_at: new Date().toISOString(),
       added_by: 1,
@@ -395,7 +459,7 @@ export default function SeedListManagementPage() {
               color: activeTab === "lists" ? color.primary.accent : color.text.muted,
             }}
           >
-            0
+            {testLists.length}
           </span>
           {activeTab === "lists" && (
             <div
@@ -581,25 +645,7 @@ export default function SeedListManagementPage() {
                       backgroundColor: color.surface.tableHeader,
                     }}
                   >
-                    Phone
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Department
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Line of Business
+                    Test List
                   </th>
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
@@ -609,24 +655,6 @@ export default function SeedListManagementPage() {
                     }}
                   >
                     Status
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Added
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Added By
                   </th>
                   <th
                     className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
@@ -651,7 +679,7 @@ export default function SeedListManagementPage() {
                         borderBottomLeftRadius: "0.375rem",
                       }}
                     >
-                      <div className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
+                      <div className={`${tw.tableFirstColumn} ${tw.textPrimary} text-sm`}>
                         {recipient.customer_name || "Unknown"}
                       </div>
                     </td>
@@ -659,7 +687,7 @@ export default function SeedListManagementPage() {
                       className="px-6 py-4"
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
-                      <span className={`text-sm ${tw.textSecondary}`}>
+                      <span className="text-sm text-black">
                         {recipient.customer_email || "-"}
                       </span>
                     </td>
@@ -667,24 +695,8 @@ export default function SeedListManagementPage() {
                       className="px-6 py-4"
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
-                      <span className={`text-sm ${tw.textSecondary}`}>
-                        {recipient.customer_phone?.replace(/^\+/, "") || "-"}
-                      </span>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span className={`text-sm ${tw.textSecondary}`}>
-                        {recipient.department_name || "-"}
-                      </span>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span className={`text-sm ${tw.textSecondary}`}>
-                        {recipient.line_of_business_name || "-"}
+                      <span className="text-sm text-black">
+                        {recipient.list_name || "-"}
                       </span>
                     </td>
                     <td
@@ -694,22 +706,6 @@ export default function SeedListManagementPage() {
                       <span className="text-sm text-black">
                         {recipient.status}
                       </span>
-                    </td>
-                    <td
-                      className="px-6 py-4 whitespace-nowrap"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary}`}>
-                        <DateFormatter date={recipient.added_at} />
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary}`}>
-                        {recipient.added_by_name || "System"}
-                      </div>
                     </td>
                     <td
                       className="px-6 py-4 text-center"
@@ -743,15 +739,131 @@ export default function SeedListManagementPage() {
 
       {/* Test Lists Tab Content */}
       {activeTab === "lists" && (
-      <div className="text-center py-12">
-        <Mail className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-        <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
-          No test lists created yet
-        </h3>
-        <p className={`text-sm ${tw.textMuted} mb-6`}>
-          Click "Create List" to organize test recipients into groups
-        </p>
-      </div>
+        <div className={`${tw.rounded} border border-gray-200 overflow-hidden`}>
+          {testLists.length === 0 ? (
+            <div className="text-center py-12">
+              <Mail className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
+                No test lists created yet
+              </h3>
+              <p className={`text-sm ${tw.textMuted} mb-6`}>
+                Click "Create List" to organize test recipients into groups
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table
+                className="w-full min-w-[800px]"
+                style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+              >
+                <thead>
+                  <tr>
+                    <th
+                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{
+                        color: color.surface.tableHeaderText,
+                        backgroundColor: color.surface.tableHeader,
+                        borderTopLeftRadius: "0.375rem",
+                      }}
+                    >
+                      List Name
+                    </th>
+                    <th
+                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{
+                        color: color.surface.tableHeaderText,
+                        backgroundColor: color.surface.tableHeader,
+                      }}
+                    >
+                      Description
+                    </th>
+                    <th
+                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{
+                        color: color.surface.tableHeaderText,
+                        backgroundColor: color.surface.tableHeader,
+                      }}
+                    >
+                      Recipients
+                    </th>
+                    <th
+                      className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
+                      style={{
+                        color: color.surface.tableHeaderText,
+                        backgroundColor: color.surface.tableHeader,
+                        borderTopRightRadius: "0.375rem",
+                      }}
+                    >
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {testLists.map((list) => {
+                    const recipientCount = recipients.filter(
+                      (r) => r.list_id === list.id
+                    ).length;
+                    return (
+                      <tr key={list.id} className="transition-colors">
+                        <td
+                          className="px-6 py-4"
+                          style={{
+                            backgroundColor: color.surface.tablebodybg,
+                            borderTopLeftRadius: "0.375rem",
+                            borderBottomLeftRadius: "0.375rem",
+                          }}
+                        >
+                          <div
+                            className={`${tw.tableFirstColumn} ${tw.textPrimary} text-sm`}
+                          >
+                            {list.name}
+                          </div>
+                        </td>
+                        <td
+                          className="px-6 py-4"
+                          style={{ backgroundColor: color.surface.tablebodybg }}
+                        >
+                          <div className={`text-sm ${tw.textSecondary} max-w-md`}>
+                            {list.description || "No description"}
+                          </div>
+                        </td>
+                        <td
+                          className="px-6 py-4"
+                          style={{ backgroundColor: color.surface.tablebodybg }}
+                        >
+                          <span className="text-sm text-black font-medium">
+                            {recipientCount}
+                          </span>
+                        </td>
+                        <td
+                          className="px-6 py-4 text-center"
+                          style={{
+                            backgroundColor: color.surface.tablebodybg,
+                            borderTopRightRadius: "0.375rem",
+                            borderBottomRightRadius: "0.375rem",
+                          }}
+                        >
+                          <button
+                            onClick={() => {
+                              setTestLists(
+                                testLists.filter((l) => l.id !== list.id)
+                              );
+                              showToast("Test list deleted successfully");
+                            }}
+                            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
+                            title="Delete test list"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       )}
 
       {/* Add Recipient/List Modal */}
@@ -817,10 +929,41 @@ export default function SeedListManagementPage() {
                         })),
                       ]}
                       placeholder="Select Line of Business"
+                      zIndex={zIndex.popover}
                     />
                   </div>
                   {errors.line_of_business_id && (
                     <p className="text-xs text-red-500 mt-1">{errors.line_of_business_id}</p>
+                  )}
+                </div>
+
+                {/* Test List Selection */}
+                <div>
+                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
+                    Select Test List *
+                  </label>
+                  <div className={errors.list_id ? "border border-red-500 rounded" : ""}>
+                    <HeadlessSelect
+                      value={formData.list_id}
+                      onChange={(value) => {
+                        setFormData({ ...formData, list_id: value });
+                        if (errors.list_id) {
+                          setErrors({ ...errors, list_id: undefined });
+                        }
+                      }}
+                      options={[
+                        { value: "", label: "Select a test list" },
+                        ...testLists.map((list) => ({
+                          value: list.id,
+                          label: list.name,
+                        })),
+                      ]}
+                      placeholder="Select test list..."
+                      zIndex={zIndex.popover}
+                    />
+                  </div>
+                  {errors.list_id && (
+                    <p className="text-xs text-red-500 mt-1">{errors.list_id}</p>
                   )}
                 </div>
               </div>

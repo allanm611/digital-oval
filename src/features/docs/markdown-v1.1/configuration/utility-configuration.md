@@ -6,6 +6,16 @@ Utility Configuration allows you to define and manage utility types used across 
 
 Navigate to **Configuration → Utility Configuration**.
 
+![utilitylistpage](/img/v1.1/configuration/utilitylistpage.png)
+
+The utilities table displays these columns:
+
+- **Name**
+- **Value (Key)**
+- **Description**
+- **Status** (Active/Inactive)
+- **Actions** (Edit/Delete)
+
 ## What You Can Do
 
 - View all utility types
@@ -22,6 +32,9 @@ Navigate to **Configuration → Utility Configuration**.
 ## Creating or Editing a Utility Type
 
 1. Click **Create** or **Edit** to open the modal.
+
+![createutilty](/img/v1.1/configuration/createutilty.png)
+
 2. Fill in the required fields.
 3. Click **Save** to apply changes.
 

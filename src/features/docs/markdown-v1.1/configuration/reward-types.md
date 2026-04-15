@@ -10,7 +10,7 @@ Reward Types allow you to:
 
 - **Categorize Rewards** - Organize rewards by type (Points, Discounts, Vouchers, Freebies, etc.)
 - **Standardize Structure** - Create consistent reward definitions across your offers
-- **Track by Category** - Monitor and report on rewards organized by type
+<!-- - **Track by Category** - Monitor and report on rewards organized by type -->
 - **Organize Management** - Group similar rewards together
 
 ## About Reward Types
@@ -44,12 +44,21 @@ This page is mainly a maintenance screen: keep reward type names clear, keep des
 
 ### Edit Reward Type
 
-Click **Edit** or **Create** to open the reward type modal:
+<!-- Click **Edit** or **Create** to open the reward type modal: -->
+Click **Edit** to open the reward type modal:
+
+
+![Edit Reward Type Modal](/img/v1.1/configuration/editrewardtype.png)
 
 - **Name** (required)
 - **Description** (optional)
 - **Reward Key** (required, unique)
 - **Active** (checkbox)
+
+**Activation/Deactivation:**
+
+- Use the **Active** checkbox to control whether a reward type is available for use. Deactivating a reward type will hide it from the offer creation dropdown, but it will remain in the list for record-keeping and reporting.
+- Only **active** reward types appear in the reward type dropdown when creating or editing an offer. Inactive types are not selectable.
 
 Click **Save** to apply changes. The list will update automatically.
 

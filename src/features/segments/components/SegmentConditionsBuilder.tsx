@@ -135,25 +135,45 @@ export default function SegmentConditionsBuilder({
 
   const buildPreviewPayload = (conditionGroups: SegmentConditionGroup[]) => {
     // Build payload in correct v2.0 format with source_layers, layer_fields, layer_filters
-    const sourceLayers = [
+    // Layer 0: always subscribers (base layer)
+    const sourceLayers: any[] = [
       {
-        source_type: "subscribers", // Base layer (layer 0)
+        source_type: "subscribers",
       },
     ];
 
-    // Standard layer_fields matching backend's expected columns
-    const STANDARD_LAYER_FIELDS = [
-      { layer_index: 0, column: "msisdn" },
-      { layer_index: 0, column: "customer_id" },
-      { layer_index: 0, column: "first_name" },
-      { layer_index: 0, column: "last_name" },
-      { layer_index: 0, column: "customer_type" },
-      { layer_index: 0, column: "status" },
-      { layer_index: 0, column: "activation_date" },
-      { layer_index: 0, column: "city" },
-    ];
+    // First pass: add all segment and quicklist layers as joined layers (index 1+)
+    // Each segment/quicklist becomes a layer that joins to the base on msisdn
+    for (const group of conditionGroups) {
+      for (const condition of group.conditions) {
+        if (condition.conditionType === "segment" && condition.segment_id) {
+          sourceLayers.push({
+            source_type: "segment",
+            segment_id: condition.segment_id,
+            join_config: {
+              join_type: "INNER JOIN",
+              left_column_ref: { layer_index: 0, column: "msisdn" },
+              right_column: "msisdn",
+            },
+          });
+        } else if (condition.conditionType === "list" && condition.list_id) {
+          sourceLayers.push({
+            source_type: "quicklist",
+            quicklist_id: condition.list_id,
+            join_config: {
+              join_type: "INNER JOIN",
+              left_column_ref: { layer_index: 0, column: "msisdn" },
+              right_column: "msisdn",
+            },
+          });
+        }
+      }
+    }
 
-    const layerFields = STANDARD_LAYER_FIELDS;
+    // layer_fields is optional - omitting it means SELECT * (all columns)
+    // This is fine for preview. If we wanted to be precise, we'd only include
+    // the fields that appear in conditions, but for preview simplicity we use SELECT *
+    const layerFields = undefined;
 
     // Build layer_filters with proper group structure
     const layerFilterGroups: any[] = [];
@@ -162,12 +182,22 @@ export default function SegmentConditionsBuilder({
       const groupConditions: any[] = [];
 
       for (const condition of group.conditions) {
-        // Only include 360_profile conditions for preview
-        if (condition.conditionType === "360_profile" && condition.field_id && condition.operator_id) {
+        // Include all profile-type conditions (360_profile, revenue_metric_kpi, usage_metric_kpi)
+        // These become WHERE conditions in layer_filters
+        // Segment/list conditions are handled above as joined layers (source_layers index 1+)
+        if (
+          condition &&
+          condition.conditionType &&
+          ["360_profile", "revenue_metric_kpi", "usage_metric_kpi"].includes(condition.conditionType) &&
+          condition.field_id &&
+          condition.field_name &&
+          condition.operator_id !== undefined &&
+          condition.operator_id !== null
+        ) {
           const hasValue = Array.isArray(condition.value)
             ? (condition.value as (string | number)[]).length > 0
             : condition.value !== "" && condition.value !== undefined && condition.value !== null;
-          const hasDateRange = condition.start_date || condition.end_date;
+          const hasDateRange = (condition.start_date && condition.start_date !== "") || (condition.end_date && condition.end_date !== "");
           const isNullOp = condition.operator_id === 13 || condition.operator_id === 14;
 
           if (!hasValue && !hasDateRange && !isNullOp) {
@@ -194,7 +224,7 @@ export default function SegmentConditionsBuilder({
           const layerCond = {
             column_ref: {
               layer_index: 0,
-              column: condition.field_name || "",
+              column: condition.field_name,
             },
             operator_id: condition.operator_id,
             ...(isNullOp
@@ -211,19 +241,24 @@ export default function SegmentConditionsBuilder({
       }
 
       // Only add group if it has conditions
-      if (groupConditions.length > 0) {
+      if (groupConditions.length > 0 && group) {
+        // Validate and normalize logic value to "AND" or "OR"
+        const groupLogic = group.operator ? String(group.operator).toUpperCase() : "AND";
+        const validLogic: "AND" | "OR" = (groupLogic === "OR" ? "OR" : "AND") as "AND" | "OR";
+
         layerFilterGroups.push({
-          logic: (group.operator || "AND").toUpperCase(),
+          logic: validLogic,
           conditions: groupConditions,
         });
       }
     }
 
-    // Determine top-level logic
-    const topLevelLogic =
-      conditionGroups.length > 0 && conditionGroups[0].groupOperator
-        ? conditionGroups[0].groupOperator.toUpperCase()
-        : "AND";
+    // Determine top-level logic with validation
+    let topLevelLogic: "AND" | "OR" = "AND";
+    if (conditionGroups && conditionGroups.length > 0 && conditionGroups[0]) {
+      const groupOp = conditionGroups[0].groupOperator ? String(conditionGroups[0].groupOperator).toUpperCase() : "AND";
+      topLevelLogic = (groupOp === "OR" ? "OR" : "AND") as "AND" | "OR";
+    }
 
     const payload = {
       source_layers: sourceLayers,
@@ -251,13 +286,23 @@ export default function SegmentConditionsBuilder({
     try {
       setIsPreviewLoading(true);
 
-      // Check if there are any 360_profile conditions
-      const profileConditions = conditions
+      // Check if there are any previewable conditions
+      // Supported: profile fields, segments, and quicklists
+      // Not supported in preview: system_events
+      const previewableConditions = conditions
         .flatMap((group) =>
-          group.conditions.filter((c) => c.conditionType === "360_profile")
+          group.conditions.filter((c) =>
+            [
+              "360_profile",
+              "revenue_metric_kpi",
+              "usage_metric_kpi",
+              "segment",
+              "list",
+            ].includes(c.conditionType)
+          )
         );
 
-      if (profileConditions.length === 0) {
+      if (previewableConditions.length === 0) {
         setPreviewCount(0);
         setPreviewQuery(null);
         setIsPreviewLoading(false);

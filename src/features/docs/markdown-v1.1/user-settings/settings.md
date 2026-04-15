@@ -15,12 +15,14 @@ Settings is where you configure your personal preferences for the platform. Thes
 Select the language for the user interface:
 
 **Available Languages:**
+
 - English (Default)
 - Français (French)
 - Español (Spanish)
 - Swahili (Kiswahili)
 
 **How to Change:**
+
 1. Go to Settings
 2. Find "Language" dropdown
 3. Select desired language
@@ -33,6 +35,7 @@ Select the language for the user interface:
 Configure how dates and numbers display:
 
 **Date Format:**
+
 - YYYY-MM-DD (ISO standard)
 - MM/DD/YYYY (United States)
 - DD/MM/YYYY (Europe/UK)
@@ -41,14 +44,17 @@ Configure how dates and numbers display:
 - YYYY/MM/DD
 
 **Timezone:**
+
 - Select your local timezone
 - Used for displaying timestamps
 <!-- - Affects scheduled task times -->
 
 **Currency:**
+
 - All currencies from currency-codes library
 
 **Number Format:**
+
 - 1,234.56 (comma thousands, period decimal)
 - 1 234,56 (space thousands, comma decimal)
 - 1.234,56 (period thousands, comma decimal)
@@ -65,6 +71,7 @@ Configure how dates and numbers display:
 Configure defaults for sending communications:
 
 **Default Communication Channel:**
+
 - SMS
 - Email
 - USSD
@@ -74,49 +81,16 @@ Configure defaults for sending communications:
 - WhatsApp
 
 **Default Sender ID:**
-- Effortel
-- Equitel
-- EquitelKE
-- EquitelAlert
-- EquitelPromo
+Sender ID options are managed by administrators and reflect the current approved sender IDs in the system. Only sender IDs that are active  will appear in the dropdown.
 
 **Default SMS Route:**
-- Effortel SMS Gateway
+SMS route options reflect the current system configuration and are managed by platform administrators.
 
 **Character Set (for SMS):**
-
-Choose the encoding that best fits your message content:
-
-- **GSM-7 (Standard SMS)** - Default
-  - Example: "Hello! Your code is 12345. Valid 24 hours."
-  - Best for: English-only messages, lowest cost
-  - 160 characters per message
-
-- **UTF-8 (Unicode)**
-  - Example: "Café réouvert! 🎉 Venez maintenant."
-  - Best for: Accents, emoji, multilingual content
-  - 70 characters per message
-
-- **ASCII (English only)**
-  - Example: "Login now at example.com"
-  - Best for: Very basic English text only
-  - Limited character support
-
-- **UCS-2 (Full Unicode)**
-  - Example: "مرحبا بك! 你好! Привет!"
-  - Best for: Multiple languages, Arabic, Chinese, Russian
-  - 70 characters per message
+Character set options (such as GSM-7, UTF-8, ASCII, UCS-2) are determined by the system configuration. The available choices may vary depending on your environment. Select the encoding that best fits your message content; descriptions and examples are provided in the interface.
 
 **Notification Sound:**
-- None (Silent)
-- Bell
-- Chime
-- Ding
-- Notification
-- Alert
-- Pop
-- Ping
-
+Select your preferred alert sound for incoming notifications. This setting lets you personalize how you are notified when new messages or alerts arrive.
 
 ## Do Not Disturb (DND)
 
@@ -127,27 +101,32 @@ Choose the encoding that best fits your message content:
 Set quiet hours when you don't want to be bothered with notifications. Notifications received during DND hours are held and delivered as a batch when your DND period ends.
 
 **Enable DND:**
+
 - Toggle to enable/disable Do Not Disturb
 - When enabled, notifications are silenced during your set hours
 
 **DND Hours:**
+
 - Set start time (e.g., 21:00 for 9 PM)
 - Set end time (e.g., 08:00 for 8 AM)
 - Notifications won't notify you during this window
 
 **DND Days:**
+
 - **Weekdays** (Mon-Fri) — Apply DND only on weekdays
 - **Weekends** (Sat-Sun) — Apply DND only on weekends
 - **Daily** (all days) — Apply DND every day
 - **Custom Days** — Select specific days for DND
 
 **What Happens During DND:**
+
 - You don't receive notification alerts or sounds during these hours
 - Notifications are collected and queued in the background
 - When DND ends, all queued notifications are delivered as a batch
 - Critical system alerts may still be delivered immediately
 
 **Example:**
+
 - DND enabled 21:00 (9 PM) to 08:00 (8 AM) daily
 - At 10:45 PM: Campaign notification arrives → queued, no alert
 - At 10:50 PM: Segment update notification arrives → queued, no alert
@@ -161,18 +140,13 @@ Set quiet hours when you don't want to be bothered with notifications. Notificat
 
 ### Notification Preferences
 
-Manage which notifications you want to receive. The list shows all available [notification types](/documentation/configuration/notification-types-list) configured by your organization.
+![Notification Preferences](/img/v1.1/usersettings/notificationpreferencesimage.png)
 
-**Available Notification Types:**
-The notification types available depend on what your organization has set up. Examples include:
-- Campaign Approval Request
-- Campaign Execution Completed
-- Segment Computation Completed
-- Offer Status Changed
-- And others configured by your organization
+Manage which notifications you want to receive. The list shows all available [notification types](/documentation/configuration/notification-types-list) configured.
 
 **How to Enable/Disable Notifications:**
-1. In the Notifications section, you'll see a list of all available notification types
+
+1. In the Notification Preferences section, you'll see a list of all available notification types
 2. Each notification type has a checkbox
 3. Check the box to enable notifications for that type
 4. Uncheck the box to disable notifications for that type
@@ -193,6 +167,7 @@ Select which communication channels you want to use for receiving notifications:
 - WhatsApp
 
 **How to Select Channels:**
+
 1. Click on the "Preferred Channels" dropdown
 2. Select one or more channels you want to use
 3. Selected channels appear as tags below the dropdown
@@ -212,10 +187,12 @@ Select which communication channels you want to use for receiving notifications:
 Choose how the interface appears:
 
 **Available Options:**
+
 - **Light Mode** - Standard light background (default)
 - **Dark Mode** - Dark background with light text
 
 **How to Change:**
+
 1. Go to Settings
 2. Find the Theme dropdown
 3. Select Light Mode or Dark Mode

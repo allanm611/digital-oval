@@ -754,7 +754,7 @@ export default function ConnectionProfileFormPage({
                 <span className="text-sm font-medium text-gray-700">
                   GDPR Applicable
                 </span>
-              </label>
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">

@@ -1906,11 +1906,14 @@ export default function ProductForm({
       <CreateUtilityModal
         isOpen={isCreateUtilityModalOpen}
         onClose={() => setIsCreateUtilityModalOpen(false)}
-        onUtilityCreated={(utility: any) => {
-          // Add to custom utilities
-          const newUtility = { value: utility.value, label: utility.name };
-          setCustomUtilities([...customUtilities, newUtility]);
-          setIsCreateUtilityModalOpen(false);
+        onSave={async (utility) => {
+          // Add custom utility to the list and select it
+          const newUtility = {
+            value: utility.name.toLowerCase().replace(/\s+/g, "-"),
+            label: utility.name,
+          };
+          setCustomUtilities((prev) => [...prev, newUtility]);
+          setSelectedUtility(newUtility.value);
         }}
       />
     </>
