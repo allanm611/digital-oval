@@ -15,6 +15,12 @@ There are two ways to open the create form:
 
 The control group creation process uses a multi-step form to organize the configuration.
 
+![Create Control Group - Step 1](/img/v1.1/configuration/createcontrolgroupstep1image1.png)
+
+
+![Create Control Group - Step 2](/img/v1.1/configuration/createcontrolgroupstep2image2.png)
+
+
 ### Step 1: Basic Info
 
 **Control Group Code** (Required)
@@ -40,6 +46,8 @@ The control group creation process uses a multi-step form to organize the config
 
 ### Step 2: Configuration
 
+![Create Control Group - Step 2](/img/v1.1/configuration/createcontrolgroupstep2.png)
+
 **Percentage** (Required)
 - Set the percentage of audience to be in the control group
 - Range: 1-100%
@@ -51,6 +59,8 @@ The control group creation process uses a multi-step form to organize the config
   - **Stratified** - Select members proportionally from population strata
 
 ### Step 3: Scheduling
+
+![Create Control Group - Step 3](/img/v1.1/configuration/createcontrolgroupstep3.png)
 
 **Recurrence** (Required)
 - Select how often the control group members are regenerated:
@@ -68,6 +78,8 @@ The control group creation process uses a multi-step form to organize the config
 - Leave blank for no expiration
 
 ### Step 4: Preview
+
+![Create Control Group - Step 4](/img/v1.1/configuration/createcontrolgroupstep4.png)
 
 Review all the control group settings before creating:
 - Verify all configuration details

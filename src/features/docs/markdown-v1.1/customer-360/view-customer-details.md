@@ -8,6 +8,9 @@ The customer details page provides a comprehensive view of an individual custome
 
 The customer details page includes action buttons in the header that allow you to manage the customer:
 
+![Customer details header](/img/v1.1/customer360-images/customerdetailsheader.png)
+
+
 ### Edit Customer
 
 Click the **Edit** button to update customer information such as name, contact details, preferences, and custom attributes. The edit form contains all editable customer profile fields and allows you to modify any information. Changes are applied immediately upon saving.

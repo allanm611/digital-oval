@@ -1,5 +1,7 @@
 # Control Group List
 
+![Control Groups List](/img/v1.1/configuration/universalcontrolgroupslist.png)
+
 ## Overview
 
 The Universal Control Group List provides a comprehensive view of all control groups in your system. You can search, filter, and manage your control groups from this page.

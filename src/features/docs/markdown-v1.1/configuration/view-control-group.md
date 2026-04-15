@@ -1,5 +1,7 @@
 # View Control Group Details
 
+![Control Group Details](/img/v1.1/configuration/controlgroupsdetailstatcards.png)
+
 ## Overview
 
 The Control Group Details page shows comprehensive information about a specific control group, including its configuration and member management.
@@ -23,6 +25,8 @@ The Control Group Details page shows comprehensive information about a specific 
 - **Delete**: Remove the control group (confirmation required)
 
 ### Overview Card
+
+![Control Group Details - Basic Info](/img/v1.1/configuration/controlgroupsdetailbasicinfo&configsection.png)
 
 Displays the control group's basic information:
 - **Control Group Name**: Name of the control group
@@ -55,6 +59,8 @@ This section displays metadata about the control group:
 
 ### Timeline Section
 
+![Control Group Details - Schedule & Timeline](/img/v1.1/configuration/controlgroupsschedule&timelinesection.png)
+
 Shows the control group's history:
 
 **Created**
@@ -67,6 +73,8 @@ Shows the control group's history:
 
 ### Members List
 
+![Control Group Details - Group Members](/img/v1.1/configuration/controlgroupdetailsgroupmemberssection.png)
+
 Displays paginated list of members in the control group with:
 - **Member Information** - Subscriber details
 - **Actions** - Remove member button
@@ -74,6 +82,8 @@ Displays paginated list of members in the control group with:
 Pagination shows 10 members per page. Use pagination controls to navigate between pages.
 
 ### Add Members
+
+![Control Group Details - Add Members Modal](/img/v1.1/configuration/controlgroupdetailsaddmembermodal.png)
 
 Click the **Add Members** button to manually add customers to the control group:
 

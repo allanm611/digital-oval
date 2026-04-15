@@ -2,7 +2,7 @@
 
 Control Groups are customer segments that do not receive a campaign message, used as a baseline to measure the true impact of your campaigns.
 
-![Control Groups List](/img/v1.1/configuration/controlgroupslist.png)
+![Control Groups List](/img/v1.1/configuration/universalcontrolgroupslist.png)
 
 ## What are Control Groups?
 
@@ -37,11 +37,11 @@ You can:
 
 Click the **Create Control Group** button to add a new control group.
 
-![Create Control Group - Step 1](/img/v1.1/configuration/createcontrolgroupstep1.png)
+![Create Control Group - Step 1](/img/v1.1/configuration/createcontrolgroupstep1image1.png)
 
 ![Create Control Group - Step 1 Saved Segments](/img/v1.1/configuration/createcontrolgroupstep1savedsegemnts.png)
 
-![Create Control Group - Step 2](/img/v1.1/configuration/createcontrolgroupstep2.png)
+![Create Control Group - Step 2](/img/v1.1/configuration/createcontrolgroupstep2image2.png)
 
 ![Create Control Group - Step 3](/img/v1.1/configuration/createcontrolgroupstep3.png)
 
