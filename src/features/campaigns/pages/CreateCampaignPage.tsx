@@ -603,6 +603,17 @@ export default function CreateCampaignPage() {
           }
         }
 
+        // Validate that each selected segment has at least one offer
+        for (const segment of selectedSegments) {
+          const hasOffer = campaignFlows.some(
+            (flow) => String(flow.segment_id) === String(segment.id)
+          );
+          if (!hasOffer) {
+            errors.flows = `Segment "${segment.name}" must have at least one offer assigned`;
+            break;
+          }
+        }
+
         return { isValid: Object.keys(errors).length === 0, errors };
 
       case 4: // Scheduling step

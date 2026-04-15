@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
+import { useNavigate } from "react-router-dom";
 import {
   X,
+  Edit,
 } from "lucide-react";
 import { CampaignOffer } from "../../types/campaign";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
@@ -32,6 +34,7 @@ export default function OfferSelectionModal({
   selectedOffers,
   editingOffer,
 }: OfferSelectionModalProps) {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { success: showSuccess, error: showError } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
@@ -225,6 +228,7 @@ export default function OfferSelectionModal({
           segments: [],
           code: offer.code,
           category_id: offer.category_id,
+          product_ids: offer.product_ids,
         }),
       );
 
@@ -547,11 +551,9 @@ export default function OfferSelectionModal({
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
                       Status
                     </th>
-                    {hasActionableOffers && (
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
-                        Actions
-                      </th>
-                    )}
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody
@@ -615,11 +617,18 @@ export default function OfferSelectionModal({
                             {offerStatus || "Unknown"}
                           </span>
                         </td>
-                        {hasActionableOffers && (
-                          <td
-                            className="px-4 py-3"
-                            onClick={(e) => e.stopPropagation()}
-                          >
+                        <td
+                          className="px-4 py-3"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => navigate(`/dashboard/offers/${offer.id}/edit`)}
+                              className="p-1.5 text-gray-400 hover:text-gray-600 rounded"
+                              title="Edit offer"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
                             {(() => {
                               // Only show action buttons for offers created during this campaign flow
                               const isCampaignFlowOffer =
@@ -685,8 +694,8 @@ export default function OfferSelectionModal({
 
                               return null;
                             })()}
-                          </td>
-                        )}
+                          </div>
+                        </td>
                       </tr>
                     );
                   })}

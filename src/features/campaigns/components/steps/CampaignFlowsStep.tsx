@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, Eye } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Plus, Trash2, Eye, Edit } from "lucide-react";
 import {
   CreateCampaignRequest,
   CampaignSegment,
@@ -31,7 +32,7 @@ interface CampaignFlowsStepProps {
 
 interface SegmentFlowState {
   offers: CampaignOffer[];
-  waitHours: number;
+  offerWaitHours: { [offerId: string]: number }; // Per-offer wait hours
   allocation?: string;
 }
 
@@ -45,6 +46,7 @@ export default function CampaignFlowsStep({
   validationErrors = {},
   stepOrder,
 }: CampaignFlowsStepProps) {
+  const navigate = useNavigate();
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [editingSegmentId, setEditingSegmentId] = useState<string | null>(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -76,7 +78,7 @@ export default function CampaignFlowsStep({
         if (!flowsBySegment[segmentIdStr]) {
           flowsBySegment[segmentIdStr] = {
             offers: [],
-            waitHours: 0,
+            offerWaitHours: {},
             allocation: flow.bucket_allocation,
           };
         }
@@ -89,10 +91,9 @@ export default function CampaignFlowsStep({
           flowsBySegment[segmentIdStr].offers.push(offer);
         }
 
-        // Update wait hours (use the highest value if multiple flows for same segment)
-        if (flow.wait_interval_hours > flowsBySegment[segmentIdStr].waitHours) {
-          flowsBySegment[segmentIdStr].waitHours = flow.wait_interval_hours;
-        }
+        // Store wait hours per offer
+        flowsBySegment[segmentIdStr].offerWaitHours[offerIdStr] =
+          flow.wait_interval_hours;
       });
 
       setSegmentFlows(flowsBySegment);
@@ -132,7 +133,7 @@ export default function CampaignFlowsStep({
           offer_id: parseInt(offer.id),
           flow_type: getFlowType(),
           step_order: flowStepOrder, // Hard coded to value from Step 2
-          wait_interval_hours: data.waitHours || 0,
+          wait_interval_hours: data.offerWaitHours[offer.id] || 0,
           bucket_allocation: data.allocation,
         });
       });
@@ -154,11 +155,20 @@ export default function CampaignFlowsStep({
       const updated = { ...prev };
       const currentState = updated[editingSegmentId] || {
         offers: [],
-        waitHours: 0,
+        offerWaitHours: {},
       };
+
+      // Preserve existing wait hours for offers that are still selected
+      const newOfferWaitHours: { [offerId: string]: number } = {};
+      offers.forEach((offer) => {
+        newOfferWaitHours[offer.id] =
+          currentState.offerWaitHours[offer.id] || 0;
+      });
+
       updated[editingSegmentId] = {
         ...currentState,
         offers,
+        offerWaitHours: newOfferWaitHours,
       };
       return updated;
     });
@@ -199,13 +209,17 @@ export default function CampaignFlowsStep({
     }
   };
 
-  const handleUpdateWaitHours = (segmentId: string, hours: number) => {
+  const handleUpdateWaitHours = (
+    segmentId: string,
+    offerId: string,
+    hours: number
+  ) => {
     setSegmentFlows((prev) => {
       const updated = { ...prev };
       if (!updated[segmentId]) {
-        updated[segmentId] = { offers: [], waitHours: 0 };
+        updated[segmentId] = { offers: [], offerWaitHours: {} };
       }
-      updated[segmentId].waitHours = hours;
+      updated[segmentId].offerWaitHours[offerId] = hours;
       return updated;
     });
   };
@@ -214,7 +228,7 @@ export default function CampaignFlowsStep({
     setSegmentFlows((prev) => {
       const updated = { ...prev };
       if (!updated[segmentId]) {
-        updated[segmentId] = { offers: [], waitHours: 0 };
+        updated[segmentId] = { offers: [], offerWaitHours: {} };
       }
       updated[segmentId].allocation = allocation;
       return updated;
@@ -288,7 +302,7 @@ export default function CampaignFlowsStep({
                   const offers = getOffersForSegment(segment.id);
                   const flowState = segmentFlows[segment.id] || {
                     offers: [],
-                    waitHours: 0,
+                    offerWaitHours: {},
                   };
 
                   if (offers.length === 0) {
@@ -307,36 +321,7 @@ export default function CampaignFlowsStep({
                           <div className="text-sm text-gray-500">—</div>
                         </td>
                         <td className="px-4 py-3">
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            min="0"
-                            placeholder="0"
-                            value={flowState.waitHours}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              if (value === "") {
-                                handleUpdateWaitHours(segment.id, 0);
-                              } else {
-                                const numValue = parseInt(value, 10);
-                                if (!isNaN(numValue) && numValue >= 0) {
-                                  handleUpdateWaitHours(segment.id, numValue);
-                                }
-                              }
-                            }}
-                            onBlur={(e) => {
-                              if (e.target.value === "") {
-                                handleUpdateWaitHours(segment.id, 0);
-                              }
-                            }}
-                            className="w-full px-3 py-2 text-sm hover:bg-gray-100 focus:bg-gray-50"
-                            style={{
-                              border: "none",
-                              outline: "none",
-                              background: "transparent",
-                              boxShadow: "none"
-                            }}
-                          />
+                          <div className="text-sm text-gray-500">—</div>
                         </td>
                         {(formData.campaign_type === "ab_test" ||
                           formData.campaign_type === "champion_challenger") && (
@@ -397,21 +382,25 @@ export default function CampaignFlowsStep({
                           inputMode="numeric"
                           min="0"
                           placeholder="0"
-                          value={flowState.waitHours}
+                          value={flowState.offerWaitHours[offer.id] || 0}
                           onChange={(e) => {
                             const value = e.target.value;
                             if (value === "") {
-                              handleUpdateWaitHours(segment.id, 0);
+                              handleUpdateWaitHours(segment.id, offer.id, 0);
                             } else {
                               const numValue = parseInt(value, 10);
                               if (!isNaN(numValue) && numValue >= 0) {
-                                handleUpdateWaitHours(segment.id, numValue);
+                                handleUpdateWaitHours(
+                                  segment.id,
+                                  offer.id,
+                                  numValue
+                                );
                               }
                             }
                           }}
                           onBlur={(e) => {
                             if (e.target.value === "") {
-                              handleUpdateWaitHours(segment.id, 0);
+                              handleUpdateWaitHours(segment.id, offer.id, 0);
                             }
                           }}
                           className="w-full px-3 py-2 text-sm hover:bg-gray-100 focus:bg-gray-50"
@@ -455,6 +444,13 @@ export default function CampaignFlowsStep({
                             title="Preview Offer"
                           >
                             <Eye className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => navigate(`/dashboard/offers/${offer.id}/edit`)}
+                            className="p-1.5 text-gray-900 rounded transition-colors cursor-pointer hover:bg-gray-100"
+                            title="Edit Offer"
+                          >
+                            <Edit className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleSelectOffers(segment.id)}

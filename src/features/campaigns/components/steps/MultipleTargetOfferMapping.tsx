@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Gift, Users, Plus, X } from "lucide-react";
+import { Gift, Users, Plus, X, Edit } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { CampaignSegment, CampaignOffer } from "../../types/campaign";
 import OfferSelectionModal from "./OfferSelectionModal";
 import { color, tw, components } from "../../../../shared/utils/utils";
@@ -20,6 +21,7 @@ export default function MultipleTargetOfferMapping({
   selectedOffers,
   setSelectedOffers,
 }: MultipleTargetOfferMappingProps) {
+  const navigate = useNavigate();
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [editingSegmentId, setEditingSegmentId] = useState<string | null>(null);
 
@@ -187,17 +189,26 @@ export default function MultipleTargetOfferMapping({
                               </div>
                             </div>
                           </div>
-                          <button
-                            onClick={() =>
-                              handleRemoveMapping(
-                                segment.id,
-                                parseInt(offer.id)
-                              )
-                            }
-                            className={`p-1.5 ${tw.rounded}`}
-                          >
-                            <X className="w-4 h-4 text-red-600" />
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => navigate(`/dashboard/offers/${offer.id}/edit`)}
+                              className={`p-1.5 ${tw.rounded} text-gray-400 hover:text-blue-600`}
+                              title="Edit offer"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() =>
+                                handleRemoveMapping(
+                                  segment.id,
+                                  parseInt(offer.id)
+                                )
+                              }
+                              className={`p-1.5 ${tw.rounded}`}
+                            >
+                              <X className="w-4 h-4 text-red-600" />
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>

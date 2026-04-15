@@ -1,4 +1,5 @@
-import { Gift, Plus, X, TrendingUp, ArrowRight } from "lucide-react";
+import { Gift, Plus, X, TrendingUp, ArrowRight, Edit } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { CampaignSegment, CampaignOffer } from "../../types/campaign";
 import { color , tw} from "../../../../shared/utils/utils";
 
@@ -19,6 +20,8 @@ export default function ABTestOfferMapping({
   onMapOffers,
   onRemoveOfferFromSegment,
 }: ABTestOfferMappingProps) {
+  const navigate = useNavigate();
+
   const getOffersForSegment = (segmentId: string) => {
     const offerIds = offerMappings[segmentId] || [];
     return selectedOffers.filter((offer) => offerIds.includes(offer.id));
@@ -133,14 +136,23 @@ export default function ABTestOfferMapping({
                         </div>
                       </div>
                     </div>
-                    <button
-                      onClick={() =>
-                        onRemoveOfferFromSegment(variantA.id, offer.id)
-                      }
-                      className="p-1.5 text-gray-400 rounded flex-shrink-0"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => navigate(`/dashboard/offers/${offer.id}/edit`)}
+                        className="p-1.5 text-gray-400 hover:text-blue-600 rounded"
+                        title="Edit offer"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() =>
+                          onRemoveOfferFromSegment(variantA.id, offer.id)
+                        }
+                        className="p-1.5 text-gray-400 rounded"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -216,14 +228,23 @@ export default function ABTestOfferMapping({
                         </div>
                       </div>
                     </div>
-                    <button
-                      onClick={() =>
-                        onRemoveOfferFromSegment(variantB.id, offer.id)
-                      }
-                      className="p-1.5 text-gray-400 rounded flex-shrink-0"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => navigate(`/dashboard/offers/${offer.id}/edit`)}
+                        className="p-1.5 text-gray-400 hover:text-blue-600 rounded"
+                        title="Edit offer"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() =>
+                          onRemoveOfferFromSegment(variantB.id, offer.id)
+                        }
+                        className="p-1.5 text-gray-400 rounded"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>

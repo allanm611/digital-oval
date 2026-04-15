@@ -2,7 +2,9 @@ import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { CampaignOffer } from "../../types/campaign";
+import { Offer } from "../../../../features/offers/types/offer";
 import { buttons } from "../../../../shared/utils/tokens";
+import { offerService } from "../../../../features/offers/services/offerService";
 import { offerCreativeService } from "../../../../features/offers/services/offerCreativeService";
 import { productService } from "../../../../features/products/services/productService";
 
@@ -32,12 +34,14 @@ export default function OfferPreviewModal({
   onClose,
 }: OfferPreviewModalProps) {
   const navigate = useNavigate();
+  const [offerDetails, setOfferDetails] = useState<Offer | null>(null);
   const [creatives, setCreatives] = useState<OfferCreative[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!isOpen || !offer) {
+      setOfferDetails(null);
       setCreatives([]);
       setProducts([]);
       return;
@@ -46,6 +50,12 @@ export default function OfferPreviewModal({
     const loadData = async () => {
       setLoading(true);
       try {
+        // Fetch full offer details
+        const offerResponse = await offerService.getOfferById(Number(offer.id), true);
+        if (offerResponse.success && offerResponse.data) {
+          setOfferDetails(offerResponse.data);
+        }
+
         // Fetch creatives
         const creativesResponse = await offerCreativeService.getByOffer(
           Number(offer.id)
@@ -63,12 +73,17 @@ export default function OfferPreviewModal({
         }
 
         // Fetch products if offer has product_ids
-        if (offer.product_ids && offer.product_ids.length > 0) {
-          const productIds = Array.isArray(offer.product_ids)
-            ? offer.product_ids
-            : [offer.product_ids];
+        let productIds = offer.product_ids;
+        if (!productIds && offerResponse.success && offerResponse.data?.product_ids) {
+          productIds = offerResponse.data.product_ids;
+        }
+
+        if (productIds && productIds.length > 0) {
+          const productIdArray = Array.isArray(productIds)
+            ? productIds
+            : [productIds];
           const productList = await Promise.all(
-            productIds.map((id: any) =>
+            productIdArray.map((id: any) =>
               productService.getProductById(Number(id)).catch(() => null)
             )
           );
@@ -113,52 +128,94 @@ export default function OfferPreviewModal({
 
         {/* Content */}
         <div className="px-6 py-6 space-y-6">
-          {/* Offer Name & Description */}
-          <div>
-            <h3 className="text-base font-semibold text-gray-900">
-              {offer.name}
-            </h3>
-            {offer.description && (
-              <p className="text-sm text-gray-600 mt-1">{offer.description}</p>
-            )}
-          </div>
-
-          {/* Offer Details Grid */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                Type
-              </p>
-              <p className="text-sm text-gray-900 mt-1">{offer.offer_type}</p>
-            </div>
-            <div>
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                Reward
-              </p>
-              <p className="text-sm text-gray-900 mt-1">
-                {offer.reward_type}
-                {offer.reward_value && ` - ${offer.reward_value}`}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                Valid For
-              </p>
-              <p className="text-sm text-gray-900 mt-1">
-                {offer.validity_period} days
-              </p>
-            </div>
-            {offer.code && (
-              <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                  Code
-                </p>
-                <p className="text-sm font-mono text-gray-900 mt-1">
-                  {offer.code}
-                </p>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+                <p className="text-sm text-gray-600">Loading offer details...</p>
               </div>
-            )}
-          </div>
+            </div>
+          ) : offerDetails ? (
+            <>
+              {/* Offer Name & Description */}
+              <div>
+                <h3 className="text-base font-semibold text-gray-900">
+                  {offerDetails.name}
+                </h3>
+                {offerDetails.description && (
+                  <p className="text-sm text-gray-600 mt-1">{offerDetails.description}</p>
+                )}
+              </div>
+
+              {/* Offer Details Grid */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    Type
+                  </p>
+                  <p className="text-sm text-gray-900 mt-1">{offerDetails.offer_type || "-"}</p>
+                </div>
+                {offerDetails.bonus_value !== undefined && (
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      Bonus Value
+                    </p>
+                    <p className="text-sm text-gray-900 mt-1">{offerDetails.bonus_value}</p>
+                  </div>
+                )}
+                {offerDetails.discount_percentage !== undefined && (
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      Discount
+                    </p>
+                    <p className="text-sm text-gray-900 mt-1">{offerDetails.discount_percentage}%</p>
+                  </div>
+                )}
+                {offerDetails.discount_amount !== undefined && (
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      Discount Amount
+                    </p>
+                    <p className="text-sm text-gray-900 mt-1">{offerDetails.discount_amount}</p>
+                  </div>
+                )}
+                {offerDetails.valid_from && (
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      Valid From
+                    </p>
+                    <p className="text-sm text-gray-900 mt-1">
+                      {new Date(offerDetails.valid_from).toLocaleDateString()}
+                    </p>
+                  </div>
+                )}
+                {offerDetails.valid_to && (
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      Valid To
+                    </p>
+                    <p className="text-sm text-gray-900 mt-1">
+                      {new Date(offerDetails.valid_to).toLocaleDateString()}
+                    </p>
+                  </div>
+                )}
+                {offerDetails.code && (
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      Code
+                    </p>
+                    <p className="text-sm font-mono text-gray-900 mt-1">
+                      {offerDetails.code}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-sm text-gray-500">Failed to load offer details</p>
+            </div>
+          )}
 
           {/* Products Section */}
           {products.length > 0 && (
@@ -215,15 +272,8 @@ export default function OfferPreviewModal({
             </div>
           )}
 
-          {/* Loading state */}
-          {loading && (
-            <div className="flex items-center justify-center py-4">
-              <div className="text-sm text-gray-500">Loading offer details...</div>
-            </div>
-          )}
-
           {/* Empty state for creatives and products */}
-          {!loading && creatives.length === 0 && products.length === 0 && (
+          {!loading && offerDetails && creatives.length === 0 && products.length === 0 && (
             <div className="text-center py-4">
               <p className="text-sm text-gray-500">
                 No products or creatives found for this offer

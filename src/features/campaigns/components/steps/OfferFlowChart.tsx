@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Plus,
   X,
@@ -7,6 +8,7 @@ import {
   Settings,
   ChevronDown,
   ChevronRight,
+  Edit,
 } from "lucide-react";
 import {
   CampaignOffer,
@@ -35,6 +37,7 @@ export default function OfferFlowChart({
   onUpdateMappings,
   onAddOffer,
 }: OfferFlowChartProps) {
+  const navigate = useNavigate();
   const [expandedNodes, setExpandedNodes] = useState<Set<number>>(new Set([0]));
   const [editingNode, setEditingNode] = useState<number | null>(null);
 
@@ -223,12 +226,21 @@ export default function OfferFlowChart({
                         </div>
                       </div>
                     </button>
-                    <button
-                      onClick={() => handleRemoveMapping(index)}
-                      className="text-gray-400 p-1"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => navigate(`/dashboard/offers/${offer.id}/edit`)}
+                        className="text-gray-400 hover:text-blue-600 p-1"
+                        title="Edit offer"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleRemoveMapping(index)}
+                        className="text-gray-400 p-1"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
 
                   {isExpanded && (
