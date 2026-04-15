@@ -787,19 +787,20 @@ export default function VIPListManagementPage() {
                         onClick={() => handleViewListMembers(list)}
                         className="text-sm font-medium transition-colors"
                         style={{
-                          color: color.text.primary,
+                          color: color.primary.accent,
                           background: "none",
                           border: "none",
+                          borderBottom: "1px solid transparent",
                           padding: "0",
                           cursor: "pointer",
                         }}
                         onMouseEnter={(e) => {
-                          (e.currentTarget as HTMLButtonElement).style.color =
-                            color.primary.action;
+                          (e.currentTarget as HTMLButtonElement).style.borderBottomColor =
+                            color.primary.accent;
                         }}
                         onMouseLeave={(e) => {
-                          (e.currentTarget as HTMLButtonElement).style.color =
-                            color.text.primary;
+                          (e.currentTarget as HTMLButtonElement).style.borderBottomColor =
+                            "transparent";
                         }}
                         disabled={isLoadingListMembers}
                       >

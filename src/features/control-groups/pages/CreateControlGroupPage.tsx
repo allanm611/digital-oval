@@ -52,7 +52,7 @@ export default function CreateControlGroupPage() {
     recurrence_pattern: "monthly",
     recurrence_interval: 1,
   });
-  const [isUniversal, setIsUniversal] = useState(false);
+  const [isUniversal, setIsUniversal] = useState(true);
   const [isActive, setIsActive] = useState(true);
   const [focusedField, setFocusedField] = useState<string | null>(null);
 
@@ -302,7 +302,7 @@ export default function CreateControlGroupPage() {
 
   const isNextButtonDisabled = () => {
     if (currentStep === 1) {
-      return controlGroupName.trim() === "" || !selectedCustomerBase ||
+      return controlGroupCode.trim() === "" || controlGroupName.trim() === "" || !selectedCustomerBase ||
              (selectedCustomerBase === "custom_conditions" && segmentConditions.length === 0);
     }
     if (currentStep === 2) {
