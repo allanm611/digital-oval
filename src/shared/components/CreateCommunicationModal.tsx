@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import {
   X,
@@ -14,16 +14,13 @@ import {
   ChevronDown,
   Settings,
   Loader,
-  Check,
 } from "lucide-react";
 import { color, tw, components, zIndex } from "../utils/utils";
 import LoadingSpinner from "./ui/LoadingSpinner";
 import PreviewPanel from "../../features/communications/components/PreviewPanel";
 import RichTextEditor from "../../features/communications/components/RichTextEditor";
 import { communicationService } from "../../features/communications/services/communicationService";
-import { quicklistService } from "../../features/quicklists/services/quicklistService";
 import {
-  CommunicationChannel,
   CommunicationResult,
 } from "../../features/communications/types/communication";
 import { QuickList } from "../../features/quicklists/types/quicklist";

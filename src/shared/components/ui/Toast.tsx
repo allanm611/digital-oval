@@ -31,7 +31,7 @@ const ToastComponent = ({ toast, onRemove }: ToastProps) => {
     }, duration);
 
     return () => clearTimeout(timer);
-  }, [toast.id, toast.duration, onRemove]);
+  }, [toast.id, toast.duration, toast.type, onRemove]);
 
   const getIcon = () => {
     switch (toast.type) {

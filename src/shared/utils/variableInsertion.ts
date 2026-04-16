@@ -37,14 +37,10 @@ export function validateInsertPosition(
   // Check if there are unclosed brackets BEFORE the cursor
   // If so, user must close them first before inserting new variable
   let bracketCount = 0;
-  let bracketStart = -1;
 
   for (let i = 0; i < Math.min(cursorPosition, text.length); i++) {
     if (text[i] === "{" && text[i + 1] === "{") {
       bracketCount++;
-      if (bracketCount === 1) {
-        bracketStart = i;
-      }
       i++; // Skip next character
     } else if (text[i] === "}" && text[i + 1] === "}") {
       bracketCount--;

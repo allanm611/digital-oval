@@ -44,7 +44,6 @@ export function useBackendSegmentTypeData(): UseBackendSegmentTypeResult {
       }
     } catch (err) {
       // Silently fail - endpoint may not be ready yet
-      console.debug("Segment types fetch skipped:", err instanceof Error ? err.message : err);
       setError(null);
     } finally {
       setLoading(false);

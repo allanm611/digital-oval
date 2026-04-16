@@ -14,7 +14,7 @@ type ErrorStateProps = {
 
 export default function ErrorState({
   title = "Something went wrong",
-  message = "We couldn’t complete this request. Please try again in a moment.",
+  _message = "We couldn’t complete this request. Please try again in a moment.",
   actionLabel = "Try again",
   onRetry,
   icon,

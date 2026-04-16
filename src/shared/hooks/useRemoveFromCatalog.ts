@@ -185,7 +185,6 @@ export function useRemoveFromCatalog() {
       // Refresh data
       if (onRefresh) {
         await onRefresh();
-      } else {
       }
       if (onRefreshCounts) {
         await Promise.resolve(onRefreshCounts());

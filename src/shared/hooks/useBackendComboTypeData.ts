@@ -44,7 +44,6 @@ export function useBackendComboTypeData(): UseBackendComboTypeResult {
       }
     } catch (err) {
       // Silently fail - endpoint may not be ready yet
-      console.debug("Combo types fetch skipped:", err instanceof Error ? err.message : err);
       setError(null);
     } finally {
       setLoading(false);

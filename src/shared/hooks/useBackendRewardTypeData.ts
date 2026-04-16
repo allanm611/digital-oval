@@ -44,7 +44,6 @@ export function useBackendRewardTypeData(): UseBackendRewardTypeResult {
       }
     } catch (err) {
       // Silently fail - endpoint may not be ready yet
-      console.debug("Reward types fetch skipped:", err instanceof Error ? err.message : err);
       setError(null);
     } finally {
       setLoading(false);

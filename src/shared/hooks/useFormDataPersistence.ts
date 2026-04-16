@@ -29,7 +29,7 @@ export function useFormDataPersistence<T>(
         );
       }
     }
-  }, [key, shouldClear]); // Run on mount or when shouldClear changes
+  }, [key, shouldClear, setFormData]); // Run on mount or when shouldClear changes
 
   // Save data whenever it changes (only in create mode)
   useEffect(() => {

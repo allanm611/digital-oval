@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { LucideIcon, Eye, EyeOff } from "lucide-react";
 
 import { tw } from '../../../shared/utils/utils';

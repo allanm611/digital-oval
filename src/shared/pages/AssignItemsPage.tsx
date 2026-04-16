@@ -133,7 +133,7 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
             );
             setCatalogName(catalog.data?.name || "");
             break;
-          case "campaigns":
+          case "campaigns": {
             const campaignCatalog =
               await campaignService.getCampaignCategoryById(
                 Number(catalogId),
@@ -144,6 +144,7 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
                 "",
             );
             break;
+          }
         }
       } catch {
         // Failed to load catalog name
@@ -202,7 +203,7 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
               itemsData = [];
             }
             break;
-          case "campaigns":
+          case "campaigns": {
             // Use getCampaigns with pagination (same as CampaignsPage)
             // Fetch all campaigns in batches of 100
             let allCampaigns: BackendCampaignType[] = [];
@@ -233,6 +234,7 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
               return status !== "archived" && !campaign.deleted_at;
             });
             break;
+          }
         }
 
         setItems(itemsData);

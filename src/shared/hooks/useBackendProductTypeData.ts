@@ -44,7 +44,6 @@ export function useBackendProductTypeData(): UseBackendProductTypeResult {
       }
     } catch (err) {
       // Silently fail - endpoint may not be ready yet
-      console.debug("Product types fetch skipped:", err instanceof Error ? err.message : err);
       setError(null);
     } finally {
       setLoading(false);

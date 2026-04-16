@@ -12,7 +12,7 @@ const GRAY_COLOR = "#e5e7eb";
 const TEXT_GRAY = "#9ca3af";
 
 // Custom step icon
-const CustomStepIcon = styled(StepIcon)(({ theme }) => ({
+const _CustomStepIcon = styled(StepIcon)((_theme) => ({
   "& .MuiStepIcon-root": {
     width: 32,
     height: 32,
@@ -62,9 +62,9 @@ export default function ProgressStepper({
   currentStep,
   onStepClick,
   canNavigateToStep,
-  primaryColor,
-  textPrimary,
-  textMuted,
+  _primaryColor,
+  _textPrimary,
+  _textMuted,
 }: ProgressStepperProps) {
   const getStepStatus = (stepId: number) => {
     if (stepId < currentStep) return "completed";

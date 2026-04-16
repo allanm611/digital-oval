@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 
 /**
  * Custom hook for Suspense-compatible data fetching
@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
  */
 export function useSuspenseData<T>(
   fetchFn: () => Promise<T>,
-  dependencies: React.DependencyList = []
+  _dependencies: React.DependencyList = []
 ): T {
   const cacheRef = useRef<{ data?: T; error?: Error; status: "pending" | "success" | "error" }>({
     status: "pending",

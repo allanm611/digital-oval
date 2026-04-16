@@ -46,7 +46,6 @@ export function useBackendCampaignTypeData(): UseBackendCampaignTypeResult {
       }
     } catch (err) {
       // Silently fail - endpoint may not be ready yet
-      console.debug("Campaign types fetch skipped:", err instanceof Error ? err.message : err);
       setError(null);
     } finally {
       setLoading(false);

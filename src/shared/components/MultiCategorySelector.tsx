@@ -4,7 +4,7 @@ import { ChevronDown, Plus, X, Check } from "lucide-react";
 import SearchInput from "./ui/SearchInput";
 import { ProductCategory } from "../../features/products/types/productCategory";
 import { productCategoryService } from "../../features/products/services/productCategoryService";
-import { color, tw, zIndex } from "../utils/utils";
+import { color, tw } from "../utils/utils";
 
 interface MultiCategorySelectorProps {
   value?: number[]; // Array of selected category IDs

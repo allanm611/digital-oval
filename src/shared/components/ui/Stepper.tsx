@@ -16,7 +16,6 @@ export default function Stepper({ steps, currentStep, completedSteps, className 
           const stepNumber = index + 1;
           const isCompleted = completedSteps.includes(stepNumber);
           const isCurrent = currentStep === stepNumber;
-          const isUpcoming = stepNumber > currentStep;
 
           return (
             <React.Fragment key={index}>

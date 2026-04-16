@@ -1,4 +1,4 @@
-import React, { useState, useRef, KeyboardEvent, forwardRef } from "react";
+import React, { useState, useRef, KeyboardEvent } from "react";
 import { X, Plus } from "lucide-react";
 
 import { tw } from "../../../shared/utils/utils";

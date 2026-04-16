@@ -51,7 +51,7 @@ export default function CatalogItemsModal<T extends CatalogItem>({
   onRemove,
   removingId = null,
   renderItem,
-  renderStatus,
+  _renderStatus,
   onRefresh,
 }: CatalogItemsModalProps<T>) {
   const navigate = useNavigate();

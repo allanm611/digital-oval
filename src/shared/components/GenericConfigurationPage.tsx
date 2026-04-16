@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { useNavigate } from "react-router-dom";
-import { Edit, Trash2, X, ArrowLeft, LucideIcon } from "lucide-react";
+import { Edit, Trash2, X, LucideIcon } from "lucide-react";
 import SearchInput from "./ui/SearchInput";
 import { color, tw, zIndex } from "../utils/utils";
 import { useConfirm } from "../../contexts/ConfirmContext";

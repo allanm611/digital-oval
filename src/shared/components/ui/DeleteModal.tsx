@@ -3,7 +3,6 @@ import { Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import {
   ExclamationTriangleIcon,
-  XMarkIcon,
 } from "@heroicons/react/24/outline";
 
 import { tw, zIndex } from "../../../shared/utils/utils";

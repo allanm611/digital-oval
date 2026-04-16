@@ -24,7 +24,7 @@ export default function CategorySelector({
   disabled = false,
   allowCreate = false,
   onCreateCategory,
-  onCategoryCreated,
+  _onCategoryCreated,
   className = "",
   refreshTrigger,
 }: CategorySelectorProps) {

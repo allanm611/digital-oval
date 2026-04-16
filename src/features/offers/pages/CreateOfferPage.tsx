@@ -1710,8 +1710,7 @@ export default function CreateOfferPage({
       setIsDuplicateMode(true);
       loadOfferData(duplicateIdParam, true);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, duplicateIdParam]);
+  }, [id, duplicateIdParam, loadOfferData]);
 
   // Validation functions
   const validateForm = useCallback(() => {

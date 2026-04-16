@@ -52,14 +52,6 @@ export default function HeadlessMultiSelect({
     onChange(value.filter((v) => v !== optionValue));
   };
 
-  const handleToggle = (optionValue: string | number) => {
-    if (value.includes(optionValue)) {
-      onChange(value.filter((v) => v !== optionValue));
-    } else {
-      onChange([...value, optionValue]);
-    }
-  };
-
   const displayText = () => {
     if (selectedOptions.length === 0) {
       return placeholder;
@@ -154,9 +146,7 @@ export default function HeadlessMultiSelect({
                   No options found.
                 </div>
               ) : (
-                filteredOptions.map((option) => {
-                  const isSelected = value.includes(option.value);
-                  return (
+                filteredOptions.map((option) => (
                     <Listbox.Option
                       key={option.value}
                       value={option.value}
@@ -191,9 +181,7 @@ export default function HeadlessMultiSelect({
                         </>
                       )}
                     </Listbox.Option>
-                  );
-                })
-              )}
+                  ))
             </Listbox.Options>
           </Transition>
         </div>
