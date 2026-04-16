@@ -522,7 +522,7 @@ export default function CreateControlGroupPage() {
         is_universal: isUniversal,
         is_active: isActive,
         target_render_config: targetRenderConfig,
-        ...(customConditions && { custom_conditions: customConditions }),
+        ...(customConditions && { definition: customConditions }),
       };
 
       if (isEditMode && id) {

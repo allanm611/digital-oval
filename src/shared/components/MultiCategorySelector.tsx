@@ -184,18 +184,23 @@ export default function MultiCategorySelector({
         category.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const selectedCategories = categories.filter((cat) => value.includes(cat.id));
+  const selectedCategories = categories.filter((cat) => {
+    const match = value.includes(cat.id) || value.some(v => String(v) === String(cat.id));
+    return match;
+  });
 
-  const handleToggle = (categoryId: number) => {
-    const newValue = value.includes(categoryId)
-      ? value.filter((id) => id !== categoryId)
+
+  const handleToggle = (categoryId: number | string) => {
+    const isIncluded = value.includes(categoryId) || value.some(v => String(v) === String(categoryId));
+    const newValue = isIncluded
+      ? value.filter((id) => String(id) !== String(categoryId))
       : [...value, categoryId];
     onChange(newValue);
   };
 
-  const handleRemove = (categoryId: number, e: React.MouseEvent) => {
+  const handleRemove = (categoryId: number | string, e: React.MouseEvent) => {
     e.stopPropagation();
-    onChange(value.filter((id) => id !== categoryId));
+    onChange(value.filter((id) => String(id) !== String(categoryId)));
   };
 
   const handleCreateNew = () => {
@@ -343,7 +348,7 @@ export default function MultiCategorySelector({
             ) : (
               <>
                 {filteredCategories.map((category) => {
-                  const isSelected = value.includes(category.id);
+                  const isSelected = value.includes(category.id) || value.some(v => String(v) === String(category.id));
                   return (
                     <button
                       key={category.id}

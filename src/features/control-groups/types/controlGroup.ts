@@ -101,7 +101,7 @@ export interface CreateControlGroupRequest {
   is_universal?: boolean;
   is_active?: boolean;
   target_render_config?: TargetRenderTime | null;
-  custom_conditions?: any;
+  definition?: any;
 }
 
 // Universal control group creation request (different schema from regular)
@@ -120,7 +120,7 @@ export interface CreateUniversalControlGroupRequest {
   };
   target_render_config: TargetRenderTime;
   is_active?: boolean;
-  custom_conditions?: any;
+  definitions?: any;
 }
 
 // Update request (use same structure as create)

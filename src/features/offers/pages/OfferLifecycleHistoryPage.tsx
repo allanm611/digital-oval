@@ -33,7 +33,7 @@ export default function OfferLifecycleHistoryPage() {
         setIsLoading(true);
         const [historyData, offerData] = await Promise.all([
           offerService.getLifecycleHistory(parseInt(id)),
-          offerService.getOfferById(parseInt(id)),
+          offerService.getOfferById(parseInt(id), true),
         ]);
 
         // Extract data from API response structure

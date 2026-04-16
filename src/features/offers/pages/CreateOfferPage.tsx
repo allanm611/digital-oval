@@ -186,6 +186,7 @@ interface StepProps {
   onCancel?: () => void;
   offerTypes?: OfferTypeEnum[];
   offerTypesLoading?: boolean;
+  categoryRefreshTrigger?: number;
 }
 
 // Step definitions for offer creation
@@ -237,6 +238,7 @@ function BasicInfoStep({
   categoriesLoading,
   offerTypes,
   offerTypesLoading,
+  categoryRefreshTrigger,
 }: Omit<
   StepProps,
   | "currentStep"
@@ -254,7 +256,7 @@ function BasicInfoStep({
   | "onSaveDraft"
   | "onCancel"
 >) {
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<(string | number)[]>([]);
   const userInitiatedUpdateRef = useRef(false);
 
   // Initialize selectedCategoryIds from formData.category_id (only on mount or when formData changes externally)
@@ -412,6 +414,7 @@ function BasicInfoStep({
             placeholder="Select catalog(s)"
             entityType="offer"
             disabled={categoriesLoading}
+            refreshTrigger={categoryRefreshTrigger}
             className="w-full"
           />
           {/* <p className="text-xs text-gray-500 mt-1">
@@ -956,7 +959,8 @@ function ReviewStep({
                   {formData.category_id
                     ? offerCategories?.find(
                         (cat: OfferCategoryType) =>
-                          cat.id === formData.category_id,
+                          cat.id === formData.category_id ||
+                          String(cat.id) === String(formData.category_id),
                       )?.name || `Catalog ${formData.category_id}`
                     : "Not selected"}
                 </div>
@@ -1330,6 +1334,7 @@ export default function CreateOfferPage({
   >({});
   const [visitedSteps, setVisitedSteps] = useState<Set<number>>(new Set([1])); // Track visited steps
   const [createdOfferId, setCreatedOfferId] = useState<number | null>(null);
+  const [categoryRefreshTrigger, setCategoryRefreshTrigger] = useState(0);
 
   const { user } = useAuth();
   const { t } = useLanguage();
@@ -1526,7 +1531,7 @@ export default function CreateOfferPage({
     setIsLoadingOffer(true);
     try {
       const [offerResponse, productsData, creativesData] = await Promise.all([
-        offerService.getOfferById(parseInt(String(idToLoad))),
+        offerService.getOfferById(parseInt(String(idToLoad)), true),
         offerService.getOfferProducts(parseInt(String(idToLoad))).catch(() => []), // Load existing products, ignore errors
         offerCreativeService
           .getByOffer(parseInt(String(idToLoad)), { limit: 100, skipCache: true })
@@ -1547,8 +1552,10 @@ export default function CreateOfferPage({
       if ((offer as any).offer_type_id) {
         offerTypeId = (offer as any).offer_type_id;
       } else if (offer.offer_type && offerTypes?.length > 0) {
-        // Try to find the type ID by looking up the name
-        const foundType = offerTypes.find((type) => type.name === offer.offer_type);
+        // Try to find the type ID by looking up the name (case-insensitive)
+        const foundType = offerTypes.find(
+          (type) => type.name.toLowerCase() === offer.offer_type.toLowerCase()
+        );
         offerTypeId = foundType?.id;
       }
 
@@ -1557,7 +1564,7 @@ export default function CreateOfferPage({
         code: offer.code || "",
         description: offer.description || "",
         offer_type_id: offerTypeId,
-        category_id: offer.category_id ? Number(offer.category_id) : undefined,
+        category_id: offer.category_id ? String(offer.category_id) : undefined,
         primary_product_id: offer.primary_product_id
           ? Number(offer.primary_product_id)
           : undefined,
@@ -1567,6 +1574,8 @@ export default function CreateOfferPage({
         supports_multi_language: offer.supports_multi_language || false,
       };
       setFormData(newFormData);
+      // Trigger category refresh to ensure categories are loaded and can be selected
+      setCategoryRefreshTrigger((prev) => prev + 1);
 
       // Fetch full product details for each product_id
       if (Array.isArray(products) && products.length > 0) {
@@ -1662,7 +1671,7 @@ export default function CreateOfferPage({
     } finally {
       setIsLoadingOffer(false);
     }
-  }, [id, navigate, setFormData, setCreatives]);
+  }, [id, navigate, setFormData, setCreatives, offerTypes]);
 
   // Offer categories state
   const [offerCategories, setOfferCategories] = useState<OfferCategoryType[]>(
@@ -2297,6 +2306,7 @@ export default function CreateOfferPage({
       onCancel: handleCancel,
       offerTypes,
       offerTypesLoading,
+      categoryRefreshTrigger,
     }),
     [
       currentStep,
@@ -2320,6 +2330,7 @@ export default function CreateOfferPage({
       handleCancel,
       offerTypes,
       offerTypesLoading,
+      categoryRefreshTrigger,
     ],
   );
 

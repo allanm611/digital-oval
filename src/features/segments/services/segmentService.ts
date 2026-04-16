@@ -136,6 +136,8 @@ class SegmentService {
       updated_by: data.updated_by || null,
       visibility: data.visibility || SEGMENT_FIELD_DEFAULTS.visibility,
       created_by_user_id: data.created_by_user_id || null,
+      segment_type_id: data.segment_type_id || undefined,
+      segment_type_label: data.segment_type_label || undefined,
     };
   }
 

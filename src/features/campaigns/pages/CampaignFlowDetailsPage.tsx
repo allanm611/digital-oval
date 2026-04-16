@@ -75,7 +75,8 @@ export default function CampaignFlowDetailsPage() {
 
           if (flowData.offer_id) {
             const offerResponse = await offerService.getOfferById(
-              String(flowData.offer_id)
+              String(flowData.offer_id),
+              true
             );
             if (offerResponse?.data) {
               setOffer(offerResponse.data as Offer);

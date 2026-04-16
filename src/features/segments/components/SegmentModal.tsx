@@ -37,8 +37,8 @@ export default function SegmentModal({
     description: "",
     tags: [] as string[],
     conditions: [] as SegmentConditionGroup[],
-    type_id: undefined as number | undefined,
-    category: undefined as number | undefined,
+    segment_type_id: undefined as number | undefined,
+    category: undefined as string | number | undefined,
   });
   const [tagInput, setTagInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -53,7 +53,7 @@ export default function SegmentModal({
     count_query: string;
     payload?: SegmentPayload;
   } | null>(null);
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<(string | number)[]>([]);
   const [fieldErrors, setFieldErrors] = useState<{
     description?: string;
     conditions?: string;
@@ -65,6 +65,7 @@ export default function SegmentModal({
   const [fieldSelectorConfig, setFieldSelectorConfig] = useState<any[]>([]);
   const [segmentTypes, setSegmentTypes] = useState<SegmentType[]>([]);
   const [loadingTypes, setLoadingTypes] = useState(false);
+  const [categoryRefreshTrigger, setCategoryRefreshTrigger] = useState(0);
   const isUserInteractionRef = useRef(false);
 
   // Load field selector config once on component mount
@@ -130,6 +131,8 @@ export default function SegmentModal({
     const loadSegmentData = async () => {
       if (isOpen) {
         isUserInteractionRef.current = false; // Mark as initialization
+        // Trigger category refresh to ensure categories are loaded
+        setCategoryRefreshTrigger((prev) => prev + 1);
 
         if (segment && segment.id) {
           try {
@@ -137,15 +140,29 @@ export default function SegmentModal({
             const fullSegmentResponse = await segmentService.getSegmentById(
               segment.id,
             );
+
             const fullSegment =
               fullSegmentResponse && "data" in fullSegmentResponse
                 ? fullSegmentResponse.data
                 : fullSegmentResponse;
 
             // Convert the stored definition/payload back to UI conditions
+            // Keep category as string since backend returns category IDs as strings
             const category = fullSegment.category
-              ? Number(fullSegment.category)
+              ? String(fullSegment.category)
               : undefined;
+
+            // Fetch category details if category ID exists (for display purposes)
+            if (category) {
+              try {
+                await segmentService.getSegmentCategoryById(category);
+                // Category was successfully fetched - MultiCategorySelector will display it
+              } catch (err) {
+                console.warn("Failed to fetch category details:", err);
+                // Continue anyway - MultiCategorySelector may still display it
+              }
+            }
+
             let conditions: SegmentConditionGroup[] = [];
 
             // Try to get conditions from the definition (SegmentPayload)
@@ -155,10 +172,12 @@ export default function SegmentModal({
               );
             }
 
-            // Determine type_id from backend response
+            // Determine segment_type_id from backend response
             let typeId: number | undefined;
-            if ((fullSegment as any).type_id) {
-              typeId = (fullSegment as any).type_id;
+            if ((fullSegment as any).segment_type_id) {
+              typeId = Number((fullSegment as any).segment_type_id);
+            } else if ((fullSegment as any).type_id) {
+              typeId = Number((fullSegment as any).type_id);
             } else if (fullSegment.type && segmentTypes?.length > 0) {
               // Try to find the type ID by looking up the name
               const foundType = segmentTypes.find((type) => type.name === fullSegment.type);
@@ -172,7 +191,7 @@ export default function SegmentModal({
                 typeof tag === "string" ? tag : tag?.name || String(tag),
               ),
               conditions: conditions,
-              type_id: typeId,
+              segment_type_id: typeId,
               category,
             });
             // Store existing queries (not displayed in edit mode, but kept for reference)
@@ -189,7 +208,7 @@ export default function SegmentModal({
             name: "",
             description: "",
             tags: [],
-            type_id: undefined,
+            segment_type_id: undefined,
             conditions: [],
             category: undefined,
           });
@@ -912,7 +931,7 @@ export default function SegmentModal({
           name: formData.name,
           description: formData.description,
           tags: formData.tags,
-          type_id: formData.type_id,
+          segment_type_id: formData.segment_type_id,
           category: formData.category,
           query: queries.segment_query,
           count_query: queries.count_query,
@@ -920,10 +939,6 @@ export default function SegmentModal({
         });
 
         // Extract segment from response - backend returns {success: true, data: [segment]}
-        console.log(
-          "[SegmentModal] Raw updateResponse:",
-          JSON.stringify(updateResponse),
-        );
         const updateResult = updateResponse as
           | { success?: boolean; data?: Segment[] | Segment }
           | Segment;
@@ -933,26 +948,14 @@ export default function SegmentModal({
           Array.isArray(updateResult.data)
         ) {
           savedSegment = updateResult.data[0];
-          console.log(
-            "[SegmentModal] Extracted from array, savedSegment.id:",
-            savedSegment?.id,
-          );
         } else if (
           typeof updateResult === "object" &&
           "data" in updateResult &&
           updateResult.data
         ) {
           savedSegment = updateResult.data as Segment;
-          console.log(
-            "[SegmentModal] Extracted from data, savedSegment.id:",
-            savedSegment?.id,
-          );
         } else {
           savedSegment = updateResult as Segment;
-          console.log(
-            "[SegmentModal] Used raw result, savedSegment.id:",
-            savedSegment?.id,
-          );
         }
       } else {
         // Create new segment with query
@@ -961,7 +964,7 @@ export default function SegmentModal({
           code: code,
           description: formData.description,
           tags: formData.tags,
-          type_id: formData.type_id,
+          segment_type_id: formData.segment_type_id,
           category: formData.category,
           query: queries.segment_query,
           count_query: queries.count_query,
@@ -974,7 +977,6 @@ export default function SegmentModal({
           await segmentService.createSegment(createRequest);
 
         // Extract segment from response - backend returns {success: true, data: [segment]}
-        console.log("[SegmentModal] Raw createResponse:", JSON.stringify(createResponse));
         const response = createResponse as
           | { success: boolean; data?: Segment[] | Segment }
           | Segment;
@@ -985,7 +987,6 @@ export default function SegmentModal({
           Array.isArray(response.data)
         ) {
           savedSegment = response.data[0];
-          console.log("[SegmentModal] Create: extracted from array, id:", savedSegment?.id);
         } else if (
           typeof response === "object" &&
           "data" in response &&
@@ -994,10 +995,8 @@ export default function SegmentModal({
           savedSegment = Array.isArray(response.data)
             ? response.data[0]
             : (response.data as Segment);
-          console.log("[SegmentModal] Create: extracted from data, id:", savedSegment?.id);
         } else {
           savedSegment = response as Segment;
-          console.log("[SegmentModal] Create: used raw result, id:", savedSegment?.id);
         }
       }
 
@@ -1011,21 +1010,13 @@ export default function SegmentModal({
       };
 
       // After successful create/update, call refresh to compute actual customer count
-      console.log("[SegmentModal] finalSegment:", JSON.stringify(finalSegment));
-      console.log("[SegmentModal] segment?.id:", segment?.id);
       // Use || not ?? so that 0 falls through to segment.id
       const segmentIdForRefresh = finalSegment.id || segment?.id;
-      console.log("[SegmentModal] segmentIdForRefresh:", segmentIdForRefresh);
       if (segmentIdForRefresh) {
         try {
-          console.log(
-            "[SegmentModal] Calling refreshSegment for id:",
-            segmentIdForRefresh,
-          );
-          const refreshResult = await segmentService.refreshSegment(
+          await segmentService.refreshSegment(
             Number(segmentIdForRefresh),
           );
-          console.log("[SegmentModal] refreshSegment result:", refreshResult);
         } catch (refreshErr) {
           console.warn(
             "[SegmentModal] Segment saved but refresh failed:",
@@ -1033,7 +1024,6 @@ export default function SegmentModal({
           );
         }
       } else {
-        console.warn("[SegmentModal] No segment ID found, skipping refresh");
       }
 
       onSave(finalSegment);
@@ -1137,6 +1127,7 @@ export default function SegmentModal({
                         }}
                         placeholder="Select catalog(s)"
                         entityType="segment"
+                        refreshTrigger={categoryRefreshTrigger}
                         className="w-full"
                       />
                       {/* <p className="text-xs text-gray-500 mt-1">
@@ -1248,14 +1239,14 @@ export default function SegmentModal({
                       </label>
                       <HeadlessSelect
                         value={
-                          formData.type_id
-                            ? String(formData.type_id)
+                          formData.segment_type_id
+                            ? String(formData.segment_type_id)
                             : ""
                         }
                         onChange={(value) =>
                           setFormData((prev) => ({
                             ...prev,
-                            type_id: value ? Number(value) : undefined,
+                            segment_type_id: value ? Number(value) : undefined,
                           }))
                         }
                         options={

@@ -90,8 +90,14 @@ Review all the control group settings before creating:
 
 ## Additional Options
 
-**Is Universal**
-- Toggle to mark this control group as universal (available system-wide)
+**Control Group Type: Standard vs Universal**
+
+When creating a control group, you can choose whether it should be **Standard** or **Universal** by toggling the "Mark as Universal Control Group" checkbox:
+
+- **Standard Control Group** - A control group for specific use cases or campaigns. Check the box to unmark it as universal, making it available only for targeted purposes.
+- **Universal Control Group** - A control group available system-wide across all campaigns and use cases. When the "Mark as Universal Control Group" checkbox is **checked**, the control group becomes universal and can be reused across your entire system.
+
+You can see the type (Standard or Universal) in the control groups list table and filter control groups by type.
 
 **Status**
 - Toggle to set the control group as Active or Inactive

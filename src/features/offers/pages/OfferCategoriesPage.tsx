@@ -331,7 +331,7 @@ function OffersModal({
       onRefresh: loadOffers,
       onRefreshCounts: onRefreshCounts,
       onRefreshCategories: onRefreshCategories,
-      getEntityById: async (id) => await offerService.getOfferById(id),
+      getEntityById: async (id) => await offerService.getOfferById(id, true),
       updateEntity: async (id, updates) => {
         await offerService.updateOffer(id, updates as UpdateOfferRequest);
       },

@@ -40,7 +40,14 @@ export default function ControlGroupsPage() {
     { value: "inactive", label: "Inactive" },
   ];
 
+  const typeFilterOptions = [
+    { value: "all", label: "All Types" },
+    { value: "universal", label: "Universal" },
+    { value: "standard", label: "Standard" },
+  ];
+
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [groupToDelete, setGroupToDelete] = useState<{ id: number; name: string } | null>(null);
 
@@ -102,7 +109,11 @@ export default function ControlGroupsPage() {
       statusFilter === "all" ||
       (statusFilter === "active" && group.is_active) ||
       (statusFilter === "inactive" && !group.is_active);
-    return matchesSearch && matchesStatus;
+    const matchesType =
+      typeFilter === "all" ||
+      (typeFilter === "universal" && group.kind === "universal") ||
+      (typeFilter === "standard" && group.kind === "standard");
+    return matchesSearch && matchesStatus && matchesType;
   });
 
   const getCustomerBaseLabel = (base: string) => {
@@ -225,6 +236,17 @@ export default function ControlGroupsPage() {
               placeholder="Filter by status"
             />
           </div>
+
+          <div className="w-full lg:w-48">
+            <HeadlessSelect
+              options={typeFilterOptions}
+              value={typeFilter}
+              onChange={(value: string | number) =>
+                setTypeFilter(value as string)
+              }
+              placeholder="Filter by type"
+            />
+          </div>
         </div>
       </div>
 
@@ -315,7 +337,7 @@ export default function ControlGroupsPage() {
                         className="px-6 py-4 text-sm text-black"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        <span className="capitalize">{group.type}</span>
+                        <span className="capitalize">{group.kind || "standard"}</span>
                       </td>
                       <td
                         className="px-6 py-4 text-sm text-black"

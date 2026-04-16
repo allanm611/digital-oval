@@ -27,6 +27,8 @@ export type SegmentType = {
   updated_by: string | null;
   visibility: string;
   created_by_user_id: number | null;
+  segment_type_id?: number; // ID of the segment type (from segment type catalog)
+  segment_type_label?: string; // Display label of the segment type (e.g., "Behavioral")
 };
 
 export type SegmentCategoryType = {
@@ -150,7 +152,7 @@ export type PaginatedResponse<T> = {
 export type CreateSegmentRequest = {
   name: string; // Required
   code?: string; // Optional (unique segment code)
-  type_id?: number; // Frontend field - ID of selected segment type
+  segment_type_id?: number; // Backend field - ID of selected segment type
   type?:
     | "static"
     | "dynamic"
@@ -173,7 +175,7 @@ export type CreateSegmentRequest = {
 export type UpdateSegmentRequest = {
   name?: string; // Optional
   code?: string; // Optional
-  type_id?: number; // Frontend field - ID of selected segment type
+  segment_type_id?: number; // Backend field - ID of selected segment type
   type?:
     | "static"
     | "dynamic"
