@@ -197,6 +197,7 @@ interface StepProps {
   offerTypes?: OfferTypeEnum[];
   offerTypesLoading?: boolean;
   categoryRefreshTrigger?: number;
+  refreshOfferTypes?: () => Promise<void>;
 }
 
 // Step definitions for offer creation
@@ -253,6 +254,7 @@ function BasicInfoStep({
   offerTypes,
   offerTypesLoading,
   categoryRefreshTrigger,
+  refreshOfferTypes,
 }: Omit<
   StepProps,
   | "currentStep"
@@ -308,6 +310,7 @@ function BasicInfoStep({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategoryIds]); // Only depend on selectedCategoryIds to avoid circular updates
+
   return (
     <div className="space-y-6">
       <div className="mt-8 mb-8">
@@ -562,6 +565,7 @@ function BasicInfoStep({
       <CreateCategoryModal
         isOpen={showCreateCatalogModal}
         onClose={() => setShowCreateCatalogModal(false)}
+        entityType="offer"
         onCategoryCreated={(categoryId) => {
           userInitiatedUpdateRef.current = true;
           setSelectedCategoryIds([categoryId]);
@@ -574,11 +578,12 @@ function BasicInfoStep({
       <CreateOfferTypeModal
         isOpen={showCreateTypeModal}
         onClose={() => setShowCreateTypeModal(false)}
-        onTypeCreated={(typeId) => {
+        onTypeCreated={(typeId, typeData) => {
           setFormData({
             ...formData,
             offer_type_id: typeId,
           });
+          refreshOfferTypes();
           setShowCreateTypeModal(false);
         }}
       />
@@ -1460,7 +1465,7 @@ export default function CreateOfferPage({
 
   const { user } = useAuth();
   const { t } = useLanguage();
-  const { data: offerTypes, loading: offerTypesLoading } = useBackendOfferTypeData();
+  const { data: offerTypes, loading: offerTypesLoading, refresh: refreshOfferTypes } = useBackendOfferTypeData();
   const hasRestoredDataRef = useRef(false);
 
   // Persist form data to localStorage
@@ -2506,6 +2511,7 @@ export default function CreateOfferPage({
       offerTypes,
       offerTypesLoading,
       categoryRefreshTrigger,
+      refreshOfferTypes,
     }),
     [
       currentStep,
@@ -2534,6 +2540,7 @@ export default function CreateOfferPage({
       offerTypes,
       offerTypesLoading,
       categoryRefreshTrigger,
+      refreshOfferTypes,
     ],
   );
 

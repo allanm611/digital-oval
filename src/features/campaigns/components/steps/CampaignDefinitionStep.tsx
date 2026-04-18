@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ChevronDown, Search, Settings, X } from "lucide-react";
+import { ChevronDown, Search, Settings, X, Plus } from "lucide-react";
 import MultiCategorySelector from "../../../../shared/components/MultiCategorySelector";
 import { CreateCampaignRequest } from "../../types/campaign";
 import { programService } from "../../services/programService";
@@ -80,7 +80,7 @@ export default function CampaignDefinitionStep({
   const { t: tLanguage } = useLanguage();
   const { success: showToast, error: showError } = useToast();
 
-  const { data: campaignTypes, loading: campaignTypesLoading } =
+  const { data: campaignTypes, loading: campaignTypesLoading, refresh: refreshCampaignTypes } =
     useBackendCampaignTypeData();
 
   const [programSearchTerm, setProgramSearchTerm] = useState("");
@@ -406,6 +406,7 @@ export default function CampaignDefinitionStep({
             )}
           </div>
 
+          {/* Campaign Type - Commented out
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Campaign Type
@@ -445,6 +446,7 @@ export default function CampaignDefinitionStep({
               className="w-full"
             />
           </div>
+          */}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1346,6 +1348,7 @@ export default function CampaignDefinitionStep({
       <CreateCategoryModal
         isOpen={showCreateCatalogModal}
         onClose={() => setShowCreateCatalogModal(false)}
+        entityType="campaign"
         onCategoryCreated={(categoryId) => {
           setSelectedCategoryIds([categoryId]);
           setCategoryRefreshTriggerState((prev) => prev + 1);
@@ -1362,6 +1365,7 @@ export default function CampaignDefinitionStep({
             ...formData,
             campaign_type_id: typeId,
           } as any);
+          refreshCampaignTypes();
           setShowCreateTypeModal(false);
         }}
       />

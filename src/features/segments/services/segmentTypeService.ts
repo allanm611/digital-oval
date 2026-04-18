@@ -60,7 +60,10 @@ class SegmentTypeService {
   async createSegmentType(
     data: CreateSegmentTypeRequest
   ): Promise<ApiResponse<SegmentType>> {
-    return this.request<ApiResponse<SegmentType>>("");
+    return this.request<ApiResponse<SegmentType>>("", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
   }
 
   // Update segment type

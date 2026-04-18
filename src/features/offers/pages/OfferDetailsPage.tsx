@@ -34,6 +34,7 @@ import Input from "../../../shared/components/ui/Input";
 const CreateProductModalWrapper = lazy(
   () => import("../../products/components/CreateProductModalWrapper"),
 );
+import OfferCreativeFormModal from "../components/OfferCreativeFormModal";
 import { Offer, OfferStatusEnum, OfferProductLink } from "../types/offer";
 import { OfferCategoryType } from "../types/offerCategory";
 import { offerService } from "../services/offerService";
@@ -197,13 +198,6 @@ export default function OfferDetailsPage() {
   const [editingCreative, setEditingCreative] = useState<OfferCreative | null>(
     null,
   );
-  const [editFormData, setEditFormData] = useState({
-    title: "",
-    text_body: "",
-    html_body: "",
-    variables: {} as Record<string, string | number | boolean>,
-  });
-  const [variablesJson, setVariablesJson] = useState("");
   const [isSavingCreative, setIsSavingCreative] = useState(false);
   const [isAddCreativeModalOpen, setIsAddCreativeModalOpen] = useState(false);
   const [isCreatingCreative, setIsCreatingCreative] = useState(false);
@@ -829,66 +823,18 @@ export default function OfferDetailsPage() {
   );
 
   // Handle edit creative
-  const handleEditCreative = (creative: OfferCreative) => {
-    setEditingCreative(creative);
-    setEditFormData({
-      title: creative.title || "",
-      text_body: creative.text_body || "",
-      html_body: creative.html_body || "",
-      variables: creative.variables || {},
-    });
-    setVariablesJson(JSON.stringify(creative.variables || {}, null, 2));
-    setIsEditCreativeModalOpen(true);
-  };
-
-  // Handle save creative
-  const handleSaveCreative = async () => {
-    if (!editingCreative || !user?.user_id) return;
+  const handleEditCreative = async (creative: OfferCreative) => {
+    if (!creative.id) return;
 
     try {
       setIsSavingCreative(true);
-
-      // Parse variables JSON
-      let parsedVariables = {};
-      if (variablesJson.trim()) {
-        try {
-          parsedVariables = JSON.parse(variablesJson);
-        } catch {
-          showError("Invalid JSON in variables field");
-          return;
-        }
-      }
-
-      // Build update payload - only include non-empty fields
-      const updatePayload: Record<string, unknown> = {
-        updated_by: user.user_id,
-      };
-
-      // Only add fields if they have content (not empty strings)
-      if (editFormData.title && editFormData.title.trim()) {
-        updatePayload.title = editFormData.title;
-      }
-      if (editFormData.text_body && editFormData.text_body.trim()) {
-        updatePayload.text_body = editFormData.text_body;
-      }
-      if (editFormData.html_body && editFormData.html_body.trim()) {
-        updatePayload.html_body = editFormData.html_body;
-      }
-      if (Object.keys(parsedVariables).length > 0) {
-        updatePayload.variables = parsedVariables;
-      }
-
-      await offerCreativeService.update(
-        editingCreative.id as number,
-        updatePayload,
-      );
-
-      success("Creative Updated", "Creative has been updated successfully");
-      setIsEditCreativeModalOpen(false);
-      loadCreatives(true); // Reload with skipCache
+      const response = await offerCreativeService.getById(Number(creative.id), true);
+      const fullCreativeData = response.data;
+      setEditingCreative(fullCreativeData);
+      setIsEditCreativeModalOpen(true);
     } catch (err) {
-      console.error("Failed to update creative:", err);
-      showError("Failed to update creative", "Please try again later.");
+      console.error("Failed to load creative details:", err);
+      showError("Failed to load creative", "Please try again later.");
     } finally {
       setIsSavingCreative(false);
     }
@@ -2508,11 +2454,24 @@ export default function OfferDetailsPage() {
                             }}
                           >
                             <div className="flex items-center gap-3">
+                              {hasCreativeId && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    navigateToCreativeDetails(
+                                      creativeId as number,
+                                    )
+                                  }
+                                  className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                  title="View details"
+                                >
+                                  <Eye className="w-4 h-4 text-gray-600" />
+                                </button>
+                              )}
                               <button
                                 type="button"
                                 onClick={() => handleEditCreative(creative)}
-                                className="text-sm font-medium hover:underline"
-                                style={{ color: color.primary.accent }}
+                                className="text-sm font-medium hover:underline text-gray-600"
                               >
                                 Edit
                               </button>
@@ -2698,9 +2657,9 @@ export default function OfferDetailsPage() {
         title="Add Creative"
         size="2xl"
       >
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-2 gap-6">
           {/* Left Column - Form Fields (1/2) */}
-          <div className="lg:col-span-1 space-y-4">
+          <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -2757,70 +2716,77 @@ export default function OfferDetailsPage() {
               </div>
             </div>
 
-            {/* Template Selector - Temporarily Disabled
-          {availableTemplates.length > 0 && (
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Creative Template (Optional)
-                </label>
-                {selectedTemplateId && (
-                  <button
-                    onClick={() => handleTemplateSelect(null)}
-                    className="text-xs text-gray-500 underline"
-                  >
-                    Clear Template
-                  </button>
-                )}
-              </div>
-              <div className="relative">
-                <HeadlessSelect
-                  value={
-                    selectedTemplateId ? selectedTemplateId.toString() : ""
-                  }
-                  onChange={(value) =>
-                    handleTemplateSelect(value ? Number(value) : null)
-                  }
-                  options={[
-                    { value: "", label: "Select template" },
-                    ...availableTemplates.map((template) => {
-                      // Get language name if template has locale
-                      let languageLabel = "";
-                      if (template.locale && languages) {
-                        const language = (
-                          languages as TypeConfigurationItem[]
-                        ).find(
-                          (lang) => lang.metadataValue === template.locale
-                        );
-                        if (language) {
-                          languageLabel = ` (${language.name})`;
+            {/* Template Selector */}
+            {((templates as TypeConfigurationItem[]) || []).filter((t) =>
+              t.isActive &&
+              t.metadataValue?.toLowerCase() === newCreativeForm.channel.toLowerCase()
+            ).length > 0 && (
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Creative Template (Optional)
+                  </label>
+                  {selectedTemplateId && (
+                    <button
+                      onClick={() => handleTemplateSelect(null)}
+                      className="text-xs text-gray-500 underline"
+                    >
+                      Clear Template
+                    </button>
+                  )}
+                </div>
+                <div className="relative">
+                  <HeadlessSelect
+                    value={
+                      selectedTemplateId ? selectedTemplateId.toString() : ""
+                    }
+                    onChange={(value) =>
+                      handleTemplateSelect(value ? Number(value) : null)
+                    }
+                    options={[
+                      { value: "", label: "Select template" },
+                      ...((templates as TypeConfigurationItem[]) || [])
+                        .filter((t) =>
+                          t.isActive &&
+                          t.metadataValue?.toLowerCase() === newCreativeForm.channel.toLowerCase()
+                        )
+                        .map((template) => {
+                        // Get language name if template has locale
+                        let languageLabel = "";
+                        if (template.locale && languages) {
+                          const language = (
+                            languages as TypeConfigurationItem[]
+                          ).find(
+                            (lang) => lang.metadataValue === template.locale
+                          );
+                          if (language) {
+                            languageLabel = ` (${language.name})`;
+                          }
                         }
-                      }
-                      return {
-                        value: template.id.toString(),
-                        label: `${template.name}${languageLabel}${
-                          template.description
-                            ? ` - ${template.description}`
-                            : ""
-                        }`,
-                      };
-                    }),
-                  ]}
-                  placeholder="Select a template to start with..."
-                  zIndex={zIndex.popover}
-                />
-                {selectedTemplateId && (
-                  <div className="mt-2 flex items-center gap-2 text-xs text-gray-600">
-                    <FileText className="w-3 h-3" />
-                    <span>
-                      Template selected. You can customize the fields below.
-                    </span>
-                  </div>
-                )}
+                        return {
+                          value: template.id.toString(),
+                          label: `${template.name}${languageLabel}${
+                            template.description
+                              ? ` - ${template.description}`
+                              : ""
+                          }`,
+                        };
+                      }),
+                    ]}
+                    placeholder="Select a template to start with..."
+                    zIndex={zIndex.popover}
+                  />
+                  {selectedTemplateId && (
+                    <div className="mt-2 flex items-center gap-2 text-xs text-gray-600">
+                      <FileText className="w-3 h-3" />
+                      <span>
+                        Template selected. You can customize the fields below.
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-          */}
+            )}
 
             <div className="space-y-4">
               {/* Sender ID (SMS) or Subject (Email/Web) */}
@@ -3129,7 +3095,7 @@ export default function OfferDetailsPage() {
           </div>
 
           {/* Right Column - Preview Panel (1/2) */}
-          <div className="lg:col-span-1">
+          <div>
             <div>
               <PreviewPanel
                 channel={
@@ -3149,59 +3115,45 @@ export default function OfferDetailsPage() {
         </div>
       </RegularModal>
       {/* Edit Creative Modal */}
-      <RegularModal
+      <OfferCreativeFormModal
         isOpen={isEditCreativeModalOpen}
         onClose={() => setIsEditCreativeModalOpen(false)}
-        title={`Edit ${editingCreative?.channel} Creative`}
-        size="xl"
-      >
-        <div className="space-y-4">
-          {/* Title */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Title
-            </label>
-            <input
-              type="text"
-              value={editFormData.title}
-              onChange={(e) =>
-                setEditFormData({ ...editFormData, title: e.target.value })
-              }
-              placeholder="Enter creative title..."
-              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-            />
-          </div>
+        onSave={async (creativeData) => {
+          if (!editingCreative || !user?.user_id) return;
 
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <button
-              onClick={() => setIsEditCreativeModalOpen(false)}
-              disabled={isSavingCreative}
-              className={`px-4 py-2 text-gray-700 bg-gray-100 ${tw.rounded} hover:bg-gray-200 transition-colors disabled:opacity-50`}
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSaveCreative}
-              disabled={isSavingCreative}
-              className={`px-4 py-2 text-white ${tw.rounded} transition-colors disabled:opacity-50 flex items-center gap-2`}
-              style={{ backgroundColor: color.primary.action }}
-            >
-              {isSavingCreative ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  Save Changes
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-      </RegularModal>
+          try {
+            setIsSavingCreative(true);
+            const updatePayload: Record<string, unknown> = {
+              updated_by: user.user_id,
+              channel: creativeData.channel,
+              locale: creativeData.locale,
+              title: creativeData.title,
+              text_body: creativeData.text_body,
+              html_body: creativeData.html_body,
+              is_active: creativeData.is_active,
+            };
+
+            if (creativeData.sms_route) {
+              updatePayload.sms_route = creativeData.sms_route;
+            }
+
+            await offerCreativeService.update(
+              editingCreative.id as number,
+              updatePayload,
+            );
+
+            setIsEditCreativeModalOpen(false);
+            loadCreatives(true);
+          } catch (err) {
+            console.error("Failed to update creative:", err);
+            throw err;
+          } finally {
+            setIsSavingCreative(false);
+          }
+        }}
+        initialCreative={editingCreative}
+        mode="edit"
+      />
 
       {/* Add Product Modal - Custom Selector */}
       {isAddProductModalOpen && (

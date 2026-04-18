@@ -6,6 +6,10 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import CascadingVariableSelector from "../../manual-broadcast/components/CascadingVariableSelector";
 import PreviewPanel from "../../communications/components/PreviewPanel";
+import {
+  SMSSmartphonePreview,
+  EmailLaptopPreview,
+} from "../components/CreativePreviewComponents";
 import { color, tw } from "../../../shared/utils/utils";
 import { zIndex } from "../../../shared/utils/tokens";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -16,6 +20,7 @@ import { smsRouteService } from "../../routes/services/smsRouteService";
 import { languageService, Language } from "../../configurations/services/languageService";
 import { creativeTemplateService } from "../../configurations/services/creativeTemplateService";
 import { communicationChannelService, CommunicationChannel } from "../../../shared/services/communicationChannelService";
+import { offerService } from "../services/offerService";
 import {
   OfferCreative,
   CreativeChannel,
@@ -81,6 +86,7 @@ export default function OfferCreativeFormModal({
 
   // Form state
   const [formData, setFormData] = useState<{
+    offer_id?: number;
     channel: CreativeChannel;
     locale: string;
     title: string;
@@ -89,6 +95,7 @@ export default function OfferCreativeFormModal({
     is_active: boolean;
     sms_route?: string;
   }>({
+    offer_id: undefined,
     channel: "SMS",
     locale: "en",
     title: "",
@@ -110,10 +117,12 @@ export default function OfferCreativeFormModal({
   const [senderIds, setSenderIds] = useState<SenderId[]>([]);
   const [smsRoutes, setSmsRoutes] = useState<any[]>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
+  const [offers, setOffers] = useState<any[]>([]);
   const [channelsLoading, setChannelsLoading] = useState(false);
   const [senderIdsLoading, setSenderIdsLoading] = useState(false);
   const [smsRoutesLoading, setSmsRoutesLoading] = useState(false);
   const [languagesLoading, setLanguagesLoading] = useState(false);
+  const [offersLoading, setOffersLoading] = useState(false);
 
   // Preview state
   const [showPreview, setShowPreview] = useState(false);
@@ -167,6 +176,17 @@ export default function OfferCreativeFormModal({
       } finally {
         setLanguagesLoading(false);
       }
+
+      try {
+        setOffersLoading(true);
+        const offersRes = await offerService.searchOffers({ limit: 100 });
+        const offersData = offersRes?.data || offersRes || [];
+        setOffers(Array.isArray(offersData) ? offersData : []);
+      } catch (err) {
+        console.error("Failed to load offers:", err);
+      } finally {
+        setOffersLoading(false);
+      }
     };
 
     loadData();
@@ -174,6 +194,7 @@ export default function OfferCreativeFormModal({
     // Initialize form data
     if (initialCreative && mode === "edit") {
       setFormData({
+        offer_id: initialCreative.offer_id,
         channel: initialCreative.channel,
         locale: initialCreative.locale,
         title: initialCreative.title || "",
@@ -198,6 +219,14 @@ export default function OfferCreativeFormModal({
     setActiveField("body");
     setVariableError("");
   }, [isOpen, initialCreative, mode]);
+
+  useEffect(() => {
+    setPreviewData({
+      rendered_title: formData.title,
+      rendered_text_body: formData.text_body,
+      rendered_html_body: formData.html_body,
+    });
+  }, [formData.title, formData.text_body, formData.html_body]);
 
   const handleVariableSelect = (variable: TemplateVariable) => {
     if (!selectedVariables.find((v) => v.id === variable.id)) {
@@ -266,6 +295,10 @@ export default function OfferCreativeFormModal({
   };
 
   const handleSave = async () => {
+    if (!formData.offer_id) {
+      showError("Validation Error", "Offer is required");
+      return;
+    }
     if (!formData.title || !formData.text_body) {
       showError("Validation Error", "Title and message body are required");
       return;
@@ -274,6 +307,7 @@ export default function OfferCreativeFormModal({
     try {
       setIsSaving(true);
       const creativeData = {
+        ...(formData.offer_id && { offer_id: formData.offer_id }),
         channel: formData.channel,
         locale: formData.locale,
         title: formData.title,
@@ -305,6 +339,21 @@ export default function OfferCreativeFormModal({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column - Form */}
           <div className="space-y-4">
+            {/* Offer Selector */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Offer *
+              </label>
+              <HeadlessSelect
+                value={formData.offer_id ? String(formData.offer_id) : ""}
+                onChange={(value) => setFormData((prev) => ({ ...prev, offer_id: value ? Number(value) : undefined }))}
+                options={offers.map((offer) => ({ value: String(offer.id), label: offer.name }))}
+                placeholder="Select an offer"
+                zIndex={zIndex.popover}
+                disabled={offersLoading}
+              />
+            </div>
+
             {/* Channel & Locale */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -348,26 +397,25 @@ export default function OfferCreativeFormModal({
               </div>
             </div>
 
-            {/* Sender ID - Always visible */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Sender ID
-              </label>
-              <HeadlessSelect
-                value={formData.title}
-                onChange={(value) => setFormData((prev) => ({ ...prev, title: value || "" }))}
-                options={[
-                  { label: "Select Sender ID", value: "" },
-                  ...senderIds.filter((s) => s.is_active).map((s) => ({ label: s.name, value: s.name })),
-                ]}
-                placeholder="Select Sender ID..."
-                zIndex={zIndex.popover}
-                disabled={senderIdsLoading}
-              />
-            </div>
-
-            {/* Subject Line - For non-SMS channels */}
-            {formData.channel?.toUpperCase() !== "SMS" && (
+            {/* Sender ID (SMS) or Subject (Email/Web) */}
+            {formData.channel?.toUpperCase() === "SMS" ? (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Sender ID
+                </label>
+                <HeadlessSelect
+                  value={formData.title || ""}
+                  onChange={(value) => setFormData((prev) => ({ ...prev, title: value || "" }))}
+                  options={[
+                    { label: "Select Sender ID", value: "" },
+                    ...senderIds.filter((s) => s.is_active).map((s) => ({ label: s.name, value: s.name })),
+                  ]}
+                  placeholder="Select Sender ID..."
+                  zIndex={zIndex.popover}
+                  disabled={senderIdsLoading}
+                />
+              </div>
+            ) : (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Subject Line
@@ -536,7 +584,7 @@ export default function OfferCreativeFormModal({
             </div>
           </div>
 
-          {/* Right Column - Preview */}
+          {/* Right Column - Preview (shown when Preview button clicked) */}
           {previewData && (
             <div className="lg:col-span-1 sticky top-4">
               <PreviewPanel
@@ -557,28 +605,116 @@ export default function OfferCreativeFormModal({
         </div>
       </RegularModal>
 
-      {/* Preview Modal */}
+      {/* Preview Creative Modal */}
       <RegularModal
         isOpen={showPreview}
-        onClose={() => setShowPreview(false)}
-        title="Preview"
+        onClose={() => {
+          setShowPreview(false);
+          setPreviewData(null);
+        }}
+        title="Creative Preview"
         size="2xl"
       >
-        {previewData && (
-          <PreviewPanel
-            channel={
-              formData.channel === "SMS"
-                ? "SMS"
-                : formData.channel === "Email"
-                  ? "EMAIL"
-                  : formData.channel === "WhatsApp"
-                    ? "WHATSAPP"
-                    : "PUSH"
-            }
-            title={previewData.rendered_title}
-            body={previewData.rendered_text_body || ""}
-          />
-        )}
+        <div className="space-y-6">
+          {previewData ? (
+            <div className="space-y-6">
+              {/* Device-Specific Previews */}
+              {formData.channel === "SMS" ||
+              formData.channel === "SMS Flash" ? (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-4">
+                    SMS Preview
+                  </h3>
+                  <SMSSmartphonePreview
+                    message={
+                      previewData.rendered_text_body ||
+                      previewData.rendered_title ||
+                      ""
+                    }
+                    title={previewData.rendered_title}
+                  />
+                </div>
+              ) : formData.channel === "Email" ? (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-4">
+                    Email Preview
+                  </h3>
+                  <EmailLaptopPreview
+                    title={previewData.rendered_title}
+                    htmlBody={previewData.rendered_html_body}
+                    textBody={previewData.rendered_text_body}
+                  />
+                </div>
+              ) : (
+                // Fallback for other channels (Web, USSD, etc.)
+                <div className="space-y-4">
+                  {previewData.rendered_title && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Rendered Title
+                      </label>
+                      <div
+                        className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}
+                      >
+                        <p className="text-gray-900">
+                          {previewData.rendered_title}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {previewData.rendered_text_body && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Rendered Text Body
+                      </label>
+                      <div
+                        className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}
+                      >
+                        <p className="text-gray-900 whitespace-pre-wrap">
+                          {previewData.rendered_text_body}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {previewData.rendered_html_body && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Rendered HTML Body
+                      </label>
+                      <div
+                        className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}
+                      >
+                        <div
+                          className="prose max-w-none"
+                          dangerouslySetInnerHTML={{
+                            __html: previewData.rendered_html_body,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {!previewData.rendered_title &&
+                    !previewData.rendered_text_body &&
+                    !previewData.rendered_html_body && (
+                      <div className="text-center py-8 text-gray-500">
+                        <p>
+                          No content to preview. Add title, text body, or HTML
+                          body.
+                        </p>
+                      </div>
+                    )}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <p>No preview available.</p>
+            </div>
+          )}
+        </div>
       </RegularModal>
     </>
   );

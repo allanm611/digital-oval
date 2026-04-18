@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Edit, MessageSquare } from "lucide-react";
+import { Plus, Trash2, Edit, MessageSquare, Eye } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import BackButton from "../../../shared/components/ui/BackButton";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -13,6 +14,7 @@ import { useConfirm } from "../../../contexts/ConfirmContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function OfferCreativesPage() {
+  const navigate = useNavigate();
   const { t } = useLanguage();
   const { success, error: showError } = useToast();
   const { confirm } = useConfirm();
@@ -32,7 +34,7 @@ export default function OfferCreativesPage() {
   const loadCreatives = async () => {
     try {
       setLoading(true);
-      const response = await offerCreativeService.superSearch({ limit: 1000 });
+      const response = await offerCreativeService.superSearch({ limit: 100 });
       setCreatives(response?.data || []);
     } catch (err) {
       showError("Error", err instanceof Error ? err.message : "Failed to load offer creatives");
@@ -278,6 +280,16 @@ export default function OfferCreativesPage() {
                       }}
                     >
                       <div className="flex items-center justify-end gap-3">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/dashboard/offer-creatives/${creative.id}`);
+                          }}
+                          className={`${tw.textAction} hover:opacity-75 transition-opacity`}
+                          title="View details"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();

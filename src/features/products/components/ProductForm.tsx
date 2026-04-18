@@ -11,6 +11,8 @@ import {
 import MultiCategorySelector from "../../../shared/components/MultiCategorySelector";
 import CreateCategoryModal from "../../../shared/components/CreateCategoryModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import TypeSelector from "../../../shared/components/TypeSelector";
+import CreateProductTypeModal from "./CreateProductTypeModal";
 import Input from "../../../shared/components/ui/Input";
 import { TypeConfigurationItem } from "../../../shared/components/TypeConfigurationPage";
 import { tw, color, zIndex } from "../../../shared/utils/utils";
@@ -60,7 +62,7 @@ export default function ProductForm({
 }: ProductFormProps) {
   const { t } = useLanguage();
   // Fetch product types and combo types from backend
-  const { data: productTypes, loading: productTypesLoading } =
+  const { data: productTypes, loading: productTypesLoading, refresh: refreshProductTypes } =
     useBackendProductTypeData();
   const { data: comboTypes, loading: comboTypesLoading } =
     useBackendComboTypeData();
@@ -129,6 +131,9 @@ export default function ProductForm({
 
   // Create utility modal state
   const [isCreateUtilityModalOpen, setIsCreateUtilityModalOpen] = useState(false);
+
+  // Create product type modal state
+  const [showCreateTypeModal, setShowCreateTypeModal] = useState(false);
 
   // Tags input state
   const [tagInput, setTagInput] = useState("");
@@ -290,6 +295,13 @@ export default function ProductForm({
       onInputChange("combo_data", undefined);
     }
   }, [comboData, isComboType]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Refresh product types when typeRefreshTrigger changes
+  useEffect(() => {
+    if (typeRefreshTrigger > 0) {
+      refreshProductTypes();
+    }
+  }, [typeRefreshTrigger, refreshProductTypes]);
 
   // Get selected combo type details (move before useEffect that uses it)
   const selectedComboType = comboData.combo_type_id
@@ -896,7 +908,7 @@ export default function ProductForm({
               >
                 {t.products.form.productType}
               </label>
-              <HeadlessSelect
+              <TypeSelector
                 options={productTypes
                   .filter((pt) => pt.is_active !== false)
                   .map((pt) => ({
@@ -919,8 +931,8 @@ export default function ProductForm({
                   )
                 }
                 placeholder={t.products.form.selectProductType}
-                className="w-full"
-                zIndex={zIndex.popover}
+                allowCreate={true}
+                onCreate={() => setShowCreateTypeModal(true)}
               />
             </div>
 
@@ -2011,6 +2023,23 @@ export default function ProductForm({
           };
           setCustomUtilities((prev) => [...prev, newUtility]);
           setSelectedUtility(newUtility.value);
+        }}
+      />
+
+      {/* Create Product Type Modal */}
+      <CreateProductTypeModal
+        isOpen={showCreateTypeModal}
+        onClose={() => setShowCreateTypeModal(false)}
+        onTypeCreated={(typeId) => {
+          onInputChange(
+            "product_type_id" as keyof (
+              | CreateProductRequest
+              | UpdateProductRequest
+            ),
+            typeId,
+          );
+          refreshProductTypes();
+          setShowCreateTypeModal(false);
         }}
       />
     </>

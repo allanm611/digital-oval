@@ -9,12 +9,14 @@ interface CreateCategoryModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCategoryCreated?: (categoryId: number) => void;
+  entityType?: "product" | "campaign" | "offer" | "segment";
 }
 
 export default function CreateCategoryModal({
   isOpen,
   onClose,
   onCategoryCreated,
+  entityType = "product",
 }: CreateCategoryModalProps) {
   const { success, error: showError } = useToast();
   const { user } = useAuth();
@@ -43,13 +45,46 @@ export default function CreateCategoryModal({
 
     try {
       setIsCreating(true);
-      const response = await productCategoryService.createCategory({
-        name: newCategoryName.trim(),
-        description: newCategoryDescription.trim() || undefined,
-        parent_category_id: undefined, // optional, default to undefined
-        is_active: true, // optional, default to true
-        created_by: createdByNumber, // required, must be a number
-      });
+      let response;
+
+      if (entityType === "campaign") {
+        const { campaignService } = await import(
+          "../../features/campaigns/services/campaignService"
+        );
+        response = await campaignService.createCampaignCategory({
+          name: newCategoryName.trim(),
+          description: newCategoryDescription.trim() || "",
+          parent_category_id: undefined,
+          is_active: true,
+          created_by: createdByNumber,
+        });
+      } else if (entityType === "offer") {
+        const { offerCategoryService } = await import(
+          "../../features/offers/services/offerCategoryService"
+        );
+        response = await offerCategoryService.createCategory({
+          name: newCategoryName.trim(),
+          description: newCategoryDescription.trim() || undefined,
+          parent_category_id: undefined,
+        });
+      } else if (entityType === "segment") {
+        const { segmentService } = await import(
+          "../../features/segments/services/segmentService"
+        );
+        response = await segmentService.createSegmentCategory({
+          name: newCategoryName.trim(),
+          description: newCategoryDescription.trim() || "",
+          is_active: true,
+        });
+      } else {
+        response = await productCategoryService.createCategory({
+          name: newCategoryName.trim(),
+          description: newCategoryDescription.trim() || undefined,
+          parent_category_id: undefined,
+          is_active: true,
+          created_by: createdByNumber,
+        });
+      }
 
       success(
         "Category Created",

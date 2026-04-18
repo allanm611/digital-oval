@@ -1669,6 +1669,7 @@ export default function SegmentModal({
             <CreateCategoryModal
               isOpen={showCreateCatalogModal}
               onClose={() => setShowCreateCatalogModal(false)}
+              entityType="segment"
               onCategoryCreated={(categoryId) => {
                 isUserInteractionRef.current = true;
                 setSelectedCategoryIds([categoryId]);
@@ -1682,13 +1683,6 @@ export default function SegmentModal({
               isOpen={showCreateTypeModal}
               onClose={() => setShowCreateTypeModal(false)}
               onTypeCreated={(typeId) => {
-                // Reload segment types to get the newly created one
-                setFormData((prev) => ({
-                  ...prev,
-                  segment_type_id: typeId,
-                }));
-                setShowCreateTypeModal(false);
-                // Reload types
                 const loadSegmentTypes = async () => {
                   try {
                     const response = await segmentTypeService.getAllSegmentTypes();
@@ -1699,7 +1693,12 @@ export default function SegmentModal({
                     console.error("Failed to reload segment types:", err);
                   }
                 };
+                setFormData((prev) => ({
+                  ...prev,
+                  segment_type_id: typeId,
+                }));
                 loadSegmentTypes();
+                setShowCreateTypeModal(false);
               }}
             />
           </div>

@@ -60,7 +60,10 @@ class OfferTypeService {
   async createOfferType(
     data: CreateOfferTypeRequest
   ): Promise<ApiResponse<OfferType>> {
-    return this.request<ApiResponse<OfferType>>("");
+    return this.request<ApiResponse<OfferType>>("", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
   }
 
   // Update offer type

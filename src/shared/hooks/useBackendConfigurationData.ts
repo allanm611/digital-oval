@@ -456,6 +456,7 @@ export function useBackendConfigurationData(
     | "notificationTypes"
     | "vipLists"
     | "controlGroups"
+    | "offerCreatives"
     | undefined,
 ): UseBackendConfigDataResult<any, any, any> | null {
   const [data, setData] = useState<CampaignType[]>([]);
@@ -554,7 +555,7 @@ export function useBackendConfigurationData(
           break;
 
         case "offerCreatives":
-          response = await offerCreativeService.superSearch({ limit: 1000 });
+          response = await offerCreativeService.superSearch({ limit: 100 });
           if (response?.success && response?.data) {
             setData(
               normalizeApiResponse(

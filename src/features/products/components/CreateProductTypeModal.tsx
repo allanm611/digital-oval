@@ -1,21 +1,21 @@
 import { useState } from "react";
 import { X } from "lucide-react";
-import { offerTypeService } from "../services/offerTypeService";
+import { productTypeService } from "../services/productTypeService";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 
-interface CreateOfferTypeModalProps {
+interface CreateProductTypeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onTypeCreated?: (typeId: number, typeData?: any) => void;
+  onTypeCreated?: (typeId: number) => void;
 }
 
-export default function CreateOfferTypeModal({
+export default function CreateProductTypeModal({
   isOpen,
   onClose,
   onTypeCreated,
-}: CreateOfferTypeModalProps) {
+}: CreateProductTypeModalProps) {
   const { success, error: showError } = useToast();
   const { user } = useAuth();
   const [newTypeName, setNewTypeName] = useState("");
@@ -32,32 +32,31 @@ export default function CreateOfferTypeModal({
 
     try {
       setIsCreating(true);
-      const response = await offerTypeService.createOfferType({
+      const response = await productTypeService.createProductType({
         name: newTypeName.trim(),
         description: newTypeDescription.trim() || undefined,
         is_active: true,
       });
 
       success(
-        "Offer Type Created",
+        "Product Type Created",
         `"${newTypeName}" has been created successfully.`
       );
 
       const createdTypeId = response.data?.id;
-      const createdTypeData = response.data;
 
       onClose();
       setNewTypeName("");
       setNewTypeDescription("");
 
       if (createdTypeId) {
-        onTypeCreated?.(createdTypeId, createdTypeData);
+        onTypeCreated?.(createdTypeId);
       }
     } catch (err) {
-      console.error("Failed to create offer type:", err);
+      console.error("Failed to create product type:", err);
       showError(
         "Error",
-        err instanceof Error ? err.message : "Failed to create offer type"
+        err instanceof Error ? err.message : "Failed to create product type"
       );
     } finally {
       setIsCreating(false);
@@ -82,7 +81,7 @@ export default function CreateOfferTypeModal({
       >
         <div className="flex items-start sm:items-center justify-between gap-4 p-4 sm:p-6 border-b border-gray-200">
           <h2 className="text-lg sm:text-xl font-semibold text-gray-900 flex-1 min-w-0">
-            New Offer Type
+            New Product Type
           </h2>
           <button
             onClick={handleClose}
@@ -103,7 +102,7 @@ export default function CreateOfferTypeModal({
               value={newTypeName}
               onChange={(e) => setNewTypeName(e.target.value)}
               className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:outline-none`}
-              placeholder="e.g., Discount, Bundle, Flash Sale..."
+              placeholder="e.g., Data, Voice, Bundle..."
               required
             />
           </div>
@@ -117,7 +116,7 @@ export default function CreateOfferTypeModal({
               onChange={(e) => setNewTypeDescription(e.target.value)}
               rows={3}
               className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:outline-none`}
-              placeholder="Offer type description..."
+              placeholder="Product type description..."
             />
           </div>
 

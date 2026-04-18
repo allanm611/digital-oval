@@ -60,7 +60,10 @@ class ProductTypeService {
   async createProductType(
     data: CreateProductTypeRequest
   ): Promise<ApiResponse<ProductType>> {
-    return this.request<ApiResponse<ProductType>>("");
+    return this.request<ApiResponse<ProductType>>("", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
   }
 
   // Update product type
