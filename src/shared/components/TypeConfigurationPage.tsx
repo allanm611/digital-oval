@@ -1844,7 +1844,35 @@ export default function TypeConfigurationPage({
   }, [useBackendConfig, backendConfig?.data?.length]);
 
   useEffect(() => {
-    if (!useBackendConfig && config.configType) {
+    if (config.configType === "communicationChannels") {
+      const loadChannels = async () => {
+        try {
+          setIsSaving(true);
+          const channels = await communicationChannelService.getAll();
+          setItems(
+            (channels || []).map((ch: any) => ({
+              id: ch.id,
+              code: ch.code,
+              name: ch.name,
+              description: ch.description,
+              isActive: ch.is_active,
+              created_at: ch.created_at,
+              updated_at: ch.updated_at,
+            }))
+          );
+        } catch (err) {
+          console.error("Failed to load communication channels:", err);
+          setItems(normalizeItems(config.initialData));
+        } finally {
+          setIsSaving(false);
+        }
+      };
+      loadChannels();
+    }
+  }, [config.configType]);
+
+  useEffect(() => {
+    if (!useBackendConfig && config.configType !== "communicationChannels" && config.configType) {
       configurationDataService.setData(
         config.configType,
         normalizeItems(config.initialData),
@@ -1986,7 +2014,50 @@ export default function TypeConfigurationPage({
   }) => {
     try {
       setIsSaving(true);
-      if (useBackendConfig && backendConfig) {
+      if (config.configType === "communicationChannels") {
+        if (editingItem) {
+          await communicationChannelService.update(editingItem.id, {
+            name: itemData.name,
+            description: itemData.description || "",
+            is_active: itemData.isActive,
+          });
+          setItems((prev) =>
+            prev.map((item) =>
+              item.id === editingItem.id
+                ? {
+                    ...item,
+                    name: itemData.name,
+                    description: itemData.description,
+                    isActive: itemData.isActive,
+                  }
+                : item,
+            ),
+          );
+          showToast(config.updateSuccessMessage);
+        } else {
+          const createdChannel = await communicationChannelService.create({
+            code: itemData.code as string,
+            name: itemData.name,
+            description: itemData.description || "",
+            is_active: itemData.isActive,
+          });
+          if (createdChannel) {
+            setItems((prev) => [
+              ...prev,
+              {
+                id: createdChannel.id,
+                code: createdChannel.code,
+                name: createdChannel.name,
+                description: createdChannel.description,
+                isActive: createdChannel.is_active,
+              },
+            ]);
+          }
+          showToast(config.createSuccessMessage);
+        }
+        setIsModalOpen(false);
+        setEditingItem(undefined);
+      } else if (useBackendConfig && backendConfig) {
         if (editingItem) {
           const optimisticItem = {
             ...editingItem,
@@ -2041,7 +2112,9 @@ export default function TypeConfigurationPage({
       }
     } catch (err) {
       console.error(`Failed to save ${config.entityName}:`, err);
-      showError(`Failed to save ${config.entityName}`, config.saveErrorMessage);
+      const errorMsg = err instanceof Error ? err.message : config.saveErrorMessage;
+      showError(`Failed to save ${config.entityName}`, errorMsg);
+      throw err;
     } finally {
       setIsSaving(false);
     }

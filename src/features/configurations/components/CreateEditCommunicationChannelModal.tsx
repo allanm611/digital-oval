@@ -12,6 +12,7 @@ interface CreateEditCommunicationChannelModalProps {
   initialData?: CommunicationChannel;
   onClose: () => void;
   onSave?: (data: {
+    code: string;
     name: string;
     description: string;
     is_active: boolean;
@@ -27,6 +28,7 @@ export default function CreateEditCommunicationChannelModal({
 }: CreateEditCommunicationChannelModalProps) {
   const { success: showSuccessToast } = useToast();
   const [formData, setFormData] = useState({
+    code: "",
     name: "",
     description: "",
     is_active: true,
@@ -38,12 +40,14 @@ export default function CreateEditCommunicationChannelModal({
     if (mode === "edit" && initialData?.name) {
       const isActive = initialData.is_active !== undefined ? initialData.is_active : ((initialData as any).isActive ?? true);
       setFormData({
+        code: initialData.code || "",
         name: initialData.name || "",
         description: initialData.description || "",
         is_active: Boolean(isActive),
       });
     } else {
       setFormData({
+        code: "",
         name: "",
         description: "",
         is_active: true,
@@ -56,8 +60,18 @@ export default function CreateEditCommunicationChannelModal({
     e.preventDefault();
     setError("");
 
+    if (!formData.code.trim()) {
+      setError("Channel code is required");
+      return;
+    }
+
     if (!formData.name.trim()) {
       setError("Channel name is required");
+      return;
+    }
+
+    if (formData.code.length > 50) {
+      setError("Channel code must be 50 characters or less");
       return;
     }
 
@@ -75,21 +89,17 @@ export default function CreateEditCommunicationChannelModal({
       setIsSaving(true);
       if (onSave) {
         await onSave({
+          code: formData.code.trim(),
           name: formData.name.trim(),
           description: formData.description.trim(),
           is_active: formData.is_active,
         });
       }
-      showSuccessToast(
-        mode === "create"
-          ? "Communication channel created successfully"
-          : "Communication channel updated successfully"
-      );
-      setFormData({ name: "", description: "", is_active: true });
+      setFormData({ code: "", name: "", description: "", is_active: true });
       onClose();
     } catch (err) {
       setError(
-        `Failed to ${mode === "create" ? "create" : "update"} communication channel. Please try again.`
+        err instanceof Error ? err.message : `Failed to ${mode === "create" ? "create" : "update"} communication channel. Please try again.`
       );
     } finally {
       setIsSaving(false);
@@ -119,12 +129,31 @@ export default function CreateEditCommunicationChannelModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-6 py-6 space-y-4">
+        <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
           {error && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-md">
               <p className="text-sm text-red-700">{error}</p>
             </div>
           )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Channel Code *
+            </label>
+            <input
+              type="text"
+              value={formData.code}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, code: e.target.value }))
+              }
+              className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+              placeholder="e.g., sms, email, push"
+              maxLength={50}
+              required
+              disabled={mode === "edit"}
+            />
+            {mode === "edit" && <p className="text-xs text-gray-500 mt-1">Code cannot be changed after creation</p>}
+          </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">

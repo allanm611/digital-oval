@@ -137,30 +137,17 @@ class VIPListService {
     return response;
   }
 
-  async removeMember(memberId: number, removedBy?: number) {
-    try {
-      // Primary behavior: mark member inactive to preserve historical records.
-      const response = await this.request<{
-        success: boolean;
-        data?: VIPCustomer;
-      }>(`/members/${memberId}`, {
-        method: "PUT",
-        body: JSON.stringify({
-          status: "inactive",
-          ...(typeof removedBy === "number" ? { removed_by: removedBy } : {}),
-        }),
-      });
-      return response;
-    } catch {
-      // Fallback for backends that expose hard-delete for member records.
-      const response = await this.request<{
-        success: boolean;
-        message?: string;
-      }>(`/members/${memberId}`, {
-        method: "DELETE",
-      });
-      return response;
-    }
+  async removeMember(listId: number, memberId: number, removedBy?: number) {
+    const response = await this.request<{
+      success: boolean;
+      message?: string;
+    }>(`/${listId}/members/${memberId}`, {
+      method: "DELETE",
+      ...(typeof removedBy === "number" ? {
+        body: JSON.stringify({ removed_by: removedBy }),
+      } : {}),
+    });
+    return response;
   }
 }
 

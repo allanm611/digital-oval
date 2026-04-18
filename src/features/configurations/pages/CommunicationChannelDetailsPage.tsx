@@ -117,10 +117,6 @@ export default function CommunicationChannelDetailsPage() {
             }
           : null
       );
-      success(
-        "Channel Updated",
-        `"${data.name}" has been updated successfully.`
-      );
     } catch (err) {
       console.error("Failed to update channel:", err);
       throw err;

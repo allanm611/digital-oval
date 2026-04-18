@@ -888,57 +888,6 @@ const hardcodedRewardTypes: TypeConfigurationItem[] = [
 ];
 
 // Hardcoded communication channels data
-const hardcodedCommunicationChannels: TypeConfigurationItem[] = [
-  {
-    id: 1,
-    name: "SMS - Normal",
-    description: "Standard SMS delivery routed via telecom SMSC",
-    isActive: true,
-    created_at: "2025-02-01T10:00:00Z",
-    updated_at: "2025-02-01T10:00:00Z",
-  },
-  {
-    id: 2,
-    name: "SMS - Flash",
-    description: "Flash SMS (display only) used for urgent notifications",
-    isActive: true,
-    created_at: "2025-02-01T10:05:00Z",
-    updated_at: "2025-02-01T10:05:00Z",
-  },
-  {
-    id: 3,
-    name: "Email",
-    description: "Transactional and marketing email channel",
-    isActive: true,
-    created_at: "2025-02-01T10:10:00Z",
-    updated_at: "2025-02-01T10:10:00Z",
-  },
-  {
-    id: 4,
-    name: "USSD - Push",
-    description: "Push USSD messages triggered automatically",
-    isActive: false,
-    created_at: "2025-02-01T10:15:00Z",
-    updated_at: "2025-02-01T10:15:00Z",
-  },
-  {
-    id: 5,
-    name: "USSD - Interactive",
-    description: "Interactive USSD menu journeys",
-    isActive: true,
-    created_at: "2025-02-01T10:20:00Z",
-    updated_at: "2025-02-01T10:20:00Z",
-  },
-  {
-    id: 6,
-    name: "Push Notification",
-    description: "Mobile app push via FCM/APNS",
-    isActive: true,
-    created_at: "2025-02-01T10:25:00Z",
-    updated_at: "2025-02-01T10:25:00Z",
-  },
-];
-
 // Hardcoded sender IDs data
 const hardcodedSenderIds: TypeConfigurationItem[] = [
   {
@@ -2596,7 +2545,7 @@ export const communicationChannelsConfig: TypeConfigurationPageConfig = {
   backPath: "/dashboard/configuration",
   icon: MessageSquare,
   searchPlaceholder: "Search channels...",
-  initialData: hardcodedCommunicationChannels,
+  initialData: [],
   createButtonText: "Create",
   modalTitle: {
     create: "Create Communication Channel",

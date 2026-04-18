@@ -251,19 +251,11 @@ export default function VIPListManagementPage() {
 
     setIsRemovingMember(true);
     try {
-      await vipListService.removeMember(memberToRemove.id);
+      await vipListService.removeMember(memberToRemove.vip_list_id, memberToRemove.id);
       showToast("Customer removed from VIP list successfully");
 
       setVipCustomers((prev) =>
-        prev.map((customer) =>
-          customer.id === memberToRemove.id
-            ? {
-                ...customer,
-                status: "inactive",
-                removed_at: new Date().toISOString(),
-              }
-            : customer,
-        ),
+        prev.filter((customer) => customer.id !== memberToRemove.id)
       );
     } catch {
       showError("Failed to remove customer from VIP list");
@@ -601,12 +593,20 @@ export default function VIPListManagementPage() {
                       style={{
                         color: color.surface.tableHeaderText,
                         backgroundColor: color.surface.tableHeader,
-                        borderTopRightRadius: "0.375rem",
                       }}
                     >
                       Added Date
                     </th>
-                    {/* Actions column intentionally hidden until member remove endpoint is finalized */}
+                    <th
+                      className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
+                      style={{
+                        color: color.surface.tableHeaderText,
+                        backgroundColor: color.surface.tableHeader,
+                        borderTopRightRadius: "0.375rem",
+                      }}
+                    >
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -654,15 +654,28 @@ export default function VIPListManagementPage() {
                         className="px-6 py-4 whitespace-nowrap"
                         style={{
                           backgroundColor: color.surface.tablebodybg,
-                          borderTopRightRadius: "0.375rem",
-                          borderBottomRightRadius: "0.375rem",
                         }}
                       >
                         <div className={`text-sm ${tw.textSecondary}`}>
                           <DateFormatter date={customer.added_at} />
                         </div>
                       </td>
-                      {/* Actions cell intentionally hidden until member remove endpoint is finalized */}
+                      <td
+                        className="px-6 py-4 text-center"
+                        style={{
+                          backgroundColor: color.surface.tablebodybg,
+                          borderTopRightRadius: "0.375rem",
+                          borderBottomRightRadius: "0.375rem",
+                        }}
+                      >
+                        <button
+                          onClick={() => handleRemoveCustomer(customer)}
+                          className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                          title="Remove from VIP list"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -1021,16 +1034,25 @@ export default function VIPListManagementPage() {
                             </span>
                           </td>
                           <td className="px-6 py-4 text-center">
-                            <button
-                              onClick={() => handleViewCustomerDetail(customer)}
-                              className="inline-flex items-center justify-center w-8 h-8 rounded hover:bg-gray-100 transition-colors"
-                              style={{
-                                color: color.primary.action,
-                              }}
-                              title="View customer details"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center justify-center gap-2">
+                              <button
+                                onClick={() => handleViewCustomerDetail(customer)}
+                                className="inline-flex items-center justify-center w-8 h-8 rounded hover:bg-gray-100 transition-colors"
+                                style={{
+                                  color: color.primary.action,
+                                }}
+                                title="View customer details"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => setMemberToRemove(customer)}
+                                className="inline-flex items-center justify-center w-8 h-8 rounded hover:bg-red-50 transition-colors text-red-600 hover:text-red-700"
+                                title="Remove from VIP list"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}

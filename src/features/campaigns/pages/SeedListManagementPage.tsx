@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Plus, Mail, Trash2, Eye, X } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -128,15 +129,24 @@ export const DUMMY_RECIPIENTS: SeedListRecipient[] = [
 ];
 
 interface AddRecipientForm {
+  mode: "existing_user" | "external_recipient";
   user_id: string;
+  phone_number: string;
   line_of_business_id: string;
   list_id: string;
+  external_name?: string;
+  external_email?: string;
+  external_phone?: string;
 }
 
 interface FormErrors {
   user_id?: string;
+  phone_number?: string;
   line_of_business_id?: string;
   list_id?: string;
+  external_name?: string;
+  external_email?: string;
+  external_phone?: string;
 }
 
 interface SystemUser {
@@ -150,10 +160,11 @@ interface SystemUser {
 }
 
 export default function SeedListManagementPage() {
+  const navigate = useNavigate();
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
   const [recipients, setRecipients] = useState<SeedListRecipient[]>([]);
-  const [seedLists, setSeedLists] = useState<Array<{ id: string | number; name: string; description?: string }>>([]);
+  const [seedLists, setSeedLists] = useState<Array<{ id: string | number; name: string; description?: string; customer_count?: number }>>([]);
   const departments = getDepartmentsConfig(t).initialData;
   const linesOfBusiness = getLineOfBusinessConfig(t).initialData;
 
@@ -167,9 +178,14 @@ export default function SeedListManagementPage() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<AddRecipientForm>({
+    mode: "existing_user",
     user_id: "",
+    phone_number: "",
     line_of_business_id: "",
     list_id: "",
+    external_name: "",
+    external_email: "",
+    external_phone: "",
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [systemUsers, setSystemUsers] = useState<SystemUser[]>([]);
@@ -187,6 +203,13 @@ export default function SeedListManagementPage() {
   const [isCreateListModalOpen, setIsCreateListModalOpen] = useState(false);
   const [isCreatingList, setIsCreatingList] = useState(false);
 
+  // Members modal state
+  const [selectedListForMembers, setSelectedListForMembers] = useState<{ id: string | number; name: string } | null>(null);
+  const [listMembers, setListMembers] = useState<SeedListRecipient[]>([]);
+  const [isLoadingListMembers, setIsLoadingListMembers] = useState(false);
+  const [memberToRemoveFromList, setMemberToRemoveFromList] = useState<SeedListRecipient | null>(null);
+  const [isRemovingMember, setIsRemovingMember] = useState(false);
+
   // Load system users and seed lists on mount
   useEffect(() => {
     const loadInitialData = async () => {
@@ -200,12 +223,27 @@ export default function SeedListManagementPage() {
       setLoading(true);
       const allMembers: SeedListRecipient[] = [];
 
+      if (!seedLists || !Array.isArray(seedLists)) {
+        setRecipients([]);
+        return;
+      }
+
       for (const list of seedLists) {
+        if (!list || !list.id) {
+          continue;
+        }
+
         try {
-          const members = await seedListService.getMembers(
-            typeof list.id === "string" ? parseInt(list.id) : list.id
-          );
-          allMembers.push(...members);
+          const numericId = typeof list.id === "string" ? parseInt(list.id) : list.id;
+          if (isNaN(numericId)) {
+            console.error(`Invalid list ID format for list:`, list);
+            continue;
+          }
+
+          const members = await seedListService.getMembers(numericId);
+          if (Array.isArray(members)) {
+            allMembers.push(...members);
+          }
         } catch (error) {
           console.error(`Failed to load members for list ${list.id}:`, error);
         }
@@ -253,6 +291,7 @@ export default function SeedListManagementPage() {
               id: list.id,
               name: list.name,
               description: list.description,
+              customer_count: (list as any).customer_count || 0,
             }))
           : [],
       );
@@ -306,7 +345,7 @@ export default function SeedListManagementPage() {
 
     setIsRemovingRecipient(true);
     try {
-      const listId = recipientToRemove.list_id ? parseInt(recipientToRemove.list_id) : 0;
+      const listId = recipientToRemove.seed_list_id || 0;
       if (!listId) {
         showError("Invalid seed list ID");
         return;
@@ -328,6 +367,88 @@ export default function SeedListManagementPage() {
   const handleCancelRemove = () => {
     setRecipientToRemove(null);
   };
+
+  const loadListMembers = async (listId: string | number) => {
+    if (!listId) {
+      showError("Invalid list ID");
+      return;
+    }
+
+    try {
+      setIsLoadingListMembers(true);
+      const numericId = typeof listId === "string" ? parseInt(listId) : listId;
+
+      if (isNaN(numericId)) {
+        showError("Invalid list ID format");
+        setListMembers([]);
+        return;
+      }
+
+      const members = await seedListService.getMembers(numericId);
+      if (Array.isArray(members)) {
+        setListMembers(members);
+      } else {
+        setListMembers([]);
+      }
+    } catch (error) {
+      console.error("Failed to load list members:", error);
+      showError("Failed to load list members");
+      setListMembers([]);
+    } finally {
+      setIsLoadingListMembers(false);
+    }
+  };
+
+  const handleOpenListMembersModal = async (list: { id: string | number; name: string }) => {
+    setSelectedListForMembers(list);
+    await loadListMembers(list.id);
+  };
+
+  const handleCloseListMembersModal = () => {
+    setSelectedListForMembers(null);
+    setListMembers([]);
+    setMemberToRemoveFromList(null);
+  };
+
+  const handleRemoveMemberFromList = (member: SeedListRecipient) => {
+    setMemberToRemoveFromList(member);
+  };
+
+  const handleConfirmRemoveMemberFromList = useCallback(async () => {
+    if (!memberToRemoveFromList) return;
+    if (!selectedListForMembers) return;
+    if (!memberToRemoveFromList.id) {
+      showError("Invalid member ID");
+      return;
+    }
+    if (!selectedListForMembers.id) {
+      showError("Invalid list ID");
+      return;
+    }
+
+    setIsRemovingMember(true);
+    try {
+      const listId = typeof selectedListForMembers.id === "string"
+        ? parseInt(selectedListForMembers.id)
+        : selectedListForMembers.id;
+
+      if (isNaN(listId)) {
+        showError("Invalid list ID");
+        return;
+      }
+
+      await seedListService.removeMember(listId, memberToRemoveFromList.id);
+
+      setListMembers(listMembers.filter((m) => m && m.id !== memberToRemoveFromList.id));
+      showToast("Member removed successfully");
+    } catch (error) {
+      console.error("Failed to remove member:", error);
+      showError("Failed to remove member");
+    } finally {
+      setIsRemovingMember(false);
+      setMemberToRemoveFromList(null);
+    }
+  }, [memberToRemoveFromList, selectedListForMembers, listMembers, showToast, showError]);
 
   const handleSaveTestList = async (data: { name: string; description?: string }) => {
     setIsCreatingList(true);
@@ -360,19 +481,34 @@ export default function SeedListManagementPage() {
 
   const confirmDeleteList = async () => {
     if (!listToDelete) return;
+    if (!listToDelete.id) {
+      showError("Invalid list ID");
+      return;
+    }
 
     setIsDeletingList(true);
     try {
-      const listId = typeof listToDelete.id === "string" ? parseInt(listToDelete.id) : listToDelete.id;
-      await seedListService.delete(listId);
-      setSeedLists(seedLists.filter((l) => l.id !== listToDelete.id));
-      setRecipients(
-        recipients.filter((r) => r.seed_list_id !== listId),
-      );
-      showToast("Test list deleted successfully");
+      const numericId = typeof listToDelete.id === "string" ? parseInt(listToDelete.id) : listToDelete.id;
+
+      if (isNaN(numericId)) {
+        showError("Invalid list ID format");
+        return;
+      }
+
+      await seedListService.delete(numericId);
+
+      if (seedLists && Array.isArray(seedLists)) {
+        setSeedLists(seedLists.filter((l) => l && l.id !== listToDelete.id));
+      }
+
+      if (recipients && Array.isArray(recipients)) {
+        setRecipients(recipients.filter((r) => r && r.seed_list_id !== numericId));
+      }
+
+      showToast("Seed list deleted successfully");
     } catch (error) {
-      console.error("Failed to delete test list:", error);
-      showError("Failed to delete test list");
+      console.error("Failed to delete seed list:", error);
+      showError("Failed to delete seed list");
     } finally {
       setIsDeletingList(false);
       setListToDelete(null);
@@ -381,9 +517,14 @@ export default function SeedListManagementPage() {
 
   const handleOpenModal = () => {
     setFormData({
+      mode: "existing_user",
       user_id: "",
+      phone_number: "",
       line_of_business_id: "",
       list_id: "",
+      external_name: "",
+      external_email: "",
+      external_phone: "",
     });
     setErrors({});
     setIsModalOpen(true);
@@ -392,9 +533,14 @@ export default function SeedListManagementPage() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setFormData({
+      mode: "existing_user",
       user_id: "",
+      phone_number: "",
       line_of_business_id: "",
       list_id: "",
+      external_name: "",
+      external_email: "",
+      external_phone: "",
     });
     setErrors({});
   };
@@ -402,9 +548,6 @@ export default function SeedListManagementPage() {
   const handleAddRecipient = async () => {
     const newErrors: FormErrors = {};
 
-    if (!formData.user_id) {
-      newErrors.user_id = "User is required";
-    }
     if (!formData.line_of_business_id) {
       newErrors.line_of_business_id = "Line of Business is required";
     }
@@ -412,41 +555,118 @@ export default function SeedListManagementPage() {
       newErrors.list_id = "Test List is required";
     }
 
+    if (formData.mode === "existing_user") {
+      if (!formData.user_id) {
+        newErrors.user_id = "User is required";
+      }
+      if (!formData.phone_number) {
+        newErrors.phone_number = "Phone is required";
+      }
+    } else {
+      if (!formData.external_name) {
+        newErrors.external_name = "Name is required";
+      }
+      if (!formData.external_email) {
+        newErrors.external_email = "Email is required";
+      }
+      if (!formData.external_phone) {
+        newErrors.external_phone = "Phone is required";
+      }
+    }
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
-    const selectedUser = systemUsers.find((u) => u.id.toString() === formData.user_id);
-    const selectedList = seedLists.find((l) => l.id.toString() === formData.list_id);
-    if (!selectedUser || !selectedList) return;
+    const selectedList = seedLists.find((l) => l && l.id && l.id.toString() === formData.list_id);
+    if (!selectedList) {
+      showError("Invalid seed list selected");
+      return;
+    }
 
     try {
       setLoading(true);
+      if (!selectedList.id) {
+        showError("Invalid list ID");
+        return;
+      }
+
       const listId = typeof selectedList.id === "string" ? parseInt(selectedList.id) : selectedList.id;
 
-      const response = await seedListService.addMember({
-        seed_list_id: listId,
-        customer_id: selectedUser.id,
-        customer_name: `${selectedUser.first_name} ${selectedUser.last_name}`.trim(),
-        customer_email: selectedUser.email_address,
-        customer_phone: selectedUser.phone_number,
-        line_of_business_id: parseInt(formData.line_of_business_id),
-      });
+      if (isNaN(listId)) {
+        showError("Invalid list ID format");
+        return;
+      }
+
+      let memberData: any;
+
+      if (formData.mode === "existing_user") {
+        const selectedUser = systemUsers.find((u) => u && u.id && u.id.toString() === formData.user_id);
+        if (!selectedUser) {
+          showError("Invalid user selected");
+          return;
+        }
+
+        if (!selectedUser.id || !selectedUser.email_address) {
+          showError("Invalid user data");
+          return;
+        }
+
+        const firstName = selectedUser.first_name || "";
+        const lastName = selectedUser.last_name || "";
+
+        memberData = {
+          seed_list_id: listId,
+          customer_id: selectedUser.id,
+          customer_name: `${firstName} ${lastName}`.trim(),
+          customer_email: selectedUser.email_address,
+          customer_phone: formData.phone_number,
+          line_of_business_id: parseInt(formData.line_of_business_id),
+        };
+      } else {
+        memberData = {
+          seed_list_id: listId,
+          customer_id: 0,
+          customer_name: formData.external_name,
+          customer_email: formData.external_email,
+          customer_phone: formData.external_phone,
+          line_of_business_id: parseInt(formData.line_of_business_id),
+        };
+      }
+
+      const response = await seedListService.addMember(memberData);
+
+      if (!response) {
+        showError("Failed to process response");
+        return;
+      }
+
+      let recipientId = response.data?.id;
+      if (!recipientId) {
+        const maxId = recipients && Array.isArray(recipients) && recipients.length > 0
+          ? Math.max(...recipients.map((r) => r?.id || 0))
+          : 0;
+        recipientId = maxId + 1;
+      }
+
+      const lineOfBusiness = linesOfBusiness && Array.isArray(linesOfBusiness)
+        ? linesOfBusiness.find(
+            (l) => l && l.id && l.id.toString() === formData.line_of_business_id
+          )
+        : undefined;
 
       const newRecipient: SeedListRecipient = {
-        id: response.data?.id || Math.max(...recipients.map((r) => r.id), 0) + 1,
+        id: recipientId || 0,
         seed_list_id: listId,
-        customer_id: selectedUser.id,
-        customer_name: `${selectedUser.first_name} ${selectedUser.last_name}`.trim(),
-        customer_email: selectedUser.email_address,
-        customer_phone: selectedUser.phone_number,
+        customer_id: memberData.customer_id || 0,
+        customer_name: memberData.customer_name || "",
+        customer_email: memberData.customer_email || "",
+        customer_phone: memberData.customer_phone || "",
         department_id: undefined,
-        department_name: selectedUser.department,
-        line_of_business_id: parseInt(formData.line_of_business_id),
-        line_of_business_name: linesOfBusiness.find(
-          (l) => l.id.toString() === formData.line_of_business_id,
-        )?.name,
+        department_name: undefined,
+        line_of_business_id: parseInt(formData.line_of_business_id) || 0,
+        line_of_business_name: lineOfBusiness?.name,
         status: "active",
         added_at: new Date().toISOString(),
         created_at: new Date().toISOString(),
@@ -488,7 +708,7 @@ export default function SeedListManagementPage() {
             style={{ backgroundColor: color.primary.action }}
           >
             <Plus className="w-4 h-4" />
-            {activeTab === "recipients" ? "Add Recipient" : "Create List"}
+            {activeTab === "recipients" ? "Add Recipient" : "Create Seed List"}
           </button>
         </div>
       </div>
@@ -515,7 +735,7 @@ export default function SeedListManagementPage() {
           }`}
         >
           <Mail className="w-4 h-4 flex-shrink-0" />
-          <span className="whitespace-nowrap">Test Recipients</span>
+          <span className="whitespace-nowrap">Seed List Recipients</span>
           <span
             className="px-1.5 py-0.5 rounded-full text-xs font-medium flex-shrink-0"
             style={{
@@ -547,7 +767,7 @@ export default function SeedListManagementPage() {
           }`}
         >
           <Mail className="w-4 h-4 flex-shrink-0" />
-          <span className="whitespace-nowrap">Test Lists</span>
+          <span className="whitespace-nowrap">Seed Lists</span>
           <span
             className="px-1.5 py-0.5 rounded-full text-xs font-medium flex-shrink-0"
             style={{
@@ -702,12 +922,12 @@ export default function SeedListManagementPage() {
           <div className="text-center py-12">
             <Mail className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
-              No test recipients found
+              No seed list recipients found
             </h3>
             <p className={`text-sm ${tw.textMuted} mb-6`}>
               {searchTerm
                 ? "Try adjusting your search terms"
-                : "No test recipients available"}
+                : "No seed list recipients available"}
             </p>
           </div>
         ) : (
@@ -744,7 +964,7 @@ export default function SeedListManagementPage() {
                       backgroundColor: color.surface.tableHeader,
                     }}
                   >
-                    Test List
+                    Seed List
                   </th>
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
@@ -768,7 +988,11 @@ export default function SeedListManagementPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredRecipients.map((recipient) => (
+                {filteredRecipients && Array.isArray(filteredRecipients) ? (
+                  filteredRecipients.map((recipient) => {
+                    if (!recipient || !recipient.id) return null;
+
+                    return (
                   <tr key={recipient.id} className="transition-colors">
                     <td
                       className="px-6 py-4"
@@ -795,7 +1019,11 @@ export default function SeedListManagementPage() {
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       <span className="text-sm text-black">
-                        {recipient.list_name || "-"}
+                        {recipient.list_name || (
+                          seedLists && Array.isArray(seedLists)
+                            ? seedLists.find((l) => l && l.id && l.id === recipient.seed_list_id)?.name
+                            : undefined
+                        ) || "-"}
                       </span>
                     </td>
                     <td
@@ -827,7 +1055,9 @@ export default function SeedListManagementPage() {
                       </button>
                     </td>
                   </tr>
-                ))}
+                    );
+                  })
+                ) : null}
               </tbody>
             </table>
           </div>
@@ -839,14 +1069,18 @@ export default function SeedListManagementPage() {
       {/* Test Lists Tab Content */}
       {activeTab === "lists" && (
         <div className={`${tw.rounded} border border-gray-200 overflow-hidden`}>
-          {seedLists.length === 0 ? (
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <LoadingSpinner />
+            </div>
+          ) : seedLists.length === 0 ? (
             <div className="text-center py-12">
               <Mail className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
-                No test lists created yet
+                No seed lists created yet
               </h3>
               <p className={`text-sm ${tw.textMuted} mb-6`}>
-                Click "Create List" to organize test recipients into groups
+                Click "Create Seed List" to organize recipients into groups
               </p>
             </div>
           ) : (
@@ -898,10 +1132,13 @@ export default function SeedListManagementPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {seedLists.map((list) => {
-                    const recipientCount = recipients.filter(
-                      (r) => r.list_id === list.id
-                    ).length;
+                  {seedLists && Array.isArray(seedLists) ? (
+                    seedLists.map((list) => {
+                      if (!list || !list.id) return null;
+
+                      const recipientCount = recipients && Array.isArray(recipients)
+                        ? recipients.filter((r) => r && r.seed_list_id === list.id).length
+                        : 0;
                     return (
                       <tr key={list.id} className="transition-colors">
                         <td
@@ -927,12 +1164,16 @@ export default function SeedListManagementPage() {
                           </div>
                         </td>
                         <td
-                          className="px-6 py-4"
+                          className="px-6 py-4 cursor-pointer"
                           style={{ backgroundColor: color.surface.tablebodybg }}
+                          onClick={() => handleOpenListMembersModal({ id: list.id, name: list.name })}
                         >
-                          <span className="text-sm text-black font-medium">
-                            {recipientCount}
-                          </span>
+                          <button
+                            className="text-sm font-medium hover:underline"
+                            style={{ color: color.primary.accent }}
+                          >
+                            {list.customer_count ?? recipientCount}
+                          </button>
                         </td>
                         <td
                           className="px-6 py-4 text-center"
@@ -957,7 +1198,8 @@ export default function SeedListManagementPage() {
                         </td>
                       </tr>
                     );
-                  })}
+                    })
+                  ) : null}
                 </tbody>
               </table>
             </div>
@@ -971,38 +1213,216 @@ export default function SeedListManagementPage() {
           <div className={`${tw.rounded} bg-white shadow-xl max-w-md w-full mx-4`}>
             <div className="p-6">
               <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
-                Add Test Recipient
+                Add Seed List Recipient
               </h2>
+
+              {/* Mode Toggle */}
+              <div className="flex gap-1 mb-6">
+                <button
+                  onClick={() => {
+                    setFormData({ ...formData, mode: "existing_user" });
+                    setErrors({});
+                  }}
+                  className={`px-4 py-2.5 text-sm font-medium transition-colors relative ${
+                    formData.mode === "existing_user"
+                      ? "text-black"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  Existing User
+                  {formData.mode === "existing_user" && (
+                    <div
+                      className="absolute bottom-0 left-0 right-0 h-0.5"
+                      style={{ backgroundColor: color.primary.accent }}
+                    />
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setFormData({ ...formData, mode: "external_recipient" });
+                    setErrors({});
+                  }}
+                  className={`px-4 py-2.5 text-sm font-medium transition-colors relative ${
+                    formData.mode === "external_recipient"
+                      ? "text-black"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  External Recipient
+                  {formData.mode === "external_recipient" && (
+                    <div
+                      className="absolute bottom-0 left-0 right-0 h-0.5"
+                      style={{ backgroundColor: color.primary.accent }}
+                    />
+                  )}
+                </button>
+              </div>
 
               {/* Form Fields */}
               <div className="space-y-4">
-                {/* User Selection */}
+                {/* Existing User Mode */}
+                {formData.mode === "existing_user" && (
+                  <>
+                    {/* User Selection */}
+                    <div>
+                      <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
+                        Select User *
+                      </label>
+                      <div className={errors.user_id ? "border border-red-500 rounded" : ""}>
+                        <HeadlessSelect
+                          value={formData.user_id}
+                          onChange={(value) => {
+                            setFormData({ ...formData, user_id: value });
+                            if (errors.user_id) {
+                              setErrors({ ...errors, user_id: undefined });
+                            }
+                          }}
+                          options={[
+                            { value: "", label: "Select a user" },
+                            ...systemUsers.map((user) => ({
+                              value: user.id.toString(),
+                              label: `${user.first_name} ${user.last_name}${user.department ? ` (${user.department})` : ""}`,
+                            })),
+                          ]}
+                          placeholder="Select user..."
+                          disabled={loadingUsers}
+                        />
+                      </div>
+                      {errors.user_id && (
+                        <p className="text-xs text-red-500 mt-1">{errors.user_id}</p>
+                      )}
+                    </div>
+
+                    {/* Phone Number */}
+                    <div>
+                      <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
+                        Phone Number *
+                      </label>
+                      <input
+                        type="tel"
+                        value={formData.phone_number}
+                        onChange={(e) => {
+                          setFormData({ ...formData, phone_number: e.target.value });
+                          if (errors.phone_number) {
+                            setErrors({ ...errors, phone_number: undefined });
+                          }
+                        }}
+                        placeholder="Phone number"
+                        className={`w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                          errors.phone_number ? "border-red-500" : "border-gray-300"
+                        }`}
+                      />
+                      {errors.phone_number && (
+                        <p className="text-xs text-red-500 mt-1">{errors.phone_number}</p>
+                      )}
+                    </div>
+                  </>
+                )}
+
+                {/* External Recipient Mode */}
+                {formData.mode === "external_recipient" && (
+                  <>
+                    {/* Name */}
+                    <div>
+                      <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
+                        Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.external_name}
+                        onChange={(e) => {
+                          setFormData({ ...formData, external_name: e.target.value });
+                          if (errors.external_name) {
+                            setErrors({ ...errors, external_name: undefined });
+                          }
+                        }}
+                        placeholder="Full name"
+                        className={`w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                          errors.external_name ? "border-red-500" : "border-gray-300"
+                        }`}
+                      />
+                      {errors.external_name && (
+                        <p className="text-xs text-red-500 mt-1">{errors.external_name}</p>
+                      )}
+                    </div>
+
+                    {/* Email */}
+                    <div>
+                      <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
+                        Email *
+                      </label>
+                      <input
+                        type="email"
+                        value={formData.external_email}
+                        onChange={(e) => {
+                          setFormData({ ...formData, external_email: e.target.value });
+                          if (errors.external_email) {
+                            setErrors({ ...errors, external_email: undefined });
+                          }
+                        }}
+                        placeholder="Email address"
+                        className={`w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                          errors.external_email ? "border-red-500" : "border-gray-300"
+                        }`}
+                      />
+                      {errors.external_email && (
+                        <p className="text-xs text-red-500 mt-1">{errors.external_email}</p>
+                      )}
+                    </div>
+
+                    {/* Phone */}
+                    <div>
+                      <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
+                        Phone *
+                      </label>
+                      <input
+                        type="tel"
+                        value={formData.external_phone}
+                        onChange={(e) => {
+                          setFormData({ ...formData, external_phone: e.target.value });
+                          if (errors.external_phone) {
+                            setErrors({ ...errors, external_phone: undefined });
+                          }
+                        }}
+                        placeholder="Phone number"
+                        className={`w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                          errors.external_phone ? "border-red-500" : "border-gray-300"
+                        }`}
+                      />
+                      {errors.external_phone && (
+                        <p className="text-xs text-red-500 mt-1">{errors.external_phone}</p>
+                      )}
+                    </div>
+                  </>
+                )}
+
+                {/* Test List Selection */}
                 <div>
                   <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                    Select User *
+                    Select Seed List *
                   </label>
-                  <div className={errors.user_id ? "border border-red-500 rounded" : ""}>
+                  <div className={errors.list_id ? "border border-red-500 rounded" : ""}>
                     <HeadlessSelect
-                      value={formData.user_id}
+                      value={formData.list_id}
                       onChange={(value) => {
-                        setFormData({ ...formData, user_id: value });
-                        if (errors.user_id) {
-                          setErrors({ ...errors, user_id: undefined });
+                        setFormData({ ...formData, list_id: value });
+                        if (errors.list_id) {
+                          setErrors({ ...errors, list_id: undefined });
                         }
                       }}
                       options={[
-                        { value: "", label: "Select a user" },
-                        ...systemUsers.map((user) => ({
-                          value: user.id.toString(),
-                          label: `${user.first_name} ${user.last_name}${user.department ? ` (${user.department})` : ""}`,
+                        { value: "", label: "Select a seed list" },
+                        ...seedLists.map((list) => ({
+                          value: list.id.toString(),
+                          label: list.name,
                         })),
                       ]}
-                      placeholder="Select user..."
-                      disabled={loadingUsers}
+                      placeholder="Select seed list..."
+                      zIndex={zIndex.popover}
                     />
                   </div>
-                  {errors.user_id && (
-                    <p className="text-xs text-red-500 mt-1">{errors.user_id}</p>
+                  {errors.list_id && (
+                    <p className="text-xs text-red-500 mt-1">{errors.list_id}</p>
                   )}
                 </div>
 
@@ -1035,36 +1455,6 @@ export default function SeedListManagementPage() {
                     <p className="text-xs text-red-500 mt-1">{errors.line_of_business_id}</p>
                   )}
                 </div>
-
-                {/* Test List Selection */}
-                <div>
-                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                    Select Test List *
-                  </label>
-                  <div className={errors.list_id ? "border border-red-500 rounded" : ""}>
-                    <HeadlessSelect
-                      value={formData.list_id}
-                      onChange={(value) => {
-                        setFormData({ ...formData, list_id: value });
-                        if (errors.list_id) {
-                          setErrors({ ...errors, list_id: undefined });
-                        }
-                      }}
-                      options={[
-                        { value: "", label: "Select a test list" },
-                        ...seedLists.map((list) => ({
-                          value: list.id.toString(),
-                          label: list.name,
-                        })),
-                      ]}
-                      placeholder="Select test list..."
-                      zIndex={zIndex.popover}
-                    />
-                  </div>
-                  {errors.list_id && (
-                    <p className="text-xs text-red-500 mt-1">{errors.list_id}</p>
-                  )}
-                </div>
               </div>
 
               {/* Action Buttons */}
@@ -1077,9 +1467,15 @@ export default function SeedListManagementPage() {
                 </button>
                 <button
                   onClick={handleAddRecipient}
-                  disabled={!formData.user_id || !formData.line_of_business_id || !formData.list_id}
+                  disabled={
+                    (formData.mode === "existing_user"
+                      ? !formData.user_id || !formData.phone_number || !formData.line_of_business_id || !formData.list_id
+                      : !formData.external_name || !formData.external_email || !formData.external_phone || !formData.line_of_business_id || !formData.list_id)
+                  }
                   className={`px-4 py-2 text-white font-medium ${tw.rounded} transition-colors ${
-                    !formData.user_id || !formData.line_of_business_id || !formData.list_id
+                    (formData.mode === "existing_user"
+                      ? !formData.user_id || !formData.phone_number || !formData.line_of_business_id || !formData.list_id
+                      : !formData.external_name || !formData.external_email || !formData.external_phone || !formData.line_of_business_id || !formData.list_id)
                       ? "opacity-50 cursor-not-allowed"
                       : "hover:opacity-90"
                   }`}
@@ -1097,7 +1493,7 @@ export default function SeedListManagementPage() {
       {recipientToRemove && (
         <DeleteConfirmModal
           isOpen={!!recipientToRemove}
-          title="Remove Test Recipient"
+          title="Remove Seed List Recipient"
           description="Are you sure you want to remove this recipient from the seed list? This action cannot be undone."
           itemName={recipientToRemove.customer_name || "this recipient"}
           onConfirm={handleConfirmRemove}
@@ -1111,8 +1507,8 @@ export default function SeedListManagementPage() {
       {/* Delete List Confirmation Modal */}
       <DeleteConfirmModal
         isOpen={!!listToDelete}
-        title="Delete Test List"
-        description="Are you sure you want to delete this test list and all its recipients? This action cannot be undone."
+        title="Delete Seed List"
+        description="Are you sure you want to delete this seed list and all its recipients? This action cannot be undone."
         itemName={listToDelete?.name || "this list"}
         onConfirm={confirmDeleteList}
         onClose={() => setListToDelete(null)}
@@ -1129,6 +1525,117 @@ export default function SeedListManagementPage() {
         isLoading={isCreatingList}
         mode="create"
       />
+
+      {/* List Members Modal */}
+      {selectedListForMembers && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className={`${tw.rounded} bg-white shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] flex flex-col`}>
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className={`text-lg font-semibold ${tw.textPrimary}`}>
+                  {selectedListForMembers.name} - Members
+                </h2>
+                <button
+                  onClick={handleCloseListMembersModal}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6">
+              {isLoadingListMembers ? (
+                <div className="flex items-center justify-center py-12">
+                  <LoadingSpinner />
+                </div>
+              ) : listMembers.length === 0 ? (
+                <div className="text-center py-12">
+                  <Mail className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className={`text-sm ${tw.textMuted}`}>No members in this list</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">
+                          Name
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">
+                          Email
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">
+                          Phone
+                        </th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-600 uppercase">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {listMembers && Array.isArray(listMembers) ? (
+                        listMembers.map((member) => {
+                          if (!member || !member.id) return null;
+
+                          return (
+                            <tr key={member.id} className="border-b border-gray-100 hover:bg-gray-50">
+                              <td className="px-4 py-3 text-sm text-gray-900">
+                                {member.customer_name || "-"}
+                              </td>
+                              <td className="px-4 py-3 text-sm text-gray-600">
+                                {member.customer_email || "-"}
+                              </td>
+                              <td className="px-4 py-3 text-sm text-gray-600">
+                                {member.customer_phone || "-"}
+                              </td>
+                              <td className="px-4 py-3 text-center">
+                                <div className="flex items-center justify-center gap-2">
+                                  <button
+                                    onClick={() => {
+                                      navigate(`/dashboard/customers/details/${member.customer_id}`);
+                                    }}
+                                    className="p-2 text-gray-600 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+                                    title="View customer details"
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleRemoveMemberFromList(member)}
+                                    className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                                    title="Remove member"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      ) : null}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Remove Member from List Confirmation Modal */}
+      {memberToRemoveFromList && (
+        <DeleteConfirmModal
+          isOpen={!!memberToRemoveFromList}
+          title="Remove Member"
+          description="Are you sure you want to remove this member from the seed list?"
+          itemName={memberToRemoveFromList.customer_name || "this member"}
+          onConfirm={handleConfirmRemoveMemberFromList}
+          onClose={() => setMemberToRemoveFromList(null)}
+          isLoading={isRemovingMember}
+          confirmText="Remove"
+          cancelText="Cancel"
+        />
+      )}
     </div>
   );
 }

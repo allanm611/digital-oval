@@ -21,6 +21,7 @@ export interface CommunicationChannel {
 }
 
 export interface CreateCommunicationChannelRequest {
+  code: string;
   name: string;
   description?: string;
   is_active?: boolean;
