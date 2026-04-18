@@ -39,8 +39,12 @@ export function useSegmentationFields(): UseSegmentationFieldsReturn {
           const fieldCategories = response.data[0]?.field_selector_config || [];
           setCategories(Array.isArray(fieldCategories) ? fieldCategories : []);
 
-          // Flatten all fields from all categories
-          const fields = (Array.isArray(fieldCategories) ? fieldCategories : []).flatMap(category => category.fields || []);
+          // Flatten all fields from all categories and subcategories
+          const fields = (Array.isArray(fieldCategories) ? fieldCategories : []).flatMap(category => {
+            const categoryFields = category.fields || [];
+            const subcategoryFields = (category.sub_categories || []).flatMap(sub => sub.fields || []);
+            return [...categoryFields, ...subcategoryFields];
+          });
           setAllFields(Array.isArray(fields) ? fields : []);
         } else {
           setCategories([]);

@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import { tw, color } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
 import type { CreativeTemplate } from "../../configurations/services/creativeTemplateService";
+import { getChannelOptionsFromAPI, CHANNEL_OPTIONS as DEFAULT_CHANNEL_OPTIONS } from "../../configurations/services/creativeTemplateService";
 
 interface CreativeTemplateFormModalProps {
   isOpen: boolean;
@@ -10,17 +11,6 @@ interface CreativeTemplateFormModalProps {
   onSave: (data: any) => Promise<void>;
   template?: CreativeTemplate | null;
 }
-
-const CHANNEL_OPTIONS = [
-  { value: "SMS", label: "SMS" },
-  { value: "Email", label: "Email" },
-  { value: "Push", label: "Push" },
-  { value: "InApp", label: "In-App" },
-  { value: "Web", label: "Web" },
-  { value: "IVR", label: "IVR" },
-  { value: "USSD", label: "USSD" },
-  { value: "WhatsApp", label: "WhatsApp" },
-];
 
 export default function CreativeTemplateFormModal({
   isOpen,
@@ -43,6 +33,22 @@ export default function CreativeTemplateFormModal({
 
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [channelOptions, setChannelOptions] = useState<Array<{ value: string; label: string }>>(DEFAULT_CHANNEL_OPTIONS);
+
+  useEffect(() => {
+    const loadChannels = async () => {
+      try {
+        const options = await getChannelOptionsFromAPI();
+        setChannelOptions(options);
+      } catch {
+        setChannelOptions(DEFAULT_CHANNEL_OPTIONS);
+      }
+    };
+
+    if (isOpen) {
+      loadChannels();
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (template) {
@@ -207,7 +213,7 @@ export default function CreativeTemplateFormModal({
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 bg-white rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                {CHANNEL_OPTIONS.map((opt) => (
+                {channelOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>
                     {opt.label}
                   </option>

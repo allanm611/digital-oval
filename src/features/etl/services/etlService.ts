@@ -245,7 +245,7 @@ class EtlService {
 
     // Get auth headers but exclude Content-Type for FormData
     const authHeaders = getAuthHeaders();
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     const { 'Content-Type': _, ...headersWithoutContentType } = authHeaders as Record<string, string>;
 
     const response = await fetch(url, {

@@ -704,7 +704,7 @@ export default function OverallDashboardPerformancePage() {
   // Scale snapshot data based on actual date range
   const baseSnapshot = mockPerformanceSnapshots[activeRangeKey];
   // kpiSnapshot is computed but not currently used - kept for future use
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   const _kpiSnapshot = useMemo(() => {
     if (!useDummyData) {
       return {

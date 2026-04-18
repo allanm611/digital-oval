@@ -10,6 +10,7 @@ import DateFormatter from "../../../shared/components/DateFormatter";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { getDepartmentsConfig, getLineOfBusinessConfig } from "../../configurations/configs/configurationPageConfigs";
 import { userService } from "../../users/services/userService";
+import { seedListService } from "../../../shared/services/seedListService";
 import CreateTestListModal from "../components/CreateTestListModal";
 
 // Types
@@ -151,10 +152,11 @@ interface SystemUser {
 export default function SeedListManagementPage() {
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
-  const [recipients, setRecipients] = useState<SeedListRecipient[]>(DUMMY_RECIPIENTS);
+  const [recipients, setRecipients] = useState<SeedListRecipient[]>([]);
+  const [seedLists, setSeedLists] = useState<Array<{ id: string | number; name: string; description?: string }>>([]);
   const departments = getDepartmentsConfig(t).initialData;
   const linesOfBusiness = getLineOfBusinessConfig(t).initialData;
-  
+
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
@@ -162,7 +164,7 @@ export default function SeedListManagementPage() {
   const [filterLoB, setFilterLoB] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [activeTab, setActiveTab] = useState<"recipients" | "lists">("recipients");
-  
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<AddRecipientForm>({
     user_id: "",
@@ -172,58 +174,62 @@ export default function SeedListManagementPage() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [systemUsers, setSystemUsers] = useState<SystemUser[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
-  
+
   // Delete confirmation state
   const [recipientToRemove, setRecipientToRemove] = useState<SeedListRecipient | null>(null);
   const [isRemovingRecipient, setIsRemovingRecipient] = useState(false);
-  
+
+  // List deletion state
+  const [listToDelete, setListToDelete] = useState<{ id: string | number; name: string } | null>(null);
+  const [isDeletingList, setIsDeletingList] = useState(false);
+
   // Test list modal state
   const [isCreateListModalOpen, setIsCreateListModalOpen] = useState(false);
-  const [testLists, setTestLists] = useState<Array<{ id: string; name: string; description: string }>>([
-    {
-      id: "list_1",
-      name: "Marketing Team",
-      description: "All marketing team members for testing campaign content",
-    },
-    {
-      id: "list_2",
-      name: "Sales Staff",
-      description: "Sales department staff members for testing promotional content",
-    },
-    {
-      id: "list_3",
-      name: "Support Team",
-      description: "Customer support team for testing communication templates",
-    },
-    {
-      id: "list_4",
-      name: "Management Group",
-      description: "Management and leadership team for senior communications testing",
-    },
-    {
-      id: "list_5",
-      name: "Executive Team",
-      description: "Executive and C-level staff for testing high-priority communications",
-    },
-  ]);
+  const [isCreatingList, setIsCreatingList] = useState(false);
 
-  // Load system users on mount
+  // Load system users and seed lists on mount
   useEffect(() => {
-    const loadUsers = async () => {
-      try {
-        setLoadingUsers(true);
-        const response = await userService.getUsers({ limit: 100, offset: 0 });
-        const users = response.data || [];
-        setSystemUsers(Array.isArray(users) ? users : []);
-      } catch (error) {
-        console.error("Failed to load system users:", error);
-        setSystemUsers([]);
-      } finally {
-        setLoadingUsers(false);
-      }
+    const loadInitialData = async () => {
+      await Promise.all([loadUsers(), loadSeedLists()]);
     };
-    loadUsers();
+    loadInitialData();
   }, []);
+
+  const loadUsers = async () => {
+    try {
+      setLoadingUsers(true);
+      const response = await userService.getUsers({ limit: 100, offset: 0 });
+      const users = response.data || [];
+      setSystemUsers(Array.isArray(users) ? users : []);
+    } catch (error) {
+      console.error("Failed to load system users:", error);
+      setSystemUsers([]);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  const loadSeedLists = async () => {
+    try {
+      setLoading(true);
+      const lists = await seedListService.getAll();
+      setSeedLists(
+        Array.isArray(lists)
+          ? lists.map((list) => ({
+              id: list.id,
+              name: list.name,
+              description: list.description,
+            }))
+          : [],
+      );
+    } catch (error) {
+      console.error("Failed to load seed lists:", error);
+      showError("Failed to load seed lists");
+      setSeedLists([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Debounce search
   useEffect(() => {
@@ -266,12 +272,18 @@ export default function SeedListManagementPage() {
 
     setIsRemovingRecipient(true);
     try {
-      // TODO: Call API to remove recipient when backend is ready
-      // await seedListService.removeRecipient(recipientToRemove.id);
-      
+      const listId = recipientToRemove.list_id ? parseInt(recipientToRemove.list_id) : 0;
+      if (!listId) {
+        showError("Invalid seed list ID");
+        return;
+      }
+
+      await seedListService.removeMember(listId, recipientToRemove.id);
+
       setRecipients(recipients.filter((r) => r.id !== recipientToRemove.id));
       showToast("Recipient removed successfully");
-    } catch {
+    } catch (error) {
+      console.error("Failed to remove recipient:", error);
       showError("Failed to remove recipient");
     } finally {
       setIsRemovingRecipient(false);
@@ -284,18 +296,52 @@ export default function SeedListManagementPage() {
   };
 
   const handleSaveTestList = async (data: { name: string; description?: string }) => {
+    setIsCreatingList(true);
     try {
-      // Mock: Add test list to state
-      const newList = {
-        id: `list_${Date.now()}`,
+      const newList = await seedListService.create({
         name: data.name,
-        description: data.description || "",
-      };
-      setTestLists([...testLists, newList]);
+        description: data.description,
+      });
+      setSeedLists([
+        ...seedLists,
+        {
+          id: newList.id,
+          name: newList.name,
+          description: newList.description,
+        },
+      ]);
       showToast("Test list created successfully");
       setIsCreateListModalOpen(false);
-    } catch {
+    } catch (error) {
+      console.error("Failed to create test list:", error);
       showError("Failed to create test list");
+    } finally {
+      setIsCreatingList(false);
+    }
+  };
+
+  const handleDeleteList = (list: { id: string | number; name: string }) => {
+    setListToDelete(list);
+  };
+
+  const confirmDeleteList = async () => {
+    if (!listToDelete) return;
+
+    setIsDeletingList(true);
+    try {
+      const listId = typeof listToDelete.id === "string" ? parseInt(listToDelete.id) : listToDelete.id;
+      await seedListService.delete(listId);
+      setSeedLists(seedLists.filter((l) => l.id !== listToDelete.id));
+      setRecipients(
+        recipients.filter((r) => r.seed_list_id !== listId),
+      );
+      showToast("Test list deleted successfully");
+    } catch (error) {
+      console.error("Failed to delete test list:", error);
+      showError("Failed to delete test list");
+    } finally {
+      setIsDeletingList(false);
+      setListToDelete(null);
     }
   };
 
@@ -319,7 +365,7 @@ export default function SeedListManagementPage() {
     setErrors({});
   };
 
-  const handleAddRecipient = () => {
+  const handleAddRecipient = async () => {
     const newErrors: FormErrors = {};
 
     if (!formData.user_id) {
@@ -337,31 +383,50 @@ export default function SeedListManagementPage() {
       return;
     }
 
-    const selectedUser = systemUsers.find(u => u.id.toString() === formData.user_id);
-    const selectedList = testLists.find(l => l.id === formData.list_id);
+    const selectedUser = systemUsers.find((u) => u.id.toString() === formData.user_id);
+    const selectedList = seedLists.find((l) => l.id.toString() === formData.list_id);
     if (!selectedUser || !selectedList) return;
 
-    const newRecipient: SeedListRecipient = {
-      id: Math.max(...recipients.map(r => r.id), 0) + 1,
-      customer_id: selectedUser.id,
-      customer_name: `${selectedUser.first_name} ${selectedUser.last_name}`.trim(),
-      customer_email: selectedUser.email_address,
-      customer_phone: selectedUser.phone_number,
-      department_id: undefined,
-      department_name: selectedUser.department,
-      line_of_business_id: parseInt(formData.line_of_business_id),
-      line_of_business_name: linesOfBusiness.find(l => l.id.toString() === formData.line_of_business_id)?.name,
-      list_id: selectedList.id,
-      list_name: selectedList.name,
-      status: "active",
-      added_at: new Date().toISOString(),
-      added_by: 1,
-      added_by_name: "Current User",
-    };
+    try {
+      setLoading(true);
+      const listId = typeof selectedList.id === "string" ? parseInt(selectedList.id) : selectedList.id;
 
-    setRecipients([...recipients, newRecipient]);
-    showToast("Recipient added successfully");
-    handleCloseModal();
+      await seedListService.addMember({
+        seed_list_id: listId,
+        customer_id: selectedUser.id,
+        customer_name: `${selectedUser.first_name} ${selectedUser.last_name}`.trim(),
+        customer_email: selectedUser.email_address,
+        customer_phone: selectedUser.phone_number,
+        line_of_business_id: parseInt(formData.line_of_business_id),
+      });
+
+      const newRecipient: SeedListRecipient = {
+        id: Math.max(...recipients.map((r) => r.id), 0) + 1,
+        customer_id: selectedUser.id,
+        customer_name: `${selectedUser.first_name} ${selectedUser.last_name}`.trim(),
+        customer_email: selectedUser.email_address,
+        customer_phone: selectedUser.phone_number,
+        department_id: undefined,
+        department_name: selectedUser.department,
+        line_of_business_id: parseInt(formData.line_of_business_id),
+        line_of_business_name: linesOfBusiness.find(
+          (l) => l.id.toString() === formData.line_of_business_id,
+        )?.name,
+        seed_list_id: listId,
+        status: "active",
+        added_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+      };
+
+      setRecipients([...recipients, newRecipient]);
+      showToast("Recipient added successfully");
+      handleCloseModal();
+    } catch (error) {
+      console.error("Failed to add recipient:", error);
+      showError("Failed to add recipient");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -459,7 +524,7 @@ export default function SeedListManagementPage() {
               color: activeTab === "lists" ? color.primary.accent : color.text.muted,
             }}
           >
-            {testLists.length}
+            {seedLists.length}
           </span>
           {activeTab === "lists" && (
             <div
@@ -740,7 +805,7 @@ export default function SeedListManagementPage() {
       {/* Test Lists Tab Content */}
       {activeTab === "lists" && (
         <div className={`${tw.rounded} border border-gray-200 overflow-hidden`}>
-          {testLists.length === 0 ? (
+          {seedLists.length === 0 ? (
             <div className="text-center py-12">
               <Mail className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
@@ -799,7 +864,7 @@ export default function SeedListManagementPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {testLists.map((list) => {
+                  {seedLists.map((list) => {
                     const recipientCount = recipients.filter(
                       (r) => r.list_id === list.id
                     ).length;
@@ -844,12 +909,12 @@ export default function SeedListManagementPage() {
                           }}
                         >
                           <button
-                            onClick={() => {
-                              setTestLists(
-                                testLists.filter((l) => l.id !== list.id)
-                              );
-                              showToast("Test list deleted successfully");
-                            }}
+                            onClick={() =>
+                              handleDeleteList({
+                                id: list.id,
+                                name: list.name,
+                              })
+                            }
                             className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
                             title="Delete test list"
                           >
@@ -953,7 +1018,7 @@ export default function SeedListManagementPage() {
                       }}
                       options={[
                         { value: "", label: "Select a test list" },
-                        ...testLists.map((list) => ({
+                        ...seedLists.map((list) => ({
                           value: list.id,
                           label: list.name,
                         })),
@@ -1004,12 +1069,25 @@ export default function SeedListManagementPage() {
         />
       )}
 
+      {/* Delete List Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={!!listToDelete}
+        title="Delete Test List"
+        description="Are you sure you want to delete this test list and all its recipients? This action cannot be undone."
+        itemName={listToDelete?.name || "this list"}
+        onConfirm={confirmDeleteList}
+        onClose={() => setListToDelete(null)}
+        isLoading={isDeletingList}
+        confirmText="Delete"
+        cancelText="Cancel"
+      />
+
       {/* Create Test List Modal */}
       <CreateTestListModal
         isOpen={isCreateListModalOpen}
         onClose={() => setIsCreateListModalOpen(false)}
         onSubmit={handleSaveTestList}
-        isLoading={false}
+        isLoading={isCreatingList}
         mode="create"
       />
     </div>

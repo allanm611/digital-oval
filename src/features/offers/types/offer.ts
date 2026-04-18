@@ -34,6 +34,8 @@ export interface Offer {
   offer_type_id?: number; // Backend field - numeric ID of offer type
   offer_type_label?: string; // Backend field - string label of offer type
   category_id?: number;
+  communication_channel_id?: number; // Communication channel for the offer
+  sms_route_id?: number; // SMS route ID (only used when channel is SMS)
   primary_product_id?: number;
   discount_percentage?: number;
   discount_amount?: number;
@@ -65,6 +67,8 @@ export interface CreateOfferRequest {
   offer_type_id?: number; // Frontend field - ID of selected offer type
   offer_type?: string; // Backend field - string value of offer type (for API response compatibility)
   category_id?: string | number;
+  communication_channel_id?: number; // Communication channel for the offer
+  sms_route_id?: number; // SMS route ID (only used when channel is SMS)
   primary_product_id?: number;
   discount_percentage?: number;
   discount_amount?: number;
@@ -89,6 +93,8 @@ export interface UpdateOfferRequest {
   offer_type_id?: number; // Frontend field - ID of selected offer type
   offer_type?: string; // Backend field - string value of offer type (for API response compatibility)
   category_id?: string | number;
+  communication_channel_id?: number; // Communication channel for the offer
+  sms_route_id?: number; // SMS route ID (only used when channel is SMS)
   primary_product_id?: number;
   discount_percentage?: number;
   discount_amount?: number;

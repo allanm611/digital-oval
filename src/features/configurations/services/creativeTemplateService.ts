@@ -1,5 +1,6 @@
 import { buildApiUrl, getAuthHeaders } from "../../../shared/services/api";
 import { ApiResponse } from "../../../shared/types/api";
+import { communicationChannelService } from "../../../shared/services/communicationChannelService";
 
 export enum ChannelEnum {
   SMS = 'SMS',
@@ -22,6 +23,19 @@ export const CHANNEL_OPTIONS = [
   { label: 'USSD', value: ChannelEnum.USSD },
   { label: 'WhatsApp', value: ChannelEnum.WhatsApp },
 ];
+
+export async function getChannelOptionsFromAPI() {
+  try {
+    const channels = await communicationChannelService.getAll();
+    return (channels || []).map((ch: any) => ({
+      label: ch.name,
+      value: ch.code?.toUpperCase() || ch.name,
+    }));
+  } catch (error) {
+    console.error("Failed to fetch channels from API, using defaults:", error);
+    return CHANNEL_OPTIONS;
+  }
+}
 
 export interface CreativeTemplate {
   id: number;

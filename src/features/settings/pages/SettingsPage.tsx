@@ -16,6 +16,7 @@ import currencyCodes from "currency-codes";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import { characterSetService } from "../../configurations/services/characterSetService";
 import { senderIdService } from "../../configurations/services/senderIdService";
+import { communicationChannelService } from "../../../shared/services/communicationChannelService";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import { notificationService } from "../../notifications/services/notificationService";
 import { NotificationSubscription } from "../../notifications/types/notification";
@@ -116,16 +117,6 @@ const dateFormats = [
 // Currencies are now loaded from currency-codes library above
 
 const numberFormats = ["1,234.56", "1 234,56", "1.234,56", "1'234.56"];
-
-// Default communication channels
-const communicationChannels = [
-  { value: "sms", label: "SMS" },
-  { value: "email", label: "Email" },
-  { value: "ussd", label: "USSD" },
-  { value: "push", label: "Push Notification" },
-  { value: "ivr", label: "IVR" },
-  { value: "voice", label: "Voice" },
-];
 
 // Routes - Using actual hardcoded data from configurationPageConfigs
 const routes = [
@@ -266,6 +257,9 @@ export default function SettingsPage() {
   const [senderIdOptions, setSenderIdOptions] = useState<
     Array<{ value: string; label: string }>
   >([]);
+  const [communicationChannelOptions, setCommunicationChannelOptions] = useState<
+    Array<{ value: string; label: string }>
+  >([]);
   const [characterSetDescriptions, setCharacterSetDescriptions] = useState<
     Record<string, string>
   >({});
@@ -369,9 +363,10 @@ export default function SettingsPage() {
   useEffect(() => {
     const loadDynamicOptions = async () => {
       try {
-        const [characterSetResponse, senderIdResponse] = await Promise.all([
+        const [characterSetResponse, senderIdResponse, channelsResponse] = await Promise.all([
           characterSetService.getCharacterSets(),
           senderIdService.getSenderIds(),
+          communicationChannelService.getAll(),
         ]);
 
         const characterSets = Array.isArray(characterSetResponse)
@@ -431,6 +426,20 @@ export default function SettingsPage() {
 
         setSenderIdOptions(fetchedSenderIdOptions);
 
+        const channels = Array.isArray(channelsResponse)
+          ? channelsResponse
+          : channelsResponse || [];
+
+        const fetchedChannelOptions = channels
+          .filter((item) => item?.is_active ?? true)
+          .map((item) => ({
+            value: String(item?.id || "").trim(),
+            label: item?.code ? `${item?.name} (${item?.code})` : String(item?.name || "").trim(),
+          }))
+          .filter((item) => item.value && item.label);
+
+        setCommunicationChannelOptions(fetchedChannelOptions);
+
         setSettings((prev) => ({
           ...prev,
           character_set: fetchedCharacterSetOptions.some(
@@ -443,11 +452,17 @@ export default function SettingsPage() {
           )
             ? prev.default_sender_id
             : fetchedSenderIdOptions[0]?.value || prev.default_sender_id,
+          default_communication_channel: fetchedChannelOptions.some(
+            (option) => option.value === prev.default_communication_channel,
+          )
+            ? prev.default_communication_channel
+            : fetchedChannelOptions[0]?.value || prev.default_communication_channel,
         }));
       } catch (error) {
-        console.error("Failed to fetch character sets or sender IDs:", error);
+        console.error("Failed to fetch character sets, sender IDs, or channels:", error);
         setCharacterSetOptions([]);
         setSenderIdOptions([]);
+        setCommunicationChannelOptions([]);
         setCharacterSetDescriptions({});
       }
     };
@@ -582,8 +597,6 @@ export default function SettingsPage() {
     value: format,
     label: format,
   }));
-
-  const communicationChannelOptions = communicationChannels;
 
   const routeOptions = routes;
 

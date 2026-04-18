@@ -69,6 +69,7 @@ interface OfferCreativeStepProps {
   creatives: LocalOfferCreative[];
   onCreativesChange: (creatives: LocalOfferCreative[]) => void;
   validationError?: string; // Optional validation error message
+  communicationChannelId?: number; // Communication channel ID from step 1
 }
 
 type ActiveField = "title" | "body";
@@ -81,6 +82,11 @@ const CHANNEL_CONFIG: Array<{
 }> = [
   { value: "Email", translationKey: "offers.channels.email", icon: Mail },
   { value: "SMS", translationKey: "offers.channels.sms", icon: Smartphone },
+  {
+    value: "USSD",
+    translationKey: "offers.channels.ussd",
+    icon: Smartphone,
+  },
   {
     value: "WhatsApp",
     translationKey: "offers.channels.whatsApp",
@@ -144,7 +150,7 @@ interface TemplateContent {
 }
 
 // TEMPLATE_CONTENT_MAP is defined but not currently used - kept for future use
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 const _TEMPLATE_CONTENT_MAP: Record<number, TemplateContent> = {
   // SMS Templates (5)
   1: {
@@ -481,8 +487,25 @@ export default function OfferCreativeStep({
   creatives,
   onCreativesChange,
   validationError,
+  communicationChannelId,
 }: OfferCreativeStepProps) {
   const { t } = useLanguage();
+
+  // Map communication channel ID to creative channel name
+  const getDefaultChannelFromId = (channelId?: number): CreativeChannel => {
+    switch (channelId) {
+      case 2:
+        return "SMS";
+      case 3:
+        return "USSD";
+      case 4:
+        return "Email";
+      case 5:
+        return "Push";
+      default:
+        return "SMS"; // Default fallback
+    }
+  };
 
   // Fetch creative templates from backend
   const [templates, setTemplates] = useState<CreativeTemplate[]>([]);
@@ -671,16 +694,15 @@ export default function OfferCreativeStep({
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
   const addCreative = () => {
+    const defaultChannel = getDefaultChannelFromId(communicationChannelId);
     const newCreative: LocalOfferCreative = {
       id: generateId(),
-      channel: "SMS", // Default to SMS
+      channel: defaultChannel, // Use channel from step 1 communication channel selection
       locale: "en", // Default locale
       title: "",
       text_body: "",
       html_body: "",
-      variables: {
-        sms_route: "", // Leave empty until user selects
-      } as Record<string, string | number | boolean>,
+      variables: {} as Record<string, string | number | boolean>,
       is_active: true,
     };
 
@@ -1168,8 +1190,8 @@ export default function OfferCreativeStep({
                 className={`bg-white ${tw.rounded} border border-gray-200 p-6`}
               >
                     <div className="space-y-6">
-                  {/* Channel Selection */}
-                  <div>
+                  {/* Channel Selection - Commented out: will be moved to step 1 */}
+                  {/* <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       {t.offers.channel.label}
                     </label>
@@ -1192,7 +1214,7 @@ export default function OfferCreativeStep({
                       placeholder={t.offers.channel.placeholder}
                       zIndex={zIndex.popover}
                     />
-                  </div>
+                  </div> */}
 
                   {/* Locale Selection */}
                   <div>
@@ -1364,8 +1386,8 @@ export default function OfferCreativeStep({
                       </div>
                     )}
 
-                    {/* SMS Route (for SMS channel only) */}
-                    {selectedCreativeData.channel === "SMS" && (
+                    {/* SMS Route (for SMS channel only) - Moved to step 1 */}
+                    {/* {selectedCreativeData.channel === "SMS" && (
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           {t.offers.smsRoute.label}
@@ -1388,7 +1410,7 @@ export default function OfferCreativeStep({
                           zIndex={zIndex.popover}
                         />
                       </div>
-                    )}
+                    )} */}
 
                     {/* Message content toolbar */}
                     <div

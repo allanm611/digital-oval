@@ -102,7 +102,7 @@ export default function JobExecutionsAnalyticsPage() {
   >([]);
   const [resourceUtilization, setResourceUtilization] =
     useState<ResourceUtilizationStats | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   const [performanceSummary, _setPerformanceSummary] =
     useState<PerformanceSummary | null>(null);
   const [executionsByHour, setExecutionsByHour] = useState<ExecutionByHour[]>(

@@ -6,6 +6,7 @@ import {
   creativeTemplateService,
   CHANNEL_OPTIONS,
   type ChannelEnum,
+  getChannelOptionsFromAPI,
 } from "../../configurations/services/creativeTemplateService";
 import { languageService } from "../../configurations/services/languageService";
 import BackButton from "../../../shared/components/ui/BackButton";
@@ -33,6 +34,7 @@ export default function CreativeTemplateFormPage() {
   const [variablesText, setVariablesText] = useState("");
 
   const [languageOptions, setLanguageOptions] = useState<LanguageOption[]>([]);
+  const [channelOptions, setChannelOptions] = useState<Array<{ value: string; label: string }>>(CHANNEL_OPTIONS);
 
   useEffect(() => {
     const loadLanguages = async () => {
@@ -57,6 +59,19 @@ export default function CreativeTemplateFormPage() {
     };
 
     loadLanguages();
+  }, []);
+
+  useEffect(() => {
+    const loadChannels = async () => {
+      try {
+        const options = await getChannelOptionsFromAPI();
+        setChannelOptions(options);
+      } catch {
+        setChannelOptions(CHANNEL_OPTIONS);
+      }
+    };
+
+    loadChannels();
   }, []);
 
   useEffect(() => {
@@ -218,7 +233,7 @@ export default function CreativeTemplateFormPage() {
               <HeadlessSelect
                 value={channel}
                 onChange={(value) => setChannel(String(value || ""))}
-                options={CHANNEL_OPTIONS}
+                options={channelOptions}
                 placeholder="Select a channel"
               />
             </div>

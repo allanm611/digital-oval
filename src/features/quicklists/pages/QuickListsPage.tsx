@@ -92,7 +92,7 @@ export default function QuickListsPage() {
 
     // Reset to page 1 when search changes (frontend filtering)
     setCurrentPage(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [searchTerm]);
 
   // Frontend filtering handles pagination, no need to reload on page change

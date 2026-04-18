@@ -81,6 +81,7 @@ export default function AudienceConfigurationStep({
 }: AudienceConfigurationStepProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showCreateSegmentModal, setShowCreateSegmentModal] = useState(false);
+  const [editingSegment, setEditingSegment] = useState<CampaignSegment | null>(null);
   const [editingControlGroup, setEditingControlGroup] = useState<string | null>(
     null,
   );
@@ -283,6 +284,24 @@ export default function AudienceConfigurationStep({
   };
 
   const handleSegmentCreated = (segment: Segment) => {
+    // If editing an existing segment, update it
+    if (editingSegment) {
+      const updatedSegments = selectedSegments.map((s) =>
+        s.id === editingSegment.id
+          ? {
+              ...s,
+              name: segment.name,
+              description: segment.description || undefined,
+              customer_count: segment.size_estimate || 0,
+            }
+          : s,
+      );
+      setSelectedSegments(updatedSegments);
+      setEditingSegment(null);
+      setShowCreateSegmentModal(false);
+      return;
+    }
+
     // Convert the created segment to CampaignSegment format
     const campaignSegment: CampaignSegment = {
       id: segment.id?.toString() || "",
@@ -977,7 +996,10 @@ export default function AudienceConfigurationStep({
                             </button>
                           )}
                           <button
-                            onClick={() => {}}
+                            onClick={() => {
+                              setEditingSegment(segment);
+                              setShowCreateSegmentModal(true);
+                            }}
                             className="p-1.5 text-gray-900 rounded transition-colors cursor-pointer"
                             title="Edit Segment"
                           >
@@ -1015,12 +1037,16 @@ export default function AudienceConfigurationStep({
       )}
 
 
-      {/* Create Segment Modal */}
+      {/* Create/Edit Segment Modal */}
       {showCreateSegmentModal && (
         <SegmentModal
           isOpen={showCreateSegmentModal}
-          onClose={() => setShowCreateSegmentModal(false)}
+          onClose={() => {
+            setShowCreateSegmentModal(false);
+            setEditingSegment(null);
+          }}
           onSave={handleSegmentCreated}
+          segment={editingSegment}
         />
       )}
 

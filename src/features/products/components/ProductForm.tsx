@@ -277,7 +277,7 @@ export default function ProductForm({
       ) {
         selectedComboType.combo_resources.forEach((apiResource: any) => {
           // Map API resource_type to form unit (keeping it as-is since it's already in correct format)
-          let resourceType: ProductUnit = apiResource.unit as ProductUnit;
+          const resourceType: ProductUnit = apiResource.unit as ProductUnit;
 
           resources.push({
             resource_type: resourceType,

@@ -141,7 +141,7 @@ export default function ManualBroadcastListsPage() {
       if (response.success && response.data) {
         // Map executions to ManualBroadcast format
         const executions = response.data.data || response.data.executions || (Array.isArray(response.data) ? response.data : []);
-        let broadcasts: ManualBroadcast[] = executions.map(
+        const broadcasts: ManualBroadcast[] = executions.map(
           (exec: any) => ({
             id: exec.id,
             execution_id: exec.last_execution_id,

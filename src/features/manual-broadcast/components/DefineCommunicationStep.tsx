@@ -44,6 +44,7 @@ import type { SeedListRecipient } from "../../campaigns/pages/SeedListManagement
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import { smsRouteService } from "../../routes/services/smsRouteService";
 import { SMSRoute } from "../../routes/types/smsRoute";
+import { communicationChannelService } from "../../../shared/services/communicationChannelService";
 
 interface DefineCommunicationStepProps {
   data: ManualBroadcastData;
@@ -68,25 +69,7 @@ export default function DefineCommunicationStep({
 }: DefineCommunicationStepProps) {
   const { t } = useLanguage();
   const [smsRoutes, setSmsRoutes] = useState<SMSRoute[]>([]);
-
-  const channels = [
-    {
-      id: "SMS" as Channel,
-      name: t.manualBroadcast.channelSMS,
-      icon: MessageSquare,
-    },
-    {
-      id: "EMAIL" as Channel,
-      name: t.manualBroadcast.channelEmail,
-      icon: Mail,
-    },
-    {
-      id: "WHATSAPP" as Channel,
-      name: t.manualBroadcast.channelWhatsApp,
-      icon: Phone,
-    },
-    { id: "PUSH" as Channel, name: t.manualBroadcast.channelPush, icon: Bell },
-  ];
+  const [channels, setChannels] = useState<Array<{ id: Channel; name: string; icon: any }>>([]);
 
   const [selectedChannel, setSelectedChannel] = useState<Channel>(
     data.channel || "SMS",
@@ -150,6 +133,47 @@ export default function DefineCommunicationStep({
     };
     fetchSmsRoutes();
   }, []);
+
+  // Fetch communication channels on component mount
+  useEffect(() => {
+    const fetchChannels = async () => {
+      try {
+        const allChannels = await communicationChannelService.getAll();
+        const channelMap: { [key: string]: any } = {};
+        const iconMap: { [key: string]: any } = {
+          SMS: MessageSquare,
+          EMAIL: Mail,
+          WHATSAPP: Phone,
+          PUSH: Bell,
+        };
+
+        (allChannels || []).forEach((ch: any) => {
+          const code = ch.code?.toUpperCase() || "";
+          if (code && !channelMap[code]) {
+            channelMap[code] = ch;
+          }
+        });
+
+        const channelsList = [
+          { id: "SMS" as Channel, name: channelMap.SMS?.name || t.manualBroadcast.channelSMS, icon: iconMap.SMS },
+          { id: "EMAIL" as Channel, name: channelMap.EMAIL?.name || t.manualBroadcast.channelEmail, icon: iconMap.EMAIL },
+          { id: "WHATSAPP" as Channel, name: channelMap.WHATSAPP?.name || t.manualBroadcast.channelWhatsApp, icon: iconMap.WHATSAPP },
+          { id: "PUSH" as Channel, name: channelMap.PUSH?.name || t.manualBroadcast.channelPush, icon: iconMap.PUSH },
+        ].filter((ch) => channelMap[ch.id] || ch.id === "SMS");
+
+        setChannels(channelsList);
+      } catch (error) {
+        console.error("Failed to fetch communication channels:", error);
+        setChannels([
+          { id: "SMS" as Channel, name: t.manualBroadcast.channelSMS, icon: MessageSquare },
+          { id: "EMAIL" as Channel, name: t.manualBroadcast.channelEmail, icon: Mail },
+          { id: "WHATSAPP" as Channel, name: t.manualBroadcast.channelWhatsApp, icon: Phone },
+          { id: "PUSH" as Channel, name: t.manualBroadcast.channelPush, icon: Bell },
+        ]);
+      }
+    };
+    fetchChannels();
+  }, [t]);
 
   // Get active seed list recipients
   const getActiveRecipients = (): SeedListRecipient[] => {

@@ -95,7 +95,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     localStorage.setItem("auth_permissions", JSON.stringify(userPermissions));
 
     // Default role for immediate display
-    let userRole = "User";
+    const userRole = "User";
 
     if (response.user) {
       // Create user object with default role for immediate display

@@ -74,6 +74,18 @@ const CampaignPages = {
         /* webpackPrefetch: true */ "../../campaigns/pages/DepartmentPage"
       ),
   ),
+  CommunicationChannelsPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../campaigns/pages/CommunicationChannelsPage"
+      ),
+  ),
+  CommunicationChannelDetailsPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../configurations/pages/CommunicationChannelDetailsPage"
+      ),
+  ),
   LineOfBusinessPage: lazy(
     () =>
       import(
@@ -1096,7 +1108,11 @@ export default function Dashboard() {
           />
           <Route
             path="/communication-channels"
-            element={<SettingsPages.CommunicationChannelsPage />}
+            element={<CampaignPages.CommunicationChannelsPage />}
+          />
+          <Route
+            path="/communication-channels/:id"
+            element={<CampaignPages.CommunicationChannelDetailsPage />}
           />
           <Route
             path="/sms-routes/*"

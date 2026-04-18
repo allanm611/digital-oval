@@ -106,7 +106,7 @@ export default function CreateProductPage({
       // Map unit to unit_of_measure and exclude frontend-only fields
       // Backend doesn't accept: unit, unit_value, combo_data, validity_hours
       // Note: product_type_id is sent to backend as-is
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+       
       const {
         unit,
         unit_value,

@@ -440,7 +440,7 @@ export default function SegmentConditionsBuilder({
   } = useSegmentationFields();
 
   // Helper: get the first operator for a field based on its field_type
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const getFirstBackendOperator = (
     field: Record<string, any> | null | undefined,
   ) => {
@@ -983,7 +983,7 @@ export default function SegmentConditionsBuilder({
     const isBooleanField = fieldType === "boolean" || fieldType === "bool";
 
     // Check if field is numeric (Money, decimal, numeric)
-    const isNumericField = ["money", "decimal", "numeric", "number", "integer", "int", "bigint", "float", "double"].includes(fieldType);
+    const isNumericField = ["money", "decimal", "numeric"].includes(fieldType);
 
     // Check if operator is NULL-type (no value needed) — backend labels: "is empty" / "is not empty"
     const isNullOperator =

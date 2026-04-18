@@ -11,6 +11,9 @@ import {
   Gift,
   Globe,
   Star,
+  Mail,
+  Phone,
+  Bell,
 } from "lucide-react";
 import {
   ConfigurationPageConfig,
@@ -2578,6 +2581,7 @@ export const communicationChannelsConfig: TypeConfigurationPageConfig = {
   updateSuccessMessage: "Communication channel updated successfully",
   deleteErrorMessage: "Failed to delete communication channel",
   saveErrorMessage: "Please try again later.",
+  enableActivateDeactivate: true,
 };
 
 // Sender IDs Configuration
@@ -2654,10 +2658,7 @@ export const smsRoutesConfig: TypeConfigurationPageConfig = {
       label: "Communication Channel",
       type: "select",
       required: true,
-      options: hardcodedCommunicationChannels.map((channel) => ({
-        value: String(channel.id),
-        label: channel.name,
-      })),
+      dynamicOptions: "communicationChannels",
     },
   ],
   hideFields: ["communication_channel_id"],
@@ -2706,10 +2707,7 @@ export const routesConfig: TypeConfigurationPageConfig = {
       label: "Communication Channel",
       type: "select",
       required: true,
-      options: hardcodedCommunicationChannels.map((channel) => ({
-        value: String(channel.id),
-        label: channel.name,
-      })),
+      dynamicOptions: "communicationChannels",
     },
   ],
   statusLabel: "Status",
@@ -3380,6 +3378,12 @@ export function getDepartmentsConfig(
   _t: (key: string) => string,
 ): ConfigurationPageConfig {
   return departmentsConfig;
+}
+
+export function getCommunicationChannelsConfig(
+  _t: (key: string) => string,
+): TypeConfigurationPageConfig {
+  return communicationChannelsConfig;
 }
 
 export function getLineOfBusinessConfig(

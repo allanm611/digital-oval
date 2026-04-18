@@ -379,7 +379,7 @@ export default function OffersPage() {
           try {
             const offersResponse = await offerService.getStats();
             if (offersResponse.success && offersResponse.data) {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+               
               const data = offersResponse.data as {
                 total_offers?: string | number;
                 totalOffers?: string | number;

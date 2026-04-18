@@ -33,6 +33,7 @@ import { offerTypeService } from "../../features/offers/services/offerTypeServic
 import { segmentTypeService } from "../../features/segments/services/segmentTypeService";
 import { productTypeService } from "../../features/products/services/productTypeService";
 import { notificationTypeService } from "../../shared/services/notificationTypeService";
+import { communicationChannelService } from "../../shared/services/communicationChannelService";
 import HeadlessSelect from "./ui/HeadlessSelect";
 import Pagination from "./ui/Pagination";
 import BackButton from "./ui/BackButton";
@@ -41,6 +42,7 @@ import LoadingSpinner from "./ui/LoadingSpinner";
 import DeleteConfirmModal from "./ui/DeleteConfirmModal";
 import Checkbox from "./ui/Checkbox";
 import Input from "./ui/Input";
+import CreateEditCommunicationChannelModal from "../../features/configurations/components/CreateEditCommunicationChannelModal";
 
 export interface TypeConfigurationItem extends ConfigurationItem {
   isActive?: boolean;
@@ -350,6 +352,9 @@ function TypeConfigurationModal({
   const [notificationTableOptions, setNotificationTableOptions] = useState<
     Array<{ value: string; label: string }>
   >([]);
+  const [communicationChannelOptions, setCommunicationChannelOptions] = useState<
+    Array<{ value: string; label: string }>
+  >([]);
 
   useEffect(() => {
     const loadCharacterSets = async () => {
@@ -424,6 +429,27 @@ function TypeConfigurationModal({
     loadNotificationTables();
   }, [isOpen, isNotificationType]);
 
+  useEffect(() => {
+    const loadCommunicationChannels = async () => {
+      try {
+        const channels = await communicationChannelService.getAll();
+        const options = (channels || [])
+          .filter((channel: any) => channel.is_active)
+          .map((channel: any) => ({
+            value: String(channel.id),
+            label: String(channel.name),
+          }));
+        setCommunicationChannelOptions(options);
+      } catch {
+        setCommunicationChannelOptions([]);
+      }
+    };
+
+    if (isOpen) {
+      loadCommunicationChannels();
+    }
+  }, [isOpen]);
+
   // Load character sets dynamically for language configuration
   const getCharacterSetsOptions = () => {
     if (!isLanguage || !config.customFields) return [];
@@ -456,6 +482,17 @@ function TypeConfigurationModal({
       if (notificationTableOptions.length > 0) {
         return notificationTableOptions;
       }
+    }
+    return [];
+  };
+
+  const getCommunicationChannelsOptions = () => {
+    if (!config.customFields) return [];
+    const channelField = config.customFields.find(
+      (f) => f.fieldKey === "communication_channel_id" && f.dynamicOptions === "communicationChannels",
+    );
+    if (channelField) {
+      return communicationChannelOptions;
     }
     return [];
   };
@@ -935,13 +972,15 @@ function TypeConfigurationModal({
                               ? getCharacterSetsOptions()
                               : field.dynamicOptions === "notificationTables"
                                 ? getNotificationTablesOptions()
-                                : field.options || []
+                                : field.dynamicOptions === "communicationChannels"
+                                  ? getCommunicationChannelsOptions()
+                                  : field.options || []
                           }
                           placeholder={field.placeholder}
                           zIndex={
                             10020 + (config.customFields!.length - index) * 10
                           }
-                          searchable={field.dynamicOptions === "notificationTables"}
+                          searchable={field.dynamicOptions === "notificationTables" || field.dynamicOptions === "communicationChannels"}
                         />
                       ) : field.type === "number" ? (
                         <input
@@ -1775,6 +1814,7 @@ export default function TypeConfigurationPage({
   );
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCommChannelModalOpen, setIsCommChannelModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<
     TypeConfigurationItem | undefined
   >();
@@ -1842,6 +1882,11 @@ export default function TypeConfigurationPage({
       navigate("/dashboard/combo-types/create");
       return;
     }
+    if (config.configType === "communicationChannels") {
+      setEditingItem(undefined);
+      setIsCommChannelModalOpen(true);
+      return;
+    }
     setEditingItem(undefined);
     setIsModalOpen(true);
   };
@@ -1857,6 +1902,11 @@ export default function TypeConfigurationPage({
     }
     if (config.configType === "comboTypes") {
       navigate(`/dashboard/combo-types/${item.id}/edit`);
+      return;
+    }
+    if (config.configType === "communicationChannels") {
+      setEditingItem(item);
+      setIsCommChannelModalOpen(true);
       return;
     }
     setEditingItem(item);
@@ -1877,6 +1927,10 @@ export default function TypeConfigurationPage({
       navigate(`/dashboard/combo-types/${item.id}`);
       return;
     }
+    if (config.configType === "communicationChannels") {
+      navigate(`/dashboard/communication-channels/${item.id}`);
+      return;
+    }
   };
 
   const handleDeleteItem = (item: TypeConfigurationItem) => {
@@ -1894,19 +1948,17 @@ export default function TypeConfigurationPage({
     // Optimistically remove row from table immediately.
     setItems((prev) => prev.filter((item) => item.id !== itemToDelete.id));
     try {
-      if (useBackendConfig && backendConfig) {
+      if (config.configType === "communicationChannels") {
+        await communicationChannelService.delete(itemToDelete.id);
+      } else if (useBackendConfig && backendConfig) {
         await backendConfig.delete(itemToDelete.id);
-        showToast(
-          config.deleteConfirmTitle,
-          config.deleteSuccessMessage(itemToDelete.name),
-        );
       } else {
         configurationDataService.deleteItem(config.configType, itemToDelete.id);
-        showToast(
-          config.deleteConfirmTitle,
-          config.deleteSuccessMessage(itemToDelete.name),
-        );
       }
+      showToast(
+        config.deleteConfirmTitle,
+        config.deleteSuccessMessage(itemToDelete.name),
+      );
       setIsDeleteModalOpen(false);
       setDeletingItem(undefined);
     } catch (err) {
@@ -2025,6 +2077,13 @@ export default function TypeConfigurationPage({
         });
       } else if (config.configType === "productTypes") {
         await productTypeService.updateProductType(item.id, {
+          is_active: newActiveStatus,
+        });
+      } else if (config.configType === "communicationChannels") {
+        const { communicationChannelService } = await import(
+          "../../shared/services/communicationChannelService"
+        );
+        await communicationChannelService.update(item.id, {
           is_active: newActiveStatus,
         });
       } else {
@@ -2496,7 +2555,8 @@ export default function TypeConfigurationPage({
                       <div className="flex items-center justify-end space-x-2">
                         {(config.configType === "comboTypes" ||
                           config.configType === "characterSets" ||
-                          config.configType === "creativeTemplates") && (
+                          config.configType === "creativeTemplates" ||
+                          config.configType === "communicationChannels") && (
                           <button
                             onClick={() => handleViewItem(item)}
                             className={`p-2 ${tw.rounded} transition-colors`}
@@ -2579,6 +2639,24 @@ export default function TypeConfigurationPage({
         onSave={handleItemSaved}
         isSaving={isSaving}
         config={config}
+      />
+
+      <CreateEditCommunicationChannelModal
+        isOpen={isCommChannelModalOpen}
+        mode={editingItem ? "edit" : "create"}
+        initialData={editingItem ? (editingItem as any) : undefined}
+        onClose={() => {
+          setIsCommChannelModalOpen(false);
+          setEditingItem(undefined);
+        }}
+        onSave={async (data) => {
+          await handleItemSaved({
+            ...data,
+            isActive: data.is_active,
+          });
+          setIsCommChannelModalOpen(false);
+          setEditingItem(undefined);
+        }}
       />
 
       <DeleteConfirmModal
