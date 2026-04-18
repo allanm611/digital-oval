@@ -195,6 +195,40 @@ export default function SeedListManagementPage() {
     loadInitialData();
   }, []);
 
+  const loadMembers = async () => {
+    try {
+      setLoading(true);
+      const allMembers: SeedListRecipient[] = [];
+
+      for (const list of seedLists) {
+        try {
+          const members = await seedListService.getMembers(
+            typeof list.id === "string" ? parseInt(list.id) : list.id
+          );
+          allMembers.push(...members);
+        } catch (error) {
+          console.error(`Failed to load members for list ${list.id}:`, error);
+        }
+      }
+
+      setRecipients(allMembers);
+    } catch (error) {
+      console.error("Failed to load members:", error);
+      showError("Failed to load members");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load members when seed lists are available
+  useEffect(() => {
+    if (seedLists.length > 0) {
+      loadMembers();
+    } else {
+      setRecipients([]);
+    }
+  }, [seedLists]);
+
   const loadUsers = async () => {
     try {
       setLoadingUsers(true);
@@ -391,7 +425,7 @@ export default function SeedListManagementPage() {
       setLoading(true);
       const listId = typeof selectedList.id === "string" ? parseInt(selectedList.id) : selectedList.id;
 
-      await seedListService.addMember({
+      const response = await seedListService.addMember({
         seed_list_id: listId,
         customer_id: selectedUser.id,
         customer_name: `${selectedUser.first_name} ${selectedUser.last_name}`.trim(),
@@ -401,7 +435,8 @@ export default function SeedListManagementPage() {
       });
 
       const newRecipient: SeedListRecipient = {
-        id: Math.max(...recipients.map((r) => r.id), 0) + 1,
+        id: response.data?.id || Math.max(...recipients.map((r) => r.id), 0) + 1,
+        seed_list_id: listId,
         customer_id: selectedUser.id,
         customer_name: `${selectedUser.first_name} ${selectedUser.last_name}`.trim(),
         customer_email: selectedUser.email_address,
@@ -412,7 +447,6 @@ export default function SeedListManagementPage() {
         line_of_business_name: linesOfBusiness.find(
           (l) => l.id.toString() === formData.line_of_business_id,
         )?.name,
-        seed_list_id: listId,
         status: "active",
         added_at: new Date().toISOString(),
         created_at: new Date().toISOString(),
@@ -1019,7 +1053,7 @@ export default function SeedListManagementPage() {
                       options={[
                         { value: "", label: "Select a test list" },
                         ...seedLists.map((list) => ({
-                          value: list.id,
+                          value: list.id.toString(),
                           label: list.name,
                         })),
                       ]}
@@ -1043,7 +1077,12 @@ export default function SeedListManagementPage() {
                 </button>
                 <button
                   onClick={handleAddRecipient}
-                  className={`px-4 py-2 text-white font-medium ${tw.rounded}`}
+                  disabled={!formData.user_id || !formData.line_of_business_id || !formData.list_id}
+                  className={`px-4 py-2 text-white font-medium ${tw.rounded} transition-colors ${
+                    !formData.user_id || !formData.line_of_business_id || !formData.list_id
+                      ? "opacity-50 cursor-not-allowed"
+                      : "hover:opacity-90"
+                  }`}
                   style={{ backgroundColor: color.primary.action }}
                 >
                   Add Recipient

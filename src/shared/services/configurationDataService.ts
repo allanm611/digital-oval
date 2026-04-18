@@ -20,6 +20,7 @@ import {
   characterSetsConfig,
   resourceTypesConfig,
   utilitiesConfig,
+  offerCreativesConfig,
 } from "../../features/configurations/configs/configurationPageConfigs";
 
 // Type pour identifier les différents types de configuration
@@ -34,6 +35,7 @@ export type ConfigurationType =
   | "comboTypes"
   | "trackingSources"
   | "creativeTemplates"
+  | "offerCreatives"
   | "rewardTypes"
   | "communicationChannels"
   | "senderIds"
@@ -64,6 +66,7 @@ class ConfigurationDataService {
     this.listeners.set("comboTypes", new Set());
     this.listeners.set("trackingSources", new Set());
     this.listeners.set("creativeTemplates", new Set());
+    this.listeners.set("offerCreatives", new Set());
     this.listeners.set("rewardTypes", new Set());
     this.listeners.set("communicationChannels", new Set());
     this.listeners.set("senderIds", new Set());
@@ -93,6 +96,9 @@ class ConfigurationDataService {
     this.data.set("trackingSources", [...trackingSourcesConfig.initialData]);
     this.data.set("creativeTemplates", [
       ...creativeTemplatesConfig.initialData,
+    ]);
+    this.data.set("offerCreatives", [
+      ...offerCreativesConfig.initialData,
     ]);
     this.data.set("rewardTypes", [...rewardTypesConfig.initialData]);
     this.data.set("communicationChannels", [

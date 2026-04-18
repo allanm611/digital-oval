@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ChevronDown, Search, Settings, Plus, X } from "lucide-react";
+import { ChevronDown, Search, Settings, X } from "lucide-react";
 import MultiCategorySelector from "../../../../shared/components/MultiCategorySelector";
 import { CreateCampaignRequest } from "../../types/campaign";
 import { programService } from "../../services/programService";
@@ -15,15 +15,20 @@ import { tw, components, color } from "../../../../shared/utils/utils";
 import { communicationPolicyService } from "../../services/communicationPolicyService";
 import CommunicationPolicyModal from "../CommunicationPolicyModal";
 import PolicyNameModal from "../PolicyNameModal";
+import CreateCampaignTypeModal from "../CreateCampaignTypeModal";
 import { useToast } from "../../../../contexts/ToastContext";
 import { useTranslation, useLanguage } from "../../../../contexts/LanguageContext";
 import { getCurrencySymbol } from "../../../../shared/services/currencyService";
+import { useBackendCampaignTypeData } from "../../../../shared/hooks/useBackendCampaignTypeData";
+import CreateCategoryModal from "../../../../shared/components/CreateCategoryModal";
+import TypeSelector from "../../../../shared/components/TypeSelector";
 
 interface CampaignDefinitionStepProps {
   formData: CreateCampaignRequest;
   setFormData: (data: CreateCampaignRequest) => void;
   validationErrors?: { [key: string]: string };
   clearValidationErrors?: () => void;
+  categoryRefreshTrigger?: number;
 }
 
 const objectiveOptions = [
@@ -69,10 +74,14 @@ export default function CampaignDefinitionStep({
   setFormData,
   validationErrors = {},
   clearValidationErrors,
+  categoryRefreshTrigger,
 }: CampaignDefinitionStepProps) {
   const t = useTranslation();
   const { t: tLanguage } = useLanguage();
   const { success: showToast, error: showError } = useToast();
+
+  const { data: campaignTypes, loading: campaignTypesLoading } =
+    useBackendCampaignTypeData();
 
   const [programSearchTerm, setProgramSearchTerm] = useState("");
   const [isProgramDropdownOpen, setIsProgramDropdownOpen] = useState(false);
@@ -92,6 +101,9 @@ export default function CampaignDefinitionStep({
   const [departmentsData, setDepartmentsData] = useState(
     departmentsConfig.initialData
   );
+  const [showCreateTypeModal, setShowCreateTypeModal] = useState(false);
+  const [showCreateCatalogModal, setShowCreateCatalogModal] = useState(false);
+  const [categoryRefreshTriggerState, setCategoryRefreshTriggerState] = useState(0);
 
   // Communication Policy states
   const [communicationPolicies, setCommunicationPolicies] = useState<
@@ -378,6 +390,13 @@ export default function CampaignDefinitionStep({
                 placeholder="Select catalog(s)"
                 entityType="campaign"
                 className="w-full"
+                allowCreate={true}
+                onCreateCategory={() => setShowCreateCatalogModal(true)}
+                onCategoryCreated={(categoryId) => {
+                  setSelectedCategoryIds([categoryId]);
+                  setCategoryRefreshTriggerState((prev) => prev + 1);
+                }}
+                refreshTrigger={categoryRefreshTriggerState}
               />
             </div>
             {validationErrors.category_id && (
@@ -385,6 +404,46 @@ export default function CampaignDefinitionStep({
                 {validationErrors.category_id}
               </p>
             )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Campaign Type
+            </label>
+            <TypeSelector
+              options={[
+                { value: "", label: "Select campaign type (optional)" },
+                ...campaignTypes
+                  .filter((type) => type.is_active !== false)
+                  .map((type) => ({
+                    value: String(type.id),
+                    label: type.name,
+                  })),
+              ]}
+              disabled={campaignTypesLoading}
+              value={
+                (formData as any).campaign_type_id
+                  ? String((formData as any).campaign_type_id)
+                  : ""
+              }
+              onChange={(value) => {
+                if (!value) {
+                  setFormData({
+                    ...formData,
+                    campaign_type_id: undefined,
+                  } as any);
+                } else {
+                  setFormData({
+                    ...formData,
+                    campaign_type_id: Number(value),
+                  } as any);
+                }
+              }}
+              placeholder={campaignTypesLoading ? "Loading..." : "Select campaign type"}
+              allowCreate={true}
+              onCreate={() => setShowCreateTypeModal(true)}
+              className="w-full"
+            />
           </div>
         </div>
 
@@ -1281,6 +1340,30 @@ export default function CampaignDefinitionStep({
             : ""
         }
         title="Save Custom Policy"
+      />
+
+      {/* Create Catalog Modal */}
+      <CreateCategoryModal
+        isOpen={showCreateCatalogModal}
+        onClose={() => setShowCreateCatalogModal(false)}
+        onCategoryCreated={(categoryId) => {
+          setSelectedCategoryIds([categoryId]);
+          setCategoryRefreshTriggerState((prev) => prev + 1);
+          setShowCreateCatalogModal(false);
+        }}
+      />
+
+      {/* Create Campaign Type Modal */}
+      <CreateCampaignTypeModal
+        isOpen={showCreateTypeModal}
+        onClose={() => setShowCreateTypeModal(false)}
+        onTypeCreated={(typeId) => {
+          setFormData({
+            ...formData,
+            campaign_type_id: typeId,
+          } as any);
+          setShowCreateTypeModal(false);
+        }}
       />
     </div>
   );

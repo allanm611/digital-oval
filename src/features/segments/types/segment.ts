@@ -29,6 +29,7 @@ export type SegmentType = {
   created_by_user_id: number | null;
   segment_type_id?: number; // ID of the segment type (from segment type catalog)
   segment_type_label?: string; // Display label of the segment type (e.g., "Behavioral")
+  customer_identity_field_mapping?: string; // Maps segment to customer identity field
 };
 
 export type SegmentCategoryType = {
@@ -170,6 +171,7 @@ export type CreateSegmentRequest = {
   is_active?: boolean; // Optional (defaults to true)
   visibility?: string; // Optional
   created_by_user_id?: number; // Optional
+  customer_identity_field_mapping?: string; // Optional - maps segment to customer identity field
 };
 
 export type UpdateSegmentRequest = {
@@ -189,6 +191,7 @@ export type UpdateSegmentRequest = {
   query?: string; // Optional
   count_query?: string; // Optional
   size_estimate?: number; // Optional
+  customer_identity_field_mapping?: string; // Optional - maps segment to customer identity field
   tags?: string[]; // Optional
   is_active?: boolean; // Optional
   visibility?: string; // Optional

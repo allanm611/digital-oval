@@ -1561,6 +1561,42 @@ export const creativeTemplatesConfig: TypeConfigurationPageConfig = {
   saveErrorMessage: "Please try again later.",
 };
 
+// Offer Creatives Configuration
+export const offerCreativesConfig: TypeConfigurationPageConfig = {
+  title: "Offer Creatives",
+  subtitle:
+    "Manage reusable offer creatives across different channels and locales",
+  entityName: "offer creative",
+  entityNamePlural: "offer creatives",
+  configType: "offerCreatives",
+  backPath: "/dashboard/configuration",
+  icon: MessageSquare,
+  searchPlaceholder: "Search offer creatives...",
+  initialData: [],
+  createButtonText: "Create",
+  enableActivateDeactivate: true,
+  modalTitle: {
+    create: "Create Offer Creative",
+    edit: "Edit Offer Creative",
+  },
+  nameLabel: "Creative Name",
+  nameRequired: true,
+  descriptionLabel: "Description",
+  descriptionRequired: false,
+  nameMaxLength: 120,
+  descriptionMaxLength: 600,
+  statusLabel: "Status",
+  deleteConfirmTitle: "Delete Offer Creative",
+  deleteConfirmMessage: (name: string) =>
+    `Are you sure you want to delete "${name}"? This creative may be referenced by offers.`,
+  deleteSuccessMessage: (name: string) =>
+    `"${name}" has been deleted successfully.`,
+  createSuccessMessage: "Offer creative created successfully",
+  updateSuccessMessage: "Offer creative updated successfully",
+  deleteErrorMessage: "Failed to delete offer creative",
+  saveErrorMessage: "Please try again later.",
+};
+
 // Reward Types Configuration
 export const rewardTypesConfig: TypeConfigurationPageConfig = {
   title: "Reward Types",
@@ -2661,7 +2697,6 @@ export const smsRoutesConfig: TypeConfigurationPageConfig = {
       dynamicOptions: "communicationChannels",
     },
   ],
-  hideFields: ["communication_channel_id"],
   statusLabel: "Status",
   deleteConfirmTitle: "Delete SMS Route",
   deleteConfirmMessage: (name: string) =>
@@ -3408,6 +3443,12 @@ export function getCreativeTemplatesConfig(
   _t: (key: string) => string,
 ): TypeConfigurationPageConfig {
   return creativeTemplatesConfig;
+}
+
+export function getOfferCreativesConfig(
+  _t: (key: string) => string,
+): TypeConfigurationPageConfig {
+  return offerCreativesConfig;
 }
 
 export function getTrackingSourcesConfig(

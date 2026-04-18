@@ -218,6 +218,23 @@ export default function SegmentListModal({
     }
   };
 
+  const cleanHeaders = (headersLine: string, delimiter: string): string => {
+    if (!headersLine || !delimiter) return headersLine;
+    let delim = delimiter;
+    if (delim === "\\t" || delim === "\t") {
+      delim = "\t";
+    }
+    return headersLine
+      .split(delim)
+      .map((h) =>
+        h
+          .trim() // Remove leading/trailing spaces
+          .replace(/^["']|["']$/g, "") // Remove quotes
+          .replace(/\s+/g, "_") // Replace internal spaces with underscores
+      )
+      .join(delim);
+  };
+
   const validateForm = () => {
     const validationErrors: Record<string, string> = {};
 
@@ -248,6 +265,7 @@ export default function SegmentListModal({
       list_label: form.list_label.trim(),
       list_description: form.list_description.trim(),
       subscriber_id_col_name: form.subscriber_id_col_name.trim(),
+      list_headers: cleanHeaders(form.list_headers || "", form.file_delimiter),
     });
   };
 

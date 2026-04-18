@@ -3,6 +3,7 @@ import { Search, Power, PowerOff } from 'lucide-react';
 import { color, tw } from '../utils/utils';
 import { useMessageVariableFields } from '../../features/manual-broadcast/hooks/useMessageVariableFields';
 import { dynamicMessageVariableService } from '../../features/manual-broadcast/services/dynamicMessageVariableService';
+import { useToast } from '../../contexts/ToastContext';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import BackButton from '../components/ui/BackButton';
 import HeadlessSelect from '../components/ui/HeadlessSelect';
@@ -27,8 +28,12 @@ interface CategoryConfig {
   sub_categories?: CategoryConfig[];
 }
 
+// Mock endpoint calls while waiting for backend
+const MOCK_DYNAMIC_MESSAGE_VARIABLES = true;
+
 export default function DynamicMessageVariablesPage() {
   const { categories, allFields, isLoading } = useMessageVariableFields();
+  const { success: showToast, error: showError } = useToast();
 
   const [categoryConfigs, setCategoryConfigs] = useState<CategoryConfig[]>([]);
   const [fieldConfigs, setFieldConfigs] = useState<MessageVariableFieldConfig[]>([]);
@@ -109,20 +114,34 @@ export default function DynamicMessageVariablesPage() {
   // Update category configs when field configs change
   useEffect(() => {
     if (categoryConfigs.length > 0 && fieldConfigs.length > 0) {
-      const updatedCatConfigs = categoryConfigs.map((cat) => ({
-        ...cat,
-        fields: cat.fields.map((field) => {
-          const updatedField = fieldConfigs.find((f) => f.id === field.id);
-          return updatedField || field;
-        }),
-      }));
+      const updateCatFieldsRecursive = (cats: CategoryConfig[]): CategoryConfig[] => {
+        return cats.map((cat) => ({
+          ...cat,
+          fields: cat.fields.map((field) => {
+            const updatedField = fieldConfigs.find((f) => f.id === field.id);
+            return updatedField || field;
+          }),
+          sub_categories: cat.sub_categories ? updateCatFieldsRecursive(cat.sub_categories) : undefined,
+        }));
+      };
+
+      const updatedCatConfigs = updateCatFieldsRecursive(categoryConfigs);
       setCategoryConfigs(updatedCatConfigs);
 
       // Also update selected category modal if it's open
       if (selectedCategoryForModal) {
-        const updatedCategory = updatedCatConfigs.find(
-          (cat) => cat.id === selectedCategoryForModal.id
-        );
+        const findCategoryRecursive = (cats: CategoryConfig[]): CategoryConfig | undefined => {
+          for (const cat of cats) {
+            if (cat.id === selectedCategoryForModal.id) return cat;
+            if (cat.sub_categories) {
+              const found = findCategoryRecursive(cat.sub_categories);
+              if (found) return found;
+            }
+          }
+          return undefined;
+        };
+
+        const updatedCategory = findCategoryRecursive(updatedCatConfigs);
         if (updatedCategory) {
           setSelectedCategoryForModal(updatedCategory);
         }
@@ -133,28 +152,56 @@ export default function DynamicMessageVariablesPage() {
   const handleToggleCategoryActive = async (categoryId: string) => {
     try {
       setTogglingCategoryId(categoryId);
-      const category = categoryConfigs.find((cat) => cat.id === categoryId);
-      const isDeactivating = category?.is_active;
 
-      const updated = categoryConfigs.map((cat) =>
-        cat.id === categoryId ? { ...cat, is_active: !cat.is_active } : cat
-      );
+      // Find category recursively (handles nested sub_categories)
+      const findCategoryRecursive = (cats: CategoryConfig[]): CategoryConfig | undefined => {
+        for (const cat of cats) {
+          if (cat.id === categoryId) return cat;
+          if (cat.sub_categories) {
+            const found = findCategoryRecursive(cat.sub_categories);
+            if (found) return found;
+          }
+        }
+        return undefined;
+      };
+
+      const foundCat = findCategoryRecursive(categoryConfigs);
+      const isDeactivating = foundCat?.is_active;
+
+      // Toggle category recursively
+      const toggleCategoryRecursive = (cats: CategoryConfig[]): CategoryConfig[] => {
+        return cats.map((cat) => {
+          if (cat.id === categoryId) {
+            return { ...cat, is_active: !cat.is_active };
+          }
+          if (cat.sub_categories) {
+            return { ...cat, sub_categories: toggleCategoryRecursive(cat.sub_categories) };
+          }
+          return cat;
+        });
+      };
+
+      const updated = toggleCategoryRecursive(categoryConfigs);
       setCategoryConfigs(updated);
 
       // If deactivating, also deactivate all fields in this category
       let updatedFields = fieldConfigs;
-      if (isDeactivating && category) {
+      if (isDeactivating && foundCat) {
         updatedFields = fieldConfigs.map((field) =>
-          category.fields.some((f) => f.id === field.id)
+          foundCat.fields.some((f) => f.id === field.id)
             ? { ...field, is_active: false }
             : field
         );
         setFieldConfigs(updatedFields);
       }
 
-      await dynamicMessageVariableService.saveConfigurations(updatedFields);
+      if (!MOCK_DYNAMIC_MESSAGE_VARIABLES) {
+        await dynamicMessageVariableService.saveConfigurations(updatedFields);
+      }
+      showToast(`Category ${isDeactivating ? 'deactivated' : 'activated'} successfully`);
     } catch (error) {
       console.error('Failed to toggle category activation:', error);
+      showError('Failed to update category');
     } finally {
       setTogglingCategoryId(null);
     }
@@ -169,9 +216,15 @@ export default function DynamicMessageVariablesPage() {
           : config
       );
       setFieldConfigs(updated);
-      await dynamicMessageVariableService.saveConfigurations(updated);
+      if (!MOCK_DYNAMIC_MESSAGE_VARIABLES) {
+        await dynamicMessageVariableService.saveConfigurations(updated);
+      }
+      const field = fieldConfigs.find((f) => f.id === fieldId);
+      const newState = desiredState !== undefined ? desiredState : !field?.is_active;
+      showToast(`Field ${newState ? 'activated' : 'deactivated'} successfully`);
     } catch (error) {
       console.error('Failed to toggle field activation:', error);
+      showError('Failed to update field');
     } finally {
       setTogglingId(null);
     }

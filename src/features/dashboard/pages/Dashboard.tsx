@@ -190,6 +190,12 @@ const OfferPages = {
         /* webpackPrefetch: true */ "../../offers/pages/CreativeTemplateFormPage"
       ),
   ),
+  OfferCreativesPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../offers/pages/OfferCreativesPage"
+      ),
+  ),
   RewardTypesPage: lazy(
     () =>
       import(/* webpackPrefetch: true */ "../../offers/pages/RewardTypesPage"),
@@ -865,6 +871,10 @@ export default function Dashboard() {
           <Route
             path="/offers/:id/lifecycle-history"
             element={<OfferPages.OfferLifecycleHistoryPage />}
+          />
+          <Route
+            path="/offer-creatives"
+            element={<OfferPages.OfferCreativesPage />}
           />
           <Route
             path="/offer-creatives/:id"

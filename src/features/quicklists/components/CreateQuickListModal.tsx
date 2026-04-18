@@ -336,6 +336,23 @@ export default function CreateQuickListModal({
     document.body.removeChild(link);
   };
 
+  const cleanHeaders = (headersLine: string, delimiter: string): string => {
+    if (!headersLine || !delimiter) return headersLine;
+    let delim = delimiter;
+    if (delim === "\\t" || delim === "\t") {
+      delim = "\t";
+    }
+    return headersLine
+      .split(delim)
+      .map((h) =>
+        h
+          .trim() // Remove leading/trailing spaces
+          .replace(/^["']|["']$/g, "") // Remove quotes
+          .replace(/\s+/g, "_") // Replace internal spaces with underscores
+      )
+      .join(delim);
+  };
+
   const handleDragEnter = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -445,7 +462,7 @@ export default function CreateQuickListModal({
         file_delimiter: form.file_delimiter,
         subscriber_id_col_name: form.subscriber_id_col_name.trim(),
         subscriber_id_field_mapping: form.subscriber_id_field_mapping.trim() || undefined,
-        list_headers: form.list_headers,
+        list_headers: cleanHeaders(form.list_headers, form.file_delimiter),
         upload_type: form.upload_type,
       });
       handleClose();

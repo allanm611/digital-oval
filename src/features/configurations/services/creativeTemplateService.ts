@@ -27,10 +27,12 @@ export const CHANNEL_OPTIONS = [
 export async function getChannelOptionsFromAPI() {
   try {
     const channels = await communicationChannelService.getAll();
-    return (channels || []).map((ch: any) => ({
-      label: ch.name,
-      value: ch.code?.toUpperCase() || ch.name,
-    }));
+    return (channels || [])
+      .filter((ch: any) => ch.is_active !== false)
+      .map((ch: any) => ({
+        label: ch.name,
+        value: ch.code?.toUpperCase() || ch.name,
+      }));
   } catch (error) {
     console.error("Failed to fetch channels from API, using defaults:", error);
     return CHANNEL_OPTIONS;

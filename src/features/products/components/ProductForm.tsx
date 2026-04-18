@@ -133,6 +133,54 @@ export default function ProductForm({
   // Tags input state
   const [tagInput, setTagInput] = useState("");
 
+  // Validate combo resources
+  const validateComboResources = (): string | null => {
+    if (isComboType && comboData.resources.length === 0) {
+      return "Please add at least one resource to the combo";
+    }
+
+    if (isComboType) {
+      // Validate shared fields if they're enabled
+      if (comboSettings.shared_validity && !comboData.shared_validity_hours) {
+        return "Shared Validity (Hours) is required";
+      }
+      if (comboSettings.shared_price && comboData.price === undefined) {
+        return "Combo Price is required";
+      }
+      if (comboSettings.shared_daid && !comboData.shared_daid_account) {
+        return "Shared DAID Account is required";
+      }
+
+      // Validate each resource
+      for (let i = 0; i < comboData.resources.length; i++) {
+        const resource = comboData.resources[i];
+
+        if (!resource.unit_value || resource.unit_value === 0) {
+          return `Resource ${i + 1}: Unit value is required`;
+        }
+
+        if (!resource.unit) {
+          return `Resource ${i + 1}: Unit is required`;
+        }
+
+        // Validate non-shared fields for each resource
+        if (!comboSettings.shared_validity && !resource.validity_hours) {
+          return `Resource ${i + 1}: Validity (Hours) is required`;
+        }
+
+        if (!comboSettings.shared_price && (resource.price === undefined || resource.price === null)) {
+          return `Resource ${i + 1}: Price is required`;
+        }
+
+        if (!comboSettings.shared_daid && !resource.daid_account) {
+          return `Resource ${i + 1}: DAID Account is required`;
+        }
+      }
+    }
+
+    return null;
+  };
+
   // Validate form fields
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -155,6 +203,12 @@ export default function ProductForm({
 
     if (!formData.description || !formData.description.trim()) {
       newErrors.description = "Description is required";
+    }
+
+    // Validate combo resources
+    const comboError = validateComboResources();
+    if (comboError) {
+      newErrors.combo = comboError;
     }
 
     setErrors(newErrors);
@@ -1382,6 +1436,27 @@ export default function ProductForm({
                               return;
                             }
 
+                            // Validate required fields based on combo settings
+                            if (!tempResourceData.unit) {
+                              alert("Unit is required");
+                              return;
+                            }
+
+                            if (!comboSettings.shared_validity && !tempResourceData.validity_hours) {
+                              alert("Validity (Hours) is required for each resource");
+                              return;
+                            }
+
+                            if (!comboSettings.shared_price && (tempResourceData.price === undefined || tempResourceData.price === null)) {
+                              alert("Price is required for each resource");
+                              return;
+                            }
+
+                            if (!comboSettings.shared_daid && !tempResourceData.daid_account) {
+                              alert("DAID Account is required for each resource");
+                              return;
+                            }
+
                             // Add resource with all temp data at once
                             addComboResource(
                               selectedResourceType,
@@ -1396,7 +1471,15 @@ export default function ProductForm({
                             // Collapse accordion after adding
                             setIsAddResourceExpanded(false);
                           }}
-                          disabled={!selectedResourceType || tempResourceData.unit_value === 0 || tempResourceData.unit_value === undefined}
+                          disabled={
+                            !selectedResourceType ||
+                            tempResourceData.unit_value === 0 ||
+                            tempResourceData.unit_value === undefined ||
+                            !tempResourceData.unit ||
+                            (!comboSettings.shared_validity && !tempResourceData.validity_hours) ||
+                            (!comboSettings.shared_price && (tempResourceData.price === undefined || tempResourceData.price === null)) ||
+                            (!comboSettings.shared_daid && !tempResourceData.daid_account)
+                          }
                           style={{
                             background: buttons.bordered.background,
                             color: "#000000",
@@ -1405,10 +1488,24 @@ export default function ProductForm({
                             borderRadius: buttons.bordered.borderRadius,
                             fontSize: buttons.bordered.fontSize,
                             fontWeight: 500,
-                            cursor: (selectedResourceType && tempResourceData.unit_value && tempResourceData.unit_value > 0)
-                              ? "pointer"
-                              : "not-allowed",
-                            opacity: (selectedResourceType && tempResourceData.unit_value && tempResourceData.unit_value > 0) ? 1 : 0.5,
+                            cursor: (
+                              selectedResourceType &&
+                              tempResourceData.unit_value &&
+                              tempResourceData.unit_value > 0 &&
+                              tempResourceData.unit &&
+                              (comboSettings.shared_validity || tempResourceData.validity_hours) &&
+                              (comboSettings.shared_price || (tempResourceData.price !== undefined && tempResourceData.price !== null)) &&
+                              (comboSettings.shared_daid || tempResourceData.daid_account)
+                            ) ? "pointer" : "not-allowed",
+                            opacity: (
+                              selectedResourceType &&
+                              tempResourceData.unit_value &&
+                              tempResourceData.unit_value > 0 &&
+                              tempResourceData.unit &&
+                              (comboSettings.shared_validity || tempResourceData.validity_hours) &&
+                              (comboSettings.shared_price || (tempResourceData.price !== undefined && tempResourceData.price !== null)) &&
+                              (comboSettings.shared_daid || tempResourceData.daid_account)
+                            ) ? 1 : 0.5,
                           }}
                         >
                           Save Resource

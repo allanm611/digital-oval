@@ -75,6 +75,12 @@ import {
   CreateControlGroupRequest,
   UpdateControlGroupRequest,
 } from "../services/controlGroupService";
+import {
+  offerCreativeService,
+  OfferCreative,
+  CreateOfferCreativeRequest,
+  UpdateOfferCreativeRequest,
+} from "../../features/offers/services/offerCreativeService";
 
 /**
  * Normalize API response to TypeConfigurationItem format
@@ -149,6 +155,13 @@ function normalizeApiResponse(type: string, data: any[]): any[] {
         if (normalized.primaryChannel) {
           normalized.metadataValue = normalized.primaryChannel;
         }
+        // Convert is_active to isActive
+        if (normalized.is_active !== undefined) {
+          normalized.isActive = normalized.is_active;
+        }
+        break;
+
+      case "offerCreatives":
         // Convert is_active to isActive
         if (normalized.is_active !== undefined) {
           normalized.isActive = normalized.is_active;
@@ -312,6 +325,14 @@ function transformPayload(type: string, payload: any): any {
       if (transformed.metadataValue) {
         transformed.primaryChannel = transformed.metadataValue;
         delete transformed.metadataValue;
+      }
+      break;
+
+    case "offerCreatives":
+      // Map isActive to is_active
+      if (transformed.isActive !== undefined) {
+        transformed.is_active = transformed.isActive;
+        delete transformed.isActive;
       }
       break;
 
@@ -532,6 +553,22 @@ export function useBackendConfigurationData(
           }
           break;
 
+        case "offerCreatives":
+          response = await offerCreativeService.superSearch({ limit: 1000 });
+          if (response?.success && response?.data) {
+            setData(
+              normalizeApiResponse(
+                type,
+                Array.isArray(response.data) ? response.data : [],
+              ),
+            );
+          } else if (Array.isArray(response)) {
+            setData(normalizeApiResponse(type, response));
+          } else {
+            setData([]);
+          }
+          break;
+
         case "offerTypes":
           response = await offerTypeService.getAllOfferTypes();
           if (response?.success && response?.data) {
@@ -701,6 +738,9 @@ export function useBackendConfigurationData(
                 await creativeTemplateService.createCreativeTemplate(payload);
             // Return the data if wrapped, otherwise return response directly
             return response?.data || response;
+          case "offerCreatives":
+            response = await offerCreativeService.create(payload);
+            return response?.data || response;
           case "smsRoutes":
             response = await smsRouteService.createRoute(payload);
             return response;
@@ -778,6 +818,9 @@ export function useBackendConfigurationData(
               );
             // Return the data if wrapped, otherwise return response directly
             return response?.data || response;
+          case "offerCreatives":
+            response = await offerCreativeService.update(id, payload);
+            return response?.data || response;
           case "smsRoutes":
             response = await smsRouteService.updateRoute(payload);
             return response;
@@ -841,6 +884,9 @@ export function useBackendConfigurationData(
               await characterSetService.deleteCharacterSet(id);
             else if (type === "creativeTemplates")
               await creativeTemplateService.deleteCreativeTemplate(id);
+            break;
+          case "offerCreatives":
+            await offerCreativeService.delete(id);
             break;
           case "smsRoutes":
             await smsRouteService.deleteRoute(id);

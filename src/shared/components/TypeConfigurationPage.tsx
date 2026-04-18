@@ -831,7 +831,9 @@ function TypeConfigurationModal({
                 ? "max-w-2xl"
                 : isSmsRoutes
                   ? "max-w-md"
-                  : "max-w-md"
+                  : isNotificationType
+                    ? "max-w-lg"
+                    : "max-w-md"
         }`}
       >
         <div
@@ -942,7 +944,7 @@ function TypeConfigurationModal({
             isNotificationType ||
             isResourceTypes) &&
             config.customFields && (
-              <>
+              <div className={isNotificationType ? "grid grid-cols-2 gap-4" : "space-y-4"}>
                 {config.customFields
                   .filter(
                     (field) => !config.hideFields?.includes(field.fieldKey),
@@ -950,6 +952,7 @@ function TypeConfigurationModal({
                   .map((field, index) => (
                     <div
                       key={field.fieldKey}
+                      className={isNotificationType && field.fieldKey === "message_template" ? "col-span-2" : ""}
                       style={{
                         position: "relative",
                         zIndex: config.customFields!.length - index,
@@ -1073,7 +1076,7 @@ function TypeConfigurationModal({
                       )}
                     </div>
                   ))}
-              </>
+              </div>
             )}
 
           {/* Status Checkbox */}

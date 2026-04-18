@@ -16,8 +16,13 @@ import { segmentService } from "../services/segmentService";
 import { segmentTypeService, SegmentType } from "../services/segmentTypeService";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import MultiCategorySelector from "../../../shared/components/MultiCategorySelector";
+import TypeSelector from "../../../shared/components/TypeSelector";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Input from "../../../shared/components/ui/Input";
+import CreateCategoryModal from "../../../shared/components/CreateCategoryModal";
+import CreateSegmentTypeModal from "./CreateSegmentTypeModal";
+import { customerIdentityService } from "../../customerIdentity/services/customerIdentityService";
+import { CustomerIdentityField } from "../../customerIdentity/types/customerIdentity";
 
 interface SegmentModalProps {
   isOpen: boolean;
@@ -39,6 +44,7 @@ export default function SegmentModal({
     conditions: [] as SegmentConditionGroup[],
     segment_type_id: undefined as number | undefined,
     category: undefined as string | number | undefined,
+    customer_identity_field_mapping: undefined as string | undefined,
   });
   const [tagInput, setTagInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -66,6 +72,12 @@ export default function SegmentModal({
   const [segmentTypes, setSegmentTypes] = useState<SegmentType[]>([]);
   const [loadingTypes, setLoadingTypes] = useState(false);
   const [categoryRefreshTrigger, setCategoryRefreshTrigger] = useState(0);
+  const [showCreateCatalogModal, setShowCreateCatalogModal] = useState(false);
+  const [showCreateTypeModal, setShowCreateTypeModal] = useState(false);
+  const [customerIdentityFields, setCustomerIdentityFields] = useState<
+    CustomerIdentityField[]
+  >([]);
+  const [isLoadingIdentityFields, setIsLoadingIdentityFields] = useState(false);
   const isUserInteractionRef = useRef(false);
 
   // Load field selector config once on component mount
@@ -107,6 +119,30 @@ export default function SegmentModal({
     };
     loadSegmentTypes();
   }, []);
+
+  // Load customer identity fields when modal opens
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const loadCustomerIdentityFields = async () => {
+      try {
+        setIsLoadingIdentityFields(true);
+        const fields = await customerIdentityService.getCustomerIdentityFields(
+          true
+        );
+        setCustomerIdentityFields(fields);
+      } catch (err) {
+        console.error("Failed to load customer identity fields:", err);
+        setCustomerIdentityFields([]);
+      } finally {
+        setIsLoadingIdentityFields(false);
+      }
+    };
+
+    loadCustomerIdentityFields();
+  }, [isOpen]);
 
   // Update formData.category when selectedCategoryIds changes (use first one)
   // This only runs when user manually changes the selection
@@ -193,6 +229,7 @@ export default function SegmentModal({
               conditions: conditions,
               segment_type_id: typeId,
               category,
+              customer_identity_field_mapping: (fullSegment as any).customer_identity_field_mapping,
             });
             // Store existing queries (not displayed in edit mode, but kept for reference)
             setExistingQuery(fullSegment.query || null);
@@ -211,6 +248,7 @@ export default function SegmentModal({
             segment_type_id: undefined,
             conditions: [],
             category: undefined,
+            customer_identity_field_mapping: undefined,
           });
           // Reset selectedCategoryIds for new segment
           setSelectedCategoryIds([]);
@@ -936,6 +974,7 @@ export default function SegmentModal({
           query: queries.segment_query,
           count_query: queries.count_query,
           definition: queries.payload, // Store the original payload for editing
+          customer_identity_field_mapping: formData.customer_identity_field_mapping,
         });
 
         // Extract segment from response - backend returns {success: true, data: [segment]}
@@ -971,6 +1010,7 @@ export default function SegmentModal({
           is_active: true,
           visibility: "private",
           definition: queries.payload, // Store the original payload for editing
+          customer_identity_field_mapping: formData.customer_identity_field_mapping,
         };
 
         const createResponse =
@@ -1129,12 +1169,46 @@ export default function SegmentModal({
                         entityType="segment"
                         refreshTrigger={categoryRefreshTrigger}
                         className="w-full"
+                        allowCreate={true}
+                        onCreateCategory={() => setShowCreateCatalogModal(true)}
+                        onCategoryCreated={(categoryId) => {
+                          isUserInteractionRef.current = true;
+                          setSelectedCategoryIds([categoryId]);
+                          setCategoryRefreshTrigger((prev) => prev + 1);
+                          setShowCreateCatalogModal(false);
+                        }}
                       />
                       {/* <p className="text-xs text-gray-500 mt-1">
                         You can select multiple catalogs. Only the first one
                         will be saved to the backend.
                       </p> */}
                     </div>
+                  </div>
+
+                  <div>
+                    <label
+                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                    >
+                      Map to Customer Identity Field
+                    </label>
+                    <p className={`text-xs ${tw.textSecondary} mb-2`}>
+                      Select which customer field this segment represents
+                    </p>
+                    <HeadlessSelect
+                      options={customerIdentityFields.map((field) => ({
+                        value: field.field_value,
+                        label: field.field_name,
+                      }))}
+                      value={formData.customer_identity_field_mapping || ""}
+                      onChange={(value) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          customer_identity_field_mapping: String(value),
+                        }))
+                      }
+                      placeholder="Select identity field..."
+                      disabled={isLoadingIdentityFields || customerIdentityFields.length === 0}
+                    />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1237,7 +1311,7 @@ export default function SegmentModal({
                       >
                         Segment Type
                       </label>
-                      <HeadlessSelect
+                      <TypeSelector
                         value={
                           formData.segment_type_id
                             ? String(formData.segment_type_id)
@@ -1265,6 +1339,8 @@ export default function SegmentModal({
                           loadingTypes ? "Loading..." : "Select segment type"
                         }
                         disabled={loadingTypes || !segmentTypes || segmentTypes.length === 0}
+                        allowCreate={true}
+                        onCreate={() => setShowCreateTypeModal(true)}
                       />
                     </div>
                   </div>
@@ -1588,6 +1664,44 @@ export default function SegmentModal({
                 </div>
               </div>
             )}
+
+            {/* Create Catalog Modal */}
+            <CreateCategoryModal
+              isOpen={showCreateCatalogModal}
+              onClose={() => setShowCreateCatalogModal(false)}
+              onCategoryCreated={(categoryId) => {
+                isUserInteractionRef.current = true;
+                setSelectedCategoryIds([categoryId]);
+                setCategoryRefreshTrigger((prev) => prev + 1);
+                setShowCreateCatalogModal(false);
+              }}
+            />
+
+            {/* Create Segment Type Modal */}
+            <CreateSegmentTypeModal
+              isOpen={showCreateTypeModal}
+              onClose={() => setShowCreateTypeModal(false)}
+              onTypeCreated={(typeId) => {
+                // Reload segment types to get the newly created one
+                setFormData((prev) => ({
+                  ...prev,
+                  segment_type_id: typeId,
+                }));
+                setShowCreateTypeModal(false);
+                // Reload types
+                const loadSegmentTypes = async () => {
+                  try {
+                    const response = await segmentTypeService.getAllSegmentTypes();
+                    if (response.success && response.data) {
+                      setSegmentTypes(response.data);
+                    }
+                  } catch (err) {
+                    console.error("Failed to reload segment types:", err);
+                  }
+                };
+                loadSegmentTypes();
+              }}
+            />
           </div>
         </div>,
         document.body,

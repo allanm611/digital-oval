@@ -151,6 +151,16 @@ export default function ConfigurationPage() {
         navigationPath: "/dashboard/creative-templates",
       },
       {
+        id: "offer-creatives",
+        name: "Offer Creatives",
+        description:
+          "Manage reusable offer creatives across different channels and locales",
+        type: "offer",
+        category: "Offer Configuration",
+        status: "active",
+        navigationPath: "/dashboard/offer-creatives",
+      },
+      {
         id: "reward-types",
         name: "Reward Types",
         description: "Define reusable reward fulfilment types",

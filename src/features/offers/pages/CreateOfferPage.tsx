@@ -49,8 +49,9 @@ import ProductSelector from "../../products/components/ProductSelector";
 import OfferCreativeStep from "../components/OfferCreativeStep";
 import OfferTrackingStep from "../components/OfferTrackingStep";
 import OfferRewardStep from "../components/OfferRewardStep";
-import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import MultiCategorySelector from "../../../shared/components/MultiCategorySelector";
+import TypeSelector from "../../../shared/components/TypeSelector";
+import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw, components } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -64,6 +65,8 @@ import {
   SMSSmartphonePreview,
   EmailLaptopPreview,
 } from "../components/CreativePreviewComponents";
+import CreateCategoryModal from "../../../shared/components/CreateCategoryModal";
+import CreateOfferTypeModal from "../components/CreateOfferTypeModal";
 
 // Import the types from offerCreative instead of defining locally
 import { OfferCreative } from "../types/offerCreative";
@@ -268,6 +271,9 @@ function BasicInfoStep({
   | "onCancel"
 >) {
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<(string | number)[]>([]);
+  const [showCreateCatalogModal, setShowCreateCatalogModal] = useState(false);
+  const [showCreateTypeModal, setShowCreateTypeModal] = useState(false);
+  const [categoryRefreshTriggerState, setCategoryRefreshTriggerState] = useState(0);
   const userInitiatedUpdateRef = useRef(false);
 
   // Initialize selectedCategoryIds from formData.category_id (only on mount or when formData changes externally)
@@ -380,7 +386,7 @@ function BasicInfoStep({
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Offer Type *
           </label>
-          <HeadlessSelect
+          <TypeSelector
             options={(offerTypes || [])
               .filter((type) => type.is_active !== false)
               .map((type) => ({
@@ -404,6 +410,8 @@ function BasicInfoStep({
               }
             }}
             placeholder={offerTypesLoading ? "Loading..." : "Select offer type"}
+            allowCreate={true}
+            onCreate={() => setShowCreateTypeModal(true)}
           />
           {validationErrors?.offer_type && (
             <p className="mt-1 text-sm text-red-600">
@@ -425,8 +433,16 @@ function BasicInfoStep({
             placeholder="Select catalog(s)"
             entityType="offer"
             disabled={categoriesLoading}
-            refreshTrigger={categoryRefreshTrigger}
+            refreshTrigger={categoryRefreshTriggerState}
             className="w-full"
+            allowCreate={true}
+            onCreateCategory={() => setShowCreateCatalogModal(true)}
+            onCategoryCreated={(categoryId) => {
+              userInitiatedUpdateRef.current = true;
+              setSelectedCategoryIds([categoryId]);
+              setCategoryRefreshTriggerState((prev) => prev + 1);
+              setShowCreateCatalogModal(false);
+            }}
           />
           {/* <p className="text-xs text-gray-500 mt-1">
             You can select multiple catalogs. Only the first one will be saved
@@ -541,6 +557,31 @@ function BasicInfoStep({
           </div>
         )}
       </div>
+
+      {/* Create Catalog Modal */}
+      <CreateCategoryModal
+        isOpen={showCreateCatalogModal}
+        onClose={() => setShowCreateCatalogModal(false)}
+        onCategoryCreated={(categoryId) => {
+          userInitiatedUpdateRef.current = true;
+          setSelectedCategoryIds([categoryId]);
+          setCategoryRefreshTriggerState((prev) => prev + 1);
+          setShowCreateCatalogModal(false);
+        }}
+      />
+
+      {/* Create Offer Type Modal */}
+      <CreateOfferTypeModal
+        isOpen={showCreateTypeModal}
+        onClose={() => setShowCreateTypeModal(false)}
+        onTypeCreated={(typeId) => {
+          setFormData({
+            ...formData,
+            offer_type_id: typeId,
+          });
+          setShowCreateTypeModal(false);
+        }}
+      />
     </div>
   );
 }
