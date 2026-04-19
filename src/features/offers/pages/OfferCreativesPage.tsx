@@ -1,23 +1,22 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Edit, MessageSquare, Eye } from "lucide-react";
+import { Plus, Trash2, Edit, MessageSquare, Eye, Power } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BackButton from "../../../shared/components/ui/BackButton";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import OfferCreativeFormModal from "../components/OfferCreativeFormModal";
+import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { offerCreativeService } from "../services/offerCreativeService";
 import { OfferCreative } from "../types/offerCreative";
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
-import { useConfirm } from "../../../contexts/ConfirmContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function OfferCreativesPage() {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { success, error: showError } = useToast();
-  const { confirm } = useConfirm();
 
   const [creatives, setCreatives] = useState<OfferCreative[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,6 +25,9 @@ export default function OfferCreativesPage() {
   const [selectedCreative, setSelectedCreative] = useState<OfferCreative | null>(null);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [isTogglingActive, setIsTogglingActive] = useState<number | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [creativeToDelete, setCreativeToDelete] = useState<OfferCreative | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     loadCreatives();
@@ -34,7 +36,7 @@ export default function OfferCreativesPage() {
   const loadCreatives = async () => {
     try {
       setLoading(true);
-      const response = await offerCreativeService.superSearch({ limit: 100 });
+      const response = await offerCreativeService.superSearch({ limit: 100, skipCache: true });
       setCreatives(response?.data || []);
     } catch (err) {
       showError("Error", err instanceof Error ? err.message : "Failed to load offer creatives");
@@ -46,7 +48,7 @@ export default function OfferCreativesPage() {
 
   const filteredCreatives = creatives.filter(
     (creative) =>
-      creative.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (creative.name || creative.title)?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       creative.channel?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -77,38 +79,55 @@ export default function OfferCreativesPage() {
 
   const handleToggleActive = async (e: React.MouseEvent, creative: OfferCreative) => {
     e.stopPropagation();
+    const originalCreatives = creatives;
+    const updatedCreatives = creatives.map((c) =>
+      c.id === creative.id ? { ...c, is_active: !c.is_active } : c
+    );
+
     try {
       setIsTogglingActive(creative.id);
+      setCreatives(updatedCreatives);
+
       if (creative.is_active) {
         await offerCreativeService.deactivate(creative.id);
       } else {
         await offerCreativeService.activate(creative.id);
       }
-      await loadCreatives();
+
+      success("Success", creative.is_active ? "Creative deactivated" : "Creative activated");
     } catch (err) {
+      setCreatives(originalCreatives);
       showError("Error", err instanceof Error ? err.message : "Failed to update status");
     } finally {
       setIsTogglingActive(null);
     }
   };
 
-  const handleDelete = async (e: React.MouseEvent, creative: OfferCreative) => {
+  const handleDelete = (e: React.MouseEvent, creative: OfferCreative) => {
     e.stopPropagation();
-    const confirmed = await confirm({
-      title: "Delete Creative",
-      message: `Are you sure you want to delete "${creative.title}"?`,
-      confirmText: "Delete",
-      isDangerous: true,
-    });
+    setCreativeToDelete(creative);
+    setIsDeleteModalOpen(true);
+  };
 
-    if (!confirmed) return;
+  const confirmDelete = async () => {
+    if (!creativeToDelete) return;
+
+    const originalCreatives = creatives;
+    const updatedCreatives = creatives.filter((c) => c.id !== creativeToDelete.id);
 
     try {
-      await offerCreativeService.delete(creative.id);
+      setIsDeleting(true);
+      setCreatives(updatedCreatives);
+
+      await offerCreativeService.delete(creativeToDelete.id);
       success("Success", "Creative deleted successfully");
-      await loadCreatives();
+      setIsDeleteModalOpen(false);
+      setCreativeToDelete(null);
     } catch (err) {
+      setCreatives(originalCreatives);
       showError("Error", err instanceof Error ? err.message : "Failed to delete creative");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -234,7 +253,7 @@ export default function OfferCreativesPage() {
                       }}
                     >
                       <div className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
-                        {creative.title}
+                        {creative.name || creative.title}
                       </div>
                     </td>
                     <td
@@ -259,17 +278,15 @@ export default function OfferCreativesPage() {
                         backgroundColor: color.surface.tablebodybg,
                       }}
                     >
-                      <button
-                        onClick={(e) => handleToggleActive(e, creative)}
-                        disabled={isTogglingActive === creative.id}
-                        className={`text-sm font-medium transition-colors disabled:opacity-50 ${
+                      <div
+                        className={`text-sm font-medium ${
                           creative.is_active
                             ? tw.textSuccess
                             : tw.textSecondary
                         }`}
                       >
                         {creative.is_active ? t.genericConfig.active : t.genericConfig.inactive}
-                      </button>
+                      </div>
                     </td>
                     <td
                       className="px-6 py-4 text-right"
@@ -301,6 +318,18 @@ export default function OfferCreativesPage() {
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
+                          onClick={(e) => handleToggleActive(e, creative)}
+                          disabled={isTogglingActive === creative.id}
+                          className={`transition-opacity hover:opacity-75 disabled:opacity-50 ${
+                            creative.is_active
+                              ? "text-green-600"
+                              : "text-gray-400"
+                          }`}
+                          title={creative.is_active ? "Deactivate" : "Activate"}
+                        >
+                          <Power className="w-4 h-4" />
+                        </button>
+                        <button
                           onClick={(e) => handleDelete(e, creative)}
                           className="text-red-600 hover:opacity-75 transition-opacity"
                           title="Delete"
@@ -317,7 +346,23 @@ export default function OfferCreativesPage() {
         )}
       </div>
 
-      {/* Modal */}
+      {/* Delete Modal */}
+      {creativeToDelete && (
+        <DeleteConfirmModal
+          isOpen={isDeleteModalOpen}
+          title="Delete Offer Creative"
+          message={`Are you sure you want to delete "${creativeToDelete.title}"? This creative may be referenced by offers.`}
+          onConfirm={confirmDelete}
+          onClose={() => {
+            setIsDeleteModalOpen(false);
+            setCreativeToDelete(null);
+          }}
+          isLoading={isDeleting}
+          isDangerous={true}
+        />
+      )}
+
+      {/* Form Modal */}
       <OfferCreativeFormModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

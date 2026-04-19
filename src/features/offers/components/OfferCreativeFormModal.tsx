@@ -5,6 +5,7 @@ import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import CascadingVariableSelector from "../../manual-broadcast/components/CascadingVariableSelector";
+import RichTextEditor from "../../communications/components/RichTextEditor";
 import PreviewPanel from "../../communications/components/PreviewPanel";
 import {
   SMSSmartphonePreview,
@@ -111,6 +112,7 @@ export default function OfferCreativeFormModal({
   const [activeField, setActiveField] = useState<"title" | "body">("body");
   const [cursorPosition, setCursorPosition] = useState(0);
   const [variableError, setVariableError] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Data loading
   const [channels, setChannels] = useState<CommunicationChannel[]>([]);
@@ -118,11 +120,14 @@ export default function OfferCreativeFormModal({
   const [smsRoutes, setSmsRoutes] = useState<any[]>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
   const [offers, setOffers] = useState<any[]>([]);
+  const [templates, setTemplates] = useState<any[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<any | null>(null);
   const [channelsLoading, setChannelsLoading] = useState(false);
   const [senderIdsLoading, setSenderIdsLoading] = useState(false);
   const [smsRoutesLoading, setSmsRoutesLoading] = useState(false);
   const [languagesLoading, setLanguagesLoading] = useState(false);
   const [offersLoading, setOffersLoading] = useState(false);
+  const [templatesLoading, setTemplatesLoading] = useState(false);
 
   // Preview state
   const [showPreview, setShowPreview] = useState(false);
@@ -186,6 +191,17 @@ export default function OfferCreativeFormModal({
         console.error("Failed to load offers:", err);
       } finally {
         setOffersLoading(false);
+      }
+
+      try {
+        setTemplatesLoading(true);
+        const templatesRes = await creativeTemplateService.getCreativeTemplates();
+        const templatesData = templatesRes?.data || templatesRes || [];
+        setTemplates(Array.isArray(templatesData) ? templatesData : []);
+      } catch (err) {
+        console.error("Failed to load creative templates:", err);
+      } finally {
+        setTemplatesLoading(false);
       }
     };
 
@@ -285,6 +301,23 @@ export default function OfferCreativeFormModal({
     setShowVariableSelector(false);
   };
 
+  const handleTemplateSelect = (templateId: number | "") => {
+    if (!templateId) {
+      setSelectedTemplate(null);
+      return;
+    }
+    const template = templates.find((t) => t.id === templateId);
+    if (template) {
+      setSelectedTemplate(template);
+      setFormData((prev) => ({
+        ...prev,
+        title: template.title || prev.title,
+        text_body: template.body_text || "",
+        html_body: template.body_html || "",
+      }));
+    }
+  };
+
   const handlePreview = () => {
     setPreviewData({
       rendered_title: formData.title,
@@ -295,28 +328,46 @@ export default function OfferCreativeFormModal({
   };
 
   const handleSave = async () => {
+    const newErrors: Record<string, string> = {};
+
     if (!formData.offer_id) {
-      showError("Validation Error", "Offer is required");
-      return;
+      newErrors.offer_id = "Offer is required";
     }
-    if (!formData.title || !formData.text_body) {
-      showError("Validation Error", "Title and message body are required");
+    if (!formData.title) {
+      newErrors.title = "Title is required";
+    }
+    if (!formData.text_body) {
+      newErrors.text_body = "Message body is required";
+    }
+    if (formData.channel === "Email" && !formData.html_body) {
+      newErrors.text_body = "HTML content is required for Email channel";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
+    setErrors({});
+
     try {
       setIsSaving(true);
-      const creativeData = {
-        ...(formData.offer_id && { offer_id: formData.offer_id }),
+      const creativeData: any = {
+        name: formData.title,
         channel: formData.channel,
         locale: formData.locale,
-        title: formData.title,
         text_body: formData.text_body,
-        html_body: formData.html_body,
         is_active: formData.is_active,
-        sms_route: formData.sms_route,
-        ...(user?.user_id && { created_by: user.user_id }),
       };
+
+      if (mode === "create") {
+        if (formData.offer_id) creativeData.offer_id = formData.offer_id;
+        if (user?.user_id) creativeData.created_by = user.user_id;
+      }
+
+      if (formData.channel !== "SMS" && formData.channel !== "SMS Flash") {
+        creativeData.html_body = formData.html_body;
+      }
 
       await onSave(creativeData);
       success("Success", `Creative ${mode === "create" ? "created" : "updated"} successfully`);
@@ -350,8 +401,11 @@ export default function OfferCreativeFormModal({
                 options={offers.map((offer) => ({ value: String(offer.id), label: offer.name }))}
                 placeholder="Select an offer"
                 zIndex={zIndex.popover}
-                disabled={offersLoading}
+                disabled={mode === "edit" || offersLoading}
               />
+              {errors.offer_id && (
+                <p className="text-xs text-red-600 mt-1">{errors.offer_id}</p>
+              )}
             </div>
 
             {/* Channel & Locale */}
@@ -362,7 +416,10 @@ export default function OfferCreativeFormModal({
                 </label>
                 <HeadlessSelect
                   value={formData.channel}
-                  onChange={(value) => setFormData((prev) => ({ ...prev, channel: value as CreativeChannel }))}
+                  onChange={(value) => {
+                    setFormData((prev) => ({ ...prev, channel: value as CreativeChannel }));
+                    setSelectedTemplate(null);
+                  }}
                   options={channels
                     .filter((ch) => ch.is_active)
                     .map((ch) => ({ value: ch.name, label: ch.name }))}
@@ -397,6 +454,26 @@ export default function OfferCreativeFormModal({
               </div>
             </div>
 
+            {/* Creative Template */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Creative Template
+              </label>
+              <HeadlessSelect
+                value={selectedTemplate?.id ? String(selectedTemplate.id) : ""}
+                onChange={(value) => handleTemplateSelect(value ? Number(value) : "")}
+                options={[
+                  { label: "Select a template", value: "" },
+                  ...templates
+                    .filter((t) => t.is_active && t.channel === formData.channel)
+                    .map((t) => ({ value: String(t.id), label: t.name }))
+                ]}
+                placeholder="Select template..."
+                zIndex={zIndex.popover}
+                disabled={templatesLoading || !formData.channel}
+              />
+            </div>
+
             {/* Sender ID (SMS) or Subject (Email/Web) */}
             {formData.channel?.toUpperCase() === "SMS" ? (
               <div>
@@ -414,6 +491,9 @@ export default function OfferCreativeFormModal({
                   zIndex={zIndex.popover}
                   disabled={senderIdsLoading}
                 />
+                {errors.title && (
+                  <p className="text-xs text-red-600 mt-1">{errors.title}</p>
+                )}
               </div>
             ) : (
               <div>
@@ -436,6 +516,9 @@ export default function OfferCreativeFormModal({
                   }}
                   variant="medium"
                 />
+                {errors.title && (
+                  <p className="text-xs text-red-600 mt-1">{errors.title}</p>
+                )}
               </div>
             )}
 
@@ -484,23 +567,28 @@ export default function OfferCreativeFormModal({
                 >
                   {isRichText ? "Rich Text" : "Plain Text"}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setShowVariableSelector(!showVariableSelector)}
-                  className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors"
-                  style={{
-                    backgroundColor: color.primary.accent,
-                    color: "white",
-                  }}
-                >
-                  Insert Variable
-                </button>
-                <div style={{ zIndex: zIndex.popover }}>
-                  <CascadingVariableSelector
-                    isOpen={showVariableSelector}
-                    onClose={() => setShowVariableSelector(false)}
-                    onVariableSelect={handleVariableSelect}
-                  />
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowVariableSelector(!showVariableSelector)}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors"
+                    style={{
+                      backgroundColor: color.primary.accent,
+                      color: "white",
+                    }}
+                  >
+                    Insert Variable
+                  </button>
+                  <div
+                    className="absolute left-0 mt-1"
+                    style={{ zIndex: zIndex.popover }}
+                  >
+                    <CascadingVariableSelector
+                      isOpen={showVariableSelector}
+                      onClose={() => setShowVariableSelector(false)}
+                      onVariableSelect={handleVariableSelect}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -510,27 +598,86 @@ export default function OfferCreativeFormModal({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Message Body
               </label>
-              <textarea
-                ref={bodyTextareaRef}
-                value={formData.text_body || ""}
-                onChange={(e) => {
-                  setActiveField("body");
-                  setCursorPosition(e.target.selectionStart || 0);
-                  setFormData((prev) => ({ ...prev, text_body: e.target.value }));
-                }}
-                onClick={(e) => {
-                  setActiveField("body");
-                  setCursorPosition(e.currentTarget.selectionStart || 0);
-                }}
-                onFocus={(e) => {
-                  setActiveField("body");
-                  setCursorPosition(e.currentTarget.selectionStart || 0);
-                }}
-                placeholder="Enter your message..."
-                rows={8}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
-              />
+              {isRichText ? (
+                <div
+                  onClick={() => setActiveField("body")}
+                  onFocus={() => setActiveField("body")}
+                >
+                  <RichTextEditor
+                    value={formData.html_body || ""}
+                    onChange={(value) => setFormData((prev) => ({ ...prev, html_body: value, text_body: value.replace(/<[^>]*>/g, '') }))}
+                    placeholder="Enter your message... Click 'Insert Variable' to add dynamic content"
+                    minHeight="250px"
+                  />
+                </div>
+              ) : (
+                <textarea
+                  ref={bodyTextareaRef}
+                  value={formData.text_body || ""}
+                  onChange={(e) => {
+                    setActiveField("body");
+                    setCursorPosition(e.target.selectionStart || 0);
+                    setFormData((prev) => ({ ...prev, text_body: e.target.value }));
+                  }}
+                  onClick={(e) => {
+                    setActiveField("body");
+                    setCursorPosition(e.currentTarget.selectionStart || 0);
+                  }}
+                  onFocus={(e) => {
+                    setActiveField("body");
+                    setCursorPosition(e.currentTarget.selectionStart || 0);
+                  }}
+                  placeholder="Enter your message..."
+                  rows={8}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
+                />
+              )}
               {variableError && <div className="mt-2 text-sm text-red-700">{variableError}</div>}
+              {errors.text_body && <div className="mt-2 text-xs text-red-600">{errors.text_body}</div>}
+
+              {/* Info bar */}
+              <div className="mt-2 flex items-center justify-between">
+                {formData.channel === "SMS" || formData.channel === "SMS Flash" || formData.channel === "WhatsApp" ? (
+                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                    <span>
+                      {getCharacterInfo(formData.text_body || "").charCount} characters
+                    </span>
+                    {getCharacterInfo(formData.text_body || "").segments > 1 && (
+                      <span>
+                        {getCharacterInfo(formData.text_body || "").segments} segments
+                      </span>
+                    )}
+                    {getCharacterInfo(formData.text_body || "").isUnicode && (
+                      <span className="text-amber-600">Unicode</span>
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-xs text-gray-500">
+                    Variables like {"{{"}{"{"}field{"}"}{"}}"} will be replaced with customer data
+                  </span>
+                )}
+                {selectedVariables.length > 0 && (
+                  <div className="flex items-center gap-1">
+                    {selectedVariables.slice(0, 3).map((v) => (
+                      <span
+                        key={v.id}
+                        className="px-2 py-0.5 rounded text-xs"
+                        style={{
+                          backgroundColor: `${color.primary.accent}10`,
+                          color: color.primary.accent,
+                        }}
+                      >
+                        {v.name}
+                      </span>
+                    ))}
+                    {selectedVariables.length > 3 && (
+                      <span className="text-xs text-gray-400">
+                        +{selectedVariables.length - 3} more
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Active Status */}

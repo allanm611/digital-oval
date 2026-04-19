@@ -76,6 +76,7 @@ import {
   EmailLaptopPreview,
 } from "../components/CreativePreviewComponents";
 import PreviewPanel from "../../communications/components/PreviewPanel";
+import RichTextEditor from "../../communications/components/RichTextEditor";
 import CascadingVariableSelector from "../../manual-broadcast/components/CascadingVariableSelector";
 import {
   insertVariableAtCursor,
@@ -2942,29 +2943,48 @@ export default function OfferDetailsPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Message Body
                 </label>
-                <textarea
-                  ref={bodyTextareaRefAdd}
-                  value={newCreativeForm.text_body || ""}
-                  onChange={(e) => {
-                    setActiveFieldAdd("body");
-                    setCursorPositionAdd(e.target.selectionStart || 0);
-                    setNewCreativeForm((prev) => ({
-                      ...prev,
-                      text_body: e.target.value,
-                    }));
-                  }}
-                  onClick={(e) => {
-                    setActiveFieldAdd("body");
-                    setCursorPositionAdd(e.currentTarget.selectionStart || 0);
-                  }}
-                  onFocus={(e) => {
-                    setActiveFieldAdd("body");
-                    setCursorPositionAdd(e.currentTarget.selectionStart || 0);
-                  }}
-                  placeholder="Enter your message... Click 'Insert Variable' to add dynamic content"
-                  rows={8}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
-                />
+                {isRichTextAdd ? (
+                  <div
+                    onClick={() => setActiveFieldAdd("body")}
+                    onFocus={() => setActiveFieldAdd("body")}
+                  >
+                    <RichTextEditor
+                      value={newCreativeForm.text_body || ""}
+                      onChange={(value) =>
+                        setNewCreativeForm((prev) => ({
+                          ...prev,
+                          text_body: value,
+                        }))
+                      }
+                      placeholder="Enter your message... Click 'Insert Variable' to add dynamic content"
+                      minHeight="250px"
+                    />
+                  </div>
+                ) : (
+                  <textarea
+                    ref={bodyTextareaRefAdd}
+                    value={newCreativeForm.text_body || ""}
+                    onChange={(e) => {
+                      setActiveFieldAdd("body");
+                      setCursorPositionAdd(e.target.selectionStart || 0);
+                      setNewCreativeForm((prev) => ({
+                        ...prev,
+                        text_body: e.target.value,
+                      }));
+                    }}
+                    onClick={(e) => {
+                      setActiveFieldAdd("body");
+                      setCursorPositionAdd(e.currentTarget.selectionStart || 0);
+                    }}
+                    onFocus={(e) => {
+                      setActiveFieldAdd("body");
+                      setCursorPositionAdd(e.currentTarget.selectionStart || 0);
+                    }}
+                    placeholder="Enter your message... Click 'Insert Variable' to add dynamic content"
+                    rows={8}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
+                  />
+                )}
 
                 {/* Info bar */}
                 <div className="mt-2 flex items-center justify-between">

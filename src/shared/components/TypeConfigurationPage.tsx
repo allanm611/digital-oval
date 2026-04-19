@@ -3026,7 +3026,6 @@ export default function TypeConfigurationPage({
                     >
                       <div className="flex items-center justify-end space-x-2">
                         {(() => {
-                          console.log("Config type:", config.configType, "Item:", item);
                           return config.configType === "offerCreatives" ? (
                             <button
                               onClick={() => handleViewItem(item)}
