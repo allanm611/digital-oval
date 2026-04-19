@@ -1676,8 +1676,8 @@ export default function CreateOfferPage({
 
       // Determine offer_type_id from backend response
       let offerTypeId: number | undefined;
-      if ((offer as any).offer_type_id) {
-        offerTypeId = (offer as any).offer_type_id;
+      if (offer.offer_type_id) {
+        offerTypeId = offer.offer_type_id;
       } else if (offer.offer_type && offerTypes?.length > 0) {
         // Try to find the type ID by looking up the name (case-insensitive)
         const foundType = offerTypes.find(
@@ -1691,6 +1691,7 @@ export default function CreateOfferPage({
         code: offer.code || "",
         description: offer.description || "",
         offer_type_id: offerTypeId,
+        offer_type: offer.offer_type,
         category_id: offer.category_id ? String(offer.category_id) : undefined,
         communication_channel_id: offer.communication_channel_id,
         sms_route_id: offer.sms_route_id,
@@ -1889,6 +1890,18 @@ export default function CreateOfferPage({
       loadOfferData(duplicateIdParam, true);
     }
   }, [id, duplicateIdParam, loadOfferData]);
+
+  // When offerTypes load and we're in edit mode without a type ID, try to find it by name
+  useEffect(() => {
+    if (isEditMode && formData.offer_type && !formData.offer_type_id && offerTypes?.length > 0) {
+      const foundType = offerTypes.find(
+        (type) => type.name.toLowerCase() === formData.offer_type.toLowerCase()
+      );
+      if (foundType) {
+        setFormData((prev) => ({ ...prev, offer_type_id: foundType.id }));
+      }
+    }
+  }, [offerTypes, isEditMode, formData.offer_type, formData.offer_type_id, setFormData]);
 
   // Validation functions
   const validateForm = useCallback(() => {

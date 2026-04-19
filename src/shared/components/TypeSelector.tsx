@@ -11,6 +11,7 @@ interface TypeSelectorProps {
   allowCreate?: boolean;
   onCreate?: () => void;
   className?: string;
+  error?: boolean;
 }
 
 export default function TypeSelector({
@@ -22,6 +23,7 @@ export default function TypeSelector({
   allowCreate = false,
   onCreate,
   className = "",
+  error = false,
 }: TypeSelectorProps) {
   return (
     <div className={`flex ${className}`}>
@@ -45,6 +47,7 @@ export default function TypeSelector({
             disabled={disabled}
             className="w-full"
             searchable={true}
+            error={error}
           />
         </div>
       </div>

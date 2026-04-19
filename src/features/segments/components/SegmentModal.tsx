@@ -68,6 +68,7 @@ export default function SegmentModal({
   const [fieldErrors, setFieldErrors] = useState<{
     description?: string;
     conditions?: string;
+    segment_type_id?: string;
   }>({});
   const [existingQuery, setExistingQuery] = useState<string | null>(null);
   const [existingCountQuery, setExistingCountQuery] = useState<string | null>(
@@ -923,6 +924,14 @@ export default function SegmentModal({
       return;
     }
 
+    if (!formData.segment_type_id) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        segment_type_id: "Segment type is required",
+      }));
+      return;
+    }
+
     if (formData.conditions.length === 0) {
       setFieldErrors((prev) => ({
         ...prev,
@@ -1321,7 +1330,7 @@ export default function SegmentModal({
                       <label
                         className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
                       >
-                        Segment Type
+                        Segment Type *
                       </label>
                       <TypeSelector
                         value={
@@ -1329,12 +1338,16 @@ export default function SegmentModal({
                             ? String(formData.segment_type_id)
                             : ""
                         }
-                        onChange={(value) =>
+                        onChange={(value) => {
                           setFormData((prev) => ({
                             ...prev,
                             segment_type_id: value ? Number(value) : undefined,
-                          }))
-                        }
+                          }));
+                          setFieldErrors((prev) => ({
+                            ...prev,
+                            segment_type_id: undefined,
+                          }));
+                        }}
                         options={
                           segmentTypes && segmentTypes.length > 0
                             ? segmentTypes
@@ -1357,7 +1370,13 @@ export default function SegmentModal({
                         }
                         allowCreate={true}
                         onCreate={() => setShowCreateTypeModal(true)}
+                        error={!!fieldErrors.segment_type_id}
                       />
+                      {fieldErrors.segment_type_id && (
+                        <p className="mt-2 text-sm text-red-600">
+                          {fieldErrors.segment_type_id}
+                        </p>
+                      )}
                     </div>
                   </div>
 
