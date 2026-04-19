@@ -1965,7 +1965,21 @@ export default function CreateOfferPage({
       case 2: // Products step
         return true; // Products are optional; allow proceeding
       case 3: // Creative step
-        return creatives.length > 0; // Creatives are required
+        // Creatives are required, and each must have:
+        // 1. Language selected (locale)
+        // 2. Text body filled
+        // 3. For Email channel, HTML body must be filled
+        if (creatives.length === 0) return false;
+
+        return creatives.every((creative) => {
+          const hasLanguage = creative.locale && creative.locale.trim() !== "";
+          const hasTextBody = creative.text_body && creative.text_body.trim() !== "";
+          const isEmailWithHtml = creative.channel === "Email"
+            ? creative.html_body && creative.html_body.trim() !== ""
+            : true; // Non-Email channels don't need HTML
+
+          return hasLanguage && hasTextBody && isEmailWithHtml;
+        });
       case 4: // Tracking step
         return true; // Tracking is optional; allow proceeding
       case 5: // Rewards step
