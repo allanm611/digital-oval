@@ -7,9 +7,8 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import SearchInput from "../../../shared/components/ui/SearchInput";
-import DateFormatter from "../../../shared/components/DateFormatter";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
-import { getDepartmentsConfig, getLineOfBusinessConfig } from "../../configurations/configs/configurationPageConfigs";
+import { getLineOfBusinessConfig } from "../../configurations/configs/configurationPageConfigs";
 import { userService } from "../../users/services/userService";
 import { seedListService } from "../../../shared/services/seedListService";
 import CreateTestListModal from "../components/CreateTestListModal";
@@ -25,6 +24,7 @@ export interface SeedListRecipient {
   department_name?: string;
   line_of_business_id?: number;
   line_of_business_name?: string;
+  seed_list_id?: number;
   list_id?: string;
   list_name?: string;
   status: "active" | "inactive";
@@ -34,6 +34,7 @@ export interface SeedListRecipient {
   removed_at?: string;
   removed_by?: number;
   removed_by_name?: string;
+  created_at?: string;
 }
 
 // Dummy data
@@ -165,14 +166,12 @@ export default function SeedListManagementPage() {
   const { t } = useLanguage();
   const [recipients, setRecipients] = useState<SeedListRecipient[]>([]);
   const [seedLists, setSeedLists] = useState<Array<{ id: string | number; name: string; description?: string; customer_count?: number }>>([]);
-  const departments = getDepartmentsConfig(t).initialData;
-  const linesOfBusiness = getLineOfBusinessConfig(t).initialData;
+  const linesOfBusiness = getLineOfBusinessConfig(() => "").initialData;
 
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
-  const [filterDepartment, setFilterDepartment] = useState<string>("all");
-  const [filterLoB, setFilterLoB] = useState<string>("all");
+  const [filterSeedList, setFilterSeedList] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [activeTab, setActiveTab] = useState<"recipients" | "lists">("recipients");
 
@@ -213,22 +212,26 @@ export default function SeedListManagementPage() {
   // Load system users and seed lists on mount
   useEffect(() => {
     const loadInitialData = async () => {
-      await Promise.all([loadUsers(), loadSeedLists()]);
+      try {
+        setLoading(true);
+        await Promise.all([loadUsers(), loadSeedLists()]);
+      } finally {
+        setLoading(false);
+      }
     };
     loadInitialData();
   }, []);
 
-  const loadMembers = async () => {
+  const loadMembers = async (lists: typeof seedLists) => {
     try {
-      setLoading(true);
       const allMembers: SeedListRecipient[] = [];
 
-      if (!seedLists || !Array.isArray(seedLists)) {
+      if (!lists || !Array.isArray(lists)) {
         setRecipients([]);
         return;
       }
 
-      for (const list of seedLists) {
+      for (const list of lists) {
         if (!list || !list.id) {
           continue;
         }
@@ -253,15 +256,13 @@ export default function SeedListManagementPage() {
     } catch (error) {
       console.error("Failed to load members:", error);
       showError("Failed to load members");
-    } finally {
-      setLoading(false);
     }
   };
 
   // Load members when seed lists are available
   useEffect(() => {
     if (seedLists.length > 0) {
-      loadMembers();
+      loadMembers(seedLists);
     } else {
       setRecipients([]);
     }
@@ -272,7 +273,18 @@ export default function SeedListManagementPage() {
       setLoadingUsers(true);
       const response = await userService.getUsers({ limit: 100, offset: 0 });
       const users = response.data || [];
-      setSystemUsers(Array.isArray(users) ? users : []);
+      const mappedUsers = Array.isArray(users)
+        ? users.map((user: any) => ({
+            id: user.id,
+            first_name: user.first_name || "",
+            last_name: user.last_name || "",
+            email_address: user.email_address || "",
+            phone_number: user.phone_number || undefined,
+            department: user.department || undefined,
+            display_name: user.display_name,
+          }))
+        : [];
+      setSystemUsers(mappedUsers);
     } catch (error) {
       console.error("Failed to load system users:", error);
       setSystemUsers([]);
@@ -324,16 +336,13 @@ export default function SeedListManagementPage() {
         ?.toLowerCase()
         .includes(debouncedSearchTerm.toLowerCase());
 
-    const matchesDepartment =
-      filterDepartment === "all" ||
-      recipient.department_id?.toString() === filterDepartment;
-    const matchesLoB =
-      filterLoB === "all" ||
-      recipient.line_of_business_id?.toString() === filterLoB;
+    const matchesList =
+      filterSeedList === "all" ||
+      recipient.seed_list_id?.toString() === filterSeedList;
     const matchesStatus =
       filterStatus === "all" || recipient.status === filterStatus;
 
-    return matchesSearch && matchesDepartment && matchesLoB && matchesStatus;
+    return matchesSearch && matchesList && matchesStatus;
   });
 
   const handleRemoveRecipient = (recipient: SeedListRecipient) => {
@@ -793,121 +802,44 @@ export default function SeedListManagementPage() {
       {activeTab === "recipients" && (
         <>
       <div className="my-5">
-        {/* Mobile: Stack everything vertically */}
-        {/* md/lg: Search + Department on row 1, others on row 2 */}
-        {/* xl+: All on one row */}
-        <div className="flex flex-col gap-4">
-          {/* First Row: Search + Department on md/lg, all filters on xl+ */}
-          <div className="flex flex-col md:flex-row xl:flex-row gap-4">
-            {/* Search */}
-            <div className="flex-1 xl:flex-[0.6]">
-              <SearchInput
-                placeholder={t.seedListManagement.searchPlaceholder}
-                value={searchTerm}
-                onChange={setSearchTerm}
-              />
-            </div>
-
-            {/* Department Filter - on first row for md/lg, on same row for xl+ */}
-            <div className="hidden md:block xl:flex-[0.15]">
-              <HeadlessSelect
-                value={filterDepartment}
-                onChange={(value) => setFilterDepartment(value.toString())}
-                options={[
-                  { value: "all", label: t.seedListManagement.allDepartments },
-                  ...departments.map((dept) => ({
-                    value: dept.id.toString(),
-                    label: dept.name,
-                  })),
-                ]}
-                placeholder="Filter by Department"
-              />
-            </div>
-
-            {/* Line of Business - show on xl+ on same row */}
-            <div className="hidden xl:block xl:flex-[0.15]">
-              <HeadlessSelect
-                value={filterLoB}
-                onChange={(value) => setFilterLoB(value.toString())}
-                options={[
-                  {
-                    value: "all",
-                    label: t.seedListManagement.allLinesOfBusiness,
-                  },
-                  ...linesOfBusiness.map((lob) => ({
-                    value: lob.id.toString(),
-                    label: lob.name,
-                  })),
-                ]}
-                placeholder="Filter by Line of Business"
-              />
-            </div>
-
-            {/* Status - show on xl+ on same row */}
-            <div className="hidden xl:block xl:flex-[0.1]">
-              <HeadlessSelect
-                value={filterStatus}
-                onChange={(value) => setFilterStatus(value.toString())}
-                options={[
-                  { value: "all", label: "All Status" },
-                  { value: "active", label: "Active" },
-                  { value: "inactive", label: "Inactive" },
-                ]}
-                placeholder="Filter by Status"
-              />
-            </div>
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+          {/* Search */}
+          <div className="flex-1 min-w-0">
+            <SearchInput
+              placeholder={t.seedListManagement.searchPlaceholder}
+              value={searchTerm}
+              onChange={setSearchTerm}
+            />
           </div>
 
-          {/* Second Row: Line of Business + Status (md/lg only), hidden on xl+ */}
-          <div className="flex flex-col md:flex-row xl:hidden gap-4">
-            {/* Department Filter - show on mobile only */}
-            <div className="md:hidden">
-              <HeadlessSelect
-                value={filterDepartment}
-                onChange={(value) => setFilterDepartment(value.toString())}
-                options={[
-                  { value: "all", label: t.seedListManagement.allDepartments },
-                  ...departments.map((dept) => ({
-                    value: dept.id.toString(),
-                    label: dept.name,
-                  })),
-                ]}
-                placeholder="Filter by Department"
-              />
-            </div>
+          {/* Seed List Filter */}
+          <div className="w-full sm:w-48 flex-shrink-0">
+            <HeadlessSelect
+              value={filterSeedList}
+              onChange={(value) => setFilterSeedList(value.toString())}
+              options={[
+                { value: "all", label: "All Seed Lists" },
+                ...seedLists.map((list) => ({
+                  value: list.id.toString(),
+                  label: list.name,
+                })),
+              ]}
+              placeholder="Filter by Seed List"
+            />
+          </div>
 
-            {/* Line of Business Filter - md/lg only */}
-            <div className="flex-1 min-w-0">
-              <HeadlessSelect
-                value={filterLoB}
-                onChange={(value) => setFilterLoB(value.toString())}
-                options={[
-                  {
-                    value: "all",
-                    label: t.seedListManagement.allLinesOfBusiness,
-                  },
-                  ...linesOfBusiness.map((lob) => ({
-                    value: lob.id.toString(),
-                    label: lob.name,
-                  })),
-                ]}
-                placeholder="Filter by Line of Business"
-              />
-            </div>
-
-            {/* Status Filter - md/lg only */}
-            <div className="flex-1 min-w-0">
-              <HeadlessSelect
-                value={filterStatus}
-                onChange={(value) => setFilterStatus(value.toString())}
-                options={[
-                  { value: "all", label: "All Status" },
-                  { value: "active", label: "Active" },
-                  { value: "inactive", label: "Inactive" },
-                ]}
-                placeholder="Filter by Status"
-              />
-            </div>
+          {/* Status Filter */}
+          <div className="w-full sm:w-40 flex-shrink-0">
+            <HeadlessSelect
+              value={filterStatus}
+              onChange={(value) => setFilterStatus(value.toString())}
+              options={[
+                { value: "all", label: "All Status" },
+                { value: "active", label: "Active" },
+                { value: "inactive", label: "Inactive" },
+              ]}
+              placeholder="Filter by Status"
+            />
           </div>
         </div>
       </div>
@@ -1272,7 +1204,7 @@ export default function SeedListManagementPage() {
                         <HeadlessSelect
                           value={formData.user_id}
                           onChange={(value) => {
-                            setFormData({ ...formData, user_id: value });
+                            setFormData({ ...formData, user_id: value.toString() });
                             if (errors.user_id) {
                               setErrors({ ...errors, user_id: undefined });
                             }
@@ -1405,7 +1337,7 @@ export default function SeedListManagementPage() {
                     <HeadlessSelect
                       value={formData.list_id}
                       onChange={(value) => {
-                        setFormData({ ...formData, list_id: value });
+                        setFormData({ ...formData, list_id: value.toString() });
                         if (errors.list_id) {
                           setErrors({ ...errors, list_id: undefined });
                         }
@@ -1435,14 +1367,14 @@ export default function SeedListManagementPage() {
                     <HeadlessSelect
                       value={formData.line_of_business_id}
                       onChange={(value) => {
-                        setFormData({ ...formData, line_of_business_id: value });
+                        setFormData({ ...formData, line_of_business_id: value.toString() });
                         if (errors.line_of_business_id) {
                           setErrors({ ...errors, line_of_business_id: undefined });
                         }
                       }}
                       options={[
                         { value: "", label: "Select Line of Business" },
-                        ...linesOfBusiness.map((lob) => ({
+                        ...linesOfBusiness.map((lob: any) => ({
                           value: lob.id.toString(),
                           label: lob.name,
                         })),

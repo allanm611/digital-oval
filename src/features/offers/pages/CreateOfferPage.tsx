@@ -1800,7 +1800,7 @@ export default function CreateOfferPage({
     } finally {
       setIsLoadingOffer(false);
     }
-  }, [id, navigate, setFormData, setCreatives, offerTypes]);
+  }, [id, navigate, setFormData, setCreatives]);
 
   // Offer categories state
   const [offerCategories, setOfferCategories] = useState<OfferCategoryType[]>(

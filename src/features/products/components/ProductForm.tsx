@@ -296,12 +296,12 @@ export default function ProductForm({
     }
   }, [comboData, isComboType]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Refresh product types when typeRefreshTrigger changes
+  // Refresh product types when refreshTrigger changes
   useEffect(() => {
-    if (typeRefreshTrigger > 0) {
+    if (refreshTrigger > 0) {
       refreshProductTypes();
     }
-  }, [typeRefreshTrigger, refreshProductTypes]);
+  }, [refreshTrigger, refreshProductTypes]);
 
   // Get selected combo type details (move before useEffect that uses it)
   const selectedComboType = comboData.combo_type_id
