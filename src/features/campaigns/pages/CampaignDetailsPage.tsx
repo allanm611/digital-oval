@@ -670,7 +670,7 @@ export default function CampaignDetailsPage() {
       {
         campaignId,
         campaignName: campaign.name,
-        action: action as "pause" | "resume" | "activate" | "submit",
+        action: action as "pause" | "resume" | "activate" | "submit" | "delete",
         successMessage,
         errorMessage: `Failed to ${action} campaign`,
         updateFields,

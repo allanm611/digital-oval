@@ -283,9 +283,9 @@ export default function CampaignFlowsStep({
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider flex-1">
                     Offer
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider flex-1">
+                  {/* <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider flex-1">
                     Wait Hours
-                  </th>
+                  </th> */}
                   {(formData.campaign_type === "ab_test" ||
                     formData.campaign_type === "champion_challenger") && (
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider flex-1">
@@ -320,9 +320,9 @@ export default function CampaignFlowsStep({
                         <td className="px-4 py-3">
                           <div className="text-sm text-gray-500">—</div>
                         </td>
-                        <td className="px-4 py-3">
+                        {/* <td className="px-4 py-3">
                           <div className="text-sm text-gray-500">—</div>
-                        </td>
+                        </td> */}
                         {(formData.campaign_type === "ab_test" ||
                           formData.campaign_type === "champion_challenger") && (
                           <td className="px-4 py-3">
@@ -376,7 +376,7 @@ export default function CampaignFlowsStep({
                       <td className="px-4 py-3">
                         <div className="text-sm text-gray-900">{offer.name}</div>
                       </td>
-                      <td className="px-4 py-3">
+                      {/* <td className="px-4 py-3">
                         <input
                           type="text"
                           inputMode="numeric"
@@ -411,7 +411,7 @@ export default function CampaignFlowsStep({
                             boxShadow: "none"
                           }}
                         />
-                      </td>
+                      </td> */}
                       {(formData.campaign_type === "ab_test" ||
                         formData.campaign_type === "champion_challenger") && (
                         <td className="px-4 py-3">

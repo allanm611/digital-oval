@@ -981,8 +981,9 @@ export default function SegmentModal({
           query: queries.segment_query,
           count_query: queries.count_query,
           definition: queries.payload, // Store the original payload for editing
-          customer_identity_field_mapping:
-            formData.customer_identity_field_mapping,
+          // TODO: Backend doesn't accept customer_identity_field_mapping yet
+          // customer_identity_field_mapping:
+          //   formData.customer_identity_field_mapping,
         });
 
         // Extract segment from response - backend returns {success: true, data: [segment]}
@@ -1018,8 +1019,9 @@ export default function SegmentModal({
           is_active: true,
           visibility: "private",
           definition: queries.payload, // Store the original payload for editing
-          customer_identity_field_mapping:
-            formData.customer_identity_field_mapping,
+          // TODO: Backend doesn't accept customer_identity_field_mapping yet
+          // customer_identity_field_mapping:
+          //   formData.customer_identity_field_mapping,
         };
 
         const createResponse =

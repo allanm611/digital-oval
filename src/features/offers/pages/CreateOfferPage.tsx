@@ -2060,10 +2060,16 @@ export default function CreateOfferPage({
 
       // Prepare API data - remove empty description if not provided
       // Backend doesn't accept empty strings for description
-      const { description, ...formDataWithoutDescription } = formData;
+      const { description, communication_channel_id, sms_route_id, offer_type, ...formDataWithoutDescription } = formData;
+
       const apiData: CreateOfferRequest = {
         ...formDataWithoutDescription,
+        // TODO: Backend only accepts offer_type_id, not offer_type
+        // offer_type: offerTypeName,
         ...(description?.trim() ? { description: description.trim() } : {}),
+        // TODO: Backend doesn't accept communication_channel_id and sms_route_id yet
+        // ...(communication_channel_id && { communication_channel_id }),
+        // ...(sms_route_id && { sms_route_id }),
       };
 
       let offerId: number;

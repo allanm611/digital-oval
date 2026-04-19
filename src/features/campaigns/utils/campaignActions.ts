@@ -41,7 +41,7 @@ export function canShowCampaignButton(
 export interface CampaignActionParams {
   campaignId: number;
   campaignName?: string;
-  action: "pause" | "resume" | "activate" | "submit";
+  action: "pause" | "resume" | "activate" | "submit" | "delete";
   successMessage: string;
   errorMessage: string;
   updateFields: Partial<CampaignDisplay> | Partial<Campaign>;
@@ -80,6 +80,9 @@ export async function handleCampaignAction(
         break;
       case "submit":
         await campaignService.submitForApproval(campaignId);
+        break;
+      case "delete":
+        await campaignService.deleteCampaign(campaignId);
         break;
     }
 
