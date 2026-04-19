@@ -71,6 +71,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { useConfigurationData } from "../../../shared/services/configurationDataService";
 import { TypeConfigurationItem } from "../../../shared/components/TypeConfigurationPage";
+import { creativeTemplateService } from "../../configurations/services/creativeTemplateService";
 import {
   SMSSmartphonePreview,
   EmailLaptopPreview,
@@ -209,14 +210,16 @@ export default function OfferDetailsPage() {
     text_body: string;
     html_body: string;
     is_active: boolean;
+    sms_route?: string;
     variables?: Record<string, string | number | boolean>;
   }>({
-    channel: "SMS" as CreativeChannel, // Default to SMS instead of Email
+    channel: "SMS" as CreativeChannel,
     locale: "en",
     title: "",
     text_body: "",
     html_body: "",
     is_active: true,
+    sms_route: "",
     variables: {},
   });
   const [showVariableSelectorAdd, setShowVariableSelectorAdd] = useState(false);
@@ -290,8 +293,29 @@ export default function OfferDetailsPage() {
     return option?.label || flowType;
   };
 
-  // Load creative templates from configuration
-  const { data: templates } = useConfigurationData("creativeTemplates");
+  // Load creative templates from API
+  const [apiTemplates, setApiTemplates] = useState<any[]>([]);
+  const [templatesLoading, setTemplatesLoading] = useState(false);
+
+  useEffect(() => {
+    const loadTemplates = async () => {
+      try {
+        setTemplatesLoading(true);
+        const response = await creativeTemplateService.getCreativeTemplates();
+        const templatesData = response?.data || response || [];
+        setApiTemplates(Array.isArray(templatesData) ? templatesData : []);
+      } catch (err) {
+        console.error("Failed to load creative templates:", err);
+        setApiTemplates([]);
+      } finally {
+        setTemplatesLoading(false);
+      }
+    };
+    loadTemplates();
+  }, []);
+
+  const templates = apiTemplates;
+
   // Load languages from configuration
   const { data: languages } = useConfigurationData("languages");
 
@@ -324,8 +348,7 @@ export default function OfferDetailsPage() {
     const fetchSmsRoutes = async () => {
       try {
         setSmsRoutesLoading(true);
-        const response = await smsRouteService.getAllRoutes();
-        const routesData = response.data || [];
+        const routesData = await smsRouteService.getAllRoutes();
         setSmsRoutes(Array.isArray(routesData) ? routesData : []);
       } catch (error) {
         console.error("Failed to fetch SMS routes:", error);
@@ -434,17 +457,35 @@ export default function OfferDetailsPage() {
   // Close More menu when clicking outside
   useClickOutside(moreMenuRef, () => setShowMoreMenu(false));
 
+  // Map communication channel ID to creative channel
+  const getChannelFromOfferId = (channelId?: number): CreativeChannel => {
+    switch (channelId) {
+      case 2:
+        return "SMS";
+      case 3:
+        return "USSD";
+      case 4:
+        return "Email";
+      case 5:
+        return "Push";
+      case 6:
+        return "WhatsApp";
+      default:
+        return "SMS";
+    }
+  };
+
   const resetNewCreativeForm = () => {
+    const offerChannel = getChannelFromOfferId(offer?.communication_channel_id);
     setNewCreativeForm({
-      channel: "SMS" as CreativeChannel, // Default to SMS instead of Email
+      channel: offerChannel,
       locale: "en",
       title: "",
       text_body: "",
       html_body: "",
       is_active: true,
-      variables: {
-        sms_route: "Effortel SMS Gateway",
-      },
+      sms_route: "",
+      variables: {},
     });
     setNewCreativeVariables("");
     setSelectedTemplateId(null);
@@ -2666,20 +2707,12 @@ export default function OfferDetailsPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Channel
                 </label>
-                <HeadlessSelect
-                  value={newCreativeForm.channel}
-                  onChange={(value) => {
-                    setNewCreativeForm((prev) => ({
-                      ...prev,
-                      channel: value as CreativeChannel,
-                    }));
-                    // Clear template when channel changes
-                    setSelectedTemplateId(null);
-                  }}
-                  options={creativeChannelOptions}
-                  placeholder="Select a channel"
-                  zIndex={zIndex.popover}
-                />
+                <div className="px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 text-sm">
+                  {newCreativeForm.channel || "—"}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Determined by offer channel (read-only)
+                </p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -2718,76 +2751,78 @@ export default function OfferDetailsPage() {
             </div>
 
             {/* Template Selector */}
-            {((templates as TypeConfigurationItem[]) || []).filter((t) =>
-              t.isActive &&
-              t.metadataValue?.toLowerCase() === newCreativeForm.channel.toLowerCase()
-            ).length > 0 && (
-              <div className="relative z-10">
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Creative Template (Optional)
-                  </label>
-                  {selectedTemplateId && (
-                    <button
-                      onClick={() => handleTemplateSelect(null)}
-                      className="text-xs text-gray-500 underline"
-                    >
-                      Clear Template
-                    </button>
-                  )}
-                </div>
-                <div className="relative">
-                  <HeadlessSelect
-                    value={
-                      selectedTemplateId ? selectedTemplateId.toString() : ""
-                    }
-                    onChange={(value) =>
-                      handleTemplateSelect(value ? Number(value) : null)
-                    }
-                    options={[
-                      { value: "", label: "Select template" },
-                      ...((templates as TypeConfigurationItem[]) || [])
-                        .filter((t) =>
-                          t.isActive &&
-                          t.metadataValue?.toLowerCase() === newCreativeForm.channel.toLowerCase()
-                        )
-                        .map((template) => {
-                        // Get language name if template has locale
-                        let languageLabel = "";
-                        if (template.locale && languages) {
-                          const language = (
-                            languages as TypeConfigurationItem[]
-                          ).find(
-                            (lang) => lang.metadataValue === template.locale
-                          );
-                          if (language) {
-                            languageLabel = ` (${language.name})`;
-                          }
-                        }
-                        return {
-                          value: template.id.toString(),
-                          label: `${template.name}${languageLabel}${
-                            template.description
-                              ? ` - ${template.description}`
-                              : ""
-                          }`,
-                        };
-                      }),
-                    ]}
-                    placeholder="Select a template to start with..."
-                    zIndex={zIndex.popover}
-                  />
-                  {selectedTemplateId && (
-                    <div className="mt-2 flex items-center gap-2 text-xs text-gray-600">
-                      <FileText className="w-3 h-3" />
-                      <span>
-                        Template selected. You can customize the fields below.
-                      </span>
-                    </div>
-                  )}
-                </div>
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Creative Template (Optional)
+                </label>
+                {selectedTemplateId && (
+                  <button
+                    onClick={() => handleTemplateSelect(null)}
+                    className="text-xs text-gray-500 underline"
+                  >
+                    Clear Template
+                  </button>
+                )}
               </div>
-            )}
+              {(templates || []).filter((t) =>
+                t.is_active &&
+                t.channel?.toLowerCase() === newCreativeForm.channel.toLowerCase()
+              ).length > 0 ? (
+                <HeadlessSelect
+                  value={
+                    selectedTemplateId ? selectedTemplateId.toString() : ""
+                  }
+                  onChange={(value) =>
+                    handleTemplateSelect(value ? Number(value) : null)
+                  }
+                  options={[
+                    { value: "", label: "Select template" },
+                    ...(templates || [])
+                      .filter((t) =>
+                        t.is_active &&
+                        t.channel?.toLowerCase() === newCreativeForm.channel.toLowerCase()
+                      )
+                      .map((template) => {
+                      // Get language name if template has locale
+                      let languageLabel = "";
+                      if (template.locale && languages) {
+                        const language = (
+                          languages as TypeConfigurationItem[]
+                        ).find(
+                          (lang) => lang.metadataValue === template.locale
+                        );
+                        if (language) {
+                          languageLabel = ` (${language.name})`;
+                        }
+                      }
+                      return {
+                        value: template.id.toString(),
+                        label: `${template.name}${languageLabel}${
+                          template.description
+                            ? ` - ${template.description}`
+                            : ""
+                        }`,
+                      };
+                    }),
+                  ]}
+                  placeholder="Select a template to start with..."
+                  zIndex={zIndex.popover}
+                />
+              ) : (
+                <div className="p-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-600">
+                  {templatesLoading ? "Loading templates..." : `No templates available for ${newCreativeForm.channel} channel`}
+                </div>
+              )}
+              {selectedTemplateId && (
+                <div className="mt-2 flex items-center gap-2 text-xs text-gray-600">
+                  <FileText className="w-3 h-3" />
+                  <span>
+                    Template selected. You can customize the fields below.
+                  </span>
+                </div>
+              )}
+            </div>
 
             <div className="space-y-4">
               {/* Sender ID (SMS) or Subject (Email/Web) */}

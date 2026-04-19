@@ -609,12 +609,29 @@ export default function OfferCreativeStep({
     fetchLanguages();
   }, []);
 
+  // Initialize selectedCreative from creatives if available, otherwise null
+  const [selectedCreative, setSelectedCreative] = useState<string | null>(
+    () => {
+      return creatives.length > 0 ? creatives[0].id : null;
+    },
+  );
+
+  // Get languages already used by other creatives
+  const getUsedLanguages = (): string[] => {
+    return creatives
+      .filter((c) => c.id !== selectedCreative) // Exclude current creative
+      .map((c) => c.locale)
+      .filter((locale): locale is string => !!locale);
+  };
+
   // Compute language options with proper null checks
   const languageOptions = useMemo(() => {
     // Check if languages data exists and is an array
     if (!languages || !Array.isArray(languages) || languages.length === 0) {
       return [];
     }
+
+    const usedLanguages = getUsedLanguages();
 
     // Safely map languages to dropdown options
     return languages
@@ -642,20 +659,15 @@ export default function OfferCreativeStep({
         return {
           label: name,
           value: String(value),
+          isUsed: usedLanguages.includes(value),
         };
       })
       .filter((option) => option !== null) as Array<{
       label: string;
       value: string;
+      isUsed: boolean;
     }>;
-  }, [languages]);
-
-  // Initialize selectedCreative from creatives if available, otherwise null
-  const [selectedCreative, setSelectedCreative] = useState<string | null>(
-    () => {
-      return creatives.length > 0 ? creatives[0].id : null;
-    },
-  );
+  }, [languages, creatives, selectedCreative]);
   // Track selected template for each creative
   const [selectedTemplates, setSelectedTemplates] = useState<
     Record<string, number | null>
@@ -1113,15 +1125,25 @@ export default function OfferCreativeStep({
                 </h3>
                 <button
                   onClick={addCreative}
-                  className={`inline-flex items-center px-4 py-2 text-sm text-white ${tw.rounded} font-medium`}
+                  disabled={languageOptions.length > 0 && languageOptions.filter((opt) => !opt.isUsed).length === 0}
+                  className={`inline-flex items-center px-4 py-2 text-sm text-white ${tw.rounded} font-medium ${languageOptions.length > 0 && languageOptions.filter((opt) => !opt.isUsed).length === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
                   style={{
                     backgroundColor: color.primary.action,
                   }}
+                  title={languageOptions.length > 0 && languageOptions.filter((opt) => !opt.isUsed).length === 0 ? "All languages already have creatives" : ""}
                 >
                   <Plus className="w-5 h-5 mr-1.5" />
                   {t.offers.creatives.addCreative}
                 </button>
               </div>
+
+              {languageOptions.length > 0 && languageOptions.filter((opt) => !opt.isUsed).length === 0 && creatives.length > 0 && (
+                <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 mb-4">
+                  <p className="text-xs text-amber-700">
+                    All available languages have creatives. You cannot add more creatives for this offer.
+                  </p>
+                </div>
+              )}
 
               <div className="space-y-2">
                 {creatives.map((creative) => {
@@ -1235,15 +1257,20 @@ export default function OfferCreativeStep({
                           return updated;
                         });
                       }}
-                      options={languageOptions}
+                      options={languageOptions.filter((opt) => !opt.isUsed)}
                       placeholder={
                         languageOptions.length === 0
                           ? "No languages configured"
                           : t.offers.locale.placeholder
                       }
-                      disabled={languageOptions.length === 0}
+                      disabled={languageOptions.filter((opt) => !opt.isUsed).length === 0}
                       zIndex={zIndex.popover}
                     />
+                    {getUsedLanguages().length > 0 && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        {getUsedLanguages().length === 1 ? "1 language" : `${getUsedLanguages().length} languages`} already used in this offer
+                      </p>
+                    )}
                   </div>
 
                   {/* Template Selector */}
