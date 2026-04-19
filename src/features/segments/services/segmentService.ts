@@ -157,7 +157,8 @@ class SegmentService {
     return {
       id: data.id || 0,
       name: data.name || SEGMENT_CATEGORY_FIELD_DEFAULTS.name,
-      description: data.description || SEGMENT_CATEGORY_FIELD_DEFAULTS.description,
+      description:
+        data.description || SEGMENT_CATEGORY_FIELD_DEFAULTS.description,
       parent_category_id: data.parent_category_id || null,
       is_active: data.is_active ?? true,
       created_at: data.created_at || new Date().toISOString(),
@@ -166,11 +167,17 @@ class SegmentService {
   }
 
   private normalizeSegmentArray(segments: any[]): SegmentType[] {
-    return Array.isArray(segments) ? segments.map((seg) => this.normalizeSegment(seg)) : [];
+    return Array.isArray(segments)
+      ? segments.map((seg) => this.normalizeSegment(seg))
+      : [];
   }
 
-  private normalizeSegmentCategoryArray(categories: any[]): SegmentCategoryType[] {
-    return Array.isArray(categories) ? categories.map((cat) => this.normalizeSegmentCategory(cat)) : [];
+  private normalizeSegmentCategoryArray(
+    categories: any[],
+  ): SegmentCategoryType[] {
+    return Array.isArray(categories)
+      ? categories.map((cat) => this.normalizeSegmentCategory(cat))
+      : [];
   }
 
   private async request<T>(
@@ -368,7 +375,10 @@ class SegmentService {
     filters: AdvancedSearchQuery,
     skipCache: boolean = true,
   ): Promise<SegmentCategoriesResponse> {
-    const queryString = this.buildQueryParams({ ...filters, skip_cache: skipCache });
+    const queryString = this.buildQueryParams({
+      ...filters,
+      skip_cache: skipCache,
+    });
     return this.requestCategories<SegmentCategoriesResponse>(
       `/super-search${queryString}`,
     );
@@ -395,9 +405,9 @@ class SegmentService {
     skipCache: boolean = true,
   ): Promise<ApiSuccessResponse<SegmentCategoryType>> {
     const queryString = this.buildQueryParams({ skipCache });
-    const response = await this.requestCategories<ApiSuccessResponse<SegmentCategoryType>>(
-      `/${id}${queryString}`,
-    );
+    const response = await this.requestCategories<
+      ApiSuccessResponse<SegmentCategoryType>
+    >(`/${id}${queryString}`);
 
     // Normalize the category
     if (response?.data) {
@@ -415,7 +425,9 @@ class SegmentService {
   async createSegmentCategory(
     request: CreateSegmentCategoryRequest,
   ): Promise<ApiSuccessResponse<SegmentCategoryType>> {
-    const response = await this.requestCategories<ApiSuccessResponse<SegmentCategoryType>>("", {
+    const response = await this.requestCategories<
+      ApiSuccessResponse<SegmentCategoryType>
+    >("", {
       method: "POST",
       body: JSON.stringify(request),
     });
@@ -437,13 +449,12 @@ class SegmentService {
     id: number,
     request: UpdateSegmentCategoryRequest,
   ): Promise<ApiSuccessResponse<SegmentCategoryType>> {
-    const response = await this.requestCategories<ApiSuccessResponse<SegmentCategoryType>>(
-      `/${id}`,
-      {
-        method: "PUT",
-        body: JSON.stringify(request),
-      },
-    );
+    const response = await this.requestCategories<
+      ApiSuccessResponse<SegmentCategoryType>
+    >(`/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(request),
+    });
 
     // Normalize the updated category
     if (response?.data) {
@@ -483,7 +494,9 @@ class SegmentService {
       skipCache: filters?.skipCache,
     });
 
-    const response = await this.request<PaginatedResponse<SegmentType>>(`/${queryString}`);
+    const response = await this.request<PaginatedResponse<SegmentType>>(
+      `/${queryString}`,
+    );
 
     // Normalize all segments in paginated response
     if (response?.data && Array.isArray(response.data)) {
@@ -547,10 +560,13 @@ class SegmentService {
     id: number,
     segment: Partial<UpdateSegmentRequest>,
   ): Promise<ApiSuccessResponse<SegmentType>> {
-    const response = await this.request<ApiSuccessResponse<SegmentType>>(`/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(segment),
-    });
+    const response = await this.request<ApiSuccessResponse<SegmentType>>(
+      `/${id}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(segment),
+      },
+    );
 
     // Normalize the updated segment - backend may return data as array
     if (response?.data) {
@@ -952,7 +968,9 @@ class SegmentService {
     filters?: GetSegmentsQuery,
   ): Promise<PaginatedResponse<SegmentType>> {
     const queryString = this.buildQueryParams(filters || {});
-    const response = await this.request<PaginatedResponse<SegmentType>>(`/empty${queryString}`);
+    const response = await this.request<PaginatedResponse<SegmentType>>(
+      `/empty${queryString}`,
+    );
 
     // Normalize all segments in paginated response
     if (response?.data && Array.isArray(response.data)) {
@@ -1171,7 +1189,10 @@ class SegmentService {
     filters?: GetSegmentsQuery,
     skipCache: boolean = true,
   ): Promise<PaginatedResponse<SegmentType>> {
-    const queryString = this.buildQueryParams({ ...(filters || {}), skipCache });
+    const queryString = this.buildQueryParams({
+      ...(filters || {}),
+      skipCache,
+    });
     const response = await this.request<PaginatedResponse<SegmentType>>(
       `/${id}/children${queryString}`,
     );
@@ -1565,7 +1586,8 @@ class SegmentService {
   ): Promise<PaginatedResponse<SegmentMemberType>> {
     // Use offset-based pagination (not page-based)
     const limit = Math.min(query?.pageSize || 50, 100); // Max 100
-    const offset = query?.offset ?? (query?.page ? (query.page - 1) * limit : 0);
+    const offset =
+      query?.offset ?? (query?.page ? (query.page - 1) * limit : 0);
     const skipCache = query?.skipCache !== false ? "true" : "false";
 
     const queryString = this.buildQueryParams({
@@ -1710,7 +1732,8 @@ class SegmentService {
   ): Promise<PaginatedResponse<SegmentMemberType>> {
     // Use offset-based pagination (not page-based)
     const limit = Math.min(request.pageSize || 50, 100); // Max 100
-    const offset = request.offset ?? (request.page ? (request.page - 1) * limit : 0);
+    const offset =
+      request.offset ?? (request.page ? (request.page - 1) * limit : 0);
     const skipCache = request.skipCache !== false ? "true" : "false";
 
     const queryString = this.buildQueryParams({

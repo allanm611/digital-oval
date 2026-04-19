@@ -609,6 +609,22 @@ export default function OfferCreativeStep({
     fetchLanguages();
   }, []);
 
+  // Clear creatives when channel changes in step 1
+  useEffect(() => {
+    if (creatives.length > 0 && communicationChannelId) {
+      const defaultChannel = getDefaultChannelFromId(communicationChannelId);
+      // Check if any creative has a different channel than the new default
+      const hasChannelMismatch = creatives.some((c) => c.channel !== defaultChannel);
+
+      if (hasChannelMismatch) {
+        // Channel changed, clear all creatives
+        onCreativesChange([]);
+        setSelectedCreative(null);
+        setSelectedTemplates({});
+      }
+    }
+  }, [communicationChannelId]);
+
   // Initialize selectedCreative from creatives if available, otherwise null
   const [selectedCreative, setSelectedCreative] = useState<string | null>(
     () => {
@@ -707,10 +723,11 @@ export default function OfferCreativeStep({
 
   const addCreative = () => {
     const defaultChannel = getDefaultChannelFromId(communicationChannelId);
+
     const newCreative: LocalOfferCreative = {
       id: generateId(),
       channel: defaultChannel, // Use channel from step 1 communication channel selection
-      locale: "en", // Default locale
+      locale: "" as Locale, // User must explicitly select language
       title: "",
       text_body: "",
       html_body: "",
@@ -752,6 +769,18 @@ export default function OfferCreativeStep({
   };
 
   const selectedCreativeData = creatives.find((c) => c.id === selectedCreative);
+
+  // Use draft creative if none selected (for inline creation flow)
+  const editingCreative = selectedCreativeData || {
+    id: 'temp-draft',
+    channel: getDefaultChannelFromId(communicationChannelId),
+    locale: languageOptions.find((opt) => !opt.isUsed)?.value || "en",
+    title: "",
+    text_body: "",
+    html_body: "",
+    variables: {} as Record<string, string | number | boolean>,
+    is_active: true,
+  };
 
   // Get channel label from translation
   const getChannelLabel = (channel: CreativeChannel): string => {
@@ -1140,7 +1169,7 @@ export default function OfferCreativeStep({
               {languageOptions.length > 0 && languageOptions.filter((opt) => !opt.isUsed).length === 0 && creatives.length > 0 && (
                 <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 mb-4">
                   <p className="text-xs text-amber-700">
-                    All available languages have creatives. You cannot add more creatives for this offer.
+                    Each creative is limited to one language. All available languages already have creatives. To add more creatives, create a new language in your configuration.
                   </p>
                 </div>
               )}
@@ -1173,14 +1202,22 @@ export default function OfferCreativeStep({
                             <div className="font-medium text-sm text-gray-900">
                               {channelConfig?.label || creative.channel}
                             </div>
-                            <div className="text-xs text-gray-500 flex items-center">
-                              <Globe className="w-3 h-3 mr-1" />
-                              {getLocaleLabel(
-                                creative.locale,
-                                Array.isArray(languages) ? languages : undefined,
-                                t
-                              )}
-                            </div>
+                            {creative.locale && (
+                              <div className="text-xs text-gray-500 flex items-center">
+                                <Globe className="w-3 h-3 mr-1" />
+                                {getLocaleLabel(
+                                  creative.locale,
+                                  Array.isArray(languages) ? languages : undefined,
+                                  t
+                                )}
+                              </div>
+                            )}
+                            {!creative.locale && (
+                              <div className="text-xs text-amber-600 flex items-center">
+                                <Globe className="w-3 h-3 mr-1" />
+                                Language not selected
+                              </div>
+                            )}
                           </div>
                         </div>
                         <button
@@ -1207,11 +1244,17 @@ export default function OfferCreativeStep({
 
           {/* Creative Editor - Center Column (1/3) */}
           <div className="lg:col-span-1">
-            {selectedCreativeData ? (
-              <div
-                className={`bg-white ${tw.rounded} border border-gray-200 p-6`}
-              >
-                    <div className="space-y-6">
+            <div
+              className={`bg-white ${tw.rounded} border border-gray-200 p-6`}
+            >
+              {!selectedCreativeData && (
+                <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 mb-6">
+                  <p className="text-xs text-blue-700">
+                    Add a creative from the left panel to begin editing.
+                  </p>
+                </div>
+              )}
+              <div className="space-y-6">
                   {/* Channel Selection - Commented out: will be moved to step 1 */}
                   {/* <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1241,46 +1284,44 @@ export default function OfferCreativeStep({
                   {/* Locale Selection */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {t.offers.locale.label}
+                      {t.offers.locale.label} <span className="text-red-500">*</span>
                     </label>
                     <HeadlessSelect
-                      value={selectedCreativeData.locale}
+                      value={editingCreative.locale || ""}
                       onChange={(value) => {
-                        updateCreative(selectedCreativeData.id, {
-                          locale: value as Locale,
-                        });
-                        // Clear template selection when locale changes
-                        // so user can select a template matching the new locale
-                        setSelectedTemplates((prev) => {
-                          const updated = { ...prev };
-                          delete updated[selectedCreativeData.id];
-                          return updated;
-                        });
+                        if (selectedCreativeData) {
+                          updateCreative(selectedCreativeData.id, {
+                            locale: value as Locale,
+                          });
+                          // Clear template selection when locale changes
+                          setSelectedTemplates((prev) => {
+                            const updated = { ...prev };
+                            delete updated[selectedCreativeData.id];
+                            return updated;
+                          });
+                        }
                       }}
-                      options={languageOptions.filter((opt) => !opt.isUsed)}
+                      options={[
+                        { label: "Select a language", value: "" },
+                        ...languageOptions.filter((opt) => !opt.isUsed),
+                      ]}
                       placeholder={
                         languageOptions.length === 0
                           ? "No languages configured"
-                          : t.offers.locale.placeholder
+                          : "Select a language"
                       }
-                      disabled={languageOptions.filter((opt) => !opt.isUsed).length === 0}
+                      disabled={selectedCreativeData ? languageOptions.filter((opt) => !opt.isUsed).length === 0 : false}
                       zIndex={zIndex.popover}
                     />
-                    {getUsedLanguages().length > 0 && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        {getUsedLanguages().length === 1 ? "1 language" : `${getUsedLanguages().length} languages`} already used in this offer
-                      </p>
-                    )}
                   </div>
 
                   {/* Template Selector */}
-                  {availableTemplates.length > 0 && (
-                    <div>
+                  <div>
                       <div className="flex items-center justify-between mb-2">
                         <label className="block text-sm font-medium text-gray-700">
                           Creative Template (Optional)
                         </label>
-                        {selectedTemplates[selectedCreativeData.id] && (
+                        {selectedCreativeData && selectedTemplates[selectedCreativeData.id] && (
                           <button
                             onClick={handleClearTemplate}
                             className="text-xs text-gray-500 underline"
@@ -1292,14 +1333,14 @@ export default function OfferCreativeStep({
                       <div className="relative">
                         <HeadlessSelect
                           value={
-                            selectedTemplates[selectedCreativeData.id]
+                            selectedCreativeData && selectedTemplates[selectedCreativeData.id]
                               ? selectedTemplates[
                                   selectedCreativeData.id
                                 ]!.toString()
                               : ""
                           }
                           onChange={(value) =>
-                            handleTemplateSelect(value ? Number(value) : null)
+                            selectedCreativeData && handleTemplateSelect(value ? Number(value) : null)
                           }
                           options={[
                             { value: "", label: "Select template" },
@@ -1345,20 +1386,19 @@ export default function OfferCreativeStep({
                         )}
                       </div>
                     </div>
-                  )}
 
                   {/* Sender ID (SMS) or Subject (Email) */}
                   <div className="space-y-4">
                     {/* Sender ID for SMS */}
-                    {selectedCreativeData.channel === "SMS" && (
+                    {editingCreative.channel === "SMS" && (
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           {t.offers.senderId.label}
                         </label>
                         <HeadlessSelect
-                          value={selectedCreativeData.title || ""}
+                          value={editingCreative.title || ""}
                           onChange={(value) =>
-                            updateCreative(selectedCreativeData.id, {
+                            selectedCreativeData && updateCreative(selectedCreativeData.id, {
                               title: value || "",
                             })
                           }
@@ -1380,7 +1420,7 @@ export default function OfferCreativeStep({
                     )}
 
                     {/* Subject Line for Email */}
-                    {selectedCreativeData.channel === "Email" && (
+                    {editingCreative.channel === "Email" && (
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           {t.offers.subjectLine.label} <span className="text-red-500">*</span>
@@ -1389,10 +1429,10 @@ export default function OfferCreativeStep({
                           ref={titleInputRef}
                           placeholder={t.offers.subjectLine.placeholder}
                           maxLength={160}
-                          value={selectedCreativeData.title}
+                          value={editingCreative.title || ""}
                           onChange={(value) => {
                             setActiveField("title");
-                            updateCreative(selectedCreativeData.id, {
+                            selectedCreativeData && updateCreative(selectedCreativeData.id, {
                               title: value,
                             });
                           }}
@@ -1448,14 +1488,14 @@ export default function OfferCreativeStep({
                         {t.offers.messageContent.label}
                       </span>
                       <div className="flex items-center gap-2">
-                        {(selectedCreativeData.channel === "Email" ||
-                          selectedCreativeData.channel === "SMS" ||
-                          selectedCreativeData.channel === "WhatsApp" ||
-                          selectedCreativeData.channel === "Push") && (
+                        {(editingCreative.channel === "Email" ||
+                          editingCreative.channel === "SMS" ||
+                          editingCreative.channel === "WhatsApp" ||
+                          editingCreative.channel === "Push") && (
                           <button
                             type="button"
                             onClick={() =>
-                              setIsRichTextMap((prev) => ({
+                              selectedCreativeData && setIsRichTextMap((prev) => ({
                                 ...prev,
                                 [selectedCreativeData.id]:
                                   !prev[selectedCreativeData.id],
@@ -1463,22 +1503,22 @@ export default function OfferCreativeStep({
                             }
                             className="px-3 py-1.5 text-sm rounded-md border transition-colors"
                             style={{
-                              backgroundColor: isRichTextMap[
+                              backgroundColor: selectedCreativeData && isRichTextMap[
                                 selectedCreativeData.id
                               ]
                                 ? `${color.primary.accent}10`
                                 : "white",
-                              borderColor: isRichTextMap[
+                              borderColor: selectedCreativeData && isRichTextMap[
                                 selectedCreativeData.id
                               ]
                                 ? color.primary.accent
                                 : color.border.default,
-                              color: isRichTextMap[selectedCreativeData.id]
+                              color: selectedCreativeData && isRichTextMap[selectedCreativeData.id]
                                 ? color.primary.accent
                                 : color.text.secondary,
                             }}
                           >
-                            {isRichTextMap[selectedCreativeData.id]
+                            {selectedCreativeData && isRichTextMap[selectedCreativeData.id]
                               ? t.offers.richText
                               : t.offers.plainText}
                           </button>
@@ -1515,21 +1555,21 @@ export default function OfferCreativeStep({
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         {t.offers.messageBody.label}
-                        {selectedCreativeData.channel === "SMS" && selectedCreativeData.text_body?.trim() && (
+                        {editingCreative.channel === "SMS" && editingCreative.text_body?.trim() && (
                           <span className="text-xs font-normal text-gray-500 ml-2">
-                            ({getCharacterInfo(selectedCreativeData.title ? `${selectedCreativeData.title}: ${selectedCreativeData.text_body || ""}` : selectedCreativeData.text_body || "").charCount} characters{getCharacterInfo(selectedCreativeData.title ? `${selectedCreativeData.title}: ${selectedCreativeData.text_body || ""}` : selectedCreativeData.text_body || "").segments > 1 ? `, ${getCharacterInfo(selectedCreativeData.title ? `${selectedCreativeData.title}: ${selectedCreativeData.text_body || ""}` : selectedCreativeData.text_body || "").segments} SMS` : ''})
+                            ({getCharacterInfo(editingCreative.title ? `${editingCreative.title}: ${editingCreative.text_body || ""}` : editingCreative.text_body || "").charCount} characters{getCharacterInfo(editingCreative.title ? `${editingCreative.title}: ${editingCreative.text_body || ""}` : editingCreative.text_body || "").segments > 1 ? `, ${getCharacterInfo(editingCreative.title ? `${editingCreative.title}: ${editingCreative.text_body || ""}` : editingCreative.text_body || "").segments} SMS` : ''})
                           </span>
                         )}
                       </label>
-                      {isRichTextMap[selectedCreativeData.id] ? (
+                      {selectedCreativeData && isRichTextMap[selectedCreativeData.id] ? (
                         <div
                           onClick={() => setActiveField("body")}
                           onFocus={() => setActiveField("body")}
                         >
                           <RichTextEditor
-                            value={selectedCreativeData.text_body || ""}
+                            value={editingCreative.text_body || ""}
                             onChange={(value) => {
-                              updateCreative(selectedCreativeData.id, {
+                              selectedCreativeData && updateCreative(selectedCreativeData.id, {
                                 text_body: value,
                               });
                             }}
@@ -1540,11 +1580,11 @@ export default function OfferCreativeStep({
                       ) : (
                         <textarea
                           ref={bodyTextareaRef}
-                          value={selectedCreativeData.text_body || ""}
+                          value={editingCreative.text_body || ""}
                           onChange={(e) => {
                             setActiveField("body");
                             setCursorPosition(e.target.selectionStart || 0);
-                            updateCreative(selectedCreativeData.id, {
+                            selectedCreativeData && updateCreative(selectedCreativeData.id, {
                               text_body: e.target.value,
                             });
                           }}
@@ -1562,7 +1602,8 @@ export default function OfferCreativeStep({
                           }}
                           placeholder={t.offers.messageBody.placeholder}
                           rows={8}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
+                          disabled={!selectedCreativeData}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none disabled:bg-gray-50 disabled:cursor-not-allowed"
                         />
                       )}
 
@@ -1576,7 +1617,7 @@ export default function OfferCreativeStep({
                       <div className="mt-4">
                         <button
                           onClick={handlePreview}
-                          disabled={!selectedCreativeData.title && !selectedCreativeData.text_body && !selectedCreativeData.html_body}
+                          disabled={!selectedCreativeData || (!editingCreative.title && !editingCreative.text_body && !editingCreative.html_body)}
                           className={`px-4 py-2 text-sm font-medium ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 border border-gray-300 text-gray-700 hover:bg-gray-50`}
                         >
                           <Eye className="w-4 h-4" />
@@ -1587,31 +1628,16 @@ export default function OfferCreativeStep({
                   </div>
                 </div>
               </div>
-            ) : (
-              <div
-                className={`bg-gray-50 ${tw.rounded} border border-gray-200 p-8 text-center`}
-              >
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <MessageSquare className="w-8 h-8 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  {t.offers.creatives.noCreativeSelected}
-                </h3>
-                <p className="text-gray-500 text-sm">
-                  {t.offers.creatives.selectPrompt}
-                </p>
-              </div>
-            )}
-          </div>
+            </div>
 
           {/* Preview Panel - Right Column (1/3) */}
-          {selectedCreativeData && (
+          {creatives.length > 0 && (
             <div className="lg:col-span-1">
               <div className="sticky top-4">
                 <PreviewPanel
-                  channel={selectedCreativeData.channel === "SMS" ? "SMS" : selectedCreativeData.channel === "Email" ? "EMAIL" : selectedCreativeData.channel === "WhatsApp" ? "WHATSAPP" : "PUSH"}
-                  title={selectedCreativeData.title}
-                  body={selectedCreativeData.text_body || ""}
+                  channel={editingCreative.channel === "SMS" ? "SMS" : editingCreative.channel === "Email" ? "EMAIL" : editingCreative.channel === "WhatsApp" ? "WHATSAPP" : "PUSH"}
+                  title={editingCreative.title}
+                  body={editingCreative.text_body || ""}
                 />
               </div>
             </div>
@@ -1648,8 +1674,8 @@ export default function OfferCreativeStep({
           ) : previewResult ? (
             <div className="space-y-6">
               {/* Device-Specific Previews */}
-              {selectedCreativeData?.channel === "SMS" ||
-              selectedCreativeData?.channel === "SMS Flash" ? (
+              {editingCreative?.channel === "SMS" ||
+              editingCreative?.channel === "SMS Flash" ? (
                 <div>
                   <h3 className="text-sm font-semibold text-gray-700 mb-4">
                     {t.offers.preview.smsPreview}
@@ -1663,7 +1689,7 @@ export default function OfferCreativeStep({
                     title={previewResult.rendered_title}
                   />
                 </div>
-              ) : selectedCreativeData?.channel === "Email" ? (
+              ) : editingCreative?.channel === "Email" ? (
                 <div>
                   <h3 className="text-sm font-semibold text-gray-700 mb-4">
                     {t.offers.preview.emailPreview}

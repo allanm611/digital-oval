@@ -13,7 +13,10 @@ import {
 } from "../types/segment";
 import SegmentConditionsBuilder from "./SegmentConditionsBuilder";
 import { segmentService } from "../services/segmentService";
-import { segmentTypeService, SegmentType } from "../services/segmentTypeService";
+import {
+  segmentTypeService,
+  SegmentType,
+} from "../services/segmentTypeService";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import MultiCategorySelector from "../../../shared/components/MultiCategorySelector";
 import TypeSelector from "../../../shared/components/TypeSelector";
@@ -59,7 +62,9 @@ export default function SegmentModal({
     count_query: string;
     payload?: SegmentPayload;
   } | null>(null);
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState<(string | number)[]>([]);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<
+    (string | number)[]
+  >([]);
   const [fieldErrors, setFieldErrors] = useState<{
     description?: string;
     conditions?: string;
@@ -129,9 +134,8 @@ export default function SegmentModal({
     const loadCustomerIdentityFields = async () => {
       try {
         setIsLoadingIdentityFields(true);
-        const fields = await customerIdentityService.getCustomerIdentityFields(
-          true
-        );
+        const fields =
+          await customerIdentityService.getCustomerIdentityFields(true);
         setCustomerIdentityFields(fields);
       } catch (err) {
         console.error("Failed to load customer identity fields:", err);
@@ -216,7 +220,9 @@ export default function SegmentModal({
               typeId = Number((fullSegment as any).type_id);
             } else if (fullSegment.type && segmentTypes?.length > 0) {
               // Try to find the type ID by looking up the name
-              const foundType = segmentTypes.find((type) => type.name === fullSegment.type);
+              const foundType = segmentTypes.find(
+                (type) => type.name === fullSegment.type,
+              );
               typeId = foundType?.id;
             }
 
@@ -229,7 +235,8 @@ export default function SegmentModal({
               conditions: conditions,
               segment_type_id: typeId,
               category,
-              customer_identity_field_mapping: (fullSegment as any).customer_identity_field_mapping,
+              customer_identity_field_mapping: (fullSegment as any)
+                .customer_identity_field_mapping,
             });
             // Store existing queries (not displayed in edit mode, but kept for reference)
             setExistingQuery(fullSegment.query || null);
@@ -974,7 +981,8 @@ export default function SegmentModal({
           query: queries.segment_query,
           count_query: queries.count_query,
           definition: queries.payload, // Store the original payload for editing
-          customer_identity_field_mapping: formData.customer_identity_field_mapping,
+          customer_identity_field_mapping:
+            formData.customer_identity_field_mapping,
         });
 
         // Extract segment from response - backend returns {success: true, data: [segment]}
@@ -1010,7 +1018,8 @@ export default function SegmentModal({
           is_active: true,
           visibility: "private",
           definition: queries.payload, // Store the original payload for editing
-          customer_identity_field_mapping: formData.customer_identity_field_mapping,
+          customer_identity_field_mapping:
+            formData.customer_identity_field_mapping,
         };
 
         const createResponse =
@@ -1054,9 +1063,7 @@ export default function SegmentModal({
       const segmentIdForRefresh = finalSegment.id || segment?.id;
       if (segmentIdForRefresh) {
         try {
-          await segmentService.refreshSegment(
-            Number(segmentIdForRefresh),
-          );
+          await segmentService.refreshSegment(Number(segmentIdForRefresh));
         } catch (refreshErr) {
           console.warn(
             "[SegmentModal] Segment saved but refresh failed:",
@@ -1187,7 +1194,7 @@ export default function SegmentModal({
 
                   <div>
                     <label
-                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                      className={`block text-sm font-medium ${tw.textPrimary} `}
                     >
                       Map to Customer Identity Field
                     </label>
@@ -1207,7 +1214,10 @@ export default function SegmentModal({
                         }))
                       }
                       placeholder="Select identity field..."
-                      disabled={isLoadingIdentityFields || customerIdentityFields.length === 0}
+                      disabled={
+                        isLoadingIdentityFields ||
+                        customerIdentityFields.length === 0
+                      }
                     />
                   </div>
 
@@ -1338,7 +1348,11 @@ export default function SegmentModal({
                         placeholder={
                           loadingTypes ? "Loading..." : "Select segment type"
                         }
-                        disabled={loadingTypes || !segmentTypes || segmentTypes.length === 0}
+                        disabled={
+                          loadingTypes ||
+                          !segmentTypes ||
+                          segmentTypes.length === 0
+                        }
                         allowCreate={true}
                         onCreate={() => setShowCreateTypeModal(true)}
                       />
@@ -1685,7 +1699,8 @@ export default function SegmentModal({
               onTypeCreated={(typeId) => {
                 const loadSegmentTypes = async () => {
                   try {
-                    const response = await segmentTypeService.getAllSegmentTypes();
+                    const response =
+                      await segmentTypeService.getAllSegmentTypes();
                     if (response.success && response.data) {
                       setSegmentTypes(response.data);
                     }
