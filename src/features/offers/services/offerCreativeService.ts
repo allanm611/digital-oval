@@ -481,22 +481,24 @@ class OfferCreativeService {
   // ============================================
 
   // PATCH /offer-creatives/:id/activate
-  async activate(id: number): Promise<OfferCreativeResponse> {
+  async activate(id: number, updated_by?: number): Promise<OfferCreativeResponse> {
     const result = await this.request<OfferCreativeResponse>(
       `/${id}/activate`,
       {
         method: "PATCH",
+        body: JSON.stringify({ updated_by }),
       }
     );
     return result;
   }
 
   // PATCH /offer-creatives/:id/deactivate
-  async deactivate(id: number): Promise<OfferCreativeResponse> {
+  async deactivate(id: number, updated_by?: number): Promise<OfferCreativeResponse> {
     const result = await this.request<OfferCreativeResponse>(
       `/${id}/deactivate`,
       {
         method: "PATCH",
+        body: JSON.stringify({ updated_by }),
       }
     );
     return result;

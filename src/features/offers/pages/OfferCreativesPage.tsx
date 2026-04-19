@@ -12,11 +12,13 @@ import { OfferCreative } from "../types/offerCreative";
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { useAuth } from "../../../contexts/AuthContext";
 
 export default function OfferCreativesPage() {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { success, error: showError } = useToast();
+  const { user } = useAuth();
 
   const [creatives, setCreatives] = useState<OfferCreative[]>([]);
   const [loading, setLoading] = useState(true);
@@ -89,9 +91,9 @@ export default function OfferCreativesPage() {
       setCreatives(updatedCreatives);
 
       if (creative.is_active) {
-        await offerCreativeService.deactivate(creative.id);
+        await offerCreativeService.deactivate(creative.id, user?.user_id);
       } else {
-        await offerCreativeService.activate(creative.id);
+        await offerCreativeService.activate(creative.id, user?.user_id);
       }
 
       success("Success", creative.is_active ? "Creative deactivated" : "Creative activated");
@@ -322,8 +324,8 @@ export default function OfferCreativesPage() {
                           disabled={isTogglingActive === creative.id}
                           className={`transition-opacity hover:opacity-75 disabled:opacity-50 ${
                             creative.is_active
-                              ? "text-green-600"
-                              : "text-gray-400"
+                              ? "text-orange-500"
+                              : "text-green-600"
                           }`}
                           title={creative.is_active ? "Deactivate" : "Activate"}
                         >
