@@ -2234,7 +2234,7 @@ export const offerTypesConfig: TypeConfigurationPageConfig = {
 
   // Permissions - Offer types are backend-managed, not creatable via UI
   disableCreate: true,
-  disableDelete: true,
+  disableDelete: false,
   enableActivateDeactivate: true,
 
   // Messages
@@ -2287,7 +2287,7 @@ export const campaignTypesConfig: TypeConfigurationPageConfig = {
 
   // Permissions - Campaign types are backend-managed, not creatable via UI
   disableCreate: true,
-  disableDelete: true,
+  disableDelete: false,
   enableActivateDeactivate: true,
 
   // Messages
@@ -2340,7 +2340,7 @@ export const segmentTypesConfig: TypeConfigurationPageConfig = {
 
   // Permissions - Segment types are backend-managed, not creatable via UI
   disableCreate: true,
-  disableDelete: true,
+  disableDelete: false,
   enableActivateDeactivate: true,
 
   // Messages
@@ -2379,14 +2379,14 @@ export const productTypesConfig: TypeConfigurationPageConfig = {
   nameMaxLength: 120,
   descriptionMaxLength: 600,
   statusLabel: "Status",
-  metadataField: {
-    label: "Associated Products",
-    type: "number",
-    placeholder: "Enter number of products",
-  },
+  // metadataField: {
+  //   label: "Associated Products",
+  //   type: "number",
+  //   placeholder: "Enter number of products",
+  // },
   // Permissions - Product types are backend-managed, not creatable via UI
   disableCreate: true,
-  disableDelete: true,
+  disableDelete: false,
   enableActivateDeactivate: true,
   deleteConfirmTitle: "Delete Product Type",
   deleteConfirmMessage: (name: string) =>
