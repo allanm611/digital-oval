@@ -37,7 +37,7 @@ export default function ProgramModal({
     start_date: "",
     end_date: "",
   });
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState({ name: "", code: "", budget_total: "", general: "" });
   const [dateError, setDateError] = useState("");
 
   useEffect(() => {
@@ -64,24 +64,30 @@ export default function ProgramModal({
         end_date: "",
       });
     }
-    setError("");
+    setErrors({ name: "", code: "", budget_total: "", general: "" });
     setDateError("");
   }, [program, isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const newErrors = { name: "", code: "", budget_total: "", general: "" };
+
     if (!formData.name.trim()) {
-      setError("Program name is required");
-      return;
+      newErrors.name = "Program name is required";
+    } else if (formData.name.length > 128) {
+      newErrors.name = "Program name must be 128 characters or less";
     }
 
     if (!formData.code.trim()) {
-      setError("Program code is required");
-      return;
+      newErrors.code = "Program code is required";
     }
 
-    if (formData.name.length > 128) {
-      setError("Program name must be 128 characters or less");
+    if (!formData.budget_total || parseFloat(formData.budget_total) <= 0) {
+      newErrors.budget_total = "Budget is required and must be greater than 0";
+    }
+
+    if (Object.values(newErrors).some(err => err !== "")) {
+      setErrors(newErrors);
       return;
     }
 
@@ -97,9 +103,7 @@ export default function ProgramModal({
       name: formData.name.trim(),
       code: formData.code.trim(),
       description: formData.description.trim() || undefined,
-      budget_total: formData.budget_total
-        ? parseFloat(formData.budget_total)
-        : undefined,
+      budget_total: parseFloat(formData.budget_total),
       start_date: formData.start_date || undefined,
       end_date: formData.end_date || undefined,
     };
@@ -136,10 +140,15 @@ export default function ProgramModal({
               <Input
                 placeholder="Enter program name"
                 value={formData.name}
-                onChange={(value) =>
-                  setFormData((prev) => ({ ...prev, name: value }))
-                }
+                onChange={(value) => {
+                  setFormData((prev) => ({ ...prev, name: value }));
+                  if (errors.name) setErrors(prev => ({ ...prev, name: "" }));
+                }}
+                className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none focus:ring-2 ${
+                  errors.name ? "border-red-300 focus:ring-red-500 focus:border-red-500" : "border-gray-300 focus:ring-purple-500 focus:border-transparent"
+                }`}
               />
+              {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
             </div>
 
             <div>
@@ -149,30 +158,39 @@ export default function ProgramModal({
               <Input
                 placeholder="Enter program code (e.g., PROG-Q4-2024)"
                 value={formData.code}
-                onChange={(value) =>
-                  setFormData((prev) => ({ ...prev, code: value }))
-                }
+                onChange={(value) => {
+                  setFormData((prev) => ({ ...prev, code: value }));
+                  if (errors.code) setErrors(prev => ({ ...prev, code: "" }));
+                }}
+                className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none focus:ring-2 ${
+                  errors.code ? "border-red-300 focus:ring-red-500 focus:border-red-500" : "border-gray-300 focus:ring-purple-500 focus:border-transparent"
+                }`}
               />
+              {errors.code && <p className="mt-1 text-sm text-red-600">{errors.code}</p>}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Budget Total
+                Budget Total *
               </label>
               <Input
                 type="number"
                 value={formData.budget_total}
-                onChange={(value) =>
+                onChange={(value) => {
                   setFormData((prev) => ({
                     ...prev,
                     budget_total: String(value),
-                  }))
-                }
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                  }));
+                  if (errors.budget_total) setErrors(prev => ({ ...prev, budget_total: "" }));
+                }}
+                className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none focus:ring-2 ${
+                  errors.budget_total ? "border-red-300 focus:ring-red-500 focus:border-red-500" : "border-gray-300 focus:ring-purple-500 focus:border-transparent"
+                }`}
                 placeholder="Enter budget amount"
                 min="0"
                 step="0.01"
               />
+              {errors.budget_total && <p className="mt-1 text-sm text-red-600">{errors.budget_total}</p>}
             </div>
 
             <div>
