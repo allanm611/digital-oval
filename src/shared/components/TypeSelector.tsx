@@ -28,17 +28,26 @@ export default function TypeSelector({
   return (
     <div className={`flex ${className}`}>
       <div className="flex-1">
-        <div
-          style={
-            allowCreate
-              ? {
-                  borderTopRightRadius: "0",
-                  borderBottomRightRadius: "0",
-                  overflow: "hidden",
-                }
-              : undefined
-          }
-        >
+        {allowCreate ? (
+          <div
+            style={{
+              borderTopRightRadius: "0",
+              borderBottomRightRadius: "0",
+              overflow: "hidden",
+            }}
+          >
+            <HeadlessSelect
+              options={options}
+              value={value}
+              onChange={onChange}
+              placeholder={placeholder}
+              disabled={disabled}
+              className="w-full"
+              searchable={true}
+              error={error}
+            />
+          </div>
+        ) : (
           <HeadlessSelect
             options={options}
             value={value}
@@ -49,7 +58,7 @@ export default function TypeSelector({
             searchable={true}
             error={error}
           />
-        </div>
+        )}
       </div>
 
       {allowCreate && (
@@ -60,6 +69,7 @@ export default function TypeSelector({
           style={{
             backgroundColor: color.primary.action,
             borderColor: color.primary.action,
+            border: "1px solid",
           }}
           title="Create new type"
         >

@@ -7,30 +7,25 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { customerService } from "../../customers360/services/customerServices";
 import type { Subscriber } from "../../customers360/types/customer";
+import { DNDType } from "../services/dndService";
 
 interface AddPhoneModalProps {
   isOpen: boolean;
   onClose: () => void;
+  dndTypes: DNDType[];
   onAdd: (customer: {
     id: number;
     name?: string;
     email?: string;
     phone?: string;
-    dndType: string;
+    dndTypeId: number;
   }) => void;
 }
-
-const DND_TYPES = [
-  { value: "promotional", label: "Promotional" },
-  { value: "transactional", label: "Transactional" },
-  { value: "marketing", label: "Marketing" },
-  { value: "service", label: "Service" },
-  { value: "other", label: "Other" },
-];
 
 export default function AddPhoneModal({
   isOpen,
   onClose,
+  dndTypes,
   onAdd,
 }: AddPhoneModalProps) {
   const [step, setStep] = useState<"search" | "selectType">("search");
@@ -43,7 +38,7 @@ export default function AddPhoneModal({
     email?: string;
     phone?: string;
   } | null>(null);
-  const [selectedDndType, setSelectedDndType] = useState("promotional");
+  const [selectedDndTypeId, setSelectedDndTypeId] = useState<number | null>(null);
 
   // Debounced search
   useEffect(() => {
@@ -52,7 +47,7 @@ export default function AddPhoneModal({
       setSearchResults([]);
       setStep("search");
       setSelectedCustomer(null);
-      setSelectedDndType("promotional");
+      setSelectedDndTypeId(dndTypes.length > 0 ? dndTypes[0].id : null);
       return;
     }
 
@@ -80,7 +75,7 @@ export default function AddPhoneModal({
       clearTimeout(debounceTimer);
       setIsSearching(false);
     };
-  }, [searchTerm, isOpen]);
+  }, [searchTerm, isOpen, dndTypes]);
 
   const handleSelectCustomer = (customer: Subscriber) => {
     const name =
@@ -101,24 +96,24 @@ export default function AddPhoneModal({
   };
 
   const handleConfirmAdd = () => {
-    if (selectedCustomer) {
+    if (selectedCustomer && selectedDndTypeId !== null) {
       onAdd({
         ...selectedCustomer,
-        dndType: selectedDndType,
+        dndTypeId: selectedDndTypeId,
       });
       // Reset state
       setSearchTerm("");
       setSearchResults([]);
       setStep("search");
       setSelectedCustomer(null);
-      setSelectedDndType("promotional");
+      setSelectedDndTypeId(dndTypes.length > 0 ? dndTypes[0].id : null);
       onClose();
     }
   };
 
   const handleBackToSearch = () => {
     setStep("search");
-    setSelectedDndType("promotional");
+    setSelectedDndTypeId(dndTypes.length > 0 ? dndTypes[0].id : null);
   };
 
   const handleClose = () => {
@@ -126,7 +121,7 @@ export default function AddPhoneModal({
     setSearchResults([]);
     setStep("search");
     setSelectedCustomer(null);
-    setSelectedDndType("promotional");
+    setSelectedDndTypeId(dndTypes.length > 0 ? dndTypes[0].id : null);
     onClose();
   };
 
@@ -264,11 +259,11 @@ export default function AddPhoneModal({
                 Choose which type of messages this customer should NOT receive
               </p>
               <HeadlessSelect
-                value={selectedDndType}
-                onChange={setSelectedDndType}
-                options={DND_TYPES.map((type) => ({
-                  label: type.label,
-                  value: type.value,
+                value={String(selectedDndTypeId)}
+                onChange={(value) => setSelectedDndTypeId(Number(value))}
+                options={dndTypes.map((type) => ({
+                  label: type.name,
+                  value: String(type.id),
                 }))}
                 placeholder="Select DND type"
                 className="w-full"
@@ -277,20 +272,14 @@ export default function AddPhoneModal({
             </div>
 
             {/* Type Description */}
-            <div className={`p-3 ${tw.rounded} bg-gray-50`}>
-              <p className="text-xs text-gray-600">
-                {selectedDndType === "promotional" &&
-                  "Promotional: Customer will NOT receive marketing and promotional SMS"}
-                {selectedDndType === "transactional" &&
-                  "Transactional: Customer will NOT receive transaction confirmations and receipts"}
-                {selectedDndType === "marketing" &&
-                  "Marketing: Customer will NOT receive marketing campaigns"}
-                {selectedDndType === "service" &&
-                  "Service: Customer will NOT receive service-related messages"}
-                {selectedDndType === "other" &&
-                  "Other: Customer will NOT receive other types of messages"}
-              </p>
-            </div>
+            {selectedDndTypeId !== null && (
+              <div className={`p-3 ${tw.rounded} bg-gray-50`}>
+                <p className="text-xs text-gray-600">
+                  {dndTypes.find((t) => t.id === selectedDndTypeId)?.description ||
+                    "Customer will NOT receive these types of messages"}
+                </p>
+              </div>
+            )}
 
             {/* Action Buttons */}
             <div className="flex gap-3 pt-4">
@@ -314,4 +303,18 @@ export default function AddPhoneModal({
       </div>
     </RegularModal>
   );
+}
+
+function getSubscriptionDisplayName(customer: Subscriber, fallback: string): string {
+  if (customer.first_name || customer.last_name) {
+    return `${customer.first_name || ""} ${customer.last_name || ""}`.trim();
+  }
+  if (customer.email) return customer.email;
+  if (customer.msisdn) return customer.msisdn;
+  return fallback;
+}
+
+function formatMsisdn(msisdn: string): string {
+  if (!msisdn) return "";
+  return msisdn.replace(/^(\+?\d{3})(\d{3})(\d{3})(\d{3})$/, "$1 $2 $3 $4");
 }

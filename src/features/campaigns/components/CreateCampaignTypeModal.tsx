@@ -58,7 +58,7 @@ export default function CreateCampaignTypeModal({
       console.error("Failed to create campaign type:", err);
       showError(
         "Error",
-        err instanceof Error ? err.message : "Failed to create campaign type"
+        "Failed to create campaign type. Please try again."
       );
     } finally {
       setIsCreating(false);

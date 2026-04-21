@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Plus,
@@ -17,125 +17,78 @@ import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import BackButton from "../../../shared/components/ui/BackButton";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import DateFormatter from "../../../shared/components/DateFormatter";
-import {
-  COMMUNICATION_CHANNELS,
-  CommunicationChannel,
-} from "../types/communicationPolicyConfig";
+import { communicationChannelService, CommunicationChannel as ChannelData } from "../../../shared/services/communicationChannelService";
+import { dndService, DNDSubscription, DNDType } from "../services/dndService";
 import AddPhoneModal from "../components/AddPhoneModal";
-import RemovePhoneModal from "../components/RemovePhoneModal";
 import AddEmailModal from "../components/AddEmailModal";
-
-// Types
-export interface DNDSubscription {
-  id: number;
-  customer_id: number;
-  customer_name?: string;
-  customer_email?: string;
-  customer_phone?: string;
-  dnd_type: "promotional" | "transactional" | "marketing" | "service" | "other";
-  status: "active" | "removed";
-  added_at: string;
-  added_by?: number;
-  added_by_name?: string;
-  removed_at?: string;
-  removed_by?: number;
-  removed_by_name?: string;
-}
-
-const DND_TYPES = [
-  { value: "promotional", label: "Promotional" },
-  { value: "transactional", label: "Transactional" },
-  { value: "marketing", label: "Marketing" },
-  { value: "service", label: "Service" },
-  { value: "other", label: "Other" },
-] as const;
-
-// Dummy data - Using Kenyan names from customer data
-const DUMMY_DND_SUBSCRIPTIONS: DNDSubscription[] = [
-  {
-    id: 1,
-    customer_id: 101,
-    customer_name: "Nelly Mwaura",
-    customer_email: "nelly.mwaura@gmail.com",
-    customer_phone: "+254763056860",
-    dnd_type: "promotional",
-    status: "active",
-    added_at: "2025-01-15T10:30:00Z",
-    added_by: 1,
-    added_by_name: "Admin User",
-  },
-  {
-    id: 2,
-    customer_id: 102,
-    customer_name: "Wilson Githaiga",
-    customer_email: "wilson.githaiga@yahoo.com",
-    customer_phone: "+254763056254",
-    dnd_type: "transactional",
-    status: "active",
-    added_at: "2025-01-20T14:20:00Z",
-    added_by: 2,
-    added_by_name: "Marketing Team",
-  },
-  {
-    id: 3,
-    customer_id: 103,
-    customer_name: "Grace Wanjiru",
-    customer_email: "grace.wanjiru@outlook.com",
-    customer_phone: "+254723456789",
-    dnd_type: "marketing",
-    status: "removed",
-    added_at: "2025-01-10T09:15:00Z",
-    added_by: 1,
-    added_by_name: "Admin User",
-    removed_at: "2025-01-25T16:45:00Z",
-    removed_by: 1,
-    removed_by_name: "Admin User",
-  },
-  {
-    id: 4,
-    customer_id: 104,
-    customer_name: "Peter Kipchoge",
-    customer_email: "peter.kipchoge@gmail.com",
-    customer_phone: "+254734567890",
-    dnd_type: "service",
-    status: "active",
-    added_at: "2025-01-18T11:00:00Z",
-    added_by: 3,
-    added_by_name: "Support Team",
-  },
-  {
-    id: 5,
-    customer_id: 105,
-    customer_name: "Mary Njeri",
-    customer_email: "mary.njeri@gmail.com",
-    customer_phone: "+254745678901",
-    dnd_type: "promotional",
-    status: "active",
-    added_at: "2025-01-22T13:30:00Z",
-    added_by: 2,
-    added_by_name: "Marketing Team",
-  },
-];
 
 export default function DNDChannelPage() {
   const navigate = useNavigate();
   const { channel } = useParams<{ channel: string }>();
-  const { success: showToast } = useToast();
+  const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
-  const [dndSubscriptions, setDndSubscriptions] = useState<DNDSubscription[]>(
-    DUMMY_DND_SUBSCRIPTIONS,
-  );
-  const [loading] = useState(false);
+  const [dndSubscriptions, setDndSubscriptions] = useState<DNDSubscription[]>([]);
+  const [dndTypes, setDndTypes] = useState<DNDType[]>([]);
+  const [loadingChannel, setLoadingChannel] = useState(true);
+  const [loadingDNDData, setLoadingDNDData] = useState(false);
+  const [channelInfo, setChannelInfo] = useState<ChannelData | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showRemoveModal, setShowRemoveModal] = useState(false);
 
-  const channelValue = channel?.toUpperCase() as CommunicationChannel;
-  const channelInfo = COMMUNICATION_CHANNELS.find(
-    (ch) => ch.value === channelValue,
-  );
+  useEffect(() => {
+    if (channel) {
+      loadChannelInfo();
+    }
+  }, [channel]);
+
+  useEffect(() => {
+    if (channelInfo) {
+      loadDNDData();
+    }
+  }, [channelInfo, filterStatus]);
+
+  const loadChannelInfo = async () => {
+    try {
+      setLoadingChannel(true);
+      const channels = await communicationChannelService.getAll();
+      const channelIdNum = Number(channel);
+      const foundChannel = channels.find((ch) => ch.id === channelIdNum);
+
+      if (foundChannel) {
+        setChannelInfo(foundChannel);
+      } else {
+        setChannelInfo(null);
+      }
+    } catch (err) {
+      showError("Error", "Failed to load channel information");
+      setChannelInfo(null);
+    } finally {
+      setLoadingChannel(false);
+    }
+  };
+
+  const loadDNDData = async () => {
+    try {
+      setLoadingDNDData(true);
+      const [types, subscriptions] = await Promise.all([
+        dndService.getDNDTypes(true),
+        dndService.getDNDSubscriptions({
+          channel: channelInfo?.code.toUpperCase(),
+          status: filterStatus === "all" ? undefined : filterStatus,
+          search: searchTerm || undefined,
+        }),
+      ]);
+      setDndTypes(types);
+      setDndSubscriptions(subscriptions);
+    } catch (err) {
+      showError("Error", "Failed to load DND data");
+    } finally {
+      setLoadingDNDData(false);
+    }
+  }
 
   const filteredSubscriptions = dndSubscriptions.filter((sub) => {
     const matchesSearch =
@@ -143,85 +96,55 @@ export default function DNDChannelPage() {
       sub.customer_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       sub.customer_phone?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesType = filterType === "all" || sub.dnd_type === filterType;
-    const matchesStatus = filterStatus === "all" || sub.status === filterStatus;
+    const matchesType = filterType === "all" || sub.dnd_type_id === Number(filterType);
 
-    return matchesSearch && matchesType && matchesStatus;
+    return matchesSearch && matchesType;
   });
 
-  const handleAddCustomer = (customer: {
+  const handleAddCustomer = async (customer: {
     id: number;
     name?: string;
     email?: string;
     phone?: string;
-    dndType: string;
+    dndTypeId: number;
   }) => {
-    // Add new DND subscription to the list
-    const newSubscription: DNDSubscription = {
-      id: Math.max(...dndSubscriptions.map((s) => s.id), 0) + 1,
-      customer_id: customer.id,
-      customer_name: customer.name,
-      customer_email: customer.email,
-      customer_phone: customer.phone,
-      dnd_type: customer.dndType as DNDSubscription["dnd_type"],
-      status: "active",
-      added_at: new Date().toISOString(),
-      added_by: 1,
-      added_by_name: "Current User",
-    };
+    try {
+      await dndService.addDNDSubscription({
+        customer_phone: customer.phone || "",
+        channel: channelInfo?.code.toUpperCase() as "SMS" | "EMAIL" | "USSD" | "APP",
+        dnd_type_id: customer.dndTypeId,
+        customer_name: customer.name,
+        customer_email: customer.email,
+      });
 
-    setDndSubscriptions([...dndSubscriptions, newSubscription]);
-    showToast(
-      `success`,
-      t("dnd.customerAdded", { name: customer.name || customer.phone, type: customer.dndType }),
-      t.dnd.customerAddedDesc,
-    );
-    setShowAddModal(false);
+      const dndType = dndTypes.find((t) => t.id === customer.dndTypeId);
+      showToast(
+        `success`,
+        `Customer added to ${dndType?.name || "DND"} list`,
+        "The customer has been added successfully"
+      );
+      setShowAddModal(false);
+      await loadDNDData();
+    } catch (err) {
+      showError("Error", "Failed to add customer to DND list");
+    }
   };
 
-  const handleRemoveCustomer = (customer: {
-    id?: number;
-    customer_id?: number;
-    name?: string;
-    customer_name?: string;
-    email?: string;
-    customer_email?: string;
-    phone?: string;
-    customer_phone?: string;
-    dndType?: string;
-    dnd_type?: string;
-  }) => {
-    // Mark subscription as removed or delete it
-    const customerId = customer.customer_id || customer.id;
-    const customerName = customer.customer_name || customer.name;
-    const dndType = customer.dnd_type || customer.dndType;
+  const handleRemoveCustomer = async (subscription: DNDSubscription) => {
+    try {
+      await dndService.removeDNDSubscription(subscription.id);
 
-    const subscribedEntry = dndSubscriptions.find(
-      (s) => s.customer_id === customerId,
-    );
-
-    if (subscribedEntry) {
-      setDndSubscriptions(
-        dndSubscriptions.map((s) =>
-          s.id === subscribedEntry.id
-            ? {
-                ...s,
-                status: "removed",
-                removed_at: new Date().toISOString(),
-                removed_by: 1,
-                removed_by_name: "Current User",
-              }
-            : s,
-        ),
+      const dndType = dndTypes.find((t) => t.id === subscription.dnd_type_id);
+      showToast(
+        `success`,
+        `Customer removed from ${dndType?.name || "DND"} list`,
+        "The customer has been removed successfully"
       );
+      setShowRemoveModal(false);
+      await loadDNDData();
+    } catch (err) {
+      showError("Error", "Failed to remove customer from DND list");
     }
-
-    showToast(
-      `success`,
-      t("dnd.customerRemoved", { name: customerName, type: dndType }),
-      t.dnd.customerRemovedDesc,
-    );
-    setShowRemoveModal(false);
   };
 
   const handleDeleteDNDRecord = (id: number, name: string) => {
@@ -232,6 +155,14 @@ export default function DNDChannelPage() {
       t("dnd.recordDeletedDesc", { name }),
     );
   };
+
+  if (loadingChannel) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <LoadingSpinner variant="modern" size="md" color="primary" />
+      </div>
+    );
+  }
 
   if (!channelInfo) {
     return (
@@ -256,15 +187,15 @@ export default function DNDChannelPage() {
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
-      <BackButton fallbackTo="/dashboard/dnd-management" showBreadcrumb={true} currentLabel="DND Management" />
+      <BackButton fallbackTo="/dashboard/dnd-management" showBreadcrumb={true} currentLabel={channelInfo?.name || "Channel"} />
 
       {/* Description and Actions */}
       <div className="flex items-start justify-between gap-4">
         <p className={`text-sm ${tw.textSecondary}`}>
-          Manage Do Not Disturb lists for {channelInfo?.label || 'this channel'}. Add or remove customers who should not receive messages on this channel.
+          Manage Do Not Disturb lists for {channelInfo?.name || 'this channel'}. Add or remove customers who should not receive messages on this channel.
         </p>
         <div className="flex flex-wrap items-center gap-2 w-auto">
-          {channelValue === "SMS" && (
+          {channelInfo?.code.toUpperCase() === "SMS" && (
             <>
               <button
                 onClick={() => setShowAddModal(true)}
@@ -284,7 +215,7 @@ export default function DNDChannelPage() {
               </button>
             </>
           )}
-          {channelValue === "EMAIL" && (
+          {channelInfo?.code.toUpperCase() === "EMAIL" && (
             <button
               onClick={() => setShowAddModal(true)}
               className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white w-auto`}
@@ -294,7 +225,7 @@ export default function DNDChannelPage() {
               Add Email
             </button>
           )}
-          {(channelValue === "USSD" || channelValue === "APP") && (
+          {(channelInfo?.code.toUpperCase() === "USSD" || channelInfo?.code.toUpperCase() === "APP") && (
             <button
               onClick={() => setShowAddModal(true)}
               className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white w-auto`}
@@ -314,9 +245,9 @@ export default function DNDChannelPage() {
           <div className="flex-[0.8]">
             <SearchInput
               placeholder={
-                channelValue === "SMS"
+                channelInfo?.code.toUpperCase() === "SMS"
                   ? "Search by name, email, or phone number..."
-                  : channelValue === "EMAIL"
+                  : channelInfo?.code.toUpperCase() === "EMAIL"
                     ? "Search by name or email..."
                     : "Search by name..."
               }
@@ -334,9 +265,9 @@ export default function DNDChannelPage() {
                 onChange={setFilterType}
                 options={[
                   { value: "all", label: "All DND Types" },
-                  ...DND_TYPES.map((type) => ({
-                    value: type.value,
-                    label: type.label,
+                  ...dndTypes.map((type) => ({
+                    value: String(type.id),
+                    label: type.name,
                   })),
                 ]}
                 placeholder="Filter by DND Type"
@@ -362,14 +293,14 @@ export default function DNDChannelPage() {
 
       {/* Table */}
       <div className={`${tw.rounded} border border-gray-200 overflow-hidden`}>
-        {loading ? (
+        {loadingDNDData ? (
           <div className="flex items-center justify-center py-12">
             <LoadingSpinner />
           </div>
         ) : filteredSubscriptions.length === 0 ? (
           <div className="text-center py-12">
-            <UserX className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
+            <UserX className="w-10 h-10 text-gray-400 mx-auto mb-4" />
+            <h3 className={`text-sm ${tw.textPrimary} mb-2`}>
               No DND subscriptions found
             </h3>
           </div>
@@ -502,7 +433,7 @@ export default function DNDChannelPage() {
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       <span className="text-sm text-black capitalize">
-                        {subscription.dnd_type}
+                        {subscription.dnd_type_name || "Unknown"}
                       </span>
                     </td>
                     <td
@@ -549,21 +480,13 @@ export default function DNDChannelPage() {
                         borderBottomRightRadius: "0.375rem",
                       }}
                     >
-                      {subscription.status === "active" ? (
+                      {subscription.status === "active" && (
                         <button
                           onClick={() => handleRemoveCustomer(subscription)}
                           className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
                           title="Remove from DND"
                         >
                           <UserCheck className="w-4 h-4" />
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => handleRemoveCustomer(subscription)}
-                          className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
-                          title="Delete from DND list"
-                        >
-                          <Trash2 className="w-4 h-4" />
                         </button>
                       )}
                     </td>
@@ -576,27 +499,21 @@ export default function DNDChannelPage() {
       </div>
 
       {/* Add Phone Modal for SMS */}
-      {channelValue === "SMS" && (
-        <>
-          <AddPhoneModal
-            isOpen={showAddModal}
-            onClose={() => setShowAddModal(false)}
-            onAdd={handleAddCustomer}
-          />
-          <RemovePhoneModal
-            isOpen={showRemoveModal}
-            onClose={() => setShowRemoveModal(false)}
-            onRemove={handleRemoveCustomer}
-            dndSubscriptions={dndSubscriptions}
-          />
-        </>
+      {channelInfo?.code.toUpperCase() === "SMS" && (
+        <AddPhoneModal
+          isOpen={showAddModal}
+          onClose={() => setShowAddModal(false)}
+          dndTypes={dndTypes}
+          onAdd={handleAddCustomer}
+        />
       )}
 
       {/* Add Email Modal for EMAIL */}
-      {channelValue === "EMAIL" && (
+      {channelInfo?.code.toUpperCase() === "EMAIL" && (
         <AddEmailModal
           isOpen={showAddModal}
           onClose={() => setShowAddModal(false)}
+          dndTypes={dndTypes}
           onAdd={handleAddCustomer}
         />
       )}

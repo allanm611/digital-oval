@@ -16,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import SearchInput from "../../../../shared/components/ui/SearchInput";
+import Input from "../../../../shared/components/ui/Input";
 import {
   CreateCampaignRequest,
   CampaignSegment,

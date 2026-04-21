@@ -100,7 +100,7 @@ export default function CreateEditCommunicationChannelModal({
       onClose();
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : `Failed to ${mode === "create" ? "create" : "update"} communication channel. Please try again.`
+        `Failed to ${mode === "create" ? "create" : "update"} communication channel. Please try again.`
       );
     } finally {
       setIsSaving(false);

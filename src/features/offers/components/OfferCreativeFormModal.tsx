@@ -430,9 +430,18 @@ export default function OfferCreativeFormModal({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Locale / Language
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Locale / Language
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => window.open("/dashboard/languages", "_blank")}
+                    className="text-xs text-purple-600 hover:text-purple-700 underline"
+                  >
+                    Create Language
+                  </button>
+                </div>
                 <HeadlessSelect
                   value={formData.locale}
                   onChange={(value) => setFormData((prev) => ({ ...prev, locale: String(value) }))}
@@ -457,9 +466,18 @@ export default function OfferCreativeFormModal({
 
             {/* Creative Template */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Creative Template
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Creative Template
+                </label>
+                <button
+                  type="button"
+                  onClick={() => window.open("/dashboard/creative-templates", "_blank")}
+                  className="text-xs text-purple-600 hover:text-purple-700 underline"
+                >
+                  Create Template
+                </button>
+              </div>
               <HeadlessSelect
                 value={selectedTemplate?.id ? String(selectedTemplate.id) : ""}
                 onChange={(value) => handleTemplateSelect(value ? Number(value) : "")}

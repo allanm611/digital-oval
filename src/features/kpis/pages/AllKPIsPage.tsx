@@ -1,11 +1,14 @@
 import { useState, useMemo } from "react";
-import { Eye,ListChecks, Activity, DollarSign,  ChevronLeft, ChevronRight } from "lucide-react";
-import SearchInput from "../../../shared/components/ui/SearchInput";
+import { Eye, Edit, Trash2, ListChecks, Activity, DollarSign,  ChevronLeft, ChevronRight } from "lucide-react";
+import Input from "../../../shared/components/ui/Input";
 import { generateAllKPIs } from "../utils/kpiGenerator";
 import { color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "../../../contexts/ToastContext";
+import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import CreateButton from "../../../shared/components/ui/CreateButton";
 
 const allKPIs = generateAllKPIs();
 
@@ -13,9 +16,13 @@ const ITEMS_PER_PAGE = 10;
 
 export default function AllKPIsPage() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [kpiToDelete, setKpiToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const categories = Array.from(new Set(allKPIs.map((kpi) => kpi.category)));
 
@@ -76,15 +83,68 @@ export default function AllKPIsPage() {
     ...categories.map((cat) => ({ value: cat, label: cat })),
   ];
 
+  const extractNumericId = (kpiId: string): string => {
+    return kpiId.split("-")[1] || kpiId;
+  };
+
+  const handleViewDetails = (kpi: typeof allKPIs[0]) => {
+    const numericId = extractNumericId(kpi.id);
+
+    if (kpi.category === "System Event") {
+      navigate(`/dashboard/kpis/system-events/${numericId}`);
+    } else if (kpi.category === "Usage Metric") {
+      navigate(`/dashboard/kpis/usage-metrics/${numericId}`);
+    } else if (kpi.category === "Revenue Metric") {
+      navigate(`/dashboard/kpis/revenue-metrics/${numericId}`);
+    }
+  };
+
+  const handleEdit = (kpi: typeof allKPIs[0]) => {
+    const numericId = extractNumericId(kpi.id);
+
+    if (kpi.category === "System Event") {
+      navigate(`/dashboard/kpis/system-events/${numericId}`);
+    } else if (kpi.category === "Usage Metric") {
+      navigate(`/dashboard/kpis/usage-metrics/${numericId}/edit`);
+    } else if (kpi.category === "Revenue Metric") {
+      navigate(`/dashboard/kpis/revenue-metrics/${numericId}/edit`);
+    }
+  };
+
+  const handleDeleteClick = (kpi: typeof allKPIs[0]) => {
+    setKpiToDelete({ id: kpi.id, name: kpi.name });
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!kpiToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      // TODO: Call the appropriate delete service based on category
+      // For now, just show a message
+      showToast("info", `Delete functionality for "${kpiToDelete.name}" will be implemented soon`);
+      setShowDeleteModal(false);
+      setKpiToDelete(null);
+    } catch (error) {
+      console.error("Failed to delete KPI:", error);
+      showToast("error", "Failed to delete KPI");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setKpiToDelete(null);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex items-center justify-between mb-6">
         <BackButton fallbackTo="/dashboard/kpis" />
-        <div>  
-                  
-        </div>
-        
+        <CreateButton route="/dashboard/kpis/create" />
       </div>
 <p className={`text-sm ${tw.textSecondary}`}>
             View all available KPIs across all categories
@@ -248,10 +308,25 @@ export default function AllKPIsPage() {
                       >
                         <div className="flex items-center justify-center space-x-2">
                           <button
+                            onClick={() => handleViewDetails(kpi)}
                             className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
                             title="View Details"
                           >
                             <Eye className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleEdit(kpi)}
+                            className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
+                            title="Edit"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(kpi)}
+                            className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-red-100 transition-all duration-300`}
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4 text-red-600" />
                           </button>
                         </div>
                       </td>
@@ -302,10 +377,25 @@ export default function AllKPIsPage() {
                     </div>
                     <div className="flex items-center gap-2 justify-end">
                       <button
+                        onClick={() => handleViewDetails(kpi)}
                         className={`p-2 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-colors`}
                         title="View Details"
                       >
                         <Eye className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleEdit(kpi)}
+                        className={`p-2 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-colors`}
+                        title="Edit"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClick(kpi)}
+                        className={`p-2 ${tw.rounded} hover:bg-red-100 transition-colors`}
+                        title="Delete"
+                      >
+                        <Trash2 className="w-4 h-4 text-red-600" />
                       </button>
                     </div>
                   </div>
@@ -351,6 +441,19 @@ export default function AllKPIsPage() {
           </>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        title="Delete KPI"
+        description="Are you sure you want to delete this KPI? This action cannot be undone."
+        itemName={kpiToDelete?.name || ""}
+        isLoading={isDeleting}
+        confirmText="Delete KPI"
+        cancelText="Cancel"
+      />
     </div>
   );
 }

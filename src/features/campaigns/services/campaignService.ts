@@ -120,6 +120,8 @@ class CampaignService {
       attribution_model_id: (item?.attribution_model_id as number | null) || null,
       metadata: (item?.metadata as Record<string, unknown>) || {},
       suppression_list_ids: Array.isArray(item?.suppression_list_ids) ? (item.suppression_list_ids as number[]) : null,
+      offer_count: typeof item?.offer_count === "number" ? item.offer_count : undefined,
+      segment_count: typeof item?.segment_count === "number" ? item.segment_count : undefined,
       offers: Array.isArray(item?.offers) ? (item.offers as any[]) : undefined,
       segments: Array.isArray(item?.segments) ? (item.segments as any[]) : undefined,
     };

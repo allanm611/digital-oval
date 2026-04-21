@@ -403,8 +403,8 @@ export default function CampaignsPage() {
       // Service now normalizes all campaigns, so we can use them directly
       const campaignsData: CampaignDisplay[] = response.data.map((campaign) => ({
         ...campaign,
-        offer_count: (campaign as any).offers_count ?? campaign.offers?.length ?? 0,
-        segment_count: (campaign as any).segments_count ?? campaign.segments?.length ?? 0,
+        offer_count: campaign.offer_count ?? campaign.offers?.length ?? 0,
+        segment_count: campaign.segment_count ?? campaign.segments?.length ?? 0,
       }));
 
       // Filter out archived campaigns when showing "all" status
