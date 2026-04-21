@@ -1295,14 +1295,14 @@ export default function SegmentModal({
                                 }
                               }
                             }}
-                            className="px-3 py-2 text-white rounded-r-md flex items-center justify-center text-sm border-l-0"
+                            className="px-3 py-2 text-white rounded-r-md flex items-center justify-center text-sm border-l-0 font-medium"
                             style={{
                               backgroundColor: color.primary.action,
                               borderColor: color.primary.action,
                             }}
                             title="Add tag"
                           >
-                            <Plus className="w-4 h-4" />
+                            Add
                           </button>
                         </div>
                         {formData.tags.length > 0 && (
