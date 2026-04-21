@@ -1,4 +1,5 @@
 import { createPortal } from "react-dom";
+import Input from '../../../shared/components/ui/Input';
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -20,7 +21,6 @@ import {
   Square,
   X,
 } from "lucide-react";
-import SearchInput from "../../../shared/components/ui/SearchInput";
 import { useToast } from "../../../contexts/ToastContext";
 import { useConfirm } from "../../../contexts/ConfirmContext";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -1137,11 +1137,11 @@ export default function ConnectionProfilesPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Server ID
                   </label>
-                  <input
+                  <Input
                     type="number"
                     min={1}
                     value={serverFilter}
-                    onChange={(e) => setServerFilter(e.target.value)}
+                    onChange={(value) => setServerFilter(String(value))}
                     placeholder="Enter server ID"
                     className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm`}
                   />

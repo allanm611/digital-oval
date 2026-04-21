@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
+import Input from '../../../shared/components/ui/Input';
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
@@ -14,7 +15,6 @@ import {
   CheckSquare,
   Square,
 } from "lucide-react";
-import SearchInput from "../../../shared/components/ui/SearchInput";
 import { stepExecutionService } from "../services/stepExecutionService";
 import type { StepExecution } from "../types/stepExecution";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -998,13 +998,13 @@ export default function StepExecutionsPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Job Execution ID
                       </label>
-                      <input
+                      <Input
                         type="text"
                         className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
                         placeholder="Job execution UUID (GUID)"
                         value={jobExecutionIdFilter}
-                        onChange={(e) =>
-                          setJobExecutionIdFilter(e.target.value.trim())
+                        onChange={(value) =>
+                          setJobExecutionIdFilter(String(value).trim())
                         }
                         pattern="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
                       />
@@ -1023,14 +1023,14 @@ export default function StepExecutionsPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Step ID
                       </label>
-                      <input
+                      <Input
                         type="number"
                         className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
                         placeholder="Step ID (numeric)"
                         value={stepIdFilter}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setStepIdFilter(
-                            e.target.value ? Number(e.target.value) : ""
+                            String(value) ? Number(String(value)) : ""
                           )
                         }
                         min="1"

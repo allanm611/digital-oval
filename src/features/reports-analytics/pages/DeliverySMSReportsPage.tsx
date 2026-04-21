@@ -640,7 +640,7 @@ export default function DeliverySMSReportsPage() {
               >
                 From:
               </label>
-              <input
+              <Input
                 id="sms-date-start"
                 type="date"
                 value={customRange.start}
@@ -662,7 +662,7 @@ export default function DeliverySMSReportsPage() {
               >
                 To:
               </label>
-              <input
+              <Input
                 id="sms-date-end"
                 type="date"
                 value={customRange.end}

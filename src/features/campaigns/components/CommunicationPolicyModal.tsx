@@ -1,3 +1,4 @@
+import Input from '../../../shared/components/ui/Input';
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -200,13 +201,13 @@ export default function CommunicationPolicyModal({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Start Time
             </label>
-            <input
+            <Input
               type="time"
               value={timeConfig.startTime}
-              onChange={(e) =>
+              onChange={(value) =>
                 updateConfig("timeWindow", (prev) => ({
                   ...prev,
-                  startTime: e.target.value,
+                  startTime: String(value),
                 }))
               }
               className={`w-full px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white`}
@@ -216,13 +217,13 @@ export default function CommunicationPolicyModal({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               End Time
             </label>
-            <input
+            <Input
               type="time"
               value={timeConfig.endTime}
-              onChange={(e) =>
+              onChange={(value) =>
                 updateConfig("timeWindow", (prev) => ({
                   ...prev,
-                  endTime: e.target.value,
+                  endTime: String(value),
                 }))
               }
               className={`w-full px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white`}
@@ -362,15 +363,15 @@ export default function CommunicationPolicyModal({
                   />
                 </div>
                 <div>
-                  <input
+                  <Input
                     type="number"
                     min="1"
                     value={period.maxCount}
-                    onChange={(e) => {
+                    onChange={(value) => {
                       setMaxCommPeriods((prev) =>
                         prev.map((p) =>
                           p.id === period.id
-                            ? { ...p, maxCount: parseInt(e.target.value) || 1 }
+                            ? { ...p, maxCount: parseInt(String(value)) || 1 }
                             : p
                         )
                       );
@@ -583,14 +584,14 @@ export default function CommunicationPolicyModal({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Priority
             </label>
-            <input
+            <Input
               type="number"
               min="1"
               value={vipConfig.priority || 1}
-              onChange={(e) =>
+              onChange={(value) =>
                 updateConfig("vipList", (prev) => ({
                   ...prev,
-                  priority: parseInt(e.target.value) || 1,
+                  priority: parseInt(String(value)) || 1,
                 }))
               }
               className={`w-full px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white`}
@@ -726,10 +727,10 @@ export default function CommunicationPolicyModal({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Policy Name <span className="text-red-500">*</span>
                 </label>
-                <input
+                <Input
                   type="text"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(value) => setName(String(value))}
                   className={`w-full px-4 py-2.5 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white`}
                   placeholder="Enter policy name"
                   required
@@ -883,7 +884,7 @@ export default function CommunicationPolicyModal({
             <div className="px-4 pt-4">
               <label className="flex items-center space-x-3 cursor-pointer">
                 <Checkbox checked={isActive}
-                  onChange={(e) => setIsActive(e.target.checked)}
+                  onChange={(value) => setIsActive(e.target.checked)}
                   className="rounded w-5 h-5"
                   style={{ accentColor: color.primary.action }} />
                 <div>

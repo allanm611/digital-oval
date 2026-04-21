@@ -1,4 +1,5 @@
 import { DataConnector, DataConnectorType, DataConnectorConfiguration } from "../types";
+import Input from '../../../shared/components/ui/Input';
 import { tw, color } from "../../../shared/utils/utils";
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
@@ -42,10 +43,10 @@ export default function ConnectorConfigDisplay({
 
     return (
       <div className="relative">
-        <input
+        <Input
           type={visible ? "text" : "password"}
           value={value ?? ""}
-          onChange={(e) => handleChange(field, e.target.value)}
+          onChange={(value) => handleChange(field, String(value))}
           className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400`}
           disabled={!isEditMode}
         />
@@ -101,10 +102,10 @@ export default function ConnectorConfigDisplay({
           {label}
         </label>
         {isEditMode && type !== "password" ? (
-          <input
+          <Input
             type={type}
             value={typeof value === "string" || typeof value === "number" ? value : ""}
-            onChange={(e) => handleChange(label.toLowerCase() as keyof DataConnectorConfiguration, e.target.value)}
+            onChange={(value) => handleChange(label.toLowerCase() as keyof DataConnectorConfiguration, String(value))}
             className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-400`}
           />
         ) : (

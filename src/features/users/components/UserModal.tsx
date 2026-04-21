@@ -10,6 +10,7 @@ import {
   UpdateUserRequest,
 } from "../../users/types/user";
 import { useToast } from "../../../contexts/ToastContext";
+import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { roleService } from "../../roles/services/roleService";
@@ -301,7 +302,7 @@ export default function UserModal({
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <UserIcon className={`w-5 h-5 ${tw.textMuted}`} />
                     </div>
-                    <input
+                    <Input
                       name="first_name"
                       value={formData.first_name}
                       onChange={handleChange}
@@ -321,7 +322,7 @@ export default function UserModal({
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <UserIcon className={`w-5 h-5 ${tw.textMuted}`} />
                     </div>
-                    <input
+                    <Input
                       name="last_name"
                       value={formData.last_name}
                       onChange={handleChange}
@@ -343,7 +344,7 @@ export default function UserModal({
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Mail className={`w-5 h-5 ${tw.textMuted}`} />
                   </div>
-                  <input
+                  <Input
                     name="email_address"
                     type="email"
                     value={formData.email_address}
@@ -375,7 +376,7 @@ export default function UserModal({
                     >
                       Username
                     </label>
-                    <input
+                    <Input
                       name="username"
                       type="text"
                       value={formData.username}
@@ -398,7 +399,7 @@ export default function UserModal({
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <Lock className={`w-5 h-5 ${tw.textMuted}`} />
                       </div>
-                      <input
+                      <Input
                         name="password"
                         type="password"
                         value={formData.password}
@@ -455,7 +456,7 @@ export default function UserModal({
                   >
                     Department
                   </label>
-                  <input
+                  <Input
                     name="department"
                     type="text"
                     value={formData.department}

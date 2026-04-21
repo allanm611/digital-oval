@@ -622,7 +622,7 @@ export default function DeliveryEmailReportsPage() {
               >
                 From:
               </label>
-              <input
+              <Input
                 id="email-date-start"
                 type="date"
                 value={customRange.start}
@@ -644,7 +644,7 @@ export default function DeliveryEmailReportsPage() {
               >
                 To:
               </label>
-              <input
+              <Input
                 id="email-date-end"
                 type="date"
                 value={customRange.end}

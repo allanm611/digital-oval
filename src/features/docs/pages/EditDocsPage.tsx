@@ -1,3 +1,4 @@
+import Input from '../../../shared/components/ui/Input';
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import MarkdownIt from 'markdown-it';
@@ -182,10 +183,10 @@ function EditDocsPageContent() {
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>{isAddMode ? 'Create New Document' : title || 'Edit Document'}</h1>
-          <input
+          <Input
             type="text"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(value) => setTitle(String(value))}
             placeholder={isAddMode ? "Enter document title" : "Document title"}
             disabled={isSaving}
             className={styles.titleEditInput}
@@ -261,7 +262,7 @@ function EditDocsPageContent() {
         <div className={styles.editorSection}>
           <div className={styles.editorLabel}>Markdown</div>
           <div className={styles.toolbar}>
-            <input
+            <Input
               type="file"
               accept="image/*"
               onChange={handleImageUpload}
@@ -281,18 +282,18 @@ function EditDocsPageContent() {
 
           {showUrlInput && (
             <div className={styles.urlInputGroup}>
-              <input
+              <Input
                 type="text"
                 placeholder="Image URL (e.g., https://example.com/image.png)"
                 value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
+                onChange={(value) => setImageUrl(String(value))}
                 className={styles.urlInput}
               />
-              <input
+              <Input
                 type="text"
                 placeholder="Alt text (optional)"
                 value={imageAlt}
-                onChange={(e) => setImageAlt(e.target.value)}
+                onChange={(value) => setImageAlt(String(value))}
                 className={styles.urlInput}
               />
               <button

@@ -358,8 +358,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
                 The network port used to connect (e.g. 80 for HTTP, 443 for
                 HTTPS).
               </p>
-              <input
-                type="number"
+              <Input type="number"
                 name="port"
                 value={form.port}
                 onChange={handleChange}
@@ -411,8 +410,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
               <label className="text-sm font-medium text-gray-700">
                 Timeout (seconds)
               </label>
-              <input
-                type="number"
+              <Input type="number"
                 name="timeout_seconds"
                 value={form.timeout_seconds}
                 onChange={handleChange}
@@ -424,8 +422,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
               <label className="text-sm font-medium text-gray-700">
                 Max Retries
               </label>
-              <input
-                type="number"
+              <Input type="number"
                 name="max_retries"
                 value={form.max_retries}
                 onChange={handleChange}
@@ -476,8 +473,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
                 <label className="text-sm font-medium text-gray-700">
                   Interval (seconds)
                 </label>
-                <input
-                  type="number"
+                <Input type="number"
                   name="health_check_interval_seconds"
                   value={form.health_check_interval_seconds}
                   onChange={handleChange}
@@ -516,8 +512,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
               <label className="text-sm font-medium text-gray-700">
                 Failure Threshold
               </label>
-              <input
-                type="number"
+              <Input type="number"
                 name="circuit_breaker_threshold"
                 value={form.circuit_breaker_threshold}
                 onChange={handleChange}

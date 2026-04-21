@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import Input from '../../../shared/components/ui/Input';
 import { useNavigate } from "react-router-dom";
 import {
   Download,
@@ -11,7 +12,6 @@ import {
   X,
   AlertTriangle,
 } from "lucide-react";
-import SearchInput from "../../../shared/components/ui/SearchInput";
 import { etlService } from "../services/etlService";
 import { EtlFileRegistryRowType, FileStatsResponse } from "../types/etl";
 import { useToast } from "../../../contexts/ToastContext";
@@ -634,11 +634,11 @@ export default function EtlFileRegistryPage() {
                   .cdr or .tdr file
                 </p>
               </div>
-              <input
+              <Input
                 id="file-input"
                 type="file"
                 accept=".cdr,.tdr"
-                onChange={(e) => {
+                onChange={(value) => {
                   const file = e.target.files?.[0];
                   setUploadError(null);
 

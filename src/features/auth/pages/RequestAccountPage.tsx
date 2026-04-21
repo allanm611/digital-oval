@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { accountService } from "../../account/services/accountService";
 import { useToast } from "../../../contexts/ToastContext";
+import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 
 export default function RequestAccountPage() {
@@ -247,13 +248,13 @@ export default function RequestAccountPage() {
                         <label htmlFor="firstName">
                           {t.auth.requestAccount.fullNameLabel.split(" ")[0]} <span className="required">*</span>
                         </label>
-                        <input
+                        <Input
                           id="firstName"
                           value={formData.firstName}
-                          onChange={(e) => {
+                          onChange={(value) => {
                             setFormData((prev) => ({
                               ...prev,
-                              firstName: e.target.value,
+                              firstName: String(value),
                             }));
                             clearError("firstName");
                           }}
@@ -279,13 +280,13 @@ export default function RequestAccountPage() {
                         <label htmlFor="lastName">
                           Last Name <span className="required">*</span>
                         </label>
-                        <input
+                        <Input
                           id="lastName"
                           value={formData.lastName}
-                          onChange={(e) => {
+                          onChange={(value) => {
                             setFormData((prev) => ({
                               ...prev,
-                              lastName: e.target.value,
+                              lastName: String(value),
                             }));
                             clearError("lastName");
                           }}
@@ -310,13 +311,13 @@ export default function RequestAccountPage() {
                       <label htmlFor="email">
                         {t.auth.requestAccount.emailLabel} <span className="required">*</span>
                       </label>
-                      <input
+                      <Input
                         id="email"
                         value={formData.email}
-                        onChange={(e) => {
+                        onChange={(value) => {
                           setFormData((prev) => ({
                             ...prev,
-                            email: e.target.value,
+                            email: String(value),
                           }));
                           clearError("email");
                         }}
@@ -337,13 +338,13 @@ export default function RequestAccountPage() {
 
                     <div className="form-group">
                       <label htmlFor="phone">Phone</label>
-                      <input
+                      <Input
                         id="phone"
                         value={formData.phone}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setFormData((prev) => ({
                             ...prev,
-                            phone: e.target.value,
+                            phone: String(value),
                           }))
                         }
                         type="tel"
@@ -417,13 +418,13 @@ export default function RequestAccountPage() {
                       <label htmlFor="position">
                         Position <span className="required">*</span>
                       </label>
-                      <input
+                      <Input
                         id="position"
                         value={formData.position}
-                        onChange={(e) => {
+                        onChange={(value) => {
                           setFormData((prev) => ({
                             ...prev,
-                            position: e.target.value,
+                            position: String(value),
                           }));
                           clearError("position");
                         }}

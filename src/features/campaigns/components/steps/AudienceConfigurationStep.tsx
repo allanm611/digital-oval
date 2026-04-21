@@ -554,14 +554,13 @@ export default function AudienceConfigurationStep({
           <label className={`block text-sm font-semibold ${tw.textPrimary}`}>
             Step Order
           </label>
-          <input
-            type="number"
+          <Input type="number"
             min="1"
             value={formData.step_order ?? 1}
-            onChange={(e) =>
+            onChange={(value) =>
               setFormData({
                 ...formData,
-                step_order: Math.max(1, parseInt(e.target.value) || 1),
+                step_order: Math.max(1, parseInt(String(value)) || 1),
               })
             }
             className={`${components.input.default} w-full px-4 py-3`}
@@ -1380,16 +1379,16 @@ function ControlGroupConfigModal({
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       {t.campaigns.audienceConfiguration.percentage}
                     </label>
-                    <input
-                      type="number"
+                    <Input type="number"
                       min="0.1"
                       max="50"
                       step="0.1"
+                      placeholder="23"
                       value={config.percentage || 23}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setConfig({
                           ...config,
-                          percentage: Number(e.target.value),
+                          percentage: Number(String(value)),
                         })
                       }
                       className={`w-24 px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-transparent`}
@@ -1406,7 +1405,7 @@ function ControlGroupConfigModal({
                   <div className="flex items-center space-x-2">
                     <Checkbox id="setLimits"
                       checked={config.set_limits || false}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setConfig({ ...config, set_limits: e.target.checked })
                       }
                       className="w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157] rounded" />
@@ -1430,14 +1429,13 @@ function ControlGroupConfigModal({
                         <label className="block text-sm text-gray-600 mb-1">
                           {t.campaigns.audienceConfiguration.lowerLimit}
                         </label>
-                        <input
-                          type="number"
+                        <Input type="number"
                           min="0"
                           value={config.lower_limit || ""}
-                          onChange={(e) =>
+                          onChange={(value) =>
                             setConfig({
                               ...config,
-                              lower_limit: Number(e.target.value),
+                              lower_limit: Number(String(value)),
                             })
                           }
                           className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-transparent`}
@@ -1448,14 +1446,13 @@ function ControlGroupConfigModal({
                         <label className="block text-sm text-gray-600 mb-1">
                           {t.campaigns.audienceConfiguration.upperLimit}
                         </label>
-                        <input
-                          type="number"
+                        <Input type="number"
                           min="0"
                           value={config.upper_limit || ""}
-                          onChange={(e) =>
+                          onChange={(value) =>
                             setConfig({
                               ...config,
-                              upper_limit: Number(e.target.value),
+                              upper_limit: Number(String(value)),
                             })
                           }
                           className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-transparent`}
@@ -1480,15 +1477,15 @@ function ControlGroupConfigModal({
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     {t.campaigns.audienceConfiguration.numberOfCustomers}
                   </label>
-                  <input
-                    type="number"
+                  <Input type="number"
                     min="1"
                     max={segment.customer_count || 0}
+                    placeholder="10000"
                     value={config.fixed_number || 10000}
-                    onChange={(e) =>
+                    onChange={(value) =>
                       setConfig({
                         ...config,
-                        fixed_number: Number(e.target.value),
+                        fixed_number: Number(String(value)),
                       })
                     }
                     className={`w-32 px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-transparent`}
@@ -1532,10 +1529,10 @@ function ControlGroupConfigModal({
                       <Radio name="selectedControlGroup"
                         value={group.id}
                         checked={config.selected_control_group_id === group.id}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setConfig({
                             ...config,
-                            selected_control_group_id: e.target.value,
+                            selected_control_group_id: String(value),
                           })
                         }
                         className="mt-1 w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157]" />

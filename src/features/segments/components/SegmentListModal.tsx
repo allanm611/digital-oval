@@ -684,7 +684,7 @@ export default function SegmentListModal({
                 </div>
               )}
 
-              <input
+              <Input
                 ref={fileInputRef}
                 type="file"
                 accept=".csv,.txt,.tsv,.xlsx"

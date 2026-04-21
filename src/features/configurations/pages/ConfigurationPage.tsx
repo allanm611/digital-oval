@@ -188,6 +188,15 @@ export default function ConfigurationPage() {
         navigationPath: "/dashboard/sms-routes",
       },
       {
+        id: "email-routes",
+        name: "Email Routes",
+        description: "Manage email SMTP routes for message delivery",
+        type: "offer",
+        category: "Offer Configuration",
+        status: "active",
+        navigationPath: "/dashboard/email-routes",
+      },
+      {
         id: "notification-types",
         name: "Notification Types",
         description: "Define and manage different types of notifications",

@@ -4,8 +4,10 @@ import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import { Role, CreateRoleRequest, UpdateRoleRequest, DataAccessLevel } from "../types/role";
 import { roleService } from "../services/roleService";
-import { color } from "../../../shared/utils/utils";
+import { color, tw } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import ModalFooter from "../../../shared/components/ui/ModalFooter";
+import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 
@@ -283,17 +285,13 @@ export default function RoleFormModal({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Role Name *
               </label>
-              <input
+              <Input
                 type="text"
-                name="name"
                 value={formData.name}
-                onChange={handleInputChange}
+                onChange={(value) => setFormData({ ...formData, name: String(value) })}
                 placeholder="e.g., Administrator"
-                className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 ${
-                  errors.name
-                    ? "border-red-300 focus:ring-red-500"
-                    : "border-gray-300 focus:ring-blue-500"
-                }`}
+                hasError={!!errors.name}
+                variant="medium"
               />
               {errors.name && (
                 <p className="mt-1 text-sm text-red-600">{errors.name}</p>
@@ -304,19 +302,14 @@ export default function RoleFormModal({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Code *
               </label>
-              <input
+              <Input
                 type="text"
-                name="code"
                 value={formData.code}
-                onChange={handleInputChange}
+                onChange={(value) => setFormData({ ...formData, code: String(value) })}
                 disabled={!!role}
-                maxLength={50}
                 placeholder="e.g., administrator"
-                className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                  errors.code
-                    ? "border-red-300 focus:ring-red-500"
-                    : "border-gray-300 focus:ring-blue-500"
-                }`}
+                hasError={!!errors.code}
+                variant="medium"
               />
               {errors.code && (
                 <p className="mt-1 text-sm text-red-600">{errors.code}</p>
@@ -349,14 +342,12 @@ export default function RoleFormModal({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Role Level
               </label>
-              <input
+              <Input
                 type="number"
-                name="role_level"
-                value={formData.role_level}
-                onChange={handleInputChange}
-                min="1"
-                max="10"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={String(formData.role_level)}
+                onChange={(value) => setFormData({ ...formData, role_level: parseInt(String(value)) || 0 })}
+                placeholder="1-10"
+                variant="medium"
               />
             </div>
 
@@ -409,17 +400,13 @@ export default function RoleFormModal({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Max Users (Optional)
             </label>
-            <input
+            <Input
               type="number"
-              name="max_users"
-              value={formData.max_users}
-              onChange={handleInputChange}
-              min="1"
-              className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 ${
-                errors.max_users
-                  ? "border-red-300 focus:ring-red-500"
-                  : "border-gray-300 focus:ring-blue-500"
-              }`}
+              value={String(formData.max_users)}
+              onChange={(value) => setFormData({ ...formData, max_users: value === "" ? "" : parseInt(String(value)) || "" })}
+              placeholder="Unlimited"
+              hasError={!!errors.max_users}
+              variant="medium"
             />
             {errors.max_users && (
               <p className="mt-1 text-sm text-red-600">{errors.max_users}</p>
@@ -445,13 +432,13 @@ export default function RoleFormModal({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Add Tag (Press Enter)
             </label>
-            <input
+            <Input
               type="text"
               value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyPress={handleAddTag}
+              onChange={(value) => setTagInput(String(value))}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleAddTag(e as any); }}
               placeholder="e.g., administrator"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              variant="medium"
             />
             {formData.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
@@ -481,23 +468,25 @@ export default function RoleFormModal({
         </form>
 
         {/* Footer */}
-        <div className="sticky bottom-0 flex justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-white">
-          <button
-            onClick={onClose}
-            disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            style={{ backgroundColor: color.primary.action }}
-          >
-            {isLoading && <LoadingSpinner />}
-            {isLoading ? (role ? "Updating..." : "Creating...") : (role ? "Update" : "Create")}
-          </button>
+        <div className="sticky bottom-0 px-6 py-4 border-t border-gray-200 bg-white">
+          <ModalFooter
+            onCancel={onClose}
+            onConfirm={handleSubmit}
+            cancelText="Cancel"
+            confirmText={
+              isLoading ? (
+                <span className="flex items-center gap-2">
+                  <LoadingSpinner />
+                  {role ? "Updating..." : "Creating..."}
+                </span>
+              ) : (
+                role ? "Update" : "Create"
+              )
+            }
+            isLoading={isLoading}
+            confirmClassName={`px-4 py-2 text-sm font-medium text-white ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
+            confirmStyle={{ backgroundColor: color.primary.action }}
+          />
         </div>
       </div>
     </div>

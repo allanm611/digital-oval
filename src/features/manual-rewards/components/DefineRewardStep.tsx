@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import Input from '../../../shared/components/ui/Input';
 import {
   AlertCircle,
   Package,
@@ -348,12 +349,12 @@ export default function DefineRewardStep({
             {t.manualRewards.rewardValueLabel}
           </label>
           <div className="relative">
-            <input
+            <Input
               type="number"
               value={rewardValue}
-              onChange={(e) => {
-                setRewardValue(e.target.value);
-                onUpdate({ rewardValue: e.target.value });
+              onChange={(value) => {
+                setRewardValue(String(value));
+                onUpdate({ rewardValue: String(value) });
                 resetRewardValidation();
               }}
               className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none focus:ring-2`}
@@ -532,7 +533,7 @@ export default function DefineRewardStep({
             value={description}
             onChange={(e) => {
               setDescription(e.target.value);
-              onUpdate({ description: e.target.value });
+              onUpdate({ description: String(value) });
               resetRewardValidation();
             }}
             className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none focus:ring-2`}

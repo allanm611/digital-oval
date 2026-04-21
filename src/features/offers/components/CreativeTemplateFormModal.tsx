@@ -225,8 +225,7 @@ export default function CreativeTemplateFormModal({
               <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
                 Locale
               </label>
-              <input
-                type="text"
+              <Input type="text"
                 name="locale"
                 value={formData.locale}
                 onChange={handleChange}
@@ -241,8 +240,7 @@ export default function CreativeTemplateFormModal({
             <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
               Title
             </label>
-            <input
-              type="text"
+            <Input type="text"
               name="title"
               value={formData.title}
               onChange={handleChange}
@@ -286,7 +284,7 @@ export default function CreativeTemplateFormModal({
 
           {/* Status */}
           <div className="flex items-center">
-            <input
+            <Input
               type="checkbox"
               name="is_active"
               checked={formData.is_active}

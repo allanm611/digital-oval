@@ -6,6 +6,7 @@ import { Listbox, Transition } from "@headlessui/react";
 import { jobWorkflowStepService } from "../services/jobWorkflowStepService";
 import { scheduledJobService } from "../services/scheduledJobService";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import Input from "../../../shared/components/ui/Input";
 import {
   CreateJobWorkflowStepPayload,
   UpdateJobWorkflowStepPayload,
@@ -513,18 +514,15 @@ export default function CreateJobWorkflowStepPage() {
                     <label className="block text-xs font-medium text-gray-700 mb-1">
                       {t.jobs.jobWorkflow.stepName} *
                     </label>
-                    <input
+                    <Input
                       type="text"
                       value={step.step_name || ""}
-                      onChange={(e) =>
-                        updateBatchStep(idx, "step_name", e.target.value)
+                      onChange={(value) =>
+                        updateBatchStep(idx, "step_name", String(value))
                       }
-                      className={`w-full ${tw.rounded} border ${
-                        errors[`batch_step_${idx}_name`]
-                          ? "border-red-300"
-                          : "border-gray-300"
-                      } px-2 py-1.5 text-sm`}
                       placeholder={t.jobs.jobWorkflow.enterStepName}
+                      hasError={!!errors[`batch_step_${idx}_name`]}
+                      variant="compact"
                     />
                     {errors[`batch_step_${idx}_name`] && (
                       <p className="mt-1 text-xs text-red-600">
@@ -536,18 +534,15 @@ export default function CreateJobWorkflowStepPage() {
                     <label className="block text-xs font-medium text-gray-700 mb-1">
                       {t.jobs.jobWorkflow.stepCode} *
                     </label>
-                    <input
+                    <Input
                       type="text"
                       value={step.step_code || ""}
-                      onChange={(e) =>
-                        updateBatchStep(idx, "step_code", e.target.value)
+                      onChange={(value) =>
+                        updateBatchStep(idx, "step_code", String(value))
                       }
-                      className={`w-full ${tw.rounded} border ${
-                        errors[`batch_step_${idx}_code`]
-                          ? "border-red-300"
-                          : "border-gray-300"
-                      } px-2 py-1.5 text-sm`}
                       placeholder={t.jobs.jobWorkflow.enterStepCode}
+                      hasError={!!errors[`batch_step_${idx}_code`]}
+                      variant="compact"
                     />
                     {errors[`batch_step_${idx}_code`] && (
                       <p className="mt-1 text-xs text-red-600">
@@ -582,18 +577,18 @@ export default function CreateJobWorkflowStepPage() {
                     <label className="block text-xs font-medium text-gray-700 mb-1">
                       {t.jobs.jobWorkflow.stepOrder} *
                     </label>
-                    <input
+                    <Input
                       type="number"
-                      min="1"
-                      value={step.step_order || idx + 1}
-                      onChange={(e) =>
+                      value={String(step.step_order || idx + 1)}
+                      onChange={(value) =>
                         updateBatchStep(
                           idx,
                           "step_order",
-                          Number(e.target.value) || idx + 1
+                          parseInt(String(value)) || idx + 1
                         )
                       }
-                      className={`w-full ${tw.rounded} border border-gray-300 px-2 py-1.5 text-sm`}
+                      placeholder={String(idx + 1)}
+                      variant="compact"
                     />
                   </div>
                   <div>
@@ -691,16 +686,15 @@ export default function CreateJobWorkflowStepPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       {t.jobs.jobWorkflow.stepName} <span className="text-red-500">*</span>
                     </label>
-                    <input
+                    <Input
                       type="text"
                       value={formData.step_name}
-                      onChange={(e) =>
-                        setFormData({ ...formData, step_name: e.target.value })
+                      onChange={(value) =>
+                        setFormData({ ...formData, step_name: String(value) })
                       }
-                      className={`w-full ${tw.rounded} border ${
-                        errors.step_name ? "border-red-300" : "border-gray-300"
-                      } px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
                       placeholder={t.jobs.jobWorkflow.enterStepName}
+                      hasError={!!errors.step_name}
+                      variant="medium"
                     />
                     {errors.step_name && (
                       <p className="mt-1 text-sm text-red-600">
@@ -713,19 +707,18 @@ export default function CreateJobWorkflowStepPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       {t.jobs.jobWorkflow.stepCode} <span className="text-red-500">*</span>
                     </label>
-                    <input
+                    <Input
                       type="text"
                       value={formData.step_code}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setFormData({
                           ...formData,
-                          step_code: e.target.value,
+                          step_code: String(value),
                         })
                       }
-                      className={`w-full ${tw.rounded} border ${
-                        errors.step_code ? "border-red-300" : "border-gray-300"
-                      } px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
                       placeholder={t.jobs.jobWorkflow.enterStepCode}
+                      hasError={!!errors.step_code}
+                      variant="medium"
                     />
                     {errors.step_code && (
                       <p className="mt-1 text-sm text-red-600">
@@ -738,19 +731,18 @@ export default function CreateJobWorkflowStepPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       {t.jobs.jobWorkflow.stepOrder} <span className="text-red-500">*</span>
                     </label>
-                    <input
+                    <Input
                       type="number"
-                      min="1"
-                      value={formData.step_order}
-                      onChange={(e) =>
+                      value={String(formData.step_order)}
+                      onChange={(value) =>
                         setFormData({
                           ...formData,
-                          step_order: Number(e.target.value) || 1,
+                          step_order: parseInt(String(value)) || 1,
                         })
                       }
-                      className={`w-full ${tw.rounded} border ${
-                        errors.step_order ? "border-red-300" : "border-gray-300"
-                      } px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
+                      placeholder="1"
+                      hasError={!!errors.step_order}
+                      variant="medium"
                     />
                     {errors.step_order && (
                       <p className="mt-1 text-sm text-red-600">
@@ -904,15 +896,15 @@ export default function CreateJobWorkflowStepPage() {
                         {t.jobs.jobWorkflow.timeoutSeconds}{" "}
                         <span className="text-red-500">*</span>
                       </label>
-                      <input
+                      <Input
                         type="number"
                         min="1"
                         max="86400"
                         value={formData.timeout_seconds}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setFormData({
                             ...formData,
-                            timeout_seconds: Number(e.target.value) || 300,
+                            timeout_seconds: Number(String(value)) || 300,
                           })
                         }
                         className={`w-full ${tw.rounded} border ${
@@ -1011,15 +1003,15 @@ export default function CreateJobWorkflowStepPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         {t.jobs.jobWorkflow.retryCount}
                       </label>
-                      <input
+                      <Input
                         type="number"
                         min="0"
                         max="10"
                         value={formData.retry_count}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setFormData({
                             ...formData,
-                            retry_count: Number(e.target.value) || 0,
+                            retry_count: Number(String(value)) || 0,
                           })
                         }
                         className={`w-full ${tw.rounded} border ${
@@ -1039,14 +1031,14 @@ export default function CreateJobWorkflowStepPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         {t.jobs.jobWorkflow.retryDelaySeconds}
                       </label>
-                      <input
+                      <Input
                         type="number"
                         min="0"
                         value={formData.retry_delay_seconds}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setFormData({
                             ...formData,
-                            retry_delay_seconds: Number(e.target.value) || 0,
+                            retry_delay_seconds: Number(String(value)) || 0,
                           })
                         }
                         className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
@@ -1098,15 +1090,15 @@ export default function CreateJobWorkflowStepPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         {t.jobs.jobWorkflow.parallelGroupId}
                       </label>
-                      <input
+                      <Input
                         type="number"
                         min="1"
                         value={formData.parallel_group_id || ""}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setFormData({
                             ...formData,
-                            parallel_group_id: e.target.value
-                              ? Number(e.target.value)
+                            parallel_group_id: String(value)
+                              ? Number(String(value))
                               : null,
                           })
                         }
@@ -1121,10 +1113,10 @@ export default function CreateJobWorkflowStepPage() {
                       {t.jobs.jobWorkflow.dependencies}
                     </label>
                     <div className="flex gap-2 mb-2">
-                      <input
+                      <Input
                         type="text"
                         value={newDependency}
-                        onChange={(e) => setNewDependency(e.target.value)}
+                        onChange={(value) => setNewDependency(String(value))}
                         onKeyPress={(e) => {
                           if (e.key === "Enter") {
                             e.preventDefault();
@@ -1224,15 +1216,15 @@ export default function CreateJobWorkflowStepPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         {t.jobs.jobWorkflow.minExpectedRows}
                       </label>
-                      <input
+                      <Input
                         type="number"
                         min="0"
                         value={formData.expected_row_count_min || ""}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setFormData({
                             ...formData,
-                            expected_row_count_min: e.target.value
-                              ? Number(e.target.value)
+                            expected_row_count_min: String(value)
+                              ? Number(String(value))
                               : null,
                           })
                         }
@@ -1244,15 +1236,15 @@ export default function CreateJobWorkflowStepPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         {t.jobs.jobWorkflow.maxExpectedRows}
                       </label>
-                      <input
+                      <Input
                         type="number"
                         min="0"
                         value={formData.expected_row_count_max || ""}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setFormData({
                             ...formData,
-                            expected_row_count_max: e.target.value
-                              ? Number(e.target.value)
+                            expected_row_count_max: String(value)
+                              ? Number(String(value))
                               : null,
                           })
                         }
@@ -1297,7 +1289,7 @@ export default function CreateJobWorkflowStepPage() {
 
                   <label className="flex items-center gap-2">
                     <Checkbox checked={formData.is_critical}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setFormData({
                           ...formData,
                           is_critical: e.target.checked,

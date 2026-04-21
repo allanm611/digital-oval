@@ -52,6 +52,9 @@ import {
   UpdateSmsRouteRequest,
 } from "../../features/routes/services/smsRouteService";
 import {
+  emailRouteService,
+} from "../../features/routes/services/emailRouteService";
+import {
   comboTypeService,
   ComboType,
   CreateComboTypeRequest,
@@ -81,6 +84,9 @@ import {
   CreateOfferCreativeRequest,
   UpdateOfferCreativeRequest,
 } from "../../features/offers/services/offerCreativeService";
+import {
+  communicationChannelService,
+} from "../services/communicationChannelService";
 
 /**
  * Normalize API response to TypeConfigurationItem format
@@ -212,6 +218,13 @@ function normalizeApiResponse(type: string, data: any[]): any[] {
       case "vipLists":
         // VIP Lists come with snake_case fields already, just keep them as is
         // No conversion needed
+        break;
+
+      case "communicationChannels":
+        // Convert is_active to isActive
+        if (normalized.is_active !== undefined) {
+          normalized.isActive = normalized.is_active;
+        }
         break;
     }
 
@@ -412,6 +425,14 @@ function transformPayload(type: string, payload: any): any {
         delete transformed.isActive;
       }
       break;
+
+    case "communicationChannels":
+      // Map isActive to is_active
+      if (transformed.isActive !== undefined) {
+        transformed.is_active = transformed.isActive;
+        delete transformed.isActive;
+      }
+      break;
   }
 
   return transformed;
@@ -452,11 +473,13 @@ export function useBackendConfigurationData(
     | "characterSets"
     | "creativeTemplates"
     | "smsRoutes"
+    | "emailRoutes"
     | "comboTypes"
     | "notificationTypes"
     | "vipLists"
     | "controlGroups"
     | "offerCreatives"
+    | "communicationChannels"
     | undefined,
 ): UseBackendConfigDataResult<any, any, any> | null {
   const [data, setData] = useState<CampaignType[]>([]);
@@ -643,6 +666,15 @@ export function useBackendConfigurationData(
           }
           break;
 
+        case "emailRoutes":
+          response = await emailRouteService.getAllRoutes();
+          if (Array.isArray(response)) {
+            setData(normalizeApiResponse(type, response));
+          } else {
+            setData([]);
+          }
+          break;
+
         case "comboTypes":
           response = await comboTypeService.getAllComboTypes();
           if (response?.data && Array.isArray(response.data)) {
@@ -675,6 +707,17 @@ export function useBackendConfigurationData(
         case "controlGroups":
           response = await controlGroupService.getAll();
           if (Array.isArray(response)) {
+            setData(normalizeApiResponse(type, response));
+          } else {
+            setData([]);
+          }
+          break;
+
+        case "communicationChannels":
+          response = await communicationChannelService.getAll();
+          if (response?.success && response?.data) {
+            setData(normalizeApiResponse(type, response.data));
+          } else if (Array.isArray(response)) {
             setData(normalizeApiResponse(type, response));
           } else {
             setData([]);
@@ -745,6 +788,9 @@ export function useBackendConfigurationData(
           case "smsRoutes":
             response = await smsRouteService.createRoute(payload);
             return response;
+          case "emailRoutes":
+            response = await emailRouteService.createRoute(payload);
+            return response;
           case "comboTypes":
             response = await comboTypeService.createComboType(payload);
             return response?.data || response;
@@ -757,6 +803,9 @@ export function useBackendConfigurationData(
           case "controlGroups":
             response = await controlGroupService.create(payload);
             return response;
+          case "communicationChannels":
+            response = await communicationChannelService.create(payload);
+            return response?.data || response;
           default:
             throw new Error(`Unknown configuration type: ${type}`);
         }
@@ -825,6 +874,9 @@ export function useBackendConfigurationData(
           case "smsRoutes":
             response = await smsRouteService.updateRoute(payload);
             return response;
+          case "emailRoutes":
+            response = await emailRouteService.updateRoute(payload);
+            return response;
           case "comboTypes":
             response = await comboTypeService.updateComboType(id, payload);
             return response?.data || response;
@@ -837,6 +889,9 @@ export function useBackendConfigurationData(
           case "controlGroups":
             response = await controlGroupService.update(id, payload);
             return response;
+          case "communicationChannels":
+            response = await communicationChannelService.update(id, payload);
+            return response?.data || response;
           default:
             throw new Error(`Unknown configuration type: ${type}`);
         }
@@ -892,6 +947,9 @@ export function useBackendConfigurationData(
           case "smsRoutes":
             await smsRouteService.deleteRoute(id);
             break;
+          case "emailRoutes":
+            await emailRouteService.deleteRoute(id);
+            break;
           case "comboTypes":
             await comboTypeService.deleteComboType(id);
             break;
@@ -903,6 +961,9 @@ export function useBackendConfigurationData(
             break;
           case "controlGroups":
             await controlGroupService.delete(id);
+            break;
+          case "communicationChannels":
+            await communicationChannelService.delete(id);
             break;
           default:
             throw new Error(`Unknown configuration type: ${type}`);

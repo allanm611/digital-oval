@@ -305,10 +305,9 @@ function JobDependencyModal({
             <label className="block text-sm font-medium text-gray-700">
               Max Wait Minutes (0-1440, optional)
             </label>
-            <input
-              type="number"
+            <Input type="number"
               value={maxWaitMinutes}
-              onChange={(e) => setMaxWaitMinutes(e.target.value)}
+              onChange={(value) => setMaxWaitMinutes(String(value))}
               className={`mt-1 w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
               placeholder="e.g. 60 (leave empty for no limit)"
               min="0"
@@ -320,10 +319,9 @@ function JobDependencyModal({
             <label className="block text-sm font-medium text-gray-700">
               Lookback Days (0-30)
             </label>
-            <input
-              type="number"
+            <Input type="number"
               value={lookbackDays}
-              onChange={(e) => setLookbackDays(e.target.value)}
+              onChange={(value) => setLookbackDays(String(value))}
               className={`mt-1 w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
               placeholder="0"
               min="0"
@@ -4219,12 +4217,11 @@ export default function JobDependenciesPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Dependency ID
                       </label>
-                      <input
-                        type="number"
+                      <Input type="number"
                         value={filterId || ""}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setFilterId(
-                            e.target.value ? Number(e.target.value) : "",
+                            String(value) ? Number(String(value)) : "",
                           )
                         }
                         placeholder="All IDs"
@@ -4237,12 +4234,11 @@ export default function JobDependenciesPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Job ID
                       </label>
-                      <input
-                        type="number"
+                      <Input type="number"
                         value={filterJobId || ""}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setFilterJobId(
-                            e.target.value ? Number(e.target.value) : "",
+                            String(value) ? Number(String(value)) : "",
                           )
                         }
                         placeholder="All Job IDs"
@@ -4255,12 +4251,11 @@ export default function JobDependenciesPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Depends On Job ID
                       </label>
-                      <input
-                        type="number"
+                      <Input type="number"
                         value={filterDependsOnJobId || ""}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setFilterDependsOnJobId(
-                            e.target.value ? Number(e.target.value) : "",
+                            String(value) ? Number(String(value)) : "",
                           )
                         }
                         placeholder="All Depends On Job IDs"
@@ -4356,12 +4351,11 @@ export default function JobDependenciesPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Lookback Days (Min)
                       </label>
-                      <input
-                        type="number"
+                      <Input type="number"
                         value={filterLookbackDaysMin || ""}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setFilterLookbackDaysMin(
-                            e.target.value ? Number(e.target.value) : "",
+                            String(value) ? Number(String(value)) : "",
                           )
                         }
                         placeholder="Min"
@@ -4376,12 +4370,11 @@ export default function JobDependenciesPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Lookback Days (Max)
                       </label>
-                      <input
-                        type="number"
+                      <Input type="number"
                         value={filterLookbackDaysMax || ""}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setFilterLookbackDaysMax(
-                            e.target.value ? Number(e.target.value) : "",
+                            String(value) ? Number(String(value)) : "",
                           )
                         }
                         placeholder="Max"
@@ -4396,12 +4389,11 @@ export default function JobDependenciesPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Max Wait Minutes (Min)
                       </label>
-                      <input
-                        type="number"
+                      <Input type="number"
                         value={filterMaxWaitMinutesMin || ""}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setFilterMaxWaitMinutesMin(
-                            e.target.value ? Number(e.target.value) : "",
+                            String(value) ? Number(String(value)) : "",
                           )
                         }
                         placeholder="Min"
@@ -4416,12 +4408,11 @@ export default function JobDependenciesPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Max Wait Minutes (Max)
                       </label>
-                      <input
-                        type="number"
+                      <Input type="number"
                         value={filterMaxWaitMinutesMax || ""}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setFilterMaxWaitMinutesMax(
-                            e.target.value ? Number(e.target.value) : "",
+                            String(value) ? Number(String(value)) : "",
                           )
                         }
                         placeholder="Max"

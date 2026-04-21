@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { AlertTriangle, CheckCircle, XCircle, Info, X } from "lucide-react";
 import { color, tw, zIndex } from "../../utils/utils";
+import ModalFooter from "./ModalFooter";
 
 export type ConfirmType = "danger" | "warning" | "success" | "info";
 
@@ -159,68 +160,53 @@ export default function ConfirmModal({
           </div>
 
           {/* Actions */}
-          <div className="px-6 pb-6 flex space-x-3 justify-end">
-            <button
-              onClick={onClose}
-              disabled={isLoading}
-              className={`px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 focus:outline-none focus:ring-0 focus:border-gray-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-            >
-              {cancelText}
-            </button>
-            <button
-              onClick={handleConfirm}
-              disabled={isLoading}
-              className={`px-4 py-2 text-sm font-medium text-white ${
-                tw.rounded
-              } focus:outline-none focus:ring-0 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+          <div className="px-6 pb-6">
+            <ModalFooter
+              onCancel={onClose}
+              onConfirm={handleConfirm}
+              cancelText={cancelText}
+              confirmText={
+                isLoading ? (
+                  <span className="flex items-center gap-2">
+                    <svg
+                      className="animate-spin h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Processing...
+                  </span>
+                ) : (
+                  confirmText
+                )
+              }
+              isLoading={isLoading}
+              cancelClassName={`px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 focus:outline-none focus:ring-0 focus:border-gray-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+              confirmClassName={`px-4 py-2 text-sm font-medium text-white ${tw.rounded} focus:outline-none focus:ring-0 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                 config.confirmButtonColor || ""
               }`}
-              style={
+              confirmStyle={
                 type === "info"
                   ? {
                       backgroundColor: color.primary.action,
                     }
                   : undefined
               }
-              onMouseEnter={(e) => {
-                if (type === "info" && !isLoading) {
-                  e.currentTarget.style.backgroundColor = "#1a1c1d"; // Slightly darker on hover
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (type === "info" && !isLoading) {
-                  e.currentTarget.style.backgroundColor = color.primary.action;
-                }
-              }}
-            >
-              {isLoading ? (
-                <span className="flex items-center gap-2">
-                  <svg
-                    className="animate-spin h-4 w-4 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Processing...
-                </span>
-              ) : (
-                confirmText
-              )}
-            </button>
+            />
           </div>
         </div>
       </div>

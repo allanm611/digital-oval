@@ -948,7 +948,7 @@ export default function OfferReportsPage() {
               >
                 From:
               </label>
-              <input
+              <Input
                 id="offer-date-start"
                 type="date"
                 value={customRange.start}
@@ -970,7 +970,7 @@ export default function OfferReportsPage() {
               >
                 To:
               </label>
-              <input
+              <Input
                 id="offer-date-end"
                 type="date"
                 value={customRange.end}

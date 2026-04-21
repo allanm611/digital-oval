@@ -889,7 +889,7 @@ export default function CampaignReportsPage() {
               >
                 From:
               </label>
-              <input
+              <Input
                 id="campaign-date-start"
                 type="date"
                 value={customRange.start}
@@ -911,7 +911,7 @@ export default function CampaignReportsPage() {
               >
                 To:
               </label>
-              <input
+              <Input
                 id="campaign-date-end"
                 type="date"
                 value={customRange.end}

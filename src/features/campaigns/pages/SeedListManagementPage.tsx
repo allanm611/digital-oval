@@ -12,6 +12,9 @@ import { getLineOfBusinessConfig } from "../../configurations/configs/configurat
 import { userService } from "../../users/services/userService";
 import { seedListService } from "../../../shared/services/seedListService";
 import CreateTestListModal from "../components/CreateTestListModal";
+import { validateMSISDN } from "../../../shared/utils/validation";
+import { buttons } from "../../../shared/utils/tokens";
+import { getButtonStyles } from "../../../shared/utils/utils";
 
 // Types
 export interface SeedListRecipient {
@@ -137,7 +140,7 @@ interface AddRecipientForm {
   list_id: string;
   external_name?: string;
   external_email?: string;
-  external_phone?: string;
+  external_msisdn?: string;
 }
 
 interface FormErrors {
@@ -148,6 +151,7 @@ interface FormErrors {
   external_name?: string;
   external_email?: string;
   external_phone?: string;
+  external_msisdn?: string;
 }
 
 interface SystemUser {
@@ -165,15 +169,18 @@ export default function SeedListManagementPage() {
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
   const [recipients, setRecipients] = useState<SeedListRecipient[]>([]);
-  const [seedLists, setSeedLists] = useState<Array<{ id: string | number; name: string; description?: string; customer_count?: number }>>([]);
+  const [seedLists, setSeedLists] = useState<Array<{ id: string | number; name: string; description?: string; member_count?: number }>>([]);
   const linesOfBusiness = getLineOfBusinessConfig(() => "").initialData;
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [searchTermLists, setSearchTermLists] = useState("");
+  const [debouncedSearchTermLists, setDebouncedSearchTermLists] = useState("");
   const [filterSeedList, setFilterSeedList] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [activeTab, setActiveTab] = useState<"recipients" | "lists">("recipients");
+  const [filterStatusLists, setFilterStatusLists] = useState<string>("all");
+  const [activeTab, setActiveTab] = useState<"recipients" | "lists">("lists");
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<AddRecipientForm>({
@@ -184,11 +191,14 @@ export default function SeedListManagementPage() {
     list_id: "",
     external_name: "",
     external_email: "",
-    external_phone: "",
+    external_msisdn: "",
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [systemUsers, setSystemUsers] = useState<SystemUser[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
+
+  // Add recipient state
+  const [isAddingRecipient, setIsAddingRecipient] = useState(false);
 
   // Delete confirmation state
   const [recipientToRemove, setRecipientToRemove] = useState<SeedListRecipient | null>(null);
@@ -209,21 +219,27 @@ export default function SeedListManagementPage() {
   const [memberToRemoveFromList, setMemberToRemoveFromList] = useState<SeedListRecipient | null>(null);
   const [isRemovingMember, setIsRemovingMember] = useState(false);
 
-  // Load system users and seed lists on mount
+  // Load system users on mount
   useEffect(() => {
-    const loadInitialData = async () => {
+    loadUsers();
+  }, []);
+
+  // Load seed lists on mount
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
-        await Promise.all([loadUsers(), loadSeedLists()]);
+        await loadSeedLists();
       } finally {
         setLoading(false);
       }
     };
-    loadInitialData();
+    load();
   }, []);
 
   const loadMembers = async (lists: typeof seedLists) => {
     try {
+      setLoading(true);
       const allMembers: SeedListRecipient[] = [];
 
       if (!lists || !Array.isArray(lists)) {
@@ -256,17 +272,20 @@ export default function SeedListManagementPage() {
     } catch (error) {
       console.error("Failed to load members:", error);
       showError("Failed to load members");
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Load members when seed lists are available
+  // Load members only when recipients tab is active
   useEffect(() => {
-    if (seedLists.length > 0) {
+    if (activeTab === "recipients" && seedLists.length > 0) {
       loadMembers(seedLists);
-    } else {
+    } else if (activeTab === "recipients") {
       setRecipients([]);
+      setLoading(false);
     }
-  }, [seedLists]);
+  }, [activeTab, seedLists]);
 
   const loadUsers = async () => {
     try {
@@ -295,7 +314,6 @@ export default function SeedListManagementPage() {
 
   const loadSeedLists = async () => {
     try {
-      setLoading(true);
       const lists = await seedListService.getAll();
       setSeedLists(
         Array.isArray(lists)
@@ -303,7 +321,7 @@ export default function SeedListManagementPage() {
               id: list.id,
               name: list.name,
               description: list.description,
-              customer_count: (list as any).customer_count || 0,
+              member_count: (list as any).member_count || 0,
             }))
           : [],
       );
@@ -311,8 +329,6 @@ export default function SeedListManagementPage() {
       console.error("Failed to load seed lists:", error);
       showError("Failed to load seed lists");
       setSeedLists([]);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -323,6 +339,14 @@ export default function SeedListManagementPage() {
     }, 300);
     return () => clearTimeout(timer);
   }, [searchTerm]);
+
+  // Debounce search for lists
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTermLists(searchTermLists);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTermLists]);
 
   const filteredRecipients = recipients.filter((recipient) => {
     const matchesSearch =
@@ -343,6 +367,22 @@ export default function SeedListManagementPage() {
       filterStatus === "all" || recipient.status === filterStatus;
 
     return matchesSearch && matchesList && matchesStatus;
+  });
+
+  const filteredLists = seedLists.filter((list) => {
+    const matchesSearch =
+      list.name
+        ?.toLowerCase()
+        .includes(debouncedSearchTermLists.toLowerCase()) ||
+      list.description
+        ?.toLowerCase()
+        .includes(debouncedSearchTermLists.toLowerCase());
+
+    const listStatus = (list.processing_status || "").toLowerCase();
+    const matchesStatus =
+      filterStatusLists === "all" || listStatus === filterStatusLists;
+
+    return matchesSearch && matchesStatus;
   });
 
   const handleRemoveRecipient = (recipient: SeedListRecipient) => {
@@ -474,11 +514,11 @@ export default function SeedListManagementPage() {
           description: newList.description,
         },
       ]);
-      showToast("Test list created successfully");
+      showToast("Seed list created successfully");
       setIsCreateListModalOpen(false);
     } catch (error) {
-      console.error("Failed to create test list:", error);
-      showError("Failed to create test list");
+      console.error("Failed to create seed list:", error);
+      showError("Failed to create seed list");
     } finally {
       setIsCreatingList(false);
     }
@@ -533,7 +573,7 @@ export default function SeedListManagementPage() {
       list_id: "",
       external_name: "",
       external_email: "",
-      external_phone: "",
+      external_msisdn: "",
     });
     setErrors({});
     setIsModalOpen(true);
@@ -549,7 +589,7 @@ export default function SeedListManagementPage() {
       list_id: "",
       external_name: "",
       external_email: "",
-      external_phone: "",
+      external_msisdn: "",
     });
     setErrors({});
   };
@@ -557,9 +597,6 @@ export default function SeedListManagementPage() {
   const handleAddRecipient = async () => {
     const newErrors: FormErrors = {};
 
-    if (!formData.line_of_business_id) {
-      newErrors.line_of_business_id = "Line of Business is required";
-    }
     if (!formData.list_id) {
       newErrors.list_id = "Test List is required";
     }
@@ -569,17 +606,22 @@ export default function SeedListManagementPage() {
         newErrors.user_id = "User is required";
       }
       if (!formData.phone_number) {
-        newErrors.phone_number = "Phone is required";
+        newErrors.phone_number = "MSISDN is required";
+      } else {
+        const validation = validateMSISDN(formData.phone_number);
+        if (!validation.valid) {
+          newErrors.phone_number = validation.error;
+        }
       }
     } else {
       if (!formData.external_name) {
         newErrors.external_name = "Name is required";
       }
-      if (!formData.external_email) {
-        newErrors.external_email = "Email is required";
-      }
-      if (!formData.external_phone) {
-        newErrors.external_phone = "Phone is required";
+      if (formData.external_msisdn) {
+        const validation = validateMSISDN(formData.external_msisdn);
+        if (!validation.valid) {
+          newErrors.external_msisdn = validation.error;
+        }
       }
     }
 
@@ -595,7 +637,7 @@ export default function SeedListManagementPage() {
     }
 
     try {
-      setLoading(true);
+      setIsAddingRecipient(true);
       if (!selectedList.id) {
         showError("Invalid list ID");
         return;
@@ -638,9 +680,9 @@ export default function SeedListManagementPage() {
           seed_list_id: listId,
           customer_id: 0,
           customer_name: formData.external_name,
-          customer_email: formData.external_email,
-          customer_phone: formData.external_phone,
-          line_of_business_id: parseInt(formData.line_of_business_id),
+          ...(formData.external_email ? { customer_email: formData.external_email } : {}),
+          ...(formData.external_msisdn ? { customer_phone: formData.external_msisdn } : {}),
+          ...(formData.line_of_business_id ? { line_of_business_id: parseInt(formData.line_of_business_id) } : {}),
         };
       }
 
@@ -670,11 +712,11 @@ export default function SeedListManagementPage() {
         seed_list_id: listId,
         customer_id: memberData.customer_id || 0,
         customer_name: memberData.customer_name || "",
-        customer_email: memberData.customer_email || "",
-        customer_phone: memberData.customer_phone || "",
+        customer_email: memberData.customer_email,
+        customer_phone: memberData.customer_phone,
         department_id: undefined,
         department_name: undefined,
-        line_of_business_id: parseInt(formData.line_of_business_id) || 0,
+        line_of_business_id: memberData.line_of_business_id,
         line_of_business_name: lineOfBusiness?.name,
         status: "active",
         added_at: new Date().toISOString(),
@@ -688,7 +730,7 @@ export default function SeedListManagementPage() {
       console.error("Failed to add recipient:", error);
       showError("Failed to add recipient");
     } finally {
-      setLoading(false);
+      setIsAddingRecipient(false);
     }
   };
 
@@ -736,6 +778,35 @@ export default function SeedListManagementPage() {
       `}</style>
       <div className="seed-list-tabs flex gap-1 border-b border-gray-200 overflow-x-auto">
         <button
+          onClick={() => setActiveTab("lists")}
+          className={`px-3 sm:px-4 py-2.5 text-sm font-medium transition-colors flex items-center gap-1.5 sm:gap-2 relative flex-shrink-0 ${
+            activeTab === "lists"
+              ? "text-black"
+              : "text-gray-600 hover:text-gray-900"
+          }`}
+        >
+          <Mail className="w-4 h-4 flex-shrink-0" />
+          <span className="whitespace-nowrap">Seed Lists</span>
+          <span
+            className="px-1.5 py-0.5 rounded-full text-xs font-medium flex-shrink-0"
+            style={{
+              backgroundColor:
+                activeTab === "lists"
+                  ? `${color.primary.accent}15`
+                  : `${color.text.muted}15`,
+              color: activeTab === "lists" ? color.primary.accent : color.text.muted,
+            }}
+          >
+            {seedLists.length}
+          </span>
+          {activeTab === "lists" && (
+            <div
+              className="absolute bottom-0 left-0 right-0 h-0.5"
+              style={{ backgroundColor: color.primary.accent }}
+            />
+          )}
+        </button>
+        <button
           onClick={() => setActiveTab("recipients")}
           className={`px-3 sm:px-4 py-2.5 text-sm font-medium transition-colors flex items-center gap-1.5 sm:gap-2 relative flex-shrink-0 ${
             activeTab === "recipients"
@@ -767,36 +838,39 @@ export default function SeedListManagementPage() {
             />
           )}
         </button>
-        <button
-          onClick={() => setActiveTab("lists")}
-          className={`px-3 sm:px-4 py-2.5 text-sm font-medium transition-colors flex items-center gap-1.5 sm:gap-2 relative flex-shrink-0 ${
-            activeTab === "lists"
-              ? "text-black"
-              : "text-gray-600 hover:text-gray-900"
-          }`}
-        >
-          <Mail className="w-4 h-4 flex-shrink-0" />
-          <span className="whitespace-nowrap">Seed Lists</span>
-          <span
-            className="px-1.5 py-0.5 rounded-full text-xs font-medium flex-shrink-0"
-            style={{
-              backgroundColor:
-                activeTab === "lists"
-                  ? `${color.primary.accent}15`
-                  : `${color.text.muted}15`,
-              color: activeTab === "lists" ? color.primary.accent : color.text.muted,
-            }}
-          >
-            {seedLists.length}
-          </span>
-          {activeTab === "lists" && (
-            <div
-              className="absolute bottom-0 left-0 right-0 h-0.5"
-              style={{ backgroundColor: color.primary.accent }}
-            />
-          )}
-        </button>
       </div>
+
+      {/* Filters - Seed Lists tab */}
+      {activeTab === "lists" && (
+        <div className="my-5">
+          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+            {/* Search */}
+            <div className="flex-1 min-w-0">
+              <SearchInput
+                placeholder="Search by list name or description..."
+                value={searchTermLists}
+                onChange={setSearchTermLists}
+              />
+            </div>
+
+            {/* Status Filter */}
+            <div className="w-full sm:w-40 flex-shrink-0">
+              <HeadlessSelect
+                value={filterStatusLists}
+                onChange={(value) => setFilterStatusLists(value.toString())}
+                options={[
+                  { value: "all", label: "All Status" },
+                  { value: "pending", label: "Pending" },
+                  { value: "processing", label: "Processing" },
+                  { value: "completed", label: "Completed" },
+                  { value: "failed", label: "Failed" },
+                ]}
+                placeholder="Filter by Status"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Recipients Tab Content */}
       {activeTab === "recipients" && (
@@ -1064,8 +1138,8 @@ export default function SeedListManagementPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {seedLists && Array.isArray(seedLists) ? (
-                    seedLists.map((list) => {
+                  {filteredLists && Array.isArray(filteredLists) ? (
+                    filteredLists.map((list) => {
                       if (!list || !list.id) return null;
 
                       const recipientCount = recipients && Array.isArray(recipients)
@@ -1104,7 +1178,7 @@ export default function SeedListManagementPage() {
                             className="text-sm font-medium hover:underline"
                             style={{ color: color.primary.accent }}
                           >
-                            {list.customer_count ?? recipientCount}
+                            {list.member_count ?? recipientCount}
                           </button>
                         </td>
                         <td
@@ -1115,6 +1189,7 @@ export default function SeedListManagementPage() {
                             borderBottomRightRadius: "0.375rem",
                           }}
                         >
+                          {/* TODO: Add eye icon for detail page view and edit icon when backend provides GET /seed-lists/:id and PUT endpoints */}
                           <button
                             onClick={() =>
                               handleDeleteList({
@@ -1143,10 +1218,18 @@ export default function SeedListManagementPage() {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className={`${tw.rounded} bg-white shadow-xl max-w-md w-full mx-4`}>
-            <div className="p-6">
-              <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <h2 className={`text-lg font-semibold ${tw.textPrimary}`}>
                 Add Seed List Recipient
               </h2>
+              <button
+                onClick={handleCloseModal}
+                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="px-6 pt-4 pb-6">
 
               {/* Mode Toggle */}
               <div className="flex gap-1 mb-6">
@@ -1225,24 +1308,26 @@ export default function SeedListManagementPage() {
                       )}
                     </div>
 
-                    {/* Phone Number */}
+                    {/* MSISDN */}
                     <div>
                       <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                        Phone Number *
+                        MSISDN *
                       </label>
-                      <input
+                      <Input
                         type="tel"
                         value={formData.phone_number}
-                        onChange={(e) => {
-                          setFormData({ ...formData, phone_number: e.target.value });
-                          if (errors.phone_number) {
+                        onChange={(value) => {
+                          setFormData({ ...formData, phone_number: value });
+                          if (value) {
+                            const validation = validateMSISDN(value);
+                            setErrors({ ...errors, phone_number: validation.error });
+                          } else {
                             setErrors({ ...errors, phone_number: undefined });
                           }
                         }}
-                        placeholder="Phone number"
-                        className={`w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                          errors.phone_number ? "border-red-500" : "border-gray-300"
-                        }`}
+                        placeholder="Country code + number (e.g., 254712345678)"
+                        hasError={!!errors.phone_number}
+                        variant="medium"
                       />
                       {errors.phone_number && (
                         <p className="text-xs text-red-500 mt-1">{errors.phone_number}</p>
@@ -1259,19 +1344,17 @@ export default function SeedListManagementPage() {
                       <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
                         Name *
                       </label>
-                      <input
-                        type="text"
+                      <Input
                         value={formData.external_name}
-                        onChange={(e) => {
-                          setFormData({ ...formData, external_name: e.target.value });
+                        onChange={(value) => {
+                          setFormData({ ...formData, external_name: value });
                           if (errors.external_name) {
                             setErrors({ ...errors, external_name: undefined });
                           }
                         }}
                         placeholder="Full name"
-                        className={`w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                          errors.external_name ? "border-red-500" : "border-gray-300"
-                        }`}
+                        hasError={!!errors.external_name}
+                        variant="medium"
                       />
                       {errors.external_name && (
                         <p className="text-xs text-red-500 mt-1">{errors.external_name}</p>
@@ -1281,48 +1364,49 @@ export default function SeedListManagementPage() {
                     {/* Email */}
                     <div>
                       <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                        Email *
+                        Email
                       </label>
-                      <input
+                      <Input
                         type="email"
                         value={formData.external_email}
-                        onChange={(e) => {
-                          setFormData({ ...formData, external_email: e.target.value });
+                        onChange={(value) => {
+                          setFormData({ ...formData, external_email: value });
                           if (errors.external_email) {
                             setErrors({ ...errors, external_email: undefined });
                           }
                         }}
                         placeholder="Email address"
-                        className={`w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                          errors.external_email ? "border-red-500" : "border-gray-300"
-                        }`}
+                        hasError={!!errors.external_email}
+                        variant="medium"
                       />
                       {errors.external_email && (
                         <p className="text-xs text-red-500 mt-1">{errors.external_email}</p>
                       )}
                     </div>
 
-                    {/* Phone */}
+                    {/* MSISDN */}
                     <div>
                       <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                        Phone *
+                        MSISDN
                       </label>
-                      <input
+                      <Input
                         type="tel"
-                        value={formData.external_phone}
-                        onChange={(e) => {
-                          setFormData({ ...formData, external_phone: e.target.value });
-                          if (errors.external_phone) {
-                            setErrors({ ...errors, external_phone: undefined });
+                        value={formData.external_msisdn}
+                        onChange={(value) => {
+                          setFormData({ ...formData, external_msisdn: value });
+                          if (value) {
+                            const validation = validateMSISDN(value);
+                            setErrors({ ...errors, external_msisdn: validation.error });
+                          } else {
+                            setErrors({ ...errors, external_msisdn: undefined });
                           }
                         }}
-                        placeholder="Phone number"
-                        className={`w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                          errors.external_phone ? "border-red-500" : "border-gray-300"
-                        }`}
+                        placeholder="Country code + number (e.g., 254712345678)"
+                        hasError={!!errors.external_msisdn}
+                        variant="medium"
                       />
-                      {errors.external_phone && (
-                        <p className="text-xs text-red-500 mt-1">{errors.external_phone}</p>
+                      {errors.external_msisdn && (
+                        <p className="text-xs text-red-500 mt-1">{errors.external_msisdn}</p>
                       )}
                     </div>
                   </>
@@ -1361,7 +1445,7 @@ export default function SeedListManagementPage() {
                 {/* Line of Business */}
                 <div>
                   <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                    Line of Business *
+                    Line of Business
                   </label>
                   <div className={errors.line_of_business_id ? "border border-red-500 rounded" : ""}>
                     <HeadlessSelect
@@ -1393,27 +1477,31 @@ export default function SeedListManagementPage() {
               <div className="flex gap-3 justify-end mt-6">
                 <button
                   onClick={handleCloseModal}
-                  className={`px-4 py-2 border border-gray-300 text-gray-700 font-medium ${tw.rounded} transition-colors`}
+                  className={`border border-gray-300 text-gray-700 font-medium ${tw.rounded} transition-colors hover:bg-gray-50`}
+                  style={getButtonStyles(buttons.bordered)}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleAddRecipient}
                   disabled={
+                    isAddingRecipient ||
                     (formData.mode === "existing_user"
-                      ? !formData.user_id || !formData.phone_number || !formData.line_of_business_id || !formData.list_id
-                      : !formData.external_name || !formData.external_email || !formData.external_phone || !formData.line_of_business_id || !formData.list_id)
+                      ? !formData.user_id || !formData.phone_number || !formData.list_id
+                      : !formData.external_name || !formData.list_id)
                   }
-                  className={`px-4 py-2 text-white font-medium ${tw.rounded} transition-colors ${
+                  className={`text-white font-medium ${tw.rounded} transition-colors flex items-center justify-center gap-2 ${
+                    isAddingRecipient ||
                     (formData.mode === "existing_user"
-                      ? !formData.user_id || !formData.phone_number || !formData.line_of_business_id || !formData.list_id
-                      : !formData.external_name || !formData.external_email || !formData.external_phone || !formData.line_of_business_id || !formData.list_id)
+                      ? !formData.user_id || !formData.phone_number || !formData.list_id
+                      : !formData.external_name || !formData.list_id)
                       ? "opacity-50 cursor-not-allowed"
                       : "hover:opacity-90"
                   }`}
-                  style={{ backgroundColor: color.primary.action }}
+                  style={getButtonStyles(buttons.action)}
                 >
-                  Add Recipient
+                  {isAddingRecipient && <LoadingSpinner size={16} />}
+                  {isAddingRecipient ? "Adding..." : "Add Recipient"}
                 </button>
               </div>
             </div>

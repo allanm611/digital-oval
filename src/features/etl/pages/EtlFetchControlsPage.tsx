@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import Input from '../../../shared/components/ui/Input';
 import { Play, Calendar } from "lucide-react";
 import { etlService } from "../services/etlService";
 import {
@@ -248,10 +249,10 @@ export default function EtlFetchControlsPage() {
             >
               {t.etl.jobIdLabel} <span style={{ color: color.status.danger }}>*</span>
             </label>
-            <input
+            <Input
               type="number"
               value={jobId}
-              onChange={(e) => setJobId(e.target.value)}
+              onChange={(value) => setJobId(String(value))}
               placeholder={t.etl.enterJobId}
               className={`w-full px-4 py-2 border ${tw.rounded} text-sm`}
               style={{ borderColor: color.border.default }}
@@ -383,10 +384,10 @@ export default function EtlFetchControlsPage() {
             >
               {t.etl.jobIdLabel} <span style={{ color: color.status.danger }}>*</span>
             </label>
-            <input
+            <Input
               type="number"
               value={byRangeJobId}
-              onChange={(e) => setByRangeJobId(e.target.value)}
+              onChange={(value) => setByRangeJobId(String(value))}
               placeholder={t.etl.enterJobId}
               className={`w-full px-4 py-2 border ${tw.rounded} text-sm`}
               style={{ borderColor: color.border.default }}

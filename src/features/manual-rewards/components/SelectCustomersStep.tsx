@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import Input from '../../../shared/components/ui/Input';
 import { AlertCircle, Loader2, Plus, List } from "lucide-react";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
@@ -183,12 +184,12 @@ export default function SelectCustomersStep({
           <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
             {t.manualRewards.listNameLabel}
           </label>
-          <input
+          <Input
             type="text"
             value={listName}
-            onChange={(e) => {
-              setListName(e.target.value);
-              onUpdate({ audienceName: e.target.value });
+            onChange={(value) => {
+              setListName(String(value));
+              onUpdate({ audienceName: String(value) });
               setError("");
             }}
             className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none focus:ring-2`}
@@ -322,11 +323,11 @@ export default function SelectCustomersStep({
               onChange={(e) => {
                 setManualInput(e.target.value);
                 // Count recipients
-                const recipientLines = e.target.value
+                const recipientLines = String(value)
                   .split("\n")
                   .filter((line) => line.trim());
                 onUpdate({
-                  audienceFileText: e.target.value,
+                  audienceFileText: String(value),
                   rowCount: recipientLines.length
                 });
                 setError("");

@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Plus, Trash2, BarChart3, Settings, Edit, X } from "lucide-react";
 import { color , tw} from "../../../shared/utils/utils";
 import { zIndex } from "../../../shared/utils/tokens";
+import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 
@@ -437,12 +438,11 @@ export default function OfferTrackingStep({
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Source Name
                       </label>
-                      <input
-                        type="text"
+                      <Input type="text"
                         value={selectedSourceData.name}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           updateTrackingSource(selectedSourceData.id, {
-                            name: e.target.value,
+                            name: String(value),
                           })
                         }
                         className={`w-full px-4 py-3 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
@@ -641,11 +641,10 @@ export default function OfferTrackingStep({
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Rule Name
                   </label>
-                  <input
-                    type="text"
+                  <Input type="text"
                     value={editingRule.name}
-                    onChange={(e) =>
-                      setEditingRule({ ...editingRule, name: e.target.value })
+                    onChange={(value) =>
+                      setEditingRule({ ...editingRule, name: String(value) })
                     }
                     className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
                   />
@@ -655,14 +654,13 @@ export default function OfferTrackingStep({
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Priority
                   </label>
-                  <input
-                    type="number"
+                  <Input type="number"
                     min="1"
                     value={editingRule.priority}
-                    onChange={(e) =>
+                    onChange={(value) =>
                       setEditingRule({
                         ...editingRule,
-                        priority: parseInt(e.target.value) || 1,
+                        priority: parseInt(String(value)) || 1,
                       })
                     }
                     className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
@@ -722,11 +720,10 @@ export default function OfferTrackingStep({
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Value
                   </label>
-                  <input
-                    type="text"
+                  <Input type="text"
                     value={editingRule.value}
-                    onChange={(e) =>
-                      setEditingRule({ ...editingRule, value: e.target.value })
+                    onChange={(value) =>
+                      setEditingRule({ ...editingRule, value: String(value) })
                     }
                     placeholder="Enter value..."
                     className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}

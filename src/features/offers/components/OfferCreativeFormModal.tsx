@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Save, Eye, File, X } from "lucide-react";
 import RegularModal from "../../../shared/components/ui/RegularModal";
+import ModalFooter from "../../../shared/components/ui/ModalFooter";
 import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
@@ -693,41 +694,35 @@ export default function OfferCreativeFormModal({
             </div>
 
             {/* Buttons */}
-            <div className="flex items-center justify-between gap-4 pt-4">
-              <button
-                onClick={handlePreview}
-                className={`inline-flex items-center px-4 py-2 text-sm font-medium ${tw.rounded} transition-colors border border-gray-300 text-gray-700 hover:bg-gray-50`}
-              >
-                <Eye className="w-4 h-4 mr-2" />
-                Preview
-              </button>
-              <div className="flex gap-3">
-                <button
-                  onClick={onClose}
-                  disabled={isSaving}
-                  className={`px-4 py-2 text-gray-700 bg-gray-100 ${tw.rounded} hover:bg-gray-200 transition-colors disabled:opacity-50`}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSave}
-                  disabled={isSaving}
-                  className={`px-4 py-2 text-white ${tw.rounded} transition-colors disabled:opacity-50 flex items-center gap-2`}
-                  style={{ backgroundColor: color.primary.action }}
-                >
-                  {isSaving ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4" />
-                      Save Creative
-                    </>
-                  )}
-                </button>
-              </div>
+            <div className="pt-4">
+              <ModalFooter
+                onCancel={onClose}
+                onConfirm={handleSave}
+                cancelText="Cancel"
+                confirmText={isSaving ? (
+                  <span className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Saving...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <Save className="w-4 h-4" />
+                    Save Creative
+                  </span>
+                )}
+                isLoading={isSaving}
+                confirmClassName={`px-4 py-2 text-white ${tw.rounded} transition-colors disabled:opacity-50 flex items-center gap-2`}
+                confirmStyle={{ backgroundColor: color.primary.action }}
+                leftContent={
+                  <button
+                    onClick={handlePreview}
+                    className={`inline-flex items-center px-4 py-2 text-sm font-medium ${tw.rounded} transition-colors border border-gray-300 text-gray-700 hover:bg-gray-50`}
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    Preview
+                  </button>
+                }
+              />
             </div>
           </div>
 

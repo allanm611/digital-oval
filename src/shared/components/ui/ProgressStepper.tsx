@@ -112,11 +112,13 @@ export default function ProgressStepper({
             sx={{
               "& .MuiStepLabel-root": {
                 cursor: "pointer",
+                userSelect: "none",
                 ".MuiStepLabel-label": {
                   fontSize: "14px",
                   fontWeight: "normal",
                   color: "#000000",
                   marginTop: "12px",
+                  cursor: "pointer",
                   "&.Mui-active": {
                     color: "#000000",
                     fontWeight: "normal",
@@ -125,6 +127,9 @@ export default function ProgressStepper({
                     color: "#000000",
                     fontWeight: "normal",
                   },
+                },
+                "& .MuiSvgIcon-root": {
+                  cursor: "pointer",
                 },
               },
               "& .MuiStep-root": {

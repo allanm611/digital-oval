@@ -14,7 +14,6 @@ import {
   Filter,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
-import Input from "../../../shared/components/ui/Input";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw, button } from "../../../shared/utils/utils";
@@ -666,13 +665,13 @@ export default function ProgramsPage() {
                   >
                     Created By (User ID)
                   </label>
-                  <input
+                  <Input
                     type="number"
                     value={filters.created_by || ""}
-                    onChange={(e) =>
+                    onChange={(value) =>
                       handleFilterChange(
                         "created_by",
-                        e.target.value ? Number(e.target.value) : undefined,
+                        String(value) ? Number(String(value)) : undefined,
                       )
                     }
                     placeholder="Enter user ID"
@@ -688,24 +687,24 @@ export default function ProgramsPage() {
                     End Date Range
                   </label>
                   <div className="space-y-2">
-                    <input
+                    <Input
                       type="date"
                       value={filters.end_date_from || ""}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         handleFilterChange(
                           "end_date_from",
-                          e.target.value || undefined,
+                          String(value) || undefined,
                         )
                       }
                       className={`w-full px-3 py-2 text-sm border ${tw.borderDefault} ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
                     />
-                    <input
+                    <Input
                       type="date"
                       value={filters.end_date_to || ""}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         handleFilterChange(
                           "end_date_to",
-                          e.target.value || undefined,
+                          String(value) || undefined,
                         )
                       }
                       placeholder="To"

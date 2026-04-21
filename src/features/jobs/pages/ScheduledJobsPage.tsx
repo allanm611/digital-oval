@@ -1055,16 +1055,16 @@ export default function ScheduledJobsPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Owner ID
                       </label>
-                      <input
+                      <Input
                         type="number"
                         value={ownerFilter || ""}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setOwnerFilter(
-                            e.target.value ? Number(e.target.value) : "",
+                            value ? Number(value) : "",
                           )
                         }
                         placeholder="All Owners"
-                        className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
+                        variant="medium"
                       />
                     </div>
 
@@ -1073,12 +1073,12 @@ export default function ScheduledJobsPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Tag
                       </label>
-                      <input
+                      <Input
                         type="text"
                         value={tagFilter}
-                        onChange={(e) => setTagFilter(e.target.value)}
+                        onChange={(value) => setTagFilter(String(value))}
                         placeholder="All Tags"
-                        className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
+                        variant="medium"
                       />
                     </div>
 
@@ -1110,16 +1110,16 @@ export default function ScheduledJobsPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Connection Profile ID
                       </label>
-                      <input
+                      <Input
                         type="number"
                         value={connectionProfileFilter || ""}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setConnectionProfileFilter(
-                            e.target.value ? Number(e.target.value) : "",
+                            value ? Number(value) : "",
                           )
                         }
                         placeholder="All Profiles"
-                        className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
+                        variant="medium"
                       />
                     </div>
 
@@ -1128,16 +1128,16 @@ export default function ScheduledJobsPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Tenant ID
                       </label>
-                      <input
+                      <Input
                         type="number"
                         value={tenantFilter || ""}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setTenantFilter(
-                            e.target.value ? Number(e.target.value) : "",
+                            value ? Number(value) : "",
                           )
                         }
                         placeholder="All Tenants"
-                        className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
+                        variant="medium"
                       />
                     </div>
 
@@ -1146,12 +1146,12 @@ export default function ScheduledJobsPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Job Code
                       </label>
-                      <input
+                      <Input
                         type="text"
                         value={jobCodeFilter}
-                        onChange={(e) => setJobCodeFilter(e.target.value)}
+                        onChange={(value) => setJobCodeFilter(String(value))}
                         placeholder="Enter job code"
-                        className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
+                        variant="medium"
                       />
                     </div>
 

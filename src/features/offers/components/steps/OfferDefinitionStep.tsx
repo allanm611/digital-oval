@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Input from '../../../../shared/components/ui/Input';
 import { ChevronDown, Search } from "lucide-react";
 import StepFlowLayout from "../../../../shared/components/ui/StepFlowLayout";
 import { CreateOfferRequest } from "../../../types/offer";
@@ -58,11 +59,11 @@ export default function OfferDefinitionStep({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Offer Name *
             </label>
-            <input
+            <Input
               type="text"
               value={formData.name || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
+              onChange={(value) =>
+                setFormData({ ...formData, name: String(value) })
               }
               className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-1 focus:ring-[#588157] focus:border-[#588157] text-sm`}
               placeholder="Enter offer name"
@@ -101,10 +102,10 @@ export default function OfferDefinitionStep({
                   <div className="p-2">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <input
+                      <Input
                         type="text"
                         value={typeSearchTerm}
-                        onChange={(e) => setTypeSearchTerm(e.target.value)}
+                        onChange={(value) => setTypeSearchTerm(String(value))}
                         className={`w-full pl-10 pr-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:ring-1 focus:ring-[#588157] focus:border-[#588157]`}
                         placeholder="Search types..."
                       />

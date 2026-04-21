@@ -19,7 +19,6 @@ import {
   Loader2,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
-import Input from "../../../shared/components/ui/Input";
 import { ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import {
   LineChart,

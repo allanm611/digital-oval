@@ -134,12 +134,12 @@ export default function SchedulingStep({
               </label>
               <div className="flex items-center space-x-4">
                 <div className="relative">
-                  <input
+                  <Input
                     type="date"
                     value={scheduling.start_date?.split("T")[0] || "2025-09-22"}
-                    onChange={(e) =>
+                    onChange={(value) =>
                       updateScheduling({
-                        start_date: e.target.value + "T08:00",
+                        start_date: String(value) + "T08:00",
                       })
                     }
                     className={`px-4 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white text-gray-900`}
@@ -147,15 +147,15 @@ export default function SchedulingStep({
                   />
                 </div>
                 <div className="relative">
-                  <input
+                  <Input
                     type="time"
                     value="08:00"
-                    onChange={(e) =>
+                    onChange={(value) =>
                       updateScheduling({
                         start_date:
                           scheduling.start_date?.split("T")[0] +
                             "T" +
-                            e.target.value || "2025-09-22T" + e.target.value,
+                            String(value) || "2025-09-22T" + String(value),
                       })
                     }
                     className={`px-4 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white text-gray-900`}
@@ -206,26 +206,26 @@ export default function SchedulingStep({
             <div className="mb-6">
               <div className="flex items-center space-x-4">
                 <div className="relative">
-                  <input
+                  <Input
                     type="date"
                     value={scheduling.end_date?.split("T")[0] || "2025-12-31"}
-                    onChange={(e) =>
-                      updateScheduling({ end_date: e.target.value + "T23:59" })
+                    onChange={(value) =>
+                      updateScheduling({ end_date: String(value) + "T23:59" })
                     }
                     className={`px-4 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white text-gray-900`}
                     style={{ minWidth: "140px", backgroundColor: "white" }}
                   />
                 </div>
                 <div className="relative">
-                  <input
+                  <Input
                     type="time"
                     value="23:59"
-                    onChange={(e) =>
+                    onChange={(value) =>
                       updateScheduling({
                         end_date:
                           scheduling.end_date?.split("T")[0] +
                             "T" +
-                            e.target.value || "2025-12-31T" + e.target.value,
+                            String(value) || "2025-12-31T" + String(value),
                       })
                     }
                     className={`px-4 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white text-gray-900`}
@@ -295,12 +295,12 @@ export default function SchedulingStep({
                 Recur Every
               </label>
               <div className="flex items-center space-x-2">
-                <input
+                <Input
                   type="number"
                   min="1"
                   value={recurrenceInterval}
-                  onChange={(e) =>
-                    setRecurrenceInterval(Number(e.target.value))
+                  onChange={(value) =>
+                    setRecurrenceInterval(Number(String(value)))
                   }
                   className={`w-16 px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent text-center`}
                 />
@@ -315,10 +315,10 @@ export default function SchedulingStep({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Default Start Time
               </label>
-              <input
+              <Input
                 type="time"
                 value={defaultStartTime}
-                onChange={(e) => setDefaultStartTime(e.target.value)}
+                onChange={(value) => setDefaultStartTime(String(value))}
                 className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white`}
               />
             </div>
@@ -396,7 +396,7 @@ export default function SchedulingStep({
               <Radio name="renderTime"
                 value="Pre-Render"
                 checked={targetRenderTime === "Pre-Render"}
-                onChange={(e) => setTargetRenderTime(e.target.value)}
+                onChange={(value) => setTargetRenderTime(String(value))}
                 className="w-4 h-4 text-[#3b8169] border-gray-300 focus:ring-[#3b8169]" />
               <span className="ml-2 text-sm font-medium text-gray-700">
                 Pre-Render
@@ -407,7 +407,7 @@ export default function SchedulingStep({
               <Radio name="renderTime"
                 value="Real Time"
                 checked={targetRenderTime === "Real Time"}
-                onChange={(e) => setTargetRenderTime(e.target.value)}
+                onChange={(value) => setTargetRenderTime(String(value))}
                 className="w-4 h-4 text-[#3b8169] border-gray-300 focus:ring-[#3b8169]" />
               <span className="ml-2 text-sm font-medium text-gray-700">
                 Real Time
@@ -418,7 +418,7 @@ export default function SchedulingStep({
               <Radio name="renderTime"
                 value="Broadcast Schedule"
                 checked={targetRenderTime === "Broadcast Schedule"}
-                onChange={(e) => setTargetRenderTime(e.target.value)}
+                onChange={(value) => setTargetRenderTime(String(value))}
                 className="w-4 h-4 text-[#3b8169] border-gray-300 focus:ring-[#3b8169]" />
               <span className="ml-2 text-sm font-medium text-gray-700">
                 Broadcast Schedule
@@ -453,7 +453,7 @@ export default function SchedulingStep({
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Time
                     </label>
-                    <input
+                    <Input
                       type="time"
                       value="12:00"
                       onChange={(_e) => {
@@ -467,12 +467,12 @@ export default function SchedulingStep({
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Hours
                     </label>
-                    <input
+                    <Input
                       type="number"
                       min="0"
                       value={hoursBeforeBroadcast}
-                      onChange={(e) =>
-                        setHoursBeforeBroadcast(Number(e.target.value))
+                      onChange={(value) =>
+                        setHoursBeforeBroadcast(Number(String(value)))
                       }
                       className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
                     />

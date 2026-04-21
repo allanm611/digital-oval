@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import Input from '../../../shared/components/ui/Input';
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { CommunicationChannel } from "../../../shared/services/communicationChannelService";
@@ -140,11 +141,11 @@ export default function CreateEditCommunicationChannelModal({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Channel Code *
             </label>
-            <input
+            <Input
               type="text"
               value={formData.code}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, code: e.target.value }))
+              onChange={(value) =>
+                setFormData((prev) => ({ ...prev, code: String(value) }))
               }
               className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
               placeholder="e.g., sms, email, push"
@@ -159,11 +160,11 @@ export default function CreateEditCommunicationChannelModal({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Channel Name *
             </label>
-            <input
+            <Input
               type="text"
               value={formData.name}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, name: e.target.value }))
+              onChange={(value) =>
+                setFormData((prev) => ({ ...prev, name: String(value) }))
               }
               className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
               placeholder="e.g., SMS, Email, Push"

@@ -6,9 +6,9 @@ import React, {
   useRef,
 } from "react";
 import { createPortal } from "react-dom";
+import Input from '../../../shared/components/ui/Input';
 import { useNavigate } from "react-router-dom";
 import { Edit, Trash2, MessageSquare, Grid, List } from "lucide-react";
-import SearchInput from "../../../shared/components/ui/SearchInput";
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
 import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
@@ -133,11 +133,11 @@ function CategoryModal({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Campaign Catalog Name *
               </label>
-              <input
+              <Input
                 type="text"
                 value={formData.name}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, name: e.target.value }))
+                onChange={(value) =>
+                  setFormData((prev) => ({ ...prev, name: String(value) }))
                 }
                 className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
                 placeholder="Enter campaign catalog name"
@@ -1089,18 +1089,16 @@ export default function CampaignCategoriesPage() {
       )}
 
       {/* Pagination */}
-      {filteredCampaignCategories.length > catalogPageSize && (
-        <div className="flex justify-center mt-6">
-          <Pagination
-            currentPage={catalogPage}
-            pageSize={catalogPageSize}
-            totalItems={filteredCampaignCategories.length}
-            onPageChange={(newPage) => {
-              setCatalogPage(newPage);
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-          />
-        </div>
+      {!loading && filteredCampaignCategories.length > 0 && (
+        <Pagination
+          currentPage={catalogPage}
+          pageSize={catalogPageSize}
+          totalItems={filteredCampaignCategories.length}
+          onPageChange={(newPage) => {
+            setCatalogPage(newPage);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+        />
       )}
           </>
         );

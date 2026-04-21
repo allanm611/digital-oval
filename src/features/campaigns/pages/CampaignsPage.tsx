@@ -1,4 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
+import Input from '../../../shared/components/ui/Input';
+import SearchInput from '../../../shared/components/ui/SearchInput';
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useToast } from "../../../contexts/ToastContext";
@@ -22,7 +24,6 @@ import {
   BarChart3,
   Copy,
 } from "lucide-react";
-import SearchInput from "../../../shared/components/ui/SearchInput";
 import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import CreateButton from "../../../shared/components/ui/CreateButton";
@@ -1813,13 +1814,13 @@ export default function CampaignsPage() {
                           <label className="block text-xs text-gray-500 mb-1">
                             Start Date From
                           </label>
-                          <input
+                          <Input
                             type="date"
                             value={filters.startDateFrom}
-                            onChange={(e) =>
+                            onChange={(value) =>
                               setFilters({
                                 ...filters,
-                                startDateFrom: e.target.value,
+                                startDateFrom: String(value),
                               })
                             }
                             className={`w-full px-4 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
@@ -1829,13 +1830,13 @@ export default function CampaignsPage() {
                           <label className="block text-xs text-gray-500 mb-1">
                             Start Date To
                           </label>
-                          <input
+                          <Input
                             type="date"
                             value={filters.startDateTo}
-                            onChange={(e) =>
+                            onChange={(value) =>
                               setFilters({
                                 ...filters,
-                                startDateTo: e.target.value,
+                                startDateTo: String(value),
                               })
                             }
                             className={`w-full px-4 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}

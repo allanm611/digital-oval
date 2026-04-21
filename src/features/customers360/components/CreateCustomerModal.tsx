@@ -951,12 +951,11 @@ export default function CreateCustomerModal({
                     >
                       Alternate Email
                     </label>
-                    <input
+                    <Input
                       type="email"
-                      name="alternateEmail"
                       value={formData.alternateEmail}
-                      onChange={handleInputChange}
-                      className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                      onChange={(value) => handleInputChange({ target: { name: "alternateEmail", value } } as any)}
+                      variant="default"
                     />
                   </div>
                 </div>
@@ -968,12 +967,11 @@ export default function CreateCustomerModal({
                     >
                       Date of Birth
                     </label>
-                    <input
+                    <Input
                       type="date"
-                      name="dateOfBirth"
                       value={formData.dateOfBirth}
-                      onChange={handleInputChange}
-                      className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                      onChange={(value) => handleInputChange({ target: { name: "dateOfBirth", value } } as any)}
+                      variant="default"
                     />
                   </div>
                   <div>
@@ -1003,12 +1001,11 @@ export default function CreateCustomerModal({
                 >
                   City
                 </label>
-                <input
+                <Input
                   type="text"
-                  name="city"
                   value={formData.city}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                  onChange={(value) => handleInputChange({ target: { name: "city", value } } as any)}
+                  variant="default"
                 />
               </div>
 
@@ -1041,13 +1038,12 @@ export default function CreateCustomerModal({
                     >
                       Region
                     </label>
-                    <input
+                    <Input
                       type="text"
-                      name="region"
                       value={formData.region}
-                      onChange={handleInputChange}
+                      onChange={(value) => handleInputChange({ target: { name: "region", value } } as any)}
                       placeholder="Region/State"
-                      className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                      variant="default"
                     />
                   </div>
                   <div>
@@ -1056,13 +1052,12 @@ export default function CreateCustomerModal({
                     >
                       Postal Code
                     </label>
-                    <input
+                    <Input
                       type="text"
-                      name="postalCode"
                       value={formData.postalCode}
-                      onChange={handleInputChange}
+                      onChange={(value) => handleInputChange({ target: { name: "postalCode", value } } as any)}
                       placeholder="Postal code"
-                      className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                      variant="default"
                     />
                   </div>
                 </div>

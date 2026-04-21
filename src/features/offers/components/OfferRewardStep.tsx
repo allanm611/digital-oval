@@ -5,6 +5,7 @@ import { color , tw} from "../../../shared/utils/utils";
 import { zIndex } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import Input from "../../../shared/components/ui/Input";
 import { rewardTypeService, RewardType } from "../services/rewardTypeService";
 
 interface RewardRule {
@@ -272,15 +273,16 @@ export default function OfferRewardStep({
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Reward Name
                       </label>
-                      <input
+                      <Input
                         type="text"
                         value={selectedRewardData.name}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           updateReward(selectedRewardData.id, {
-                            name: e.target.value,
+                            name: String(value),
                           })
                         }
-                        className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
+                        placeholder="Reward name"
+                        variant="medium"
                       />
                     </div>
 
@@ -450,13 +452,14 @@ export default function OfferRewardStep({
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Rule Name
                     </label>
-                    <input
+                    <Input
                       type="text"
                       value={editingRule.name}
-                      onChange={(e) =>
-                        setEditingRule({ ...editingRule, name: e.target.value })
+                      onChange={(value) =>
+                        setEditingRule({ ...editingRule, name: String(value) })
                       }
-                      className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
+                      placeholder="Rule name"
+                      variant="medium"
                     />
                   </div>
 
@@ -464,17 +467,17 @@ export default function OfferRewardStep({
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Priority
                     </label>
-                    <input
+                    <Input
                       type="number"
-                      min="1"
-                      value={editingRule.priority}
-                      onChange={(e) =>
+                      value={String(editingRule.priority)}
+                      onChange={(value) =>
                         setEditingRule({
                           ...editingRule,
-                          priority: parseInt(e.target.value) || 1,
+                          priority: parseInt(String(value)) || 1,
                         })
                       }
-                      className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
+                      placeholder="1"
+                      variant="medium"
                     />
                   </div>
                 </div>
@@ -530,17 +533,17 @@ export default function OfferRewardStep({
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Reward Value
                     </label>
-                    <input
+                    <Input
                       type="text"
                       value={editingRule.reward_value}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setEditingRule({
                           ...editingRule,
-                          reward_value: e.target.value,
+                          reward_value: String(value),
                         })
                       }
                       placeholder="Enter reward value..."
-                      className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
+                      variant="medium"
                     />
                   </div>
                 </div>
@@ -568,17 +571,17 @@ export default function OfferRewardStep({
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Error Group
                     </label>
-                    <input
+                    <Input
                       type="text"
                       value={editingRule.error_group}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setEditingRule({
                           ...editingRule,
-                          error_group: e.target.value,
+                          error_group: String(value),
                         })
                       }
                       placeholder="e.g., Low balance Failure [01]"
-                      className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
+                      variant="medium"
                     />
                   </div>
 
@@ -586,17 +589,17 @@ export default function OfferRewardStep({
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Failure Text
                     </label>
-                    <input
+                    <Input
                       type="text"
                       value={editingRule.failure_text}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setEditingRule({
                           ...editingRule,
-                          failure_text: e.target.value,
+                          failure_text: String(value),
                         })
                       }
                       placeholder="Enter failure message..."
-                      className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
+                      variant="medium"
                     />
                   </div>
                 </div>

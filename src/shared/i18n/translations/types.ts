@@ -1344,6 +1344,32 @@ export interface Translations {
       routeNamePlaceholder: string;
       statusLabel: string;
     };
+    emailRoutes: {
+      title: string;
+      subtitle: string;
+      entityName: string;
+      entityNamePlural: string;
+      searchPlaceholder: string;
+      createButtonText: string;
+      modalTitleCreate: string;
+      modalTitleEdit: string;
+      nameLabel: string;
+      descriptionLabel: string;
+      deleteConfirmTitle: string;
+      deleteConfirmMessage: string;
+      deleteSuccessMessage: string;
+      createSuccessMessage: string;
+      updateSuccessMessage: string;
+      deleteErrorMessage: string;
+      saveErrorMessage: string;
+      gatewayProviderLabel: string;
+      smtpHostLabel: string;
+      smtpPortLabel: string;
+      smtpUsernameLabel: string;
+      smtpPasswordLabel: string;
+      fromAddressLabel: string;
+      statusLabel: string;
+    };
     languages: {
       title: string;
       subtitle: string;

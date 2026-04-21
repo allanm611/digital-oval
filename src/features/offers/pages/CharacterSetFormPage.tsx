@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import Input from '../../../shared/components/ui/Input';
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Save } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
@@ -121,10 +122,10 @@ export default function CharacterSetFormPage() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Name *
             </label>
-            <input
+            <Input
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(value) => setName(String(value))}
               required
               className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="e.g., GSM Default"
@@ -179,10 +180,10 @@ export default function CharacterSetFormPage() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Character Set Size
             </label>
-            <input
+            <Input
               type="number"
               value={characterSetSize}
-              onChange={(e) => setCharacterSetSize(e.target.value)}
+              onChange={(value) => setCharacterSetSize(String(value))}
               className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="e.g., 160"
             />

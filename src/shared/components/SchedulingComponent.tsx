@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Calendar, AlertCircle, Trash2 } from "lucide-react";
 import { tw } from "../utils/utils";
 import { buttons } from "../utils/tokens";
+import Input from "./ui/Input";
 import HeadlessSelect from "./ui/HeadlessSelect";
 import type {
   SchedulingData,
@@ -228,32 +229,34 @@ export default function SchedulingComponent({
               </label>
               <div className="flex items-center space-x-4">
                 <div className="relative">
-                  <input
+                  <Input
                     type="date"
                     value={scheduling.start_date?.split("T")[0] || ""}
-                    onChange={(e) =>
+                    onChange={(value) =>
                       updateScheduling({
-                        start_date: e.target.value + "T08:00",
+                        start_date: String(value) + "T08:00",
                       })
                     }
-                    className={`px-4 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#00BBCC] focus:border-transparent bg-white text-gray-900`}
-                    style={{ minWidth: "140px", backgroundColor: "white" }}
+                    className="flex-1"
+                    variant="default"
+                    placeholder=""
                   />
                 </div>
                 <div className="relative">
-                  <input
+                  <Input
                     type="time"
                     value="08:00"
-                    onChange={(e) =>
+                    onChange={(value) =>
                       updateScheduling({
                         start_date:
                           scheduling.start_date?.split("T")[0] +
                             "T" +
-                            e.target.value || "T" + e.target.value,
+                            String(value) || "T" + String(value),
                       })
                     }
-                    className={`px-4 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#00BBCC] focus:border-transparent bg-white text-gray-900`}
-                    style={{ minWidth: "100px", backgroundColor: "white" }}
+                    className="flex-1"
+                    variant="default"
+                    placeholder=""
                   />
                 </div>
               </div>
@@ -294,30 +297,32 @@ export default function SchedulingComponent({
             <div className="mb-6">
               <div className="flex items-center space-x-4">
                 <div className="relative">
-                  <input
+                  <Input
                     type="date"
                     value={scheduling.end_date?.split("T")[0] || ""}
-                    onChange={(e) =>
-                      updateScheduling({ end_date: e.target.value + "T23:59" })
+                    onChange={(value) =>
+                      updateScheduling({ end_date: String(value) + "T23:59" })
                     }
-                    className={`px-4 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#00BBCC] focus:border-transparent bg-white text-gray-900`}
-                    style={{ minWidth: "140px", backgroundColor: "white" }}
+                    className="flex-1"
+                    variant="default"
+                    placeholder=""
                   />
                 </div>
                 <div className="relative">
-                  <input
+                  <Input
                     type="time"
                     value="23:59"
-                    onChange={(e) =>
+                    onChange={(value) =>
                       updateScheduling({
                         end_date:
                           scheduling.end_date?.split("T")[0] +
                             "T" +
-                            e.target.value || "T" + e.target.value,
+                            String(value) || "T" + String(value),
                       })
                     }
-                    className={`px-4 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#00BBCC] focus:border-transparent bg-white text-gray-900`}
-                    style={{ minWidth: "100px", backgroundColor: "white" }}
+                    className="flex-1"
+                    variant="default"
+                    placeholder=""
                   />
                 </div>
               </div>
@@ -383,14 +388,15 @@ export default function SchedulingComponent({
                 Recur Every
               </label>
               <div className="flex items-center space-x-2">
-                <input
+                <Input
                   type="number"
-                  min="1"
                   value={recurrenceInterval}
-                  onChange={(e) =>
-                    setRecurrenceInterval(Number(e.target.value))
+                  onChange={(value) =>
+                    setRecurrenceInterval(Number(value))
                   }
-                  className={`w-16 px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#00BBCC] focus:border-transparent text-center`}
+                  className="w-16"
+                  variant="default"
+                  placeholder=""
                 />
                 <span className="text-sm text-gray-600">
                   {recurrencePattern}
@@ -403,11 +409,13 @@ export default function SchedulingComponent({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Default Start Time
               </label>
-              <input
+              <Input
                 type="time"
                 value={defaultStartTime}
-                onChange={(e) => setDefaultStartTime(e.target.value)}
-                className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#00BBCC] focus:border-transparent bg-white`}
+                onChange={(value) => setDefaultStartTime(String(value))}
+                className="w-full"
+                variant="default"
+                placeholder=""
               />
             </div>
           </div>
@@ -441,17 +449,17 @@ export default function SchedulingComponent({
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Day Number
                   </label>
-                  <input
+                  <Input
                     type="number"
-                    min="1"
-                    max="31"
                     value={monthlyDayOfMonth}
-                    onChange={(e) =>
+                    onChange={(value) =>
                       setMonthlyDayOfMonth(
-                        Math.max(1, Math.min(31, Number(e.target.value) || 1)),
+                        Math.max(1, Math.min(31, Number(value) || 1)),
                       )
                     }
-                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#00BBCC] focus:border-transparent`}
+                    className="w-full"
+                    variant="default"
+                    placeholder=""
                   />
                 </div>
               )}
@@ -551,15 +559,17 @@ export default function SchedulingComponent({
                         </div>
 
                         <div>
-                          <input
+                          <Input
                             type="time"
                             value={entry.time}
-                            onChange={(e) =>
+                            onChange={(value) =>
                               updateSpecificDayRow(entry.id, {
-                                time: e.target.value,
+                                time: String(value),
                               })
                             }
-                            className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#00BBCC] focus:border-transparent bg-white`}
+                            className="w-full"
+                            variant="default"
+                            placeholder=""
                           />
                         </div>
 
@@ -674,13 +684,15 @@ export default function SchedulingComponent({
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Time
                     </label>
-                    <input
+                    <Input
                       type="time"
                       value="12:00"
-                      onChange={(_e) => {
+                      onChange={(_value) => {
                         // Handle time change
                       }}
-                      className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#00BBCC] focus:border-transparent bg-white`}
+                      className="w-full"
+                      variant="default"
+                      placeholder=""
                     />
                   </div>
                 ) : (
@@ -688,14 +700,15 @@ export default function SchedulingComponent({
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Hours
                     </label>
-                    <input
+                    <Input
                       type="number"
-                      min="0"
                       value={hoursBeforeBroadcast}
-                      onChange={(e) =>
-                        setHoursBeforeBroadcast(Number(e.target.value))
+                      onChange={(value) =>
+                        setHoursBeforeBroadcast(Number(value))
                       }
-                      className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#00BBCC] focus:border-transparent`}
+                      className="w-full"
+                      variant="default"
+                      placeholder=""
                     />
                   </div>
                 )}

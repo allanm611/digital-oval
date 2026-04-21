@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import Input from '../../../shared/components/ui/Input';
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Edit,
@@ -677,13 +678,13 @@ export default function ConnectionProfileDetailsPage() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Valid From
             </label>
-            <input
+            <Input
               type="date"
               value={validityForm.valid_from}
-              onChange={(e) =>
+              onChange={(value) =>
                 setValidityForm((prev) => ({
                   ...prev,
-                  valid_from: e.target.value,
+                  valid_from: String(value),
                 }))
               }
               className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
@@ -693,13 +694,13 @@ export default function ConnectionProfileDetailsPage() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Valid To (optional)
             </label>
-            <input
+            <Input
               type="date"
               value={validityForm.valid_to}
-              onChange={(e) =>
+              onChange={(value) =>
                 setValidityForm((prev) => ({
                   ...prev,
-                  valid_to: e.target.value,
+                  valid_to: String(value),
                 }))
               }
               className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}

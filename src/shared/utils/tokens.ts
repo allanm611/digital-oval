@@ -507,7 +507,7 @@ export const buttons = {
     background: colors.primary.action,
     color: "#FFFFFF", // White text on dark buttons
     border: "none",
-    paddingY: "0.625rem", // py-2.5
+    paddingY: "0.5rem", // py-2
     paddingX: "1rem", // px-4
     borderRadius: "0.375rem", // rounded-md
     fontSize: "0.875rem", // text-sm (14px)

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import Input from '../../../shared/components/ui/Input';
 import {
   BarChart,
   Bar,
@@ -1047,7 +1048,7 @@ export default function OverallDashboardPerformancePage() {
               >
                 From:
               </label>
-              <input
+              <Input
                 id="overall-date-start"
                 type="date"
                 value={customRange.start}
@@ -1069,7 +1070,7 @@ export default function OverallDashboardPerformancePage() {
               >
                 To:
               </label>
-              <input
+              <Input
                 id="overall-date-end"
                 type="date"
                 value={customRange.end}

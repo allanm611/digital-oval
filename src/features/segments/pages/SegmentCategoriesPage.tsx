@@ -17,7 +17,6 @@ import {
   PowerOff,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
-import Input from "../../../shared/components/ui/Input";
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
@@ -1059,18 +1058,16 @@ export default function SegmentCategoriesPage() {
       )}
 
       {/* Pagination */}
-      {filteredCategories.length > catalogPageSize && (
-        <div className="flex justify-center mt-6">
-          <Pagination
-            currentPage={catalogPage}
-            pageSize={catalogPageSize}
-            totalItems={filteredCategories.length}
-            onPageChange={(newPage) => {
-              setCatalogPage(newPage);
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-          />
-        </div>
+      {!isLoading && filteredCategories.length > 0 && (
+        <Pagination
+          currentPage={catalogPage}
+          pageSize={catalogPageSize}
+          totalItems={filteredCategories.length}
+          onPageChange={(newPage) => {
+            setCatalogPage(newPage);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+        />
       )}
           </>
         );

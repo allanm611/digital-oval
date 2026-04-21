@@ -24,15 +24,15 @@ export default function Pagination({
 
   return (
     <div
-      className={`bg-white ${tw.rounded} border px-4 sm:px-6 py-4`}
+      className={`bg-white ${tw.rounded} border px-4 sm:px-6 py-4 w-full`}
       style={{ borderColor: color.border.default }}
     >
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-        <div className={`text-sm ${tw.textSecondary} text-center sm:text-left`}>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0 gap-4">
+        <div className={`text-sm ${tw.textSecondary} text-center sm:text-left flex-shrink-0`}>
           Showing {startItem} to {endItem} of {totalItems} items
         </div>
 
-        <div className="flex items-center justify-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-4 w-full sm:w-auto">
           {showPageSizeSelector && onPageSizeChange && (
             <div className="flex items-center gap-2">
               <label className="text-sm font-medium text-gray-700">

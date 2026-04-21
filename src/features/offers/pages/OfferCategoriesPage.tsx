@@ -186,11 +186,10 @@ function CategoryModal({
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     {t.offerCatalogs.catalogNameLabel} *
                   </label>
-                  <input
-                    type="text"
+                  <Input type="text"
                     value={formData.name}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, name: e.target.value }))
+                    onChange={(value) =>
+                      setFormData((prev) => ({ ...prev, name: String(value) }))
                     }
                     className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
                     placeholder={t.offerCatalogs.catalogNamePlaceholder}
@@ -1560,18 +1559,16 @@ function OfferCategoriesPage() {
       )}
 
       {/* Pagination */}
-      {filteredOfferCategories.length > catalogPageSize && (
-        <div className="flex justify-center mt-6">
-          <Pagination
-            currentPage={catalogPage}
-            pageSize={catalogPageSize}
-            totalItems={filteredOfferCategories.length}
-            onPageChange={(newPage) => {
-              setCatalogPage(newPage);
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-          />
-        </div>
+      {!loading && filteredOfferCategories.length > 0 && (
+        <Pagination
+          currentPage={catalogPage}
+          pageSize={catalogPageSize}
+          totalItems={filteredOfferCategories.length}
+          onPageChange={(newPage) => {
+            setCatalogPage(newPage);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+        />
       )}
           </>
         );
@@ -1685,13 +1682,12 @@ function OfferCategoriesPage() {
                       >
                         Exact Name Match
                       </label>
-                      <input
-                        type="text"
+                      <Input type="text"
                         value={advancedSearch.exactName}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setAdvancedSearch((prev) => ({
                             ...prev,
-                            exactName: e.target.value,
+                            exactName: String(value),
                           }))
                         }
                         placeholder="Enter exact category name..."
@@ -1739,13 +1735,12 @@ function OfferCategoriesPage() {
                         >
                           Created After
                         </label>
-                        <input
-                          type="date"
+                        <Input type="date"
                           value={advancedSearch.createdAfter}
-                          onChange={(e) =>
+                          onChange={(value) =>
                             setAdvancedSearch((prev) => ({
                               ...prev,
-                              createdAfter: e.target.value,
+                              createdAfter: String(value),
                             }))
                           }
                           className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
@@ -1757,13 +1752,12 @@ function OfferCategoriesPage() {
                         >
                           Created Before
                         </label>
-                        <input
-                          type="date"
+                        <Input type="date"
                           value={advancedSearch.createdBefore}
-                          onChange={(e) =>
+                          onChange={(value) =>
                             setAdvancedSearch((prev) => ({
                               ...prev,
-                              createdBefore: e.target.value,
+                              createdBefore: String(value),
                             }))
                           }
                           className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}

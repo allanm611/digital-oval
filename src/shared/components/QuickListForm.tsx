@@ -1,6 +1,7 @@
 import { useState, useRef, useMemo, useEffect } from "react";
 import { Upload, FileText, AlertCircle, Download, Edit3 } from "lucide-react";
 import { color, tw } from "../utils/utils";
+import Input from "./ui/Input";
 import { UploadType } from "../../features/quicklists/types/quicklist";
 import HeadlessSelect from "./ui/HeadlessSelect";
 
@@ -426,7 +427,7 @@ export default function QuickListForm({
                 }
               }}
             >
-              <input
+              <Input
                 id="quicklist-form-file-upload"
                 ref={fileInputRef}
                 type="file"
@@ -720,21 +721,12 @@ export default function QuickListForm({
         <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
           List Name *
         </label>
-        <input
+        <Input
           type="text"
           value={name}
-          onChange={(e) => setName(e.target.value)}
-          className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none focus:ring-2`}
-          style={{
-            borderColor: color.border.default,
-            color: color.text.primary,
-          }}
-          onFocus={(e) =>
-            (e.currentTarget.style.borderColor = color.primary.accent)
-          }
-          onBlur={(e) =>
-            (e.currentTarget.style.borderColor = color.border.default)
-          }
+          onChange={(value) => setName(String(value))}
+          className="w-full"
+          variant="default"
           placeholder="Enter a descriptive name"
           disabled={disabled}
         />

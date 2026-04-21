@@ -1129,14 +1129,15 @@ export default function JobWorkflowStepsPage() {
           placeholder="All Types"
           className="w-auto min-w-[180px]"
         />
-        <input
+        <Input
           type="number"
-          className={`w-auto min-w-[120px] ${tw.rounded} border border-gray-200 py-3 px-4 text-sm shadow-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
+          className="w-auto min-w-[120px]"
           placeholder="Job ID"
           value={jobIdFilter || ""}
-          onChange={(e) =>
-            setJobIdFilter(e.target.value ? Number(e.target.value) : "")
+          onChange={(value) =>
+            setJobIdFilter(value ? Number(value) : "")
           }
+          variant="medium"
         />
         <div className="flex gap-2">
           <button
@@ -1645,12 +1646,12 @@ export default function JobWorkflowStepsPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Step Code
                       </label>
-                      <input
+                      <Input
                         type="text"
                         value={stepCodeFilter}
-                        onChange={(e) => setStepCodeFilter(e.target.value)}
+                        onChange={(value) => setStepCodeFilter(String(value))}
                         placeholder="Enter step code"
-                        className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
+                        variant="medium"
                       />
                     </div>
 
@@ -1659,17 +1660,16 @@ export default function JobWorkflowStepsPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Step Order
                       </label>
-                      <input
+                      <Input
                         type="number"
-                        min="1"
                         value={stepOrderFilter || ""}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setStepOrderFilter(
-                            e.target.value ? Number(e.target.value) : "",
+                            value ? Number(value) : "",
                           )
                         }
                         placeholder="Enter step order"
-                        className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
+                        variant="medium"
                       />
                       <p className="mt-1 text-xs text-gray-500">
                         Use with Job ID for precise lookup
@@ -1858,16 +1858,16 @@ export default function JobWorkflowStepsPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Parallel Group ID
                       </label>
-                      <input
+                      <Input
                         type="number"
                         value={parallelGroupIdFilter || ""}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setParallelGroupIdFilter(
-                            e.target.value ? Number(e.target.value) : "",
+                            value ? Number(value) : "",
                           )
                         }
                         placeholder="All Groups"
-                        className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
+                        variant="medium"
                       />
                     </div>
                   </div>
@@ -1998,12 +1998,11 @@ export default function JobWorkflowStepsPage() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <input
+                          <Input
                             type="number"
-                            min="1"
                             value={item.newOrder}
-                            onChange={(e) => {
-                              const newOrder = Number(e.target.value) || 1;
+                            onChange={(value) => {
+                              const newOrder = Number(value) || 1;
                               const newData = [...reorderData];
                               newData[idx].newOrder = newOrder;
                               // Sort by newOrder and reassign sequential orders
@@ -2015,7 +2014,8 @@ export default function JobWorkflowStepsPage() {
                               setReorderData(updatedData);
                             }}
                             onClick={(e) => e.stopPropagation()}
-                            className={`w-20 ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
+                            className="w-20"
+                            variant="medium"
                           />
                           <div className="text-gray-400">
                             <svg
@@ -2229,18 +2229,16 @@ export default function JobWorkflowStepsPage() {
                       </label>
                       {batchUpdateFields.timeout_seconds !== undefined && (
                         <div className="mt-2 ml-6">
-                          <input
+                          <Input
                             type="number"
-                            min="1"
-                            max="86400"
                             value={batchUpdateFields.timeout_seconds || 300}
-                            onChange={(e) =>
+                            onChange={(value) =>
                               setBatchUpdateFields({
                                 ...batchUpdateFields,
-                                timeout_seconds: Number(e.target.value) || 300,
+                                timeout_seconds: Number(value) || 300,
                               })
                             }
-                            className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
+                            variant="medium"
                           />
                         </div>
                       )}
@@ -2262,18 +2260,16 @@ export default function JobWorkflowStepsPage() {
                       </label>
                       {batchUpdateFields.retry_count !== undefined && (
                         <div className="mt-2 ml-6">
-                          <input
+                          <Input
                             type="number"
-                            min="0"
-                            max="10"
                             value={batchUpdateFields.retry_count || 0}
-                            onChange={(e) =>
+                            onChange={(value) =>
                               setBatchUpdateFields({
                                 ...batchUpdateFields,
-                                retry_count: Number(e.target.value) || 0,
+                                retry_count: Number(value) || 0,
                               })
                             }
-                            className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
+                            variant="medium"
                           />
                         </div>
                       )}

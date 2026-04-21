@@ -1,3 +1,4 @@
+import Input from '../../../shared/components/ui/Input';
 import React, { useState } from "react";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -211,10 +212,10 @@ const LoginPage: React.FC = () => {
                   {t.auth.login.emailLabel} <span className="required">*</span>
                 </label>
                 <div className="input-with-icon">
-                  <input
+                  <Input
                     id="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(value) => setEmail(String(value))}
                     type="email"
                     required
                     placeholder={t.auth.login.emailPlaceholder}
@@ -236,10 +237,10 @@ const LoginPage: React.FC = () => {
                   {t.auth.login.passwordLabel} <span className="required">*</span>
                 </label>
                 <div className="input-with-icon">
-                  <input
+                  <Input
                     id="password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(value) => setPassword(String(value))}
                     type={showPassword ? "text" : "password"}
                     required
                     placeholder={t.auth.login.passwordPlaceholder}
@@ -362,10 +363,10 @@ const LoginPage: React.FC = () => {
                 <label htmlFor="resetEmail">
                   {t.auth.forgotPassword.emailLabel} <span className="required">*</span>
                 </label>
-                <input
+                <Input
                   id="resetEmail"
                   value={resetEmail}
-                  onChange={(e) => setResetEmail(e.target.value)}
+                  onChange={(value) => setResetEmail(String(value))}
                   type="email"
                   required
                   placeholder={t.auth.forgotPassword.emailPlaceholder}

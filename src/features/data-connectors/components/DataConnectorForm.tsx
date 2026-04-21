@@ -146,11 +146,11 @@ const APIConfig: React.FC<ConfigComponentProps> = ({
           <label className="block text-sm font-medium text-black mb-1">
             URL <span className="text-red-500">*</span>
           </label>
-          <input
+          <Input
             type="url"
             required
             value={config.url || ""}
-            onChange={(e) => updateConfiguration("url", e.target.value)}
+            onChange={(value) => updateConfiguration("url", String(value))}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black text-sm"
             placeholder="https://api.example.com/endpoint"
           />
@@ -185,10 +185,10 @@ const APIConfig: React.FC<ConfigComponentProps> = ({
             Password
           </label>
           <div className="relative">
-            <input
+            <Input
               type={showPasswords.api_password ? "text" : "password"}
               value={config.password || ""}
-              onChange={(e) => updateConfiguration("password", e.target.value)}
+              onChange={(value) => updateConfiguration("password", String(value))}
               className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
               placeholder="••••••••"
             />
@@ -387,13 +387,12 @@ const APIConfig: React.FC<ConfigComponentProps> = ({
                 <label className="block text-sm font-medium text-black mb-1">
                   Response Timeout (sec)
                 </label>
-                <input
-                  type="number"
+                <Input type="number"
                   value={config.response_timeout || 10}
-                  onChange={(e) =>
+                  onChange={(value) =>
                     updateConfiguration(
                       "response_timeout",
-                      parseInt(e.target.value) || 10,
+                      parseInt(String(value)) || 10,
                     )
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-black text-sm"
@@ -405,13 +404,12 @@ const APIConfig: React.FC<ConfigComponentProps> = ({
                 <label className="block text-sm font-medium text-black mb-1">
                   Thread Count
                 </label>
-                <input
-                  type="number"
+                <Input type="number"
                   value={config.thread_count || 1}
-                  onChange={(e) =>
+                  onChange={(value) =>
                     updateConfiguration(
                       "thread_count",
-                      parseInt(e.target.value) || 1,
+                      parseInt(String(value)) || 1,
                     )
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-black text-sm"
@@ -423,13 +421,12 @@ const APIConfig: React.FC<ConfigComponentProps> = ({
                 <label className="block text-sm font-medium text-black mb-1">
                   Messages Per Second
                 </label>
-                <input
-                  type="number"
+                <Input type="number"
                   value={config.messages_per_second || 10}
-                  onChange={(e) =>
+                  onChange={(value) =>
                     updateConfiguration(
                       "messages_per_second",
-                      parseInt(e.target.value) || 10,
+                      parseInt(String(value)) || 10,
                     )
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-black text-sm"
@@ -441,13 +438,12 @@ const APIConfig: React.FC<ConfigComponentProps> = ({
                 <label className="block text-sm font-medium text-black mb-1">
                   Service Message Throttle
                 </label>
-                <input
-                  type="number"
+                <Input type="number"
                   value={config.service_message_throttle || 1}
-                  onChange={(e) =>
+                  onChange={(value) =>
                     updateConfiguration(
                       "service_message_throttle",
-                      parseInt(e.target.value) || 1,
+                      parseInt(String(value)) || 1,
                     )
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-black text-sm"
@@ -590,10 +586,9 @@ const JDBCConfig: React.FC<ConfigComponentProps> = ({
           <label className="block text-sm font-medium text-black mb-1">
             Host
           </label>
-          <input
-            type="text"
+          <Input type="text"
             value={config.host || ""}
-            onChange={(e) => updateConfiguration("host", e.target.value)}
+            onChange={(value) => updateConfiguration("host", String(value))}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black text-sm"
             placeholder="localhost"
           />
@@ -602,11 +597,10 @@ const JDBCConfig: React.FC<ConfigComponentProps> = ({
           <label className="block text-sm font-medium text-black mb-1">
             Port
           </label>
-          <input
-            type="number"
+          <Input type="number"
             value={config.port || 3306}
-            onChange={(e) =>
-              updateConfiguration("port", parseInt(e.target.value) || 3306)
+            onChange={(value) =>
+              updateConfiguration("port", parseInt(String(value)) || 3306)
             }
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
           />
@@ -629,13 +623,12 @@ const JDBCConfig: React.FC<ConfigComponentProps> = ({
           <label className="block text-sm font-medium text-black mb-1">
             Query Timeout (ms)
           </label>
-          <input
-            type="number"
+          <Input type="number"
             value={config.queries_timemill || 17000000}
-            onChange={(e) =>
+            onChange={(value) =>
               updateConfiguration(
                 "queries_timemill",
-                parseInt(e.target.value) || 17000000,
+                parseInt(String(value)) || 17000000,
               )
             }
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
@@ -660,10 +653,10 @@ const JDBCConfig: React.FC<ConfigComponentProps> = ({
             Password
           </label>
           <div className="relative">
-            <input
+            <Input
               type={showPasswords.jdbc_password ? "text" : "password"}
               value={config.password || ""}
-              onChange={(e) => updateConfiguration("password", e.target.value)}
+              onChange={(value) => updateConfiguration("password", String(value))}
               className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
               placeholder="••••••••"
             />
@@ -778,10 +771,10 @@ const WebSocketConfig: React.FC<ConfigComponentProps> = ({
 
       <div>
         <label className="block text-sm font-medium text-black mb-1">URL</label>
-        <input
+        <Input
           type="url"
           value={config.url || ""}
-          onChange={(e) => updateConfiguration("url", e.target.value)}
+          onChange={(value) => updateConfiguration("url", String(value))}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="ws://localhost:8080"
         />
@@ -816,10 +809,10 @@ const WebSocketConfig: React.FC<ConfigComponentProps> = ({
             Password
           </label>
           <div className="relative">
-            <input
+            <Input
               type={showPasswords.websocket_password ? "text" : "password"}
               value={config.password || ""}
-              onChange={(e) => updateConfiguration("password", e.target.value)}
+              onChange={(value) => updateConfiguration("password", String(value))}
               className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="••••••••"
             />
@@ -999,13 +992,12 @@ const TCPConfig: React.FC<ConfigComponentProps> = ({
           <label className="block text-sm font-medium text-black mb-1">
             Buffer Size
           </label>
-          <input
-            type="number"
+          <Input type="number"
             value={config.buffer_size || 8192}
-            onChange={(e) =>
+            onChange={(value) =>
               updateConfiguration(
                 "buffer_size",
-                parseInt(e.target.value) || 8192,
+                parseInt(String(value)) || 8192,
               )
             }
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -1017,13 +1009,12 @@ const TCPConfig: React.FC<ConfigComponentProps> = ({
           <label className="block text-sm font-medium text-black mb-1">
             Socket Timeout (ms)
           </label>
-          <input
-            type="number"
+          <Input type="number"
             value={config.socket_timeout || 120000}
-            onChange={(e) =>
+            onChange={(value) =>
               updateConfiguration(
                 "socket_timeout",
-                parseInt(e.target.value) || 120000,
+                parseInt(String(value)) || 120000,
               )
             }
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -1233,11 +1224,10 @@ const FilesConfig: React.FC<ConfigComponentProps> = ({
               <label className="block text-sm font-medium text-black mb-1">
                 Port
               </label>
-              <input
-                type="number"
+              <Input type="number"
                 value={config.port || (config.protocol === "sftp" ? 22 : 21)}
-                onChange={(e) =>
-                  updateConfiguration("port", parseInt(e.target.value))
+                onChange={(value) =>
+                  updateConfiguration("port", parseInt(String(value)))
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-black text-sm"
               />
@@ -1261,11 +1251,10 @@ const FilesConfig: React.FC<ConfigComponentProps> = ({
               <label className="block text-sm font-medium text-black mb-1">
                 Password
               </label>
-              <input
-                type="password"
+              <Input type="password"
                 value={config.password || ""}
-                onChange={(e) =>
-                  updateConfiguration("password", e.target.value)
+                onChange={(value) =>
+                  updateConfiguration("password", String(value))
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-black text-sm"
               />
@@ -1294,13 +1283,12 @@ const FilesConfig: React.FC<ConfigComponentProps> = ({
                 <label className="block text-sm font-medium text-black mb-1">
                   Polling Interval (sec)
                 </label>
-                <input
-                  type="number"
+                <Input type="number"
                   value={config.polling_interval || 60}
-                  onChange={(e) =>
+                  onChange={(value) =>
                     updateConfiguration(
                       "polling_interval",
-                      parseInt(e.target.value) || 60,
+                      parseInt(String(value)) || 60,
                     )
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-black text-sm"
@@ -1312,13 +1300,12 @@ const FilesConfig: React.FC<ConfigComponentProps> = ({
                 <label className="block text-sm font-medium text-black mb-1">
                   Max File Size (MB)
                 </label>
-                <input
-                  type="number"
+                <Input type="number"
                   value={config.max_file_size || 100}
-                  onChange={(e) =>
+                  onChange={(value) =>
                     updateConfiguration(
                       "max_file_size",
-                      parseInt(e.target.value) || 100,
+                      parseInt(String(value)) || 100,
                     )
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-black text-sm"
@@ -1616,13 +1603,12 @@ const SMSInboxConfig: React.FC<ConfigComponentProps> = ({
                 <label className="block text-sm font-medium text-black mb-1">
                   Polling Interval (sec)
                 </label>
-                <input
-                  type="number"
+                <Input type="number"
                   value={config.polling_interval || 30}
-                  onChange={(e) =>
+                  onChange={(value) =>
                     updateConfiguration(
                       "polling_interval",
-                      parseInt(e.target.value) || 30,
+                      parseInt(String(value)) || 30,
                     )
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-black text-sm"
@@ -1634,13 +1620,12 @@ const SMSInboxConfig: React.FC<ConfigComponentProps> = ({
                 <label className="block text-sm font-medium text-black mb-1">
                   Max Messages
                 </label>
-                <input
-                  type="number"
+                <Input type="number"
                   value={config.max_messages || 100}
-                  onChange={(e) =>
+                  onChange={(value) =>
                     updateConfiguration(
                       "max_messages",
-                      parseInt(e.target.value) || 100,
+                      parseInt(String(value)) || 100,
                     )
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-black text-sm"
@@ -1686,13 +1671,12 @@ const SMSInboxConfig: React.FC<ConfigComponentProps> = ({
               <label className="block text-sm font-medium text-black mb-1">
                 Retry Failed Messages
               </label>
-              <input
-                type="number"
+              <Input type="number"
                 value={config.retry_count || 3}
-                onChange={(e) =>
+                onChange={(value) =>
                   updateConfiguration(
                     "retry_count",
-                    parseInt(e.target.value) || 3,
+                    parseInt(String(value)) || 3,
                   )
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-black text-sm"
@@ -1793,13 +1777,12 @@ const AdvancedSettings: React.FC<{
               <label className="block text-sm font-medium text-black mb-1">
                 Scalability Factor
               </label>
-              <input
-                type="number"
+              <Input type="number"
                 value={config.scalability_factor || 1}
-                onChange={(e) =>
+                onChange={(value) =>
                   updateConfiguration(
                     "scalability_factor",
-                    parseInt(e.target.value) || 1,
+                    parseInt(String(value)) || 1,
                   )
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-black text-sm"
@@ -1811,13 +1794,12 @@ const AdvancedSettings: React.FC<{
               <label className="block text-sm font-medium text-black mb-1">
                 Max Retry Count
               </label>
-              <input
-                type="number"
+              <Input type="number"
                 value={config.max_retry_count || 3}
-                onChange={(e) =>
+                onChange={(value) =>
                   updateConfiguration(
                     "max_retry_count",
-                    parseInt(e.target.value) || 3,
+                    parseInt(String(value)) || 3,
                   )
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-black text-sm"
@@ -2039,12 +2021,11 @@ const DataConnectorForm: React.FC<DataConnectorFormProps> = ({
                 <label className="block text-sm font-medium text-black mb-1">
                   Name <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
+                <Input type="text"
                   required
                   value={formData.name}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, name: e.target.value }))
+                  onChange={(value) =>
+                    setFormData((prev) => ({ ...prev, name: String(value) }))
                   }
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                   placeholder="Enter connector name"

@@ -29,7 +29,6 @@ import {
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import Checkbox from "../../../shared/components/ui/Checkbox";
-import Input from "../../../shared/components/ui/Input";
 
 const CreateProductModalWrapper = lazy(
   () => import("../../products/components/CreateProductModalWrapper"),

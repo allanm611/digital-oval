@@ -355,7 +355,7 @@ export default function RevenueMetricFormPage({ mode }: RevenueMetricFormPagePro
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Unit (optional)
                 </label>
-                <input
+                <Input
                   type="text"
                   name="unit"
                   value={formData.unit}

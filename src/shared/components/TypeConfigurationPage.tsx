@@ -59,7 +59,6 @@ import CreateButton from "./ui/CreateButton";
 import LoadingSpinner from "./ui/LoadingSpinner";
 import DeleteConfirmModal from "./ui/DeleteConfirmModal";
 import Checkbox from "./ui/Checkbox";
-import Input from "./ui/Input";
 import CreateEditCommunicationChannelModal from "../../features/configurations/components/CreateEditCommunicationChannelModal";
 import RegularModal from "./ui/RegularModal";
 import { useAuth } from "../../contexts/AuthContext";
@@ -260,6 +259,7 @@ function TypeConfigurationModal({
   const isCharacterSet = config.configType === "characterSets";
   const isComboType = config.configType === "comboTypes";
   const isSmsRoutes = config.configType === "smsRoutes";
+  const isEmailRoutes = config.configType === "emailRoutes";
   const isRoutes = config.configType === "routes";
   const isNotificationType = config.configType === "notificationTypes";
   const isResourceTypes = config.configType === "resourceTypes";
@@ -574,6 +574,7 @@ function TypeConfigurationModal({
         (isLanguage ||
           isCharacterSet ||
           isSmsRoutes ||
+          isEmailRoutes ||
           isRoutes ||
           isNotificationType ||
           isResourceTypes) &&
@@ -643,6 +644,7 @@ function TypeConfigurationModal({
         (isLanguage ||
           isCharacterSet ||
           isSmsRoutes ||
+          isEmailRoutes ||
           isRoutes ||
           isNotificationType ||
           isResourceTypes) &&
@@ -687,6 +689,7 @@ function TypeConfigurationModal({
     isCharacterSet,
     isComboType,
     isSmsRoutes,
+    isEmailRoutes,
     isRoutes,
     isNotificationType,
     isResourceTypes,
@@ -799,11 +802,12 @@ function TypeConfigurationModal({
       payload.locale = locale.trim() || undefined;
     }
 
-    // Add custom fields for languages, character sets, SMS routes, routes, notification types, and resource types
+    // Add custom fields for languages, character sets, SMS routes, email routes, routes, notification types, and resource types
     if (
       (isLanguage ||
         isCharacterSet ||
         isSmsRoutes ||
+        isEmailRoutes ||
         isRoutes ||
         isNotificationType ||
         isResourceTypes) &&
@@ -883,6 +887,8 @@ function TypeConfigurationModal({
                 ? "max-w-2xl"
                 : isSmsRoutes
                   ? "max-w-md"
+                  : isEmailRoutes
+                    ? "max-w-lg"
                   : isNotificationType
                     ? "max-w-lg"
                     : "max-w-md"
@@ -969,34 +975,36 @@ function TypeConfigurationModal({
                   variant="medium"
                 />
               ) : (
-                <input
-                  type={config.metadataField.type}
+                <Input
+                  type={config.metadataField.type as any}
                   value={String(metadataValue || "")}
-                  onChange={(e) =>
+                  onChange={(value) =>
                     setMetadataValue(
                       config.metadataField?.type === "number"
-                        ? e.target.value
-                          ? parseFloat(e.target.value)
+                        ? value
+                          ? parseFloat(String(value))
                           : ""
-                        : e.target.value,
+                        : value,
                     )
                   }
-                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                  className="w-full"
+                  variant="medium"
                   placeholder={config.metadataField.placeholder}
                 />
               )}
             </div>
           )}
 
-          {/* Custom Fields (for Languages, Character Sets, SMS Routes, Routes, Notification Types, and Resource Types) */}
+          {/* Custom Fields (for Languages, Character Sets, SMS Routes, Email Routes, Routes, Notification Types, and Resource Types) */}
           {(isLanguage ||
             isCharacterSet ||
             isSmsRoutes ||
+            isEmailRoutes ||
             isRoutes ||
             isNotificationType ||
             isResourceTypes) &&
             config.customFields && (
-              <div className={isNotificationType ? "grid grid-cols-2 gap-4" : "space-y-4"}>
+              <div className={(isNotificationType || isEmailRoutes) ? "grid grid-cols-2 gap-4" : "space-y-4"}>
                 {config.customFields
                   .filter(
                     (field) => !config.hideFields?.includes(field.fieldKey),
@@ -1004,7 +1012,12 @@ function TypeConfigurationModal({
                   .map((field, index) => (
                     <div
                       key={field.fieldKey}
-                      className={isNotificationType && field.fieldKey === "message_template" ? "col-span-2" : ""}
+                      className={
+                        (isNotificationType && field.fieldKey === "message_template") ||
+                        (isEmailRoutes && (field.fieldKey === "gateway_provider" || field.fieldKey === "from_address"))
+                          ? "col-span-2"
+                          : ""
+                      }
                       style={{
                         position: "relative",
                         zIndex: config.customFields!.length - index,
@@ -1038,18 +1051,32 @@ function TypeConfigurationModal({
                           searchable={field.dynamicOptions === "notificationTables" || field.dynamicOptions === "communicationChannels"}
                         />
                       ) : field.type === "number" ? (
-                        <input
+                        <Input
                           type="number"
                           value={customFields[field.fieldKey] || ""}
-                          onChange={(e) =>
+                          onChange={(value) =>
                             setCustomFields((prev) => ({
                               ...prev,
-                              [field.fieldKey]: e.target.value,
+                              [field.fieldKey]: value,
                             }))
                           }
-                          className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                          className="w-full"
+                          variant="medium"
                           placeholder={field.placeholder}
-                          required={field.required}
+                        />
+                      ) : field.type === "password" || field.type === "email" ? (
+                        <Input
+                          type={field.type as any}
+                          value={customFields[field.fieldKey] || ""}
+                          onChange={(value) =>
+                            setCustomFields((prev) => ({
+                              ...prev,
+                              [field.fieldKey]: value,
+                            }))
+                          }
+                          className="w-full"
+                          variant="medium"
+                          placeholder={field.placeholder}
                         />
                       ) : field.type === "textarea" ? (
                         <>
@@ -1857,6 +1884,7 @@ export default function TypeConfigurationPage({
     "vipLists",
     "controlGroups",
     "offerCreatives",
+    "communicationChannels",
   ];
   const useBackendConfig = backendTypes.includes(config.configType);
 
@@ -2637,7 +2665,7 @@ export default function TypeConfigurationPage({
       <div
         className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
       >
-        {backendConfig?.loading ? (
+        {useBackendConfig && backendConfig?.loading ? (
           <div className="text-center py-12">
             <div className="flex justify-center mb-4">
               <LoadingSpinner size="lg" variant="default" />
@@ -2646,16 +2674,10 @@ export default function TypeConfigurationPage({
               Loading {config.entityNamePlural}...
             </p>
           </div>
-        ) : filteredItems.length === 0 ? (
+        ) : useBackendConfig && (backendConfig?.data?.length ?? 0) === 0 ? (
           <div className="text-center py-12">
             <IconComponent className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            {searchTerm && (
-              <p className={`${tw.textMuted} mb-6`}>
-                No {config.entityNamePlural} found. Try adjusting your search
-                terms.
-              </p>
-            )}
-            {!searchTerm && !config.disableCreate && (
+            {!config.disableCreate && (
               <>
                 <p className={`${tw.textMuted} mb-6`}>
                   Create your first {config.entityName} to get started.
@@ -2663,11 +2685,19 @@ export default function TypeConfigurationPage({
                 <CreateButton onClick={handleCreateItem} className="mx-auto" />
               </>
             )}
-            {!searchTerm && config.disableCreate && (
+            {config.disableCreate && (
               <p className={`${tw.textMuted} mb-6`}>
                 No {config.entityNamePlural} available.
               </p>
             )}
+          </div>
+        ) : filteredItems.length === 0 ? (
+          <div className="text-center py-12">
+            <IconComponent className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <p className={`${tw.textMuted} mb-6`}>
+              No {config.entityNamePlural} found. Try adjusting your search
+              terms.
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">

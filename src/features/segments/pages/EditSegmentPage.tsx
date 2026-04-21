@@ -12,6 +12,7 @@ import { segmentService } from "../services/segmentService";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
@@ -233,10 +234,9 @@ export default function EditSegmentPage() {
                 >
                   Segment Name <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
+                <Input type="text"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(value) => setName(String(value))}
                   placeholder="Enter segment name"
                   className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[${color.primary.action}]/20`}
                   disabled={isSaving}
@@ -298,8 +298,8 @@ export default function EditSegmentPage() {
                   <label className="flex items-center">
                     <Radio value="private"
                       checked={visibility === "private"}
-                      onChange={(e) =>
-                        setVisibility(e.target.value as SegmentVisibility)
+                      onChange={(value) =>
+                        setVisibility(String(value) as SegmentVisibility)
                       }
                       className="mr-2"
                       disabled={isSaving} />
@@ -308,8 +308,8 @@ export default function EditSegmentPage() {
                   <label className="flex items-center">
                     <Radio value="public"
                       checked={visibility === "public"}
-                      onChange={(e) =>
-                        setVisibility(e.target.value as SegmentVisibility)
+                      onChange={(value) =>
+                        setVisibility(String(value) as SegmentVisibility)
                       }
                       className="mr-2"
                       disabled={isSaving} />
@@ -337,10 +337,9 @@ export default function EditSegmentPage() {
                 </label>
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2">
-                    <input
-                      type="text"
+                    <Input type="text"
                       value={tagInput}
-                      onChange={(e) => setTagInput(e.target.value)}
+                      onChange={(value) => setTagInput(String(value))}
                       onKeyPress={(e) =>
                         e.key === "Enter" &&
                         (e.preventDefault(), handleAddTag())

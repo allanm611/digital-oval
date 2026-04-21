@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import Input from '../../../shared/components/ui/Input';
 import { Save } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
@@ -691,7 +692,7 @@ export default function SettingsPage() {
               >
                 {t.settings.countryCode}
               </label>
-              <input
+              <Input
                 id="country-code"
                 type="text"
                 value={settings.country_code}

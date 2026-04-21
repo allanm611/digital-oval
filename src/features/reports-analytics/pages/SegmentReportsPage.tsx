@@ -737,7 +737,7 @@ export default function SegmentReportsPage() {
               >
                 From:
               </label>
-              <input
+              <Input
                 id="segment-date-start"
                 type="date"
                 value={customRange.start}
@@ -760,7 +760,7 @@ export default function SegmentReportsPage() {
               >
                 To:
               </label>
-              <input
+              <Input
                 id="segment-date-end"
                 type="date"
                 value={customRange.end}

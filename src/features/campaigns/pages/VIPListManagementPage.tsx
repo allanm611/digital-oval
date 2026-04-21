@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Star, Users, Trash2, Eye, X } from "lucide-react";
+import { Plus, Star, Users, Trash2, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -35,7 +35,7 @@ export interface VIPList {
   id: number;
   name: string;
   description?: string;
-  customer_count?: number | string;
+  member_count?: number;
   rows_imported?: number;
   rows_failed?: number;
   processing_status?: "pending" | "processing" | "completed" | "failed";
@@ -49,14 +49,14 @@ export default function VIPListManagementPage() {
   const navigate = useNavigate();
   const [vipCustomers, setVipCustomers] = useState<VIPCustomer[]>([]);
   const [vipLists, setVipLists] = useState<VIPList[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchTermLists, setSearchTermLists] = useState("");
   const [filterList, setFilterList] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterStatusLists, setFilterStatusLists] = useState<string>("all");
   const [activeTab, setActiveTab] = useState<"customers" | "lists">(
-    "customers",
+    "lists",
   );
   const [isCreateListModalOpen, setIsCreateListModalOpen] = useState(false);
   const [isAddMembersModalOpen, setIsAddMembersModalOpen] = useState(false);
@@ -91,11 +91,11 @@ export default function VIPListManagementPage() {
       } else {
         setVipLists([]);
       }
+      setLoading(false);
     } catch (error) {
       console.error("Failed to fetch VIP lists:", error);
       showError("Failed to fetch VIP lists");
       setVipLists([]);
-    } finally {
       setLoading(false);
     }
   };
@@ -383,6 +383,36 @@ export default function VIPListManagementPage() {
       `}</style>
       <div className="vip-list-tabs flex gap-1 border-b border-gray-200 overflow-x-auto">
         <button
+          onClick={() => setActiveTab("lists")}
+          className={`px-3 sm:px-4 py-2.5 text-sm font-medium transition-colors flex items-center gap-1.5 sm:gap-2 relative flex-shrink-0 ${
+            activeTab === "lists"
+              ? "text-black"
+              : "text-gray-600 hover:text-gray-900"
+          }`}
+        >
+          <Star className="w-4 h-4 flex-shrink-0" />
+          <span className="whitespace-nowrap">VIP Lists</span>
+          <span
+            className="px-1.5 py-0.5 rounded-full text-xs font-medium flex-shrink-0"
+            style={{
+              backgroundColor:
+                activeTab === "lists"
+                  ? `${color.primary.accent}15`
+                  : `${color.text.muted}15`,
+              color:
+                activeTab === "lists" ? color.primary.accent : color.text.muted,
+            }}
+          >
+            {vipLists.length}
+          </span>
+          {activeTab === "lists" && (
+            <div
+              className="absolute bottom-0 left-0 right-0 h-0.5"
+              style={{ backgroundColor: color.primary.accent }}
+            />
+          )}
+        </button>
+        <button
           onClick={() => setActiveTab("customers")}
           className={`px-3 sm:px-4 py-2.5 text-sm font-medium transition-colors flex items-center gap-1.5 sm:gap-2 relative flex-shrink-0 ${
             activeTab === "customers"
@@ -408,36 +438,6 @@ export default function VIPListManagementPage() {
             {vipCustomers.length}
           </span>
           {activeTab === "customers" && (
-            <div
-              className="absolute bottom-0 left-0 right-0 h-0.5"
-              style={{ backgroundColor: color.primary.accent }}
-            />
-          )}
-        </button>
-        <button
-          onClick={() => setActiveTab("lists")}
-          className={`px-3 sm:px-4 py-2.5 text-sm font-medium transition-colors flex items-center gap-1.5 sm:gap-2 relative flex-shrink-0 ${
-            activeTab === "lists"
-              ? "text-black"
-              : "text-gray-600 hover:text-gray-900"
-          }`}
-        >
-          <Star className="w-4 h-4 flex-shrink-0" />
-          <span className="whitespace-nowrap">VIP Lists</span>
-          <span
-            className="px-1.5 py-0.5 rounded-full text-xs font-medium flex-shrink-0"
-            style={{
-              backgroundColor:
-                activeTab === "lists"
-                  ? `${color.primary.accent}15`
-                  : `${color.text.muted}15`,
-              color:
-                activeTab === "lists" ? color.primary.accent : color.text.muted,
-            }}
-          >
-            {vipLists.length}
-          </span>
-          {activeTab === "lists" && (
             <div
               className="absolute bottom-0 left-0 right-0 h-0.5"
               style={{ backgroundColor: color.primary.accent }}
@@ -817,7 +817,7 @@ export default function VIPListManagementPage() {
                         }}
                         disabled={isLoadingListMembers}
                       >
-                        {list.customer_count || 0}
+                        {list.member_count ?? 0}
                       </button>
                     </td>
                     <td
@@ -852,15 +852,14 @@ export default function VIPListManagementPage() {
                         borderBottomRightRadius: "0.375rem",
                       }}
                     >
-                      <div className="flex items-center justify-center gap-2">
-                        <button
-                          onClick={() => handleDeleteVIPList(list)}
-                          className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
-                          title="Delete VIP List"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                      {/* TODO: Add eye icon for detail page view and edit icon when backend provides GET /vip-lists/:id and PUT endpoints */}
+                      <button
+                        onClick={() => handleDeleteVIPList(list)}
+                        className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
+                        title="Delete VIP List"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </td>
                   </tr>
                 ))}

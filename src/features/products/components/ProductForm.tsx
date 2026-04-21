@@ -15,8 +15,7 @@ import TypeSelector from "../../../shared/components/TypeSelector";
 import CreateProductTypeModal from "./CreateProductTypeModal";
 import Input from "../../../shared/components/ui/Input";
 import { TypeConfigurationItem } from "../../../shared/components/TypeConfigurationPage";
-import { tw, color, zIndex } from "../../../shared/utils/utils";
-import { buttons } from "../../../shared/utils/tokens";
+import { tw, color, zIndex, getButtonStyles, button } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useConfigurationData } from "../../../shared/services/configurationDataService";
 import { useBackendProductTypeData } from "../../../shared/hooks/useBackendProductTypeData";
@@ -802,34 +801,40 @@ export default function ProductForm({
                   Tags
                 </label>
                 <div className="space-y-2">
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Type tags separated by commas"
-                      value={tagInput}
-                      onChange={(value) => {
-                        setTagInput(value);
+                  <div className="flex">
+                    <div className="flex-1">
+                      <Input
+                        placeholder="Type tags separated by commas"
+                        value={tagInput}
+                        onChange={(value) => {
+                          setTagInput(value);
 
-                        // Auto-add tag when comma is typed
-                        if (value.includes(",")) {
-                          const tag = value.replace(",", "").trim();
-                          const currentTags = getCurrentTagsAsArray();
-                          if (tag && !currentTags.includes(tag.toLowerCase())) {
-                            const updatedTags = [
-                              ...currentTags,
-                              tag.toLowerCase(),
-                            ];
-                            onInputChange("tags", updatedTags);
-                            setTagInput("");
+                          // Auto-add tag when comma is typed
+                          if (value.includes(",")) {
+                            const tag = value.replace(",", "").trim();
+                            const currentTags = getCurrentTagsAsArray();
+                            if (tag && !currentTags.includes(tag.toLowerCase())) {
+                              const updatedTags = [
+                                ...currentTags,
+                                tag.toLowerCase(),
+                              ];
+                              onInputChange("tags", updatedTags);
+                              setTagInput("");
+                            }
                           }
-                        }
-                      }}
-                      onKeyDown={(e) => {
-                        handleAddTag(e);
-                      }}
-                      onFocus={() => setFocusedField("tags")}
-                      onBlur={() => setFocusedField(null)}
-                      className="flex-1"
-                    />
+                        }}
+                        onKeyDown={(e) => {
+                          handleAddTag(e);
+                        }}
+                        onFocus={() => setFocusedField("tags")}
+                        onBlur={() => setFocusedField(null)}
+                        className="w-full"
+                        style={{
+                          borderTopRightRadius: "0",
+                          borderBottomRightRadius: "0",
+                        }}
+                      />
+                    </div>
                     <button
                       type="button"
                       onClick={() => {
@@ -843,12 +848,13 @@ export default function ProductForm({
                           }
                         }
                       }}
-                      className={`inline-flex items-center px-4 py-2.5 text-sm text-white ${tw.rounded} transition-colors`}
+                      className="px-3 py-2 text-white rounded-r-md flex items-center justify-center text-sm border-l-0"
                       style={{
                         backgroundColor: color.primary.action,
+                        borderColor: color.primary.action,
                       }}
                     >
-                      Add
+                      <Plus className="w-4 h-4" />
                     </button>
                   </div>
                   {getCurrentTagsAsArray().length > 0 && (
@@ -1113,16 +1119,15 @@ export default function ProductForm({
                           Validity (Hours){" "}
                           <span style={{ color: color.status.danger }}>*</span>
                         </label>
-                        <input
-                          type="number"
+                        <Input type="number"
                           min="1"
                           step="1"
                           value={comboData.shared_validity_hours ?? ""}
-                          onChange={(e) =>
+                          onChange={(value) =>
                             setComboData({
                               ...comboData,
-                              shared_validity_hours: e.target.value
-                                ? parseInt(e.target.value, 10)
+                              shared_validity_hours: String(value)
+                                ? parseInt(String(value), 10)
                                 : undefined,
                             })
                           }
@@ -1142,16 +1147,15 @@ export default function ProductForm({
                           Combo Price{" "}
                           <span style={{ color: color.status.danger }}>*</span>
                         </label>
-                        <input
-                          type="number"
+                        <Input type="number"
                           min="0"
                           step="0.01"
                           value={comboData.price ?? ""}
-                          onChange={(e) =>
+                          onChange={(value) =>
                             setComboData({
                               ...comboData,
-                              price: e.target.value
-                                ? parseFloat(e.target.value)
+                              price: String(value)
+                                ? parseFloat(String(value))
                                 : undefined,
                             })
                           }
@@ -1334,8 +1338,7 @@ export default function ProductForm({
                               {tempResourceData.unit &&
                                 `(${tempResourceData.unit})`}
                             </label>
-                            <input
-                              type="number"
+                            <Input type="number"
                               min="0"
                               step="1"
                               value={
@@ -1343,11 +1346,11 @@ export default function ProductForm({
                                   ? ""
                                   : tempResourceData.unit_value
                               }
-                              onChange={(e) => {
+                              onChange={(value) => {
                                 const val =
-                                  e.target.value === ""
+                                  String(value) === ""
                                     ? 0
-                                    : parseFloat(e.target.value);
+                                    : parseFloat(String(value));
                                 setTempResourceData({
                                   ...tempResourceData,
                                   unit_value: isNaN(val) ? 0 : val,
@@ -1367,16 +1370,15 @@ export default function ProductForm({
                               >
                                 Validity (Hours)
                               </label>
-                              <input
-                                type="number"
+                              <Input type="number"
                                 min="1"
                                 step="1"
                                 value={tempResourceData.validity_hours ?? ""}
-                                onChange={(e) =>
+                                onChange={(value) =>
                                   setTempResourceData({
                                     ...tempResourceData,
-                                    validity_hours: e.target.value
-                                      ? parseInt(e.target.value, 10)
+                                    validity_hours: String(value)
+                                      ? parseInt(String(value), 10)
                                       : undefined,
                                   })
                                 }
@@ -1395,16 +1397,15 @@ export default function ProductForm({
                               >
                                 Price
                               </label>
-                              <input
-                                type="number"
+                              <Input type="number"
                                 min="0"
                                 step="0.01"
                                 value={tempResourceData.price ?? ""}
-                                onChange={(e) =>
+                                onChange={(value) =>
                                   setTempResourceData({
                                     ...tempResourceData,
-                                    price: e.target.value
-                                      ? parseFloat(e.target.value)
+                                    price: String(value)
+                                      ? parseFloat(String(value))
                                       : undefined,
                                   })
                                 }
@@ -1493,12 +1494,8 @@ export default function ProductForm({
                             (!comboSettings.shared_daid && !tempResourceData.daid_account)
                           }
                           style={{
-                            background: buttons.bordered.background,
+                            ...getButtonStyles(button.bordered),
                             color: "#000000",
-                            border: buttons.bordered.border,
-                            padding: `${buttons.bordered.paddingY} ${buttons.bordered.paddingX}`,
-                            borderRadius: buttons.bordered.borderRadius,
-                            fontSize: buttons.bordered.fontSize,
                             fontWeight: 500,
                             cursor: (
                               selectedResourceType &&
@@ -1574,13 +1571,8 @@ export default function ProductForm({
                                     }}
                                     disabled={isLoading}
                                     style={{
-                                      background: buttons.action?.background || color.primary.action,
-                                      color: buttons.action?.color || "#FFFFFF",
-                                      padding: `${buttons.action?.paddingY || "0.625rem"} ${buttons.action?.paddingX || "1rem"}`,
-                                      borderRadius: buttons.action?.borderRadius || "0.375rem",
-                                      fontSize: buttons.action?.fontSize || "0.875rem",
+                                      ...getButtonStyles(button.action),
                                       fontWeight: "500",
-                                      border: "none",
                                       cursor: isLoading ? "not-allowed" : "pointer",
                                       opacity: isLoading ? 0.5 : 1,
                                     }}
@@ -1595,12 +1587,7 @@ export default function ProductForm({
                                     }}
                                     disabled={isLoading}
                                     style={{
-                                      background: buttons.bordered?.background || "transparent",
-                                      color: buttons.bordered?.color || "#000000",
-                                      border: buttons.bordered?.border || `1px solid ${color.border.default}`,
-                                      padding: `${buttons.bordered?.paddingY || "0.625rem"} ${buttons.bordered?.paddingX || "1rem"}`,
-                                      borderRadius: buttons.bordered?.borderRadius || "0.375rem",
-                                      fontSize: buttons.bordered?.fontSize || "0.875rem",
+                                      ...getButtonStyles(button.bordered),
                                       fontWeight: "500",
                                       cursor: isLoading ? "not-allowed" : "pointer",
                                       opacity: isLoading ? 0.5 : 1,
@@ -1664,14 +1651,13 @@ export default function ProductForm({
                             >
                               Unit
                             </label>
-                            <input
-                              type="text"
+                            <Input type="text"
                               value={editingCardResourceIndex === index ? editingCardData.unit : getResourceTypeLabel(resource.unit)}
                               disabled={editingCardResourceIndex !== index}
-                              onChange={(e) =>
+                              onChange={(value) =>
                                 setEditingCardData({
                                   ...editingCardData,
-                                  unit: e.target.value,
+                                  unit: String(value),
                                 })
                               }
                               className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm ${
@@ -1690,8 +1676,7 @@ export default function ProductForm({
                             >
                               Value {isDataType(resource.unit) && "(MB)"}
                             </label>
-                            <input
-                              type="number"
+                            <Input type="number"
                               min="0"
                               step="1"
                               value={
@@ -1704,11 +1689,11 @@ export default function ProductForm({
                                   : (resource.unit_value ?? "")
                               }
                               disabled={editingCardResourceIndex !== index}
-                              onChange={(e) => {
+                              onChange={(value) => {
                                 const val =
-                                  e.target.value === ""
+                                  String(value) === ""
                                     ? 0
-                                    : parseFloat(e.target.value);
+                                    : parseFloat(String(value));
                                 setEditingCardData({
                                   ...editingCardData,
                                   unit_value: isNaN(val) ? 0 : val,
@@ -1732,8 +1717,7 @@ export default function ProductForm({
                               >
                                 Validity (Hours)
                               </label>
-                              <input
-                                type="number"
+                              <Input type="number"
                                 min="1"
                                 step="1"
                                 value={
@@ -1742,11 +1726,11 @@ export default function ProductForm({
                                     : resource.validity_hours ?? ""
                                 }
                                 disabled={editingCardResourceIndex !== index}
-                                onChange={(e) =>
+                                onChange={(value) =>
                                   setEditingCardData({
                                     ...editingCardData,
-                                    validity_hours: e.target.value
-                                      ? parseInt(e.target.value, 10)
+                                    validity_hours: String(value)
+                                      ? parseInt(String(value), 10)
                                       : (0 as number),
                                   })
                                 }
@@ -1769,8 +1753,7 @@ export default function ProductForm({
                               >
                                 Price
                               </label>
-                              <input
-                                type="number"
+                              <Input type="number"
                                 min="0"
                                 step="0.01"
                                 value={
@@ -1779,11 +1762,11 @@ export default function ProductForm({
                                     : resource.price ?? ""
                                 }
                                 disabled={editingCardResourceIndex !== index}
-                                onChange={(e) =>
+                                onChange={(value) =>
                                   setEditingCardData({
                                     ...editingCardData,
-                                    price: e.target.value
-                                      ? parseFloat(e.target.value)
+                                    price: String(value)
+                                      ? parseFloat(String(value))
                                       : (0 as number),
                                   })
                                 }
@@ -1806,18 +1789,17 @@ export default function ProductForm({
                               >
                                 DAID Account
                               </label>
-                              <input
-                                type="text"
+                              <Input type="text"
                                 value={
                                   editingCardResourceIndex === index
                                     ? editingCardData.daid_account ?? ""
                                     : resource.daid_account ?? ""
                                 }
                                 disabled={editingCardResourceIndex !== index}
-                                onChange={(e) =>
+                                onChange={(value) =>
                                   setEditingCardData({
                                     ...editingCardData,
-                                    daid_account: e.target.value,
+                                    daid_account: String(value),
                                   })
                                 }
                                 className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm ${
@@ -1899,8 +1881,7 @@ export default function ProductForm({
                   >
                     Value ({currentUnitLabel})
                   </label>
-                  <input
-                    type="number"
+                  <Input type="number"
                     min="0"
                     step="1"
                     value={
@@ -1908,9 +1889,9 @@ export default function ProductForm({
                         ? ""
                         : (formData.unit_value ?? "")
                     }
-                    onChange={(e) => {
+                    onChange={(value) => {
                       const val =
-                        e.target.value === "" ? 0 : parseFloat(e.target.value);
+                        String(value) === "" ? 0 : parseFloat(String(value));
                       onInputChange("unit_value", isNaN(val) ? 0 : val);
                     }}
                     className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
@@ -1929,17 +1910,16 @@ export default function ProductForm({
                       aria-label="Validity period specifies how long the product remains active after purchase (e.g., 24 hours = product expires 24 hours after activation). This should be set together with the Value field."
                     />
                   </label>
-                  <input
-                    type="number"
+                  <Input type="number"
                     min="1"
                     max="8760"
                     step="1"
                     value={formData.validity_hours ?? ""}
-                    onChange={(e) =>
+                    onChange={(value) =>
                       onInputChange(
                         "validity_hours",
-                        e.target.value
-                          ? parseInt(e.target.value, 10)
+                        String(value)
+                          ? parseInt(String(value), 10)
                           : undefined,
                       )
                     }

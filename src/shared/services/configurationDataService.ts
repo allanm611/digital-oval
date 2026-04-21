@@ -15,6 +15,7 @@ import {
   communicationChannelsConfig,
   senderIdsConfig,
   smsRoutesConfig,
+  emailRoutesConfig,
   routesConfig,
   languagesConfig,
   characterSetsConfig,
@@ -40,6 +41,7 @@ export type ConfigurationType =
   | "communicationChannels"
   | "senderIds"
   | "smsRoutes"
+  | "emailRoutes"
   | "routes"
   | "languages"
   | "characterSets"
@@ -71,6 +73,7 @@ class ConfigurationDataService {
     this.listeners.set("communicationChannels", new Set());
     this.listeners.set("senderIds", new Set());
     this.listeners.set("smsRoutes", new Set());
+    this.listeners.set("emailRoutes", new Set());
     this.listeners.set("routes", new Set());
     this.listeners.set("languages", new Set());
     this.listeners.set("characterSets", new Set());
@@ -106,6 +109,7 @@ class ConfigurationDataService {
     ]);
     this.data.set("senderIds", [...senderIdsConfig.initialData]);
     this.data.set("smsRoutes", [...smsRoutesConfig.initialData]);
+    this.data.set("emailRoutes", [...emailRoutesConfig.initialData]);
     this.data.set("routes", [...routesConfig.initialData]);
     this.data.set("languages", [...languagesConfig.initialData]);
     this.data.set("characterSets", [...characterSetsConfig.initialData]);
@@ -250,6 +254,9 @@ class ConfigurationDataService {
         break;
       case "smsRoutes":
         this.setData(type, [...smsRoutesConfig.initialData]);
+        break;
+      case "emailRoutes":
+        this.setData(type, [...emailRoutesConfig.initialData]);
         break;
       case "routes":
         this.setData(type, [...routesConfig.initialData]);

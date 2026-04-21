@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
-import Input from "../../../shared/components/ui/Input";
 import { segmentService } from "../services/segmentService";
 import Pagination from "../../../shared/components/ui/Pagination";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";

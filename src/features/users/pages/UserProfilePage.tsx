@@ -446,7 +446,7 @@ export default function UserProfilePage() {
             </div>
           )}
 
-          <input
+          <Input
             ref={fileInputRef}
             type="file"
             accept="image/*"
@@ -491,7 +491,7 @@ export default function UserProfilePage() {
                 Middle Name
               </label>
               {isEditing ? (
-                <input
+                <Input
                   type="text"
                   name="middle_name"
                   value={formData.middle_name || ""}

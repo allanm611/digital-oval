@@ -343,14 +343,14 @@ function IntervalConfigPanel({
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Interval Value
           </label>
-          <input
+          <Input
             type="number"
             min="1"
             value={localConfig.interval_value}
-            onChange={(e) =>
+            onChange={(value) =>
               setLocalConfig({
                 ...localConfig,
-                interval_value: parseInt(e.target.value) || 1,
+                interval_value: parseInt(String(value)) || 1,
               })
             }
             className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-transparent`}
@@ -384,11 +384,11 @@ function IntervalConfigPanel({
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Description (optional)
         </label>
-        <input
+        <Input
           type="text"
           value={localConfig.description || ""}
-          onChange={(e) =>
-            setLocalConfig({ ...localConfig, description: e.target.value })
+          onChange={(value) =>
+            setLocalConfig({ ...localConfig, description: String(value) })
           }
           className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-transparent`}
           placeholder="e.g., Wait for customer to open first email"
@@ -459,11 +459,11 @@ function ConditionConfigPanel({
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Field
         </label>
-        <input
+        <Input
           type="text"
           value={localConfig.field}
-          onChange={(e) =>
-            setLocalConfig({ ...localConfig, field: e.target.value })
+          onChange={(value) =>
+            setLocalConfig({ ...localConfig, field: String(value) })
           }
           className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-transparent`}
           placeholder="e.g., purchase_amount, email_opened, tier_level"
@@ -500,12 +500,12 @@ function ConditionConfigPanel({
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Value
           </label>
-          <input
+          <Input
             type="text"
             value={String(localConfig.value)}
-            onChange={(e) => {
+            onChange={(value) => {
               // Try to parse as number if possible
-              const val = e.target.value;
+              const val = String(value);
               const numVal = parseFloat(val);
               setLocalConfig({
                 ...localConfig,
@@ -522,11 +522,11 @@ function ConditionConfigPanel({
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Description (optional)
         </label>
-        <input
+        <Input
           type="text"
           value={localConfig.description || ""}
-          onChange={(e) =>
-            setLocalConfig({ ...localConfig, description: e.target.value })
+          onChange={(value) =>
+            setLocalConfig({ ...localConfig, description: String(value) })
           }
           className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-transparent`}
           placeholder="e.g., Only for premium customers"

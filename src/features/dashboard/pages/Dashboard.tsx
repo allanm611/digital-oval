@@ -515,6 +515,10 @@ const SettingsPages = {
     () =>
       import(/* webpackPrefetch: true */ "../../settings/pages/SMSRoutesPage"),
   ),
+  EmailRoutesPage: lazy(
+    () =>
+      import(/* webpackPrefetch: true */ "../../offers/pages/EmailRoutesPage"),
+  ),
   SMSRoutesPage: lazy(
     () =>
       import(/* webpackPrefetch: true */ "../../routes/pages/RoutesContainer"),
@@ -1127,6 +1131,10 @@ export default function Dashboard() {
           <Route
             path="/sms-routes/*"
             element={<SettingsPages.SMSRoutesPage />}
+          />
+          <Route
+            path="/email-routes/*"
+            element={<SettingsPages.EmailRoutesPage />}
           />
           <Route path="/sms-test" element={<SettingsPages.SMSTestPage />} />
           <Route path="/manual-rewards-test" element={<OtherPages.ManualRewardsTestPage />} />

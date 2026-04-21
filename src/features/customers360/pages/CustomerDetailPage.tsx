@@ -19,6 +19,7 @@ import {
 import { colors, buttons } from "../../../shared/utils/tokens";
 import { color, tw } from "../../../shared/utils/utils";
 import BackButton from "../../../shared/components/ui/BackButton";
+import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
 import Radio from "../../../shared/components/ui/Radio";
@@ -28,7 +29,6 @@ import { PermissionGate } from "../../auth/components/PermissionGate";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useToast } from "../../../contexts/ToastContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
-import SearchInput from "../../../shared/components/ui/SearchInput";
 import CreateCommunicationModal from "../../../shared/components/CreateCommunicationModal";
 import EditCustomerModal from "../components/EditCustomerModal";
 import type { CustomerSubscriptionRecord } from "../types/customerSubscription";
@@ -1724,12 +1724,13 @@ export default function CustomerDetailPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    <input
+                    <Input
                       type="text"
                       value={eventSearchTerm}
-                      onChange={(e) => setEventSearchTerm(e.target.value)}
+                      onChange={(value) => setEventSearchTerm(String(value))}
                       placeholder="Search events..."
-                      className={`w-full pl-10 pr-4 py-2.5 text-sm bg-white border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent`}
+                      className="pl-10 pr-4"
+                      variant="medium"
                     />
                   </div>
                   <HeadlessSelect
@@ -1760,12 +1761,13 @@ export default function CustomerDetailPage() {
                   />
                   <div className="relative">
                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
-                    <input
+                    <Input
                       type="date"
                       value={eventDateFrom}
-                      onChange={(e) => setEventDateFrom(e.target.value)}
+                      onChange={(value) => setEventDateFrom(String(value))}
                       placeholder="From Date"
-                      className={`w-full pl-10 pr-10 py-2.5 text-sm bg-white border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent cursor-pointer`}
+                      className="pl-10 pr-10"
+                      variant="medium"
                       onClick={(e) =>
                         (e.currentTarget as HTMLInputElement).showPicker()
                       }
@@ -1781,12 +1783,13 @@ export default function CustomerDetailPage() {
                   </div>
                   <div className="relative">
                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
-                    <input
+                    <Input
                       type="date"
                       value={eventDateTo}
-                      onChange={(e) => setEventDateTo(e.target.value)}
+                      onChange={(value) => setEventDateTo(String(value))}
                       placeholder="To Date"
-                      className={`w-full pl-10 pr-10 py-2.5 text-sm bg-white border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent cursor-pointer`}
+                      className="pl-10 pr-10"
+                      variant="medium"
                       onClick={(e) =>
                         (e.currentTarget as HTMLInputElement).showPicker()
                       }

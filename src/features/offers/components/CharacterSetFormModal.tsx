@@ -221,8 +221,7 @@ export default function CharacterSetFormModal({
                 Character Set Size
                 <span className="text-red-600">*</span>
               </label>
-              <input
-                type="number"
+              <Input type="number"
                 name="character_set_size"
                 value={formData.character_set_size}
                 onChange={handleChange}
@@ -302,7 +301,7 @@ export default function CharacterSetFormModal({
 
           {/* Status */}
           <div className="flex items-center">
-            <input
+            <Input
               type="checkbox"
               name="is_active"
               checked={formData.is_active}

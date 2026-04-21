@@ -42,11 +42,11 @@ export default function PolicyCustomizationPanel({
             <label className={`block ${tw.label} ${tw.textSecondary} mb-2`}>
               Start Time
             </label>
-            <input
+            <Input
               type="time"
               value={timeConfig.startTime}
-              onChange={(e) =>
-                onConfigChange({ ...timeConfig, startTime: e.target.value })
+              onChange={(value) =>
+                onConfigChange({ ...timeConfig, startTime: String(value) })
               }
               className={`${components.input.default} w-full px-3 py-2`}
             />
@@ -55,11 +55,11 @@ export default function PolicyCustomizationPanel({
             <label className={`block ${tw.label} ${tw.textSecondary} mb-2`}>
               End Time
             </label>
-            <input
+            <Input
               type="time"
               value={timeConfig.endTime}
-              onChange={(e) =>
-                onConfigChange({ ...timeConfig, endTime: e.target.value })
+              onChange={(value) =>
+                onConfigChange({ ...timeConfig, endTime: String(value) })
               }
               className={`${components.input.default} w-full px-3 py-2`}
             />
@@ -141,14 +141,14 @@ export default function PolicyCustomizationPanel({
             <label className={`block ${tw.label} ${tw.textSecondary} mb-2`}>
               Maximum Count
             </label>
-            <input
+            <Input
               type="number"
               min="1"
               value={maxConfig.maxCount}
-              onChange={(e) =>
+              onChange={(value) =>
                 onConfigChange({
                   ...maxConfig,
-                  maxCount: parseInt(e.target.value) || 1,
+                  maxCount: parseInt(String(value)) || 1,
                 })
               }
               className={`${components.input.default} w-full px-3 py-2`}
@@ -332,14 +332,14 @@ export default function PolicyCustomizationPanel({
             <label className={`block ${tw.label} ${tw.textSecondary} mb-2`}>
               Priority
             </label>
-            <input
+            <Input
               type="number"
               min="1"
               value={vipConfig.priority || 1}
-              onChange={(e) =>
+              onChange={(value) =>
                 onConfigChange({
                   ...vipConfig,
-                  priority: parseInt(e.target.value) || 1,
+                  priority: parseInt(String(value)) || 1,
                 })
               }
               className={`${components.input.default} w-full px-3 py-2`}

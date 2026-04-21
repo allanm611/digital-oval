@@ -1412,18 +1412,16 @@ export default function ProductCatalogsPage() {
       )}
 
       {/* Pagination */}
-      {filteredCatalogs.length > catalogPageSize && (
-        <div className="flex justify-center mt-6">
-          <Pagination
-            currentPage={catalogPage}
-            pageSize={catalogPageSize}
-            totalItems={filteredCatalogs.length}
-            onPageChange={(newPage) => {
-              setCatalogPage(newPage);
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-          />
-        </div>
+      {!loading && filteredCatalogs.length > 0 && (
+        <Pagination
+          currentPage={catalogPage}
+          pageSize={catalogPageSize}
+          totalItems={filteredCatalogs.length}
+          onPageChange={(newPage) => {
+            setCatalogPage(newPage);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+        />
       )}
           </>
         );
@@ -1464,10 +1462,9 @@ export default function ProductCatalogsPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     {t.productCatalogs.catalogNameLabel} *
                   </label>
-                  <input
-                    type="text"
+                  <Input type="text"
                     value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
+                    onChange={(value) => setEditName(String(value))}
                     className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:outline-none`}
                     placeholder={t.productCatalogs.catalogNamePlaceholder}
                     required
@@ -1620,9 +1617,9 @@ export default function ProductCatalogsPage() {
                         <Radio name="filterType"
                           value={option.value}
                           checked={filterType === option.value}
-                          onChange={(e) =>
+                          onChange={(value) =>
                             setFilterType(
-                              e.target.value as
+                              String(value) as
                                 | "all"
                                 | "active"
                                 | "with_products"
@@ -1649,13 +1646,12 @@ export default function ProductCatalogsPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Exact Name
                     </label>
-                    <input
-                      type="text"
+                    <Input type="text"
                       value={advancedSearch.exactName}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setAdvancedSearch((prev) => ({
                           ...prev,
-                          exactName: e.target.value,
+                          exactName: String(value),
                         }))
                       }
                       className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
@@ -1699,13 +1695,12 @@ export default function ProductCatalogsPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Created After
                       </label>
-                      <input
-                        type="date"
+                      <Input type="date"
                         value={advancedSearch.createdAfter}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setAdvancedSearch((prev) => ({
                             ...prev,
-                            createdAfter: e.target.value,
+                            createdAfter: String(value),
                           }))
                         }
                         className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
@@ -1715,13 +1710,12 @@ export default function ProductCatalogsPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Created Before
                       </label>
-                      <input
-                        type="date"
+                      <Input type="date"
                         value={advancedSearch.createdBefore}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setAdvancedSearch((prev) => ({
                             ...prev,
-                            createdBefore: e.target.value,
+                            createdBefore: String(value),
                           }))
                         }
                         className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
@@ -1735,14 +1729,13 @@ export default function ProductCatalogsPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Min Products
                       </label>
-                      <input
-                        type="number"
+                      <Input type="number"
                         min="0"
                         value={advancedSearch.productCountMin}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setAdvancedSearch((prev) => ({
                             ...prev,
-                            productCountMin: e.target.value,
+                            productCountMin: String(value),
                           }))
                         }
                         className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
@@ -1753,14 +1746,13 @@ export default function ProductCatalogsPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Max Products
                       </label>
-                      <input
-                        type="number"
+                      <Input type="number"
                         min="0"
                         value={advancedSearch.productCountMax}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setAdvancedSearch((prev) => ({
                             ...prev,
-                            productCountMax: e.target.value,
+                            productCountMax: String(value),
                           }))
                         }
                         className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}

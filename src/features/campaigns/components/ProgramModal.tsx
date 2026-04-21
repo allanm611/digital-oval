@@ -159,13 +159,13 @@ export default function ProgramModal({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Budget Total
               </label>
-              <input
+              <Input
                 type="number"
                 value={formData.budget_total}
-                onChange={(e) =>
+                onChange={(value) =>
                   setFormData((prev) => ({
                     ...prev,
-                    budget_total: e.target.value,
+                    budget_total: String(value),
                   }))
                 }
                 className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
@@ -198,17 +198,17 @@ export default function ProgramModal({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Start Date
                 </label>
-                <input
+                <Input
                   type="date"
                   value={formData.start_date}
-                  onChange={(e) => {
+                  onChange={(value) => {
                     setFormData((prev) => ({
                       ...prev,
-                      start_date: e.target.value,
+                      start_date: String(value),
                     }));
                     // Validate dates in real-time
-                    if (e.target.value && formData.end_date) {
-                      if (formData.end_date < e.target.value) {
+                    if (String(value) && formData.end_date) {
+                      if (formData.end_date < String(value)) {
                         setDateError("End date must be after start date");
                       } else {
                         setDateError("");
@@ -224,17 +224,17 @@ export default function ProgramModal({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   End Date
                 </label>
-                <input
+                <Input
                   type="date"
                   value={formData.end_date}
-                  onChange={(e) => {
+                  onChange={(value) => {
                     setFormData((prev) => ({
                       ...prev,
-                      end_date: e.target.value,
+                      end_date: String(value),
                     }));
                     // Validate dates in real-time
-                    if (e.target.value && formData.start_date) {
-                      if (e.target.value < formData.start_date) {
+                    if (String(value) && formData.start_date) {
+                      if (String(value) < formData.start_date) {
                         setDateError("End date must be after start date");
                       } else {
                         setDateError("");

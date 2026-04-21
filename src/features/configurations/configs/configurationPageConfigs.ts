@@ -951,6 +951,37 @@ const hardcodedSMSRoutes: TypeConfigurationItem[] = [
   },
 ];
 
+const hardcodedEmailRoutes: TypeConfigurationItem[] = [
+  {
+    id: 1,
+    name: "SendGrid Primary Route",
+    description: "Primary SendGrid SMTP configuration",
+    isActive: true,
+    gateway_provider: "SENDGRID",
+    smtp_host: "smtp.sendgrid.net",
+    smtp_port: 587,
+    smtp_username: "apikey",
+    smtp_password: "SG.xxxxxxxxxxxxxxxxxxxx",
+    from_address: "noreply@sentra.com",
+    created_at: "2025-01-15T10:30:00Z",
+    updated_at: "2025-01-20T14:45:00Z",
+  },
+  {
+    id: 2,
+    name: "AWS SES Backup Route",
+    description: "AWS SES backup email route",
+    isActive: true,
+    gateway_provider: "AWS_SES",
+    smtp_host: "email-smtp.us-east-1.amazonaws.com",
+    smtp_port: 587,
+    smtp_username: "AKIAIOSFODNN7EXAMPLE",
+    smtp_password: "BF1234567890abcdefghijklmnopqrstuv",
+    from_address: "notifications@sentra.com",
+    created_at: "2025-01-16T11:15:00Z",
+    updated_at: "2025-01-21T15:20:00Z",
+  },
+];
+
 // Hardcoded sample campaigns data for notifications/real entity references
 export const hardcodedCampaigns = [
   {
@@ -2658,6 +2689,86 @@ export const smsRoutesConfig: TypeConfigurationPageConfig = {
   saveErrorMessage: "Please try again later.",
 };
 
+export const emailRoutesConfig: TypeConfigurationPageConfig = {
+  title: "Email Routes",
+  subtitle:
+    "Manage email SMTP routes for message delivery. Routes determine which SMTP provider and configuration is used to send email messages.",
+  entityName: "Email route",
+  entityNamePlural: "Email routes",
+  configType: "emailRoutes",
+  backPath: "/dashboard/communication-channels",
+  icon: Mail,
+  searchPlaceholder: "Search routes...",
+  initialData: hardcodedEmailRoutes,
+  createButtonText: "Create",
+  modalTitle: {
+    create: "Create New Email Route",
+    edit: "Edit Email Route",
+  },
+  nameLabel: "Route Name",
+  nameRequired: true,
+  descriptionLabel: "Description",
+  descriptionRequired: false,
+  nameMaxLength: 100,
+  descriptionMaxLength: 500,
+  customFields: [
+    {
+      fieldKey: "gateway_provider",
+      label: "Gateway Provider",
+      type: "select",
+      required: true,
+      options: [
+        { value: "SENDGRID", label: "SendGrid" },
+        { value: "AWS_SES", label: "AWS SES" },
+        { value: "MAILGUN", label: "Mailgun" },
+        { value: "POSTMARK", label: "Postmark" },
+        { value: "INTERNAL_SMTP", label: "Internal SMTP" },
+        { value: "GMAIL", label: "Gmail" },
+      ],
+    },
+    {
+      fieldKey: "smtp_host",
+      label: "SMTP Host",
+      type: "text",
+      required: true,
+    },
+    {
+      fieldKey: "smtp_port",
+      label: "SMTP Port",
+      type: "number",
+      required: true,
+    },
+    {
+      fieldKey: "smtp_username",
+      label: "SMTP Username",
+      type: "text",
+      required: true,
+    },
+    {
+      fieldKey: "smtp_password",
+      label: "SMTP Password",
+      type: "password",
+      required: true,
+    },
+    {
+      fieldKey: "from_address",
+      label: "From Email Address",
+      type: "email",
+      required: true,
+    },
+  ],
+  statusLabel: "Status",
+  deleteConfirmTitle: "Delete Email Route",
+  deleteConfirmMessage: (name: string) =>
+    `Are you sure you want to delete "${name}"? This may affect email delivery.`,
+  deleteSuccessMessage: (name: string) =>
+    `"${name}" has been deleted successfully.`,
+  createSuccessMessage: "Email route created successfully",
+  updateSuccessMessage: "Email route updated successfully",
+  deleteErrorMessage: "Failed to delete email route",
+  saveErrorMessage: "Please try again later.",
+};
+
 // Routes configuration - Shows all routes from all communication channels
 export const routesConfig: TypeConfigurationPageConfig = {
   title: "Communication Routes",
@@ -3434,6 +3545,12 @@ export function getSmsRoutesConfig(
   _t: (key: string) => string,
 ): TypeConfigurationPageConfig {
   return smsRoutesConfig;
+}
+
+export function getEmailRoutesConfig(
+  _t: (key: string) => string,
+): TypeConfigurationPageConfig {
+  return emailRoutesConfig;
 }
 
 export function getNotificationTypesConfig(

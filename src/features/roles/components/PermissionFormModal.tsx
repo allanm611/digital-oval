@@ -5,6 +5,7 @@ import { Permission, CreatePermissionRequest, UpdatePermissionRequest } from "..
 import { permissionService } from "../services/permissionService";
 import { color } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 
@@ -240,17 +241,13 @@ export default function PermissionFormModal({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Permission Name *
               </label>
-              <input
+              <Input
                 type="text"
-                name="name"
                 value={formData.name}
-                onChange={handleInputChange}
+                onChange={(value) => setFormData({ ...formData, name: String(value) })}
                 placeholder="e.g., User Management"
-                className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 ${
-                  errors.name
-                    ? "border-red-300 focus:ring-red-500"
-                    : "border-gray-300 focus:ring-blue-500"
-                }`}
+                hasError={!!errors.name}
+                variant="medium"
               />
               {errors.name && (
                 <p className="mt-1 text-sm text-red-600">{errors.name}</p>
@@ -261,18 +258,14 @@ export default function PermissionFormModal({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Code *
               </label>
-              <input
+              <Input
                 type="text"
-                name="code"
                 value={formData.code}
-                onChange={handleInputChange}
+                onChange={(value) => setFormData({ ...formData, code: String(value) })}
                 disabled={!!permission}
                 placeholder="e.g., permission.action.resource"
-                className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                  errors.code
-                    ? "border-red-300 focus:ring-red-500"
-                    : "border-gray-300 focus:ring-blue-500"
-                }`}
+                hasError={!!errors.code}
+                variant="medium"
               />
               {errors.code && (
                 <p className="mt-1 text-sm text-red-600">{errors.code}</p>
@@ -327,13 +320,12 @@ export default function PermissionFormModal({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Resource Type ID (Optional)
               </label>
-              <input
+              <Input
                 type="number"
-                name="resource_type_id"
-                value={formData.resource_type_id}
-                onChange={handleInputChange}
-                min="1"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={String(formData.resource_type_id)}
+                onChange={(value) => setFormData({ ...formData, resource_type_id: value === "" ? "" : parseInt(String(value)) || "" })}
+                placeholder="e.g., 1"
+                variant="medium"
               />
             </div>
           </div>

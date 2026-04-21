@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Input from "./ui/Input";
 import { X } from "lucide-react";
 import { productCategoryService } from "../../features/products/services/productCategoryService";
 import { color, tw, zIndex } from "../utils/utils";
@@ -145,10 +146,9 @@ export default function CreateCategoryModal({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Catalog Name *
             </label>
-            <input
-              type="text"
+            <Input type="text"
               value={newCategoryName}
-              onChange={(e) => setNewCategoryName(e.target.value)}
+              onChange={(value) => setNewCategoryName(String(value))}
               className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:outline-none`}
               placeholder="e.g., Data, Voice, SMS..."
               required

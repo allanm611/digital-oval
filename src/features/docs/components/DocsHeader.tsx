@@ -4,6 +4,7 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
+import Input from '../../../shared/components/ui/Input';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Search, ChevronDown } from 'lucide-react';
 import { SearchModal } from './SearchModal';
@@ -96,7 +97,7 @@ export function DocsHeader() {
               className={styles.searchBox}
             >
               <Search size={18} className={styles.searchIcon} />
-              <input
+              <Input
                 type="text"
                 placeholder="Search documentation..."
                 className={styles.searchInput}

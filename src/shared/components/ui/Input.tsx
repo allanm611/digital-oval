@@ -3,13 +3,14 @@ import { tw } from '../../utils/utils';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   placeholder: string;
-  value: string;
-  onChange: (value: string) => void;
+  value: string | number;
+  onChange: (value: string | number) => void;
   disabled?: boolean;
   hasError?: boolean;
   className?: string;
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   variant?: 'default' | 'medium' | 'compact'; // default: px-4 py-2, medium: px-3 py-2, compact: px-3 py-1
+  type?: 'text' | 'number' | 'email' | 'password' | 'tel' | 'url' | 'search' | 'date' | 'time'; // default: text
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(({
@@ -21,6 +22,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
   className = '',
   onKeyDown,
   variant = 'default',
+  type = 'text',
   ...rest
 }, ref) => {
   let paddingClass = 'px-4 py-2'; // default
@@ -39,10 +41,13 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
   return (
     <input
       ref={ref}
-      type="text"
+      type={type}
       placeholder={placeholder}
       value={value}
-      onChange={(e) => onChange(e.target.value)}
+      onChange={(e) => {
+        const newValue = type === 'number' ? (e.target.value === '' ? '' : Number(e.target.value)) : e.target.value;
+        onChange(newValue);
+      }}
       disabled={disabled}
       onKeyDown={onKeyDown}
       className={`w-full ${paddingClass} text-sm border ${borderClass} ${tw.rounded}

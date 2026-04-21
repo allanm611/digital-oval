@@ -42,7 +42,10 @@ import { productService } from "../../products/services/productService";
 import { offerCreativeService } from "../services/offerCreativeService";
 import { communicationChannelService, CommunicationChannel } from "../../../shared/services/communicationChannelService";
 import { smsRouteService } from "../../routes/services/smsRouteService";
+import { emailRouteService } from "../../routes/services/emailRouteService";
 import { SMSRoute } from "../../routes/types/smsRoute";
+import { EmailRoute } from "../../routes/types/emailRoute";
+import { useConfigurationData } from "../../../shared/services/configurationDataService";
 // import { productCategoryService } from "../../products/services/productCategoryService";
 import { OfferCategoryType } from "../types/offerCategory";
 import ProductSelector from "../../products/components/ProductSelector";
@@ -192,6 +195,8 @@ interface StepProps {
   channelsLoading?: boolean;
   smsRoutes?: SMSRoute[];
   smsRoutesLoading?: boolean;
+  emailRoutes?: EmailRoute[];
+  emailRoutesLoading?: boolean;
   onSaveDraft?: () => void;
   onCancel?: () => void;
   offerTypes?: OfferTypeEnum[];
@@ -251,6 +256,8 @@ function BasicInfoStep({
   channelsLoading,
   smsRoutes,
   smsRoutesLoading,
+  emailRoutes,
+  emailRoutesLoading,
   offerTypes,
   offerTypesLoading,
   categoryRefreshTrigger,
@@ -494,71 +501,114 @@ function BasicInfoStep({
           </p>
         </div>
 
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Communication Channel *
-          </label>
-          <HeadlessSelect
-            options={communicationChannels?.map((channel) => ({
-              value: String(channel.id),
-              label: channel.name,
-            })) || []}
-            disabled={channelsLoading}
-            value={
-              formData.communication_channel_id
-                ? String(formData.communication_channel_id)
-                : ""
-            }
-            onChange={(value) => {
-              if (!value) return;
-              setFormData({
-                ...formData,
-                communication_channel_id: Number(value),
-                sms_route_id: undefined, // Reset SMS route when channel changes
-              });
-              if (validationErrors?.communication_channel && clearValidationErrors) {
-                clearValidationErrors();
-              }
-            }}
-            placeholder={channelsLoading ? "Loading..." : "Select communication channel"}
-          />
-          {validationErrors?.communication_channel && (
-            <p className="mt-1 text-sm text-red-600">
-              {validationErrors.communication_channel}
-            </p>
-          )}
-        </div>
-
-        {/* SMS Route - only show when SMS channel is selected */}
-        {formData.communication_channel_id === 2 && (
-          <div>
+        <div className={`flex gap-4 ${(formData.communication_channel_id === 2 || communicationChannels?.find(ch => String(ch.id) === String(formData.communication_channel_id))?.name?.toUpperCase() === "EMAIL") ? 'items-start' : ''}`}>
+          <div className={(() => {
+            const selectedChannel = communicationChannels?.find(ch => String(ch.id) === String(formData.communication_channel_id));
+            const isRouteChannel = formData.communication_channel_id === 2 || selectedChannel?.name?.toUpperCase() === "EMAIL";
+            return isRouteChannel ? 'flex-1' : 'w-full';
+          })()}>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              SMS Route
+              Communication Channel *
             </label>
             <HeadlessSelect
-              options={
-                smsRoutes?.map((route) => ({
-                  value: String(route.id),
-                  label: route.name,
-                })) || []
-              }
-              disabled={smsRoutesLoading}
+              options={communicationChannels?.map((channel) => ({
+                value: String(channel.id),
+                label: channel.name,
+              })) || []}
+              disabled={channelsLoading}
               value={
-                formData.sms_route_id
-                  ? String(formData.sms_route_id)
+                formData.communication_channel_id
+                  ? String(formData.communication_channel_id)
                   : ""
               }
               onChange={(value) => {
                 if (!value) return;
                 setFormData({
                   ...formData,
-                  sms_route_id: Number(value),
+                  communication_channel_id: Number(value),
+                  sms_route_id: undefined, // Reset SMS route when channel changes
+                  email_route_id: undefined, // Reset email route when channel changes
                 });
+                if (validationErrors?.communication_channel && clearValidationErrors) {
+                  clearValidationErrors();
+                }
               }}
-              placeholder={smsRoutesLoading ? "Loading..." : "Select SMS route"}
+              placeholder={channelsLoading ? "Loading..." : "Select communication channel"}
             />
+            {validationErrors?.communication_channel && (
+              <p className="mt-1 text-sm text-red-600">
+                {validationErrors.communication_channel}
+              </p>
+            )}
           </div>
-        )}
+
+          {/* SMS Route - only show when SMS channel is selected */}
+          {formData.communication_channel_id === 2 && (
+            <div className="flex-1">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                SMS Route
+              </label>
+              <HeadlessSelect
+                options={
+                  smsRoutes?.map((route) => ({
+                    value: String(route.id),
+                    label: route.name,
+                  })) || []
+                }
+                disabled={smsRoutesLoading}
+                value={
+                  formData.sms_route_id
+                    ? String(formData.sms_route_id)
+                    : ""
+                }
+                onChange={(value) => {
+                  if (!value) return;
+                  setFormData({
+                    ...formData,
+                    sms_route_id: Number(value),
+                  });
+                }}
+                placeholder={smsRoutesLoading ? "Loading..." : "Select SMS route"}
+              />
+            </div>
+          )}
+
+          {/* Email Route - only show when EMAIL channel is selected */}
+          {(() => {
+            const selectedChannel = communicationChannels?.find(
+              (ch) => String(ch.id) === String(formData.communication_channel_id)
+            );
+            return selectedChannel?.name?.toUpperCase() === "EMAIL" ? (
+              <div className="flex-1">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Email Route
+                </label>
+                <HeadlessSelect
+                  options={
+                    emailRoutes?.map((route: any) => ({
+                      value: String(route.id),
+                      label: route.name,
+                    })) || []
+                  }
+                  disabled={emailRoutesLoading}
+                  value={
+                    formData.email_route_id
+                      ? String(formData.email_route_id)
+                      : ""
+                  }
+                  onChange={(value) => {
+                    if (!value) return;
+                    setFormData({
+                      ...formData,
+                      email_route_id: Number(value),
+                    });
+                  }}
+                  placeholder={emailRoutesLoading ? "Loading..." : "Select email route"}
+                />
+              </div>
+            ) : null;
+          })()}
+        </div>
       </div>
 
       {/* Create Catalog Modal */}
@@ -1835,12 +1885,27 @@ export default function CreateOfferPage({
     loadOfferCategories();
   }, []);
 
-  // SMS routes state
+  // Load SMS routes from API endpoint and Email routes from configuration (dummy data)
   const [smsRoutes, setSmsRoutes] = useState<SMSRoute[]>([]);
-  const [smsRoutesLoading, setSmsRoutesLoading] = useState(true);
+  const [smsRoutesLoading, setSmsRoutesLoading] = useState(false);
+  const emailRoutesConfig = useConfigurationData("emailRoutes");
+  const emailRoutes = emailRoutesConfig?.data?.filter((r: any) => r.isActive || r.is_active) || [];
+  const emailRoutesLoading = !emailRoutesConfig;
 
-  // Load communication channels on component mount
+  // Load routes and communication channels on component mount
   useEffect(() => {
+    const loadRoutes = async () => {
+      try {
+        setSmsRoutesLoading(true);
+        const smsRoutesData = await smsRouteService.getAllRoutes();
+        setSmsRoutes(Array.isArray(smsRoutesData) ? smsRoutesData.filter((r: any) => r.is_active) : []);
+      } catch {
+        setSmsRoutes([]);
+      } finally {
+        setSmsRoutesLoading(false);
+      }
+    };
+
     const loadCommunicationChannels = async () => {
       try {
         setChannelsLoading(true);
@@ -1857,27 +1922,8 @@ export default function CreateOfferPage({
       }
     };
 
+    loadRoutes();
     loadCommunicationChannels();
-  }, []);
-
-  // Load SMS routes on component mount
-  useEffect(() => {
-    const loadSmsRoutes = async () => {
-      try {
-        setSmsRoutesLoading(true);
-        const routes = await smsRouteService.getAllRoutes();
-        setSmsRoutes(
-          Array.isArray(routes) ? routes.filter((r) => r.is_active) : []
-        );
-      } catch {
-        // Failed to load SMS routes
-        // Keep empty array on error
-      } finally {
-        setSmsRoutesLoading(false);
-      }
-    };
-
-    loadSmsRoutes();
   }, []);
 
   // Detect edit mode and load data
@@ -1956,12 +2002,22 @@ export default function CreateOfferPage({
           formData.category_id !== undefined &&
           formData.communication_channel_id !== undefined;
 
+        if (!isBasicInfoValid) return false;
+
+        // Get selected channel
+        const selectedChannel = communicationChannels?.find(ch => String(ch.id) === String(formData.communication_channel_id));
+
         // If SMS channel is selected, SMS route is required
-        if (isBasicInfoValid && formData.communication_channel_id === 2) {
+        if (selectedChannel?.name?.toUpperCase() === "SMS") {
           return formData.sms_route_id !== undefined;
         }
 
-        return isBasicInfoValid;
+        // If EMAIL channel is selected, EMAIL route is required
+        if (selectedChannel?.name?.toUpperCase() === "EMAIL") {
+          return formData.email_route_id !== undefined;
+        }
+
+        return true;
       case 2: // Products step
         return true; // Products are optional; allow proceeding
       case 3: // Creative step
@@ -1993,12 +2049,22 @@ export default function CreateOfferPage({
           formData.category_id !== undefined &&
           formData.communication_channel_id !== undefined;
 
+        if (!isReviewValid) return false;
+
+        // Get selected channel
+        const reviewSelectedChannel = communicationChannels?.find(ch => String(ch.id) === String(formData.communication_channel_id));
+
         // If SMS channel is selected, SMS route is required
-        if (isReviewValid && formData.communication_channel_id === 2) {
+        if (reviewSelectedChannel?.name?.toUpperCase() === "SMS") {
           return formData.sms_route_id !== undefined;
         }
 
-        return isReviewValid;
+        // If EMAIL channel is selected, EMAIL route is required
+        if (reviewSelectedChannel?.name?.toUpperCase() === "EMAIL") {
+          return formData.email_route_id !== undefined;
+        }
+
+        return true;
       default:
         return false;
     }
@@ -2008,6 +2074,7 @@ export default function CreateOfferPage({
     creatives,
     trackingSources,
     rewards,
+    communicationChannels,
     // Removed validationErrors and clearValidationErrors to break circular dependency
   ]);
 
@@ -2539,6 +2606,8 @@ export default function CreateOfferPage({
       channelsLoading,
       smsRoutes,
       smsRoutesLoading,
+      emailRoutes,
+      emailRoutesLoading,
       onSaveDraft: handleSaveDraft,
       onCancel: handleCancel,
       offerTypes,
@@ -2568,6 +2637,8 @@ export default function CreateOfferPage({
       channelsLoading,
       smsRoutes,
       smsRoutesLoading,
+      emailRoutes,
+      emailRoutesLoading,
       handleSaveDraft,
       handleCancel,
       offerTypes,

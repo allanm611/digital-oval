@@ -23,7 +23,6 @@ import {
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import TagInput from "../../../shared/components/ui/TagInput";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import {
   CampaignObjective,

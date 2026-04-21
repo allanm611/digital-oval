@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { CampaignOffer } from "../../types/campaign";
 import { Offer } from "../../../../features/offers/types/offer";
-import { buttons } from "../../../../shared/utils/tokens";
+import { getButtonStyles, button } from "../../../../shared/utils/utils";
 import { offerService } from "../../../../features/offers/services/offerService";
 import { offerCreativeService } from "../../../../features/offers/services/offerCreativeService";
 import { productService } from "../../../../features/products/services/productService";
@@ -109,7 +109,7 @@ export default function OfferPreviewModal({
   if (!isOpen || !offer) return null;
 
   const handleViewDetails = () => {
-    navigate(`/dashboard/offers/${offer.id}`);
+    window.open(`${window.location.origin}/dashboard/offers/${offer.id}`, '_blank');
   };
 
   return (
@@ -287,17 +287,8 @@ export default function OfferPreviewModal({
           <button
             onClick={onClose}
             style={{
-              background: "#F5FCFF",
-              color: "#000000",
-              paddingTop: buttons.secondaryAction.paddingY,
-              paddingBottom: buttons.secondaryAction.paddingY,
-              paddingLeft: buttons.secondaryAction.paddingX,
-              paddingRight: buttons.secondaryAction.paddingX,
-              borderRadius: buttons.secondaryAction.borderRadius,
-              fontSize: buttons.secondaryAction.fontSize,
+              ...getButtonStyles(button.secondaryAction),
               fontWeight: "500",
-              border: "none",
-              cursor: "pointer",
               transition: "background-color 0.2s",
             }}
             onMouseEnter={(e) =>
@@ -313,17 +304,8 @@ export default function OfferPreviewModal({
           <button
             onClick={handleViewDetails}
             style={{
-              background: buttons.action.background,
-              color: buttons.action.color,
-              paddingTop: buttons.action.paddingY,
-              paddingBottom: buttons.action.paddingY,
-              paddingLeft: buttons.action.paddingX,
-              paddingRight: buttons.action.paddingX,
-              borderRadius: buttons.action.borderRadius,
-              fontSize: buttons.action.fontSize,
+              ...getButtonStyles(button.action),
               fontWeight: "500",
-              border: "none",
-              cursor: "pointer",
               transition: "opacity 0.2s",
             }}
             onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}

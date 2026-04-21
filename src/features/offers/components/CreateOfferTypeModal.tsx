@@ -4,6 +4,8 @@ import { offerTypeService } from "../services/offerTypeService";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
+import Input from "../../../shared/components/ui/Input";
+import ModalFooter from "../../../shared/components/ui/ModalFooter";
 
 interface CreateOfferTypeModalProps {
   isOpen: boolean;
@@ -98,13 +100,12 @@ export default function CreateOfferTypeModal({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Type Name *
             </label>
-            <input
+            <Input
               type="text"
               value={newTypeName}
-              onChange={(e) => setNewTypeName(e.target.value)}
-              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:outline-none`}
+              onChange={(value) => setNewTypeName(String(value))}
               placeholder="e.g., Discount, Bundle, Flash Sale..."
-              required
+              variant="medium"
             />
           </div>
 
@@ -121,23 +122,16 @@ export default function CreateOfferTypeModal({
             />
           </div>
 
-          <div className="flex justify-end space-x-3">
-            <button
-              type="button"
-              onClick={handleClose}
-              className={`px-4 py-2 text-gray-700 bg-gray-100 ${tw.rounded} hover:bg-gray-200 transition-colors text-sm`}
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleCreateType}
-              disabled={!newTypeName.trim() || isCreating}
-              className={`px-4 py-2 text-white ${tw.rounded} transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm`}
-              style={{ backgroundColor: color.primary.action }}
-            >
-              {isCreating ? "Creating..." : "Create Type"}
-            </button>
-          </div>
+          <ModalFooter
+            onCancel={handleClose}
+            onConfirm={handleCreateType}
+            cancelText="Cancel"
+            confirmText={isCreating ? "Creating..." : "Create Type"}
+            isLoading={isCreating}
+            disabled={!newTypeName.trim()}
+            confirmClassName={`px-4 py-2 text-white ${tw.rounded} transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm`}
+            confirmStyle={{ backgroundColor: color.primary.action }}
+          />
         </div>
       </div>
     </div>

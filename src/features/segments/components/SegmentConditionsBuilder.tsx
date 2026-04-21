@@ -20,6 +20,7 @@ import {
   SegmentType,
 } from "../types/segment";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
+import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useSegmentationFields } from "../hooks/useSegmentationFields";
 import { getOperatorsForFieldType, DATE_OPERATORS } from "../../../shared/utils/operatorMapper";
@@ -1015,12 +1016,11 @@ export default function SegmentConditionsBuilder({
           {/* Numeric field dual-operator UI - ALL on one line */}
           <div className="flex items-center gap-2 flex-wrap w-full">
             {/* Numeric Value Input */}
-            <input
-              type="number"
+            <Input type="number"
               value={condition.value as string | number}
-              onChange={(e) => {
+              onChange={(value) => {
                 updateCondition(groupId, condition.id, {
-                  value: e.target.value ? parseFloat(e.target.value) : "",
+                  value: String(value) ? parseFloat(String(value)) : "",
                 });
               }}
               placeholder="Enter value"
@@ -1046,17 +1046,16 @@ export default function SegmentConditionsBuilder({
             </div>
 
             {(condition.date_operator || "on") === "on" && (
-              <input
-                type="date"
+              <Input type="date"
                 value={
                   condition.start_date
                     ? condition.start_date.split("T")[0]
                     : ""
                 }
-                onChange={(e) => {
+                onChange={(value) => {
                   updateCondition(groupId, condition.id, {
-                    start_date: e.target.value
-                      ? `${e.target.value}T00:00:00Z`
+                    start_date: String(value)
+                      ? `${String(value)}T00:00:00Z`
                       : undefined,
                   });
                 }}
@@ -1068,17 +1067,16 @@ export default function SegmentConditionsBuilder({
 
             {(condition.date_operator || "on") === "between" && (
               <>
-                <input
-                  type="date"
+                <Input type="date"
                   value={
                     condition.start_date
                       ? condition.start_date.split("T")[0]
                       : ""
                   }
-                  onChange={(e) => {
+                  onChange={(value) => {
                     updateCondition(groupId, condition.id, {
-                      start_date: e.target.value
-                        ? `${e.target.value}T00:00:00Z`
+                      start_date: String(value)
+                        ? `${String(value)}T00:00:00Z`
                         : undefined,
                     });
                   }}
@@ -1086,17 +1084,16 @@ export default function SegmentConditionsBuilder({
                   className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
                   style={{ borderColor: color.border.default }}
                 />
-                <input
-                  type="date"
+                <Input type="date"
                   value={
                     condition.end_date
                       ? condition.end_date.split("T")[0]
                       : ""
                   }
-                  onChange={(e) => {
+                  onChange={(value) => {
                     updateCondition(groupId, condition.id, {
-                      end_date: e.target.value
-                        ? `${e.target.value}T23:59:59Z`
+                      end_date: String(value)
+                        ? `${String(value)}T23:59:59Z`
                         : undefined,
                     });
                   }}
@@ -1108,17 +1105,16 @@ export default function SegmentConditionsBuilder({
             )}
 
             {(condition.date_operator || "on") === "since" && (
-              <input
-                type="date"
+              <Input type="date"
                 value={
                   condition.start_date
                     ? condition.start_date.split("T")[0]
                     : ""
                 }
-                onChange={(e) => {
+                onChange={(value) => {
                   updateCondition(groupId, condition.id, {
-                    start_date: e.target.value
-                      ? `${e.target.value}T00:00:00Z`
+                    start_date: String(value)
+                      ? `${String(value)}T00:00:00Z`
                       : undefined,
                   });
                 }}
@@ -1129,17 +1125,16 @@ export default function SegmentConditionsBuilder({
             )}
 
             {(condition.date_operator || "on") === "until" && (
-              <input
-                type="date"
+              <Input type="date"
                 value={
                   condition.end_date
                     ? condition.end_date.split("T")[0]
                     : ""
                 }
-                onChange={(e) => {
+                onChange={(value) => {
                   updateCondition(groupId, condition.id, {
-                    end_date: e.target.value
-                      ? `${e.target.value}T23:59:59Z`
+                    end_date: String(value)
+                      ? `${String(value)}T23:59:59Z`
                       : undefined,
                   });
                 }}
@@ -1159,17 +1154,16 @@ export default function SegmentConditionsBuilder({
         <>
           <div className="flex items-center gap-2 flex-wrap w-full">
             {condition.operator === "on_date" && (
-              <input
-                type="date"
+              <Input type="date"
                 value={
                   condition.value
                     ? (condition.value as string).split("T")[0]
                     : ""
                 }
-                onChange={(e) => {
+                onChange={(value) => {
                   updateCondition(groupId, condition.id, {
-                    value: e.target.value
-                      ? `${e.target.value}T00:00:00Z`
+                    value: String(value)
+                      ? `${String(value)}T00:00:00Z`
                       : "",
                   });
                 }}
@@ -1181,17 +1175,16 @@ export default function SegmentConditionsBuilder({
 
             {condition.operator === "between_dates" && (
               <>
-                <input
-                  type="date"
+                <Input type="date"
                   value={
                     condition.start_date
                       ? condition.start_date.split("T")[0]
                       : ""
                   }
-                  onChange={(e) => {
+                  onChange={(value) => {
                     updateCondition(groupId, condition.id, {
-                      start_date: e.target.value
-                        ? `${e.target.value}T00:00:00Z`
+                      start_date: String(value)
+                        ? `${String(value)}T00:00:00Z`
                         : undefined,
                     });
                   }}
@@ -1199,17 +1192,16 @@ export default function SegmentConditionsBuilder({
                   className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
                   style={{ borderColor: color.border.default }}
                 />
-                <input
-                  type="date"
+                <Input type="date"
                   value={
                     condition.end_date
                       ? condition.end_date.split("T")[0]
                       : ""
                   }
-                  onChange={(e) => {
+                  onChange={(value) => {
                     updateCondition(groupId, condition.id, {
-                      end_date: e.target.value
-                        ? `${e.target.value}T23:59:59Z`
+                      end_date: String(value)
+                        ? `${String(value)}T23:59:59Z`
                         : undefined,
                     });
                   }}
@@ -1221,17 +1213,16 @@ export default function SegmentConditionsBuilder({
             )}
 
             {condition.operator === "since_date" && (
-              <input
-                type="date"
+              <Input type="date"
                 value={
                   condition.start_date
                     ? condition.start_date.split("T")[0]
                     : ""
                 }
-                onChange={(e) => {
+                onChange={(value) => {
                   updateCondition(groupId, condition.id, {
-                    start_date: e.target.value
-                      ? `${e.target.value}T00:00:00Z`
+                    start_date: String(value)
+                      ? `${String(value)}T00:00:00Z`
                       : undefined,
                   });
                 }}
@@ -1242,17 +1233,16 @@ export default function SegmentConditionsBuilder({
             )}
 
             {condition.operator === "until_date" && (
-              <input
-                type="date"
+              <Input type="date"
                 value={
                   condition.end_date
                     ? condition.end_date.split("T")[0]
                     : ""
                 }
-                onChange={(e) => {
+                onChange={(value) => {
                   updateCondition(groupId, condition.id, {
-                    end_date: e.target.value
-                      ? `${e.target.value}T23:59:59Z`
+                    end_date: String(value)
+                      ? `${String(value)}T23:59:59Z`
                       : undefined,
                   });
                 }}
@@ -1300,17 +1290,16 @@ export default function SegmentConditionsBuilder({
           // less_than/<= → end_date only, between → start_date + end_date
           <div className="flex gap-2">
             {(operator === "equals" || operator === "not equals") && (
-              <input
-                type="date"
+              <Input type="date"
                 placeholder="Date"
                 value={
                   condition.value && typeof condition.value === "string"
                     ? condition.value.split("T")[0]
                     : ""
                 }
-                onChange={(e) => {
+                onChange={(value) => {
                   updateCondition(groupId, condition.id, {
-                    value: e.target.value ? `${e.target.value}T00:00:00Z` : "",
+                    value: String(value) ? `${String(value)}T00:00:00Z` : "",
                   });
                 }}
                 className={`px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[160px] flex-1`}
@@ -1319,16 +1308,15 @@ export default function SegmentConditionsBuilder({
             {(operator === "greater than" ||
               operator === "greater than or equal" ||
               isBetweenOperator) && (
-              <input
-                type="date"
+              <Input type="date"
                 placeholder={isBetweenOperator ? "From date" : "After date"}
                 value={
                   condition.start_date ? condition.start_date.split("T")[0] : ""
                 }
-                onChange={(e) => {
+                onChange={(value) => {
                   updateCondition(groupId, condition.id, {
-                    start_date: e.target.value
-                      ? `${e.target.value}T00:00:00Z`
+                    start_date: String(value)
+                      ? `${String(value)}T00:00:00Z`
                       : undefined,
                   });
                 }}
@@ -1338,16 +1326,15 @@ export default function SegmentConditionsBuilder({
             {(operator === "less than" ||
               operator === "less than or equal" ||
               isBetweenOperator) && (
-              <input
-                type="date"
+              <Input type="date"
                 placeholder={isBetweenOperator ? "To date" : "Before date"}
                 value={
                   condition.end_date ? condition.end_date.split("T")[0] : ""
                 }
-                onChange={(e) => {
+                onChange={(value) => {
                   updateCondition(groupId, condition.id, {
-                    end_date: e.target.value
-                      ? `${e.target.value}T23:59:59Z`
+                    end_date: String(value)
+                      ? `${String(value)}T23:59:59Z`
                       : undefined,
                   });
                 }}
@@ -1358,17 +1345,16 @@ export default function SegmentConditionsBuilder({
         ) : isInListOperator ? (
           // IN / NOT IN — comma-separated input, stored as array
           <div className="flex gap-2 flex-1">
-            <input
-              type="text"
+            <Input type="text"
               placeholder="Enter comma-separated values (e.g. NAIROBI, MOMBASA)"
               value={
                 Array.isArray(condition.value)
                   ? (condition.value as (string | number)[]).join(", ")
                   : (condition.value as string | number) || ""
               }
-              onChange={(e) => {
+              onChange={(value) => {
                 // Store as array by splitting on commas
-                const rawValue = e.target.value;
+                const rawValue = String(value);
                 const valuesArray = rawValue
                   .split(",")
                   .map((v) => v.trim())
@@ -1383,24 +1369,22 @@ export default function SegmentConditionsBuilder({
         ) : isBetweenOperator ? (
           // BETWEEN for non-date fields (numeric) — two value inputs
           <div className="flex gap-2">
-            <input
-              type="number"
+            <Input type="number"
               placeholder="Min"
               value={condition.start_date || ""}
-              onChange={(e) => {
+              onChange={(value) => {
                 updateCondition(groupId, condition.id, {
-                  start_date: e.target.value || undefined,
+                  start_date: String(value) || undefined,
                 });
               }}
               className={`px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[100px] flex-1`}
             />
-            <input
-              type="number"
+            <Input type="number"
               placeholder="Max"
               value={condition.end_date || ""}
-              onChange={(e) => {
+              onChange={(value) => {
                 updateCondition(groupId, condition.id, {
-                  end_date: e.target.value || undefined,
+                  end_date: String(value) || undefined,
                 });
               }}
               className={`px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[100px] flex-1`}
@@ -1428,21 +1412,21 @@ export default function SegmentConditionsBuilder({
           </div>
         ) : (
           // Regular text/number input
-          <input
+          <Input
             type={
               getFieldType(condition.field || "") === "number"
                 ? "number"
                 : "text"
             }
             value={condition.value as string | number}
-            onChange={(e) => {
+            onChange={(value) => {
               const fieldType = getFieldType(condition.field || "");
-              const value =
+              const parsedValue =
                 fieldType === "number"
-                  ? parseFloat(e.target.value) || 0
-                  : e.target.value;
+                  ? parseFloat(String(value)) || 0
+                  : String(value);
               updateCondition(groupId, condition.id, {
-                value,
+                value: parsedValue,
                 type: fieldType,
               });
             }}
@@ -1671,16 +1655,15 @@ export default function SegmentConditionsBuilder({
             <>
               {condition.operator === "on_date" ? (
                 <div className="min-w-[180px] flex-shrink-0">
-                  <input
-                    type="date"
+                  <Input type="date"
                     value={
                       (typeof condition.value === "string"
                         ? condition.value
                         : "") || ""
                     }
-                    onChange={(e) => {
+                    onChange={(value) => {
                       updateCondition(groupId, condition.id, {
-                        value: e.target.value || "",
+                        value: String(value) || "",
                       });
                     }}
                     className={`w-full px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm`}
@@ -1690,15 +1673,14 @@ export default function SegmentConditionsBuilder({
               ) : condition.operator === "between_dates" ? (
                 <>
                   <div className="min-w-[180px] flex-shrink-0">
-                    <input
-                      type="date"
+                    <Input type="date"
                       value={
                         condition.value && typeof condition.value === "object"
                           ? (condition.value as { start: string; end: string })
                               .start || ""
                           : ""
                       }
-                      onChange={(e) => {
+                      onChange={(value) => {
                         const currentVal =
                           condition.value && typeof condition.value === "object"
                             ? (condition.value as {
@@ -1707,7 +1689,7 @@ export default function SegmentConditionsBuilder({
                               })
                             : { start: "", end: "" };
                         updateCondition(groupId, condition.id, {
-                          value: { ...currentVal, start: e.target.value },
+                          value: { ...currentVal, start: String(value) },
                         });
                       }}
                       placeholder="Start date"
@@ -1716,15 +1698,14 @@ export default function SegmentConditionsBuilder({
                     />
                   </div>
                   <div className="min-w-[180px] flex-shrink-0">
-                    <input
-                      type="date"
+                    <Input type="date"
                       value={
                         condition.value && typeof condition.value === "object"
                           ? (condition.value as { start: string; end: string })
                               .end || ""
                           : ""
                       }
-                      onChange={(e) => {
+                      onChange={(value) => {
                         const currentVal =
                           condition.value && typeof condition.value === "object"
                             ? (condition.value as {
@@ -1733,7 +1714,7 @@ export default function SegmentConditionsBuilder({
                               })
                             : { start: "", end: "" };
                         updateCondition(groupId, condition.id, {
-                          value: { ...currentVal, end: e.target.value },
+                          value: { ...currentVal, end: String(value) },
                         });
                       }}
                       placeholder="End date"
@@ -1744,16 +1725,15 @@ export default function SegmentConditionsBuilder({
                 </>
               ) : (
                 <div className="min-w-[100px] max-w-[120px] flex-shrink-0">
-                  <input
-                    type="number"
+                  <Input type="number"
                     value={
                       typeof condition.value === "object"
                         ? ""
                         : condition.value || ""
                     }
-                    onChange={(e) => {
+                    onChange={(value) => {
                       updateCondition(groupId, condition.id, {
-                        value: e.target.value ? parseInt(e.target.value) : "",
+                        value: String(value) ? parseInt(String(value)) : "",
                       });
                     }}
                     placeholder={
@@ -1896,12 +1876,11 @@ export default function SegmentConditionsBuilder({
 
                   {/* Numeric Value Input - Only show if NOT a date operator */}
                   {!isDateOperator && (
-                    <input
-                      type="number"
+                    <Input type="number"
                       value={condition.value as string | number}
-                      onChange={(e) => {
+                      onChange={(value) => {
                         updateCondition(groupId, condition.id, {
-                          value: e.target.value ? parseFloat(e.target.value) : "",
+                          value: String(value) ? parseFloat(String(value)) : "",
                         });
                       }}
                       placeholder="Enter value"
@@ -1934,17 +1913,16 @@ export default function SegmentConditionsBuilder({
                   // When date operator selected directly
                   <>
                     {condition.operator === "on_date" && (
-                      <input
-                        type="date"
+                      <Input type="date"
                         value={
                           condition.value
                             ? (condition.value as string).split("T")[0]
                             : ""
                         }
-                        onChange={(e) => {
+                        onChange={(value) => {
                           updateCondition(groupId, condition.id, {
-                            value: e.target.value
-                              ? `${e.target.value}T00:00:00Z`
+                            value: String(value)
+                              ? `${String(value)}T00:00:00Z`
                               : "",
                           });
                         }}
@@ -1956,38 +1934,36 @@ export default function SegmentConditionsBuilder({
 
                     {condition.operator === "between_dates" && (
                       <>
-                        <input
-                          type="date"
+                        <Input type="date"
                           value={
                             condition.value
                               ? (condition.value as string).split(",")[0] || ""
                               : ""
                           }
-                          onChange={(e) => {
+                          onChange={(value) => {
                             const endDate = condition.value
                               ? (condition.value as string).split(",")[1] || ""
                               : "";
                             updateCondition(groupId, condition.id, {
-                              value: `${e.target.value},${endDate}`,
+                              value: `${String(value)},${endDate}`,
                             });
                           }}
                           placeholder="From date"
                           className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
                           style={{ borderColor: color.border.default }}
                         />
-                        <input
-                          type="date"
+                        <Input type="date"
                           value={
                             condition.value
                               ? (condition.value as string).split(",")[1] || ""
                               : ""
                           }
-                          onChange={(e) => {
+                          onChange={(value) => {
                             const startDate = condition.value
                               ? (condition.value as string).split(",")[0] || ""
                               : "";
                             updateCondition(groupId, condition.id, {
-                              value: `${startDate},${e.target.value}`,
+                              value: `${startDate},${String(value)}`,
                             });
                           }}
                           placeholder="To date"
@@ -1998,17 +1974,16 @@ export default function SegmentConditionsBuilder({
                     )}
 
                     {condition.operator === "since_date" && (
-                      <input
-                        type="date"
+                      <Input type="date"
                         value={
                           condition.value
                             ? (condition.value as string).split("T")[0]
                             : ""
                         }
-                        onChange={(e) => {
+                        onChange={(value) => {
                           updateCondition(groupId, condition.id, {
-                            value: e.target.value
-                              ? `${e.target.value}T00:00:00Z`
+                            value: String(value)
+                              ? `${String(value)}T00:00:00Z`
                               : "",
                           });
                         }}
@@ -2019,17 +1994,16 @@ export default function SegmentConditionsBuilder({
                     )}
 
                     {condition.operator === "until_date" && (
-                      <input
-                        type="date"
+                      <Input type="date"
                         value={
                           condition.value
                             ? (condition.value as string).split("T")[0]
                             : ""
                         }
-                        onChange={(e) => {
+                        onChange={(value) => {
                           updateCondition(groupId, condition.id, {
-                            value: e.target.value
-                              ? `${e.target.value}T23:59:59Z`
+                            value: String(value)
+                              ? `${String(value)}T23:59:59Z`
                               : "",
                           });
                         }}
@@ -2043,17 +2017,16 @@ export default function SegmentConditionsBuilder({
                   // When numeric operator selected, show secondary date inputs based on date_operator
                   <>
                     {(condition.date_operator || "on") === "on" && (
-                      <input
-                        type="date"
+                      <Input type="date"
                         value={
                           condition.start_date
                             ? condition.start_date.split("T")[0]
                             : ""
                         }
-                        onChange={(e) => {
+                        onChange={(value) => {
                           updateCondition(groupId, condition.id, {
-                            start_date: e.target.value
-                              ? `${e.target.value}T00:00:00Z`
+                            start_date: String(value)
+                              ? `${String(value)}T00:00:00Z`
                               : undefined,
                           });
                         }}
@@ -2065,17 +2038,16 @@ export default function SegmentConditionsBuilder({
 
                     {(condition.date_operator || "on") === "between" && (
                       <>
-                        <input
-                          type="date"
+                        <Input type="date"
                           value={
                             condition.start_date
                               ? condition.start_date.split("T")[0]
                               : ""
                           }
-                          onChange={(e) => {
+                          onChange={(value) => {
                             updateCondition(groupId, condition.id, {
-                              start_date: e.target.value
-                                ? `${e.target.value}T00:00:00Z`
+                              start_date: String(value)
+                                ? `${String(value)}T00:00:00Z`
                                 : undefined,
                             });
                           }}
@@ -2083,17 +2055,16 @@ export default function SegmentConditionsBuilder({
                           className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
                           style={{ borderColor: color.border.default }}
                         />
-                        <input
-                          type="date"
+                        <Input type="date"
                           value={
                             condition.end_date
                               ? condition.end_date.split("T")[0]
                               : ""
                           }
-                          onChange={(e) => {
+                          onChange={(value) => {
                             updateCondition(groupId, condition.id, {
-                              end_date: e.target.value
-                                ? `${e.target.value}T23:59:59Z`
+                              end_date: String(value)
+                                ? `${String(value)}T23:59:59Z`
                                 : undefined,
                             });
                           }}
@@ -2105,17 +2076,16 @@ export default function SegmentConditionsBuilder({
                     )}
 
                     {(condition.date_operator || "on") === "since" && (
-                      <input
-                        type="date"
+                      <Input type="date"
                         value={
                           condition.start_date
                             ? condition.start_date.split("T")[0]
                             : ""
                         }
-                        onChange={(e) => {
+                        onChange={(value) => {
                           updateCondition(groupId, condition.id, {
-                            start_date: e.target.value
-                              ? `${e.target.value}T00:00:00Z`
+                            start_date: String(value)
+                              ? `${String(value)}T00:00:00Z`
                               : undefined,
                           });
                         }}
@@ -2126,17 +2096,16 @@ export default function SegmentConditionsBuilder({
                     )}
 
                     {(condition.date_operator || "on") === "until" && (
-                      <input
-                        type="date"
+                      <Input type="date"
                         value={
                           condition.end_date
                             ? condition.end_date.split("T")[0]
                             : ""
                         }
-                        onChange={(e) => {
+                        onChange={(value) => {
                           updateCondition(groupId, condition.id, {
-                            end_date: e.target.value
-                              ? `${e.target.value}T23:59:59Z`
+                            end_date: String(value)
+                              ? `${String(value)}T23:59:59Z`
                               : undefined,
                           });
                         }}
@@ -2180,16 +2149,16 @@ export default function SegmentConditionsBuilder({
                   />
                 </div>
 
-                <input
+                <Input
                   type={
                     condition.operator === "in_last_days"
                       ? "number"
                       : "text"
                   }
                   value={condition.value as string}
-                  onChange={(e) => {
+                  onChange={(value) => {
                     updateCondition(groupId, condition.id, {
-                      value: e.target.value,
+                      value: String(value),
                     });
                   }}
                   placeholder={

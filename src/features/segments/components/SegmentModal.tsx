@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { X, Plus } from "lucide-react";
 import {
   Segment,
   CreateSegmentRequest,
@@ -1240,7 +1240,7 @@ export default function SegmentModal({
                         Tags
                       </label>
                       <div className="space-y-2">
-                        <div className="flex gap-2">
+                        <div className="flex">
                           <div className="flex-1">
                             <Input
                               value={tagInput}
@@ -1271,6 +1271,10 @@ export default function SegmentModal({
                               }}
                               placeholder="Type tags separated by commas (e.g., premium, high-value)"
                               variant="default"
+                              style={{
+                                borderTopRightRadius: "0",
+                                borderBottomRightRadius: "0",
+                              }}
                             />
                           </div>
                           <button
@@ -1291,12 +1295,14 @@ export default function SegmentModal({
                                 }
                               }
                             }}
-                            className={`inline-flex items-center px-4  text-sm text-white ${tw.rounded} transition-colors`}
+                            className="px-3 py-2 text-white rounded-r-md flex items-center justify-center text-sm border-l-0"
                             style={{
                               backgroundColor: color.primary.action,
+                              borderColor: color.primary.action,
                             }}
+                            title="Add tag"
                           >
-                            Add
+                            <Plus className="w-4 h-4" />
                           </button>
                         </div>
                         {formData.tags.length > 0 && (

@@ -497,13 +497,12 @@ export default function ConnectionProfileFormPage({
               <p className="text-xs text-gray-500 mb-2">
                 How many records to process at a time.
               </p>
-              <input
-                type="number"
+              <Input type="number"
                 value={formData.batch_size}
-                onChange={(e) =>
+                onChange={(value) =>
                   setFormData({
                     ...formData,
-                    batch_size: Number(e.target.value),
+                    batch_size: Number(String(value)),
                   })
                 }
                 className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
@@ -518,13 +517,12 @@ export default function ConnectionProfileFormPage({
               <p className="text-xs text-gray-500 mb-2">
                 How many tasks run at the same time for faster processing.
               </p>
-              <input
-                type="number"
+              <Input type="number"
                 value={formData.parallel_threads}
-                onChange={(e) =>
+                onChange={(value) =>
                   setFormData({
                     ...formData,
-                    parallel_threads: Number(e.target.value),
+                    parallel_threads: Number(String(value)),
                   })
                 }
                 className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
@@ -540,13 +538,12 @@ export default function ConnectionProfileFormPage({
               {/* <p className="text-xs text-gray-500 mb-1">
                 Smallest number of connections to keep open to the service. Example: 2 for always-ready SMS connections.
               </p> */}
-              <input
-                type="number"
+              <Input type="number"
                 value={formData.min_pool_size}
-                onChange={(e) =>
+                onChange={(value) =>
                   setFormData({
                     ...formData,
-                    min_pool_size: Number(e.target.value),
+                    min_pool_size: Number(String(value)),
                   })
                 }
                 className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
@@ -561,13 +558,12 @@ export default function ConnectionProfileFormPage({
               {/* <p className="text-xs text-gray-500 mb-1">
                 Largest number of connections allowed at once. 
               </p> */}
-              <input
-                type="number"
+              <Input type="number"
                 value={formData.max_pool_size}
-                onChange={(e) =>
+                onChange={(value) =>
                   setFormData({
                     ...formData,
-                    max_pool_size: Number(e.target.value),
+                    max_pool_size: Number(String(value)),
                   })
                 }
                 className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
@@ -582,13 +578,12 @@ export default function ConnectionProfileFormPage({
               <p className="text-xs text-gray-500 mb-2">
                 How long to wait for a connection before giving up.
               </p>
-              <input
-                type="number"
+              <Input type="number"
                 value={formData.connection_timeout_seconds}
-                onChange={(e) =>
+                onChange={(value) =>
                   setFormData({
                     ...formData,
-                    connection_timeout_seconds: Number(e.target.value),
+                    connection_timeout_seconds: Number(String(value)),
                   })
                 }
                 className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
@@ -603,13 +598,12 @@ export default function ConnectionProfileFormPage({
               <p className="text-xs text-gray-500 mb-2">
                 How long a connection can be unused before closing.
               </p>
-              <input
-                type="number"
+              <Input type="number"
                 value={formData.idle_timeout_seconds}
-                onChange={(e) =>
+                onChange={(value) =>
                   setFormData({
                     ...formData,
-                    idle_timeout_seconds: Number(e.target.value),
+                    idle_timeout_seconds: Number(String(value)),
                   })
                 }
                 className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
@@ -624,13 +618,12 @@ export default function ConnectionProfileFormPage({
               <p className="text-xs text-gray-500 mb-2">
                 Maximum number of retry attempts on failure.
               </p>
-              <input
-                type="number"
+              <Input type="number"
                 value={formData.max_retries}
-                onChange={(e) =>
+                onChange={(value) =>
                   setFormData({
                     ...formData,
-                    max_retries: Number(e.target.value),
+                    max_retries: Number(String(value)),
                   })
                 }
                 className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
@@ -645,13 +638,12 @@ export default function ConnectionProfileFormPage({
               <p className="text-xs text-gray-500 mb-2">
                 Exponential backoff multiplier for retries.
               </p>
-              <input
-                type="number"
+              <Input type="number"
                 value={formData.retry_backoff_multiplier}
-                onChange={(e) =>
+                onChange={(value) =>
                   setFormData({
                     ...formData,
-                    retry_backoff_multiplier: Number(e.target.value),
+                    retry_backoff_multiplier: Number(String(value)),
                   })
                 }
                 className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
@@ -667,13 +659,12 @@ export default function ConnectionProfileFormPage({
               <p className="text-xs text-gray-500 mb-2">
                 Number of failures before circuit opens.
               </p>
-              <input
-                type="number"
+              <Input type="number"
                 value={formData.circuit_breaker_threshold}
-                onChange={(e) =>
+                onChange={(value) =>
                   setFormData({
                     ...formData,
-                    circuit_breaker_threshold: Number(e.target.value),
+                    circuit_breaker_threshold: Number(String(value)),
                   })
                 }
                 className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
@@ -760,11 +751,10 @@ export default function ConnectionProfileFormPage({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Valid From *
               </label>
-              <input
-                type="date"
+              <Input type="date"
                 value={formData.valid_from}
-                onChange={(e) =>
-                  setFormData({ ...formData, valid_from: e.target.value })
+                onChange={(value) =>
+                  setFormData({ ...formData, valid_from: String(value) })
                 }
                 className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-gray-400 cursor-pointer`}
                 required
@@ -775,13 +765,12 @@ export default function ConnectionProfileFormPage({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Valid To
               </label>
-              <input
-                type="date"
+              <Input type="date"
                 value={formData.valid_to || ""}
-                onChange={(e) =>
+                onChange={(value) =>
                   setFormData({
                     ...formData,
-                    valid_to: e.target.value || null,
+                    valid_to: String(value) || null,
                   })
                 }
                 className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-gray-400 cursor-pointer`}
@@ -917,14 +906,13 @@ export default function ConnectionProfileFormPage({
               <p className="text-xs text-gray-500 mb-2">
                 Version of encryption key to use for sensitive data.
               </p>
-              <input
-                type="number"
+              <Input type="number"
                 value={formData.encryption_key_version || ""}
-                onChange={(e) =>
+                onChange={(value) =>
                   setFormData({
                     ...formData,
-                    encryption_key_version: e.target.value
-                      ? Number(e.target.value)
+                    encryption_key_version: String(value)
+                      ? Number(String(value))
                       : undefined,
                   })
                 }

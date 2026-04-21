@@ -44,6 +44,20 @@ export const button = buttons;
 export { zIndex };
 export const zIndexTokens = zIndex;
 
+// Utility function to convert button tokens to CSS style object
+export const getButtonStyles = (buttonToken: typeof buttons.action) => ({
+  background: buttonToken.background,
+  color: buttonToken.color,
+  paddingTop: buttonToken.paddingY,
+  paddingBottom: buttonToken.paddingY,
+  paddingLeft: buttonToken.paddingX,
+  paddingRight: buttonToken.paddingX,
+  borderRadius: buttonToken.borderRadius,
+  fontSize: buttonToken.fontSize,
+  border: buttonToken.border,
+  cursor: "pointer",
+});
+
 // Note/banner styles to avoid hardcoded colors
 export const noteStyles = {
   warning: {

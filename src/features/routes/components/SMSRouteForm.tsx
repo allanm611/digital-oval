@@ -204,11 +204,11 @@ export default function SMSRouteForm({
             </label>
             <div className="flex items-center gap-4">
               <label className="flex items-center gap-2 cursor-pointer">
-                <input
+                <Input
                   type="checkbox"
                   name="is_active"
                   checked={formData.is_active || false}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, is_active: e.target.checked }))}
+                  onChange={(value) => setFormData((prev) => ({ ...prev, is_active: e.target.checked }))}
                   disabled={isLoading}
                   className="w-4 h-4"
                 />

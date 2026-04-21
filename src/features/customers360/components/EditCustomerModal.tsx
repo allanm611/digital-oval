@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { isValidCountryCodePhone } from "../../../shared/utils/validation";
 import { customerService } from "../services/customerServices";
@@ -293,24 +294,26 @@ export default function EditCustomerModal({
               <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
                 Subscription ID
               </label>
-              <input
+              <Input
                 type="text"
                 value={formData.subscriptionId}
+                onChange={() => {}}
                 disabled
-                className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} text-sm bg-gray-100 text-gray-600 cursor-not-allowed`}
+                variant="medium"
+                placeholder=""
               />
             </div>
             <div>
               <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
                 Phone Number (MSISDN) *
               </label>
-              <input
+              <Input
                 type="text"
-                name="msisdn"
                 value={formData.msisdn}
-                onChange={handleInputChange}
+                onChange={(value) => setFormData({ ...formData, msisdn: String(value) })}
+                placeholder="+256..."
                 disabled={isLoading}
-                className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                variant="medium"
               />
             </div>
           </div>
@@ -321,26 +324,26 @@ export default function EditCustomerModal({
               <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
                 First Name *
               </label>
-              <input
+              <Input
                 type="text"
-                name="firstName"
                 value={formData.firstName}
-                onChange={handleInputChange}
+                onChange={(value) => setFormData({ ...formData, firstName: String(value) })}
+                placeholder="John"
                 disabled={isLoading}
-                className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                variant="medium"
               />
             </div>
             <div>
               <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
                 Last Name *
               </label>
-              <input
+              <Input
                 type="text"
-                name="lastName"
                 value={formData.lastName}
-                onChange={handleInputChange}
+                onChange={(value) => setFormData({ ...formData, lastName: String(value) })}
+                placeholder="Doe"
                 disabled={isLoading}
-                className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                variant="medium"
               />
             </div>
           </div>
@@ -351,13 +354,13 @@ export default function EditCustomerModal({
               <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
                 Alternate Phone Numbers (MSISDN)
               </label>
-              <input
+              <Input
                 type="text"
-                name="alternatemsisdns"
                 value={formData.alternatemsisdns}
-                onChange={handleInputChange}
+                onChange={(value) => setFormData({ ...formData, alternatemsisdns: String(value) })}
+                placeholder="+256..., +256..."
                 disabled={isLoading}
-                className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                variant="medium"
               />
             </div>
             <div>
@@ -384,26 +387,26 @@ export default function EditCustomerModal({
               <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
                 Email *
               </label>
-              <input
+              <Input
                 type="email"
-                name="email"
                 value={formData.email}
-                onChange={handleInputChange}
+                onChange={(value) => setFormData({ ...formData, email: String(value) })}
+                placeholder="john@example.com"
                 disabled={isLoading}
-                className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                variant="medium"
               />
             </div>
             <div>
               <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
                 Alternate Email
               </label>
-              <input
+              <Input
                 type="email"
-                name="alternateEmail"
                 value={formData.alternateEmail}
-                onChange={handleInputChange}
+                onChange={(value) => setFormData({ ...formData, alternateEmail: String(value) })}
+                placeholder="john2@example.com"
                 disabled={isLoading}
-                className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                variant="medium"
               />
             </div>
           </div>
@@ -413,13 +416,13 @@ export default function EditCustomerModal({
             <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
               City
             </label>
-            <input
+            <Input
               type="text"
-              name="city"
               value={formData.city}
-              onChange={handleInputChange}
+              onChange={(value) => setFormData({ ...formData, city: String(value) })}
+              placeholder="Kampala"
               disabled={isLoading}
-              className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+              variant="medium"
             />
           </div>
 
@@ -433,13 +436,13 @@ export default function EditCustomerModal({
                 <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
                   Date of Birth
                 </label>
-                <input
-                  type="date"
-                  name="dateOfBirth"
+                <Input
+                  type="text"
                   value={formData.dateOfBirth}
-                  onChange={handleInputChange}
+                  onChange={(value) => setFormData({ ...formData, dateOfBirth: String(value) })}
+                  placeholder="YYYY-MM-DD"
                   disabled={isLoading}
-                  className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                  variant="medium"
                 />
               </div>
               <div>
@@ -485,26 +488,26 @@ export default function EditCustomerModal({
                 <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
                   Region
                 </label>
-                <input
+                <Input
                   type="text"
-                  name="region"
                   value={formData.region}
-                  onChange={handleInputChange}
+                  onChange={(value) => setFormData({ ...formData, region: String(value) })}
+                  placeholder="Central Region"
                   disabled={isLoading}
-                  className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                  variant="medium"
                 />
               </div>
               <div>
                 <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
                   Postal Code
                 </label>
-                <input
+                <Input
                   type="text"
-                  name="postalCode"
                   value={formData.postalCode}
-                  onChange={handleInputChange}
+                  onChange={(value) => setFormData({ ...formData, postalCode: String(value) })}
+                  placeholder="00256"
                   disabled={isLoading}
-                  className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                  variant="medium"
                 />
               </div>
             </div>

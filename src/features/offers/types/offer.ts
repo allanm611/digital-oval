@@ -36,6 +36,7 @@ export interface Offer {
   category_id?: number;
   communication_channel_id?: number; // Communication channel for the offer
   sms_route_id?: number; // SMS route ID (only used when channel is SMS)
+  email_route_id?: number; // Email route ID (only used when channel is EMAIL)
   primary_product_id?: number;
   discount_percentage?: number;
   discount_amount?: number;
@@ -69,6 +70,7 @@ export interface CreateOfferRequest {
   category_id?: string | number;
   communication_channel_id?: number; // Communication channel for the offer
   sms_route_id?: number; // SMS route ID (only used when channel is SMS)
+  email_route_id?: number; // Email route ID (only used when channel is EMAIL)
   primary_product_id?: number;
   discount_percentage?: number;
   discount_amount?: number;
@@ -95,6 +97,7 @@ export interface UpdateOfferRequest {
   category_id?: string | number;
   communication_channel_id?: number; // Communication channel for the offer
   sms_route_id?: number; // SMS route ID (only used when channel is SMS)
+  email_route_id?: number; // Email route ID (only used when channel is EMAIL)
   primary_product_id?: number;
   discount_percentage?: number;
   discount_amount?: number;

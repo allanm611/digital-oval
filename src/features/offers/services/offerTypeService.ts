@@ -71,7 +71,7 @@ class OfferTypeService {
     id: number,
     data: UpdateOfferTypeRequest
   ): Promise<ApiResponse<OfferType>> {
-    return this.request<ApiResponse<OfferType>>("/", {
+    return this.request<ApiResponse<OfferType>>(`/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
     });

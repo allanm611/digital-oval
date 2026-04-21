@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import Input from '../../../shared/components/ui/Input';
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -1180,10 +1181,10 @@ export default function ScheduledJobDetailsPage() {
                   </div>
                 )}
               <div className="flex gap-2">
-                <input
+                <Input
                   type="text"
                   value={newRecipient}
-                  onChange={(e) => setNewRecipient(e.target.value)}
+                  onChange={(value) => setNewRecipient(String(value))}
                   onKeyPress={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
@@ -1234,10 +1235,10 @@ export default function ScheduledJobDetailsPage() {
             </div>
           )}
           <div className="flex gap-2">
-            <input
+            <Input
               type="text"
               value={newTag}
-              onChange={(e) => setNewTag(e.target.value)}
+              onChange={(value) => setNewTag(String(value))}
               onKeyPress={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault();

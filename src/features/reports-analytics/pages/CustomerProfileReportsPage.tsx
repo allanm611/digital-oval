@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import Input from '../../../shared/components/ui/Input';
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import {
   Bar,
@@ -24,7 +25,6 @@ import {
   Repeat,
   Users,
 } from "lucide-react";
-import SearchInput from "../../../shared/components/ui/SearchInput";
 import { colors } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
@@ -1198,7 +1198,7 @@ export default function CustomerProfileReportsPage() {
               >
                 {t.customerProfileReports.from}
               </label>
-              <input
+              <Input
                 id="customer-date-start"
                 type="date"
                 value={customRange.start}
@@ -1220,7 +1220,7 @@ export default function CustomerProfileReportsPage() {
               >
                 {t.customerProfileReports.to}
               </label>
-              <input
+              <Input
                 id="customer-date-end"
                 type="date"
                 value={customRange.end}

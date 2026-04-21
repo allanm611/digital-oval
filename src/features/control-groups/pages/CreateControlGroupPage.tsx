@@ -775,13 +775,13 @@ export default function CreateControlGroupPage() {
                     Control Group Percentage *
                   </label>
                   <div className="flex items-center space-x-4">
-                    <input
+                    <Input
                       type="range"
                       min="1"
                       max="100"
                       value={controlGroupPercentage}
-                      onChange={(e) => {
-                        setControlGroupPercentage(Number(e.target.value));
+                      onChange={(value) => {
+                        setControlGroupPercentage(Number(String(value)));
                         if (percentageError) setPercentageError("");
                       }}
                       className="flex-1"

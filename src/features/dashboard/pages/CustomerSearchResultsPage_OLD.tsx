@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
+import Input from '../../../shared/components/ui/Input';
 import { useLocation, useNavigate } from "react-router-dom";
 import { Mail, MessageSquare, ArrowLeft } from "lucide-react";
-import SearchInput from "../../../shared/components/ui/SearchInput";
 import {
   BarChart,
   Bar,
@@ -624,17 +624,17 @@ export default function CustomerSearchResultsPage() {
                   <option value="push">Push</option>
                   <option value="other">Other</option>
                 </select>
-                <input
+                <Input
                   type="date"
                   value={eventDateFrom}
-                  onChange={(e) => setEventDateFrom(e.target.value)}
+                  onChange={(value) => setEventDateFrom(String(value))}
                   max={getDateConstraints().maxDate}
                   className={`px-4 py-2 text-sm ${tw.rounded} border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500`}
                 />
-                <input
+                <Input
                   type="date"
                   value={eventDateTo}
-                  onChange={(e) => setEventDateTo(e.target.value)}
+                  onChange={(value) => setEventDateTo(String(value))}
                   max={getDateConstraints().maxDate}
                   className={`px-4 py-2 text-sm ${tw.rounded} border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500`}
                 />

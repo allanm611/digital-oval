@@ -43,6 +43,7 @@ import { offerCreativeService } from "../../offers/services/offerCreativeService
 import { segmentService } from "../../segments/services/segmentService";
 import type { CreativeChannel } from "../../offers/types/offerCreative";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
@@ -2725,8 +2726,7 @@ export default function CampaignDetailsPage() {
                     >
                       Campaign ID
                     </label>
-                    <input
-                      type="text"
+                    <Input type="text"
                       readOnly
                       value={campaign?.id || selectedFlow?.campaign_id || ""}
                       className={`w-full px-4 py-2 border ${tw.rounded} text-sm ${tw.textSecondary} bg-gray-50`}
@@ -2870,14 +2870,13 @@ export default function CampaignDetailsPage() {
                       >
                         Step Order
                       </label>
-                      <input
-                        type="number"
+                      <Input type="number"
                         min="1"
                         value={editedFlow.step_order || 1}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setEditedFlow({
                             ...editedFlow,
-                            step_order: parseInt(e.target.value) || 1,
+                            step_order: parseInt(String(value)) || 1,
                           })
                         }
                         className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
@@ -2890,14 +2889,13 @@ export default function CampaignDetailsPage() {
                       >
                         Wait Interval (hours)
                       </label>
-                      <input
-                        type="number"
+                      <Input type="number"
                         min="0"
                         value={editedFlow.wait_interval_hours || 0}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setEditedFlow({
                             ...editedFlow,
-                            wait_interval_hours: parseInt(e.target.value) || 0,
+                            wait_interval_hours: parseInt(String(value)) || 0,
                           })
                         }
                         className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
@@ -2914,14 +2912,13 @@ export default function CampaignDetailsPage() {
                         <span className="text-red-600 ml-1">*</span>
                       )}
                     </label>
-                    <input
-                      type="text"
+                    <Input type="text"
                       placeholder="e.g., 50-50"
                       value={editedFlow.bucket_allocation || ""}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setEditedFlow({
                           ...editedFlow,
-                          bucket_allocation: e.target.value,
+                          bucket_allocation: String(value),
                         })
                       }
                       className={`w-full px-3 py-2 border ${
@@ -2969,13 +2966,12 @@ export default function CampaignDetailsPage() {
                     >
                       Template ID
                     </label>
-                    <input
-                      type="number"
+                    <Input type="number"
                       value={editedFlow.template_id || ""}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setEditedFlow({
                           ...editedFlow,
-                          template_id: parseInt(e.target.value) || undefined,
+                          template_id: parseInt(String(value)) || undefined,
                         })
                       }
                       className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}

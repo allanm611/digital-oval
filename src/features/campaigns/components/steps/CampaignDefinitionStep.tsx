@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import Input from "../../../../shared/components/ui/Input";
 import { ChevronDown, Search, Settings, X, Plus } from "lucide-react";
 import MultiCategorySelector from "../../../../shared/components/MultiCategorySelector";
 import { CreateCampaignRequest } from "../../types/campaign";
@@ -342,11 +343,10 @@ export default function CampaignDefinitionStep({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               {tLanguage.campaigns.campaignDefinition.campaignName}
             </label>
-            <input
-              type="text"
+            <Input type="text"
               value={formData.name}
-              onChange={(e) => {
-                setFormData({ ...formData, name: e.target.value });
+              onChange={(value) => {
+                setFormData({ ...formData, name: String(value) });
                 if (validationErrors.name && clearValidationErrors) {
                   clearValidationErrors();
                 }
@@ -496,11 +496,10 @@ export default function CampaignDefinitionStep({
                   <div className="p-2">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <input
-                        type="text"
+                      <Input type="text"
                         value={lineOfBusinessSearchTerm}
-                        onChange={(e) =>
-                          setLineOfBusinessSearchTerm(e.target.value)
+                        onChange={(value) =>
+                          setLineOfBusinessSearchTerm(String(value))
                         }
                         className={`w-full pl-10 pr-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:ring-1 focus:ring-[#588157] focus:border-[#588157]`}
                         placeholder="Search line of business..."
@@ -601,11 +600,10 @@ export default function CampaignDefinitionStep({
                   <div className="p-2">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <input
-                        type="text"
+                      <Input type="text"
                         value={departmentSearchTerm}
-                        onChange={(e) =>
-                          setDepartmentSearchTerm(e.target.value)
+                        onChange={(value) =>
+                          setDepartmentSearchTerm(String(value))
                         }
                         className={`w-full pl-10 pr-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:ring-1 focus:ring-[#588157] focus:border-[#588157]`}
                         placeholder="Search departments..."
@@ -665,26 +663,31 @@ export default function CampaignDefinitionStep({
               Campaign Tags
             </label>
             <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <input
-                  type="text"
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleAddTag();
-                    }
-                  }}
-                  placeholder="Enter a tag and press Enter"
-                  className={`flex-1 px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-1 focus:ring-[#588157] focus:border-[#588157] text-sm`}
-                />
+              <div className="flex">
+                <div className="flex-1">
+                  <Input type="text"
+                    value={tagInput}
+                    onChange={(value) => setTagInput(String(value))}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddTag();
+                      }
+                    }}
+                    placeholder="Enter a tag and press Enter"
+                    className="w-full"
+                    style={{
+                      borderTopRightRadius: "0",
+                      borderBottomRightRadius: "0",
+                    }}
+                  />
+                </div>
                 <button
                   type="button"
                   onClick={handleAddTag}
                   disabled={!tagInput.trim()}
-                  className={`px-3 py-2 text-sm font-medium text-white ${tw.rounded} disabled:opacity-50 disabled:cursor-not-allowed`}
-                  style={{ backgroundColor: color.primary.action }}
+                  className="px-3 py-2 text-white rounded-r-md flex items-center justify-center text-sm border-l-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: color.primary.action, borderColor: color.primary.action }}
                 >
                   <Plus className="w-4 h-4" />
                 </button>
@@ -763,10 +766,9 @@ export default function CampaignDefinitionStep({
                   <div className="p-2">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <input
-                        type="text"
+                      <Input type="text"
                         value={programSearchTerm}
-                        onChange={(e) => setProgramSearchTerm(e.target.value)}
+                        onChange={(value) => setProgramSearchTerm(String(value))}
                         className={`w-full pl-10 pr-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:ring-1 focus:ring-[#588157] focus:border-[#588157]`}
                         placeholder="Search programs..."
                       />
@@ -867,10 +869,9 @@ export default function CampaignDefinitionStep({
                   <div className="p-2">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <input
-                        type="text"
+                      <Input type="text"
                         value={objectiveSearchTerm}
-                        onChange={(e) => setObjectiveSearchTerm(e.target.value)}
+                        onChange={(value) => setObjectiveSearchTerm(String(value))}
                         className={`w-full pl-10 pr-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:ring-1 focus:ring-[#588157] focus:border-[#588157]`}
                         placeholder="Search objectives..."
                       />
@@ -1197,16 +1198,15 @@ export default function CampaignDefinitionStep({
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
               {getCurrencySymbol()}
             </span>
-            <input
-              type="number"
+            <Input type="number"
               min="0"
               step="0.01"
               value={formData.budget_allocated || ""}
-              onChange={(e) => {
-                const value = e.target.value;
+              onChange={(value) => {
+                const budgetValue = String(value);
                 setFormData({
                   ...formData,
-                  budget_allocated: value ? parseFloat(value) : undefined,
+                  budget_allocated: budgetValue ? parseFloat(budgetValue) : undefined,
                 });
                 if (
                   validationErrors.budget_allocated &&
@@ -1238,16 +1238,16 @@ export default function CampaignDefinitionStep({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               {tLanguage.campaigns.campaignDefinition.startDate}
             </label>
-            <input
+            <Input
               type="datetime-local"
               value={
                 formData.start_date
                   ? new Date(formData.start_date).toISOString().slice(0, 16)
                   : ""
               }
-              onChange={(e) => {
-                const dateValue = e.target.value
-                  ? new Date(e.target.value).toISOString()
+              onChange={(value) => {
+                const dateValue = String(value)
+                  ? new Date(String(value)).toISOString()
                   : undefined;
                 setFormData({ ...formData, start_date: dateValue });
               }}
@@ -1266,16 +1266,16 @@ export default function CampaignDefinitionStep({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               {tLanguage.campaigns.campaignDefinition.endDate}
             </label>
-            <input
+            <Input
               type="datetime-local"
               value={
                 formData.end_date
                   ? new Date(formData.end_date).toISOString().slice(0, 16)
                   : ""
               }
-              onChange={(e) => {
-                const dateValue = e.target.value
-                  ? new Date(e.target.value).toISOString()
+              onChange={(value) => {
+                const dateValue = String(value)
+                  ? new Date(String(value)).toISOString()
                   : undefined;
                 setFormData({ ...formData, end_date: dateValue });
                 if (validationErrors.end_date && clearValidationErrors) {

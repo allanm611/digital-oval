@@ -228,7 +228,7 @@ export default function MultiCategorySelector({
           type="button"
           onClick={() => !disabled && setIsOpen(!isOpen)}
           disabled={disabled}
-          className={`flex-1 px-4 py-2 text-left border ${tw.rounded} text-sm transition-all min-h-[42px] ${
+          className={`flex-1 px-4 py-2 text-left border ${tw.rounded} text-sm transition-all ${
             disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"
           } ${
             isFocused

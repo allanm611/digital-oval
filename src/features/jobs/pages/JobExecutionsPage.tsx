@@ -866,14 +866,13 @@ export default function JobExecutionsPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Job ID
                       </label>
-                      <input
-                        type="number"
+                      <Input type="number"
                         className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
                         placeholder="Filter by job ID"
                         value={jobIdFilter}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setJobIdFilter(
-                            e.target.value ? Number(e.target.value) : "",
+                            String(value) ? Number(String(value)) : "",
                           )
                         }
                       />
@@ -882,13 +881,12 @@ export default function JobExecutionsPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Days Back
                       </label>
-                      <input
-                        type="number"
+                      <Input type="number"
                         className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
                         placeholder="7"
                         value={daysBackFilter}
-                        onChange={(e) =>
-                          setDaysBackFilter(Number(e.target.value) || 7)
+                        onChange={(value) =>
+                          setDaysBackFilter(Number(String(value)) || 7)
                         }
                       />
                     </div>
@@ -896,46 +894,42 @@ export default function JobExecutionsPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Start Date
                       </label>
-                      <input
-                        type="date"
+                      <Input type="date"
                         className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
                         value={startDateFilter}
-                        onChange={(e) => setStartDateFilter(e.target.value)}
+                        onChange={(value) => setStartDateFilter(String(value))}
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         End Date
                       </label>
-                      <input
-                        type="date"
+                      <Input type="date"
                         className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
                         value={endDateFilter}
-                        onChange={(e) => setEndDateFilter(e.target.value)}
+                        onChange={(value) => setEndDateFilter(String(value))}
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Correlation ID
                       </label>
-                      <input
-                        type="text"
+                      <Input type="text"
                         className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
                         placeholder="Filter by correlation ID"
                         value={correlationIdFilter}
-                        onChange={(e) => setCorrelationIdFilter(e.target.value)}
+                        onChange={(value) => setCorrelationIdFilter(String(value))}
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Trace ID
                       </label>
-                      <input
-                        type="text"
+                      <Input type="text"
                         className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
                         placeholder="Filter by trace ID"
                         value={traceIdFilter}
-                        onChange={(e) => setTraceIdFilter(e.target.value)}
+                        onChange={(value) => setTraceIdFilter(String(value))}
                       />
                     </div>
                     {quickFilter === "long-running" && (
@@ -943,14 +937,13 @@ export default function JobExecutionsPage() {
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Threshold (minutes)
                         </label>
-                        <input
-                          type="number"
+                        <Input type="number"
                           className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
                           placeholder="60"
                           value={longRunningThreshold}
-                          onChange={(e) =>
+                          onChange={(value) =>
                             setLongRunningThreshold(
-                              Number(e.target.value) || 60,
+                              Number(String(value)) || 60,
                             )
                           }
                         />

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import Input from '../../../../shared/components/ui/Input';
 import { useNavigate } from "react-router-dom";
 import { Plus, Trash2, Eye, Edit } from "lucide-react";
 import {
@@ -7,7 +8,7 @@ import {
   CampaignOffer,
 } from "../../types/campaign";
 import { CampaignFlowConfig, CampaignFlowType } from "../../types/campaignFlow";
-import { color, tw, components } from "../../../../shared/utils/utils";
+import { color, tw, components, getButtonStyles, button } from "../../../../shared/utils/utils";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
 import OfferSelectionModal from "./OfferSelectionModal";
 import OfferPreviewModal from "./OfferPreviewModal";
@@ -326,11 +327,11 @@ export default function CampaignFlowsStep({
                         {(formData.campaign_type === "ab_test" ||
                           formData.campaign_type === "champion_challenger") && (
                           <td className="px-4 py-3">
-                            <input
+                            <Input
                               type="text"
                               value={flowState.allocation || ""}
-                              onChange={(e) =>
-                                handleUpdateAllocation(segment.id, e.target.value)
+                              onChange={(value) =>
+                                handleUpdateAllocation(segment.id, String(value))
                               }
                               placeholder={
                                 formData.campaign_type === "ab_test"
@@ -348,13 +349,18 @@ export default function CampaignFlowsStep({
                           </td>
                         )}
                         <td className="px-4 py-3">
-                          <div className="flex items-center justify-end gap-2">
+                          <div className="flex items-center justify-end">
                             <button
                               onClick={() => handleSelectOffers(segment.id)}
-                              className="p-1.5 text-gray-900 rounded transition-colors cursor-pointer hover:bg-gray-100"
-                              title="Select Offers"
+                              style={{
+                                ...getButtonStyles(button.action),
+                                fontWeight: "500",
+                                transition: "opacity 0.2s",
+                              }}
+                              onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
+                              onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
                             >
-                              <Plus className="w-4 h-4" />
+                              Add Offer
                             </button>
                           </div>
                         </td>
@@ -377,18 +383,18 @@ export default function CampaignFlowsStep({
                         <div className="text-sm text-gray-900">{offer.name}</div>
                       </td>
                       {/* <td className="px-4 py-3">
-                        <input
+                        <Input
                           type="text"
                           inputMode="numeric"
                           min="0"
                           placeholder="0"
                           value={flowState.offerWaitHours[offer.id] || 0}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            if (value === "") {
+                          onChange={(value) => {
+                            const stringValue = String(value);
+                            if (stringValue === "") {
                               handleUpdateWaitHours(segment.id, offer.id, 0);
                             } else {
-                              const numValue = parseInt(value, 10);
+                              const numValue = parseInt(stringValue, 10);
                               if (!isNaN(numValue) && numValue >= 0) {
                                 handleUpdateWaitHours(
                                   segment.id,
@@ -399,7 +405,7 @@ export default function CampaignFlowsStep({
                             }
                           }}
                           onBlur={(e) => {
-                            if (e.target.value === "") {
+                            if (String(value) === "") {
                               handleUpdateWaitHours(segment.id, offer.id, 0);
                             }
                           }}
@@ -415,11 +421,11 @@ export default function CampaignFlowsStep({
                       {(formData.campaign_type === "ab_test" ||
                         formData.campaign_type === "champion_challenger") && (
                         <td className="px-4 py-3">
-                          <input
+                          <Input
                             type="text"
                             value={flowState.allocation || ""}
-                            onChange={(e) =>
-                              handleUpdateAllocation(segment.id, e.target.value)
+                            onChange={(value) =>
+                              handleUpdateAllocation(segment.id, String(value))
                             }
                             placeholder={
                               formData.campaign_type === "ab_test"
@@ -453,13 +459,6 @@ export default function CampaignFlowsStep({
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleSelectOffers(segment.id)}
-                            className="p-1.5 text-gray-900 rounded transition-colors cursor-pointer hover:bg-gray-100"
-                            title="Add More Offers"
-                          >
-                            <Plus className="w-4 h-4" />
-                          </button>
-                          <button
                             onClick={() =>
                               handleRemoveOffer(segment.id, offer.id)
                             }
@@ -467,6 +466,18 @@ export default function CampaignFlowsStep({
                             title="Remove This Offer"
                           >
                             <Trash2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleSelectOffers(segment.id)}
+                            style={{
+                              ...getButtonStyles(button.action),
+                              fontWeight: "500",
+                              transition: "opacity 0.2s",
+                            }}
+                            onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
+                            onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+                          >
+                            Add Offer
                           </button>
                         </div>
                       </td>

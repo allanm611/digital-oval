@@ -1,3 +1,4 @@
+import Input from '../../../shared/components/ui/Input';
 import React, { useState, useCallback, useEffect, useMemo } from "react";
 import {
   Trash2,
@@ -626,11 +627,11 @@ export default function TeamRolesPermissionsPage() {
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
+              <Input
                 type="text"
                 placeholder="Search roles..."
                 value={rolesSearch}
-                onChange={(e) => setRolesSearch(e.target.value)}
+                onChange={(value) => setRolesSearch(String(value))}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -883,11 +884,11 @@ export default function TeamRolesPermissionsPage() {
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
+              <Input
                 type="text"
                 placeholder="Search permissions..."
                 value={permissionsSearch}
-                onChange={(e) => setPermissionsSearch(e.target.value)}
+                onChange={(value) => setPermissionsSearch(String(value))}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -1246,11 +1247,11 @@ export default function TeamRolesPermissionsPage() {
                 <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
                   Role Name
                 </label>
-                <input
+                <Input
                   type="text"
                   value={cloneFormData.name}
-                  onChange={(e) =>
-                    setCloneFormData({ ...cloneFormData, name: e.target.value })
+                  onChange={(value) =>
+                    setCloneFormData({ ...cloneFormData, name: String(value) })
                   }
                   placeholder="Enter role name"
                   className={`w-full px-3 py-2 border border-gray-300 text-sm rounded focus:outline-none focus:ring-2 focus:ring-blue-500`}
@@ -1262,11 +1263,11 @@ export default function TeamRolesPermissionsPage() {
                 <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
                   Role Code
                 </label>
-                <input
+                <Input
                   type="text"
                   value={cloneFormData.code}
-                  onChange={(e) =>
-                    setCloneFormData({ ...cloneFormData, code: e.target.value })
+                  onChange={(value) =>
+                    setCloneFormData({ ...cloneFormData, code: String(value) })
                   }
                   placeholder="Enter role code"
                   className={`w-full px-3 py-2 border border-gray-300 text-sm rounded focus:outline-none focus:ring-2 focus:ring-blue-500`}

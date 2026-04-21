@@ -910,7 +910,7 @@ export default function CreateQuickListModal({
                 </div>
               )}
 
-              <input
+              <Input
                 ref={fileInputRef}
                 type="file"
                 accept=".csv,.txt,.tsv,.xlsx"

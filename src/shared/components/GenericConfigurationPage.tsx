@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Edit, Trash2, X, LucideIcon } from "lucide-react";
 import SearchInput from "./ui/SearchInput";
+import Pagination from "./ui/Pagination";
 import { color, tw, zIndex } from "../utils/utils";
 import { useConfirm } from "../../contexts/ConfirmContext";
 import { useToast } from "../../contexts/ToastContext";
@@ -218,11 +219,10 @@ export function ConfigurationModal({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 {config.nameLabel} {config.nameRequired && "*"}
               </label>
-              <input
-                type="text"
+              <Input type="text"
                 value={formData.name}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, name: e.target.value }))
+                onChange={(value) =>
+                  setFormData((prev) => ({ ...prev, name: String(value) }))
                 }
                 className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
                 placeholder={t.genericConfig.enter.replace(
@@ -272,13 +272,12 @@ export function ConfigurationModal({
                     </label>
 
                     {field.type === "text" && (
-                      <input
-                        type="text"
+                      <Input type="text"
                         value={formData[field.key] || ""}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setFormData((prev) => ({
                             ...prev,
-                            [field.key]: e.target.value,
+                            [field.key]: String(value),
                           }))
                         }
                         placeholder={field.placeholder}
@@ -288,13 +287,12 @@ export function ConfigurationModal({
                     )}
 
                     {field.type === "date" && (
-                      <input
-                        type="date"
+                      <Input type="date"
                         value={formData[field.key] || ""}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setFormData((prev) => ({
                             ...prev,
-                            [field.key]: e.target.value,
+                            [field.key]: String(value),
                           }))
                         }
                         className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
@@ -413,6 +411,8 @@ export default function GenericConfigurationPage({
   const [items, setItems] = useState<ConfigurationItem[]>(config.initialData);
   const [loading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(20);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<
     ConfigurationItem | undefined
@@ -534,6 +534,15 @@ export default function GenericConfigurationPage({
       (item?.description &&
         item.description.toLowerCase().includes(searchTerm.toLowerCase())),
   );
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  const totalPages = Math.ceil(filteredItems.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedItems = filteredItems.slice(startIndex, startIndex + pageSize);
 
   const IconComponent = config.icon;
 
@@ -657,7 +666,7 @@ export default function GenericConfigurationPage({
               </thead>
 
               <tbody>
-                {filteredItems.map((item) => (
+                {paginatedItems.map((item) => (
                   <tr key={item.id} className="transition-colors">
                     <td
                       className="px-6 py-4"
@@ -724,6 +733,16 @@ export default function GenericConfigurationPage({
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {!loading && filteredItems.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalItems={filteredItems.length}
+          onPageChange={setCurrentPage}
+        />
+      )}
 
       <ConfigurationModal
         isOpen={isModalOpen}

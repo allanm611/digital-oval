@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Input from '../../../shared/components/ui/Input';
 import { createPortal } from "react-dom";
 import { X, Users, Calendar, BarChart3 } from "lucide-react";
 
@@ -220,11 +221,11 @@ function CreateControlGroupModal({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Control Group Name *
                 </label>
-                <input
+                <Input
                   type="text"
                   value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
+                  onChange={(value) =>
+                    setFormData({ ...formData, name: String(value) })
                   }
                   className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-1 focus:ring-[#588157] focus:border-[#588157]`}
                   placeholder="Enter control group name"
@@ -260,10 +261,10 @@ function CreateControlGroupModal({
                       <Radio name="customerBase"
                         value={option.value}
                         checked={formData.customerBase === option.value}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setFormData({
                             ...formData,
-                            customerBase: e.target.value as
+                            customerBase: String(value) as
                               | "active_subscribers"
                               | "all_customers"
                               | "saved_segments",

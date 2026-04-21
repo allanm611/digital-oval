@@ -6,6 +6,7 @@ import {
   // Download,
 } from "lucide-react";
 import { color, tw, zIndex } from "../utils/utils";
+import Input from "./ui/Input";
 import HeadlessSelect from "./ui/HeadlessSelect";
 import SubscriptionIdSelector from "../../features/manual-broadcast/components/SubscriptionIdSelector";
 
@@ -395,10 +396,9 @@ export default function AudienceCreator({
         <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
           {mode === "quicklist" ? "Name *" : "List Name *"}
         </label>
-        <input
-          type="text"
+        <Input type="text"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(value) => setName(String(value))}
           className="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2"
           style={{
             borderColor: color.border.default,
@@ -504,7 +504,7 @@ export default function AudienceCreator({
                   opacity: disabled ? 0.5 : 1,
                 }}
               >
-                <input
+                <Input
                   id="file-upload"
                   ref={fileInputRef}
                   type="file"
