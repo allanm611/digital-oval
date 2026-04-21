@@ -57,6 +57,15 @@ export default function ConfigurationPage() {
         navigationPath: "/dashboard/communication-channels",
       },
       {
+        id: "dnd-types",
+        name: "DND Types",
+        description: "Manage Do Not Disturb types for customer preferences",
+        type: "campaign",
+        category: "Campaign Configuration",
+        status: "active",
+        navigationPath: "/dashboard/dnd-types",
+      },
+      {
         id: "routes",
         name: "Routes",
         description: "Manage routes across all communication channels",
@@ -331,16 +340,6 @@ export default function ConfigurationPage() {
         status: "active",
         navigationPath: "/dashboard/control-groups",
       },
-      {
-        id: "control-groups-segment",
-        name: "Universal Control Groups",
-        description:
-          "Configure and manage universal control groups for segments",
-        type: "segment",
-        category: "Segment Configuration",
-        status: "active",
-        navigationPath: "/dashboard/control-groups",
-      },
       // Job-related configs
       {
         id: "job-types",
@@ -422,13 +421,13 @@ export default function ConfigurationPage() {
   ];
 
   const filteredConfigurations = configurations.filter((config) => {
+    const lowerSearchTerm = searchTerm.toLowerCase().trim();
+
     const matchesSearch =
-      searchTerm === "" ||
-      (config.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (config.description || "")
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      (config.category || "").toLowerCase().includes(searchTerm.toLowerCase());
+      lowerSearchTerm === "" ||
+      (config.name || "").toLowerCase().includes(lowerSearchTerm) ||
+      (config.description || "").toLowerCase().includes(lowerSearchTerm) ||
+      (config.category || "").toLowerCase().includes(lowerSearchTerm);
 
     const matchesCategory =
       selectedCategory === "all" || config.type === selectedCategory;

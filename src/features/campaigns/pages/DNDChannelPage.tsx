@@ -5,13 +5,12 @@ import {
   Trash2,
   UserX,
   UserCheck,
-  Mail,
-  Minus,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { color, tw } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import BackButton from "../../../shared/components/ui/BackButton";
@@ -19,8 +18,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { communicationChannelService, CommunicationChannel as ChannelData } from "../../../shared/services/communicationChannelService";
 import { dndService, DNDSubscription, DNDType } from "../services/dndService";
-import AddPhoneModal from "../components/AddPhoneModal";
-import AddEmailModal from "../components/AddEmailModal";
+import AddDNDMembersModal from "../components/AddDNDMembersModal";
 
 export default function DNDChannelPage() {
   const navigate = useNavigate();
@@ -36,7 +34,10 @@ export default function DNDChannelPage() {
   const [filterType, setFilterType] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showRemoveModal, setShowRemoveModal] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [deleteConfirmName, setDeleteConfirmName] = useState("");
+  const [isRemoving, setIsRemoving] = useState(false);
+  const [isAddingCustomers, setIsAddingCustomers] = useState(false);
 
   useEffect(() => {
     if (channel) {
@@ -101,59 +102,72 @@ export default function DNDChannelPage() {
     return matchesSearch && matchesType;
   });
 
-  const handleAddCustomer = async (customer: {
-    id: number;
-    name?: string;
-    email?: string;
-    phone?: string;
-    dndTypeId: number;
-  }) => {
+  const handleAddCustomers = async (members: Array<{
+    customer_id: number;
+    customer_name?: string;
+    customer_email?: string;
+    customer_phone?: string;
+  }>, dndTypeId: number) => {
     try {
-      await dndService.addDNDSubscription({
-        customer_phone: customer.phone || "",
-        channel: channelInfo?.code.toUpperCase() as "SMS" | "EMAIL" | "USSD" | "APP",
-        dnd_type_id: customer.dndTypeId,
-        customer_name: customer.name,
-        customer_email: customer.email,
-      });
+      setIsAddingCustomers(true);
+      await Promise.all(
+        members.map((member) =>
+          dndService.addDNDSubscription({
+            customer_phone: member.customer_phone || "",
+            channel: channelInfo?.code.toUpperCase() as "SMS" | "EMAIL" | "USSD" | "APP",
+            dnd_type_id: dndTypeId,
+            customer_name: member.customer_name,
+            customer_email: member.customer_email,
+          })
+        )
+      );
 
-      const dndType = dndTypes.find((t) => t.id === customer.dndTypeId);
+      const dndType = dndTypes.find((t) => t.id === dndTypeId);
       showToast(
         `success`,
-        `Customer added to ${dndType?.name || "DND"} list`,
-        "The customer has been added successfully"
+        `${members.length} customer${members.length !== 1 ? "s" : ""} added to ${dndType?.name || "DND"} list`,
+        "Customers have been added successfully"
       );
       setShowAddModal(false);
       await loadDNDData();
     } catch (err) {
-      showError("Error", "Failed to add customer to DND list");
+      showError("Error", "Failed to add customers to DND list");
+    } finally {
+      setIsAddingCustomers(false);
     }
   };
 
-  const handleRemoveCustomer = async (subscription: DNDSubscription) => {
-    try {
-      await dndService.removeDNDSubscription(subscription.id);
+  const handleRemoveCustomer = (subscription: DNDSubscription) => {
+    setDeleteConfirmId(subscription.id);
+    setDeleteConfirmName(subscription.customer_name || "Unknown");
+  };
 
-      const dndType = dndTypes.find((t) => t.id === subscription.dnd_type_id);
+  const handleConfirmRemove = async () => {
+    if (!deleteConfirmId) return;
+
+    const oldSubscriptions = dndSubscriptions;
+
+    try {
+      setIsRemoving(true);
+      setDndSubscriptions(dndSubscriptions.filter((s) => s.id !== deleteConfirmId));
+
+      await dndService.removeDNDSubscription(deleteConfirmId);
+
+      const subscription = oldSubscriptions.find((s) => s.id === deleteConfirmId);
+      const dndType = dndTypes.find((t) => t.id === subscription?.dnd_type_id);
+
       showToast(
         `success`,
         `Customer removed from ${dndType?.name || "DND"} list`,
         "The customer has been removed successfully"
       );
-      setShowRemoveModal(false);
-      await loadDNDData();
+      setDeleteConfirmId(null);
+      setDeleteConfirmName("");
     } catch (err) {
+      setDndSubscriptions(oldSubscriptions);
       showError("Error", "Failed to remove customer from DND list");
+      setIsRemoving(false);
     }
-  };
-
-  const handleDeleteDNDRecord = (id: number, name: string) => {
-    // TODO: Implement delete functionality
-    showToast(
-      `success`,
-      t.dnd.recordDeleted,
-      t("dnd.recordDeletedDesc", { name }),
-    );
   };
 
   if (loadingChannel) {
@@ -186,56 +200,24 @@ export default function DNDChannelPage() {
 
   return (
     <div className="space-y-6">
-      {/* Breadcrumb */}
-      <BackButton fallbackTo="/dashboard/dnd-management" showBreadcrumb={true} currentLabel={channelInfo?.name || "Channel"} />
+      {/* Breadcrumb and Add Button */}
+      <div className="flex items-center justify-between gap-4">
+        <BackButton fallbackTo="/dashboard/dnd-management" showBreadcrumb={true} currentLabel={channelInfo?.name || "Channel"} />
+        <button
+          onClick={() => setShowAddModal(true)}
+          className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white`}
+          style={{ backgroundColor: color.primary.action }}
+        >
+          <Plus className="w-4 h-4" />
+          Add Customer
+        </button>
+      </div>
 
-      {/* Description and Actions */}
-      <div className="flex items-start justify-between gap-4">
+      {/* Description */}
+      <div>
         <p className={`text-sm ${tw.textSecondary}`}>
           Manage Do Not Disturb lists for {channelInfo?.name || 'this channel'}. Add or remove customers who should not receive messages on this channel.
         </p>
-        <div className="flex flex-wrap items-center gap-2 w-auto">
-          {channelInfo?.code.toUpperCase() === "SMS" && (
-            <>
-              <button
-                onClick={() => setShowAddModal(true)}
-                className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white w-auto`}
-                style={{ backgroundColor: color.primary.action }}
-              >
-                <Plus className="w-4 h-4" />
-                Add Phone
-              </button>
-              <button
-                onClick={() => setShowRemoveModal(true)}
-                className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white w-auto`}
-                style={{ backgroundColor: color.primary.action }}
-              >
-                <Minus className="w-4 h-4" />
-                Remove Phone
-              </button>
-            </>
-          )}
-          {channelInfo?.code.toUpperCase() === "EMAIL" && (
-            <button
-              onClick={() => setShowAddModal(true)}
-              className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white w-auto`}
-              style={{ backgroundColor: color.primary.action }}
-            >
-              <Mail className="w-4 h-4" />
-              Add Email
-            </button>
-          )}
-          {(channelInfo?.code.toUpperCase() === "USSD" || channelInfo?.code.toUpperCase() === "APP") && (
-            <button
-              onClick={() => setShowAddModal(true)}
-              className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white w-auto`}
-              style={{ backgroundColor: color.primary.action }}
-            >
-              <Plus className="w-4 h-4" />
-              Add Customer
-            </button>
-          )}
-        </div>
       </div>
 
       {/* Filters */}
@@ -359,33 +341,6 @@ export default function DNDChannelPage() {
                     Status
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Added
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Added By
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Removed
-                  </th>
-                  <th
                     className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
                     style={{
                       color: color.surface.tableHeaderText,
@@ -408,7 +363,7 @@ export default function DNDChannelPage() {
                         borderBottomLeftRadius: "0.375rem",
                       }}
                     >
-                      <div className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
+                      <div className={`text-sm ${tw.tableFirstColumn} ${tw.textPrimary}`}>
                         {subscription.customer_name || "Unknown"}
                       </div>
                     </td>
@@ -445,34 +400,6 @@ export default function DNDChannelPage() {
                       </span>
                     </td>
                     <td
-                      className="px-6 py-4 whitespace-nowrap"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary}`}>
-                        <DateFormatter date={subscription.added_at} />
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary}`}>
-                        {subscription.added_by_name || "System"}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4 whitespace-nowrap"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary}`}>
-                        {subscription.removed_at ? (
-                          <DateFormatter date={subscription.removed_at} />
-                        ) : (
-                          "-"
-                        )}
-                      </div>
-                    </td>
-                    <td
                       className="px-6 py-4 text-center"
                       style={{
                         backgroundColor: color.surface.tablebodybg,
@@ -498,25 +425,27 @@ export default function DNDChannelPage() {
         )}
       </div>
 
-      {/* Add Phone Modal for SMS */}
-      {channelInfo?.code.toUpperCase() === "SMS" && (
-        <AddPhoneModal
-          isOpen={showAddModal}
-          onClose={() => setShowAddModal(false)}
-          dndTypes={dndTypes}
-          onAdd={handleAddCustomer}
-        />
-      )}
+      {/* Add DND Members Modal - Works for all channels */}
+      <AddDNDMembersModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        dndTypes={dndTypes}
+        channel={channelInfo?.name || "Channel"}
+        onAdd={handleAddCustomers}
+        isLoading={isAddingCustomers}
+      />
 
-      {/* Add Email Modal for EMAIL */}
-      {channelInfo?.code.toUpperCase() === "EMAIL" && (
-        <AddEmailModal
-          isOpen={showAddModal}
-          onClose={() => setShowAddModal(false)}
-          dndTypes={dndTypes}
-          onAdd={handleAddCustomer}
-        />
-      )}
+      {/* Remove Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={deleteConfirmId !== null}
+        onClose={() => setDeleteConfirmId(null)}
+        onConfirm={handleConfirmRemove}
+        title="Remove Customer from DND"
+        description="Are you sure you want to remove this customer from the DND list? They will be able to receive messages again."
+        itemName={deleteConfirmName}
+        isLoading={isRemoving}
+        confirmText="Remove"
+      />
     </div>
   );
 }

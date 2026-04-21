@@ -530,6 +530,10 @@ const SettingsPages = {
     () =>
       import(/* webpackPrefetch: true */ "../../settings/pages/SMSTestPage"),
   ),
+  DNDTypesPage: lazy(
+    () =>
+      import(/* webpackPrefetch: true */ "../../configurations/pages/DNDTypesPage"),
+  ),
 };
 
 // Server & Connection Pages - All routes preloaded for instant access
@@ -1127,6 +1131,10 @@ export default function Dashboard() {
           <Route
             path="/communication-channels/:id"
             element={<CampaignPages.CommunicationChannelDetailsPage />}
+          />
+          <Route
+            path="/dnd-types"
+            element={<SettingsPages.DNDTypesPage />}
           />
           <Route
             path="/sms-routes/*"
