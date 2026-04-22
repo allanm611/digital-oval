@@ -665,6 +665,10 @@ export interface SegmentCondition {
   start_date?: string; // ISO 8601 date for "from" date or range start
   end_date?: string; // ISO 8601 date for "to" date or range end
   date_operator?: "on" | "between" | "since" | "until"; // Date context operator for metric-based conditions
+
+  // For computable KPI fields
+  time_window?: "last_7_days" | "last_30_days" | "last_90_days" | "current_month" | "custom"; // Predefined or custom time window
+  is_computable?: boolean; // Flag indicating if field is computable (user can customize time window)
 }
 
 export interface SegmentConditionGroup {

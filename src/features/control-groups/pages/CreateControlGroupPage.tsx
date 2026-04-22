@@ -520,7 +520,7 @@ export default function CreateControlGroupPage() {
         start_date: scheduling.start_date,
         ...(scheduling.end_date && { end_date: scheduling.end_date }),
         is_universal: isUniversal,
-        // is_active: isActive,
+        is_active: isActive,
         target_render_config: targetRenderConfig,
         ...(customConditions && { definition: customConditions }),
       };
@@ -754,7 +754,7 @@ export default function CreateControlGroupPage() {
                       Mark as Universal Control Group
                     </span>
                   </div>
-                  {/* <div className="flex items-center gap-2 cursor-pointer" onClick={() => setIsActive(!isActive)}>
+                  <div className="flex items-center gap-2 cursor-pointer" onClick={() => setIsActive(!isActive)}>
                     <Checkbox
                       id="control-group-active"
                       checked={isActive}
@@ -763,7 +763,7 @@ export default function CreateControlGroupPage() {
                     <span className="text-sm font-medium text-gray-700">
                       Active
                     </span>
-                  </div> */}
+                  </div>
                 </div>
               </>
             )}
@@ -897,12 +897,12 @@ export default function CreateControlGroupPage() {
                       {isUniversal ? "Yes" : "No"}
                     </p>
                   </div>
-                  {/* <div className={`border border-gray-200 ${tw.rounded} p-4`}>
+                  <div className={`border border-gray-200 ${tw.rounded} p-4`}>
                     <p className="text-xs text-gray-500 mb-1">Status</p>
                     <p className="text-sm font-medium text-gray-900">
                       {isActive ? "Active" : "Inactive"}
                     </p>
-                  </div> */}
+                  </div>
                   <div className={`border border-gray-200 ${tw.rounded} p-4`}>
                     <p className="text-xs text-gray-500 mb-1">Customer Base</p>
                     <p className="text-sm font-medium text-gray-900">

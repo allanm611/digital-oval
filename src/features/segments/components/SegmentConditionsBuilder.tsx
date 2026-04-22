@@ -23,7 +23,7 @@ import { color, tw, zIndex } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useSegmentationFields } from "../hooks/useSegmentationFields";
-import { getOperatorsForFieldType, DATE_OPERATORS } from "../../../shared/utils/operatorMapper";
+import { getOperatorsForFieldType, getOperatorsForField, DATE_OPERATORS, TIME_WINDOWS, getDateRangeForTimeWindow } from "../../../shared/utils/operatorMapper";
 import UnifiedPickerModal from "./UnifiedPickerModal";
 import SystemEventPickerModal from "./SystemEventPickerModal";
 import FieldPickerModal from "./FieldPickerModal";
@@ -440,12 +440,10 @@ export default function SegmentConditionsBuilder({
     getFieldByValue,
   } = useSegmentationFields();
 
-  // Helper: get the first operator for a field based on its field_type
-   
   const getFirstBackendOperator = (
     field: Record<string, any> | null | undefined,
   ) => {
-    const ops = getOperatorsForFieldType(field?.field_type || "text");
+    const ops = getOperatorsForField(field);
     return ops.length > 0
       ? { id: ops[0].id, label: ops[0].label }
       : { id: 1, label: "equals" };
@@ -817,7 +815,7 @@ export default function SegmentConditionsBuilder({
       <>
         {/* Subcategory Dropdown - Show if category has subcategories */}
         {hasSubcategories && (
-          <div className="flex-1 min-w-[140px]">
+          <div className="flex-1 min-w-[80px]">
             <div
               className={`${tw.rounded} transition-all cursor-pointer`}
               style={{
@@ -895,11 +893,9 @@ export default function SegmentConditionsBuilder({
           </button>
         )}
 
-        {/* Operator Selection - always show */}
+        {/* Operator & Time Window Selection - on same line */}
         {(() => {
           const backendField = getFieldByValue(condition.field);
-
-          // Get the actual field from the subcategory if not found in allFields
           let actualField = backendField;
           if (!actualField && hasSubcategories && condition.subcategory_id) {
             const subcategory = selectedCategoryObj?.sub_categories.find(
@@ -911,56 +907,88 @@ export default function SegmentConditionsBuilder({
           }
 
           const isBooleanField = actualField?.field_type?.toLowerCase() === "boolean";
+          const isComputable = actualField?.is_computable === true;
 
           if (isBooleanField) {
-            return null; // Don't show operator dropdown for boolean fields
+            return null;
           }
 
           return (
-            <div className="flex-1 min-w-[140px]">
-              <div
-                className={`${tw.rounded} transition-all cursor-pointer`}
-                style={{
-                  backgroundColor: color.surface.background,
-                  // border: `1px solid ${color.border.default}`,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = color.primary.accent;
-                  e.currentTarget.style.backgroundColor = `${color.primary.accent}08`;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = color.border.default;
-                  e.currentTarget.style.backgroundColor = color.surface.background;
-                }}
-              >
-                <HeadlessSelect
-                  options={(() => {
-                    // Determine operators based on field type
-                    const operators = getOperatorsForFieldType(actualField?.field_type || "text");
-                    return operators.map((op) => ({
-                      value: `${op.label}|${op.id}`,
-                      label: op.label
-                        .split("_")
-                        .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-                        .join(" "),
-                    }));
-                  })()}
-                  value={`${condition.operator}|${condition.operator_id}`}
-                  onChange={(value) => {
-                    const [operator, operatorId] = (value as string).split("|");
-                    updateCondition(groupId, condition.id, {
-                      operator: operator as SegmentCondition["operator"],
-                      operator_id: operatorId ? parseInt(operatorId) : undefined,
-                      // Clear date fields and value when operator changes
-                      value: "",
-                      start_date: undefined,
-                      end_date: undefined,
-                    });
+            <div className="flex items-center gap-2">
+              {/* Operator Dropdown */}
+              <div className="min-w-[160px] max-w-[200px] flex-shrink-0">
+                <div
+                  className={`${tw.rounded} transition-all cursor-pointer`}
+                  style={{
+                    backgroundColor: color.surface.background,
                   }}
-                  className="text-sm"
-                  zIndex={zIndex.popover}
-                />
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = color.primary.accent;
+                    e.currentTarget.style.backgroundColor = `${color.primary.accent}08`;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = color.border.default;
+                    e.currentTarget.style.backgroundColor = color.surface.background;
+                  }}
+                >
+                  <HeadlessSelect
+                    options={(() => {
+                      const operators = getOperatorsForField(actualField);
+                      return operators.map((op) => ({
+                        value: `${op.label}|${op.id}`,
+                        label: op.label
+                          .split("_")
+                          .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+                          .join(" "),
+                      }));
+                    })()}
+                    value={`${condition.operator}|${condition.operator_id}`}
+                    onChange={(value) => {
+                      const [operator, operatorId] = (value as string).split("|");
+                      updateCondition(groupId, condition.id, {
+                        operator: operator as SegmentCondition["operator"],
+                        operator_id: operatorId ? parseInt(operatorId) : undefined,
+                        value: "",
+                        start_date: undefined,
+                        end_date: undefined,
+                      });
+                    }}
+                    className="text-sm"
+                    zIndex={zIndex.popover}
+                  />
+                </div>
               </div>
+
+              {/* Time Window Selector - only for computable fields */}
+              {isComputable && (
+                <div className="min-w-[140px] max-w-[180px] flex-shrink-0">
+                  <HeadlessSelect
+                    options={TIME_WINDOWS.map((tw) => ({
+                      value: tw.value,
+                      label: tw.label,
+                    }))}
+                    value={condition.time_window || "last_7_days"}
+                    onChange={(value) => {
+                      const tw = value as SegmentCondition["time_window"];
+                      const dateRange = tw !== "custom" ? getDateRangeForTimeWindow(tw) : null;
+
+                      updateCondition(groupId, condition.id, {
+                        time_window: tw,
+                        ...(dateRange ? {
+                          start_date: dateRange.start_date,
+                          end_date: dateRange.end_date,
+                        } : {
+                          start_date: undefined,
+                          end_date: undefined,
+                        }),
+                      });
+                    }}
+                    placeholder="Select time window"
+                    className="text-sm"
+                    zIndex={zIndex.popover}
+                  />
+                </div>
+              )}
             </div>
           );
         })()}
@@ -1006,6 +1034,112 @@ export default function SegmentConditionsBuilder({
     // No value input needed for NULL operators
     if (isNullOperator) {
       return null;
+    }
+
+    // For computable fields, handle time window and value input
+    if (backendField?.is_computable === true) {
+      const timeWindow = condition.time_window || "last_7_days";
+      const isCustom = timeWindow === "custom";
+
+      return (
+        <div className="flex items-center gap-2">
+          {/* Value Input */}
+          <div className="min-w-[140px] max-w-[160px]">
+            <Input
+              type="number"
+              value={condition.value as string | number}
+              onChange={(value) => {
+                updateCondition(groupId, condition.id, {
+                  value: String(value) ? parseFloat(String(value)) : "",
+                });
+              }}
+              placeholder="Enter value"
+              variant="medium"
+            />
+          </div>
+
+          {/* Custom Date Controls - only if time_window === "custom" */}
+          {isCustom && (() => {
+            const dateOp = condition.date_operator || "between";
+            const isOnDate = dateOp === "on";
+            const isBetweenDates = dateOp === "between";
+            const isSince = dateOp === "since";
+            const isUntil = dateOp === "until";
+
+            return (
+              <>
+                <div className="min-w-[140px] max-w-[160px]">
+                  <HeadlessSelect
+                    options={DATE_OPERATORS}
+                    value={dateOp}
+                    onChange={(value) => {
+                      updateCondition(groupId, condition.id, {
+                        date_operator: value as SegmentCondition["date_operator"],
+                        start_date: undefined,
+                        end_date: undefined,
+                      });
+                    }}
+                    placeholder="Select date type"
+                    className="text-sm"
+                    zIndex={zIndex.popover}
+                  />
+                </div>
+
+                {(isOnDate || isBetweenDates) && (
+                  <div className="min-w-[140px] max-w-[160px]">
+                    <Input
+                      type="date"
+                      value={condition.start_date || ""}
+                      onChange={(value) => {
+                        updateCondition(groupId, condition.id, {
+                          start_date: String(value),
+                        });
+                      }}
+                      placeholder="Select date"
+                      variant="medium"
+                    />
+                  </div>
+                )}
+
+                {isBetweenDates && (
+                  <>
+                    <span className="text-gray-500 text-sm">to</span>
+                    <div className="min-w-[140px] max-w-[160px]">
+                      <Input
+                        type="date"
+                        value={condition.end_date || ""}
+                        onChange={(value) => {
+                          updateCondition(groupId, condition.id, {
+                            end_date: String(value),
+                          });
+                        }}
+                        placeholder="End date"
+                        variant="medium"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {(isSince || isUntil) && (
+                  <div className="min-w-[140px] max-w-[160px]">
+                    <Input
+                      type="date"
+                      value={condition.start_date || ""}
+                      onChange={(value) => {
+                        updateCondition(groupId, condition.id, {
+                          start_date: String(value),
+                        });
+                      }}
+                      placeholder={isSince ? "Since date" : "Until date"}
+                      variant="medium"
+                    />
+                  </div>
+                )}
+              </>
+            );
+          })()}
+        </div>
+      );
     }
 
     // For numeric fields, show dual-operator UI (value + secondary date dropdown)
@@ -2480,7 +2614,7 @@ export default function SegmentConditionsBuilder({
                       )}
 
                       {/* Condition Type Badge - Selectable appearance */}
-                      <div className="flex-1 min-w-[140px]">
+                      <div className="max-w-[180px]">
                         <div
                           className={`${tw.rounded} transition-all cursor-pointer`}
                           style={{

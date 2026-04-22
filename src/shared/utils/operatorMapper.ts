@@ -133,7 +133,7 @@ export function getOperatorsForFieldType(fieldType: string): OperatorType[] {
       ];
 
     // Regular numeric fields (no date operators)
-    
+
     case "number":
     case "integer":
     case "int":
@@ -221,6 +221,39 @@ export function getOperatorsForFieldType(fieldType: string): OperatorType[] {
   }
 }
 
+export function getOperatorsForField(field: Record<string, any> | null | undefined): OperatorType[] {
+  if (!field) {
+    return getOperatorsForFieldType("text");
+  }
+
+  const fieldType = (field.field_type || "").toLowerCase().trim();
+  const isComputable = field.is_computable === true;
+
+  if (isComputable) {
+    const valueOperators = getOperatorsForFieldType(fieldType);
+    return valueOperators;
+  }
+
+  if (fieldType === "date" || fieldType === "timestamp" || fieldType === "timestamptz" || fieldType === "datetime") {
+    return [
+      OPERATORS.EQUALS,
+      OPERATORS.GREATER_THAN,
+      OPERATORS.LESS_THAN,
+      OPERATORS.GREATER_THAN_OR_EQUAL,
+      OPERATORS.LESS_THAN_OR_EQUAL,
+      OPERATORS.BETWEEN,
+      OPERATORS.ON_DATE,
+      OPERATORS.BETWEEN_DATES,
+      OPERATORS.SINCE_DATE,
+      OPERATORS.UNTIL_DATE,
+      OPERATORS.IS_NULL,
+      OPERATORS.IS_NOT_NULL,
+    ];
+  }
+
+  return getOperatorsForFieldType(fieldType);
+}
+
 /**
  * Date range operators for numeric field conditions
  * Used as secondary dropdown when numeric operator is selected
@@ -232,3 +265,56 @@ export const DATE_OPERATORS = [
   { value: "since", label: "Since", id: 14 },
   { value: "until", label: "Until", id: 15 },
 ];
+
+/**
+ * Predefined time windows for computable KPI fields
+ * Allows users to quickly select common time periods without manual date entry
+ */
+export const TIME_WINDOWS = [
+  { value: "last_7_days", label: "Last 7 Days" },
+  { value: "last_30_days", label: "Last 30 Days" },
+  { value: "last_90_days", label: "Last 90 Days" },
+  { value: "current_month", label: "Current Month" },
+  { value: "custom", label: "Custom" },
+];
+
+export function getDateRangeForTimeWindow(window: string): { start_date: string; end_date: string } | null {
+  const now = new Date();
+  const today = now.toISOString().split('T')[0];
+
+  switch (window) {
+    case "last_7_days": {
+      const start = new Date(now);
+      start.setDate(start.getDate() - 7);
+      return {
+        start_date: start.toISOString().split('T')[0],
+        end_date: today,
+      };
+    }
+    case "last_30_days": {
+      const start = new Date(now);
+      start.setDate(start.getDate() - 30);
+      return {
+        start_date: start.toISOString().split('T')[0],
+        end_date: today,
+      };
+    }
+    case "last_90_days": {
+      const start = new Date(now);
+      start.setDate(start.getDate() - 90);
+      return {
+        start_date: start.toISOString().split('T')[0],
+        end_date: today,
+      };
+    }
+    case "current_month": {
+      const start = new Date(now.getFullYear(), now.getMonth(), 1);
+      return {
+        start_date: start.toISOString().split('T')[0],
+        end_date: today,
+      };
+    }
+    default:
+      return null;
+  }
+}
