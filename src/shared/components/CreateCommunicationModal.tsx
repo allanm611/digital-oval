@@ -738,43 +738,23 @@ export default function CreateCommunicationModal({
               <div className="space-y-6">
                 {/* Channel Selection */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-3">
-                    Channel
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Communication Channel <span className="text-red-500">*</span>
                   </label>
-                  <div
-                    className="inline-flex rounded-md border p-1"
-                    style={{
-                      borderColor: color.border.default,
-                      backgroundColor: color.surface.cards,
+                  <HeadlessSelect
+                    options={channels.map((channel) => ({
+                      value: channel.id,
+                      label: channel.name,
+                    }))}
+                    value={selectedChannel}
+                    onChange={(value) => {
+                      setSelectedChannel(value as Channel);
+                      setError("");
                     }}
-                  >
-                    {channels.map((channel) => {
-                      const Icon = channel.icon;
-                      const isSelected = selectedChannel === channel.id;
-                      return (
-                        <button
-                          key={channel.id}
-                          type="button"
-                          onClick={() => setSelectedChannel(channel.id)}
-                          className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all"
-                          style={{
-                            backgroundColor: isSelected
-                              ? "white"
-                              : "transparent",
-                            color: isSelected
-                              ? color.primary.accent
-                              : color.text.secondary,
-                            boxShadow: isSelected
-                              ? "0 1px 3px rgba(0,0,0,0.1)"
-                              : "none",
-                          }}
-                        >
-                          <Icon className="w-4 h-4" />
-                          <span>{channel.name}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
+                    placeholder="Select communication channel"
+                    className="text-sm"
+                    zIndex={zIndex.popover}
+                  />
                 </div>
 
                 {/* Communication Policy */}

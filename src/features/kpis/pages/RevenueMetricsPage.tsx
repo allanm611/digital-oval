@@ -1,9 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Edit, Trash2, Eye, DollarSign } from "lucide-react";
-import SearchInput from "../../../shared/components/ui/SearchInput";
+import { Plus, Edit, Trash2, Eye, DollarSign, Power } from "lucide-react";
+import Input from "../../../shared/components/ui/Input";
 import BackButton from "../../../shared/components/ui/BackButton";
-import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
 import { RevenueMetric } from "../types/revenueMetrics";
@@ -16,12 +15,13 @@ export default function RevenueMetricsPage() {
   const { success, error: showError } = useToast();
 
   const [metrics, setMetrics] = useState<RevenueMetric[]>([]);
-  const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<number | null>(null);
+  const [toggling, setToggling] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
+  const [activeMetrics, setActiveMetrics] = useState<Set<number>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(20);
 
@@ -35,19 +35,36 @@ export default function RevenueMetricsPage() {
 
   const loadMetrics = async () => {
     try {
-      setLoading(true);
       const data = await revenueMetricService.getAllMetrics();
       setMetrics(data);
     } catch (err) {
       showError("Error", "Failed to load revenue metrics");
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleDeleteClick = (metric: RevenueMetric) => {
     setDeleteConfirmId(metric.id);
     setDeleteConfirmName(metric.name);
+  };
+
+  const handleToggleActive = async (metric: RevenueMetric) => {
+    setToggling(metric.id);
+    try {
+      const isCurrentlyActive = activeMetrics.has(metric.id);
+      const newActiveSet = new Set(activeMetrics);
+      if (isCurrentlyActive) {
+        newActiveSet.delete(metric.id);
+        success("Success", `"${metric.name}" has been deactivated`);
+      } else {
+        newActiveSet.add(metric.id);
+        success("Success", `"${metric.name}" has been activated`);
+      }
+      setActiveMetrics(newActiveSet);
+    } catch (err) {
+      showError("Error", "Failed to toggle metric status");
+    } finally {
+      setToggling(null);
+    }
   };
 
   const handleConfirmDelete = async () => {
@@ -127,7 +144,6 @@ export default function RevenueMetricsPage() {
         <BackButton fallbackTo="/dashboard/kpis" showBreadcrumb={true} currentLabel="Revenue Metrics" />
         <button
           onClick={() => navigate("/dashboard/kpis/revenue-metrics/create")}
-          disabled={loading}
           className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-md whitespace-nowrap disabled:opacity-60"
           style={{ backgroundColor: color.primary.action }}
         >
@@ -166,7 +182,6 @@ export default function RevenueMetricsPage() {
           placeholder="Search metrics..."
           value={searchTerm}
           onChange={setSearchTerm}
-          disabled={loading}
           className="flex-1 min-w-[250px]"
         />
 
@@ -235,22 +250,7 @@ export default function RevenueMetricsPage() {
             </tr>
           </thead>
           <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={5} className="px-6 py-12 text-center">
-                  <div className="flex flex-col items-center justify-center">
-                    <LoadingSpinner
-                      variant="modern"
-                      size="md"
-                      color="primary"
-                    />
-                    <p className={`${tw.textMuted} font-medium mt-4`}>
-                      Loading metrics...
-                    </p>
-                  </div>
-                </td>
-              </tr>
-            ) : filteredMetrics.length === 0 ? (
+            {filteredMetrics.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-6 py-12 text-center">
                   <p className={`${tw.textSecondary} text-sm`}>
@@ -281,12 +281,20 @@ export default function RevenueMetricsPage() {
                   <td className="px-6 py-4 text-sm">
                     <div className="flex items-center justify-end space-x-2">
                       <button
+                        onClick={() => handleToggleActive(metric)}
+                        disabled={toggling === metric.id || deleting === metric.id}
+                        className={`p-2 ${tw.rounded} disabled:opacity-60 transition-colors ${activeMetrics.has(metric.id) ? 'text-green-800' : 'text-orange-800'}`}
+                        title={activeMetrics.has(metric.id) ? "Deactivate" : "Activate"}
+                      >
+                        <Power className="w-4 h-4" />
+                      </button>
+                      <button
                         onClick={() =>
                           navigate(
                             `/dashboard/kpis/revenue-metrics/${metric.id}`,
                           )
                         }
-                        disabled={deleting === metric.id || loading}
+                        disabled={deleting === metric.id}
                         className={`p-2 ${tw.rounded} text-black disabled:opacity-60`}
                         title="View details"
                       >
@@ -298,7 +306,7 @@ export default function RevenueMetricsPage() {
                             `/dashboard/kpis/revenue-metrics/${metric.id}/edit`,
                           )
                         }
-                        disabled={deleting === metric.id || loading}
+                        disabled={deleting === metric.id}
                         className={`p-2 ${tw.rounded} text-black disabled:opacity-60`}
                         title="Edit metric"
                       >
@@ -306,7 +314,7 @@ export default function RevenueMetricsPage() {
                       </button>
                       <button
                         onClick={() => handleDeleteClick(metric)}
-                        disabled={deleting === metric.id || loading}
+                        disabled={deleting === metric.id}
                         className={`p-2 text-black ${tw.rounded} disabled:opacity-60`}
                         title="Delete metric"
                       >

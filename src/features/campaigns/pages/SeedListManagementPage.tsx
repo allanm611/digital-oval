@@ -8,6 +8,7 @@ import { color, tw, zIndex } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import Input from "../../../shared/components/ui/Input";
 import { getLineOfBusinessConfig } from "../../configurations/configs/configurationPageConfigs";
 import { userService } from "../../users/services/userService";
 import { seedListService } from "../../../shared/services/seedListService";

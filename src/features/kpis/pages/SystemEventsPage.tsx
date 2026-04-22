@@ -1,19 +1,23 @@
 import { useState, useMemo } from "react";
-import { Filter, Eye, ListChecks, Zap } from "lucide-react";
-import SearchInput from "../../../shared/components/ui/SearchInput";
+import { Filter, Eye, ListChecks, Zap, Power } from "lucide-react";
+import Input from "../../../shared/components/ui/Input";
 import { SYSTEM_EVENTS, SYSTEM_EVENT_CATEGORIES } from "../types/systemEvent";
 import { color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "../../../contexts/ToastContext";
 
 const ITEMS_PER_PAGE = 10;
 
 export default function SystemEventsPage() {
   const navigate = useNavigate();
+  const { success } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [toggling, setToggling] = useState<number | null>(null);
+  const [activeEvents, setActiveEvents] = useState<Set<number>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
 
   const filteredEvents = useMemo(() => {
@@ -42,6 +46,24 @@ export default function SystemEventsPage() {
   const handleCategoryChange = (value: string) => {
     setCategoryFilter(value || "all");
     setCurrentPage(1);
+  };
+
+  const handleToggleActive = async (event: typeof SYSTEM_EVENTS[0]) => {
+    setToggling(event.id);
+    try {
+      const isCurrentlyActive = activeEvents.has(event.id);
+      const newActiveSet = new Set(activeEvents);
+      if (isCurrentlyActive) {
+        newActiveSet.delete(event.id);
+        success("Success", `"${event.event_name}" has been deactivated`);
+      } else {
+        newActiveSet.add(event.id);
+        success("Success", `"${event.event_name}" has been activated`);
+      }
+      setActiveEvents(newActiveSet);
+    } finally {
+      setToggling(null);
+    }
   };
 
   // Calculate statistics
@@ -257,6 +279,14 @@ export default function SystemEventsPage() {
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
                         <div className="flex items-center justify-center space-x-2">
+                          <button
+                            onClick={() => handleToggleActive(event)}
+                            disabled={toggling === event.id}
+                            className={`p-2 ${tw.rounded} disabled:opacity-60 transition-colors ${activeEvents.has(event.id) ? 'text-green-800' : 'text-orange-800'}`}
+                            title={activeEvents.has(event.id) ? "Deactivate" : "Activate"}
+                          >
+                            <Power className="w-4 h-4" />
+                          </button>
                           <button
                             onClick={() =>
                               navigate(

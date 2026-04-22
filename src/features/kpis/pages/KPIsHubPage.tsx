@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ListChecks, DollarSign, Activity, Zap, ArrowLeft } from "lucide-react";
+import { ListChecks, DollarSign, Activity, Zap, Users, ArrowLeft } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -32,6 +32,12 @@ export default function KPIsHubPage() {
       description: "View platform system events and interactions",
       icon: Zap,
       onClick: () => navigate("/dashboard/kpis/system-events"),
+    },
+    {
+      title: "Subscriber Profile",
+      description: "Manage customer profile fields and attributes",
+      icon: Users,
+      onClick: () => navigate("/dashboard/kpis/subscriber-profiles"),
     },
   ];
 

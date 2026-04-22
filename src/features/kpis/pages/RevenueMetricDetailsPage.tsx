@@ -105,7 +105,7 @@ export default function RevenueMetricDetailsPage() {
             onClick={() =>
               navigate(`/dashboard/kpis/revenue-metrics/${metric.id}/edit`)
             }
-            className={`px-4 py-2 text-white ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm w-fit`}
+            className={`px-4 py-2 text-white text-xs ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 w-fit`}
             style={{ backgroundColor: color.primary.action }}
             onMouseEnter={(e) => {
               e.currentTarget.style.opacity = "0.9";
@@ -119,7 +119,7 @@ export default function RevenueMetricDetailsPage() {
           </button>
           <button
             onClick={handleDelete}
-            className={`${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm w-fit`}
+            className={`${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-xs w-fit`}
             style={{
               backgroundColor: button.delete.background,
               color: button.delete.color,
@@ -155,23 +155,23 @@ export default function RevenueMetricDetailsPage() {
               <DollarSign className="w-7 h-7 text-white" />
             </div>
             <div className="flex-1">
-              <h2 className={`${tw.tableFirstColumn} ${tw.textPrimary} mb-2`}>
+              <h2 className={`text-sm font-semibold ${tw.textPrimary} mb-2`}>
                 {metric.name}
               </h2>
-              <p className={`${tw.textSecondary} text-base leading-relaxed`}>
+              <p className={`text-sm ${tw.textSecondary} leading-relaxed`}>
                 {metric.description || "No description available"}
               </p>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-gray-200">
             <span
-              className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium text-white"
+              className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium text-white"
               style={{ backgroundColor: color.primary.accent }}
             >
               {CATEGORY_LABELS[metric.category]}
             </span>
             <span
-              className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium text-white"
+              className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium text-white"
               style={{ backgroundColor: color.primary.accent }}
             >
               {metric.field_type === "decimal" ? "Decimal" : "Numeric"}
@@ -181,7 +181,7 @@ export default function RevenueMetricDetailsPage() {
 
         {/* Basic Information */}
         <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
-          <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
+          <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-6`}>
             Basic Information
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -191,7 +191,7 @@ export default function RevenueMetricDetailsPage() {
               >
                 Metric Name
               </label>
-              <p className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
+              <p className={`text-sm ${tw.textPrimary}`}>
                 {metric.name}
               </p>
             </div>
@@ -201,7 +201,7 @@ export default function RevenueMetricDetailsPage() {
               >
                 Category
               </label>
-              <p className={`text-base ${tw.textPrimary}`}>
+              <p className={`text-sm ${tw.textPrimary}`}>
                 {CATEGORY_LABELS[metric.category]}
               </p>
             </div>
@@ -211,7 +211,7 @@ export default function RevenueMetricDetailsPage() {
               >
                 Field Type
               </label>
-              <p className={`text-base ${tw.textPrimary}`}>
+              <p className={`text-sm ${tw.textPrimary}`}>
                 {metric.field_type === "decimal" ? "Decimal" : "Numeric"}
               </p>
             </div>
@@ -221,7 +221,7 @@ export default function RevenueMetricDetailsPage() {
               >
                 Unit
               </label>
-              <p className={`text-base ${tw.textPrimary}`}>
+              <p className={`text-sm ${tw.textPrimary}`}>
                 {metric.unit || "—"}
               </p>
             </div>
@@ -230,7 +230,7 @@ export default function RevenueMetricDetailsPage() {
 
         {/* Data Source Information */}
         <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
-          <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
+          <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-6`}>
             Data Source Information
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -240,7 +240,7 @@ export default function RevenueMetricDetailsPage() {
               >
                 Source Table
               </label>
-              <p className={`text-base ${tw.textPrimary} font-mono`}>
+              <p className={`text-sm ${tw.textPrimary} font-mono`}>
                 {metric.source_table}
               </p>
             </div>
@@ -250,7 +250,7 @@ export default function RevenueMetricDetailsPage() {
               >
                 Data Source
               </label>
-              <p className={`text-base ${tw.textPrimary}`}>
+              <p className={`text-sm ${tw.textPrimary}`}>
                 {metric.data_source}
               </p>
             </div>
@@ -260,7 +260,7 @@ export default function RevenueMetricDetailsPage() {
               >
                 Frequency
               </label>
-              <p className={`text-base ${tw.textPrimary}`}>
+              <p className={`text-sm ${tw.textPrimary}`}>
                 {metric.frequency}
               </p>
             </div>
@@ -269,14 +269,14 @@ export default function RevenueMetricDetailsPage() {
 
         {/* Operators */}
         <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
-          <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
+          <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-6`}>
             Operators
           </h3>
           <div className="flex flex-wrap gap-2">
             {metric.operators.map((op) => (
               <span
                 key={op}
-                className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium text-white"
+                className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium text-white"
                 style={{ backgroundColor: color.primary.accent }}
               >
                 {op.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
@@ -290,10 +290,10 @@ export default function RevenueMetricDetailsPage() {
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-md p-6 max-w-md w-full mx-4">
-            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-2`}>
+            <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-2`}>
               Delete Revenue Metric
             </h3>
-            <p className={`${tw.textSecondary} text-sm mb-6`}>
+            <p className={`text-sm ${tw.textSecondary} mb-6`}>
               Are you sure you want to delete "{metric.name}"? This action
               cannot be undone.
             </p>
@@ -301,14 +301,14 @@ export default function RevenueMetricDetailsPage() {
               <button
                 onClick={() => setShowDeleteModal(false)}
                 disabled={deleting}
-                className="px-4 py-2 text-sm font-medium border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-60"
+                className="px-4 py-2 text-xs font-medium border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-60"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmDelete}
                 disabled={deleting}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors disabled:opacity-60"
+                className="px-4 py-2 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors disabled:opacity-60"
               >
                 {deleting ? "Deleting..." : "Delete"}
               </button>

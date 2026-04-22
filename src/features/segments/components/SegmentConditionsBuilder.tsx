@@ -959,8 +959,8 @@ export default function SegmentConditionsBuilder({
                 </div>
               </div>
 
-              {/* Time Window Selector - only for computable fields */}
-              {isComputable && (
+              {/* Time Window Selector - only for computable fields AND not date operators */}
+              {isComputable && !["on_date", "between_dates", "since_date", "until_date"].includes(condition.operator?.toLowerCase() || "") && (
                 <div className="min-w-[140px] max-w-[180px] flex-shrink-0">
                   <HeadlessSelect
                     options={TIME_WINDOWS.map((tw) => ({
@@ -1037,7 +1037,8 @@ export default function SegmentConditionsBuilder({
     }
 
     // For computable fields, handle time window and value input
-    if (backendField?.is_computable === true) {
+    // BUT: if a date operator is selected, show date inputs instead
+    if (backendField?.is_computable === true && !isDateOperator) {
       const timeWindow = condition.time_window || "last_7_days";
       const isCustom = timeWindow === "custom";
 
@@ -1138,6 +1139,108 @@ export default function SegmentConditionsBuilder({
               </>
             );
           })()}
+        </div>
+      );
+    }
+
+    // For computable fields with date operators, show date inputs directly
+    if (backendField?.is_computable === true && isDateOperator) {
+      return (
+        <div className="flex items-center gap-2">
+          {condition.operator === "on_date" && (
+            <Input type="date"
+              value={
+                condition.value
+                  ? (condition.value as string).split("T")[0]
+                  : ""
+              }
+              onChange={(value) => {
+                updateCondition(groupId, condition.id, {
+                  value: String(value)
+                    ? `${String(value)}T00:00:00Z`
+                    : "",
+                });
+              }}
+              placeholder="Select date"
+              variant="medium"
+            />
+          )}
+
+          {condition.operator === "between_dates" && (
+            <>
+              <Input type="date"
+                value={
+                  condition.start_date
+                    ? condition.start_date.split("T")[0]
+                    : ""
+                }
+                onChange={(value) => {
+                  updateCondition(groupId, condition.id, {
+                    start_date: String(value)
+                      ? `${String(value)}T00:00:00Z`
+                      : undefined,
+                  });
+                }}
+                placeholder="From date"
+                variant="medium"
+              />
+              <span className="text-gray-500 text-sm">to</span>
+              <Input type="date"
+                value={
+                  condition.end_date
+                    ? condition.end_date.split("T")[0]
+                    : ""
+                }
+                onChange={(value) => {
+                  updateCondition(groupId, condition.id, {
+                    end_date: String(value)
+                      ? `${String(value)}T23:59:59Z`
+                      : undefined,
+                  });
+                }}
+                placeholder="To date"
+                variant="medium"
+              />
+            </>
+          )}
+
+          {condition.operator === "since_date" && (
+            <Input type="date"
+              value={
+                condition.value
+                  ? (condition.value as string).split("T")[0]
+                  : ""
+              }
+              onChange={(value) => {
+                updateCondition(groupId, condition.id, {
+                  value: String(value)
+                    ? `${String(value)}T00:00:00Z`
+                    : "",
+                });
+              }}
+              placeholder="From date"
+              variant="medium"
+            />
+          )}
+
+          {condition.operator === "until_date" && (
+            <Input type="date"
+              value={
+                condition.value
+                  ? (condition.value as string).split("T")[0]
+                  : ""
+              }
+              onChange={(value) => {
+                updateCondition(groupId, condition.id, {
+                  value: String(value)
+                    ? `${String(value)}T23:59:59Z`
+                    : "",
+                });
+              }}
+              placeholder="To date"
+              variant="medium"
+            />
+          )}
         </div>
       );
     }

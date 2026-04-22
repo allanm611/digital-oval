@@ -8,6 +8,7 @@ import { tw } from "../../../../shared/utils/utils";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../../shared/components/ui/Checkbox";
 import Radio from "../../../../shared/components/ui/Radio";
+import Input from "../../../../shared/components/ui/Input";
 import { getSettingsTimezone, TIMEZONE_OPTIONS } from "../../../../shared/utils/settingsHelper";
 
 interface SchedulingStepProps {

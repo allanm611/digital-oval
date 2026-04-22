@@ -19,6 +19,7 @@ import {
 } from "../../types/campaign";
 import { color , tw} from "../../../../shared/utils/utils";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
+import Input from "../../../../shared/components/ui/Input";
 
 interface OfferFlowChartProps {
   campaignType: "round_robin" | "multiple_level";
