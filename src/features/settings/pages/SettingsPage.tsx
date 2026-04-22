@@ -435,7 +435,7 @@ export default function SettingsPage() {
           .filter((item) => item?.is_active ?? true)
           .map((item) => ({
             value: String(item?.id || "").trim(),
-            label: item?.code ? `${item?.name} (${item?.code})` : String(item?.name || "").trim(),
+            label: String(item?.name || "").trim(),
           }))
           .filter((item) => item.value && item.label);
 
@@ -898,10 +898,6 @@ export default function SettingsPage() {
               options={characterSetOptions}
               placeholder="Select character set"
             />
-            <p className="text-xs text-gray-500 mt-3">
-              {characterSetDescriptions[settings.character_set] ||
-                "SMS encoding used for message delivery."}
-            </p>
           </div>
         </div>
 
@@ -933,10 +929,6 @@ export default function SettingsPage() {
               options={communicationChannelOptions}
               placeholder="Select default channel"
             />
-            <p className="text-xs text-gray-500 mt-3">
-              This channel will be used as the default for campaigns when no
-              specific channel is selected.
-            </p>
           </div>
         </div>
 
@@ -966,9 +958,6 @@ export default function SettingsPage() {
               options={senderIdOptions}
               placeholder="Select sender ID"
             />
-            <p className="text-xs text-gray-500 mt-3">
-              The sender ID that will appear on SMS messages by default.
-            </p>
           </div>
         </div>
 
@@ -998,9 +987,6 @@ export default function SettingsPage() {
               options={routeOptions}
               placeholder="Select route"
             />
-            <p className="text-xs text-gray-500 mt-3">
-              Determines which carrier or gateway handles message delivery.
-            </p>
           </div>
         </div>
 

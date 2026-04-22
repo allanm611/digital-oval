@@ -13,11 +13,12 @@ import {
   Loader,
   AlertCircle,
 } from "lucide-react";
-import { color, tw, components } from "../../../shared/utils/utils";
+import { color, tw, components, zIndex } from "../../../shared/utils/utils";
 import { ManualBroadcastData } from "../pages/CreateManualBroadcastPage";
 import PreviewPanel from "../../communications/components/PreviewPanel";
 import RichTextEditor from "../../communications/components/RichTextEditor";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { getSettingsCommunicationChannel } from "../../../shared/utils/settingsHelper";
 import CascadingVariableSelector from "./CascadingVariableSelector";
 import type { TemplateVariable } from "../types";
 import {
@@ -44,6 +45,8 @@ import type { SeedListRecipient } from "../../campaigns/pages/SeedListManagement
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import { smsRouteService } from "../../routes/services/smsRouteService";
 import { SMSRoute } from "../../routes/types/smsRoute";
+import { emailRouteService } from "../../routes/services/emailRouteService";
+import { EmailRoute } from "../../routes/types/emailRoute";
 import { communicationChannelService } from "../../../shared/services/communicationChannelService";
 
 interface DefineCommunicationStepProps {
@@ -72,12 +75,17 @@ export default function DefineCommunicationStep({
   const [channels, setChannels] = useState<Array<{ id: Channel; name: string; icon: any }>>([]);
 
   const [selectedChannel, setSelectedChannel] = useState<Channel>(
-    data.channel || "SMS",
+    data.channel || (getSettingsCommunicationChannel() as Channel),
   );
   const [messageTitle, setMessageTitle] = useState(data.messageTitle || "");
   const [messageBody, setMessageBody] = useState(data.messageBody || "");
   const [isRichText, setIsRichText] = useState(data.isRichText || false);
   const [smsRoute, setSmsRoute] = useState(data.smsRoute || "");
+  const [emailRoute, setEmailRoute] = useState("");
+
+  // Load email routes from configuration (dummy data)
+  const emailRoutesConfig = useConfigurationData("emailRoutes");
+  const emailRoutes = emailRoutesConfig?.data?.filter((r: any) => r.isActive || r.is_active) || [];
   const [error, setError] = useState("");
   const [showVariableSelector, setShowVariableSelector] = useState(false);
   const [activeField, setActiveField] = useState<"title" | "body">("body");
@@ -134,12 +142,12 @@ export default function DefineCommunicationStep({
     fetchSmsRoutes();
   }, []);
 
+
   // Fetch communication channels on component mount
   useEffect(() => {
     const fetchChannels = async () => {
       try {
         const allChannels = await communicationChannelService.getAll();
-        const channelMap: { [key: string]: any } = {};
         const iconMap: { [key: string]: any } = {
           SMS: MessageSquare,
           EMAIL: Mail,
@@ -147,29 +155,25 @@ export default function DefineCommunicationStep({
           PUSH: Bell,
         };
 
-        (allChannels || []).forEach((ch: any) => {
-          const code = ch.code?.toUpperCase() || "";
-          if (code && !channelMap[code]) {
-            channelMap[code] = ch;
-          }
-        });
+        const channelsList = (allChannels || [])
+          .filter((ch: any) => ch.is_active)
+          .map((ch: any) => {
+            const code = ch.code?.toUpperCase() || "";
+            return {
+              id: code as Channel,
+              name: ch.name || code,
+              icon: iconMap[code] || MessageSquare,
+            };
+          });
 
-        const channelsList = [
-          { id: "SMS" as Channel, name: channelMap.SMS?.name || t.manualBroadcast.channelSMS, icon: iconMap.SMS },
-          { id: "EMAIL" as Channel, name: channelMap.EMAIL?.name || t.manualBroadcast.channelEmail, icon: iconMap.EMAIL },
-          { id: "WHATSAPP" as Channel, name: channelMap.WHATSAPP?.name || t.manualBroadcast.channelWhatsApp, icon: iconMap.WHATSAPP },
-          { id: "PUSH" as Channel, name: channelMap.PUSH?.name || t.manualBroadcast.channelPush, icon: iconMap.PUSH },
-        ].filter((ch) => channelMap[ch.id] || ch.id === "SMS");
-
-        setChannels(channelsList);
+        setChannels(channelsList.length > 0 ? channelsList : []);
+        // Set default channel to first available
+        if (channelsList.length > 0 && !selectedChannel) {
+          setSelectedChannel(channelsList[0].id);
+        }
       } catch (error) {
         console.error("Failed to fetch communication channels:", error);
-        setChannels([
-          { id: "SMS" as Channel, name: t.manualBroadcast.channelSMS, icon: MessageSquare },
-          { id: "EMAIL" as Channel, name: t.manualBroadcast.channelEmail, icon: Mail },
-          { id: "WHATSAPP" as Channel, name: t.manualBroadcast.channelWhatsApp, icon: Phone },
-          { id: "PUSH" as Channel, name: t.manualBroadcast.channelPush, icon: Bell },
-        ]);
+        setChannels([]);
       }
     };
     fetchChannels();
@@ -754,42 +758,84 @@ export default function DefineCommunicationStep({
       </div>
 
       <div className="p-5">
-        <div className="mb-6">
-          <label className={`block text-sm font-medium ${tw.textPrimary} mb-3`}>
-            {t.manualBroadcast.channelLabel}
-          </label>
-          <div
-            className="inline-flex rounded-md border p-1"
-            style={{
-              borderColor: color.border.default,
-              backgroundColor: color.surface.cards,
-            }}
-          >
-            {channels.map((channel) => {
-              const Icon = channel.icon;
-              const isSelected = selectedChannel === channel.id;
-              return (
-                <button
-                  key={channel.id}
-                  type="button"
-                  onClick={() => setSelectedChannel(channel.id)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all"
-                  style={{
-                    backgroundColor: isSelected ? "white" : "transparent",
-                    color: isSelected
-                      ? color.primary.accent
-                      : color.text.secondary,
-                    boxShadow: isSelected
-                      ? "0 1px 3px rgba(0,0,0,0.1)"
-                      : "none",
-                  }}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{channel.name}</span>
-                </button>
-              );
-            })}
+        <div className="flex gap-4 mb-6">
+          <div className="flex-1">
+            <label className={`block text-sm font-medium ${tw.textPrimary} mb-3`}>
+              {t.manualBroadcast.channelLabel} <span className="text-red-500">*</span>
+            </label>
+            <HeadlessSelect
+              value={selectedChannel}
+              onChange={(value) => setSelectedChannel(value as Channel)}
+              options={channels.map((channel) => ({
+                value: channel.id,
+                label: channel.name,
+              }))}
+              placeholder="Select a communication channel"
+              zIndex={zIndex.popover}
+            />
           </div>
+
+          {/* SMS Route Selection - Show only when SMS variant is selected */}
+          {selectedChannel && selectedChannel.toUpperCase().includes("SMS") && (
+            <div className="flex-1">
+              <label
+                className={`text-sm font-medium ${tw.textPrimary} mb-3 block`}
+              >
+                SMS Route <span className="text-red-500">*</span>
+              </label>
+              <HeadlessSelect
+                options={[
+                  { value: "", label: "Select SMS Route" },
+                  ...(smsRoutes || [])
+                    .filter((route) => route.is_active)
+                    .map((route) => ({
+                      value: route.id.toString(),
+                      label: route.name,
+                    })),
+                ]}
+                value={smsRoute}
+                onChange={(value) => {
+                  setSmsRoute(value);
+                  setError("");
+                }}
+                placeholder="Select SMS Route"
+                zIndex={zIndex.popover}
+              />
+              {error === "Please select an SMS route" && (
+                <p className="text-red-600 text-sm mt-2">{error}</p>
+              )}
+            </div>
+          )}
+
+          {/* Email Route Selection - Show only when EMAIL is selected */}
+          {selectedChannel && selectedChannel.toUpperCase() === "EMAIL" && (
+            <div className="flex-1">
+              <label
+                className={`text-sm font-medium ${tw.textPrimary} mb-3 block`}
+              >
+                Email Route <span className="text-red-500">*</span>
+              </label>
+              <HeadlessSelect
+                options={[
+                  { value: "", label: "Select Email Route" },
+                  ...(emailRoutes || []).map((route: any) => ({
+                    value: route.id.toString(),
+                    label: route.name,
+                  })),
+                ]}
+                value={emailRoute}
+                onChange={(value) => {
+                  setEmailRoute(value);
+                  setError("");
+                }}
+                placeholder="Select Email Route"
+                zIndex={zIndex.popover}
+              />
+              {error === "Please select an email route" && (
+                <p className="text-red-600 text-sm mt-2">{error}</p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Communication Policy */}
@@ -926,38 +972,6 @@ export default function DefineCommunicationStep({
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Left Column - Message Editor (3/5) */}
           <div className="lg:col-span-3 space-y-4">
-            {/* SMS Route Selection - Show only when SMS is selected */}
-            {selectedChannel === "SMS" && (
-              <div>
-                <label
-                  className={`text-sm font-medium ${tw.textPrimary} mb-2 block`}
-                >
-                  SMS Route <span className="text-red-500">*</span>
-                </label>
-                <HeadlessSelect
-                  options={[
-                    { value: "", label: "Select SMS Route" },
-                    ...(smsRoutes || [])
-                      .filter((route) => route.is_active)
-                      .map((route) => ({
-                        value: route.id.toString(),
-                        label: route.name,
-                      })),
-                  ]}
-                  value={smsRoute}
-                  onChange={(value) => {
-                    setSmsRoute(value);
-                    setError("");
-                  }}
-                  placeholder="Select SMS Route"
-                  zIndex={1050}
-                />
-                {error === "Please select an SMS route" && (
-                  <p className="text-red-600 text-sm mt-2">{error}</p>
-                )}
-              </div>
-            )}
-
             {/* Toolbar */}
             <div
               className="flex items-center justify-between p-3 rounded-md"

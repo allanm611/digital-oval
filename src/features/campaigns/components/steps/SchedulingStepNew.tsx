@@ -8,6 +8,7 @@ import { tw } from "../../../../shared/utils/utils";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../../shared/components/ui/Checkbox";
 import Radio from "../../../../shared/components/ui/Radio";
+import { getSettingsTimezone, TIMEZONE_OPTIONS } from "../../../../shared/utils/settingsHelper";
 
 interface SchedulingStepProps {
   formData: CreateCampaignRequest;
@@ -31,7 +32,7 @@ export default function SchedulingStep({
   const [scheduling, setScheduling] = useState<CampaignScheduling>(
     formData.scheduling || {
       type: "scheduled",
-      time_zone: "(GMT+02:00) Sudan",
+      time_zone: getSettingsTimezone(),
       start_date: new Date().toISOString().split("T")[0], // Today's date
       end_date: "",
     }
@@ -60,7 +61,7 @@ export default function SchedulingStep({
     if (!formData.scheduling) {
       const defaultScheduling = {
         type: "scheduled",
-        time_zone: "(GMT+02:00) Sudan",
+        time_zone: getSettingsTimezone(),
         start_date: new Date().toISOString().split("T")[0], // Today's date
         end_date: "",
       };
@@ -242,23 +243,18 @@ export default function SchedulingStep({
               Time Zone
             </label>
             <HeadlessSelect
-              value={scheduling.time_zone}
+              value={scheduling.time_zone || getSettingsTimezone()}
               onChange={(value) =>
                 updateScheduling({ time_zone: value as string })
               }
-              options={[
-                { label: "(GMT+02:00) Sudan", value: "(GMT+02:00) Sudan" },
-                {
-                  label: "UTC (Coordinated Universal Time)",
-                  value: "(GMT+00:00) UTC",
-                },
-                { label: "Eastern Time (ET)", value: "(GMT-05:00) Eastern" },
-                { label: "Central Time (CT)", value: "(GMT-06:00) Central" },
-                { label: "Paris (CET/CEST)", value: "(GMT+01:00) Paris" },
-              ]}
+              options={TIMEZONE_OPTIONS}
               placeholder="Select timezone"
+              searchable={true}
               className="w-full"
             />
+            {/* <p className="text-xs text-gray-500 mt-2">
+              Using timezone from Settings: {getSettingsTimezone()}
+            </p> */}
           </div>
         </div>
       </div>
@@ -348,7 +344,7 @@ export default function SchedulingStep({
 
           {/* Time Zone Display */}
           <div className="mb-6">
-            <span className="text-sm text-gray-600">(GMT+02:00) Sudan</span>
+            <span className="text-sm text-gray-600">{scheduling.time_zone || getSettingsTimezone()}</span>
           </div>
 
           {/* Additional Options */}

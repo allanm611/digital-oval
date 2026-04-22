@@ -15,6 +15,7 @@ import {
 import { color, tw } from "../../../shared/utils/utils";
 import { zIndex } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import TypeSelector from "../../../shared/components/TypeSelector";
 import Input from "../../../shared/components/ui/Input";
 import RegularModal from "../../../shared/components/ui/RegularModal";
 import {
@@ -1286,7 +1287,7 @@ export default function OfferCreativeStep({
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       {t.offers.locale.label} <span className="text-red-500">*</span>
                     </label>
-                    <HeadlessSelect
+                    <TypeSelector
                       value={editingCreative.locale || ""}
                       onChange={(value) => {
                         if (selectedCreativeData) {
@@ -1311,7 +1312,8 @@ export default function OfferCreativeStep({
                           : "Select a language"
                       }
                       disabled={selectedCreativeData ? languageOptions.filter((opt) => !opt.isUsed).length === 0 : false}
-                      zIndex={zIndex.popover}
+                      allowCreate={true}
+                      onCreate={() => window.open("/dashboard/languages", "_blank")}
                     />
                   </div>
 
@@ -1331,7 +1333,7 @@ export default function OfferCreativeStep({
                         )}
                       </div>
                       <div className="relative">
-                        <HeadlessSelect
+                        <TypeSelector
                           value={
                             selectedCreativeData && selectedTemplates[selectedCreativeData.id]
                               ? selectedTemplates[
@@ -1345,7 +1347,6 @@ export default function OfferCreativeStep({
                           options={[
                             { value: "", label: "Select template" },
                             ...availableTemplates.map((template) => {
-                              // Get language name if template has locale
                               let languageLabel = "";
                               if (
                                 template.locale &&
@@ -1360,20 +1361,18 @@ export default function OfferCreativeStep({
                                     lang.language_code === template.locale
                                 );
                                 if (language && language.name) {
-                                  languageLabel = ` (${language.name})`;
+                                  languageLabel = " (" + language.name + ")";
                                 }
                               }
                               return {
                                 value: template.id.toString(),
-                                label: `${template.name}${languageLabel}${
-                                  template.description
-                                    ? ` - ${template.description}`
-                                    : ""
-                                }`,
+                                label: template.name + languageLabel + (template.description ? " - " + template.description : ""),
                               };
                             }),
                           ]}
                           placeholder="Select a template to start with..."
+                          allowCreate={true}
+                          onCreate={() => window.open("/dashboard/creative-templates", "_blank")}
                         />
                         {selectedTemplates[selectedCreativeData.id] && (
                           <div className="mt-2 flex items-center gap-2 text-xs text-gray-600">

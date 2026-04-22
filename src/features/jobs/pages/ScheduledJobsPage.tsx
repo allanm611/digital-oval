@@ -24,6 +24,7 @@ import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
 import CreateButton from "../../../shared/components/ui/CreateButton";
+import Input from "../../../shared/components/ui/Input";
 import SelectJobTypeModal from "../components/SelectJobTypeModal";
 import { color, tw, zIndexTokens } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";

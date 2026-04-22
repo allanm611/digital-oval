@@ -38,6 +38,9 @@ export interface ManualRewardData {
   rewardValue?: string;
   bundleTrack?: string;
   description?: string;
+  channel?: "EMAIL" | "SMS" | "WHATSAPP" | "PUSH";
+  smsRoute?: string;
+  rewardTitle?: string;
   selectedCommunicationPolicyId?: number;
   seedTestContacts?: string[];
   rewardValidation?: {

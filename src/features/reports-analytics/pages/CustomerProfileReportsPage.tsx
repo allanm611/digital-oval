@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import Input from '../../../shared/components/ui/Input';
+import SearchInput from '../../../shared/components/ui/SearchInput';
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import {
   Bar,

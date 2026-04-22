@@ -59,6 +59,7 @@ import { color, tw, components } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { getSettingsCommunicationChannel } from "../../../shared/utils/settingsHelper";
 import { useBackendOfferTypeData } from "../../../shared/hooks/useBackendOfferTypeData";
 import ProgressStepper, {
   Step,
@@ -465,48 +466,8 @@ function BasicInfoStep({
           )}
         </div>
 
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Max Usage Per Customer
-          </label>
-          <Input
-            type="number"
-            min="0"
-            placeholder="e.g., 1, 5, 10"
-            value={(formData.max_usage_per_customer || "").toString()}
-            onChange={(value) => {
-              setFormData({
-                ...formData,
-                max_usage_per_customer: value
-                  ? Number(value)
-                  : 0,
-              });
-              if (
-                validationErrors?.max_usage_per_customer &&
-                clearValidationErrors
-              ) {
-                clearValidationErrors();
-              }
-            }}
-            hasError={!!validationErrors?.max_usage_per_customer}
-            variant="medium"
-          />
-          {validationErrors?.max_usage_per_customer && (
-            <p className="mt-1 text-sm text-red-600">
-              {validationErrors.max_usage_per_customer}
-            </p>
-          )}
-          <p className="mt-1 text-xs text-gray-500">
-            Maximum times a customer can use this offer (minimum: 0)
-          </p>
-        </div>
-
-        <div className={`flex gap-4 ${(formData.communication_channel_id === 2 || communicationChannels?.find(ch => String(ch.id) === String(formData.communication_channel_id))?.name?.toUpperCase() === "EMAIL") ? 'items-start' : ''}`}>
-          <div className={(() => {
-            const selectedChannel = communicationChannels?.find(ch => String(ch.id) === String(formData.communication_channel_id));
-            const isRouteChannel = formData.communication_channel_id === 2 || selectedChannel?.name?.toUpperCase() === "EMAIL";
-            return isRouteChannel ? 'flex-1' : 'w-full';
-          })()}>
+        <div className="flex gap-4">
+          <div className="flex-1">
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Communication Channel *
             </label>
@@ -542,36 +503,41 @@ function BasicInfoStep({
             )}
           </div>
 
-          {/* SMS Route - only show when SMS channel is selected */}
-          {formData.communication_channel_id === 2 && (
-            <div className="flex-1">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                SMS Route
-              </label>
-              <HeadlessSelect
-                options={
-                  smsRoutes?.map((route) => ({
-                    value: String(route.id),
-                    label: route.name,
-                  })) || []
-                }
-                disabled={smsRoutesLoading}
-                value={
-                  formData.sms_route_id
-                    ? String(formData.sms_route_id)
-                    : ""
-                }
-                onChange={(value) => {
-                  if (!value) return;
-                  setFormData({
-                    ...formData,
-                    sms_route_id: Number(value),
-                  });
-                }}
-                placeholder={smsRoutesLoading ? "Loading..." : "Select SMS route"}
-              />
-            </div>
-          )}
+          {/* SMS Route - only show when SMS variant channel is selected */}
+          {(() => {
+            const selectedChannel = communicationChannels?.find(
+              (ch) => String(ch.id) === String(formData.communication_channel_id)
+            );
+            return selectedChannel?.name?.toUpperCase().includes("SMS") ? (
+              <div className="flex-1">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  SMS Route
+                </label>
+                <HeadlessSelect
+                  options={
+                    smsRoutes?.map((route) => ({
+                      value: String(route.id),
+                      label: route.name,
+                    })) || []
+                  }
+                  disabled={smsRoutesLoading}
+                  value={
+                    formData.sms_route_id
+                      ? String(formData.sms_route_id)
+                      : ""
+                  }
+                  onChange={(value) => {
+                    if (!value) return;
+                    setFormData({
+                      ...formData,
+                      sms_route_id: Number(value),
+                    });
+                  }}
+                  placeholder={smsRoutesLoading ? "Loading..." : "Select SMS route"}
+                />
+              </div>
+            ) : null;
+          })()}
 
           {/* Email Route - only show when EMAIL channel is selected */}
           {(() => {
@@ -595,19 +561,55 @@ function BasicInfoStep({
                     formData.email_route_id
                       ? String(formData.email_route_id)
                       : ""
-                  }
-                  onChange={(value) => {
-                    if (!value) return;
-                    setFormData({
-                      ...formData,
-                      email_route_id: Number(value),
-                    });
-                  }}
-                  placeholder={emailRoutesLoading ? "Loading..." : "Select email route"}
-                />
-              </div>
-            ) : null;
-          })()}
+                    }
+                    onChange={(value) => {
+                      if (!value) return;
+                      setFormData({
+                        ...formData,
+                        email_route_id: Number(value),
+                      });
+                    }}
+                    placeholder={emailRoutesLoading ? "Loading..." : "Select email route"}
+                  />
+                </div>
+              ) : null;
+            })()}
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Max Usage Per Customer
+          </label>
+          <Input
+            type="number"
+            min="0"
+            placeholder="e.g., 1, 5, 10"
+            value={(formData.max_usage_per_customer || "").toString()}
+            onChange={(value) => {
+              setFormData({
+                ...formData,
+                max_usage_per_customer: value
+                  ? Number(value)
+                  : 0,
+              });
+              if (
+                validationErrors?.max_usage_per_customer &&
+                clearValidationErrors
+              ) {
+                clearValidationErrors();
+              }
+            }}
+            hasError={!!validationErrors?.max_usage_per_customer}
+            variant="medium"
+          />
+          {validationErrors?.max_usage_per_customer && (
+            <p className="mt-1 text-sm text-red-600">
+              {validationErrors.max_usage_per_customer}
+            </p>
+          )}
+          <p className="mt-1 text-xs text-gray-500">
+            Maximum times a customer can use this offer (minimum: 0)
+          </p>
         </div>
       </div>
 
@@ -1911,9 +1913,22 @@ export default function CreateOfferPage({
         setChannelsLoading(true);
         const channels = await communicationChannelService.getAll();
         // Filter for active channels only - prevents users from selecting inactive/unavailable channels
-        setCommunicationChannels(
-          Array.isArray(channels) ? channels.filter((ch) => ch.is_active) : []
-        );
+        const activeChannels = Array.isArray(channels) ? channels.filter((ch) => ch.is_active) : [];
+        setCommunicationChannels(activeChannels);
+
+        // Set default channel from settings if not already set
+        if (!formData.communication_channel_id && activeChannels.length > 0) {
+          const defaultChannelName = getSettingsCommunicationChannel();
+          const defaultChannel = activeChannels.find(
+            (ch) => ch.name?.toUpperCase() === defaultChannelName.toUpperCase()
+          );
+          if (defaultChannel) {
+            setFormData((prev) => ({
+              ...prev,
+              communication_channel_id: defaultChannel.id,
+            }));
+          }
+        }
       } catch {
         // Failed to load communication channels
         // Keep empty array on error, user can still proceed

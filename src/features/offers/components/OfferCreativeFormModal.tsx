@@ -5,6 +5,7 @@ import ModalFooter from "../../../shared/components/ui/ModalFooter";
 import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import TypeSelector from "../../../shared/components/TypeSelector";
 import CascadingVariableSelector from "../../manual-broadcast/components/CascadingVariableSelector";
 import RichTextEditor from "../../communications/components/RichTextEditor";
 import PreviewPanel from "../../communications/components/PreviewPanel";
@@ -430,21 +431,10 @@ export default function OfferCreativeFormModal({
                 />
               </div>
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Locale / Language
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => window.open("/dashboard/languages", "_blank")}
-                    className="text-xs text-purple-600 hover:text-purple-700 underline"
-                  >
-                    Create Language
-                  </button>
-                </div>
-                <HeadlessSelect
-                  value={formData.locale}
-                  onChange={(value) => setFormData((prev) => ({ ...prev, locale: String(value) }))}
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Locale / Language
+                </label>
+                <TypeSelector
                   options={
                     languages.length > 0
                       ? languages
@@ -458,38 +448,33 @@ export default function OfferCreativeFormModal({
                           value: locale,
                         }))
                   }
+                  value={formData.locale}
+                  onChange={(value) => setFormData((prev) => ({ ...prev, locale: String(value) }))}
                   placeholder="Select language"
-                  zIndex={zIndex.popover}
+                  allowCreate={true}
+                  onCreate={() => window.open("/dashboard/languages", "_blank")}
                 />
               </div>
             </div>
 
             {/* Creative Template */}
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Creative Template
-                </label>
-                <button
-                  type="button"
-                  onClick={() => window.open("/dashboard/creative-templates", "_blank")}
-                  className="text-xs text-purple-600 hover:text-purple-700 underline"
-                >
-                  Create Template
-                </button>
-              </div>
-              <HeadlessSelect
-                value={selectedTemplate?.id ? String(selectedTemplate.id) : ""}
-                onChange={(value) => handleTemplateSelect(value ? Number(value) : "")}
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Creative Template (Optional)
+              </label>
+              <TypeSelector
                 options={[
                   { label: "Select a template", value: "" },
                   ...templates
                     .filter((t) => t.is_active && t.channel === formData.channel)
                     .map((t) => ({ value: String(t.id), label: t.name }))
                 ]}
+                value={selectedTemplate?.id ? String(selectedTemplate.id) : ""}
+                onChange={(value) => handleTemplateSelect(value ? Number(value) : "")}
                 placeholder="Select template..."
-                zIndex={zIndex.popover}
                 disabled={templatesLoading || !formData.channel}
+                allowCreate={true}
+                onCreate={() => window.open("/dashboard/creative-templates", "_blank")}
               />
             </div>
 

@@ -80,14 +80,47 @@ export default function CharacterSetFormModal({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
-  ) => {
-    const { name, value, type } = e.target;
+  const handleInputChange = (fieldName: keyof typeof formData) => (value: string | number) => {
     setFormData((prev) => ({
       ...prev,
-      [name]:
-        type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
+      [fieldName]: value,
+    }));
+    if (errors[fieldName]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[fieldName];
+        return newErrors;
+      });
+    }
+  };
+
+  const handleCheckboxChange = (fieldName: keyof typeof formData) => (checked: boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      [fieldName]: checked,
+    }));
+  };
+
+  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    if (errors[name]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+  };
+
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
     }));
     if (errors[name]) {
       setErrors((prev) => {
@@ -146,10 +179,7 @@ export default function CharacterSetFormModal({
             <Input
               placeholder="Enter character set name"
               value={formData.name}
-              onChange={(value) => {
-                const event = { target: { name: "name", value } } as any;
-                handleChange(event);
-              }}
+              onChange={handleInputChange('name')}
               hasError={!!errors.name}
               variant="medium"
             />
@@ -166,7 +196,7 @@ export default function CharacterSetFormModal({
             <textarea
               name="description"
               value={formData.description}
-              onChange={handleChange}
+              onChange={handleTextareaChange}
               rows={2}
               className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none`}
               placeholder="Enter description (optional)"
@@ -184,7 +214,7 @@ export default function CharacterSetFormModal({
               <select
                 name="message_type"
                 value={formData.message_type}
-                onChange={handleChange}
+                onChange={handleSelectChange}
                 className="w-full px-3 py-2 border border-gray-300 bg-white rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {MESSAGE_TYPE_OPTIONS.map((opt) => (
@@ -204,7 +234,7 @@ export default function CharacterSetFormModal({
               <select
                 name="character_set_type"
                 value={formData.character_set_type}
-                onChange={handleChange}
+                onChange={handleSelectChange}
                 className="w-full px-3 py-2 border border-gray-300 bg-white rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {CHARSET_TYPE_OPTIONS.map((opt) => (
@@ -222,9 +252,8 @@ export default function CharacterSetFormModal({
                 <span className="text-red-600">*</span>
               </label>
               <Input type="number"
-                name="character_set_size"
                 value={formData.character_set_size}
-                onChange={handleChange}
+                onChange={handleInputChange('character_set_size')}
                 className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="e.g., 160"
               />
@@ -240,7 +269,7 @@ export default function CharacterSetFormModal({
             <textarea
               name="standard_chars"
               value={formData.standard_chars}
-              onChange={handleChange}
+              onChange={handleTextareaChange}
               rows={3}
               className={`w-full px-3 py-2 border ${
                 errors.standard_chars ? "border-red-500" : "border-gray-300"
@@ -263,7 +292,7 @@ export default function CharacterSetFormModal({
               <textarea
                 name="double_chars"
                 value={formData.double_chars}
-                onChange={handleChange}
+                onChange={handleTextareaChange}
                 rows={2}
                 className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 placeholder="Enter double characters (optional)"
@@ -277,7 +306,7 @@ export default function CharacterSetFormModal({
               <textarea
                 name="triple_chars"
                 value={formData.triple_chars}
-                onChange={handleChange}
+                onChange={handleTextareaChange}
                 rows={2}
                 className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 placeholder="Enter triple characters (optional)"
@@ -291,7 +320,7 @@ export default function CharacterSetFormModal({
               <textarea
                 name="quad_chars"
                 value={formData.quad_chars}
-                onChange={handleChange}
+                onChange={handleTextareaChange}
                 rows={2}
                 className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 placeholder="Enter quad characters (optional)"
@@ -303,9 +332,8 @@ export default function CharacterSetFormModal({
           <div className="flex items-center">
             <Input
               type="checkbox"
-              name="is_active"
               checked={formData.is_active}
-              onChange={handleChange}
+              onChange={handleCheckboxChange('is_active')}
               className="w-4 h-4 rounded border-gray-300 cursor-pointer"
             />
             <label className={`ml-2 text-sm font-medium ${tw.textPrimary}`}>

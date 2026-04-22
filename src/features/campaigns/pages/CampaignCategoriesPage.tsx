@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { createPortal } from "react-dom";
 import Input from '../../../shared/components/ui/Input';
+import SearchInput from '../../../shared/components/ui/SearchInput';
 import { useNavigate } from "react-router-dom";
 import { Edit, Trash2, MessageSquare, Grid, List } from "lucide-react";
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";

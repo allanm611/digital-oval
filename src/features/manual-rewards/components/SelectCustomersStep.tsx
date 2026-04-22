@@ -9,6 +9,7 @@ import CreateQuickListModal from "../../quicklists/components/CreateQuickListMod
 import { quicklistService } from "../../quicklists/services/quicklistService";
 import { ManualRewardData } from "../pages/CreateManualRewardPage";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { isValidCountryCodePhone, isValidEmail } from "../../../shared/utils/validation";
 
 interface SelectCustomersStepProps {
   data: ManualRewardData;
@@ -55,9 +56,7 @@ export default function SelectCustomersStep({
   const validateManualInput = () => {
     if (!manualInput.trim()) return false;
     const lines = manualInput.split("\n").filter((line) => line.trim());
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^[\d+\-() \s]{5,}$/;
-    return lines.some((line) => emailRegex.test(line) || phoneRegex.test(line));
+    return lines.some((line) => isValidEmail(line) || isValidCountryCodePhone(line));
   };
 
   const isFormValid =
@@ -323,11 +322,11 @@ export default function SelectCustomersStep({
               onChange={(e) => {
                 setManualInput(e.target.value);
                 // Count recipients
-                const recipientLines = String(value)
+                const recipientLines = String(e.target.value)
                   .split("\n")
                   .filter((line) => line.trim());
                 onUpdate({
-                  audienceFileText: String(value),
+                  audienceFileText: String(e.target.value),
                   rowCount: recipientLines.length
                 });
                 setError("");

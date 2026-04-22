@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import Input from '../../../shared/components/ui/Input';
+import SearchInput from '../../../shared/components/ui/SearchInput';
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {

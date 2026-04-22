@@ -5,6 +5,7 @@ import { AlertCircle } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { ManualRewardData } from "../pages/CreateManualRewardPage";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { getSettingsTimezone } from "../../../shared/utils/settingsHelper";
 
 interface ApplyRewardStepProps {
   data: ManualRewardData;
@@ -26,7 +27,7 @@ export default function ApplyRewardStep({
     start_date: data.applyDate
       ? `${data.applyDate}T${data.applyTime || "00:00"}`
       : undefined,
-    time_zone: "(GMT+02:00) Sudan",
+    time_zone: getSettingsTimezone(),
   };
 
   const handleSchedulingChange = (scheduling: SchedulingData) => {
@@ -117,6 +118,16 @@ export default function ApplyRewardStep({
               {getRewardTypeLabel()}: {getRewardValueDisplay()}
             </span>
           </div>
+          {data.channel && (
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
+              <span className={tw.textSecondary}>
+                Communication Channel
+              </span>
+              <span className={`font-medium ${tw.textPrimary}`}>
+                {data.channel}
+              </span>
+            </div>
+          )}
           <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
             <span className={tw.textSecondary}>
               {t.manualRewards.summarySchedule}

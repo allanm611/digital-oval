@@ -154,14 +154,10 @@ export default function UserModal({
     [roles],
   );
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
-    const { name, value, type } = e.target;
+  const handleInputChange = (fieldName: keyof UserFormData) => (value: string | number) => {
     setFormData((prev) => ({
       ...prev,
-      [name]:
-        type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
+      [fieldName]: value,
     }));
   };
 
@@ -305,7 +301,7 @@ export default function UserModal({
                     <Input
                       name="first_name"
                       value={formData.first_name}
-                      onChange={handleChange}
+                      onChange={handleInputChange('first_name')}
                       required
                       className={`block w-full pl-10 pr-3 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 text-sm`}
                       placeholder="First Name"
@@ -325,7 +321,7 @@ export default function UserModal({
                     <Input
                       name="last_name"
                       value={formData.last_name}
-                      onChange={handleChange}
+                      onChange={handleInputChange('last_name')}
                       required
                       className={`block w-full pl-10 pr-3 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 text-sm`}
                       placeholder="Last Name"
@@ -348,7 +344,7 @@ export default function UserModal({
                     name="email_address"
                     type="email"
                     value={formData.email_address}
-                    onChange={handleChange}
+                    onChange={handleInputChange('email_address')}
                     required
                     disabled={!!user}
                     className={`block w-full pl-10 pr-3 py-3 border ${
@@ -380,7 +376,7 @@ export default function UserModal({
                       name="username"
                       type="text"
                       value={formData.username}
-                      onChange={handleChange}
+                      onChange={handleInputChange('username')}
                       className={`block w-full px-3 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 text-sm`}
                       placeholder="Leave empty to auto-generate from email"
                     />
@@ -403,7 +399,7 @@ export default function UserModal({
                         name="password"
                         type="password"
                         value={formData.password}
-                        onChange={handleChange}
+                        onChange={handleInputChange('password')}
                         required
                         minLength={8}
                         className={`block w-full pl-10 pr-3 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 text-sm`}
@@ -460,7 +456,7 @@ export default function UserModal({
                     name="department"
                     type="text"
                     value={formData.department}
-                    onChange={handleChange}
+                    onChange={handleInputChange('department')}
                     className={`block w-full px-3 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 text-sm`}
                     placeholder="Department"
                   />

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import Input from '../../../shared/components/ui/Input';
+import SearchInput from '../../../shared/components/ui/SearchInput';
 import { useNavigate } from "react-router-dom";
 import {
   Download,

@@ -10,10 +10,20 @@ import {
   FlaskConical,
   CheckCircle,
   XCircle,
+  Mail,
+  MessageSquare,
+  Phone,
+  Bell,
 } from "lucide-react";
+import { communicationChannelService } from "../../../shared/services/communicationChannelService";
+import { smsRouteService } from "../../routes/services/smsRouteService";
+import { SMSRoute } from "../../routes/types/smsRoute";
+import { emailRouteService } from "../../routes/services/emailRouteService";
+import { EmailRoute } from "../../routes/types/emailRoute";
 import { color, tw, zIndex, components } from "../../../shared/utils/utils";
 import { ManualRewardData } from "../pages/CreateManualRewardPage";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { useConfigurationData } from "../../../shared/services/configurationDataService";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { communicationPolicyService } from "../../campaigns/services/communicationPolicyService";
 import type { CommunicationPolicyConfiguration } from "../../campaigns/types/communicationPolicyConfig";
@@ -23,6 +33,7 @@ import {
   isValidCountryCodePhone,
   isValidEmail,
 } from "../../../shared/utils/validation";
+import { getSettingsCommunicationChannel } from "../../../shared/utils/settingsHelper";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 
 interface DefineRewardStepProps {
@@ -33,6 +44,7 @@ interface DefineRewardStepProps {
 }
 
 type RewardType = "bundle" | "points" | "discount" | "cashback";
+type Channel = "EMAIL" | "SMS" | "WHATSAPP" | "PUSH";
 
 interface RewardSeedTestResult {
   contact: string;
@@ -71,6 +83,20 @@ export default function DefineRewardStep({
     RewardSeedTestResult[]
   >([]);
 
+  // Channel states
+  const [channels, setChannels] = useState<Array<{ id: Channel; name: string; icon: any }>>([]);
+  const [selectedChannel, setSelectedChannel] = useState<Channel>(
+    data.channel || (getSettingsCommunicationChannel() as Channel),
+  );
+  const [smsRoutes, setSmsRoutes] = useState<SMSRoute[]>([]);
+  const [smsRoute, setSmsRoute] = useState("");
+  const [emailRoute, setEmailRoute] = useState("");
+  const [rewardTitle, setRewardTitle] = useState("");
+
+  // Load email routes from configuration (dummy data)
+  const emailRoutesConfig = useConfigurationData("emailRoutes");
+  const emailRoutes = emailRoutesConfig?.data?.filter((r: any) => r.isActive || r.is_active) || [];
+
   // Communication Policy states
   const [communicationPolicies, setCommunicationPolicies] = useState<
     CommunicationPolicyConfiguration[]
@@ -81,6 +107,57 @@ export default function DefineRewardStep({
   const policyDropdownRef = useRef<HTMLDivElement>(null);
 
   useClickOutside(policyDropdownRef, () => setIsPolicyDropdownOpen(false));
+
+  // Fetch SMS routes
+  useEffect(() => {
+    const fetchSmsRoutes = async () => {
+      try {
+        const routes = await smsRouteService.getAllRoutes();
+        setSmsRoutes(Array.isArray(routes) ? routes : []);
+      } catch (error) {
+        console.error("Failed to fetch SMS routes:", error);
+        setSmsRoutes([]);
+      }
+    };
+    fetchSmsRoutes();
+  }, []);
+
+
+  // Fetch communication channels
+  useEffect(() => {
+    const fetchChannels = async () => {
+      try {
+        const allChannels = await communicationChannelService.getAll();
+        const iconMap: { [key: string]: any } = {
+          SMS: MessageSquare,
+          EMAIL: Mail,
+          WHATSAPP: Phone,
+          PUSH: Bell,
+        };
+
+        const channelsList = (allChannels || [])
+          .filter((ch: any) => ch.is_active)
+          .map((ch: any) => {
+            const code = ch.code?.toUpperCase() || "";
+            return {
+              id: code as Channel,
+              name: ch.name || code,
+              icon: iconMap[code] || MessageSquare,
+            };
+          });
+
+        setChannels(channelsList);
+        // Set default channel to first available
+        if (channelsList.length > 0) {
+          setSelectedChannel(channelsList[0].id);
+        }
+      } catch (error) {
+        console.error("Failed to fetch communication channels:", error);
+        setChannels([]);
+      }
+    };
+    fetchChannels();
+  }, []);
 
   // Load Communication Policies
   useEffect(() => {
@@ -93,6 +170,13 @@ export default function DefineRewardStep({
     );
 
     return unsubscribe;
+  }, []);
+
+  // Sync channel data from parent on mount
+  useEffect(() => {
+    if (data.channel) setSelectedChannel(data.channel as Channel);
+    if (data.smsRoute) setSmsRoute(data.smsRoute);
+    if (data.rewardTitle) setRewardTitle(data.rewardTitle);
   }, []);
 
   // Sync selectedPolicy with parent data
@@ -254,6 +338,9 @@ export default function DefineRewardStep({
       rewardValue: rewardValue.trim(),
       bundleTrack: rewardType === "bundle" ? bundleTrack : undefined,
       description: description.trim() || undefined,
+      channel: selectedChannel,
+      smsRoute: selectedChannel === "SMS" ? smsRoute : undefined,
+      rewardTitle: selectedChannel === "EMAIL" ? rewardTitle : undefined,
       selectedCommunicationPolicyId: selectedPolicy?.id,
     });
 
@@ -417,6 +504,94 @@ export default function DefineRewardStep({
             <p className={`mt-1 text-xs ${tw.textSecondary}`}>
               {t.manualRewards.bundleTrackHelper}
             </p>
+          </div>
+        )}
+
+        {/* Communication Channel, SMS Route, and Email Route */}
+        <div className="flex gap-4 mb-6">
+          <div className="flex-1">
+            <label className={`block text-sm font-medium ${tw.textPrimary} mb-3`}>
+              Communication Channel <span className="text-red-500">*</span>
+            </label>
+            <HeadlessSelect
+              value={selectedChannel}
+              onChange={(value) => {
+                setSelectedChannel(value as Channel);
+                setSmsRoute("");
+                setRewardTitle("");
+              }}
+              options={channels.map((channel) => ({
+                value: channel.id,
+                label: channel.name,
+              }))}
+              placeholder="Select a communication channel"
+              zIndex={zIndex.popover}
+            />
+          </div>
+
+          {/* SMS Route (for SMS variants) */}
+          {selectedChannel && selectedChannel.toUpperCase().includes("SMS") && (
+            <div className="flex-1">
+              <label className={`block text-sm font-medium ${tw.textPrimary} mb-3`}>
+                SMS Route <span className="text-red-500">*</span>
+              </label>
+              <HeadlessSelect
+                options={[
+                  { value: "", label: "Select SMS Route" },
+                  ...(smsRoutes || [])
+                    .filter((route) => route.is_active)
+                    .map((route) => ({
+                      value: route.id.toString(),
+                      label: route.name,
+                    })),
+                ]}
+                value={smsRoute}
+                onChange={(value) => {
+                  setSmsRoute(value);
+                }}
+                placeholder="Select SMS Route"
+                zIndex={zIndex.popover}
+              />
+            </div>
+          )}
+
+          {/* Email Route (for Email channel only) */}
+          {selectedChannel && selectedChannel.toUpperCase() === "EMAIL" && (
+            <div className="flex-1">
+              <label className={`block text-sm font-medium ${tw.textPrimary} mb-3`}>
+                Email Route <span className="text-red-500">*</span>
+              </label>
+              <HeadlessSelect
+                options={[
+                  { value: "", label: "Select Email Route" },
+                  ...(emailRoutes || []).map((route: any) => ({
+                    value: route.id.toString(),
+                    label: route.name,
+                  })),
+                ]}
+                value={emailRoute}
+                onChange={(value) => {
+                  setEmailRoute(value);
+                }}
+                placeholder="Select Email Route"
+                zIndex={zIndex.popover}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Subject Line (for Email channel only) */}
+        {selectedChannel === "EMAIL" && (
+          <div>
+            <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
+              Subject Line <span className="text-red-500">*</span>
+            </label>
+            <Input
+              placeholder="Enter email subject..."
+              value={rewardTitle}
+              onChange={(value) => setRewardTitle(String(value))}
+              variant="medium"
+            />
           </div>
         )}
 

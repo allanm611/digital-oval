@@ -1,22 +1,17 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Save } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import { UsageMetric, UsageMetricOperator } from "../types/usageMetrics";
-import { usageMetricService } from "../services/usageMetricService";
 import { useToast } from "../../../contexts/ToastContext";
 import { color, tw } from "../../../shared/utils/utils";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 
-const CATEGORY_OPTIONS = [
-  { label: "Data Usage", value: "data_usage" },
-  { label: "Voice Usage", value: "voice_usage" },
-  { label: "SMS Usage", value: "sms_usage" },
-  { label: "Bundle Usage", value: "bundle_usage" },
-  { label: "DOU Metrics", value: "dou_metrics" },
+const KPI_TYPE_OPTIONS = [
+  { label: "Revenue Metric", value: "revenue" },
+  { label: "Usage Metric", value: "usage" },
+  { label: "System Event", value: "system" },
 ];
 
 const FIELD_TYPE_OPTIONS = [
@@ -35,7 +30,13 @@ const FREQUENCY_OPTIONS = [
   { label: "Monthly", value: "Monthly" },
 ];
 
-const OPERATORS: { value: UsageMetricOperator; label: string }[] = [
+const CALCULATION_TYPE_OPTIONS = [
+  { label: "Value Set", value: "value_set" },
+  { label: "Computed", value: "computed" },
+  { label: "Static", value: "static" },
+];
+
+const OPERATORS = [
   { value: "equals", label: "Equals" },
   { value: "not_equals", label: "Not Equals" },
   { value: "greater_than", label: "Greater Than" },
@@ -44,72 +45,32 @@ const OPERATORS: { value: UsageMetricOperator; label: string }[] = [
   { value: "not_in", label: "Not In" },
 ];
 
-interface UsageMetricFormPageProps {
-  mode: "create" | "edit";
-}
-
-export default function UsageMetricFormPage({ mode }: UsageMetricFormPageProps) {
-  const { id } = useParams<{ id: string }>();
+export default function CreateKPIPage() {
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
 
-  const [loading, setLoading] = useState(mode === "edit");
   const [saving, setSaving] = useState(false);
-  const [metric, setMetric] = useState<UsageMetric | null>(null);
-
   const [formData, setFormData] = useState({
+    kpiType: "revenue" as "revenue" | "usage" | "system",
     name: "",
     description: "",
     field_type: "numeric" as "numeric" | "decimal",
-    category: "data_usage" as const,
-    operators: [] as UsageMetricOperator[],
-    source_table: "",
+    calculationType: "value_set" as "value_set" | "computed" | "static",
     data_source: "Live" as "Live" | "DB",
+    source_table: "",
     frequency: "Per Min" as "Per Min" | "D-1" | "Monthly",
     unit: "",
+    operators: [] as string[],
+    extractionLogic: "",
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-
-  // Load metric if editing
-  useEffect(() => {
-    if (mode === "edit" && id) {
-      loadMetric();
-    }
-  }, [mode, id]);
-
-  const loadMetric = async () => {
-    if (!id) return;
-    try {
-      setLoading(true);
-      const data = await usageMetricService.getMetricById(Number(id));
-      if (data) {
-        setMetric(data);
-        setFormData({
-          name: data.name,
-          description: data.description,
-          field_type: data.field_type,
-          category: data.category,
-          operators: [...data.operators],
-          source_table: data.source_table,
-          data_source: data.data_source,
-          frequency: data.frequency,
-          unit: data.unit || "",
-        });
-      }
-    } catch (err) {
-      showError("Error", "Failed to load usage metric");
-      navigate("/dashboard/kpis/usage-metrics");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = "Metric name is required";
+      newErrors.name = "KPI name is required";
     }
     if (!formData.description.trim()) {
       newErrors.description = "Description is required";
@@ -119,6 +80,9 @@ export default function UsageMetricFormPage({ mode }: UsageMetricFormPageProps) 
     }
     if (formData.operators.length === 0) {
       newErrors.operators = "At least one operator must be selected";
+    }
+    if (!formData.extractionLogic.trim()) {
+      newErrors.extractionLogic = "Extraction logic is required";
     }
 
     setErrors(newErrors);
@@ -136,37 +100,10 @@ export default function UsageMetricFormPage({ mode }: UsageMetricFormPageProps) 
     try {
       setSaving(true);
 
-      if (mode === "edit" && id) {
-        await usageMetricService.updateMetric(Number(id), {
-          name: formData.name,
-          description: formData.description,
-          field_type: formData.field_type,
-          category: formData.category,
-          operators: formData.operators,
-          source_table: formData.source_table,
-          data_source: formData.data_source,
-          frequency: formData.frequency,
-          unit: formData.unit || undefined,
-        });
-        success("Success", "Usage metric updated successfully");
-      } else {
-        await usageMetricService.createMetric({
-          name: formData.name,
-          description: formData.description,
-          field_type: formData.field_type,
-          category: formData.category,
-          operators: formData.operators,
-          source_table: formData.source_table,
-          data_source: formData.data_source,
-          frequency: formData.frequency,
-          unit: formData.unit || undefined,
-        });
-        success("Success", "Usage metric created successfully");
-      }
-
-      navigate("/dashboard/kpis/usage-metrics");
+      success("Success", `${formData.kpiType} KPI created successfully`);
+      navigate("/dashboard/kpis");
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to save metric";
+      const errorMessage = err instanceof Error ? err.message : "Failed to create KPI";
       showError("Error", errorMessage);
     } finally {
       setSaving(false);
@@ -220,7 +157,7 @@ export default function UsageMetricFormPage({ mode }: UsageMetricFormPageProps) 
     }
   };
 
-  const handleOperatorChange = (operator: UsageMetricOperator, checked: boolean) => {
+  const handleOperatorChange = (operator: string, checked: boolean) => {
     setFormData((prev) => ({
       ...prev,
       operators: checked
@@ -237,21 +174,10 @@ export default function UsageMetricFormPage({ mode }: UsageMetricFormPageProps) 
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16">
-        <LoadingSpinner variant="modern" size="xl" color="primary" />
-        <p className={`${tw.textMuted} font-medium mt-4`}>Loading usage metric...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      {/* Header with Back Button */}
-      <BackButton fallbackTo="/dashboard/kpis/usage-metrics" showBreadcrumb={true} currentLabel={mode === "create" ? "Create Usage Metric" : "Edit Usage Metric"} />
+      <BackButton fallbackTo="/dashboard/kpis" showBreadcrumb={true} currentLabel="Create KPI" />
 
-      {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information Section */}
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
@@ -260,17 +186,14 @@ export default function UsageMetricFormPage({ mode }: UsageMetricFormPageProps) 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Metric Name *
+                  KPI Type *
                 </label>
-                <Input
-                  placeholder="e.g., Data 2G Usage"
-                  value={formData.name}
-                  onChange={handleInputChange('name')}
-                  hasError={!!errors.name}
-                  variant="medium"
+                <HeadlessSelect
+                  options={KPI_TYPE_OPTIONS}
+                  value={formData.kpiType}
+                  onChange={(value) => handleSelectChange("kpiType", value)}
                   disabled={saving}
                 />
-                {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
               </div>
 
               <div>
@@ -288,13 +211,28 @@ export default function UsageMetricFormPage({ mode }: UsageMetricFormPageProps) 
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
+                KPI Name *
+              </label>
+              <Input
+                placeholder="e.g., Data 2G Revenue"
+                value={formData.name}
+                onChange={handleInputChange('name')}
+                hasError={!!errors.name}
+                variant="medium"
+                disabled={saving}
+              />
+              {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Description *
               </label>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleTextareaChange}
-                placeholder="Describe this metric..."
+                placeholder="Describe this KPI..."
                 rows={3}
                 className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none ${
                   errors.description ? "border-red-500" : "border-gray-300"
@@ -313,24 +251,24 @@ export default function UsageMetricFormPage({ mode }: UsageMetricFormPageProps) 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Category *
-                </label>
-                <HeadlessSelect
-                  options={CATEGORY_OPTIONS}
-                  value={formData.category}
-                  onChange={(value) => handleSelectChange("category", value)}
-                  disabled={saving}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Data Source *
                 </label>
                 <HeadlessSelect
                   options={DATA_SOURCE_OPTIONS}
                   value={formData.data_source}
                   onChange={(value) => handleSelectChange("data_source", value)}
+                  disabled={saving}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Frequency *
+                </label>
+                <HeadlessSelect
+                  options={FREQUENCY_OPTIONS}
+                  value={formData.frequency}
+                  onChange={(value) => handleSelectChange("frequency", value)}
                   disabled={saving}
                 />
               </div>
@@ -351,32 +289,17 @@ export default function UsageMetricFormPage({ mode }: UsageMetricFormPageProps) 
               {errors.source_table && <p className="text-red-500 text-xs mt-1">{errors.source_table}</p>}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Frequency *
-                </label>
-                <HeadlessSelect
-                  options={FREQUENCY_OPTIONS}
-                  value={formData.frequency}
-                  onChange={(value) => handleSelectChange("frequency", value)}
-                  disabled={saving}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Unit (optional)
-                </label>
-                <Input
-                  type="text"
-                  value={formData.unit}
-                  onChange={handleInputChange('unit')}
-                  placeholder="e.g., MB, Minutes, Count"
-                  className="w-full px-4 py-3 text-sm border border-gray-300 rounded-md focus:outline-none"
-                  disabled={saving}
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Unit (optional)
+              </label>
+              <Input
+                value={formData.unit}
+                onChange={handleInputChange('unit')}
+                placeholder="e.g., Million PKR, MB"
+                variant="medium"
+                disabled={saving}
+              />
             </div>
           </div>
         </div>
@@ -384,21 +307,75 @@ export default function UsageMetricFormPage({ mode }: UsageMetricFormPageProps) 
         {/* Operators Section */}
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Operators</h2>
-          <p className="text-sm text-gray-600 mb-4">Select all operators that apply to this metric</p>
+          <p className="text-sm text-gray-600 mb-4">Select all operators that apply to this KPI</p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {OPERATORS.map((op) => (
-              <div key={op.value} className="flex items-center gap-2 cursor-pointer" onClick={() => handleOperatorChange(op.value, !formData.operators.includes(op.value))}>
+              <div
+                key={op.value}
+                className="flex items-center gap-2 cursor-pointer"
+                onClick={() => handleOperatorChange(op.value, !formData.operators.includes(op.value))}
+              >
                 <Checkbox
                   id={`operator-${op.value}`}
                   checked={formData.operators.includes(op.value)}
                   onChange={() => handleOperatorChange(op.value, !formData.operators.includes(op.value))}
                   disabled={saving}
-                  style={{ accentColor: color.primary.accent }} />
+                  style={{ accentColor: color.primary.accent }}
+                />
                 <span className="text-sm text-gray-700">{op.label}</span>
               </div>
             ))}
           </div>
           {errors.operators && <p className="text-red-500 text-xs mt-3">{errors.operators}</p>}
+        </div>
+
+        {/* Calculation Type Section */}
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Calculation Type</h2>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              How is this KPI calculated? *
+            </label>
+            <HeadlessSelect
+              options={CALCULATION_TYPE_OPTIONS}
+              value={formData.calculationType}
+              onChange={(value) => handleSelectChange("calculationType", value)}
+              disabled={saving}
+            />
+            <p className="text-xs text-gray-500 mt-2">
+              {formData.calculationType === "value_set" && "Reference a field directly from your data source"}
+              {formData.calculationType === "computed" && "Define a formula to compute the value (e.g., current - previous)"}
+              {formData.calculationType === "static" && "Set a fixed value that never changes"}
+            </p>
+          </div>
+        </div>
+
+        {/* Extraction Logic Section */}
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Extraction Logic</h2>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Logic Definition *
+            </label>
+            <textarea
+              name="extractionLogic"
+              value={formData.extractionLogic}
+              onChange={handleTextareaChange}
+              placeholder={
+                formData.calculationType === "value_set"
+                  ? "e.g., field_name (reference the field from your table)"
+                  : formData.calculationType === "computed"
+                  ? "e.g., current_revenue - previous_revenue (define your calculation)"
+                  : "e.g., 100 (enter the static value)"
+              }
+              rows={4}
+              className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none font-mono ${
+                errors.extractionLogic ? "border-red-500" : "border-gray-300"
+              }`}
+              disabled={saving}
+            />
+            {errors.extractionLogic && <p className="text-red-500 text-xs mt-1">{errors.extractionLogic}</p>}
+          </div>
         </div>
 
         {/* Submit Button */}
@@ -410,11 +387,11 @@ export default function UsageMetricFormPage({ mode }: UsageMetricFormPageProps) 
             style={{ backgroundColor: color.primary.action }}
           >
             <Save className="w-4 h-4" />
-            {saving ? "Saving..." : "Save Metric"}
+            {saving ? "Creating..." : "Create KPI"}
           </button>
           <button
             type="button"
-            onClick={() => navigate("/dashboard/kpis/usage-metrics")}
+            onClick={() => navigate("/dashboard/kpis")}
             disabled={saving}
             className="px-6 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-60"
           >

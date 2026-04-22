@@ -20,6 +20,7 @@ import { colors, buttons } from "../../../shared/utils/tokens";
 import { color, tw } from "../../../shared/utils/utils";
 import BackButton from "../../../shared/components/ui/BackButton";
 import Input from "../../../shared/components/ui/Input";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
 import Radio from "../../../shared/components/ui/Radio";

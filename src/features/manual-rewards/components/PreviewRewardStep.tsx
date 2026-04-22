@@ -1,4 +1,4 @@
-import { AlertCircle, Users, Gift, Calendar, FlaskConical } from "lucide-react";
+import { AlertCircle, Users, Gift, Calendar, FlaskConical, Mail, MessageSquare, Phone, Bell } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { ManualRewardData } from "../pages/CreateManualRewardPage";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -68,6 +68,16 @@ export default function PreviewRewardStep({
     }
 
     return t.manualRewards.summaryNotSet;
+  };
+
+  const getChannelIcon = () => {
+    const iconMap: Record<string, any> = {
+      SMS: MessageSquare,
+      EMAIL: Mail,
+      WHATSAPP: Phone,
+      PUSH: Bell,
+    };
+    return iconMap[data.channel || "SMS"] || MessageSquare;
   };
 
   return (
@@ -164,6 +174,37 @@ export default function PreviewRewardStep({
                 </p>
               </div>
             </div>
+
+            {/* Communication Channel */}
+            {data.channel && (
+              <div className="flex items-start gap-3">
+                {(() => {
+                  const ChannelIcon = getChannelIcon();
+                  return <ChannelIcon
+                    className="w-5 h-5 flex-shrink-0 mt-0.5"
+                    style={{ color: color.text.muted }}
+                  />;
+                })()}
+                <div className="flex-1 min-w-0">
+                  <p className={`text-xs ${tw.textSecondary}`}>
+                    Communication Channel
+                  </p>
+                  <p className={`text-sm font-medium ${tw.textPrimary} mt-0.5`}>
+                    {data.channel}
+                  </p>
+                  {data.smsRoute && (
+                    <p className={`text-xs ${tw.textMuted} mt-1`}>
+                      SMS Route: {data.smsRoute}
+                    </p>
+                  )}
+                  {data.rewardTitle && (
+                    <p className={`text-xs ${tw.textMuted} mt-1`}>
+                      Subject: {data.rewardTitle}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Communication Policy / Seed List */}
             <div className="flex items-start gap-3">

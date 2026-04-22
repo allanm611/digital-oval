@@ -23,6 +23,7 @@ import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
 import DateFormatter from "../../../shared/components/DateFormatter";
+import Input from "../../../shared/components/ui/Input";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";

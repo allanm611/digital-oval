@@ -116,9 +116,22 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
     }
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleInputChange = (fieldName: keyof CreateSMSRouteRequest) => (value: string | number) => {
+    setFormData((prev) => ({
+      ...prev,
+      [fieldName]: value,
+    }));
+
+    if (errors[fieldName]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[fieldName];
+        return newErrors;
+      });
+    }
+  };
+
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const { name, value } = e.target;
 
     setFormData((prev) => ({
@@ -126,7 +139,6 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
       [name]: value,
     }));
 
-    // Clear error for this field
     if (errors[name]) {
       setErrors((prev) => {
         const newErrors = { ...prev };
@@ -186,7 +198,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
                 <Input
                   placeholder="e.g., Primary SMS Gateway"
                   value={formData.name}
-                  onChange={(value) => handleChange({ target: { name: "name", value } } as any)}
+                  onChange={handleInputChange('name')}
                   hasError={!!errors.name}
                   variant="medium"
                   disabled={saving}
@@ -214,7 +226,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
               <textarea
                 name="description"
                 value={formData.description || ""}
-                onChange={handleChange}
+                onChange={handleTextareaChange}
                 placeholder="Add notes about this route..."
                 rows={3}
                 className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}

@@ -1014,7 +1014,7 @@ export default function SegmentConditionsBuilder({
       return (
         <>
           {/* Numeric field dual-operator UI - ALL on one line */}
-          <div className="flex items-center gap-2 flex-wrap w-full">
+          <div className="flex items-center gap-2 w-full overflow-x-auto">
             {/* Numeric Value Input */}
             <Input type="number"
               value={condition.value as string | number}
@@ -1060,7 +1060,7 @@ export default function SegmentConditionsBuilder({
                   });
                 }}
                 placeholder="Select date"
-                className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px] max-w-[180px]`}
                 style={{ borderColor: color.border.default }}
               />
             )}
@@ -1081,7 +1081,7 @@ export default function SegmentConditionsBuilder({
                     });
                   }}
                   placeholder="From date"
-                  className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                  className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px] max-w-[180px]`}
                   style={{ borderColor: color.border.default }}
                 />
                 <Input type="date"
@@ -1098,7 +1098,7 @@ export default function SegmentConditionsBuilder({
                     });
                   }}
                   placeholder="To date"
-                  className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                  className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px] max-w-[180px]`}
                   style={{ borderColor: color.border.default }}
                 />
               </>
@@ -1119,7 +1119,7 @@ export default function SegmentConditionsBuilder({
                   });
                 }}
                 placeholder="From date"
-                className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px] max-w-[180px]`}
                 style={{ borderColor: color.border.default }}
               />
             )}
@@ -1139,7 +1139,7 @@ export default function SegmentConditionsBuilder({
                   });
                 }}
                 placeholder="To date"
-                className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px] max-w-[180px]`}
                 style={{ borderColor: color.border.default }}
               />
             )}
@@ -1152,7 +1152,7 @@ export default function SegmentConditionsBuilder({
     if (isNumericField && isDateOperator) {
       return (
         <>
-          <div className="flex items-center gap-2 flex-wrap w-full">
+          <div className="flex items-center gap-2 w-full overflow-x-auto">
             {condition.operator === "on_date" && (
               <Input type="date"
                 value={
@@ -1168,7 +1168,7 @@ export default function SegmentConditionsBuilder({
                   });
                 }}
                 placeholder="Select date"
-                className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px] max-w-[180px]`}
                 style={{ borderColor: color.border.default }}
               />
             )}
@@ -1189,7 +1189,7 @@ export default function SegmentConditionsBuilder({
                     });
                   }}
                   placeholder="From date"
-                  className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                  className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px] max-w-[180px]`}
                   style={{ borderColor: color.border.default }}
                 />
                 <Input type="date"
@@ -1206,7 +1206,7 @@ export default function SegmentConditionsBuilder({
                     });
                   }}
                   placeholder="To date"
-                  className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                  className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px] max-w-[180px]`}
                   style={{ borderColor: color.border.default }}
                 />
               </>
@@ -1227,7 +1227,7 @@ export default function SegmentConditionsBuilder({
                   });
                 }}
                 placeholder="From date"
-                className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px] max-w-[180px]`}
                 style={{ borderColor: color.border.default }}
               />
             )}
@@ -1247,7 +1247,7 @@ export default function SegmentConditionsBuilder({
                   });
                 }}
                 placeholder="To date"
-                className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px] max-w-[180px]`}
                 style={{ borderColor: color.border.default }}
               />
             )}
@@ -1841,7 +1841,7 @@ export default function SegmentConditionsBuilder({
             {isNumericKPI ? (
               <>
                 {/* Wrapper for operator + value + date operator dropdowns + date inputs ALL on one line */}
-                <div className="flex items-center gap-2 flex-wrap w-full">
+                <div className="flex items-center gap-2 w-full overflow-x-auto">
                   {/* Operator Dropdown */}
                   <div className="min-w-[220px] max-w-[280px] flex-shrink-0">
                     <HeadlessSelect
@@ -1927,7 +1927,7 @@ export default function SegmentConditionsBuilder({
                           });
                         }}
                         placeholder="Select date"
-                        className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                        className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px] max-w-[180px]`}
                         style={{ borderColor: color.border.default }}
                       />
                     )}
@@ -1949,7 +1949,7 @@ export default function SegmentConditionsBuilder({
                             });
                           }}
                           placeholder="From date"
-                          className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                          className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px] max-w-[180px]`}
                           style={{ borderColor: color.border.default }}
                         />
                         <Input type="date"
@@ -1967,7 +1967,7 @@ export default function SegmentConditionsBuilder({
                             });
                           }}
                           placeholder="To date"
-                          className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                          className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px] max-w-[180px]`}
                           style={{ borderColor: color.border.default }}
                         />
                       </>
@@ -1988,7 +1988,7 @@ export default function SegmentConditionsBuilder({
                           });
                         }}
                         placeholder="From date"
-                        className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                        className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px] max-w-[180px]`}
                         style={{ borderColor: color.border.default }}
                       />
                     )}
@@ -2008,7 +2008,7 @@ export default function SegmentConditionsBuilder({
                           });
                         }}
                         placeholder="To date"
-                        className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                        className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px] max-w-[180px]`}
                         style={{ borderColor: color.border.default }}
                       />
                     )}
@@ -2031,7 +2031,7 @@ export default function SegmentConditionsBuilder({
                           });
                         }}
                         placeholder="Select date"
-                        className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                        className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px] max-w-[180px]`}
                         style={{ borderColor: color.border.default }}
                       />
                     )}
@@ -2052,7 +2052,7 @@ export default function SegmentConditionsBuilder({
                             });
                           }}
                           placeholder="From date"
-                          className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                          className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px] max-w-[180px]`}
                           style={{ borderColor: color.border.default }}
                         />
                         <Input type="date"
@@ -2069,7 +2069,7 @@ export default function SegmentConditionsBuilder({
                             });
                           }}
                           placeholder="To date"
-                          className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                          className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px] max-w-[180px]`}
                           style={{ borderColor: color.border.default }}
                         />
                       </>
@@ -2090,7 +2090,7 @@ export default function SegmentConditionsBuilder({
                           });
                         }}
                         placeholder="From date"
-                        className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                        className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px] max-w-[180px]`}
                         style={{ borderColor: color.border.default }}
                       />
                     )}
@@ -2110,7 +2110,7 @@ export default function SegmentConditionsBuilder({
                           });
                         }}
                         placeholder="To date"
-                        className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px]`}
+                        className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[140px] max-w-[180px]`}
                         style={{ borderColor: color.border.default }}
                       />
                     )}

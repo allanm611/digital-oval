@@ -85,14 +85,47 @@ export default function CreativeTemplateFormModal({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
-  ) => {
-    const { name, value, type } = e.target;
+  const handleInputChange = (fieldName: keyof typeof formData) => (value: string | number) => {
     setFormData((prev) => ({
       ...prev,
-      [name]:
-        type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
+      [fieldName]: value,
+    }));
+    if (errors[fieldName]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[fieldName];
+        return newErrors;
+      });
+    }
+  };
+
+  const handleCheckboxChange = (fieldName: keyof typeof formData) => (checked: boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      [fieldName]: checked,
+    }));
+  };
+
+  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    if (errors[name]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+  };
+
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
     }));
     if (errors[name]) {
       setErrors((prev) => {
@@ -151,10 +184,7 @@ export default function CreativeTemplateFormModal({
             <Input
               placeholder="Enter template name"
               value={formData.name}
-              onChange={(value) => {
-                const event = { target: { name: "name", value } } as any;
-                handleChange(event);
-              }}
+              onChange={handleInputChange('name')}
               hasError={!!errors.name}
               variant="medium"
             />
@@ -172,10 +202,7 @@ export default function CreativeTemplateFormModal({
             <Input
               placeholder="e.g., WELCOME_SMS"
               value={formData.code}
-              onChange={(value) => {
-                const event = { target: { name: "code", value } } as any;
-                handleChange(event);
-              }}
+              onChange={handleInputChange('code')}
               hasError={!!errors.code}
               variant="medium"
               className="font-mono"
@@ -193,7 +220,7 @@ export default function CreativeTemplateFormModal({
             <textarea
               name="description"
               value={formData.description}
-              onChange={handleChange}
+              onChange={handleTextareaChange}
               rows={2}
               className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none`}
               placeholder="Enter description (optional)"
@@ -210,7 +237,7 @@ export default function CreativeTemplateFormModal({
               <select
                 name="primaryChannel"
                 value={formData.primaryChannel}
-                onChange={handleChange}
+                onChange={handleSelectChange}
                 className="w-full px-3 py-2 border border-gray-300 bg-white rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {channelOptions.map((opt) => (
@@ -226,9 +253,8 @@ export default function CreativeTemplateFormModal({
                 Locale
               </label>
               <Input type="text"
-                name="locale"
                 value={formData.locale}
-                onChange={handleChange}
+                onChange={handleInputChange('locale')}
                 className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="e.g., en, fr, es"
               />
@@ -241,9 +267,8 @@ export default function CreativeTemplateFormModal({
               Title
             </label>
             <Input type="text"
-              name="title"
               value={formData.title}
-              onChange={handleChange}
+              onChange={handleInputChange('title')}
               className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Template title (optional)"
             />
@@ -257,7 +282,7 @@ export default function CreativeTemplateFormModal({
             <textarea
               name="text_body"
               value={formData.text_body}
-              onChange={handleChange}
+              onChange={handleTextareaChange}
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               placeholder="Enter template text body"
@@ -272,7 +297,7 @@ export default function CreativeTemplateFormModal({
             <textarea
               name="html_body"
               value={formData.html_body}
-              onChange={handleChange}
+              onChange={handleTextareaChange}
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none font-mono"
               placeholder="Enter template HTML body"
@@ -286,9 +311,8 @@ export default function CreativeTemplateFormModal({
           <div className="flex items-center">
             <Input
               type="checkbox"
-              name="is_active"
               checked={formData.is_active}
-              onChange={handleChange}
+              onChange={handleCheckboxChange('is_active')}
               className="w-4 h-4 rounded border-gray-300 cursor-pointer"
             />
             <label className={`ml-2 text-sm font-medium ${tw.textPrimary}`}>

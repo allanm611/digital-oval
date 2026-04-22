@@ -10,6 +10,7 @@ import type {
 } from "../types/scheduling";
 import Checkbox from "./ui/Checkbox";
 import Radio from "./ui/Radio";
+import { getSettingsTimezone, TIMEZONE_OPTIONS } from "../utils/settingsHelper";
 
 const daysOfWeek = [
   { value: 0, label: "Sunday" },
@@ -57,10 +58,11 @@ export default function SchedulingComponent({
   // Initialize with defaults if not provided (mount-only)
   useEffect(() => {
     if (!scheduling.start_date) {
+      const settingsTimezone = getSettingsTimezone();
       const defaultScheduling = {
         ...scheduling,
         type: scheduling.type || "scheduled",
-        time_zone: scheduling.time_zone || "(GMT+02:00) Sudan",
+        time_zone: scheduling.time_zone || settingsTimezone,
         start_date: new Date().toISOString().split("T")[0],
         end_date: scheduling.end_date || "",
       };
@@ -335,23 +337,18 @@ export default function SchedulingComponent({
               Time Zone
             </label>
             <HeadlessSelect
-              value={scheduling.time_zone || "(GMT+02:00) Sudan"}
+              value={scheduling.time_zone || getSettingsTimezone()}
               onChange={(value) =>
                 updateScheduling({ time_zone: value as string })
               }
-              options={[
-                { label: "(GMT+02:00) Sudan", value: "(GMT+02:00) Sudan" },
-                {
-                  label: "UTC (Coordinated Universal Time)",
-                  value: "(GMT+00:00) UTC",
-                },
-                { label: "Eastern Time (ET)", value: "(GMT-05:00) Eastern" },
-                { label: "Central Time (CT)", value: "(GMT-06:00) Central" },
-                { label: "Paris (CET/CEST)", value: "(GMT+01:00) Paris" },
-              ]}
+              options={TIMEZONE_OPTIONS}
               placeholder="Select timezone"
+              searchable={true}
               className="w-full"
             />
+            {/* <p className="text-xs text-gray-500 mt-2">
+              Using timezone from Settings: {getSettingsTimezone()}
+            </p> */}
           </div>
         </div>
       </div>
@@ -496,7 +493,7 @@ export default function SchedulingComponent({
           {/* Time Zone Display */}
           <div className="mb-6">
             <span className="text-sm text-gray-600">
-              {scheduling.time_zone || "(GMT+02:00) Sudan"}
+              {scheduling.time_zone || getSettingsTimezone()}
             </span>
           </div>
 

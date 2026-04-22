@@ -1,6 +1,7 @@
 import SchedulingComponent from "../../../shared/components/SchedulingComponent";
 import type { SchedulingData } from "../../../shared/types/scheduling";
 import { ManualBroadcastData } from "../pages/CreateManualBroadcastPage";
+import { getSettingsTimezone } from "../../../shared/utils/settingsHelper";
 
 interface ScheduleStepProps {
   data: ManualBroadcastData;
@@ -24,7 +25,7 @@ export default function ScheduleStep({
     start_date: data.scheduleDate
       ? `${data.scheduleDate}T${data.scheduleTime || "00:00"}`
       : undefined,
-    time_zone: "(GMT+02:00) Sudan",
+    time_zone: getSettingsTimezone(),
   };
 
   const handleSchedulingChange = (scheduling: SchedulingData) => {

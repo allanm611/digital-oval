@@ -14,6 +14,7 @@ import {
   FileText,
 } from "lucide-react";
 import SearchInput from "./ui/SearchInput";
+import Input from "./ui/Input";
 import { color, tw, button, zIndex } from "../utils/utils";
 import { useToast } from "../../contexts/ToastContext";
 import { useLanguage } from "../../contexts/LanguageContext";

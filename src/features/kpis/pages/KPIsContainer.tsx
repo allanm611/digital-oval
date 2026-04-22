@@ -4,12 +4,14 @@ import AllKPIsPage from "./AllKPIsPage";
 import SystemEventsContainer from "./SystemEventsContainer";
 import RevenueMetricsContainer from "./RevenueMetricsContainer";
 import UsageMetricsContainer from "./UsageMetricsContainer";
+import CreateKPIPage from "./CreateKPIPage";
 
 export default function KPIsContainer() {
   return (
     <Routes>
       <Route path="/" element={<KPIsHubPage />} />
       <Route path="/all" element={<AllKPIsPage />} />
+      <Route path="/create" element={<CreateKPIPage />} />
       <Route path="/system-events/*" element={<SystemEventsContainer />} />
       <Route path="/revenue-metrics/*" element={<RevenueMetricsContainer />} />
       <Route path="/usage-metrics/*" element={<UsageMetricsContainer />} />

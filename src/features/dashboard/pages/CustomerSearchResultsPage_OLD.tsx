@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import Input from '../../../shared/components/ui/Input';
+import SearchInput from '../../../shared/components/ui/SearchInput';
 import { useLocation, useNavigate } from "react-router-dom";
 import { Mail, MessageSquare, ArrowLeft } from "lucide-react";
 import {

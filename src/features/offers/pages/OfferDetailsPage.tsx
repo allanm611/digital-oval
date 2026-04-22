@@ -67,6 +67,7 @@ import { Product } from "../../products/types/product";
 import { Search, Check, FileText, Eye, Copy } from "lucide-react";
 import { productCategoryService } from "../../products/services/productCategoryService";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import TypeSelector from "../../../shared/components/TypeSelector";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { useConfigurationData } from "../../../shared/services/configurationDataService";
 import { TypeConfigurationItem } from "../../../shared/components/TypeConfigurationPage";
@@ -2717,7 +2718,7 @@ export default function OfferDetailsPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Locale / Language
                 </label>
-                <HeadlessSelect
+                <TypeSelector
                   value={newCreativeForm.locale}
                   onChange={(value) => {
                     setNewCreativeForm((prev) => ({
@@ -2743,8 +2744,8 @@ export default function OfferDetailsPage() {
                       : []),
                   ]}
                   placeholder="Select language"
-                  searchable
-                  zIndex={zIndex.popover}
+                  allowCreate={true}
+                  onCreate={() => window.open("/dashboard/languages", "_blank")}
                 />
               </div>
             </div>
@@ -2768,7 +2769,7 @@ export default function OfferDetailsPage() {
                 t.is_active &&
                 t.channel?.toLowerCase() === newCreativeForm.channel.toLowerCase()
               ).length > 0 ? (
-                <HeadlessSelect
+                <TypeSelector
                   value={
                     selectedTemplateId ? selectedTemplateId.toString() : ""
                   }
@@ -2783,7 +2784,6 @@ export default function OfferDetailsPage() {
                         t.channel?.toLowerCase() === newCreativeForm.channel.toLowerCase()
                       )
                       .map((template) => {
-                      // Get language name if template has locale
                       let languageLabel = "";
                       if (template.locale && languages) {
                         const language = (
@@ -2792,25 +2792,22 @@ export default function OfferDetailsPage() {
                           (lang) => lang.metadataValue === template.locale
                         );
                         if (language) {
-                          languageLabel = ` (${language.name})`;
+                          languageLabel = " (" + language.name + ")";
                         }
                       }
                       return {
                         value: template.id.toString(),
-                        label: `${template.name}${languageLabel}${
-                          template.description
-                            ? ` - ${template.description}`
-                            : ""
-                        }`,
+                        label: template.name + languageLabel + (template.description ? " - " + template.description : ""),
                       };
                     }),
                   ]}
                   placeholder="Select a template to start with..."
-                  zIndex={zIndex.popover}
+                  allowCreate={true}
+                  onCreate={() => window.open("/dashboard/creative-templates", "_blank")}
                 />
               ) : (
                 <div className="p-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-600">
-                  {templatesLoading ? "Loading templates..." : `No templates available for ${newCreativeForm.channel} channel`}
+                  {templatesLoading ? "Loading templates..." : "No templates available for " + newCreativeForm.channel + " channel"}
                 </div>
               )}
               {selectedTemplateId && (
@@ -2883,8 +2880,8 @@ export default function OfferDetailsPage() {
                 </div>
               )}
 
-              {/* SMS Route (for SMS channel only) */}
-              {newCreativeForm.channel === "SMS" && (
+              {/* SMS Route (for SMS variants) */}
+              {newCreativeForm.channel && newCreativeForm.channel.toUpperCase().includes("SMS") && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     SMS Route
