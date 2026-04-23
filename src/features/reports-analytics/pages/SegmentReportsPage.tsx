@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import {
   Bar,
   BarChart,
@@ -29,6 +29,8 @@ import { tw } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
 import { useToast } from "../../../contexts/ToastContext";
 import type { RangeOption } from "../types/ReportsAPI";
+import { segmentService } from "../../segments/services/segmentService";
+import type { SegmentType } from "../../segments/types/segment";
 
 // Types
 type SegmentSummary = {
@@ -274,43 +276,6 @@ const performanceComparisonData: Record<RangeOption, PerformanceComparisonPoint[
   ],
 };
 
-const generateSegmentRows = (): SegmentRow[] => {
-  const rows: SegmentRow[] = [];
-  const segmentNames = [
-    "New Customers",
-    "Active Shoppers",
-    "High Value",
-    "Cart Abandoners",
-    "VIP Customers",
-    "Regular Customers",
-  ];
-
-  segmentNames.forEach((name) => {
-    for (let i = 0; i < 3; i++) {
-      const daysAgo = Math.floor(Math.random() * 90);
-      const updateDate = new Date();
-      updateDate.setDate(updateDate.getDate() - daysAgo);
-
-      rows.push({
-        id: `segment-${rows.length + 1}`,
-        name: `${name}${i > 0 ? ` (v${i})` : ""}`,
-        memberCount: 25_000 + Math.floor(Math.random() * 200_000),
-        growthRate: -5 + Math.random() * 25,
-        campaignsUsed: Math.floor(Math.random() * 15) + 2,
-        engagementRate: 5 + Math.random() * 50,
-        conversionRate: 1 + Math.random() * 15,
-        avgValue: 50 + Math.random() * 1000,
-        status: i < 2 ? "Active" : "Inactive",
-        lastUpdated: updateDate.toISOString().split("T")[0],
-        lastUpdatedDate: updateDate.getTime(),
-      });
-    }
-  });
-
-  return rows;
-};
-
-const segmentRows: SegmentRow[] = generateSegmentRows();
 const statusOptions = ["All Statuses", "Active", "Inactive"];
 
 interface ChartTooltipEntry {
@@ -384,7 +349,75 @@ export default function SegmentReportsPage() {
   const [tablePage, setTablePage] = useState(1);
   const tablePageSize = 20;
 
+  // Real segment data state
+  const [segments, setSegments] = useState<SegmentType[]>([]);
+  const [isLoadingSegments, setIsLoadingSegments] = useState(false);
+  const [segmentFetchError, setSegmentFetchError] = useState<string | null>(null);
+  const [totalSegmentsCount, setTotalSegmentsCount] = useState(0);
+  const searchDebounceRef = useRef<NodeJS.Timeout | null>(null);
+
   const { minDate, maxDate } = getDateConstraints();
+
+  // Fetch segments with optional search
+  const fetchSegments = useCallback(
+    async (query: string = "") => {
+      try {
+        setIsLoadingSegments(true);
+        setSegmentFetchError(null);
+
+        let response;
+        if (query.trim()) {
+          // Use search endpoint when there's a query
+          response = await segmentService.searchSegments({
+            q: query,
+            skipCache: true,
+          });
+        } else {
+          // Use get endpoint for initial load
+          response = await segmentService.getSegments({
+            skipCache: true,
+          });
+        }
+
+        if (response?.data && Array.isArray(response.data)) {
+          setSegments(response.data);
+          setTotalSegmentsCount(response.pagination?.total || response.data.length);
+        } else {
+          setSegments([]);
+          setTotalSegmentsCount(0);
+        }
+      } catch (err) {
+        console.error("Error fetching segments:", err);
+        setSegmentFetchError("Failed to load segments");
+        setSegments([]);
+      } finally {
+        setIsLoadingSegments(false);
+      }
+    },
+    [],
+  );
+
+  // Debounced search
+  const handleSearch = useCallback(
+    (query: string) => {
+      setTableQuery(query);
+      setTablePage(1);
+
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+      }
+
+      searchDebounceRef.current = setTimeout(() => {
+        fetchSegments(query);
+      }, 150);
+    },
+    [fetchSegments],
+  );
+
+  // Load segments on mount
+  useEffect(() => {
+    fetchSegments();
+  }, [fetchSegments]);
 
   const customDays = useMemo(
     () => getDaysBetween(appliedCustomRange.start, appliedCustomRange.end),
@@ -592,8 +625,28 @@ export default function SegmentReportsPage() {
     return performanceComparisonData[activeRangeKey];
   }, [activeRangeKey, useDummyData]);
 
+  // Convert real segments to table row format with dummy data for other columns
+  const segmentTableRows = useMemo(() => {
+    return segments.map((segment, index) => ({
+      id: String(segment.id),
+      name: segment.name || "Unknown",
+      memberCount: Math.floor(Math.random() * 500000) + 10000, // Dummy data
+      growthRate: -5 + Math.random() * 25, // Dummy data
+      campaignsUsed: Math.floor(Math.random() * 15) + 2, // Dummy data
+      engagementRate: 5 + Math.random() * 50, // Dummy data
+      conversionRate: 1 + Math.random() * 15, // Dummy data
+      avgValue: 50 + Math.random() * 1000, // Dummy data
+      status: index % 3 === 0 ? "Inactive" : "Active", // Dummy data (deterministic for consistency)
+      lastUpdated: segment.updated_at
+        ? new Date(segment.updated_at).toLocaleDateString()
+        : "—",
+      lastUpdatedDate: segment.updated_at
+        ? new Date(segment.updated_at).getTime()
+        : Date.now(),
+    }));
+  }, [segments]);
+
   const filteredRows = useMemo(() => {
-    const query = tableQuery.trim().toLowerCase();
     const maxDays =
       appliedCustomRange.start && appliedCustomRange.end
         ? (customDays ?? rangeDays[selectedRange])
@@ -605,25 +658,24 @@ export default function SegmentReportsPage() {
       ? new Date(appliedCustomRange.end).getTime()
       : null;
 
-    return segmentRows.filter((row) => {
+    return segmentTableRows.filter((row) => {
       const matchesStatus =
         statusFilter === "All Statuses" ? true : row.status === statusFilter;
-      const matchesQuery = query ? row.name.toLowerCase().includes(query) : true;
       const rowDate = row.lastUpdatedDate || Date.now();
       const now = Date.now();
       const matchesRange =
         appliedCustomRange.start && appliedCustomRange.end && startMs && endMs
           ? rowDate >= startMs && rowDate <= endMs
           : now - rowDate <= maxDays * 24 * 60 * 60 * 1000;
-      return matchesStatus && matchesQuery && matchesRange;
+      return matchesStatus && matchesRange;
     });
   }, [
     statusFilter,
-    tableQuery,
     customRange,
     customDays,
     selectedRange,
     appliedCustomRange,
+    segmentTableRows,
   ]);
 
   useEffect(() => {
@@ -1057,7 +1109,7 @@ export default function SegmentReportsPage() {
             <Input
               placeholder="Search segment"
               value={tableQuery}
-              onChange={setTableQuery}
+              onChange={handleSearch}
               className="w-full md:w-80"
             />
             <HeadlessSelect
@@ -1079,19 +1131,31 @@ export default function SegmentReportsPage() {
           </div>
         </div>
 
-        {!useDummyData && (
+        {isLoadingSegments && (
           <div className="flex justify-center py-16">
             <LoadingSpinner />
           </div>
         )}
 
-        {useDummyData && filteredRows.length === 0 && (
+        {!isLoadingSegments && segmentFetchError && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-8 text-center">
+            <p className="text-sm text-red-700 font-medium mb-4">{segmentFetchError}</p>
+            <button
+              onClick={() => fetchSegments(tableQuery)}
+              className={`${tw.rounded} ${tw.btnSmall} bg-red-600 text-white hover:bg-red-700`}
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {!isLoadingSegments && !segmentFetchError && segments.length === 0 && (
           <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
             <p className="text-sm text-gray-600">No segments found</p>
           </div>
         )}
 
-        {useDummyData && filteredRows.length > 0 && (
+        {!isLoadingSegments && !segmentFetchError && segments.length > 0 && (
           <div className="hidden lg:block">
             <div className="overflow-x-auto">
               <table
@@ -1146,19 +1210,11 @@ export default function SegmentReportsPage() {
                         {row.memberCount.toLocaleString("en-US")}
                       </td>
                       <td
-                        className="px-6 py-4"
+                        className="px-6 py-4 text-gray-900"
                         style={{ backgroundColor: colors.surface.tablebodybg }}
                       >
-                        <span
-                          className={
-                            row.growthRate >= 0
-                              ? "text-green-600"
-                              : "text-red-600"
-                          }
-                        >
-                          {row.growthRate >= 0 ? "+" : ""}
-                          {row.growthRate.toFixed(1)}%
-                        </span>
+                        {row.growthRate >= 0 ? "+" : ""}
+                        {row.growthRate.toFixed(1)}%
                       </td>
                       <td
                         className="px-6 py-4"
@@ -1179,24 +1235,16 @@ export default function SegmentReportsPage() {
                         {row.conversionRate.toFixed(1)}%
                       </td>
                       <td
-                        className="px-6 py-4"
+                        className="px-6 py-4 text-gray-900"
                         style={{ backgroundColor: colors.surface.tablebodybg }}
                       >
-                        ${row.avgValue.toFixed(2)}
+                        {row.avgValue.toFixed(2)}
                       </td>
                       <td
-                        className="px-6 py-4"
+                        className="px-6 py-4 text-gray-900"
                         style={{ backgroundColor: colors.surface.tablebodybg }}
                       >
-                        <span
-                          className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
-                            row.status === "Active"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {row.status}
-                        </span>
+                        {row.status}
                       </td>
                       <td
                         className="px-6 py-4"

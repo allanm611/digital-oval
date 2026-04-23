@@ -495,7 +495,7 @@ export default function CustomerProfileReportsPage() {
   >([]);
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(true);
   const [isSearchingTable, setIsSearchingTable] = useState(false);
-  const [useDummyData] = useState(true); // Charts use dummy data, table uses API data
+  const [useDummyData, setUseDummyData] = useState(true); // Charts use dummy data, table uses API data
   const locationState = location.state as
     | { subscription?: CustomerSubscriptionRecord }
     | undefined;
@@ -1258,6 +1258,31 @@ export default function CustomerProfileReportsPage() {
                 {t.customerProfileReports.clear}
               </button>
             )}
+          </div>
+          <div className="flex items-center gap-2">
+            <label
+              htmlFor="customer-data-toggle"
+              className="text-sm font-medium text-gray-700 whitespace-nowrap"
+            >
+              Data Mode:
+            </label>
+            <button
+              id="customer-data-toggle"
+              type="button"
+              onClick={() => setUseDummyData(!useDummyData)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#252829] focus:ring-offset-2 ${
+                useDummyData ? "bg-[#252829]" : "bg-gray-300"
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  useDummyData ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+            <span className="ml-2 text-xs text-gray-600 whitespace-nowrap">
+              {useDummyData ? "Dummy Data" : "Real Data"}
+            </span>
           </div>
         </div>
       </header>

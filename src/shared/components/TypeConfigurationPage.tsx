@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
@@ -10,7 +10,6 @@ import {
   X,
   Power,
   PowerOff,
-  Plus,
   FileText,
 } from "lucide-react";
 import SearchInput from "./ui/SearchInput";
@@ -42,7 +41,6 @@ import { offerService } from "../../features/offers/services/offerService";
 import { senderIdService, SenderId } from "../../features/configurations/services/senderIdService";
 import { smsRouteService } from "../../features/routes/services/smsRouteService";
 import {
-  OfferCreative,
   CreativeChannel,
   COMMON_LOCALES,
   CreateOfferCreativeRequest,
@@ -54,7 +52,6 @@ import {
 import PreviewPanel from "../../features/communications/components/PreviewPanel";
 import CascadingVariableSelector from "../../features/manual-broadcast/components/CascadingVariableSelector";
 import HeadlessSelect from "./ui/HeadlessSelect";
-import Pagination from "./ui/Pagination";
 import BackButton from "./ui/BackButton";
 import CreateButton from "./ui/CreateButton";
 import LoadingSpinner from "./ui/LoadingSpinner";
@@ -63,11 +60,9 @@ import Checkbox from "./ui/Checkbox";
 import CreateEditCommunicationChannelModal from "../../features/configurations/components/CreateEditCommunicationChannelModal";
 import RegularModal from "./ui/RegularModal";
 import { useAuth } from "../../contexts/AuthContext";
-import { useClickOutside } from "../../shared/hooks/useClickOutside";
 import { useConfigurationData } from "../../shared/services/configurationDataService";
 import {
   insertVariableAtCursor,
-  formatVariablePlaceholder,
 } from "../../shared/utils/variableInsertion";
 import type { TemplateVariable } from "../../features/manual-broadcast/types";
 
@@ -263,8 +258,9 @@ function TypeConfigurationModal({
   const isSmsRoutes = config.configType === "smsRoutes";
   const isEmailRoutes = config.configType === "emailRoutes";
   const isRoutes = config.configType === "routes";
-  const isNotificationType = config.configType === "notificationTypes";
   const isResourceTypes = config.configType === "resourceTypes";
+  // Check if this is a notification configuration by looking for notification-specific custom fields
+  const isNotificationType = config.customFields?.some((f) => f.fieldKey === "message_template") || false;
 
   // Custom fields state for languages and character sets
   const [customFields, setCustomFields] = useState<Record<string, string>>({});

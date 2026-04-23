@@ -32,9 +32,9 @@ export interface MetadataField {
   key: string;
   type: "text" | "select" | "toggle" | "textarea" | "date";
   required?: boolean;
-  options?: { value: string | boolean; label: string }[];
+  options?: { value: string | number | boolean; label: string }[];
   placeholder?: string;
-  condition?: (values: any) => boolean;
+  condition?: (values: Record<string, any>) => boolean;
 }
 
 export interface ConfigurationPageConfig {
@@ -101,14 +101,14 @@ export function ConfigurationModal({
   config,
 }: ConfigurationModalProps) {
   const { t } = useLanguage();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Record<string, any>>({
     name: "",
     description: "",
   });
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const initialData: any = {
+    const initialData: Record<string, any> = {
       name: item?.name || "",
       description: item?.description || "",
     };
@@ -116,7 +116,7 @@ export function ConfigurationModal({
     // Initialize metadata fields
     if (config.metadataFields) {
       config.metadataFields.forEach((field) => {
-        initialData[field.key] = item?.[field.key] || "";
+        initialData[field.key] = (item as Record<string, any>)?.[field.key] || "";
       });
     }
 
@@ -173,7 +173,7 @@ export function ConfigurationModal({
 
     setError("");
 
-    const itemData = {
+    const itemData: Record<string, any> = {
       name: formData.name.trim(),
       description: formData.description.trim() || undefined,
     };
@@ -188,7 +188,7 @@ export function ConfigurationModal({
       }
     }
 
-    await onSave(itemData);
+    await onSave(itemData as { name: string; description?: string });
   };
 
   if (!isOpen) return null;
@@ -219,10 +219,11 @@ export function ConfigurationModal({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 {config.nameLabel} {config.nameRequired && "*"}
               </label>
-              <Input type="text"
+              <input
+                type="text"
                 value={formData.name}
-                onChange={(value) =>
-                  setFormData((prev) => ({ ...prev, name: String(value) }))
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setFormData((prev) => ({ ...prev, name: e.target.value }))
                 }
                 className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
                 placeholder={t.genericConfig.enter.replace(
@@ -272,12 +273,13 @@ export function ConfigurationModal({
                     </label>
 
                     {field.type === "text" && (
-                      <Input type="text"
+                      <input
+                        type="text"
                         value={formData[field.key] || ""}
-                        onChange={(value) =>
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                           setFormData((prev) => ({
                             ...prev,
-                            [field.key]: String(value),
+                            [field.key]: e.target.value,
                           }))
                         }
                         placeholder={field.placeholder}
@@ -287,12 +289,13 @@ export function ConfigurationModal({
                     )}
 
                     {field.type === "date" && (
-                      <Input type="date"
+                      <input
+                        type="date"
                         value={formData[field.key] || ""}
-                        onChange={(value) =>
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                           setFormData((prev) => ({
                             ...prev,
-                            [field.key]: String(value),
+                            [field.key]: e.target.value,
                           }))
                         }
                         className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
@@ -318,7 +321,7 @@ export function ConfigurationModal({
 
                     {field.type === "select" && field.options && (
                       <HeadlessSelect
-                        options={field.options}
+                        options={field.options as Array<{ value: string | number; label: string }>}
                         value={formData[field.key] || ""}
                         onChange={(value) =>
                           setFormData((prev) => ({
@@ -540,7 +543,6 @@ export default function GenericConfigurationPage({
     setCurrentPage(1);
   }, [searchTerm]);
 
-  const totalPages = Math.ceil(filteredItems.length / pageSize);
   const startIndex = (currentPage - 1) * pageSize;
   const paginatedItems = filteredItems.slice(startIndex, startIndex + pageSize);
 
