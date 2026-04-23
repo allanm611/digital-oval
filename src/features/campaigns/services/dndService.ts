@@ -136,6 +136,11 @@ class DNDService {
     return data.data || [];
   }
 
+  async getDNDSubscriptionById(id: number): Promise<DNDSubscription> {
+    const data = await this.request<ApiResponse<DNDSubscription>>(`/subscriptions/${id}`);
+    return data.data || ({} as DNDSubscription);
+  }
+
   async addDNDSubscription(
     payload: CreateDNDSubscriptionRequest
   ): Promise<DNDSubscription> {

@@ -163,6 +163,7 @@ interface CustomFieldConfig {
   required?: boolean;
   fieldKey: string;
   dynamicOptions?: string; // Configuration type to load options from (e.g., "characterSets")
+  searchable?: boolean; // Enable search/filtering for select fields
 }
 
 export interface TypeConfigurationPageConfig {
@@ -1049,7 +1050,7 @@ function TypeConfigurationModal({
                           zIndex={
                             10020 + (config.customFields!.length - index) * 10
                           }
-                          searchable={field.dynamicOptions === "notificationTables" || field.dynamicOptions === "communicationChannels"}
+                          searchable={field.searchable || field.dynamicOptions === "notificationTables" || field.dynamicOptions === "communicationChannels"}
                         />
                       ) : field.type === "number" ? (
                         <Input

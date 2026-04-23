@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { X, CheckCircle } from "lucide-react";
 import { customerService } from "../../customers360/services/customerServices";
 import Pagination from "../../../shared/components/ui/Pagination";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -8,7 +8,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import { tw, zIndex, color } from "../../../shared/utils/utils";
 import Checkbox from "../../../shared/components/ui/Checkbox";
-import { DNDType } from "../services/dndService";
+import { DNDType, dndService, DNDSubscription } from "../services/dndService";
 
 interface Customer {
   id: string | number;
@@ -52,14 +52,33 @@ export default function AddDNDMembersModal({
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [totalCustomers, setTotalCustomers] = useState(0);
+  const [existingSubscriptions, setExistingSubscriptions] = useState<DNDSubscription[]>([]);
+  const [loadingSubscriptions, setLoadingSubscriptions] = useState(false);
+
+  const loadExistingSubscriptions = useCallback(async () => {
+    try {
+      setLoadingSubscriptions(true);
+      const subscriptions = await dndService.getDNDSubscriptions({
+        channel: channel.toUpperCase(),
+        status: "active",
+      });
+      setExistingSubscriptions(subscriptions);
+    } catch (error) {
+      console.error("Failed to load existing subscriptions:", error);
+      setExistingSubscriptions([]);
+    } finally {
+      setLoadingSubscriptions(false);
+    }
+  }, [channel]);
 
   useEffect(() => {
     if (isOpen && dndTypes.length > 0) {
       setPage(1);
       setSelectedDNDTypeId(String(dndTypes[0].id));
       loadCustomers();
+      loadExistingSubscriptions();
     }
-  }, [isOpen, dndTypes]);
+  }, [isOpen, dndTypes, loadExistingSubscriptions]);
 
   const loadCustomers = useCallback(async () => {
     setCustomerLoading(true);
@@ -98,8 +117,15 @@ export default function AddDNDMembersModal({
     });
   }, [customers, customerSearchTerm]);
 
+  const isCustomerInDND = (customerId: number): boolean => {
+    return existingSubscriptions.some((sub) => sub.customer_id === customerId);
+  };
+
   const handleCustomerSelect = (customer: Customer) => {
     const customerId = typeof customer.customerId === "string" ? parseInt(customer.customerId, 10) : customer.customerId || (typeof customer.id === "string" ? parseInt(customer.id, 10) : customer.id);
+
+    // Don't allow selecting customers already in DND
+    if (isCustomerInDND(customerId)) return;
 
     const fullName = `${customer.first_name || ""} ${customer.last_name || ""}`.trim();
 
@@ -212,25 +238,35 @@ export default function AddDNDMembersModal({
                   const customerId = typeof customer.customerId === "string" ? parseInt(customer.customerId, 10) : customer.customerId || (typeof customer.id === "string" ? parseInt(customer.id, 10) : customer.id);
                   const fullName = `${customer.first_name || ""} ${customer.last_name || ""}`.trim();
                   const isSelected = selectedMembers.some((m) => m.customer_id === customerId);
+                  const alreadyInDND = isCustomerInDND(customerId);
 
                   return (
                     <div
                       key={customerId}
-                      className="px-4 py-3 flex items-center gap-3 hover:bg-gray-50 cursor-pointer"
-                      onClick={() => handleCustomerSelect(customer)}
+                      className={`px-4 py-3 flex items-center gap-3 ${alreadyInDND ? "bg-gray-50 cursor-not-allowed" : "hover:bg-gray-50 cursor-pointer"}`}
+                      onClick={() => !alreadyInDND && handleCustomerSelect(customer)}
                     >
-                      <Checkbox
-                        id={`customer-${customerId}`}
-                        checked={isSelected}
-                        onChange={() => handleCustomerSelect(customer)}
-                      />
+                      {alreadyInDND ? (
+                        <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                      ) : (
+                        <Checkbox
+                          id={`customer-${customerId}`}
+                          checked={isSelected}
+                          onChange={() => handleCustomerSelect(customer)}
+                        />
+                      )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className={`text-sm font-medium ${alreadyInDND ? "text-gray-500" : "text-gray-900"}`}>
                           {fullName || customer.msisdn || "Unknown"}
                         </p>
                         <div className="mt-1 flex flex-wrap gap-2 text-xs text-gray-500">
                           {customer.msisdn && <span>{customer.msisdn}</span>}
                           {customer.email && <span>{customer.email}</span>}
+                          {alreadyInDND && (
+                            <span className="text-green-600 font-medium">
+                              Already in DND
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>

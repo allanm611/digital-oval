@@ -116,6 +116,12 @@ const CampaignPages = {
         /* webpackPrefetch: true */ "../../campaigns/pages/DNDChannelPage"
       ),
   ),
+  DNDSubscriptionDetailPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../campaigns/pages/DNDSubscriptionDetailPage"
+      ),
+  ),
   VIPListManagementPage: lazy(
     () =>
       import(
@@ -1333,6 +1339,10 @@ export default function Dashboard() {
           <Route
             path="/dnd-management/:channel"
             element={<CampaignPages.DNDChannelPage />}
+          />
+          <Route
+            path="/dnd-management/:channel/:id"
+            element={<CampaignPages.DNDSubscriptionDetailPage />}
           />
           <Route
             path="/vip-list-management"

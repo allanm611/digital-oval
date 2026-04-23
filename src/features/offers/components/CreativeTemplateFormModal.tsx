@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { tw, color } from "../../../shared/utils/utils";
+import { zIndex } from "../../../shared/utils/tokens";
 import Input from "../../../shared/components/ui/Input";
+import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import type { CreativeTemplate } from "../../configurations/services/creativeTemplateService";
 import { getChannelOptionsFromAPI, CHANNEL_OPTIONS as DEFAULT_CHANNEL_OPTIONS } from "../../configurations/services/creativeTemplateService";
+import { languageService, Language } from "../../configurations/services/languageService";
 
 interface CreativeTemplateFormModalProps {
   isOpen: boolean;
@@ -34,19 +37,28 @@ export default function CreativeTemplateFormModal({
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [channelOptions, setChannelOptions] = useState<Array<{ value: string; label: string }>>(DEFAULT_CHANNEL_OPTIONS);
+  const [languages, setLanguages] = useState<Language[]>([]);
 
   useEffect(() => {
-    const loadChannels = async () => {
+    const loadData = async () => {
       try {
         const options = await getChannelOptionsFromAPI();
         setChannelOptions(options);
       } catch {
         setChannelOptions(DEFAULT_CHANNEL_OPTIONS);
       }
+
+      try {
+        const response = await languageService.getLanguages();
+        const langData = Array.isArray(response) ? response : response?.data || [];
+        setLanguages(langData.filter((l: Language) => l.is_active));
+      } catch {
+        setLanguages([]);
+      }
     };
 
     if (isOpen) {
-      loadChannels();
+      loadData();
     }
   }, [isOpen]);
 
@@ -234,29 +246,28 @@ export default function CreativeTemplateFormModal({
                 Channel
                 <span className="text-red-600">*</span>
               </label>
-              <select
-                name="primaryChannel"
+              <HeadlessSelect
                 value={formData.primaryChannel}
-                onChange={handleSelectChange}
-                className="w-full px-3 py-2 border border-gray-300 bg-white rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {channelOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+                onChange={(value) => setFormData((prev) => ({ ...prev, primaryChannel: value as any }))}
+                options={channelOptions.map((opt) => ({ value: opt.value, label: opt.label }))}
+                placeholder="Select a channel"
+                zIndex={zIndex.popover}
+              />
             </div>
 
             <div>
               <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                Locale
+                Language
               </label>
-              <Input type="text"
+              <HeadlessSelect
                 value={formData.locale}
-                onChange={handleInputChange('locale')}
-                className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="e.g., en, fr, es"
+                onChange={(value) => setFormData((prev) => ({ ...prev, locale: value as string }))}
+                options={[
+                  { value: "", label: "Select a language" },
+                  ...languages.map((lang) => ({ value: lang.language_code, label: lang.name }))
+                ]}
+                placeholder="Select a language"
+                zIndex={zIndex.popover}
               />
             </div>
           </div>
@@ -321,7 +332,7 @@ export default function CreativeTemplateFormModal({
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-200">
+          <div className="flex items-center justify-end gap-3 pt-6">
             <button
               type="button"
               onClick={onClose}

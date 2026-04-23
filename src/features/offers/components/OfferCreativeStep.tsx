@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, lazy } from "react";
 import {
   Plus,
   Trash2,
@@ -45,6 +45,8 @@ import {
   validateInsertPosition,
 } from "../../../shared/utils/variableInsertion";
 import type { TemplateVariable } from "../../manual-broadcast/types";
+import CreateLanguageModal from "./CreateLanguageModal";
+import CreativeTemplateFormModal from "./CreativeTemplateFormModal";
 
 interface LocalOfferCreative extends Omit<OfferCreative, "id" | "offer_id"> {
   id: string; // Use string for local temp ID
@@ -492,6 +494,10 @@ export default function OfferCreativeStep({
 }: OfferCreativeStepProps) {
   const { t } = useLanguage();
 
+  // Modal states for creating languages and templates
+  const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+
   // Map communication channel ID to creative channel name
   const getDefaultChannelFromId = (channelId?: number): CreativeChannel => {
     switch (channelId) {
@@ -609,6 +615,36 @@ export default function OfferCreativeStep({
     };
     fetchLanguages();
   }, []);
+
+  // Handle language creation - auto-select it
+  const handleLanguageCreated = async (newLanguage: Language) => {
+    setLanguages((prev) => [...prev, newLanguage]);
+    setIsLanguageModalOpen(false);
+
+    // Auto-select the newly created language if we have a selected creative
+    if (selectedCreativeData) {
+      updateCreative(selectedCreativeData.id, {
+        locale: newLanguage.language_code as Locale,
+      });
+      // Clear template selection when locale changes
+      setSelectedTemplates((prev) => {
+        const updated = { ...prev };
+        delete updated[selectedCreativeData.id];
+        return updated;
+      });
+    }
+  };
+
+  // Handle template creation - auto-select it
+  const handleTemplateCreated = async (newTemplate: CreativeTemplate) => {
+    setTemplates((prev) => [...prev, newTemplate]);
+    setIsTemplateModalOpen(false);
+
+    // Auto-select the newly created template if we have a selected creative
+    if (selectedCreativeData) {
+      handleTemplateSelect(newTemplate.id);
+    }
+  };
 
   // Clear creatives when channel changes in step 1
   useEffect(() => {
@@ -1313,7 +1349,7 @@ export default function OfferCreativeStep({
                       }
                       disabled={selectedCreativeData ? languageOptions.filter((opt) => !opt.isUsed).length === 0 : false}
                       allowCreate={true}
-                      onCreate={() => window.open("/dashboard/languages", "_blank")}
+                      onCreate={() => setIsLanguageModalOpen(true)}
                     />
                   </div>
 
@@ -1372,7 +1408,7 @@ export default function OfferCreativeStep({
                           ]}
                           placeholder="Select a template to start with..."
                           allowCreate={true}
-                          onCreate={() => window.open("/dashboard/creative-templates", "_blank")}
+                          onCreate={() => setIsTemplateModalOpen(true)}
                         />
                         {selectedTemplates[selectedCreativeData.id] && (
                           <div className="mt-2 flex items-center gap-2 text-xs text-gray-600">
@@ -1771,6 +1807,27 @@ export default function OfferCreativeStep({
           )}
         </div>
       </RegularModal>
+
+      {/* Create Language Modal */}
+      <CreateLanguageModal
+        isOpen={isLanguageModalOpen}
+        onClose={() => setIsLanguageModalOpen(false)}
+        onLanguageCreated={handleLanguageCreated}
+      />
+
+      {/* Create Creative Template Modal */}
+      <CreativeTemplateFormModal
+        isOpen={isTemplateModalOpen}
+        onClose={() => setIsTemplateModalOpen(false)}
+        onSave={async (formData) => {
+          const response = await creativeTemplateService.createCreativeTemplate(formData);
+          const newTemplate = response.data;
+          if (newTemplate) {
+            const template = Array.isArray(newTemplate) ? newTemplate[0] : newTemplate;
+            handleTemplateCreated(template);
+          }
+        }}
+      />
     </div>
   );
 }

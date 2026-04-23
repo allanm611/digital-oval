@@ -5,6 +5,7 @@ import {
   Trash2,
   UserX,
   UserCheck,
+  Eye,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import { useToast } from "../../../contexts/ToastContext";
@@ -407,15 +408,24 @@ export default function DNDChannelPage() {
                         borderBottomRightRadius: "0.375rem",
                       }}
                     >
-                      {subscription.status === "active" && (
+                      <div className="flex items-center justify-center gap-2">
                         <button
-                          onClick={() => handleRemoveCustomer(subscription)}
-                          className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
-                          title="Remove from DND"
+                          onClick={() => navigate(`/dashboard/dnd-management/${channelInfo?.id}/${subscription.id}`)}
+                          className={`p-2 ${tw.textSecondary} hover:bg-gray-100 ${tw.rounded} transition-colors`}
+                          title="View Details"
                         >
-                          <UserCheck className="w-4 h-4" />
+                          <Eye className="w-4 h-4" />
                         </button>
-                      )}
+                        {subscription.status === "active" && (
+                          <button
+                            onClick={() => handleRemoveCustomer(subscription)}
+                            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
+                            title="Remove from DND"
+                          >
+                            <UserCheck className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

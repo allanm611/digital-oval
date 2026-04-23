@@ -47,6 +47,7 @@ import { validatePhoneOnly, isValidEmail } from "../utils/validation";
 import Checkbox from "./ui/Checkbox";
 import type { CustomerSubscriptionRecord } from "../../features/customers360/types/customerSubscription";
 import { communicationChannelService } from "../services/communicationChannelService";
+import { smsRouteService } from "../../features/routes/services/smsRouteService";
 
 interface CreateCommunicationModalProps {
   isOpen: boolean;
@@ -67,9 +68,13 @@ export default function CreateCommunicationModal({
   customerRecord,
   onSuccess,
 }: CreateCommunicationModalProps) {
-  const { data: smsRoutes } = useConfigurationData("smsRoutes");
+  const { data: emailRoutesData } = useConfigurationData("emailRoutes");
   const { error: showError } = useToast();
   const { user } = useAuth();
+
+  const emailRoutes = emailRoutesData?.filter((r: any) => r.isActive || r.is_active) || [];
+  const [smsRoutes, setSmsRoutes] = useState<any[]>([]);
+  const [smsRoutesLoading, setSmsRoutesLoading] = useState(false);
 
   const [channels, setChannels] = useState<Array<{ id: Channel; name: string; icon: any }>>([]);
 
@@ -84,6 +89,7 @@ export default function CreateCommunicationModal({
   const [messageBody, setMessageBody] = useState("");
   const [isRichText, setIsRichText] = useState(false);
   const [smsRoute, setSmsRoute] = useState("");
+  const [emailRoute, setEmailRoute] = useState("");
   const [error, setError] = useState("");
   const [showVariableSelector, setShowVariableSelector] = useState(false);
   const [activeField, setActiveField] = useState<"title" | "body">("body");
@@ -125,12 +131,11 @@ export default function CreateCommunicationModal({
   const policyDropdownRef = useRef<HTMLDivElement>(null);
   useClickOutside(policyDropdownRef, () => setIsPolicyDropdownOpen(false));
 
-  // Fetch communication channels on component mount
+  // Fetch communication channels and routes on component mount
   useEffect(() => {
     const fetchChannels = async () => {
       try {
         const allChannels = await communicationChannelService.getAll();
-        const channelMap: { [key: string]: any } = {};
         const iconMap: { [key: string]: any } = {
           SMS: MessageSquare,
           EMAIL: Mail,
@@ -138,33 +143,38 @@ export default function CreateCommunicationModal({
           PUSH: Bell,
         };
 
-        (allChannels || []).forEach((ch: any) => {
+        const channelsList = (allChannels || []).map((ch: any) => {
           const code = ch.code?.toUpperCase() || "";
-          if (code && !channelMap[code]) {
-            channelMap[code] = ch;
-          }
+          return {
+            id: code as Channel,
+            name: ch.name || code,
+            icon: iconMap[code] || MessageSquare,
+          };
         });
-
-        const channelsList = [
-          { id: "EMAIL" as Channel, name: channelMap.EMAIL?.name || "Email", icon: iconMap.EMAIL },
-          { id: "SMS" as Channel, name: channelMap.SMS?.name || "SMS", icon: iconMap.SMS },
-          { id: "WHATSAPP" as Channel, name: channelMap.WHATSAPP?.name || "WhatsApp", icon: iconMap.WHATSAPP },
-          { id: "PUSH" as Channel, name: channelMap.PUSH?.name || "Push", icon: iconMap.PUSH },
-        ].filter((ch) => channelMap[ch.id] || ch.id === "EMAIL");
 
         setChannels(channelsList);
       } catch (error) {
         console.error("Failed to fetch communication channels:", error);
-        setChannels([
-          { id: "EMAIL" as Channel, name: "Email", icon: Mail },
-          { id: "SMS" as Channel, name: "SMS", icon: MessageSquare },
-          { id: "WHATSAPP" as Channel, name: "WhatsApp", icon: Phone },
-          { id: "PUSH" as Channel, name: "Push", icon: Bell },
-        ]);
+        setChannels([]);
       }
     };
+
+    const fetchSmsRoutes = async () => {
+      try {
+        setSmsRoutesLoading(true);
+        const smsRoutesData = await smsRouteService.getAllRoutes();
+        setSmsRoutes(Array.isArray(smsRoutesData) ? smsRoutesData.filter((r: any) => r.is_active) : []);
+      } catch (error) {
+        console.error("Failed to fetch SMS routes:", error);
+        setSmsRoutes([]);
+      } finally {
+        setSmsRoutesLoading(false);
+      }
+    };
+
     if (isOpen) {
       fetchChannels();
+      fetchSmsRoutes();
     }
   }, [isOpen]);
 
@@ -306,6 +316,7 @@ export default function CreateCommunicationModal({
       setSelectedChannel("EMAIL");
       setIsRichText(false);
       setSmsRoute("");
+      setEmailRoute("");
       setError("");
       setShowVariableSelector(false);
       setSelectedVariables([]);
@@ -468,6 +479,11 @@ export default function CreateCommunicationModal({
 
     if (selectedChannel === "EMAIL" && !messageTitle.trim()) {
       setError("Subject line is required for email");
+      return;
+    }
+
+    if (selectedChannel === "EMAIL" && !emailRoute.trim()) {
+      setError("Please select an email route");
       return;
     }
 
@@ -736,25 +752,79 @@ export default function CreateCommunicationModal({
           <>
             <div className="flex-1 overflow-auto p-4 sm:p-6">
               <div className="space-y-6">
-                {/* Channel Selection */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Communication Channel <span className="text-red-500">*</span>
-                  </label>
-                  <HeadlessSelect
-                    options={channels.map((channel) => ({
-                      value: channel.id,
-                      label: channel.name,
-                    }))}
-                    value={selectedChannel}
-                    onChange={(value) => {
-                      setSelectedChannel(value as Channel);
-                      setError("");
-                    }}
-                    placeholder="Select communication channel"
-                    className="text-sm"
-                    zIndex={zIndex.popover}
-                  />
+                {/* Channel and Route Selection on same line */}
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Communication Channel <span className="text-red-500">*</span>
+                    </label>
+                    <HeadlessSelect
+                      options={channels.map((channel) => ({
+                        value: channel.id,
+                        label: channel.name,
+                      }))}
+                      value={selectedChannel}
+                      onChange={(value) => {
+                        setSelectedChannel(value as Channel);
+                        setSmsRoute("");
+                        setEmailRoute("");
+                        setError("");
+                      }}
+                      placeholder="Select communication channel"
+                      className="text-sm"
+                      zIndex={zIndex.popover}
+                    />
+                  </div>
+
+                  {/* Email Route - only show when EMAIL channel is selected */}
+                  {selectedChannel === "EMAIL" && (
+                    <div className="flex-1">
+                      <label className="text-sm font-semibold text-gray-700 mb-2 block">
+                        Email Route <span className="text-red-500">*</span>
+                      </label>
+                      <HeadlessSelect
+                        options={[
+                          { value: "", label: "Select Email Route" },
+                          ...(emailRoutes || []).map((route: any) => ({
+                            value: route.id.toString(),
+                            label: route.name,
+                          })),
+                        ]}
+                        value={emailRoute}
+                        onChange={(value) => {
+                          setEmailRoute(value);
+                          setError("");
+                        }}
+                        placeholder="Select Email Route"
+                        zIndex={zIndex.popover}
+                      />
+                    </div>
+                  )}
+
+                  {/* SMS Route - only show when SMS channel is selected */}
+                  {selectedChannel === "SMS" && (
+                    <div className="flex-1">
+                      <label className="text-sm font-semibold text-gray-700 mb-2 block">
+                        SMS Route <span className="text-red-500">*</span>
+                      </label>
+                      <HeadlessSelect
+                        options={[
+                          { value: "", label: "Select SMS Route" },
+                          ...(smsRoutes || []).map((route: any) => ({
+                            value: route.id.toString(),
+                            label: route.name,
+                          })),
+                        ]}
+                        value={smsRoute}
+                        onChange={(value) => {
+                          setSmsRoute(value);
+                          setError("");
+                        }}
+                        placeholder={smsRoutesLoading ? "Loading..." : "Select SMS Route"}
+                        zIndex={zIndex.popover}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {/* Communication Policy */}
@@ -887,33 +957,6 @@ export default function CreateCommunicationModal({
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                   {/* Left Column - Message Editor (3/5) */}
                   <div className="lg:col-span-3 space-y-4">
-                    {/* SMS Route Selection - Show only when SMS is selected */}
-                    {selectedChannel === "SMS" && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-900 mb-2 block">
-                          SMS Route <span className="text-red-500">*</span>
-                        </label>
-                        <HeadlessSelect
-                          options={[
-                            { value: "", label: "Select SMS Route" },
-                            ...(smsRoutes || [])
-                              .filter((route: any) => route.isActive)
-                              .map((route: any) => ({
-                                value: route.id.toString(),
-                                label: route.name,
-                              })),
-                          ]}
-                          value={smsRoute}
-                          onChange={(value) => {
-                            setSmsRoute(value);
-                            setError("");
-                          }}
-                          placeholder="Select SMS Route"
-                          zIndex={zIndex.popover}
-                        />
-                      </div>
-                    )}
-
                     {/* Toolbar */}
                     <div
                       className="flex items-center justify-between p-3 rounded-md"

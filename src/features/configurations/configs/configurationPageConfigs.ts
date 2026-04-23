@@ -3040,7 +3040,8 @@ export const languagesConfig: TypeConfigurationPageConfig = {
       fieldKey: "country",
       required: true,
       options: countriesList,
-      placeholder: "Select a country",
+      placeholder: "Search or select a country",
+      searchable: true,
     },
     {
       label: "Character Set Type",

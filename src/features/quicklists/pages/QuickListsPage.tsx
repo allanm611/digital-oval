@@ -216,7 +216,7 @@ export default function QuickListsPage() {
           response.data.quicklist_id,
         );
         if (quicklistResponse.success && quicklistResponse.data) {
-          setCommunicateQuickList(quicklistResponse.data);
+          setQuicklistToCommunicate(quicklistResponse.data);
           setIsCommunicateModalOpen(true);
         }
       }
