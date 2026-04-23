@@ -70,7 +70,7 @@ export default function CampaignBroadcastDetailsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <BackButton fallbackTo="/dashboard/campaign-broadcasts" currentLabel="Broadcast Details" />
+          <BackButton fallbackTo="/dashboard/campaign-broadcasts" showBreadcrumb={true} currentLabel="Broadcast Details" />
         </div>
       </div>
 

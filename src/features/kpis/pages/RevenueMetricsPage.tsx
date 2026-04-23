@@ -292,6 +292,7 @@ export default function RevenueMetricsPage() {
                         onClick={() =>
                           navigate(
                             `/dashboard/kpis/revenue-metrics/${metric.id}`,
+                            { state: { parentLabel: "Revenue Metrics" } }
                           )
                         }
                         disabled={deleting === metric.id}

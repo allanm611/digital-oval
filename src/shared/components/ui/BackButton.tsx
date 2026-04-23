@@ -10,6 +10,7 @@ interface BackButtonProps {
   iconSize?: string;
   showBreadcrumb?: boolean;
   currentLabel?: string;
+  parentLabel?: string;
 }
 
 function toTitleCaseLabel(value: string): string {
@@ -71,6 +72,7 @@ export default function BackButton({
   iconSize,
   showBreadcrumb,
   currentLabel,
+  parentLabel,
 }: BackButtonProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -83,7 +85,7 @@ export default function BackButton({
   const shouldShowBreadcrumb = showBreadcrumb ?? !iconSize;
 
   const breadcrumbData = useMemo(() => {
-    const fallbackLabel = fallbackTo ? getPathLabel(fallbackTo) : "Back";
+    const fallbackLabel = parentLabel || (fallbackTo ? getPathLabel(fallbackTo) : "Back");
     const computedCurrentLabel =
       currentLabel || getPathLabel(location.pathname);
 
@@ -91,7 +93,7 @@ export default function BackButton({
       fallbackLabel,
       computedCurrentLabel,
     };
-  }, [fallbackTo, currentLabel, location.pathname]);
+  }, [fallbackTo, currentLabel, location.pathname, parentLabel]);
 
   if (shouldShowBreadcrumb && fallbackTo) {
     return (

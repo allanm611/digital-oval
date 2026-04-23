@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  ArrowLeft,
   AlertCircle,
   XCircle,
   Clock,
@@ -11,6 +10,7 @@ import {
   RotateCcw,
   X,
 } from "lucide-react";
+import BackButton from "../../../shared/components/ui/BackButton";
 import {
   PieChart,
   Pie,
@@ -361,22 +361,16 @@ export default function JobExecutionDetailsPage() {
 
   return (
     <div className="space-y-6">
+      <BackButton
+        fallbackTo="/dashboard/job-executions"
+        showBreadcrumb={true}
+        currentLabel="Job Execution Details"
+      />
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate("/dashboard/job-executions")}
-            className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 transition-colors`}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div>
-            <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-              Job Execution Details
-            </h1>
-            <p className={`${tw.textSecondary} mt-1 text-sm`}>
-              Execution ID: {execution.id.substring(0, 8)}...
-            </p>
-          </div>
+        <div>
+          <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
+            Execution ID: {execution.id.substring(0, 8)}...
+          </h1>
         </div>
         <div className="flex gap-2">
           {canWrite && execution.execution_status === "running" && (

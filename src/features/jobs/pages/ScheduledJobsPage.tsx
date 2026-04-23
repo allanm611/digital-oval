@@ -901,7 +901,7 @@ export default function ScheduledJobsPage() {
                       <div className="flex items-center justify-end space-x-2">
                         <button
                           onClick={() =>
-                            navigate(`/dashboard/scheduled-jobs/${job.id}`)
+                            navigate(`/dashboard/scheduled-jobs/${job.id}`, { state: { parentLabel: "Scheduled Jobs" } })
                           }
                           className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
                           aria-label="View details"

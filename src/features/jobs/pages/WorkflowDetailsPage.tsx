@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Edit, Trash2, Copy, Play, Pause } from "lucide-react";
+import { Edit, Trash2, Copy, Play, Pause } from "lucide-react";
 import { workflowService } from "../services/workflowService";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import BackButton from "../../../shared/components/ui/BackButton";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import { tw, button } from "../../../shared/utils/utils";
@@ -138,23 +139,16 @@ export default function WorkflowDetailsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
+      <BackButton
+        fallbackTo="/dashboard/workflows"
+        showBreadcrumb={true}
+        currentLabel="Workflow Details"
+      />
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate("/dashboard/workflows")}
-            className={`${tw.rounded} p-2 text-gray-600 hover:text-gray-800 transition-colors`}
-            aria-label="Back"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <div>
-            <h1 className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
-              {workflow.name}
-            </h1>
-            <p className={`${tw.textSecondary} mt-1 text-sm`}>
-              Workflow Details
-            </p>
-          </div>
+        <div>
+          <h1 className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
+            {workflow.name}
+          </h1>
         </div>
         <div className="flex items-center gap-3">
           {!isActive && (

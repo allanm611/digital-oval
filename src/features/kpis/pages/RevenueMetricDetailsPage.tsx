@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Edit, Trash2, DollarSign } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -19,6 +19,8 @@ const CATEGORY_LABELS: Record<string, string> = {
 export default function RevenueMetricDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const parentLabel = (location.state as any)?.parentLabel;
   const { success, error: showError } = useToast();
 
   const [loading, setLoading] = useState(true);
@@ -83,7 +85,7 @@ export default function RevenueMetricDetailsPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <BackButton fallbackTo="/dashboard/kpis/revenue-metrics" />
+          <BackButton fallbackTo="/dashboard/kpis/revenue-metrics" showBreadcrumb={true} currentLabel="Revenue Metric Details" parentLabel={parentLabel} />
           <p className={tw.textSecondary}>Metric not found</p>
         </div>
       </div>
@@ -95,7 +97,7 @@ export default function RevenueMetricDetailsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <BackButton fallbackTo="/dashboard/kpis/revenue-metrics" />
+          <BackButton fallbackTo="/dashboard/kpis/revenue-metrics" showBreadcrumb={true} currentLabel="Revenue Metric Details" parentLabel={parentLabel} />
           <div></div>
         </div>
 

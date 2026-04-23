@@ -91,11 +91,11 @@ export default function AllKPIsPage() {
     const numericId = extractNumericId(kpi.id);
 
     if (kpi.category === "System Event") {
-      navigate(`/dashboard/kpis/system-events/${numericId}`);
+      navigate(`/dashboard/kpis/system-events/${numericId}`, { state: { parentLabel: "All KPIs" } });
     } else if (kpi.category === "Usage Metric") {
-      navigate(`/dashboard/kpis/usage-metrics/${numericId}`);
+      navigate(`/dashboard/kpis/usage-metrics/${numericId}`, { state: { parentLabel: "All KPIs" } });
     } else if (kpi.category === "Revenue Metric") {
-      navigate(`/dashboard/kpis/revenue-metrics/${numericId}`);
+      navigate(`/dashboard/kpis/revenue-metrics/${numericId}`, { state: { parentLabel: "All KPIs" } });
     }
   };
 
@@ -103,11 +103,11 @@ export default function AllKPIsPage() {
     const numericId = extractNumericId(kpi.id);
 
     if (kpi.category === "System Event") {
-      navigate(`/dashboard/kpis/system-events/${numericId}`);
+      navigate(`/dashboard/kpis/system-events/${numericId}`, { state: { parentLabel: "All KPIs" } });
     } else if (kpi.category === "Usage Metric") {
-      navigate(`/dashboard/kpis/usage-metrics/${numericId}/edit`);
+      navigate(`/dashboard/kpis/usage-metrics/${numericId}/edit`, { state: { parentLabel: "All KPIs" } });
     } else if (kpi.category === "Revenue Metric") {
-      navigate(`/dashboard/kpis/revenue-metrics/${numericId}/edit`);
+      navigate(`/dashboard/kpis/revenue-metrics/${numericId}/edit`, { state: { parentLabel: "All KPIs" } });
     }
   };
 

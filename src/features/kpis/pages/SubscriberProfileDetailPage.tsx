@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Edit, Trash2, Users } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw, button } from "../../../shared/utils/utils";
@@ -39,6 +39,8 @@ const DUMMY_PROFILE_FIELDS = [
 export default function SubscriberProfileDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const parentLabel = (location.state as any)?.parentLabel;
   const { showToast } = useToast();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -48,7 +50,7 @@ export default function SubscriberProfileDetailPage() {
   if (!profile) {
     return (
       <div className="space-y-6">
-        <BackButton fallbackTo="/dashboard/kpis/subscriber-profiles" />
+        <BackButton fallbackTo="/dashboard/kpis/subscriber-profiles" showBreadcrumb={true} currentLabel="Subscriber Profile Details" parentLabel={parentLabel} />
         <div className="text-center py-12">
           <p className="text-gray-600">Profile field not found</p>
         </div>
@@ -75,7 +77,7 @@ export default function SubscriberProfileDetailPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <BackButton fallbackTo="/dashboard/kpis/subscriber-profiles" />
+          <BackButton fallbackTo="/dashboard/kpis/subscriber-profiles" showBreadcrumb={true} currentLabel="Subscriber Profile Details" parentLabel={parentLabel} />
           <div></div>
         </div>
         {/* Action Buttons */}

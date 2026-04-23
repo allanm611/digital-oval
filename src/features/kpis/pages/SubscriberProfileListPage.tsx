@@ -217,11 +217,11 @@ export default function SubscriberProfileListPage() {
   const paginatedProfiles = filteredProfiles.slice(startIdx, startIdx + ITEMS_PER_PAGE);
 
   const handleViewDetails = (profile: typeof DUMMY_PROFILE_FIELDS[0]) => {
-    navigate(`/dashboard/kpis/subscriber-profiles/${profile.id}`);
+    navigate(`/dashboard/kpis/subscriber-profiles/${profile.id}`, { state: { parentLabel: "Subscriber Profiles" } });
   };
 
   const handleEdit = (profile: typeof DUMMY_PROFILE_FIELDS[0]) => {
-    navigate(`/dashboard/kpis/subscriber-profiles/${profile.id}/edit`);
+    navigate(`/dashboard/kpis/subscriber-profiles/${profile.id}/edit`, { state: { parentLabel: "Subscriber Profiles" } });
   };
 
   const handleDeleteClick = (profile: typeof DUMMY_PROFILE_FIELDS[0]) => {

@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
-  ArrowLeft,
   Edit,
   Trash2,
   AlertCircle,
@@ -22,6 +21,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import BackButton from "../../../shared/components/ui/BackButton";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { color, tw } from "../../../shared/utils/utils";
 
@@ -250,18 +250,16 @@ export default function JobWorkflowStepDetailsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
+      <BackButton
+        fallbackTo="/dashboard/job-workflow-steps"
+        showBreadcrumb={true}
+        currentLabel="Workflow Step Details"
+      />
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate(-1)}
-            className={`p-2 ${tw.rounded} text-gray-600 transition-colors`}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div>
-            <h1 className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
-              {step.step_name}
-            </h1>
+        <div>
+          <h1 className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
+            {step.step_name}
+          </h1>
             {canExecute && (
               <div className="flex items-center gap-2 mt-1">
                 {canExecute.can_execute ? (

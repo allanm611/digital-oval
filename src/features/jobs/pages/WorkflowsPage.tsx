@@ -724,7 +724,7 @@ export default function WorkflowsPage() {
                     <div className="flex items-center justify-end space-x-2">
                       <button
                         onClick={() =>
-                          navigate(`/dashboard/workflows/${workflow.id}`)
+                          navigate(`/dashboard/workflows/${workflow.id}`, { state: { parentLabel: "Workflows" } })
                         }
                         className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
                         aria-label="View workflow"

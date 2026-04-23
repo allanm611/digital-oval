@@ -28,6 +28,7 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw } from "../../../shared/utils/utils";
 import { userService } from "../../users/services/userService";
 import { segmentService } from "../../segments/services/segmentService";
@@ -569,15 +570,13 @@ export default function ScheduledJobDetailsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
+      <BackButton
+        fallbackTo="/dashboard/scheduled-jobs"
+        showBreadcrumb={true}
+        currentLabel="Scheduled Job Details"
+      />
       <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-        <div className="flex items-center space-x-2 sm:space-x-4">
-          <button
-            onClick={() => navigate(-1)}
-            className={`${tw.rounded} p-2 text-gray-600 transition-colors`}
-            aria-label="Back"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
+        <div>
           <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
             {job.name || "Loading..."}
           </h1>

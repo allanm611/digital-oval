@@ -290,7 +290,7 @@ export default function UsageMetricsPage() {
                       </button>
                       <button
                         onClick={() =>
-                          navigate(`/dashboard/kpis/usage-metrics/${metric.id}`)
+                          navigate(`/dashboard/kpis/usage-metrics/${metric.id}`, { state: { parentLabel: "Usage Metrics" } })
                         }
                         disabled={deleting === metric.id}
                         className={`p-2 ${tw.rounded} text-black disabled:opacity-60`}

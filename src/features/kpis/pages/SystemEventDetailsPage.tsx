@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Zap } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -9,6 +9,8 @@ import { color, tw } from "../../../shared/utils/utils";
 export default function SystemEventDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const parentLabel = (location.state as any)?.parentLabel;
   const [loading, setLoading] = useState(true);
   const [event, setEvent] = useState<SystemEvent | null>(null);
 
@@ -62,7 +64,7 @@ export default function SystemEventDetailsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <BackButton fallbackTo="/dashboard/kpis/system-events" showBreadcrumb={true} currentLabel="System Event Details" />
+      <BackButton fallbackTo="/dashboard/kpis/system-events" showBreadcrumb={true} currentLabel="System Event Details" parentLabel={parentLabel} />
 
       {/* Event Information */}
       <div className="space-y-6">
