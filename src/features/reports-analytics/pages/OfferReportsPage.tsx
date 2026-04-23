@@ -529,7 +529,7 @@ export default function OfferReportsPage() {
     start: "",
     end: "",
   });
-  const [useDummyData, setUseDummyData] = useState(false);
+  const [useDummyData, setUseDummyData] = useState(true);
   const [tablePage, setTablePage] = useState(1);
   const tablePageSize = 20;
 
