@@ -540,6 +540,10 @@ const SettingsPages = {
     () =>
       import(/* webpackPrefetch: true */ "../../configurations/pages/DNDTypesPage"),
   ),
+  TimezonesPage: lazy(
+    () =>
+      import(/* webpackPrefetch: true */ "../../configurations/pages/TimezonesPage"),
+  ),
 };
 
 // Server & Connection Pages - All routes preloaded for instant access
@@ -1141,6 +1145,10 @@ export default function Dashboard() {
           <Route
             path="/dnd-types"
             element={<SettingsPages.DNDTypesPage />}
+          />
+          <Route
+            path="/timezones"
+            element={<SettingsPages.TimezonesPage />}
           />
           <Route
             path="/sms-routes/*"

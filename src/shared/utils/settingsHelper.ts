@@ -96,6 +96,7 @@ export const getSettingsTheme = (): "light" | "dark" => {
 
 /**
  * All available timezone options
+ * @deprecated Use timezoneService.getTimezones() for dynamic timezone list
  */
 export const TIMEZONE_OPTIONS = [
   { label: "UTC", value: "UTC" },

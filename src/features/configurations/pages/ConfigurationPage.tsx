@@ -381,6 +381,17 @@ export default function ConfigurationPage() {
         status: "active",
         navigationPath: "/dashboard/seed-list-management",
       },
+      // System-related configs
+      {
+        id: "timezones",
+        name: "Timezones",
+        description:
+          "Manage available timezones for campaign scheduling and system operations",
+        type: "campaign",
+        category: "System Configuration",
+        status: "active",
+        navigationPath: "/dashboard/timezones",
+      },
     ];
 
     setConfigurations(allConfigurations);

@@ -18,9 +18,11 @@ import { PermissionGate } from "../../auth/components/PermissionGate";
 import { characterSetService } from "../../configurations/services/characterSetService";
 import { senderIdService } from "../../configurations/services/senderIdService";
 import { communicationChannelService } from "../../../shared/services/communicationChannelService";
+import { timezoneService } from "../../configurations/services/timezoneService";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import { notificationService } from "../../notifications/services/notificationService";
 import { NotificationSubscription } from "../../notifications/types/notification";
+import { TimeZone } from "../../configurations/types/timezone";
 
 // Get all countries from world-countries library, sorted alphabetically
 const countriesList = countries
@@ -50,60 +52,6 @@ const languages = [
   { name: "French", code: "fr" },
   { name: "Spanish", code: "es" },
   { name: "Swahili", code: "sw" },
-];
-
-const timezones = [
-  "UTC",
-  "America/New_York",
-  "America/Chicago",
-  "America/Denver",
-  "America/Los_Angeles",
-  "America/Toronto",
-  "America/Vancouver",
-  "Europe/London",
-  "Europe/Paris",
-  "Europe/Berlin",
-  "Europe/Rome",
-  "Europe/Madrid",
-  "Europe/Amsterdam",
-  "Europe/Brussels",
-  "Europe/Zurich",
-  "Europe/Vienna",
-  "Europe/Stockholm",
-  "Europe/Oslo",
-  "Europe/Copenhagen",
-  "Europe/Helsinki",
-  "Europe/Warsaw",
-  "Europe/Lisbon",
-  "Europe/Athens",
-  "Europe/Dublin",
-  "Asia/Tokyo",
-  "Asia/Seoul",
-  "Asia/Shanghai",
-  "Asia/Hong_Kong",
-  "Asia/Singapore",
-  "Asia/Kuala_Lumpur",
-  "Asia/Bangkok",
-  "Asia/Jakarta",
-  "Asia/Manila",
-  "Asia/Ho_Chi_Minh",
-  "Asia/Dubai",
-  "Asia/Riyadh",
-  "Asia/Jerusalem",
-  "Asia/Istanbul",
-  "Asia/Moscow",
-  "Africa/Johannesburg",
-  "Africa/Cairo",
-  "Africa/Lagos",
-  "Africa/Nairobi",
-  "Africa/Dar_es_Salaam",
-  "Africa/Kampala",
-  "Africa/Accra",
-  "America/Sao_Paulo",
-  "America/Buenos_Aires",
-  "America/Mexico_City",
-  "America/Santiago",
-  "America/Bogota",
 ];
 
 const dateFormats = [
@@ -264,6 +212,8 @@ export default function SettingsPage() {
   const [characterSetDescriptions, setCharacterSetDescriptions] = useState<
     Record<string, string>
   >({});
+  const [timezoneList, setTimezoneList] = useState<TimeZone[]>([]);
+  const [timezonesLoading, setTimezonesLoading] = useState(true);
 
   // Notification subscriptions from API
   const [subscriptions, setSubscriptions] = useState<NotificationSubscription[]>([]);
@@ -280,6 +230,27 @@ export default function SettingsPage() {
       // Default: SMS and Email
       return ["sms", "email"];
     });
+
+  // Load timezones from API on mount
+  useEffect(() => {
+    const loadTimezones = async () => {
+      try {
+        setTimezonesLoading(true);
+        const data = await timezoneService.getTimezones();
+        if (Array.isArray(data)) {
+          setTimezoneList(data.filter((tz) => tz && tz.is_active === true));
+        } else {
+          setTimezoneList([]);
+        }
+      } catch (error) {
+        console.error("Failed to load timezones:", error);
+        setTimezoneList([]);
+      } finally {
+        setTimezonesLoading(false);
+      }
+    };
+    loadTimezones();
+  }, []);
 
   // Load subscriptions from API on mount
   useEffect(() => {
@@ -579,10 +550,14 @@ export default function SettingsPage() {
     label: lang.name,
   }));
 
-  const timezoneOptions = timezones.map((tz) => ({
-    value: tz,
-    label: tz,
-  }));
+  const timezoneOptions = Array.isArray(timezoneList)
+    ? timezoneList
+        .filter((tz) => tz && tz.value && tz.label)
+        .map((tz) => ({
+          value: tz.value || "",
+          label: tz.label || "",
+        }))
+    : [];
 
   const dateFormatOptions = dateFormats.map((format) => ({
     value: format,

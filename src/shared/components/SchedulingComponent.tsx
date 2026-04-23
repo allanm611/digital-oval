@@ -11,6 +11,8 @@ import type {
 import Checkbox from "./ui/Checkbox";
 import Radio from "./ui/Radio";
 import { getSettingsTimezone, TIMEZONE_OPTIONS } from "../utils/settingsHelper";
+import { timezoneService } from "../../features/configurations/services/timezoneService";
+import type { TimeZone } from "../../features/configurations/types/timezone";
 
 const daysOfWeek = [
   { value: 0, label: "Sunday" },
@@ -55,16 +57,41 @@ export default function SchedulingComponent({
   const [startBroadcastBefore, setStartBroadcastBefore] = useState("Before");
   const [hoursBeforeBroadcast, setHoursBeforeBroadcast] = useState(0);
 
+  // Timezone state - fetch from API
+  const [timezoneList, setTimezoneList] = useState<TimeZone[]>([]);
+  const [timezonesLoading, setTimezonesLoading] = useState(true);
+
+  // Fetch timezones from API
+  useEffect(() => {
+    const loadTimezones = async () => {
+      try {
+        setTimezonesLoading(true);
+        const data = await timezoneService.getTimezones();
+        if (Array.isArray(data)) {
+          setTimezoneList(data.filter((tz) => tz && tz.is_active === true));
+        } else {
+          setTimezoneList([]);
+        }
+      } catch (error) {
+        console.error("Failed to load timezones:", error);
+        setTimezoneList([]);
+      } finally {
+        setTimezonesLoading(false);
+      }
+    };
+    loadTimezones();
+  }, []);
+
   // Initialize with defaults if not provided (mount-only)
   useEffect(() => {
-    if (!scheduling.start_date) {
+    if (!scheduling || !scheduling.start_date) {
       const settingsTimezone = getSettingsTimezone();
       const defaultScheduling = {
-        ...scheduling,
-        type: scheduling.type || "scheduled",
-        time_zone: scheduling.time_zone || settingsTimezone,
+        ...(scheduling || {}),
+        type: (scheduling && scheduling.type) || "scheduled",
+        time_zone: (scheduling && scheduling.time_zone) || settingsTimezone,
         start_date: new Date().toISOString().split("T")[0],
-        end_date: scheduling.end_date || "",
+        end_date: (scheduling && scheduling.end_date) || "",
       };
       onSchedulingChange(defaultScheduling);
     }
@@ -72,6 +99,8 @@ export default function SchedulingComponent({
   }, []);
 
   useEffect(() => {
+    if (!scheduling) return;
+
     const mappedPattern: "daily" | "weekly" | "monthly" =
       recurrencePattern === "Days"
         ? "daily"
@@ -127,8 +156,9 @@ export default function SchedulingComponent({
   const getDayOptionsForRow = (rowId: number) => {
     const selectedByOtherRows = new Set(
       specificDayStartTimes
-        .filter((entry) => entry.id !== rowId)
-        .map((entry) => entry.day),
+        .filter((entry) => entry && entry.id !== rowId)
+        .map((entry) => entry && entry.day)
+        .filter(Boolean),
     );
 
     return daysOfWeek
@@ -137,6 +167,7 @@ export default function SchedulingComponent({
   };
 
   const updateScheduling = (updates: Partial<SchedulingData>) => {
+    if (!scheduling) return;
     const newScheduling = { ...scheduling, ...updates };
     onSchedulingChange(newScheduling);
   };
@@ -151,8 +182,10 @@ export default function SchedulingComponent({
 
   const addSpecificDayRow = () => {
     setSpecificDayStartTimes((prev) => {
+      if (!Array.isArray(prev)) return prev;
+
       // Find first available day not already selected
-      const selectedDays = new Set(prev.map((entry) => entry.day));
+      const selectedDays = new Set(prev.map((entry) => entry && entry.day).filter(Boolean));
       let availableDay = 1;
       for (let day = 0; day < 7; day++) {
         if (!selectedDays.has(day)) {
@@ -164,7 +197,7 @@ export default function SchedulingComponent({
       return [
         ...prev,
         {
-          id: Date.now() + prev.length,
+          id: Date.now() + (prev.length || 0),
           day: availableDay,
           time: "08:00",
         },
@@ -177,14 +210,18 @@ export default function SchedulingComponent({
     updates: Partial<{ day: number; time: string }>,
   ) => {
     setSpecificDayStartTimes((prev) =>
-      prev.map((entry) => (entry.id === id ? { ...entry, ...updates } : entry)),
+      Array.isArray(prev)
+        ? prev.map((entry) =>
+            entry && entry.id === id ? { ...entry, ...updates } : entry,
+          )
+        : [],
     );
   };
 
   const removeSpecificDayRow = (id: number) => {
     setSpecificDayStartTimes((prev) => {
-      if (prev.length <= 1) return prev;
-      return prev.filter((entry) => entry.id !== id);
+      if (!Array.isArray(prev) || prev.length <= 1) return prev || [];
+      return prev.filter((entry) => entry && entry.id !== id);
     });
   };
 
@@ -224,7 +261,7 @@ export default function SchedulingComponent({
           </div>
 
           {/* Start Date/Time Input - Only show when datetime is selected */}
-          {startType === "datetime" && (
+          {startType === "datetime" && scheduling && (
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 Start Date/Time
@@ -233,12 +270,18 @@ export default function SchedulingComponent({
                 <div className="relative">
                   <Input
                     type="date"
-                    value={scheduling.start_date?.split("T")[0] || ""}
-                    onChange={(value) =>
-                      updateScheduling({
-                        start_date: String(value) + "T08:00",
-                      })
+                    value={
+                      scheduling.start_date
+                        ? scheduling.start_date.split("T")[0]
+                        : ""
                     }
+                    onChange={(value) => {
+                      if (value) {
+                        updateScheduling({
+                          start_date: String(value) + "T08:00",
+                        });
+                      }
+                    }}
                     className="flex-1"
                     variant="default"
                     placeholder=""
@@ -248,14 +291,16 @@ export default function SchedulingComponent({
                   <Input
                     type="time"
                     value="08:00"
-                    onChange={(value) =>
-                      updateScheduling({
-                        start_date:
-                          scheduling.start_date?.split("T")[0] +
+                    onChange={(value) => {
+                      if (value && scheduling.start_date) {
+                        updateScheduling({
+                          start_date:
+                            scheduling.start_date.split("T")[0] +
                             "T" +
-                            String(value) || "T" + String(value),
-                      })
-                    }
+                            String(value),
+                        });
+                      }
+                    }}
                     className="flex-1"
                     variant="default"
                     placeholder=""
@@ -295,16 +340,22 @@ export default function SchedulingComponent({
           </div>
 
           {/* End Date Input (conditional) */}
-          {endType === "at" && (
+          {endType === "at" && scheduling && (
             <div className="mb-6">
               <div className="flex items-center space-x-4">
                 <div className="relative">
                   <Input
                     type="date"
-                    value={scheduling.end_date?.split("T")[0] || ""}
-                    onChange={(value) =>
-                      updateScheduling({ end_date: String(value) + "T23:59" })
+                    value={
+                      scheduling.end_date
+                        ? scheduling.end_date.split("T")[0]
+                        : ""
                     }
+                    onChange={(value) => {
+                      if (value) {
+                        updateScheduling({ end_date: String(value) + "T23:59" });
+                      }
+                    }}
                     className="flex-1"
                     variant="default"
                     placeholder=""
@@ -314,14 +365,16 @@ export default function SchedulingComponent({
                   <Input
                     type="time"
                     value="23:59"
-                    onChange={(value) =>
-                      updateScheduling({
-                        end_date:
-                          scheduling.end_date?.split("T")[0] +
+                    onChange={(value) => {
+                      if (value && scheduling.end_date) {
+                        updateScheduling({
+                          end_date:
+                            scheduling.end_date.split("T")[0] +
                             "T" +
-                            String(value) || "T" + String(value),
-                      })
-                    }
+                            String(value),
+                        });
+                      }
+                    }}
                     className="flex-1"
                     variant="default"
                     placeholder=""
@@ -336,19 +389,36 @@ export default function SchedulingComponent({
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Time Zone
             </label>
-            <HeadlessSelect
-              value={scheduling.time_zone || getSettingsTimezone()}
-              onChange={(value) =>
-                updateScheduling({ time_zone: value as string })
-              }
-              options={TIMEZONE_OPTIONS}
-              placeholder="Select timezone"
-              searchable={true}
-              className="w-full"
-            />
-            {/* <p className="text-xs text-gray-500 mt-2">
-              Using timezone from Settings: {getSettingsTimezone()}
-            </p> */}
+            {timezonesLoading ? (
+              <div className="p-3 bg-gray-50 border border-gray-200 rounded text-sm text-gray-600">
+                Loading timezones...
+              </div>
+            ) : (
+              <HeadlessSelect
+                value={scheduling.time_zone || getSettingsTimezone()}
+                onChange={(value) => {
+                  if (value) {
+                    updateScheduling({ time_zone: value as string });
+                  }
+                }}
+                options={
+                  Array.isArray(timezoneList)
+                    ? timezoneList
+                        .filter((tz) => tz && tz.value)
+                        .map((tz) => ({
+                          value: tz.value || "",
+                          label: tz.label || tz.value || "",
+                        }))
+                    : []
+                }
+                placeholder="Select timezone"
+                searchable={true}
+                className="w-full"
+              />
+            )}
+            <p className="text-xs text-gray-500 mt-2">
+              Default: {getSettingsTimezone()} (from settings)
+            </p>
           </div>
         </div>
       </div>
