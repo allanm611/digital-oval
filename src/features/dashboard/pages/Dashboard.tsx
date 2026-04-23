@@ -92,6 +92,12 @@ const CampaignPages = {
         /* webpackPrefetch: true */ "../../campaigns/pages/LineOfBusinessPage"
       ),
   ),
+  PolicyTypesPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../campaigns/pages/PolicyTypesPage"
+      ),
+  ),
   CampaignApprovalHistoryPage: lazy(
     () =>
       import(
@@ -529,9 +535,6 @@ const SettingsPages = {
     () =>
       import(/* webpackPrefetch: true */ "../../routes/pages/RoutesContainer"),
   ),
-  RoutesPage: lazy(
-    () => import(/* webpackPrefetch: true */ "../../settings/pages/RoutesPage"),
-  ),
   SMSTestPage: lazy(
     () =>
       import(/* webpackPrefetch: true */ "../../settings/pages/SMSTestPage"),
@@ -543,6 +546,10 @@ const SettingsPages = {
   TimezonesPage: lazy(
     () =>
       import(/* webpackPrefetch: true */ "../../configurations/pages/TimezonesPage"),
+  ),
+  TeamRolesPage: lazy(
+    () =>
+      import(/* webpackPrefetch: true */ "../../configurations/pages/TeamRolesPage"),
   ),
 };
 
@@ -855,6 +862,10 @@ export default function Dashboard() {
             path="/line-of-business"
             element={<CampaignPages.LineOfBusinessPage />}
           />
+          <Route
+            path="/policy-types"
+            element={<CampaignPages.PolicyTypesPage />}
+          />
           <Route path="/programs" element={<CampaignPages.ProgramsPage />} />
           <Route
             path="/programs/:id"
@@ -1151,6 +1162,10 @@ export default function Dashboard() {
             element={<SettingsPages.TimezonesPage />}
           />
           <Route
+            path="/team-roles"
+            element={<SettingsPages.TeamRolesPage />}
+          />
+          <Route
             path="/sms-routes/*"
             element={<SettingsPages.SMSRoutesPage />}
           />
@@ -1160,7 +1175,6 @@ export default function Dashboard() {
           />
           <Route path="/sms-test" element={<SettingsPages.SMSTestPage />} />
           <Route path="/manual-rewards-test" element={<OtherPages.ManualRewardsTestPage />} />
-          <Route path="/routes" element={<SettingsPages.RoutesPage />} />
           <Route
             path="/customer-identity"
             element={<OtherPages.CustomerIdentityPage />}

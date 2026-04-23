@@ -66,15 +66,6 @@ export default function ConfigurationPage() {
         navigationPath: "/dashboard/dnd-types",
       },
       {
-        id: "routes",
-        name: "Routes",
-        description: "Manage routes across all communication channels",
-        type: "campaign",
-        category: "Campaign Configuration",
-        status: "active",
-        navigationPath: "/dashboard/routes",
-      },
-      {
         id: "campaign-objectives",
         name: "Campaign Objectives",
         description: "Define and manage your campaign objectives",
@@ -119,6 +110,15 @@ export default function ConfigurationPage() {
         category: "Campaign Configuration",
         status: "active",
         navigationPath: "/dashboard/campaign-types",
+      },
+      {
+        id: "policy-types",
+        name: "Policy Types",
+        description: "Define and manage communication policy types",
+        type: "campaign",
+        category: "Campaign Configuration",
+        status: "active",
+        navigationPath: "/dashboard/policy-types",
       },
       // Offer-related configs
       {
@@ -318,6 +318,15 @@ export default function ConfigurationPage() {
         category: "User Configuration",
         status: "active",
         navigationPath: "/dashboard/user-management",
+      },
+      {
+        id: "team-roles",
+        name: "Team Roles",
+        description: "Define and manage team roles and role assignments",
+        type: "user",
+        category: "User Configuration",
+        status: "active",
+        navigationPath: "/dashboard/team-roles",
       },
       {
         id: "kpis",

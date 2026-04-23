@@ -1,8 +1,8 @@
-import TypeConfigurationPage from "../../../shared/components/TypeConfigurationPage";
-import { getSegmentTypesConfig } from "../../configurations/configs/configurationPageConfigs";
+import { ConfigurationManagerAPI } from "../../configurations/components/ConfigurationManager";
+import { getSegmentTypesApiConfig } from "../../configurations/configs/configurationPageConfigs";
 import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function SegmentTypesPage() {
   const { t } = useLanguage();
-  return <TypeConfigurationPage config={getSegmentTypesConfig(t)} />;
+  return <ConfigurationManagerAPI config={getSegmentTypesApiConfig(t)} />;
 }

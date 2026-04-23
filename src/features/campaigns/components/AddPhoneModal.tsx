@@ -60,7 +60,7 @@ export default function AddPhoneModal({
     const debounceTimer = setTimeout(async () => {
       try {
         const response = await customerService.searchCustomers({
-          search: searchTerm,
+          msisdn: searchTerm,
           limit: 50,
         });
         setSearchResults(response.data || []);

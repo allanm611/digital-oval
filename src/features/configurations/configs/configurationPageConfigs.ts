@@ -14,16 +14,71 @@ import {
   Mail,
   Phone,
   Bell,
+  LucideIcon,
 } from "lucide-react";
 import {
   ConfigurationPageConfig,
   ConfigurationItem,
-} from "../components/GenericConfigurationPage";
-import {
-  TypeConfigurationItem,
-  TypeConfigurationPageConfig,
-} from "../components/TypeConfigurationPage";
+  APIConfigurationPageConfig,
+} from "../components/ConfigurationManager";
+import type { ConfigurationType } from "../../../shared/services/configurationDataService";
 import { GATEWAY_KEY_OPTIONS, CHARACTER_SET_TYPE_OPTIONS } from "./ts";
+
+// Type definitions (previously in TypeConfigurationPage.tsx)
+interface MetadataFieldConfig {
+  label: string;
+  type: "text" | "number" | "select";
+  placeholder?: string;
+  options?: { value: string; label: string }[];
+}
+
+interface CustomFieldConfig {
+  label: string;
+  type: "text" | "select" | "number" | "textarea";
+  placeholder?: string;
+  options?: { value: string; label: string }[];
+  required?: boolean;
+  fieldKey: string;
+  dynamicOptions?: string;
+  searchable?: boolean;
+}
+
+export interface TypeConfigurationPageConfig {
+  title: string;
+  subtitle: string;
+  entityName: string;
+  entityNamePlural: string;
+  configType: ConfigurationType;
+  icon: LucideIcon;
+  backPath: string;
+  searchPlaceholder: string;
+  initialData: ConfigurationItem[];
+  createButtonText: string;
+  modalTitle: {
+    create: string;
+    edit: string;
+  };
+  nameLabel: string;
+  nameRequired: boolean;
+  descriptionLabel: string;
+  descriptionRequired: boolean;
+  nameMaxLength: number;
+  descriptionMaxLength: number;
+  statusLabel?: string;
+  metadataField?: MetadataFieldConfig;
+  customFields?: CustomFieldConfig[];
+  hideFields?: string[];
+  deleteConfirmTitle: string;
+  deleteConfirmMessage: (name: string) => string;
+  deleteSuccessMessage: (name: string) => string;
+  createSuccessMessage: string;
+  updateSuccessMessage: string;
+  deleteErrorMessage: string;
+  saveErrorMessage: string;
+  disableCreate?: boolean;
+  disableDelete?: boolean;
+  enableActivateDeactivate?: boolean;
+}
 
 // Hardcoded objectives data
 const hardcodedObjectives: ConfigurationItem[] = [
@@ -329,7 +384,7 @@ const hardcodedTrackingSources: ConfigurationItem[] = [
 ];
 
 // Hardcoded creative templates data
-const hardcodedCreativeTemplates: TypeConfigurationItem[] = [
+const hardcodedCreativeTemplates: ConfigurationItem[] = [
   // SMS Templates (5)
   {
     id: 1,
@@ -839,7 +894,7 @@ const hardcodedCreativeTemplates: TypeConfigurationItem[] = [
 ];
 
 // Hardcoded reward types data
-const hardcodedRewardTypes: TypeConfigurationItem[] = [
+const hardcodedRewardTypes: ConfigurationItem[] = [
   {
     id: 1,
     name: "Bundle Reward",
@@ -889,7 +944,7 @@ const hardcodedRewardTypes: TypeConfigurationItem[] = [
 
 // Hardcoded communication channels data
 // Hardcoded sender IDs data
-const hardcodedSenderIds: TypeConfigurationItem[] = [
+const hardcodedSenderIds: ConfigurationItem[] = [
   {
     id: 1,
     name: "Effortel",
@@ -938,7 +993,7 @@ const hardcodedSenderIds: TypeConfigurationItem[] = [
 ];
 
 // Hardcoded SMS routes/gateways data
-const hardcodedSMSRoutes: TypeConfigurationItem[] = [
+const hardcodedSMSRoutes: ConfigurationItem[] = [
   {
     id: 1,
     name: "Effortel SMS Gateway",
@@ -951,7 +1006,7 @@ const hardcodedSMSRoutes: TypeConfigurationItem[] = [
   },
 ];
 
-const hardcodedEmailRoutes: TypeConfigurationItem[] = [
+const hardcodedEmailRoutes: ConfigurationItem[] = [
   {
     id: 1,
     name: "SendGrid Primary Route",
@@ -1110,7 +1165,7 @@ export const hardcodedOffers = [
 ];
 
 // Hardcoded languages/locales data
-const hardcodedLanguages: TypeConfigurationItem[] = [
+const hardcodedLanguages: ConfigurationItem[] = [
   {
     id: 1,
     name: "English",
@@ -1618,7 +1673,7 @@ export const rewardTypesConfig: TypeConfigurationPageConfig = {
 };
 
 // Hardcoded offer types data
-const hardcodedOfferTypes: TypeConfigurationItem[] = [
+const hardcodedOfferTypes: ConfigurationItem[] = [
   {
     id: 1,
     name: "Data",
@@ -1686,7 +1741,7 @@ const hardcodedOfferTypes: TypeConfigurationItem[] = [
 ];
 
 // Hardcoded campaign types data
-const hardcodedCampaignTypes: TypeConfigurationItem[] = [
+const hardcodedCampaignTypes: ConfigurationItem[] = [
   {
     id: 1,
     name: "Multiple Target Group",
@@ -1731,7 +1786,7 @@ const hardcodedCampaignTypes: TypeConfigurationItem[] = [
 ];
 
 // Hardcoded segment types data
-const hardcodedSegmentTypes: TypeConfigurationItem[] = [
+const hardcodedSegmentTypes: ConfigurationItem[] = [
   {
     id: 1,
     name: "Static",
@@ -1798,7 +1853,7 @@ const hardcodedSegmentTypes: TypeConfigurationItem[] = [
 ];
 
 // Hardcoded product types data
-const hardcodedProductTypes: TypeConfigurationItem[] = [
+const hardcodedProductTypes: ConfigurationItem[] = [
   {
     id: 1,
     name: "Data Products",
@@ -1867,7 +1922,7 @@ const hardcodedProductTypes: TypeConfigurationItem[] = [
 ];
 
 // Hardcoded combo types data
-const hardcodedComboTypes: TypeConfigurationItem[] = [
+const hardcodedComboTypes: ConfigurationItem[] = [
   {
     id: 1,
     name: "Data + On-net Voice",
@@ -2769,54 +2824,6 @@ export const emailRoutesConfig: TypeConfigurationPageConfig = {
   saveErrorMessage: "Please try again later.",
 };
 
-// Routes configuration - Shows all routes from all communication channels
-export const routesConfig: TypeConfigurationPageConfig = {
-  title: "Communication Routes",
-  subtitle:
-    "Manage all routes across communication channels. Routes determine how messages are delivered through each channel.",
-  entityName: "route",
-  entityNamePlural: "routes",
-  configType: "routes",
-  backPath: "/dashboard/configuration", // Back to configuration page
-  icon: MessageSquare,
-  searchPlaceholder: "Search routes...",
-  initialData: hardcodedSMSRoutes,
-  createButtonText: "Create",
-  modalTitle: {
-    create: "Create New Route",
-    edit: "Edit Route",
-  },
-  nameLabel: "Route Name",
-  nameRequired: true,
-  descriptionLabel: "Description",
-  descriptionRequired: false,
-  nameMaxLength: 100,
-  descriptionMaxLength: 500,
-  metadataField: {
-    label: "Gateway Provider",
-    type: "text",
-  },
-  customFields: [
-    {
-      fieldKey: "communication_channel_id",
-      label: "Communication Channel",
-      type: "select",
-      required: true,
-      dynamicOptions: "communicationChannels",
-    },
-  ],
-  statusLabel: "Status",
-  deleteConfirmTitle: "Delete Route",
-  deleteConfirmMessage: (name: string) =>
-    `Are you sure you want to delete "${name}"? This may affect message delivery.`,
-  deleteSuccessMessage: (name: string) =>
-    `"${name}" has been deleted successfully.`,
-  createSuccessMessage: "Route created successfully",
-  updateSuccessMessage: "Route updated successfully",
-  deleteErrorMessage: "Failed to delete route",
-  saveErrorMessage: "Please try again later.",
-};
-
 // Countries list for language configuration
 const countriesList = [
   { value: "US", label: "United States" },
@@ -2849,7 +2856,7 @@ const countriesList = [
 ];
 
 // Hardcoded character sets data
-const hardcodedCharacterSets: TypeConfigurationItem[] = [
+const hardcodedCharacterSets: ConfigurationItem[] = [
   {
     id: 1,
     name: "GSM Default",
@@ -3576,4 +3583,401 @@ export function getUtilitiesConfig(
   _t: (key: string) => string,
 ): TypeConfigurationPageConfig {
   return utilitiesConfig;
+}
+
+// API-backed configuration getters (for ConfigurationManagerAPI)
+// These use the same config objects as above but are typed as APIConfigurationPageConfig
+
+export function getCampaignTypesApiConfig(
+  _t: (key: string) => string,
+): APIConfigurationPageConfig {
+  return campaignTypesConfig as APIConfigurationPageConfig;
+}
+
+export function getOfferTypesApiConfig(
+  _t: (key: string) => string,
+): APIConfigurationPageConfig {
+  return offerTypesConfig as APIConfigurationPageConfig;
+}
+
+export function getSegmentTypesApiConfig(
+  _t: (key: string) => string,
+): APIConfigurationPageConfig {
+  return segmentTypesConfig as APIConfigurationPageConfig;
+}
+
+export function getProductTypesApiConfig(
+  _t: (key: string) => string,
+): APIConfigurationPageConfig {
+  return productTypesConfig as APIConfigurationPageConfig;
+}
+
+export function getRewardTypesApiConfig(
+  _t: (key: string) => string,
+): APIConfigurationPageConfig {
+  return rewardTypesConfig as APIConfigurationPageConfig;
+}
+
+export function getSenderIdsApiConfig(
+  _t: (key: string) => string,
+): APIConfigurationPageConfig {
+  return senderIdsConfig as APIConfigurationPageConfig;
+}
+
+export function getNotificationTypesApiConfig(
+  _t: (key: string) => string,
+): APIConfigurationPageConfig {
+  return notificationTypesConfig as APIConfigurationPageConfig;
+}
+
+export function getSmsRoutesApiConfig(
+  _t: (key: string) => string,
+): APIConfigurationPageConfig {
+  return smsRoutesConfig as APIConfigurationPageConfig;
+}
+
+export function getEmailRoutesApiConfig(
+  _t: (key: string) => string,
+): APIConfigurationPageConfig {
+  return emailRoutesConfig as APIConfigurationPageConfig;
+}
+
+export function getComboTypesApiConfig(
+  _t: (key: string) => string,
+): APIConfigurationPageConfig {
+  return comboTypesConfig as APIConfigurationPageConfig;
+}
+
+export function getUtilitiesApiConfig(
+  _t: (key: string) => string,
+): APIConfigurationPageConfig {
+  return utilitiesConfig as APIConfigurationPageConfig;
+}
+
+export function getResourceTypesApiConfig(
+  _t: (key: string) => string,
+): APIConfigurationPageConfig {
+  return resourceTypesConfig as APIConfigurationPageConfig;
+}
+
+export function getLanguagesApiConfig(
+  _t: (key: string) => string,
+): APIConfigurationPageConfig {
+  return languagesConfig as APIConfigurationPageConfig;
+}
+
+export function getCharacterSetsApiConfig(
+  _t: (key: string) => string,
+): APIConfigurationPageConfig {
+  return characterSetsConfig as APIConfigurationPageConfig;
+}
+
+export function getCreativeTemplatesApiConfig(
+  _t: (key: string) => string,
+): APIConfigurationPageConfig {
+  return creativeTemplatesConfig as APIConfigurationPageConfig;
+}
+
+export function getVIPListsApiConfig(
+  _t: (key: string) => string,
+): APIConfigurationPageConfig {
+  return vipListsConfig as APIConfigurationPageConfig;
+}
+
+export function getCommunicationChannelsApiConfig(
+  _t: (key: string) => string,
+): APIConfigurationPageConfig {
+  return communicationChannelsConfig as APIConfigurationPageConfig;
+}
+
+export function getDNDTypesApiConfig(
+  _t: (key: string) => string,
+): APIConfigurationPageConfig {
+  return {
+    title: "DND Types",
+    subtitle: "Manage Do Not Disturb configuration types",
+    entityName: "DND type",
+    entityNamePlural: "DND types",
+    configType: "dndTypes",
+    icon: Phone,
+    backPath: "/dashboard/configuration",
+    searchPlaceholder: "Search DND types by name...",
+    createButtonText: "Create",
+    modalTitle: {
+      create: "Create DND Type",
+      edit: "Edit DND Type",
+    },
+    nameLabel: "DND Type Name",
+    nameRequired: true,
+    descriptionLabel: "Description",
+    descriptionRequired: false,
+    nameMaxLength: 100,
+    descriptionMaxLength: 500,
+    statusLabel: "Status",
+    deleteConfirmTitle: "Delete DND Type",
+    deleteConfirmMessage: (name: string) =>
+      `Are you sure you want to delete "${name}"?`,
+    deleteSuccessMessage: (name: string) =>
+      `"${name}" has been deleted successfully.`,
+    createSuccessMessage: "DND type created successfully",
+    updateSuccessMessage: "DND type updated successfully",
+    deleteErrorMessage: "Failed to delete DND type",
+    saveErrorMessage: "Please try again later.",
+    enableActivateDeactivate: true,
+  } as APIConfigurationPageConfig;
+}
+
+export function getCampaignObjectivesApiConfig(
+  _t: (key: string) => string,
+): APIConfigurationPageConfig {
+  return {
+    title: "Campaign Objectives",
+    subtitle: "Define and manage your campaign objectives",
+    entityName: "objective",
+    entityNamePlural: "objectives",
+    configType: "campaignObjectives",
+    icon: Flag,
+    backPath: "/dashboard/configuration",
+    searchPlaceholder: "Search objectives by name or description...",
+    createButtonText: "Create",
+    modalTitle: {
+      create: "Create Campaign Objective",
+      edit: "Edit Campaign Objective",
+    },
+    nameLabel: "Objective Name",
+    nameRequired: true,
+    descriptionLabel: "Description",
+    descriptionRequired: false,
+    nameMaxLength: 100,
+    descriptionMaxLength: 500,
+    statusLabel: "Status",
+    deleteConfirmTitle: "Delete Campaign Objective",
+    deleteConfirmMessage: (name: string) =>
+      `Are you sure you want to delete "${name}"?`,
+    deleteSuccessMessage: (name: string) =>
+      `"${name}" has been deleted successfully.`,
+    createSuccessMessage: "Campaign objective created successfully",
+    updateSuccessMessage: "Campaign objective updated successfully",
+    deleteErrorMessage: "Failed to delete campaign objective",
+    saveErrorMessage: "Please try again later.",
+    enableActivateDeactivate: true,
+  } as APIConfigurationPageConfig;
+}
+
+export function getTimezonesApiConfig(
+  _t: (key: string) => string,
+): APIConfigurationPageConfig {
+  return {
+    title: "Timezones",
+    subtitle: "Manage available timezones for your organization",
+    entityName: "timezone",
+    entityNamePlural: "timezones",
+    configType: "timezones",
+    icon: Globe,
+    backPath: "/dashboard/configuration",
+    searchPlaceholder: "Search by timezone or label...",
+    createButtonText: "Create",
+    modalTitle: {
+      create: "Create Timezone",
+      edit: "Edit Timezone",
+    },
+    nameLabel: "Timezone Label",
+    nameRequired: true,
+    descriptionLabel: "Description",
+    descriptionRequired: false,
+    nameMaxLength: 100,
+    descriptionMaxLength: 500,
+    statusLabel: "Status",
+    deleteConfirmTitle: "Delete Timezone",
+    deleteConfirmMessage: (name: string) =>
+      `Are you sure you want to delete "${name}"?`,
+    deleteSuccessMessage: (name: string) =>
+      `"${name}" has been deleted successfully.`,
+    createSuccessMessage: "Timezone created successfully",
+    updateSuccessMessage: "Timezone updated successfully",
+    deleteErrorMessage: "Failed to delete timezone",
+    saveErrorMessage: "Please try again later.",
+    enableActivateDeactivate: true,
+  } as APIConfigurationPageConfig;
+}
+
+export function getPolicyTypesApiConfig(
+  _t: (key: string) => string,
+): APIConfigurationPageConfig {
+  return {
+    title: "Policy Types",
+    subtitle: "Define and manage communication policy types",
+    entityName: "policy type",
+    entityNamePlural: "policy types",
+    configType: "policyTypes",
+    icon: Briefcase,
+    backPath: "/dashboard/configuration",
+    searchPlaceholder: "Search policy types by name or description...",
+    createButtonText: "Create",
+    modalTitle: {
+      create: "Create Policy Type",
+      edit: "Edit Policy Type",
+    },
+    nameLabel: "Policy Type Name",
+    nameRequired: true,
+    descriptionLabel: "Description",
+    descriptionRequired: false,
+    nameMaxLength: 100,
+    descriptionMaxLength: 500,
+    statusLabel: "Status",
+    deleteConfirmTitle: "Delete Policy Type",
+    deleteConfirmMessage: (name: string) =>
+      `Are you sure you want to delete "${name}"?`,
+    deleteSuccessMessage: (name: string) =>
+      `"${name}" has been deleted successfully.`,
+    createSuccessMessage: "Policy type created successfully",
+    updateSuccessMessage: "Policy type updated successfully",
+    deleteErrorMessage: "Failed to delete policy type",
+    saveErrorMessage: "Please try again later.",
+    enableActivateDeactivate: true,
+  } as APIConfigurationPageConfig;
+}
+
+export function getCommunicationPoliciesApiConfig(
+  _t: (key: string) => string,
+): APIConfigurationPageConfig {
+  return {
+    title: "Communication Policies",
+    subtitle: "Define and manage communication policies",
+    entityName: "policy",
+    entityNamePlural: "policies",
+    configType: "communicationPolicies",
+    icon: MessageSquare,
+    backPath: "/dashboard/configuration",
+    searchPlaceholder: "Search policies by name or description...",
+    createButtonText: "Create",
+    modalTitle: {
+      create: "Create Communication Policy",
+      edit: "Edit Communication Policy",
+    },
+    nameLabel: "Policy Name",
+    nameRequired: true,
+    descriptionLabel: "Description",
+    descriptionRequired: false,
+    nameMaxLength: 100,
+    descriptionMaxLength: 500,
+    statusLabel: "Status",
+    deleteConfirmTitle: "Delete Communication Policy",
+    deleteConfirmMessage: (name: string) =>
+      `Are you sure you want to delete "${name}"?`,
+    deleteSuccessMessage: (name: string) =>
+      `"${name}" has been deleted successfully.`,
+    createSuccessMessage: "Communication policy created successfully",
+    updateSuccessMessage: "Communication policy updated successfully",
+    deleteErrorMessage: "Failed to delete communication policy",
+    saveErrorMessage: "Please try again later.",
+    enableActivateDeactivate: true,
+  } as APIConfigurationPageConfig;
+}
+
+export function getRolesApiConfig(
+  _t: (key: string) => string,
+): APIConfigurationPageConfig {
+  return {
+    title: "Roles",
+    subtitle: "Define and manage team roles",
+    entityName: "role",
+    entityNamePlural: "roles",
+    configType: "roles",
+    icon: Briefcase,
+    backPath: "/dashboard/user-management",
+    searchPlaceholder: "Search roles by name or description...",
+    createButtonText: "Create",
+    modalTitle: {
+      create: "Create Role",
+      edit: "Edit Role",
+    },
+    nameLabel: "Role Name",
+    nameRequired: true,
+    descriptionLabel: "Description",
+    descriptionRequired: false,
+    nameMaxLength: 100,
+    descriptionMaxLength: 500,
+    statusLabel: "Status",
+    deleteConfirmTitle: "Delete Role",
+    deleteConfirmMessage: (name: string) =>
+      `Are you sure you want to delete "${name}"?`,
+    deleteSuccessMessage: (name: string) =>
+      `"${name}" has been deleted successfully.`,
+    createSuccessMessage: "Role created successfully",
+    updateSuccessMessage: "Role updated successfully",
+    deleteErrorMessage: "Failed to delete role",
+    saveErrorMessage: "Please try again later.",
+    enableActivateDeactivate: true,
+  } as APIConfigurationPageConfig;
+}
+
+export function getDepartmentsApiConfig(
+  _t: (key: string) => string,
+): APIConfigurationPageConfig {
+  return {
+    title: "Departments",
+    subtitle: "Define and manage your departments",
+    entityName: "department",
+    entityNamePlural: "departments",
+    configType: "departments",
+    icon: Building2,
+    backPath: "/dashboard/configuration",
+    searchPlaceholder: "Search departments by name or description...",
+    createButtonText: "Create",
+    modalTitle: {
+      create: "Create New Department",
+      edit: "Edit Department",
+    },
+    nameLabel: "Department Name",
+    nameRequired: true,
+    descriptionLabel: "Description",
+    descriptionRequired: false,
+    nameMaxLength: 100,
+    descriptionMaxLength: 500,
+    deleteConfirmTitle: "Delete Department",
+    deleteConfirmMessage: (name: string) =>
+      `Are you sure you want to delete "${name}"? This action cannot be undone.`,
+    deleteSuccessMessage: (name: string) =>
+      `"${name}" has been deleted successfully.`,
+    createSuccessMessage: "Department created successfully",
+    updateSuccessMessage: "Department updated successfully",
+    deleteErrorMessage: "Failed to delete department",
+    saveErrorMessage: "Please try again later.",
+  } as APIConfigurationPageConfig;
+}
+
+export function getLineOfBusinessApiConfig(
+  _t: (key: string) => string,
+): APIConfigurationPageConfig {
+  return {
+    title: "Line of Business",
+    subtitle: "Define and manage your business lines and services",
+    entityName: "business line",
+    entityNamePlural: "business lines",
+    configType: "lineOfBusiness",
+    icon: Briefcase,
+    backPath: "/dashboard/configuration",
+    searchPlaceholder: "Search business lines by name or description...",
+    createButtonText: "Create",
+    modalTitle: {
+      create: "Create New Line of Business",
+      edit: "Edit Line of Business",
+    },
+    nameLabel: "Business Line Name",
+    nameRequired: true,
+    descriptionLabel: "Description",
+    descriptionRequired: false,
+    nameMaxLength: 100,
+    descriptionMaxLength: 500,
+    deleteConfirmTitle: "Delete Business Line",
+    deleteConfirmMessage: (name: string) =>
+      `Are you sure you want to delete "${name}"? This action cannot be undone.`,
+    deleteSuccessMessage: (name: string) =>
+      `"${name}" has been deleted successfully.`,
+    createSuccessMessage: "Business line created successfully",
+    updateSuccessMessage: "Business line updated successfully",
+    deleteErrorMessage: "Failed to delete business line",
+    saveErrorMessage: "Please try again later.",
+  } as APIConfigurationPageConfig;
 }

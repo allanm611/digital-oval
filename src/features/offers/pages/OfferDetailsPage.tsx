@@ -70,7 +70,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import TypeSelector from "../../../shared/components/TypeSelector";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { useConfigurationData } from "../../../shared/services/configurationDataService";
-import { TypeConfigurationItem } from "../../../shared/components/TypeConfigurationPage";
+import { ConfigurationItem } from "../../configurations/components/ConfigurationManager";
 import { creativeTemplateService } from "../../configurations/services/creativeTemplateService";
 import {
   SMSSmartphonePreview,
@@ -411,7 +411,7 @@ export default function OfferDetailsPage() {
     channel: CreativeChannel,
     locale: string,
   ) => {
-    return (templates as TypeConfigurationItem[]).filter((template) => {
+    return (templates as ConfigurationItem[]).filter((template) => {
       if (!template.isActive) return false;
 
       // Check if template matches channel
@@ -563,7 +563,7 @@ export default function OfferDetailsPage() {
     }
 
     const template = templates.find((t) => t.id === templateId) as
-      | TypeConfigurationItem
+      | ConfigurationItem
       | undefined;
     if (!template) return;
 
@@ -2729,14 +2729,14 @@ export default function OfferDetailsPage() {
                     setSelectedTemplateId(null);
                   }}
                   options={[
-                    ...((languages as TypeConfigurationItem[]) || [])
+                    ...((languages as ConfigurationItem[]) || [])
                       .filter((lang) => lang.isActive)
                       .map((lang) => ({
                         label: lang.name,
                         value: lang.metadataValue as string,
                       })),
                     // Fallback to COMMON_LOCALES if languages config is empty
-                    ...((languages as TypeConfigurationItem[])?.length === 0
+                    ...((languages as ConfigurationItem[])?.length === 0
                       ? COMMON_LOCALES.map((locale) => ({
                           label: getLocaleLabel(locale),
                           value: locale,
@@ -2787,7 +2787,7 @@ export default function OfferDetailsPage() {
                       let languageLabel = "";
                       if (template.locale && languages) {
                         const language = (
-                          languages as TypeConfigurationItem[]
+                          languages as ConfigurationItem[]
                         ).find(
                           (lang) => lang.metadataValue === template.locale
                         );

@@ -1,8 +1,8 @@
-import TypeConfigurationPage from "../../../shared/components/TypeConfigurationPage";
-import { getCreativeTemplatesConfig } from "../../configurations/configs/configurationPageConfigs";
+import { ConfigurationManagerAPI } from "../../configurations/components/ConfigurationManager";
+import { getCreativeTemplatesApiConfig } from "../../configurations/configs/configurationPageConfigs";
 import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function CreativeTemplatesPage() {
   const { t } = useLanguage();
-  return <TypeConfigurationPage config={getCreativeTemplatesConfig(t)} />;
+  return <ConfigurationManagerAPI config={getCreativeTemplatesApiConfig(t)} />;
 }

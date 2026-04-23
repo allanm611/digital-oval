@@ -1,9 +1,9 @@
 import { useLanguage } from "../../../contexts/LanguageContext";
 import ConfigurationManagerAPI from "../../configurations/components/ConfigurationManager/ConfigurationManagerAPI";
-import { getLineOfBusinessApiConfig } from "../../configurations/configs/configurationPageConfigs";
+import { getPolicyTypesApiConfig } from "../../configurations/configs/configurationPageConfigs";
 
-export default function LineOfBusinessPage() {
+export default function PolicyTypesPage() {
   const { t } = useLanguage();
-  const config = getLineOfBusinessApiConfig(t);
+  const config = getPolicyTypesApiConfig(t);
   return <ConfigurationManagerAPI config={config} />;
 }

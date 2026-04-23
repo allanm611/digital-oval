@@ -26,7 +26,7 @@ import {
 } from "../types/offerCreative";
 import { offerCreativeService } from "../services/offerCreativeService";
 import { useLanguage } from "../../../contexts/LanguageContext";
-import { TypeConfigurationItem } from "../../../shared/components/TypeConfigurationPage";
+import { ConfigurationItem } from "../../configurations/components/ConfigurationManager";
 import { senderIdService, SenderId } from "../../configurations/services/senderIdService";
 import { creativeTemplateService, CreativeTemplate } from "../../configurations/services/creativeTemplateService";
 import { smsRouteService } from "../../routes/services/smsRouteService";

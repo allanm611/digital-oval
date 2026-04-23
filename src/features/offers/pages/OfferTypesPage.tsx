@@ -1,8 +1,8 @@
-import TypeConfigurationPage from "../../../shared/components/TypeConfigurationPage";
-import { getOfferTypesConfig } from "../../configurations/configs/configurationPageConfigs";
+import { ConfigurationManagerAPI } from "../../configurations/components/ConfigurationManager";
+import { getOfferTypesApiConfig } from "../../configurations/configs/configurationPageConfigs";
 import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function OfferTypesPage() {
   const { t } = useLanguage();
-  return <TypeConfigurationPage config={getOfferTypesConfig(t)} />;
+  return <ConfigurationManagerAPI config={getOfferTypesApiConfig(t)} />;
 }

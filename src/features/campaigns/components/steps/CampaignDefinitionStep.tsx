@@ -6,10 +6,7 @@ import { CreateCampaignRequest } from "../../types/campaign";
 import { programService } from "../../services/programService";
 import { Program } from "../../types/program";
 import { useClickOutside } from "../../../../shared/hooks/useClickOutside";
-import {
-  lineOfBusinessConfig,
-  departmentsConfig,
-} from "../../../configurations/configs/configurationPageConfigs";
+import { lineOfBusinessConfig } from "../../../configurations/configs/configurationPageConfigs";
 import { configurationDataService } from "../../../../shared/services/configurationDataService";
 import { CommunicationPolicyConfiguration } from "../../types/communicationPolicyConfig";
 import { tw, components, color } from "../../../../shared/utils/utils";
@@ -21,9 +18,16 @@ import { useToast } from "../../../../contexts/ToastContext";
 import { useTranslation, useLanguage } from "../../../../contexts/LanguageContext";
 import { getCurrencySymbol } from "../../../../shared/services/currencyService";
 import { useBackendCampaignTypeData } from "../../../../shared/hooks/useBackendCampaignTypeData";
+import { useBackendConfigurationData } from "../../../../shared/hooks/useBackendConfigurationData";
 import CreateCategoryModal from "../../../../shared/components/CreateCategoryModal";
 import TypeSelector from "../../../../shared/components/TypeSelector";
 import ProgramModal from "../ProgramModal";
+import ConfigurationModal from "../../../configurations/components/ConfigurationManager/ConfigurationModal";
+import {
+  getCampaignObjectivesApiConfig,
+  getLineOfBusinessConfig,
+  getCommunicationPoliciesApiConfig,
+} from "../../../configurations/configs/configurationPageConfigs";
 
 interface CampaignDefinitionStepProps {
   formData: CreateCampaignRequest;
@@ -32,44 +36,6 @@ interface CampaignDefinitionStepProps {
   clearValidationErrors?: () => void;
   categoryRefreshTrigger?: number;
 }
-
-const objectiveOptions = [
-  {
-    value: "acquisition",
-    label: "New Customer Acquisition",
-    description: "Attract and convert new customers to your service",
-    icon: "",
-    color: "border-green-300 hover:border-green-400 hover:bg-green-50",
-  },
-  {
-    value: "retention",
-    label: "Customer Retention",
-    description: "Keep existing customers engaged and loyal",
-    icon: "",
-    color: "border-green-200 hover:border-green-300 hover:bg-green-50",
-  },
-  {
-    value: "churn_prevention",
-    label: "Churn Prevention",
-    description: "Prevent at-risk customers from leaving",
-    icon: "",
-    color: "border-red-200 hover:border-red-300 hover:bg-red-50",
-  },
-  {
-    value: "upsell_cross_sell",
-    label: "Upsell/Cross-sell",
-    description: "Increase revenue from existing customers",
-    icon: "",
-    color: "border-purple-200 hover:border-purple-300 hover:bg-purple-50",
-  },
-  {
-    value: "reactivation",
-    label: "Dormant Customer Reactivation",
-    description: "Re-engage inactive or dormant customers",
-    icon: "🔄",
-    color: "border-orange-200 hover:border-orange-300 hover:bg-orange-50",
-  },
-];
 
 export default function CampaignDefinitionStep({
   formData,
@@ -84,6 +50,18 @@ export default function CampaignDefinitionStep({
 
   const { data: campaignTypes, loading: campaignTypesLoading, refresh: refreshCampaignTypes } =
     useBackendCampaignTypeData();
+
+  const { data: objectives, loading: objectivesLoading, refresh: refreshObjectives, create: createObjective } =
+    useBackendConfigurationData("campaignObjectives") || { data: [], loading: false, refresh: () => {}, create: async () => {} };
+
+  const { data: departmentsData, loading: departmentsLoading, refresh: refreshDepartments, create: createDepartment } =
+    useBackendConfigurationData("departments") || { data: [], loading: false, refresh: () => {}, create: async () => {} };
+
+  const { data: linesOfBusiness, loading: lobLoading, refresh: refreshLob, create: createLob } =
+    useBackendConfigurationData("lineOfBusiness") || { data: [], loading: false, refresh: () => {}, create: async () => {} };
+
+  const { data: policiesData, loading: policiesLoading, refresh: refreshPolicies, create: createPolicy } =
+    useBackendConfigurationData("communicationPolicies") || { data: [], loading: false, refresh: () => {}, create: async () => {} };
 
   const [programSearchTerm, setProgramSearchTerm] = useState("");
   const [isProgramDropdownOpen, setIsProgramDropdownOpen] = useState(false);
@@ -100,14 +78,19 @@ export default function CampaignDefinitionStep({
   const [lineOfBusinessData, setLineOfBusinessData] = useState(
     lineOfBusinessConfig.initialData
   );
-  const [departmentsData, setDepartmentsData] = useState(
-    departmentsConfig.initialData
-  );
   const [showCreateTypeModal, setShowCreateTypeModal] = useState(false);
   const [showCreateCatalogModal, setShowCreateCatalogModal] = useState(false);
   const [showCreateProgramModal, setShowCreateProgramModal] = useState(false);
+  const [showCreateObjectiveModal, setShowCreateObjectiveModal] = useState(false);
+  const [showCreateDepartmentModal, setShowCreateDepartmentModal] = useState(false);
+  const [showCreatePolicyModal, setShowCreatePolicyModal] = useState(false);
   const [categoryRefreshTriggerState, setCategoryRefreshTriggerState] = useState(0);
   const [isCreatingProgram, setIsCreatingProgram] = useState(false);
+  const [isCreatingObjective, setIsCreatingObjective] = useState(false);
+  const [isCreatingDepartment, setIsCreatingDepartment] = useState(false);
+  const [isCreatingLineOfBusiness, setIsCreatingLineOfBusiness] = useState(false);
+  const [isCreatingPolicy, setIsCreatingPolicy] = useState(false);
+  const [showCreateLineOfBusinessModal, setShowCreateLineOfBusinessModal] = useState(false);
 
   // Communication Policy states
   const [communicationPolicies, setCommunicationPolicies] = useState<
@@ -211,15 +194,6 @@ export default function CampaignDefinitionStep({
     const unsubscribe = configurationDataService.subscribe(
       "lineOfBusiness",
       setLineOfBusinessData
-    );
-    return unsubscribe;
-  }, []);
-
-  // S'abonner aux changements des données Departments
-  useEffect(() => {
-    const unsubscribe = configurationDataService.subscribe(
-      "departments",
-      setDepartmentsData
     );
     return unsubscribe;
   }, []);
@@ -355,6 +329,89 @@ export default function CampaignDefinitionStep({
     }
   };
 
+  const handleSaveObjective = async (formData: Record<string, any>) => {
+    try {
+      setIsCreatingObjective(true);
+      const newObjective = await createObjective(formData);
+
+      // Select the newly created objective
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        objective: String(newObjective.id || formData.name),
+      }) as CreateCampaignRequest);
+
+      // Refresh objectives list
+      await refreshObjectives();
+      setShowCreateObjectiveModal(false);
+    } catch (error) {
+      console.error("Failed to create objective:", error);
+    } finally {
+      setIsCreatingObjective(false);
+    }
+  };
+
+  const handleSaveDepartment = async (formData: Record<string, any>) => {
+    try {
+      setIsCreatingDepartment(true);
+      const newDepartment = await createDepartment(formData);
+
+      // Select the newly created department
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        department_id: Number(newDepartment.id || formData.name),
+      }) as CreateCampaignRequest);
+
+      // Refresh departments list
+      await refreshDepartments();
+      setShowCreateDepartmentModal(false);
+    } catch (error) {
+      console.error("Failed to create department:", error);
+    } finally {
+      setIsCreatingDepartment(false);
+    }
+  };
+
+  const handleSaveLineOfBusiness = async (formData: Record<string, any>) => {
+    try {
+      setIsCreatingLineOfBusiness(true);
+      const newLob = await createLob(formData);
+
+      // Select the newly created line of business
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        line_of_business_id: Number(newLob.id || formData.name),
+      }) as CreateCampaignRequest);
+
+      // Refresh lines of business list
+      await refreshLob();
+      setShowCreateLineOfBusinessModal(false);
+    } catch (error) {
+      console.error("Failed to create line of business:", error);
+    } finally {
+      setIsCreatingLineOfBusiness(false);
+    }
+  };
+
+  const handleSavePolicy = async (formData: Record<string, any>) => {
+    try {
+      setIsCreatingPolicy(true);
+      const newPolicy = await createPolicy(formData);
+
+      // Select the newly created policy
+      setSelectedPolicy(newPolicy as CommunicationPolicyConfiguration);
+
+      // Refresh policies list
+      await refreshPolicies();
+      setShowCreatePolicyModal(false);
+      showToast("Communication policy created successfully");
+    } catch (error) {
+      console.error("Failed to create policy:", error);
+      showError("Failed to create communication policy");
+    } finally {
+      setIsCreatingPolicy(false);
+    }
+  };
+
   return (
     <div className=" space-y-6">
       <div className="mt-8 mb-8">
@@ -485,209 +542,245 @@ export default function CampaignDefinitionStep({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="relative">
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Line of Business
             </label>
             <div className="relative" ref={lineOfBusinessDropdownRef}>
-              <button
-                type="button"
-                onClick={() =>
-                  setIsLineOfBusinessDropdownOpen(!isLineOfBusinessDropdownOpen)
-                }
-                className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-1 focus:ring-[#588157] focus:border-[#588157] bg-white text-sm text-left flex items-center justify-between`}
-              >
-                <span
-                  className={`text-sm ${
-                    (formData as { line_of_business_id?: number })
+              <div className="flex">
+                <div className="flex-1">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setIsLineOfBusinessDropdownOpen(!isLineOfBusinessDropdownOpen)
+                    }
+                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-1 focus:ring-[#588157] focus:border-[#588157] bg-white text-sm text-left flex items-center justify-between`}
+                    style={{
+                      borderTopRightRadius: "0",
+                      borderBottomRightRadius: "0",
+                    }}
+                  >
+                  <span
+                    className={`text-sm ${
+                      (formData as { line_of_business_id?: number })
+                        .line_of_business_id
+                        ? "text-gray-900"
+                        : "text-gray-500"
+                    }`}
+                  >
+                    {(formData as { line_of_business_id?: number })
                       .line_of_business_id
-                      ? "text-gray-900"
-                      : "text-gray-500"
-                  }`}
+                      ? linesOfBusiness.find(
+                          (lob) =>
+                            Number(lob.id) ===
+                            Number(
+                              (formData as { line_of_business_id?: number })
+                                .line_of_business_id
+                            )
+                        )?.name
+                      : lobLoading ? "Loading..." : "Select line of business (optional)"}
+                  </span>
+                  <ChevronDown
+                    className={`w-4 h-4 text-gray-400 transition-transform ${
+                      isLineOfBusinessDropdownOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowCreateLineOfBusinessModal(true)}
+                  className="px-3 py-2 text-white rounded-r-md flex items-center justify-center text-sm border border-l-0 border-gray-300"
+                  style={{ backgroundColor: color.primary.action }}
+                  title="Create new line of business"
                 >
-                  {(formData as { line_of_business_id?: number })
-                    .line_of_business_id
-                    ? lineOfBusinessData.find(
-                        (lob) =>
-                          Number(lob.id) ===
-                          Number(
-                            (formData as { line_of_business_id?: number })
-                              .line_of_business_id
-                          )
-                      )?.name
-                    : "Select line of business (optional)"}
-                </span>
-                <ChevronDown
-                  className={`w-4 h-4 text-gray-400 transition-transform ${
-                    isLineOfBusinessDropdownOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
 
               {isLineOfBusinessDropdownOpen && (
                 <div
                   className={`absolute z-10 w-full mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-lg max-h-60 overflow-auto`}
                 >
-                  <div className="p-2">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input type="text"
-                        value={lineOfBusinessSearchTerm}
-                        onChange={(value) =>
-                          setLineOfBusinessSearchTerm(String(value))
-                        }
-                        className={`w-full pl-10 pr-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:ring-1 focus:ring-[#588157] focus:border-[#588157]`}
-                        placeholder="Search line of business..."
-                      />
-                    </div>
-                  </div>
-                  <div className="py-1">
-                    {lineOfBusinessData.length === 0 ? (
-                      <div className="px-4 py-2 text-sm text-gray-500">
-                        No line of business available
+                    <div className="p-2">
+                      <div className="relative mb-2">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input type="text"
+                          value={lineOfBusinessSearchTerm}
+                          onChange={(value) =>
+                            setLineOfBusinessSearchTerm(String(value))
+                          }
+                          className={`w-full pl-10 pr-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:ring-1 focus:ring-[#588157] focus:border-[#588157]`}
+                          placeholder="Search line of business..."
+                        />
                       </div>
-                    ) : (
-                      lineOfBusinessData
-                        .filter(
-                          (lob) =>
-                            lob.name
-                              .toLowerCase()
-                              .includes(
-                                lineOfBusinessSearchTerm.toLowerCase()
-                              ) ||
-                            (lob.description &&
-                              lob.description
+                    </div>
+                    <div className="py-1">
+                      {linesOfBusiness.length === 0 ? (
+                        <div className="px-4 py-2 text-sm text-gray-500">
+                          {lobLoading ? "Loading..." : "No line of business available"}
+                        </div>
+                      ) : (
+                        linesOfBusiness
+                          .filter(
+                            (lob) =>
+                              lob.name
                                 .toLowerCase()
                                 .includes(
                                   lineOfBusinessSearchTerm.toLowerCase()
-                                ))
-                        )
-                        .map((lob) => (
-                          <button
-                            key={lob.id}
-                            type="button"
-                            onClick={() => {
-                              setFormData({
-                                ...formData,
-                                line_of_business_id: Number(lob.id),
-                              } as CreateCampaignRequest);
-                              setIsLineOfBusinessDropdownOpen(false);
-                              setLineOfBusinessSearchTerm("");
-                            }}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                          >
-                            <div className="font-medium">{lob.name}</div>
-                            {lob.description && (
-                              <div className="text-gray-500 text-xs">
-                                {lob.description}
-                              </div>
-                            )}
-                          </button>
-                        ))
-                    )}
+                                ) ||
+                              (lob.description &&
+                                lob.description
+                                  .toLowerCase()
+                                  .includes(
+                                    lineOfBusinessSearchTerm.toLowerCase()
+                                  ))
+                          )
+                          .map((lob) => (
+                            <button
+                              key={lob.id}
+                              type="button"
+                              onClick={() => {
+                                setFormData({
+                                  ...formData,
+                                  line_of_business_id: Number(lob.id),
+                                } as CreateCampaignRequest);
+                                setIsLineOfBusinessDropdownOpen(false);
+                                setLineOfBusinessSearchTerm("");
+                              }}
+                              className="w-full text-left px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                            >
+                              <div className="font-medium">{lob.name}</div>
+                              {lob.description && (
+                                <div className="text-gray-500 text-xs">
+                                  {lob.description}
+                                </div>
+                              )}
+                            </button>
+                          ))
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
           </div>
 
-          <div className="relative">
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Department
             </label>
             <div className="relative" ref={departmentDropdownRef}>
-              <button
-                type="button"
-                onClick={() =>
-                  setIsDepartmentDropdownOpen(!isDepartmentDropdownOpen)
-                }
-                className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-1 focus:ring-[#588157] focus:border-[#588157] bg-white text-sm text-left flex items-center justify-between`}
-              >
-                <span
-                  className={`text-sm ${
-                    (formData as { department_id?: number }).department_id
-                      ? "text-gray-900"
-                      : "text-gray-500"
-                  }`}
+              <div className="flex">
+                <div className="flex-1">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setIsDepartmentDropdownOpen(!isDepartmentDropdownOpen)
+                    }
+                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-1 focus:ring-[#588157] focus:border-[#588157] bg-white text-sm text-left flex items-center justify-between`}
+                    style={{
+                      borderTopRightRadius: "0",
+                      borderBottomRightRadius: "0",
+                    }}
+                  >
+                  <span
+                    className={`text-sm ${
+                      (formData as { department_id?: number }).department_id
+                        ? "text-gray-900"
+                        : "text-gray-500"
+                    }`}
+                  >
+                    {(formData as { department_id?: number }).department_id
+                      ? departmentsData.find(
+                          (dept) =>
+                            Number(dept.id) ===
+                            Number(
+                              (formData as { department_id?: number })
+                                .department_id
+                            )
+                        )?.name
+                      : "Select department (optional)"}
+                  </span>
+                  <ChevronDown
+                    className={`w-4 h-4 text-gray-400 transition-transform ${
+                      isDepartmentDropdownOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowCreateDepartmentModal(true)}
+                  className="px-3 py-2 text-white rounded-r-md flex items-center justify-center text-sm border border-l-0 border-gray-300"
+                  style={{ backgroundColor: color.primary.action }}
+                  title="Create new department"
                 >
-                  {(formData as { department_id?: number }).department_id
-                    ? departmentsData.find(
-                        (dept) =>
-                          Number(dept.id) ===
-                          Number(
-                            (formData as { department_id?: number })
-                              .department_id
-                          )
-                      )?.name
-                    : "Select department (optional)"}
-                </span>
-                <ChevronDown
-                  className={`w-4 h-4 text-gray-400 transition-transform ${
-                    isDepartmentDropdownOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
 
               {isDepartmentDropdownOpen && (
-                <div
-                  className={`absolute z-10 w-full mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-lg max-h-60 overflow-auto`}
-                >
-                  <div className="p-2">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input type="text"
-                        value={departmentSearchTerm}
-                        onChange={(value) =>
-                          setDepartmentSearchTerm(String(value))
-                        }
-                        className={`w-full pl-10 pr-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:ring-1 focus:ring-[#588157] focus:border-[#588157]`}
-                        placeholder="Search departments..."
-                      />
+                  <div
+                    className={`absolute z-10 w-full mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-lg max-h-60 overflow-auto`}
+                  >
+                    <div className="p-2">
+                      <div className="relative mb-2">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input type="text"
+                          value={departmentSearchTerm}
+                          onChange={(value) =>
+                            setDepartmentSearchTerm(String(value))
+                          }
+                          className={`w-full pl-10 pr-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:ring-1 focus:ring-[#588157] focus:border-[#588157]`}
+                          placeholder="Search departments..."
+                        />
+                      </div>
+                    </div>
+                    <div className="py-1">
+                      {departmentsData.length === 0 ? (
+                        <div className="px-4 py-2 text-sm text-gray-500">
+                          {departmentsLoading ? "Loading departments..." : "No departments available"}
+                        </div>
+                      ) : (
+                        departmentsData
+                          .filter(
+                            (dept) =>
+                              dept.name
+                                .toLowerCase()
+                                .includes(departmentSearchTerm.toLowerCase()) ||
+                              (dept.description &&
+                                dept.description
+                                  .toLowerCase()
+                                  .includes(departmentSearchTerm.toLowerCase()))
+                          )
+                          .map((dept) => (
+                            <button
+                              key={dept.id}
+                              type="button"
+                              onClick={() => {
+                                setFormData({
+                                  ...formData,
+                                  department_id: Number(dept.id),
+                                } as CreateCampaignRequest);
+                                setIsDepartmentDropdownOpen(false);
+                                setDepartmentSearchTerm("");
+                              }}
+                              className="w-full text-left px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                            >
+                              <div className="font-medium">{dept.name}</div>
+                              {dept.description && (
+                                <div className="text-gray-500 text-xs">
+                                  {dept.description}
+                                </div>
+                              )}
+                            </button>
+                          ))
+                      )}
                     </div>
                   </div>
-                  <div className="py-1">
-                    {departmentsData.length === 0 ? (
-                      <div className="px-4 py-2 text-sm text-gray-500">
-                        No departments available
-                      </div>
-                    ) : (
-                      departmentsData
-                        .filter(
-                          (dept) =>
-                            dept.name
-                              .toLowerCase()
-                              .includes(departmentSearchTerm.toLowerCase()) ||
-                            (dept.description &&
-                              dept.description
-                                .toLowerCase()
-                                .includes(departmentSearchTerm.toLowerCase()))
-                        )
-                        .map((dept) => (
-                          <button
-                            key={dept.id}
-                            type="button"
-                            onClick={() => {
-                              setFormData({
-                                ...formData,
-                                department_id: Number(dept.id),
-                              } as CreateCampaignRequest);
-                              setIsDepartmentDropdownOpen(false);
-                              setDepartmentSearchTerm("");
-                            }}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                          >
-                            <div className="font-medium">{dept.name}</div>
-                            {dept.description && (
-                              <div className="text-gray-500 text-xs">
-                                {dept.description}
-                              </div>
-                            )}
-                          </button>
-                        ))
-                    )}
-                  </div>
-                </div>
-              )}
+                )}
             </div>
           </div>
         </div>
@@ -884,104 +977,123 @@ export default function CampaignDefinitionStep({
               Primary Objective *
             </label>
             <div className="relative" ref={objectiveDropdownRef}>
-              <button
-                type="button"
-                onClick={() =>
-                  setIsObjectiveDropdownOpen(!isObjectiveDropdownOpen)
-                }
-                className={`w-full px-3 py-2 border ${
-                  tw.rounded
-                } focus:ring-1 bg-white text-sm text-left flex items-center justify-between ${
-                  validationErrors.objective
-                    ? "border-red-300 focus:ring-red-500 focus:border-red-500"
-                    : "border-gray-300 focus:ring-[#588157] focus:border-[#588157]"
-                }`}
-              >
-                <span
-                  className={`text-sm ${
-                    formData.objective ? "text-gray-900" : "text-gray-500"
-                  }`}
+              <div className="flex">
+                <div className="flex-1">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setIsObjectiveDropdownOpen(!isObjectiveDropdownOpen)
+                    }
+                    className={`w-full px-3 py-2 border ${
+                      tw.rounded
+                    } focus:ring-1 bg-white text-sm text-left flex items-center justify-between ${
+                      validationErrors.objective
+                        ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                        : "border-gray-300 focus:ring-[#588157] focus:border-[#588157]"
+                    }`}
+                    style={{
+                      borderTopRightRadius: "0",
+                      borderBottomRightRadius: "0",
+                    }}
+                  >
+                  <span
+                    className={`text-sm ${
+                      formData.objective ? "text-gray-900" : "text-gray-500"
+                    }`}
+                  >
+                    {formData.objective && objectives.length > 0
+                      ? objectives.find(
+                          (o) => String(o.id) === String(formData.objective)
+                        )?.name || "Select objective"
+                      : objectivesLoading ? "Loading..." : "Select objective"}
+                  </span>
+                  <ChevronDown
+                    className={`w-4 h-4 text-gray-400 transition-transform ${
+                      isObjectiveDropdownOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowCreateObjectiveModal(true)}
+                  className="px-3 py-2 text-white rounded-r-md flex items-center justify-center text-sm border border-l-0 border-gray-300"
+                  style={{ backgroundColor: color.primary.action }}
+                  title="Create new objective"
                 >
-                  {formData.objective
-                    ? objectiveOptions.find(
-                        (o) => o.value === formData.objective
-                      )?.label
-                    : "Select objective"}
-                </span>
-                <ChevronDown
-                  className={`w-4 h-4 text-gray-400 transition-transform ${
-                    isObjectiveDropdownOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
 
               {isObjectiveDropdownOpen && (
                 <div
                   className={`absolute z-10 w-full mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-lg max-h-60 overflow-auto`}
                 >
-                  <div className="p-2">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input type="text"
-                        value={objectiveSearchTerm}
-                        onChange={(value) => setObjectiveSearchTerm(String(value))}
-                        className={`w-full pl-10 pr-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:ring-1 focus:ring-[#588157] focus:border-[#588157]`}
-                        placeholder="Search objectives..."
-                      />
+                    <div className="p-2">
+                      <div className="relative mb-2">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input type="text"
+                          value={objectiveSearchTerm}
+                          onChange={(value) => setObjectiveSearchTerm(String(value))}
+                          className={`w-full pl-10 pr-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:ring-1 focus:ring-[#588157] focus:border-[#588157]`}
+                          placeholder="Search objectives..."
+                        />
+                      </div>
+                    </div>
+                    <div className="py-1">
+                      {objectives.length === 0 ? (
+                        <div className="px-4 py-2 text-sm text-gray-500">
+                          {objectivesLoading ? "Loading objectives..." : "No objectives available"}
+                        </div>
+                      ) : (
+                        objectives
+                          .filter(
+                            (objective) =>
+                              objective.name
+                                .toLowerCase()
+                                .includes(objectiveSearchTerm.toLowerCase()) ||
+                              (objective.description &&
+                                objective.description
+                                  .toLowerCase()
+                                  .includes(objectiveSearchTerm.toLowerCase()))
+                          )
+                          .map((objective) => (
+                            <button
+                              key={objective.id}
+                              type="button"
+                              onClick={() => {
+                                setFormData({
+                                  ...formData,
+                                  objective: String(objective.id),
+                                });
+                                setIsObjectiveDropdownOpen(false);
+                                setObjectiveSearchTerm("");
+                                if (
+                                  validationErrors.objective &&
+                                  clearValidationErrors
+                                ) {
+                                  clearValidationErrors();
+                                }
+                              }}
+                              className="w-full text-left px-4 py-3 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                            >
+                              <div>
+                                <div className="font-medium">
+                                  {objective.name}
+                                </div>
+                                {objective.description && (
+                                  <div className="text-gray-500 text-xs">
+                                    {objective.description}
+                                  </div>
+                                )}
+                              </div>
+                            </button>
+                          ))
+                      )}
                     </div>
                   </div>
-                  <div className="py-1">
-                    {objectiveOptions
-                      .filter(
-                        (objective) =>
-                          objective.label
-                            .toLowerCase()
-                            .includes(objectiveSearchTerm.toLowerCase()) ||
-                          objective.description
-                            .toLowerCase()
-                            .includes(objectiveSearchTerm.toLowerCase())
-                      )
-                      .map((objective) => (
-                        <button
-                          key={objective.value}
-                          type="button"
-                          onClick={() => {
-                            setFormData({
-                              ...formData,
-                              objective: objective.value as
-                                | "acquisition"
-                                | "retention"
-                                | "churn_prevention"
-                                | "upsell_cross_sell"
-                                | "reactivation",
-                            });
-                            setIsObjectiveDropdownOpen(false);
-                            setObjectiveSearchTerm("");
-                            if (
-                              validationErrors.objective &&
-                              clearValidationErrors
-                            ) {
-                              clearValidationErrors();
-                            }
-                          }}
-                          className="w-full text-left px-4 py-3 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                        >
-                          <div className="flex items-center space-x-3">
-                            <span className="text-lg">{objective.icon}</span>
-                            <div>
-                              <div className="font-medium">
-                                {objective.label}
-                              </div>
-                              <div className="text-gray-500 text-xs">
-                                {objective.description}
-                              </div>
-                            </div>
-                          </div>
-                        </button>
-                      ))}
-                  </div>
-                </div>
-              )}
+                )}
             </div>
             {validationErrors.objective && (
               <p className="mt-1 text-sm text-red-600">
@@ -1119,15 +1231,21 @@ export default function CampaignDefinitionStep({
             Communication Policy
           </label>
           <div className="relative" ref={policyDropdownRef}>
-            <button
-              type="button"
-              onClick={() => setIsPolicyDropdownOpen(!isPolicyDropdownOpen)}
-              className={`${
-                components.input.default
-              } w-full px-3 py-2 text-left flex items-center justify-between ${
-                selectedPolicy ? "" : "text-gray-500"
-              }`}
-            >
+            <div className="flex">
+              <div className="flex-1">
+                <button
+                  type="button"
+                  onClick={() => setIsPolicyDropdownOpen(!isPolicyDropdownOpen)}
+                  className={`${
+                    components.input.default
+                  } w-full px-3 py-2 text-left flex items-center justify-between ${
+                    selectedPolicy ? "" : "text-gray-500"
+                  }`}
+                  style={{
+                    borderTopRightRadius: "0",
+                    borderBottomRightRadius: "0",
+                  }}
+                >
               <div className="flex items-center gap-2">
                 {selectedPolicy && (
                   <div
@@ -1142,12 +1260,24 @@ export default function CampaignDefinitionStep({
                     : "Choose a communication policy (optional)"}
                 </span>
               </div>
-              <ChevronDown
-                className={`w-4 h-4 transition-transform ${
-                  isPolicyDropdownOpen ? "rotate-180" : ""
-                }`}
-              />
-            </button>
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform ${
+                    isPolicyDropdownOpen ? "rotate-180" : ""
+                  }`}
+                />
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowCreatePolicyModal(true)}
+                className="px-3 py-2 text-white rounded-r-md flex items-center justify-center text-sm border border-l-0 border-gray-300"
+                style={{ backgroundColor: color.primary.action }}
+                title="Create new communication policy"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
 
             {isPolicyDropdownOpen && (
               <div
@@ -1429,6 +1559,48 @@ export default function CampaignDefinitionStep({
         onClose={() => setShowCreateProgramModal(false)}
         onSave={handleSaveProgram}
         isSaving={isCreatingProgram}
+      />
+
+      <ConfigurationModal
+        isOpen={showCreateObjectiveModal}
+        onClose={() => setShowCreateObjectiveModal(false)}
+        config={getCampaignObjectivesApiConfig(tLanguage)}
+        onSave={handleSaveObjective}
+        isSaving={isCreatingObjective}
+      />
+
+      <ConfigurationModal
+        isOpen={showCreateDepartmentModal}
+        onClose={() => setShowCreateDepartmentModal(false)}
+        config={{
+          ...getCampaignObjectivesApiConfig(tLanguage),
+          title: "Create Department",
+          entityName: "department",
+          entityNamePlural: "departments",
+          configType: "departments",
+          modalTitle: {
+            create: "Create Department",
+            edit: "Edit Department",
+          },
+        }}
+        onSave={handleSaveDepartment}
+        isSaving={isCreatingDepartment}
+      />
+
+      <ConfigurationModal
+        isOpen={showCreateLineOfBusinessModal}
+        onClose={() => setShowCreateLineOfBusinessModal(false)}
+        config={getLineOfBusinessConfig(tLanguage)}
+        onSave={handleSaveLineOfBusiness}
+        isSaving={isCreatingLineOfBusiness}
+      />
+
+      <ConfigurationModal
+        isOpen={showCreatePolicyModal}
+        onClose={() => setShowCreatePolicyModal(false)}
+        config={getCommunicationPoliciesApiConfig(tLanguage)}
+        onSave={handleSavePolicy}
+        isSaving={isCreatingPolicy}
       />
     </div>
   );

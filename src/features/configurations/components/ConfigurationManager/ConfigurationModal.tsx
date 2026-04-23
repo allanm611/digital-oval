@@ -1,0 +1,249 @@
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { X } from "lucide-react";
+import { color, tw, zIndex } from "../../../../shared/utils/utils";
+import { useLanguage } from "../../../../contexts/LanguageContext";
+import CustomFieldsRenderer from "./CustomFieldsRenderer";
+import type {
+  ConfigurationItem,
+  ConfigurationPageConfig,
+} from "./ConfigurationManager";
+
+interface ConfigurationModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  item?: ConfigurationItem;
+  onSave: (item: Record<string, any>) => Promise<void>;
+  isSaving?: boolean;
+  config: ConfigurationPageConfig;
+}
+
+export default function ConfigurationModal({
+  isOpen,
+  onClose,
+  item,
+  onSave,
+  isSaving = false,
+  config,
+}: ConfigurationModalProps) {
+  const { t } = useLanguage();
+  const [formData, setFormData] = useState<Record<string, any>>({
+    name: "",
+    description: "",
+  });
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const initialData: Record<string, any> = {
+      name: item?.name || "",
+      description: item?.description || "",
+    };
+
+    // Initialize metadata fields
+    if (config.metadataFields) {
+      config.metadataFields.forEach((field) => {
+        initialData[field.key] = (item as Record<string, any>)?.[field.key] || "";
+      });
+    }
+
+    setFormData(initialData);
+    setError("");
+  }, [item, isOpen, config.metadataFields]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Validate name
+    if (config.nameRequired && !formData.name.trim()) {
+      setError(
+        t.genericConfig.isRequired.replace("{field}", config.nameLabel)
+      );
+      return;
+    }
+
+    if (formData.name.length > config.nameMaxLength) {
+      setError(
+        t.genericConfig.mustBeCharactersOrLess
+          .replace("{field}", config.nameLabel)
+          .replace("{maxLength}", config.nameMaxLength.toString())
+      );
+      return;
+    }
+
+    // Validate description
+    if (config.descriptionRequired && !formData.description.trim()) {
+      setError(
+        t.genericConfig.isRequired.replace("{field}", config.descriptionLabel)
+      );
+      return;
+    }
+
+    if (
+      formData.description &&
+      formData.description.length > config.descriptionMaxLength
+    ) {
+      setError(
+        t.genericConfig.mustBeCharactersOrLess
+          .replace("{field}", config.descriptionLabel)
+          .replace("{maxLength}", config.descriptionMaxLength.toString())
+      );
+      return;
+    }
+
+    // Validate metadata fields
+    if (config.metadataFields) {
+      for (const field of config.metadataFields) {
+        const shouldShow = field.condition ? field.condition(formData) : true;
+        if (shouldShow && field.required && !formData[field.key]) {
+          setError(
+            t.genericConfig.isRequired.replace("{field}", field.label)
+          );
+          return;
+        }
+      }
+    }
+
+    setError("");
+
+    const itemData: Record<string, any> = {
+      name: formData.name.trim(),
+      description: formData.description.trim() || undefined,
+    };
+
+    // Add metadata fields to itemData
+    if (config.metadataFields) {
+      for (const field of config.metadataFields) {
+        const shouldShow = field.condition ? field.condition(formData) : true;
+        if (shouldShow) {
+          itemData[field.key] = formData[field.key];
+        }
+      }
+    }
+
+    await onSave(itemData);
+  };
+
+  if (!isOpen) return null;
+
+  return createPortal(
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+      style={{ zIndex: zIndex.modal }}
+    >
+      <div
+        className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto`}
+      >
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <h2 className="text-xl font-bold text-gray-900">
+            {item ? config.modalTitle.edit : config.modalTitle.create}
+          </h2>
+          <button
+            onClick={onClose}
+            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
+          >
+            <X className="w-5 h-5 text-gray-500" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6">
+          <div className="space-y-4">
+            {/* Name Field */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {config.nameLabel} {config.nameRequired && "*"}
+              </label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, name: e.target.value }))
+                }
+                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                placeholder={t.genericConfig.enter.replace(
+                  "{field}",
+                  config.nameLabel.toLowerCase()
+                )}
+                maxLength={config.nameMaxLength}
+                required={config.nameRequired}
+              />
+            </div>
+
+            {/* Description Field */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {config.descriptionLabel} {config.descriptionRequired && "*"}
+              </label>
+              <textarea
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    description: e.target.value,
+                  }))
+                }
+                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                placeholder={t.genericConfig.enter.replace(
+                  "{field}",
+                  config.descriptionLabel.toLowerCase()
+                )}
+                rows={3}
+                maxLength={config.descriptionMaxLength}
+                required={config.descriptionRequired}
+              />
+            </div>
+
+            {/* Metadata Fields */}
+            {config.metadataFields && (
+              <CustomFieldsRenderer
+                fields={config.metadataFields}
+                formData={formData}
+                onFieldChange={(key, value) =>
+                  setFormData((prev) => ({ ...prev, [key]: value }))
+                }
+              />
+            )}
+          </div>
+
+          {/* Error Message */}
+          {error && (
+            <div
+              className={`mt-4 p-3 bg-red-50 border border-red-200 ${tw.rounded}`}
+            >
+              <p className="text-red-700 text-sm">{error}</p>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex items-center justify-end space-x-3 mt-6">
+            <button
+              type="button"
+              onClick={onClose}
+              className={`px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 ${tw.rounded} transition-colors`}
+            >
+              {t.genericConfig.cancel}
+            </button>
+            <button
+              type="submit"
+              disabled={isSaving}
+              className={`px-4 py-2 text-white ${tw.rounded} transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
+              style={{ backgroundColor: color.primary.action }}
+            >
+              {isSaving
+                ? t.genericConfig.saving
+                : item
+                  ? t.genericConfig.update.replace(
+                      "{entityName}",
+                      config.entityName
+                    )
+                  : t.genericConfig.create.replace(
+                      "{entityName}",
+                      config.entityName
+                    )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>,
+    document.body
+  );
+}

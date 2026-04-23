@@ -1,5 +1,5 @@
 import React from "react";
-import { ConfigurationItem } from "../components/GenericConfigurationPage";
+import { ConfigurationItem } from "../../features/configurations/components/ConfigurationManager";
 import {
   lineOfBusinessConfig,
   departmentsConfig,
@@ -16,7 +16,6 @@ import {
   senderIdsConfig,
   smsRoutesConfig,
   emailRoutesConfig,
-  routesConfig,
   languagesConfig,
   characterSetsConfig,
   resourceTypesConfig,
@@ -42,7 +41,6 @@ export type ConfigurationType =
   | "senderIds"
   | "smsRoutes"
   | "emailRoutes"
-  | "routes"
   | "languages"
   | "characterSets"
   | "resourceTypes"
@@ -74,7 +72,6 @@ class ConfigurationDataService {
     this.listeners.set("senderIds", new Set());
     this.listeners.set("smsRoutes", new Set());
     this.listeners.set("emailRoutes", new Set());
-    this.listeners.set("routes", new Set());
     this.listeners.set("languages", new Set());
     this.listeners.set("characterSets", new Set());
     this.listeners.set("resourceTypes", new Set());
@@ -110,7 +107,6 @@ class ConfigurationDataService {
     this.data.set("senderIds", [...senderIdsConfig.initialData]);
     this.data.set("smsRoutes", [...smsRoutesConfig.initialData]);
     this.data.set("emailRoutes", [...emailRoutesConfig.initialData]);
-    this.data.set("routes", [...routesConfig.initialData]);
     this.data.set("languages", [...languagesConfig.initialData]);
     this.data.set("characterSets", [...characterSetsConfig.initialData]);
     this.data.set("resourceTypes", [...resourceTypesConfig.initialData]);
@@ -257,9 +253,6 @@ class ConfigurationDataService {
         break;
       case "emailRoutes":
         this.setData(type, [...emailRoutesConfig.initialData]);
-        break;
-      case "routes":
-        this.setData(type, [...routesConfig.initialData]);
         break;
       case "languages":
         this.setData(type, [...languagesConfig.initialData]);

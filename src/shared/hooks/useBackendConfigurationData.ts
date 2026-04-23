@@ -87,6 +87,20 @@ import {
 import {
   communicationChannelService,
 } from "../services/communicationChannelService";
+import {
+  dndService,
+  DNDType,
+} from "../../features/campaigns/services/dndService";
+import {
+  timezoneService,
+  TimeZone,
+} from "../../features/configurations/services/timezoneService";
+import { campaignObjectiveService } from "../../features/configurations/services/campaignObjectiveService";
+import { departmentService } from "../../features/campaigns/services/departmentService";
+import { lineOfBusinessService } from "../../features/campaigns/services/lineOfBusinessService";
+import { policyTypeService } from "../../features/campaigns/services/policyTypeService";
+import { communicationPolicyService } from "../../features/campaigns/services/communicationPolicyService";
+import { roleService } from "../services/roleService";
 
 /**
  * Normalize API response to TypeConfigurationItem format
@@ -221,6 +235,70 @@ function normalizeApiResponse(type: string, data: any[]): any[] {
         break;
 
       case "communicationChannels":
+        // Convert is_active to isActive
+        if (normalized.is_active !== undefined) {
+          normalized.isActive = normalized.is_active;
+        }
+        break;
+
+      case "dndTypes":
+        // Convert is_active to isActive
+        if (normalized.is_active !== undefined) {
+          normalized.isActive = normalized.is_active;
+        }
+        break;
+
+      case "timezones":
+        // Map label to name for display
+        if (normalized.label && !normalized.name) {
+          normalized.name = normalized.label;
+        }
+        // Create description from UTC offset if not present
+        if (normalized.utc_offset && !normalized.description) {
+          normalized.description = `UTC ${normalized.utc_offset}`;
+        }
+        // Convert is_active to isActive
+        if (normalized.is_active !== undefined) {
+          normalized.isActive = normalized.is_active;
+        }
+        break;
+
+      case "campaignObjectives":
+        // Convert is_active to isActive
+        if (normalized.is_active !== undefined) {
+          normalized.isActive = normalized.is_active;
+        }
+        break;
+
+      case "departments":
+        // Convert is_active to isActive
+        if (normalized.is_active !== undefined) {
+          normalized.isActive = normalized.is_active;
+        }
+        break;
+
+      case "lineOfBusiness":
+        // Convert is_active to isActive
+        if (normalized.is_active !== undefined) {
+          normalized.isActive = normalized.is_active;
+        }
+        break;
+
+      case "policyTypes":
+        // Convert is_active to isActive
+        if (normalized.is_active !== undefined) {
+          normalized.isActive = normalized.is_active;
+        }
+        break;
+
+      case "communicationPolicies":
+        // Convert is_active to isActive
+        if (normalized.is_active !== undefined) {
+          normalized.isActive = normalized.is_active;
+        }
+        break;
+
+      case "roles":
         // Convert is_active to isActive
         if (normalized.is_active !== undefined) {
           normalized.isActive = normalized.is_active;
@@ -433,6 +511,70 @@ function transformPayload(type: string, payload: any): any {
         delete transformed.isActive;
       }
       break;
+
+    case "dndTypes":
+      // Map isActive to is_active
+      if (transformed.isActive !== undefined) {
+        transformed.is_active = transformed.isActive;
+        delete transformed.isActive;
+      }
+      break;
+
+    case "timezones":
+      // Map isActive to is_active
+      if (transformed.isActive !== undefined) {
+        transformed.is_active = transformed.isActive;
+        delete transformed.isActive;
+      }
+      break;
+
+    case "campaignObjectives":
+      // Map isActive to is_active
+      if (transformed.isActive !== undefined) {
+        transformed.is_active = transformed.isActive;
+        delete transformed.isActive;
+      }
+      break;
+
+    case "departments":
+      // Map isActive to is_active
+      if (transformed.isActive !== undefined) {
+        transformed.is_active = transformed.isActive;
+        delete transformed.isActive;
+      }
+      break;
+
+    case "lineOfBusiness":
+      // Map isActive to is_active
+      if (transformed.isActive !== undefined) {
+        transformed.is_active = transformed.isActive;
+        delete transformed.isActive;
+      }
+      break;
+
+    case "policyTypes":
+      // Map isActive to is_active
+      if (transformed.isActive !== undefined) {
+        transformed.is_active = transformed.isActive;
+        delete transformed.isActive;
+      }
+      break;
+
+    case "communicationPolicies":
+      // Map isActive to is_active
+      if (transformed.isActive !== undefined) {
+        transformed.is_active = transformed.isActive;
+        delete transformed.isActive;
+      }
+      break;
+
+    case "roles":
+      // Map isActive to is_active
+      if (transformed.isActive !== undefined) {
+        transformed.is_active = transformed.isActive;
+        delete transformed.isActive;
+      }
+      break;
   }
 
   return transformed;
@@ -464,6 +606,12 @@ export type UseBackendConfigDataResult<T, CreateReq, UpdateReq> =
 export function useBackendConfigurationData(
   type:
     | "campaignTypes"
+    | "campaignObjectives"
+    | "departments"
+    | "lineOfBusiness"
+    | "policyTypes"
+    | "communicationPolicies"
+    | "roles"
     | "offerTypes"
     | "segmentTypes"
     | "productTypes"
@@ -480,6 +628,8 @@ export function useBackendConfigurationData(
     | "controlGroups"
     | "offerCreatives"
     | "communicationChannels"
+    | "dndTypes"
+    | "timezones"
     | undefined,
 ): UseBackendConfigDataResult<any, any, any> | null {
   const [data, setData] = useState<CampaignType[]>([]);
@@ -724,12 +874,84 @@ export function useBackendConfigurationData(
           }
           break;
 
+        case "dndTypes":
+          response = await dndService.getDNDTypes(false);
+          if (Array.isArray(response)) {
+            setData(normalizeApiResponse(type, response));
+          } else {
+            setData([]);
+          }
+          break;
+
+        case "campaignObjectives":
+          response = await campaignObjectiveService.getCampaignObjectives();
+          if (Array.isArray(response)) {
+            setData(normalizeApiResponse(type, response));
+          } else {
+            setData([]);
+          }
+          break;
+
+        case "departments":
+          response = await departmentService.getDepartments();
+          if (Array.isArray(response)) {
+            setData(normalizeApiResponse(type, response));
+          } else {
+            setData([]);
+          }
+          break;
+
+        case "lineOfBusiness":
+          response = await lineOfBusinessService.getLinesOfBusiness();
+          if (Array.isArray(response)) {
+            setData(normalizeApiResponse(type, response));
+          } else {
+            setData([]);
+          }
+          break;
+
+        case "policyTypes":
+          response = await policyTypeService.getPolicyTypes();
+          if (Array.isArray(response)) {
+            setData(normalizeApiResponse(type, response));
+          } else {
+            setData([]);
+          }
+          break;
+
+        case "communicationPolicies":
+          response = await communicationPolicyService.getAllPolicies();
+          if (Array.isArray(response)) {
+            setData(normalizeApiResponse(type, response));
+          } else {
+            setData([]);
+          }
+          break;
+
+        case "roles":
+          response = await roleService.getAllRoles();
+          if (Array.isArray(response)) {
+            setData(normalizeApiResponse(type, response));
+          } else {
+            setData([]);
+          }
+          break;
+
+        case "timezones":
+          response = await timezoneService.getTimezones();
+          if (Array.isArray(response)) {
+            setData(normalizeApiResponse(type, response));
+          } else {
+            setData([]);
+          }
+          break;
+
         default:
           throw new Error(`Unknown configuration type: ${type}`);
       }
     } catch (err) {
       // Silently fail - endpoint may not be ready yet or returning errors
-      console.debug(
+      console.error(
         `Configuration fetch failed for ${type}:`,
         err instanceof Error ? err.message : err,
       );
@@ -755,6 +977,28 @@ export function useBackendConfigurationData(
             } else {
               throw new Error(response?.error || "Failed to create item");
             }
+          case "campaignObjectives":
+            response = await campaignObjectiveService.createCampaignObjective(
+              payload,
+            );
+            return response;
+          case "departments":
+            response = await departmentService.createDepartment(payload);
+            return response;
+          case "lineOfBusiness":
+            response = await lineOfBusinessService.createLineOfBusiness(
+              payload,
+            );
+            return response;
+          case "policyTypes":
+            response = await policyTypeService.createPolicyType(payload);
+            return response;
+          case "communicationPolicies":
+            response = await communicationPolicyService.createPolicy(payload);
+            return response;
+          case "roles":
+            response = await roleService.createRole(payload);
+            return response;
           case "offerTypes":
             response = await offerTypeService.createOfferType(payload);
             return response?.data || response;
@@ -806,6 +1050,12 @@ export function useBackendConfigurationData(
           case "communicationChannels":
             response = await communicationChannelService.create(payload);
             return response?.data || response;
+          case "dndTypes":
+            response = await dndService.createDNDType(payload);
+            return response;
+          case "timezones":
+            response = await timezoneService.createTimezone(payload);
+            return response;
           default:
             throw new Error(`Unknown configuration type: ${type}`);
         }
@@ -892,6 +1142,36 @@ export function useBackendConfigurationData(
           case "communicationChannels":
             response = await communicationChannelService.update(id, payload);
             return response?.data || response;
+          case "dndTypes":
+            response = await dndService.updateDNDType(id, payload);
+            return response;
+          case "campaignObjectives":
+            response = await campaignObjectiveService.updateCampaignObjective(
+              id,
+              payload,
+            );
+            return response;
+          case "departments":
+            response = await departmentService.updateDepartment(id, payload);
+            return response;
+          case "lineOfBusiness":
+            response = await lineOfBusinessService.updateLineOfBusiness(
+              id,
+              payload,
+            );
+            return response;
+          case "policyTypes":
+            response = await policyTypeService.updatePolicyType(id, payload);
+            return response;
+          case "communicationPolicies":
+            response = await communicationPolicyService.updatePolicy(id, payload);
+            return response;
+          case "roles":
+            response = await roleService.updateRole(id, payload);
+            return response;
+          case "timezones":
+            response = await timezoneService.updateTimezone(id, payload);
+            return response;
           default:
             throw new Error(`Unknown configuration type: ${type}`);
         }
@@ -964,6 +1244,30 @@ export function useBackendConfigurationData(
             break;
           case "communicationChannels":
             await communicationChannelService.delete(id);
+            break;
+          case "dndTypes":
+            await dndService.deleteDNDType(id);
+            break;
+          case "campaignObjectives":
+            await campaignObjectiveService.deleteCampaignObjective(id);
+            break;
+          case "departments":
+            await departmentService.deleteDepartment(id);
+            break;
+          case "lineOfBusiness":
+            await lineOfBusinessService.deleteLineOfBusiness(id);
+            break;
+          case "policyTypes":
+            await policyTypeService.deletePolicyType(id);
+            break;
+          case "communicationPolicies":
+            await communicationPolicyService.deletePolicy(id);
+            break;
+          case "roles":
+            await roleService.deleteRole(id);
+            break;
+          case "timezones":
+            await timezoneService.deleteTimezone(id);
             break;
           default:
             throw new Error(`Unknown configuration type: ${type}`);

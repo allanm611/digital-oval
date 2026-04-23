@@ -166,33 +166,27 @@ class CustomerService {
   }
 
   /**
-   * Search customers by query term
-   * GET /subscribers/search
+   * Search customers by msisdn
+   * POST /subscribers/search
    */
   async searchCustomers(params?: {
-    q?: string;
-    search?: string;
+    msisdn?: string;
     limit?: number;
     offset?: number;
-    skipCache?: boolean;
   }): Promise<CustomersListResponse> {
     try {
-      const queryParams = new URLSearchParams();
-      if (params) {
-        if (params.q) queryParams.append("q", params.q);
-        if (params.search) queryParams.append("search", params.search);
-        if (params.limit) queryParams.append("limit", String(params.limit));
-        if (params.offset) queryParams.append("offset", String(params.offset));
-        // Note: skipCache not supported by search endpoint
-      }
+      const body: any = {};
+      if (params?.msisdn) body.msisdn = params.msisdn;
+      if (params?.limit) body.limit = params.limit;
+      if (params?.offset) body.offset = params.offset;
 
-      const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
-      const url = `${BASE_URL}/search${query}`;
-
-      const response = await fetch(url, {
+      const response = await fetch(`${BASE_URL}/search`, {
+        method: "POST",
         headers: {
           ...getAuthHeaders(),
+          "Content-Type": "application/json",
         },
+        body: JSON.stringify(body),
       });
 
       if (!response.ok && response.status !== 304) {

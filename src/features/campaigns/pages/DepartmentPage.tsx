@@ -1,9 +1,9 @@
-import React from "react";
-import GenericConfigurationPage from "../../../shared/components/GenericConfigurationPage";
-import { getDepartmentsConfig } from "../../configurations/configs/configurationPageConfigs";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import ConfigurationManagerAPI from "../../configurations/components/ConfigurationManager/ConfigurationManagerAPI";
+import { getDepartmentsApiConfig } from "../../configurations/configs/configurationPageConfigs";
 
 export default function DepartmentPage() {
   const { t } = useLanguage();
-  return <GenericConfigurationPage config={getDepartmentsConfig(t)} />;
+  const config = getDepartmentsApiConfig(t);
+  return <ConfigurationManagerAPI config={config} />;
 }

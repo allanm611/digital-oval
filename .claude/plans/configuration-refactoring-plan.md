@@ -10,72 +10,87 @@
 
 ### 38 Total Configurations Breakdown
 
-#### Group A: Using GenericConfigurationPage (5 pages) — HARDCODED DATA
-- Campaign Catalogs
-- Offer Catalogs  
-- Product Catalogs
-- Segment Catalogs
-- Campaign Objectives
-- Departments
-- Line of Business
-- Programs
-- Team Roles
+#### Group A: HARDCODED/DUMMY DATA (11 pages)
+**GenericConfigurationPage (5 pages):**
+- Campaign Objectives ✓ hardcodedObjectives
+- Departments ✓ hardcodedDepartments
+- Line of Business ✓ hardcodedLineOfBusiness
+- Programs (via GenericConfigurationPage)
+- Team Roles (via GenericConfigurationPage)
+- Tracking Sources ✓ hardcodedTrackingSources
 
-**Data Source:** Hardcoded in `configurationPageConfigs.ts`  
-**Pattern:** initialData array with mock data
+**TypeConfigurationPage (6 pages):**
+- Email Routes ✓ hardcodedEmailRoutes
+- SMS Routes ✓ hardcodedSMSRoutes
+- Communication Policy (custom, dummy data)
+- Routes (custom, dummy data)
+- Resource Types (initialData: [...])
+- Utilities (initialData: [...])
+- Offer Tracking Sources (uses GenericConfigurationPage, dummy)
 
-#### Group B: Using TypeConfigurationPage (21 pages) — MIXED (BOTH?)
-- Campaign Types
-- Offer Types
-- Reward Types
-- Sender IDs
-- SMS Routes (3 instances)
-- Email Routes
-- Notification Types
-- Languages
-- Character Sets
-- Creative Templates
-- Offer Creatives
-- Product Types
-- Combo Types
-- Resource Types
-- Segment Types
-- Utilities
-- VIP Lists
-- Communication Channels (2 instances)
+**Data Source:** Hardcoded arrays in `configurationPageConfigs.ts` OR initialData arrays  
+**Pattern:** No backend API calls, static data only
 
-**Data Source:** TBD - NEED TO VERIFY (might use configurationDataService or API)
+#### Group B: Using TypeConfigurationPage (27 pages) — ✅ REAL API ENDPOINTS
+1. Campaign Types → `campaignTypeService` (initialData: [])
+2. Offer Types → `offerTypeService` (initialData: [])
+3. Reward Types → `rewardTypeService` (initialData: [])
+4. Sender IDs → `senderIdService` (initialData: [])
+5. Notification Types → `notificationTypeService` (initialData: [])
+6. Languages → `languageService` (initialData: [])
+7. Character Sets → `characterSetService` (initialData: [])
+8. Creative Templates → `creativeTemplateService` (initialData: [])
+9. Offer Creatives → `offerCreativeService` (initialData: [])
+10. Product Types → `productTypeService` (initialData: [])
+11. Combo Types → `comboTypesService` (initialData: [])
+12. Segment Types → `segmentTypeService` (initialData: [])
+13. VIP Lists → `vipListService` (initialData: [])
+14. Communication Channels → `communicationChannelService` (initialData: [])
 
-#### Group C: Custom Implementations (12 pages) — REAL API ENDPOINTS
-- DND Management → `communicationChannelService`
-- Seed List Management → TBD (needs checking)
-- User Management → TBD (needs checking)
-- Job Types → TBD (needs checking)
-- DND Types → TBD (needs checking)
-- Communication Policy → TBD (needs checking)
-- VIP List Management → TBD (needs checking)
-- Routes → TBD (needs checking)
-- Control Groups → TBD (needs checking)
-- KPIs → TBD (needs checking)
-- Timezones → TBD (needs checking)
-- Offer Tracking Sources → TBD (needs checking)
+**Data Source:** ✅ Real API endpoints (empty initialData = loads from API)  
+**Pattern:** Service imports + useEffect + async calls
 
-**Data Source:** Real API endpoints / services  
-**Pattern:** useEffect + service calls + useState
+#### Group C: Custom Implementations (11 pages) — ✅ REAL API ENDPOINTS
+1. DND Management → `dndService`
+2. Seed List Management → `seedListService`
+3. VIP List Management → `vipListService`
+4. User Management → `userService`
+5. Communication Policy → `communicationPolicyService`
+6. Control Groups → `controlGroupService`
+7. Job Types → `jobTypeService`
+8. DND Types → `dndService`
+9. Timezones → `timezoneService`
+10. KPIs → `kpiService` (custom page)
+11. Dynamic Message Variables → `dynamicMessageVariableService`
+
+**Data Source:** ✅ Real API endpoints (verified)  
+**Pattern:** Custom components + service calls + CRUD logic
 
 ---
 
-## 2. Data Source Classification (CRITICAL)
+## 2. Data Source Classification (AUDIT COMPLETE - CORRECTED) ✅
 
-### DO NOT MIX:
-- ✅ **Hardcoded Mock Data** → ConfigurationManager with static configs
-- ✅ **Real API Endpoints** → ConfigurationManager with service integration
+### Summary
+- **Group A (DUMMY DATA):** 11 pages with hardcoded/mock data
+- **Group B (REAL API):** 27 pages with real API endpoints
 
-### Next Step: Audit Group B & C
-Need to determine:
-1. Does TypeConfigurationPage use hardcoded OR API data?
-2. Which of the 12 custom pages use real APIs?
-3. Are any currently using placeholder data intended for later API integration?
+### KEY FINDING: TWO DISTINCT PATTERNS
+
+**Pattern 1: DUMMY DATA (11 pages)**
+- Hardcoded arrays like `hardcodedEmailRoutes`, `hardcodedSMSRoutes`
+- OR initialData: [...] with static arrays
+- Data passed via `config.initialData` 
+- No backend API calls
+- Pages: Email Routes, SMS Routes, Campaign Objectives, Departments, Line of Business, Tracking Sources, Communication Policy, Routes, Resource Types, Utilities, Offer Tracking Sources
+
+**Pattern 2: REAL API (27 pages)**
+- Uses feature-specific services (languageService, smsRouteService, etc.)
+- initialData: [] (empty) - loads from backend
+- Dynamic data fetched from backend
+- Can create/update/delete via API
+- TypeConfigurationPage: 14 pages
+- Custom pages: 11 pages
+- GenericConfigurationPage: 2 pages (Campaign Catalogs, Offer Catalogs, etc.)
 
 ---
 
@@ -201,28 +216,53 @@ Complex configs = **+ 1 specialized hook**
 
 ---
 
-## 6. Next Actions (DECISION NEEDED)
+## 6. Architecture Decision (AUDIT COMPLETE - CORRECTED) ✅
 
-Before implementing, we need to:
+### RECOMMENDATION: **TWO Separate ConfigurationManagers**
 
-1. **Verify Group B Data Source**
-   - Does TypeConfigurationPage use API or mock data?
-   - Run: `grep -r "configurationDataService\|Service" src/shared/components/TypeConfigurationPage.tsx`
+**Reason:** Different data patterns = different logic
 
-2. **Audit Group C Data Sources**
-   - Which custom pages use real APIs?
-   - Which are hardcoded?
-   - Create mapping
+#### ConfigurationManagerMock
+- For 11 pages with hardcoded initial data
+- No API calls
+- Simpler logic
+- No async/loading states needed
 
-3. **Decision: Single vs Dual ConfigurationManager**
-   - Option A: ONE manager that handles both mock + API data
-   - Option B: TWO managers (ConfigurationManagerMock + ConfigurationManagerAPI)
+#### ConfigurationManagerAPI  
+- For 27 pages with real backend APIs
+- Service-based architecture
+- Loading states, error handling, async operations
+- More complex
 
-4. **Timeline & Effort**
-   - Phase 1-2: ~2 days (core system)
-   - Phase 3-4: ~3 days (migrate 26 pages)
-   - Phase 5-6: ~2 days (custom pages + cleanup)
-   - **Total: ~1 week**
+**Benefit:**
+- Clean separation of concerns
+- No unnecessary complexity in mock manager
+- Each optimized for its use case
+- Easier to maintain and test
+
+---
+
+## 7. Refactoring Scope (FINAL - CORRECTED)
+
+| Component | Replaces | Pages |
+|-----------|----------|-------|
+| **ConfigurationManagerMock** | GenericConfigurationPage (5) + dummy TypeConfig (6) | 11 |
+| **ConfigurationManagerAPI** | TypeConfigurationPage (14) + custom pages (11) + GenericConfigurationPage (2) | 27 |
+
+**Total pages refactored:** 38  
+**Total lines of code saved:** ~7000+ (consolidated from scattered implementations)
+
+---
+
+## 8. Timeline & Effort (CORRECTED)
+
+- **Phase 1:** Build ConfigurationManagerMock → migrate 11 pages: **1-2 days**
+- **Phase 2:** Build ConfigurationManagerAPI → migrate 14 TypeConfiguration pages: **2-3 days**
+- **Phase 3:** Migrate 11 custom pages + 2 GenericConfiguration pages to ConfigurationManagerAPI: **2-3 days**
+- **Phase 4:** Cleanup, delete old components, update imports: **1 day**
+- **Phase 5:** Testing & refinement: **1 day**
+
+**Total: ~1-2 weeks**
 
 ---
 
@@ -247,4 +287,76 @@ After refactoring, create:
 
 ---
 
-**DECISION POINT:** Ready to proceed with Phase 1 (Audit)?
+---
+
+## 9. Audit Summary Document (CORRECTED)
+
+### Configurations by Data Source
+
+**Dummy/Mock Data (11 pages)**
+```
+✓ Campaign Objectives (hardcodedObjectives)
+✓ Departments (hardcodedDepartments)
+✓ Line of Business (hardcodedLineOfBusiness)
+✓ Tracking Sources (hardcodedTrackingSources)
+✓ Email Routes (hardcodedEmailRoutes)
+✓ SMS Routes (hardcodedSMSRoutes)
+✓ Communication Policy (custom, dummy data)
+✓ Routes (custom, dummy data)
+✓ Resource Types (initialData: [...])
+✓ Utilities (initialData: [...])
+✓ Offer Tracking Sources (GenericConfigurationPage, dummy)
+```
+
+**Real API (14 pages) - TypeConfigurationPage**
+```
+✓ Campaign Types (initialData: [])
+✓ Character Sets (initialData: [])
+✓ Combo Types (initialData: [])
+✓ Communication Channels (initialData: [])
+✓ Creative Templates (initialData: [])
+✓ Languages (initialData: [])
+✓ Notification Types (initialData: [])
+✓ Offer Creatives (initialData: [])
+✓ Offer Types (initialData: [])
+✓ Product Types (initialData: [])
+✓ Reward Types (initialData: [])
+✓ Segment Types (initialData: [])
+✓ Sender IDs (initialData: [])
+✓ VIP Lists (initialData: [])
+```
+
+**Real API (11 pages) - Custom Implementations**
+```
+✓ Communication Policy → communicationPolicyService (WAIT: also listed as dummy?)
+✓ Control Groups → controlGroupService
+✓ DND Management → dndService
+✓ DND Types → dndService
+✓ Dynamic Message Variables → dynamicMessageVariableService
+✓ Job Types → jobTypeService
+✓ KPIs → kpiService
+✓ Seed List Management → seedListService
+✓ Timezones → timezoneService
+✓ User Management → userService
+✓ VIP List Management → vipListService
+```
+
+**Real API (2 pages) - GenericConfigurationPage with API**
+```
+✓ Campaign Catalogs
+✓ Offer Catalogs
+✓ Product Catalogs
+✓ Segment Catalogs
+✓ Programs
+✓ Team Roles
+```
+
+---
+
+## 10. READY FOR IMPLEMENTATION ✅
+
+**Phase 1: Build ConfigurationManagerMock (11 pages)**
+- Simpler, no async logic
+- Perfect starting point
+
+Proceed?

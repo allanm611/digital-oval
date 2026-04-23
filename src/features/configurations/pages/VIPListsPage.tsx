@@ -1,6 +1,8 @@
-import TypeConfigurationPage from "../../../shared/components/TypeConfigurationPage";
-import { vipListsConfig } from "../configs/configurationPageConfigs";
+import { useLanguage } from "../../../contexts/LanguageContext";
+import { ConfigurationManagerAPI } from "../components/ConfigurationManager";
+import { getVIPListsApiConfig } from "../configs/configurationPageConfigs";
 
 export default function VIPListsPage() {
-  return <TypeConfigurationPage config={vipListsConfig} />;
+  const { t } = useLanguage();
+  return <ConfigurationManagerAPI config={getVIPListsApiConfig(t)} />;
 }

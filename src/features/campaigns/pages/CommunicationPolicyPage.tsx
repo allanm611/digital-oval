@@ -42,13 +42,21 @@ export default function CommunicationPolicyPage() {
 
   // Load policies from service and subscribe to changes
   useEffect(() => {
-    // Load initial policies
-    setPolicies(communicationPolicyService.getAllPolicies());
+    const loadPolicies = async () => {
+      const data = await communicationPolicyService.getAllPolicies();
+      if (Array.isArray(data)) {
+        setPolicies(data);
+      }
+    };
+
+    loadPolicies();
 
     // Subscribe to policy changes
     const unsubscribe = communicationPolicyService.subscribe(
       (updatedPolicies) => {
-        setPolicies(updatedPolicies);
+        if (Array.isArray(updatedPolicies)) {
+          setPolicies(updatedPolicies);
+        }
       }
     );
 
@@ -75,16 +83,10 @@ export default function CommunicationPolicyPage() {
 
     setIsDeleting(true);
     try {
-      const success = communicationPolicyService.deletePolicy(
-        policyToDelete.id
-      );
-      if (success) {
-        showToast(t.communicationPolicy.deleteSuccess);
-        setShowDeleteModal(false);
-        setPolicyToDelete(null);
-      } else {
-        showError(t.communicationPolicy.policyNotFound);
-      }
+      await communicationPolicyService.deletePolicy(policyToDelete.id);
+      showToast(t.communicationPolicy.deleteSuccess);
+      setShowDeleteModal(false);
+      setPolicyToDelete(null);
     } catch (err) {
       console.error("Failed to delete policy:", err);
       showError(t.communicationPolicy.deleteFailed);
@@ -105,29 +107,21 @@ export default function CommunicationPolicyPage() {
       setIsSaving(true);
       if (editingPolicy) {
         // Update existing policy
-        const updatedPolicy = communicationPolicyService.updatePolicy(
+        await communicationPolicyService.updatePolicy(
           editingPolicy.id,
           policyData
         );
-        if (updatedPolicy) {
-          showToast(t.communicationPolicy.updateSuccess);
-        } else {
-          showError(t.communicationPolicy.policyNotFound);
-          return;
-        }
+        showToast(t.communicationPolicy.updateSuccess);
       } else {
         // Create new policy
-        communicationPolicyService.createPolicy(policyData);
+        await communicationPolicyService.createPolicy(policyData);
         showToast(t.communicationPolicy.createSuccess);
       }
       setIsModalOpen(false);
       setEditingPolicy(undefined);
     } catch (err) {
       console.error("Failed to save policy:", err);
-      showError(
-        t.communicationPolicy.saveFailed,
-        t.communicationPolicy.saveFailed
-      );
+      showError(t.communicationPolicy.saveFailed);
     } finally {
       setIsSaving(false);
     }
@@ -195,12 +189,16 @@ export default function CommunicationPolicyPage() {
     return summaryParts.join(" • ");
   };
 
-  const filteredPolicies = (policies || []).filter(
-    (policy) =>
-      policy?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (policy?.description &&
-        policy.description.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredPolicies = Array.isArray(policies) ? policies.filter(
+    (policy) => {
+      if (!policy || !policy.name) return false;
+      return (
+        policy.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (policy.description &&
+          policy.description.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+  ) : [];
 
   return (
     <div className="space-y-6">

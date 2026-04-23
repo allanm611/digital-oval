@@ -1,84 +1,56 @@
+import { fetchWithAuthInterceptor } from '../../../shared/services/fetchInterceptor';
+import { ApiResponse } from '../../../shared/types/api';
 import { CommunicationPolicyConfiguration, CreateCommunicationPolicyRequest } from '../types/communicationPolicyConfig';
+import { buildApiUrl } from '../../../shared/services/api';
 
 class CommunicationPolicyService {
+    private baseUrl = buildApiUrl('/communication-policies');
     private policies: CommunicationPolicyConfiguration[] = [];
     private subscribers: Set<(policies: CommunicationPolicyConfiguration[]) => void> = new Set();
 
-    constructor() {
-        // Initialize with sample data
-        this.policies = [
-            {
-                id: 1,
-                name: 'Business Hours Time Window',
-                description: 'Allow communications only during business hours',
-                channels: ['EMAIL', 'SMS'],
-                type: 'timeWindow',
-                config: {
-                    startTime: '09:00',
-                    endTime: '18:00',
-                    timezone: 'UTC',
-                    days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']
-                },
-                isActive: true,
-                created_at: '2024-01-15T10:30:00Z',
-                updated_at: '2024-01-20T14:45:00Z'
-            },
-            {
-                id: 2,
-                name: 'Daily Communication Limit',
-                description: 'Maximum 3 communications per customer per day',
-                channels: ['SMS', 'USSD'],
-                type: 'maximumCommunication',
-                config: {
-                    type: 'daily',
-                    maxCount: 3,
-                    resetTime: '00:00'
-                },
-                isActive: true,
-                created_at: '2024-01-10T09:15:00Z',
-                updated_at: '2024-01-18T16:20:00Z'
-            },
-            {
-                id: 3,
-                name: 'Marketing DND Policy',
-                description: 'Do not disturb policy for marketing communications',
-                channels: ['APP', 'EMAIL'],
-                type: 'dnd',
-                config: {
-                    categories: [
-                        {
-                            id: '1',
-                            name: 'Marketing Campaigns',
-                            type: 'marketing',
-                            status: 'stop'
-                        }
-                    ]
-                },
-                isActive: true,
-                created_at: '2024-01-12T11:20:00Z',
-                updated_at: '2024-01-22T09:30:00Z'
-            },
-            {
-                id: 4,
-                name: 'VIP Customer Priority',
-                description: 'Priority handling for VIP customers',
-                channels: ['EMAIL', 'SMS', 'APP', 'USSD'],
-                type: 'vipList',
-                config: {
-                    action: 'include',
-                    vipLists: [],
-                    priority: 1
-                },
-                isActive: true,
-                created_at: '2024-01-08T14:15:00Z',
-                updated_at: '2024-01-25T10:45:00Z'
-            }
-        ];
+    private async request<T>(
+        endpoint: string,
+        options?: RequestInit
+    ): Promise<T> {
+        const url = `${this.baseUrl}${endpoint}`;
+        const headers = {
+            'Content-Type': 'application/json',
+            ...options?.headers,
+        };
+
+        const response = await fetchWithAuthInterceptor(url, {
+            ...options,
+            headers,
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(
+                errorData.error || errorData.message || `HTTP ${response.status}`
+            );
+        }
+
+        return response.json();
     }
 
     // Get all policies
-    getAllPolicies(): CommunicationPolicyConfiguration[] {
-        return [...this.policies];
+    async getAllPolicies(): Promise<CommunicationPolicyConfiguration[]> {
+        try {
+            const data = await this.request<ApiResponse<CommunicationPolicyConfiguration[]>>('');
+            if (data && Array.isArray(data.data)) {
+                this.policies = data.data;
+                this.notifySubscribers();
+                return data.data;
+            } else if (data && data.data) {
+                const policyArray = Array.isArray(data.data) ? data.data : [data.data];
+                this.policies = policyArray;
+                this.notifySubscribers();
+                return policyArray;
+            }
+        } catch (error) {
+            console.debug('Failed to fetch policies (endpoint may not exist yet):', error);
+        }
+        return [];
     }
 
     // Get active policies only
@@ -92,7 +64,21 @@ class CommunicationPolicyService {
     }
 
     // Create new policy
-    createPolicy(policyData: CreateCommunicationPolicyRequest): CommunicationPolicyConfiguration {
+    async createPolicy(policyData: CreateCommunicationPolicyRequest): Promise<CommunicationPolicyConfiguration> {
+        const data = await this.request<ApiResponse<CommunicationPolicyConfiguration>>('', {
+            method: 'POST',
+            body: JSON.stringify(policyData),
+        });
+        if (data && data.data) {
+            this.policies.push(data.data);
+            this.notifySubscribers();
+            return data.data;
+        }
+        throw new Error('Failed to create policy');
+    }
+
+    // Keeping the old synchronous method for backward compatibility
+    createPolicySync(policyData: CreateCommunicationPolicyRequest): CommunicationPolicyConfiguration {
         const newPolicy: CommunicationPolicyConfiguration = {
             id: Math.max(...this.policies.map(p => p.id), 0) + 1,
             ...policyData,
@@ -106,29 +92,33 @@ class CommunicationPolicyService {
         return newPolicy;
     }
 
-    // Update existing policy
-    updatePolicy(id: number, policyData: Partial<CreateCommunicationPolicyRequest>): CommunicationPolicyConfiguration | null {
-        const index = this.policies.findIndex(policy => policy.id === id);
-        if (index === -1) return null;
-
-        this.policies[index] = {
-            ...this.policies[index],
-            ...policyData,
-            updated_at: new Date().toISOString()
-        };
-
-        this.notifySubscribers();
-        return this.policies[index];
+    // Update existing policy (async - hits API)
+    async updatePolicy(id: number, policyData: Partial<CreateCommunicationPolicyRequest>): Promise<CommunicationPolicyConfiguration> {
+        const data = await this.request<ApiResponse<CommunicationPolicyConfiguration>>(`/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(policyData),
+        });
+        if (data && data.data) {
+            const index = this.policies.findIndex(p => p.id === id);
+            if (index !== -1) {
+                this.policies[index] = data.data;
+                this.notifySubscribers();
+            }
+            return data.data;
+        }
+        throw new Error('Failed to update policy');
     }
 
-    // Delete policy
-    deletePolicy(id: number): boolean {
-        const index = this.policies.findIndex(policy => policy.id === id);
-        if (index === -1) return false;
-
-        this.policies.splice(index, 1);
-        this.notifySubscribers();
-        return true;
+    // Delete policy (async - hits API)
+    async deletePolicy(id: number): Promise<void> {
+        await this.request<void>(`/${id}`, {
+            method: 'DELETE',
+        });
+        const index = this.policies.findIndex(p => p.id === id);
+        if (index !== -1) {
+            this.policies.splice(index, 1);
+            this.notifySubscribers();
+        }
     }
 
     // Subscribe to policy changes

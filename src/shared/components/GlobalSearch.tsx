@@ -166,15 +166,6 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
           navigationPath: "/dashboard/communication-channels",
         },
         {
-          id: "routes",
-          name: "Routes",
-          description: "Manage routes across all communication channels",
-          type: "campaign",
-          category: "Campaign Configuration",
-          status: "active",
-          navigationPath: "/dashboard/routes",
-        },
-        {
           id: "campaign-objectives",
           name: "Campaign Objectives",
           description: "Define and manage your campaign objectives",

@@ -313,9 +313,8 @@ export default function CustomersPage() {
         setIsLoading(true);
         setError("");
         const response = await customerService.searchCustomers({
-          search: debouncedSearchTerm,
+          msisdn: debouncedSearchTerm,
           limit: 100,
-          skipCache: true,
         });
 
         if (response.success && response.data && Array.isArray(response.data)) {

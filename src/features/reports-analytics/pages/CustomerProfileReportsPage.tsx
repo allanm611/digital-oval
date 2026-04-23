@@ -985,7 +985,7 @@ export default function CustomerProfileReportsPage() {
       try {
         setIsSearchingTable(true);
         const response = await customerService.searchCustomers({
-          search: debouncedTableSearchTerm,
+          msisdn: debouncedTableSearchTerm,
           limit: 100,
           offset: 0,
         });

@@ -14,7 +14,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import TypeSelector from "../../../shared/components/TypeSelector";
 import CreateProductTypeModal from "./CreateProductTypeModal";
 import Input from "../../../shared/components/ui/Input";
-import { TypeConfigurationItem } from "../../../shared/components/TypeConfigurationPage";
+import { ConfigurationItem } from "../../configurations/components/ConfigurationManager";
 import { tw, color, zIndex, getButtonStyles, button } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useConfigurationData } from "../../../shared/services/configurationDataService";
