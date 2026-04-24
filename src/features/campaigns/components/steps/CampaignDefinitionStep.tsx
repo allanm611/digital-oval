@@ -26,7 +26,6 @@ import ConfigurationModal from "../../../configurations/components/Configuration
 import {
   getCampaignObjectivesApiConfig,
   getLineOfBusinessConfig,
-  getCommunicationPoliciesApiConfig,
 } from "../../../configurations/configs/configurationPageConfigs";
 
 interface CampaignDefinitionStepProps {
@@ -392,10 +391,10 @@ export default function CampaignDefinitionStep({
     }
   };
 
-  const handleSavePolicy = async (formData: Record<string, any>) => {
+  const handleSavePolicy = async (policyData: any) => {
     try {
       setIsCreatingPolicy(true);
-      const newPolicy = await createPolicy(formData);
+      const newPolicy = await communicationPolicyService.createPolicy(policyData);
 
       // Select the newly created policy
       setSelectedPolicy(newPolicy as CommunicationPolicyConfiguration);
@@ -1595,10 +1594,9 @@ export default function CampaignDefinitionStep({
         isSaving={isCreatingLineOfBusiness}
       />
 
-      <ConfigurationModal
+      <CommunicationPolicyModal
         isOpen={showCreatePolicyModal}
         onClose={() => setShowCreatePolicyModal(false)}
-        config={getCommunicationPoliciesApiConfig(tLanguage)}
         onSave={handleSavePolicy}
         isSaving={isCreatingPolicy}
       />

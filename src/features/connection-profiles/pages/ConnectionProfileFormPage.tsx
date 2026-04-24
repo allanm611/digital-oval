@@ -4,7 +4,9 @@ import { Save } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import { connectionProfileService } from "../services/connectionProfileService";
+import { dataConnectorService } from "../../data-connectors/services/dataConnectorService";
 import { serverService } from "../../servers/services/serverService";
+import { DataConnectorType } from "../../data-connectors/types/dataConnector";
 import { ServerType } from "../../servers/types/server";
 import {
   ConnectionProfileType,
@@ -24,10 +26,19 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw } from "../../../shared/utils/utils";
 import {
-  CONNECTION_TYPE_OPTIONS,
   DATABASE_TYPE_OPTIONS,
 } from "../constants/connectionTypes";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import {
+  APIConfig,
+  JDBCConfig,
+  KafkaConfig,
+  WebSocketConfig,
+  TCPConfig,
+  FilesConfig,
+  SMSInboxConfig,
+  ConfigComponentProps,
+} from "../../../shared/components/ConnectorConfigComponents";
 
 interface ConnectionProfileFormPageProps {
   mode: "create" | "edit";
@@ -36,6 +47,19 @@ interface ConnectionProfileFormPageProps {
   onCancel?: () => void;
 }
 
+// Helper to convert formData format to config format and back
+const createConfigAdapter = (formData: any, setFormData: (data: any) => void) => ({
+  config: formData.metadata || {},
+  updateConfiguration: (key: string, value: any) => {
+    setFormData({
+      ...formData,
+      metadata: { ...(formData.metadata || {}), [key]: value },
+    });
+  },
+});
+
+// Note: The configuration field components below have been replaced by shared components
+// that are imported from ConnectorConfigComponents.tsx to avoid duplication
 export default function ConnectionProfileFormPage({
   mode,
   defaultConnectionType,
@@ -54,6 +78,9 @@ export default function ConnectionProfileFormPage({
   const [servers, setServers] = useState<ServerType[]>([]);
   const [loadingServers, setLoadingServers] = useState(false);
   const [serversError, setServersError] = useState<string | null>(null);
+  const [connectorTypes, setConnectorTypes] = useState<DataConnectorType[]>([]);
+  const [loadingConnectorTypes, setLoadingConnectorTypes] = useState(true);
+  const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
 
   const [formData, setFormData] = useState<
     CreateConnectionProfilePayload & {
@@ -89,6 +116,10 @@ export default function ConnectionProfileFormPage({
     encryption_key_version: undefined,
     metadata: "",
   });
+
+  const togglePasswordVisibility = useCallback((field: string) => {
+    setShowPasswords((prev) => ({ ...prev, [field]: !prev[field] }));
+  }, []);
 
   const ensureUniqueIdentifiers = async () => {
     // Note: Backend doesn't have /name/{name} or /code/{code} endpoints
@@ -176,6 +207,23 @@ export default function ConnectionProfileFormPage({
     };
 
     loadServers();
+  }, []);
+
+  useEffect(() => {
+    const loadConnectorTypes = async () => {
+      try {
+        setLoadingConnectorTypes(true);
+        const types = await dataConnectorService.getAvailableConnectorTypes();
+        setConnectorTypes(types);
+      } catch (err) {
+        console.error("Failed to load connector types:", err);
+        setConnectorTypes([]);
+      } finally {
+        setLoadingConnectorTypes(false);
+      }
+    };
+
+    loadConnectorTypes();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -333,38 +381,49 @@ export default function ConnectionProfileFormPage({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Connection Type *
               </label>
-              <HeadlessSelect
-                options={CONNECTION_TYPE_OPTIONS}
-                value={formData.connection_type}
-                onChange={(value) =>
-                  setFormData({
-                    ...formData,
-                    connection_type: (value ||
-                      "database") as ConnectionTypeEnum,
-                  })
-                }
-              />
-            </div>
-            {formData.connection_type === "database" && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Database Type
-                </label>
+              {loadingConnectorTypes ? (
+                <div className="text-sm text-gray-500 py-2">
+                  Loading connection types...
+                </div>
+              ) : (
                 <HeadlessSelect
-                  options={DATABASE_TYPE_OPTIONS.map((opt) => ({
-                    value: opt.value,
-                    label: opt.label,
+                  options={connectorTypes.map((type) => ({
+                    value: type,
+                    label: type.charAt(0).toUpperCase() + type.slice(1).replace(/_/g, " "),
                   }))}
-                  value={formData.database_type || ""}
+                  value={formData.connection_type}
                   onChange={(value) =>
                     setFormData({
                       ...formData,
-                      database_type: (value as DatabaseTypeEnum) || undefined,
+                      connection_type: (value ||
+                        "database") as ConnectionTypeEnum,
                     })
                   }
-                  placeholder="Select database type..."
                 />
-              </div>
+              )}
+            </div>
+            {formData.connection_type === "database" && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Database Type
+                  </label>
+                  <HeadlessSelect
+                    options={DATABASE_TYPE_OPTIONS.map((opt) => ({
+                      value: opt.value,
+                      label: opt.label,
+                    }))}
+                    value={formData.database_type || ""}
+                    onChange={(value) =>
+                      setFormData({
+                        ...formData,
+                        database_type: (value as DatabaseTypeEnum) || undefined,
+                      })
+                    }
+                    placeholder="Select database type..."
+                  />
+                </div>
+              </>
             )}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -482,6 +541,111 @@ export default function ConnectionProfileFormPage({
             )}
           </div>
         </div>
+
+        {/* Connection Type Specific Configuration */}
+        {(formData.connection_type === "api" ||
+          formData.connection_type === "kafka" ||
+          formData.connection_type === "websocket" ||
+          formData.connection_type === "tcp" ||
+          formData.connection_type === "jdbc" ||
+          formData.connection_type === "sms_inbox" ||
+          formData.connection_type === "files") && (
+          <div
+            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          >
+            {formData.connection_type === "api" && (
+              <APIConfig
+                config={formData.metadata || {}}
+                updateConfiguration={(key, value) =>
+                  setFormData({
+                    ...formData,
+                    metadata: { ...(formData.metadata || {}), [key]: value },
+                  })
+                }
+                showPasswords={showPasswords}
+                togglePasswordVisibility={togglePasswordVisibility}
+              />
+            )}
+            {formData.connection_type === "kafka" && (
+              <KafkaConfig
+                config={formData.metadata || {}}
+                updateConfiguration={(key, value) =>
+                  setFormData({
+                    ...formData,
+                    metadata: { ...(formData.metadata || {}), [key]: value },
+                  })
+                }
+                showPasswords={showPasswords}
+                togglePasswordVisibility={togglePasswordVisibility}
+              />
+            )}
+            {formData.connection_type === "websocket" && (
+              <WebSocketConfig
+                config={formData.metadata || {}}
+                updateConfiguration={(key, value) =>
+                  setFormData({
+                    ...formData,
+                    metadata: { ...(formData.metadata || {}), [key]: value },
+                  })
+                }
+                showPasswords={showPasswords}
+                togglePasswordVisibility={togglePasswordVisibility}
+              />
+            )}
+            {formData.connection_type === "tcp" && (
+              <TCPConfig
+                config={formData.metadata || {}}
+                updateConfiguration={(key, value) =>
+                  setFormData({
+                    ...formData,
+                    metadata: { ...(formData.metadata || {}), [key]: value },
+                  })
+                }
+                showPasswords={showPasswords}
+                togglePasswordVisibility={togglePasswordVisibility}
+              />
+            )}
+            {formData.connection_type === "jdbc" && (
+              <JDBCConfig
+                config={formData.metadata || {}}
+                updateConfiguration={(key, value) =>
+                  setFormData({
+                    ...formData,
+                    metadata: { ...(formData.metadata || {}), [key]: value },
+                  })
+                }
+                showPasswords={showPasswords}
+                togglePasswordVisibility={togglePasswordVisibility}
+              />
+            )}
+            {formData.connection_type === "sms_inbox" && (
+              <SMSInboxConfig
+                config={formData.metadata || {}}
+                updateConfiguration={(key, value) =>
+                  setFormData({
+                    ...formData,
+                    metadata: { ...(formData.metadata || {}), [key]: value },
+                  })
+                }
+                showPasswords={showPasswords}
+                togglePasswordVisibility={togglePasswordVisibility}
+              />
+            )}
+            {formData.connection_type === "files" && (
+              <FilesConfig
+                config={formData.metadata || {}}
+                updateConfiguration={(key, value) =>
+                  setFormData({
+                    ...formData,
+                    metadata: { ...(formData.metadata || {}), [key]: value },
+                  })
+                }
+                showPasswords={showPasswords}
+                togglePasswordVisibility={togglePasswordVisibility}
+              />
+            )}
+          </div>
+        )}
 
         <div
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}

@@ -105,11 +105,12 @@ export interface DataConnector {
   name: string;
   type: DataConnectorType;
   description: string;
-  icon: string; 
+  icon: string;
   color: string;
   is_active: boolean;
-  last_used?: string; 
+  last_used?: string;
   connection_count?: number;
+  connection_profile_id?: number;
   created_at: string;
   updated_at: string;
   created_by?: string;
@@ -158,6 +159,7 @@ export interface CreateDataConnectorRequest {
   name: string;
   type: DataConnectorType;
   description?: string;
+  connection_profile_id: number;
   configuration?: DataConnectorConfiguration;
   metadata?: Record<string, any>;
 }
@@ -166,6 +168,7 @@ export interface UpdateDataConnectorRequest {
   name?: string;
   description?: string;
   is_active?: boolean;
+  connection_profile_id: number;
   configuration?: DataConnectorConfiguration;
   metadata?: Record<string, any>;
 }

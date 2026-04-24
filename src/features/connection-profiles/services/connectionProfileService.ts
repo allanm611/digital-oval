@@ -474,6 +474,46 @@ class ConnectionProfileService {
     const endpoint = this.withSkipCache(`/${id}/is-valid`, skipCache);
     return this.request<ConnectionProfileValidityResponse>(endpoint);
   }
+
+  // ========= Test Connection =========
+
+  async testConnectionProfile(id: number): Promise<any> {
+    try {
+      const response = await this.request<any>(`/${id}/test-connection`, {
+        method: "POST",
+      });
+      return response;
+    } catch (error) {
+      console.error("Failed to test connection profile:", error);
+      return {
+        success: false,
+        message: "Connection test failed",
+        error_details: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  }
+
+  // ========= Data Connector Relationship =========
+
+  async getProfilesByDataConnector(
+    dataConnectorId: string,
+    skipCache?: boolean
+  ): Promise<ConnectionProfileType[]> {
+    const endpoint = this.withSkipCache(
+      `/data-connector/${encodeURIComponent(dataConnectorId)}`,
+      skipCache
+    );
+    try {
+      const response = await this.request<unknown>(endpoint);
+      return this.unwrapData<ConnectionProfileType[]>(response);
+    } catch (error) {
+      console.error(
+        "Failed to fetch connection profiles for data connector:",
+        error
+      );
+      return [];
+    }
+  }
 }
 
 export const connectionProfileService = new ConnectionProfileService();

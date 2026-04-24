@@ -183,13 +183,22 @@ export default function SegmentConditionsBuilder({
       const groupConditions: any[] = [];
 
       for (const condition of group.conditions) {
-        // Include all profile-type conditions (360_profile, revenue_metric_kpi, usage_metric_kpi)
+        console.log("Processing condition for preview:", {
+          field_name: condition.field_name,
+          operator: condition.operator,
+          operator_id: condition.operator_id,
+          value: condition.value,
+          start_date: condition.start_date,
+          end_date: condition.end_date,
+        });
+
+        // Include all profile-type conditions (customer_identity, revenue_metric, usage_metric, kpi)
         // These become WHERE conditions in layer_filters
         // Segment/list conditions are handled above as joined layers (source_layers index 1+)
         if (
           condition &&
           condition.conditionType &&
-          ["360_profile", "revenue_metric_kpi", "usage_metric_kpi"].includes(condition.conditionType) &&
+          ["customer_identity", "revenue_metric", "usage_metric", "kpi"].includes(condition.conditionType) &&
           condition.field_id &&
           condition.field_name &&
           condition.operator_id !== undefined &&
@@ -199,9 +208,12 @@ export default function SegmentConditionsBuilder({
             ? (condition.value as (string | number)[]).length > 0
             : condition.value !== "" && condition.value !== undefined && condition.value !== null;
           const hasDateRange = (condition.start_date && condition.start_date !== "") || (condition.end_date && condition.end_date !== "");
-          const isNullOp = condition.operator_id === 13 || condition.operator_id === 14;
+          const isDateOperator = ["on_date", "since_date", "until_date", "between_dates"].includes(condition.operator?.toLowerCase() || "");
+          const isNullOp = (condition.operator_id === 13 || condition.operator_id === 14) && !isDateOperator;
 
+          console.log("Condition check:", { hasValue, hasDateRange, isNullOp, conditionType: condition.conditionType });
           if (!hasValue && !hasDateRange && !isNullOp) {
+            console.log("⏭️ Skipping condition - no value, no date range, not null op");
             continue;
           }
 
@@ -235,8 +247,11 @@ export default function SegmentConditionsBuilder({
                     start_date: condition.start_date || null,
                     end_date: condition.end_date || null,
                   }
-                : { value: condValue || undefined }),
+                : isDateOperator && hasValue
+                  ? { value: condValue || undefined } // Date operators with values
+                  : { value: condValue || undefined }),
           };
+          console.log("Built layer condition:", layerCond);
           groupConditions.push(layerCond);
         }
       }
@@ -294,9 +309,10 @@ export default function SegmentConditionsBuilder({
         .flatMap((group) =>
           group.conditions.filter((c) =>
             [
-              "360_profile",
-              "revenue_metric_kpi",
-              "usage_metric_kpi",
+              "customer_identity",
+              "revenue_metric",
+              "usage_metric",
+              "kpi",
               "segment",
               "list",
             ].includes(c.conditionType)
@@ -311,8 +327,11 @@ export default function SegmentConditionsBuilder({
       }
 
       const payload = buildPreviewPayload(conditions);
+      console.log("Preview Payload:", JSON.stringify(payload, null, 2));
+      console.log("Conditions being sent:", JSON.stringify(conditions, null, 2));
 
       const response = await segmentService.generateSegmentQueryPreview(payload);
+      console.log("Preview Response:", response);
 
       if (response?.data?.segment_query) {
         setPreviewQuery(response.data.segment_query);
@@ -414,7 +433,7 @@ export default function SegmentConditionsBuilder({
   // Get icon for condition type (using theme colors only)
   const getConditionTypeIcon = (type: string) => {
     switch (type) {
-      case "360_profile":
+      case "customer_identity":
         return User;
       case "segment":
         return Users;
@@ -422,13 +441,48 @@ export default function SegmentConditionsBuilder({
         return List;
       case "system_event":
         return Zap;
-      case "revenue_metric_kpi":
+      case "revenue_metric":
         return DollarSign;
-      case "usage_metric_kpi":
+      case "usage_metric":
+        return Activity;
+      case "kpi":
         return Activity;
       default:
         return User;
     }
+  };
+
+  // Get subcategory options for KPI condition types from actual KPI data
+  const getKPISubcategoryOptions = (conditionType: string) => {
+    let categoryName: string | undefined;
+    if (conditionType === "revenue_metric") {
+      categoryName = "Revenue Metric";
+    } else if (conditionType === "usage_metric") {
+      categoryName = "Usage Metric";
+    } else if (conditionType === "kpi") {
+      categoryName = "System Event";
+    }
+
+    if (!categoryName) return undefined;
+
+    const subcategories = Array.from(
+      new Set(
+        allKPIs
+          .filter((kpi) => kpi.category === categoryName)
+          .map((kpi) => kpi.subcategory)
+          .filter((sc) => sc !== undefined) as string[]
+      )
+    ).sort();
+
+    if (subcategories.length === 0) return undefined;
+
+    return [
+      { value: "all", label: `All ${categoryName}` },
+      ...subcategories.map((sc) => ({
+        value: sc,
+        label: sc.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" "),
+      })),
+    ];
   };
 
   // Load segmentation fields from backend
@@ -503,7 +557,7 @@ export default function SegmentConditionsBuilder({
       conditions: [
         {
           id: generateId(),
-          conditionType: "360_profile",
+          conditionType: "customer_identity",
           category: categoryId,
           subcategory_id: selectedSubcategoryId,
           subcategory_name: selectedSubcategoryName,
@@ -570,7 +624,7 @@ export default function SegmentConditionsBuilder({
 
     const newCondition: SegmentCondition = {
       id: generateId(),
-      conditionType: "360_profile",
+      conditionType: "customer_identity",
       category: categoryId,
       subcategory_id: selectedSubcategoryId,
       subcategory_name: selectedSubcategoryName,
@@ -665,11 +719,11 @@ export default function SegmentConditionsBuilder({
       type: SegmentCondition["conditionType"];
     }[] = [];
 
-    // Add field categories (360_profile)
+    // Add field categories (customer_identity)
     const categoriesArray = Array.isArray(categories) ? categories : [];
     categoriesArray.forEach((cat) => {
       // Determine condition type based on category value
-      let condType: SegmentCondition["conditionType"] = "360_profile";
+      let condType: SegmentCondition["conditionType"] = "customer_identity";
       if (cat.value === "segments") {
         condType = "segment";
       } else if (cat.value === "quicklists") {
@@ -690,23 +744,31 @@ export default function SegmentConditionsBuilder({
       type: "system_event",
     });
 
+    // Add KPI option
+    options.push({
+      value: "kpi",
+      label: "KPI",
+      type: "kpi",
+    });
+
     return options;
   };
 
   // Render condition based on type
   const renderLine1Fields = (groupId: string, condition: SegmentCondition) => {
     switch (condition.conditionType) {
-      case "360_profile":
-        return render360ProfileLine1Fields(groupId, condition);
+      case "customer_identity":
+        return renderCustomerIdentityLine1Fields(groupId, condition);
       case "segment":
         return renderSegmentLine1Fields(groupId, condition);
       case "list":
         return renderListLine1Fields(groupId, condition);
       case "system_event":
         return renderSystemEventLine1Fields(groupId, condition);
-      case "revenue_metric_kpi":
-      case "usage_metric_kpi":
-        return renderKPILine1Fields(groupId, condition);
+      case "revenue_metric":
+      case "usage_metric":
+      case "kpi":
+        return renderMetricsLine1Fields(groupId, condition);
       default:
         return null;
     }
@@ -714,24 +776,25 @@ export default function SegmentConditionsBuilder({
 
   const renderLine2Fields = (groupId: string, condition: SegmentCondition) => {
     switch (condition.conditionType) {
-      case "360_profile":
-        return render360ProfileLine2Fields(groupId, condition);
+      case "customer_identity":
+        return renderCustomerIdentityLine2Fields(groupId, condition);
       case "segment":
         return renderSegmentLine2Fields(groupId, condition);
       case "list":
         return renderListLine2Fields(groupId, condition);
       case "system_event":
         return renderSystemEventLine2Fields(groupId, condition);
-      case "revenue_metric_kpi":
-      case "usage_metric_kpi":
-        return renderKPILine2Fields(groupId, condition);
+      case "revenue_metric":
+      case "usage_metric":
+      case "kpi":
+        return renderMetricsLine2Fields(groupId, condition);
       default:
         return null;
     }
   };
 
   // Render 360 Profile condition fields - Line 1 (Field + Operator on same line)
-  const render360ProfileLine1Fields = (
+  const renderCustomerIdentityLine1Fields = (
     groupId: string,
     condition: SegmentCondition,
   ) => {
@@ -945,13 +1008,26 @@ export default function SegmentConditionsBuilder({
                     value={`${condition.operator}|${condition.operator_id}`}
                     onChange={(value) => {
                       const [operator, operatorId] = (value as string).split("|");
-                      updateCondition(groupId, condition.id, {
+                      const updates: Partial<SegmentCondition> = {
                         operator: operator as SegmentCondition["operator"],
                         operator_id: operatorId ? parseInt(operatorId) : undefined,
                         value: "",
                         start_date: undefined,
                         end_date: undefined,
-                      });
+                      };
+
+                      // Auto-populate dates for between_dates operator
+                      if (operator === "between_dates") {
+                        const today = new Date();
+                        const thirtyDaysAgo = new Date(today);
+                        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+                        updates.start_date = thirtyDaysAgo.toISOString().split('T')[0] + "T00:00:00Z";
+                        updates.end_date = today.toISOString().split('T')[0] + "T23:59:59Z";
+                        console.log("Customer Identity between_dates - Auto-populated:", updates);
+                      }
+
+                      updateCondition(groupId, condition.id, updates);
                     }}
                     className="text-sm"
                     zIndex={zIndex.popover}
@@ -997,7 +1073,7 @@ export default function SegmentConditionsBuilder({
   };
 
   // Render 360 Profile condition fields - Line 2 (Value Input - Conditional based on operator)
-  const render360ProfileLine2Fields = (
+  const renderCustomerIdentityLine2Fields = (
     groupId: string,
     condition: SegmentCondition,
   ) => {
@@ -1872,9 +1948,26 @@ export default function SegmentConditionsBuilder({
                 options={availableOperators}
                 value={condition.operator || ""}
                 onChange={(value) => {
+                  const today = new Date().toISOString().split('T')[0];
+                  const thirtyDaysAgo = new Date();
+                  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                  const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
+
+                  let defaultValue: any = "";
+                  if (value === "on_date") {
+                    defaultValue = today;
+                  } else if (value === "between_dates") {
+                    defaultValue = { start: thirtyDaysAgoStr, end: today };
+                  } else if (value === "since_date") {
+                    defaultValue = thirtyDaysAgoStr;
+                  } else if (value === "until_date") {
+                    defaultValue = today;
+                  }
+
+                  console.log("System Event operator changed to:", value, "default value:", defaultValue);
                   updateCondition(groupId, condition.id, {
                     operator: value as SystemEventTimeOperator,
-                    value: "",
+                    value: defaultValue,
                   });
                 }}
                 placeholder="Select time condition"
@@ -2010,7 +2103,7 @@ export default function SegmentConditionsBuilder({
   };
 
   // Render KPI condition fields
-  const renderKPILine1Fields = (
+  const renderMetricsLine1Fields = (
     groupId: string,
     condition: SegmentCondition,
   ) => {
@@ -2051,14 +2144,14 @@ export default function SegmentConditionsBuilder({
     );
   };
 
-  const renderKPILine2Fields = (
+  const renderMetricsLine2Fields = (
     groupId: string,
     condition: SegmentCondition,
   ) => {
     // For numeric KPI fields (Revenue, Usage), show dual operators
     const isNumericKPI =
-      condition.conditionType === "revenue_metric_kpi" ||
-      condition.conditionType === "usage_metric_kpi";
+      condition.conditionType === "revenue_metric" ||
+      condition.conditionType === "usage_metric";
 
     // Check if selected operator is a date operator (new date operators for numeric fields)
     const isDateOperator = ["on_date", "between_dates", "since_date", "until_date"].includes(
@@ -2091,16 +2184,38 @@ export default function SegmentConditionsBuilder({
                       //     .join(" "),
                       // }))}
                       options={[
-                        // TODO: Get KPI operators from backend
+                        // Numeric operators
                         { value: "equals", label: "Equals" },
                         { value: "greater_than", label: "Greater Than" },
                         { value: "less_than", label: "Less Than" },
-                      ]} // Temporary default options - should come from backend
+                        // Date operators
+                        { value: "on_date", label: "On Date" },
+                        { value: "between_dates", label: "Between Dates" },
+                        { value: "since_date", label: "Since Date" },
+                        { value: "until_date", label: "Until Date" },
+                      ]}
                       value={condition.operator}
                       onChange={(value) => {
+                        const today = new Date().toISOString().split('T')[0];
+                        const thirtyDaysAgo = new Date();
+                        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                        const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
+
+                        let defaultValue: any = "";
+                        if (value === "on_date") {
+                          defaultValue = today;
+                        } else if (value === "between_dates") {
+                          defaultValue = `${thirtyDaysAgoStr},${today}`;
+                        } else if (value === "since_date") {
+                          defaultValue = thirtyDaysAgoStr;
+                        } else if (value === "until_date") {
+                          defaultValue = today;
+                        }
+
+                        console.log("KPI/Metrics operator changed to:", value, "default value:", defaultValue);
                         updateCondition(groupId, condition.id, {
                           operator: value as SegmentCondition["operator"],
-                          value: "",
+                          value: defaultValue,
                           start_date: undefined,
                           end_date: undefined,
                         });
@@ -2739,8 +2854,8 @@ export default function SegmentConditionsBuilder({
                                 label: opt.label,
                               }))}
                               value={
-                                condition.conditionType === "360_profile"
-                                  ? `360_profile:${condition.category}`
+                                condition.conditionType === "customer_identity"
+                                  ? `customer_identity:${condition.category}`
                                   : condition.conditionType === "segment" || condition.conditionType === "list"
                                     ? `${condition.conditionType}:${condition.category}`
                                     : condition.conditionType
@@ -2758,7 +2873,7 @@ export default function SegmentConditionsBuilder({
                                 );
 
                                 // Reset condition based on type
-                                if (condType === "360_profile") {
+                                if (condType === "customer_identity") {
                                   const fieldsArray = Array.isArray(allFields)
                                     ? allFields
                                     : [];
@@ -2878,6 +2993,12 @@ export default function SegmentConditionsBuilder({
                                     kpi_name: undefined,
                                     kpi_category: undefined,
                                   });
+                                  setCurrentEditingCondition({ groupId: group.id, conditionId: condition.id });
+                                  setIsSystemEventModalOpen(true);
+                                } else if (condType === "revenue_metric" || condType === "usage_metric" || condType === "kpi") {
+                                  setCurrentEditingCondition({ groupId: group.id, conditionId: condition.id });
+                                  setCurrentKPIModalType(condType as KPIConditionType);
+                                  setIsKPIModalOpen(true);
                                 }
                               }}
                               placeholder="Select data source"
@@ -2887,13 +3008,13 @@ export default function SegmentConditionsBuilder({
                         </div>
                       </div>
 
-                      {/* Render Line 1 Fields (Category, Field for 360_profile, etc.) */}
+                      {/* Render Line 1 Fields (Category, Field for customer_identity, etc.) */}
                       {renderLine1Fields(group.id, condition)}
                     </div>
 
                     {/* Line 2: Operator + Value + Remove */}
                     <div className="flex items-center gap-3">
-                      {/* Render Line 2 Fields (Operator, Value for 360_profile, etc.) */}
+                      {/* Render Line 2 Fields (Operator, Value for customer_identity, etc.) */}
                       {renderLine2Fields(group.id, condition)}
 
                       {/* Remove Condition - Only show if more than one condition */}
@@ -3144,28 +3265,8 @@ export default function SegmentConditionsBuilder({
           }
           title={KPI_CONDITION_CONFIG[currentKPIModalType].kpiCategory}
           searchPlaceholder={`Search ${KPI_CONDITION_CONFIG[currentKPIModalType].kpiCategory.toLowerCase()}...`}
-          hasSubcategories={true}
-          subcategoryOptions={
-            currentKPIModalType === "revenue_metric_kpi"
-              ? [
-                  { value: "all", label: "All Revenue Metrics" },
-                  { value: "data_revenue", label: "Data Revenue" },
-                  { value: "voice_revenue", label: "Voice Revenue" },
-                  { value: "sms_revenue", label: "SMS Revenue" },
-                  { value: "bundle_revenue", label: "Bundle Revenue" },
-                  { value: "other_revenue", label: "Other Revenue" },
-                ]
-              : currentKPIModalType === "usage_metric_kpi"
-                ? [
-                    { value: "all", label: "All Usage Metrics" },
-                    { value: "data_usage", label: "Data Usage" },
-                    { value: "voice_usage", label: "Voice Usage" },
-                    { value: "sms_usage", label: "SMS Usage" },
-                    { value: "bundle_usage", label: "Bundle Usage" },
-                    { value: "dou_metrics", label: "DOU Metrics" },
-                  ]
-                : undefined
-          }
+          hasSubcategories={!!currentKPIModalType && !!getKPISubcategoryOptions(currentKPIModalType)}
+          subcategoryOptions={currentKPIModalType ? getKPISubcategoryOptions(currentKPIModalType) : undefined}
         />
       )}
 

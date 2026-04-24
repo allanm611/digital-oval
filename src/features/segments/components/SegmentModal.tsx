@@ -26,6 +26,7 @@ import CreateCategoryModal from "../../../shared/components/CreateCategoryModal"
 import CreateSegmentTypeModal from "./CreateSegmentTypeModal";
 import { customerIdentityService } from "../../customerIdentity/services/customerIdentityService";
 import { CustomerIdentityField } from "../../customerIdentity/types/customerIdentity";
+import { convertConditionsToPayload } from "../utils/conditionPayloadBuilder";
 
 interface SegmentModalProps {
   isOpen: boolean;
@@ -442,7 +443,7 @@ export default function SegmentModal({
         // Ensure we're storing field_value (might have "p_" prefix) and field_name separately
         const condition: SegmentCondition = {
           id: Math.random().toString(36).substr(2, 9),
-          conditionType: "360_profile",
+          conditionType: "customer_identity",
           field_name: matchedField?.field_name || fieldName,
           // Store the actual field_value from the matched field (this is what SegmentConditionsBuilder looks up)
           field:
@@ -464,7 +465,7 @@ export default function SegmentModal({
       if (conditionGroup.conditions.length > 0) {
         conditions.push(conditionGroup);
       } else {
-        // Even if no 360_profile conditions, create a group for segment/quicklist conditions
+        // Even if no customer_identity conditions, create a group for segment/quicklist conditions
         // This ensures segment/quicklist are in the same group context
       }
     }
@@ -619,9 +620,10 @@ export default function SegmentModal({
 
         // Handle filter-based conditions (go to layer 0)
         if (
-          (condition.conditionType === "360_profile" ||
-            condition.conditionType === "revenue_metric_kpi" ||
-            condition.conditionType === "usage_metric_kpi") &&
+          (condition.conditionType === "customer_identity" ||
+            condition.conditionType === "revenue_metric" ||
+            condition.conditionType === "usage_metric" ||
+            condition.conditionType === "kpi") &&
           condition.field_id &&
           condition.operator_id
         ) {
@@ -729,9 +731,10 @@ export default function SegmentModal({
       for (const condition of group.conditions) {
         // Skip non-filter conditions
         if (
-          (condition.conditionType === "360_profile" ||
-            condition.conditionType === "revenue_metric_kpi" ||
-            condition.conditionType === "usage_metric_kpi") &&
+          (condition.conditionType === "customer_identity" ||
+            condition.conditionType === "revenue_metric" ||
+            condition.conditionType === "usage_metric" ||
+            condition.conditionType === "kpi") &&
           condition.field_id &&
           condition.operator_id
         ) {
@@ -880,8 +883,8 @@ export default function SegmentModal({
     }
 
     try {
-      // Convert SegmentConditionGroup to SegmentPayload (v2.0 format)
-      const payload = convertConditionsToPayload(formData.conditions);
+      // Convert SegmentConditionGroup to SegmentPayload (v2.0 format) using shared utility
+      const payload = convertConditionsToPayload(formData.conditions, false);
 
       // Keep a copy of the payload for storage (without limit)
       const payloadForStorage = { ...payload };

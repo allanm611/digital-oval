@@ -4,10 +4,9 @@
  */
 
 export type KPIConditionType =
-  | "customer_profile_kpi"
-  | "revenue_metric_kpi"
-  | "usage_metric_kpi"
-  | "device_info_kpi";
+  | "revenue_metric"
+  | "usage_metric"
+  | "kpi";
 
 export interface KPIConditionConfig {
   conditionType: KPIConditionType;
@@ -25,33 +24,26 @@ export const KPI_CONDITION_CONFIG: Record<
   KPIConditionType,
   KPIConditionConfig
 > = {
-  customer_profile_kpi: {
-    conditionType: "customer_profile_kpi",
-    label: "Customer Profile KPI",
-    description: "Customer profile information metrics",
-    kpiCategory: "Customer Profile Info",
-    icon: "User",
-  },
-  revenue_metric_kpi: {
-    conditionType: "revenue_metric_kpi",
+  revenue_metric: {
+    conditionType: "revenue_metric" as KPIConditionType,
     label: "Revenue Metric",
     description: "Revenue and billing metrics",
     kpiCategory: "Revenue Metric",
     icon: "DollarSign",
   },
-  usage_metric_kpi: {
-    conditionType: "usage_metric_kpi",
+  usage_metric: {
+    conditionType: "usage_metric" as KPIConditionType,
     label: "Usage Metric",
     description: "Customer usage and activity metrics",
     kpiCategory: "Usage Metric",
     icon: "Activity",
   },
-  device_info_kpi: {
-    conditionType: "device_info_kpi",
-    label: "Device Info",
-    description: "Device and platform information",
-    kpiCategory: "Customer Device Info",
-    icon: "Smartphone",
+  kpi: {
+    conditionType: "kpi" as KPIConditionType,
+    label: "KPI",
+    description: "Key performance indicator metrics",
+    kpiCategory: "KPI",
+    icon: "Activity",
   },
 };
 

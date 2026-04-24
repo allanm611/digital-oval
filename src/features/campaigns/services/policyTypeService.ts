@@ -4,7 +4,7 @@ import { ConfigurationItem } from "../../../features/configurations/components/C
 import { buildApiUrl } from "../../../shared/services/api";
 
 class PolicyTypeService {
-  private baseUrl = buildApiUrl("/policies/types");
+  private baseUrl = buildApiUrl("/communication-policies/types");
 
   private async request<T>(
     endpoint: string,

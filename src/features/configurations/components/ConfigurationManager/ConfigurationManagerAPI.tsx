@@ -63,6 +63,8 @@ export default function ConfigurationManagerAPI({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ConfigurationItem | undefined>();
   const [isSaving, setIsSaving] = useState(false);
+  const [togglingItemId, setTogglingItemId] = useState<number | null>(null);
+  const [deletingItemId, setDeletingItemId] = useState<number | null>(null);
 
   // If hook returns null (shouldn't happen), show error
   if (!backendConfig) {
@@ -106,36 +108,49 @@ export default function ConfigurationManagerAPI({
 
     if (!confirmed) return;
 
+    setDeletingItemId(item.id as number);
     try {
       await deleteItem(item.id as number);
-      await refresh();
       showToast(
         config.deleteConfirmTitle,
         config.deleteSuccessMessage(item.name)
       );
+      await refresh();
     } catch (err) {
       console.error(`Error deleting ${config.entityName}:`, err);
-      showError(
-        t.genericConfig.error,
-        err instanceof Error ? err.message : config.deleteErrorMessage
-      );
+      const errorMsg = err instanceof Error ? err.message : config.deleteErrorMessage;
+      showError(t.genericConfig.error, errorMsg);
+      await refresh();
+    } finally {
+      setDeletingItemId(null);
     }
   };
 
   const handleToggleActive = async (item: ConfigurationItem) => {
+    const newActive = !(item.isActive ?? true);
+    setTogglingItemId(item.id as number);
+
     try {
-      setIsSaving(true);
-      const newActive = !(item.isActive ?? true);
+      // Optimistic update - update backend
       await update(item.id as number, { isActive: newActive });
+
+      // Refresh data to get updated state
       await refresh();
+
+      showToast(
+        newActive ? "Activated" : "Deactivated",
+        newActive
+          ? `${item.name} has been activated`
+          : `${item.name} has been deactivated`
+      );
     } catch (err) {
       console.error(`Error updating ${config.entityName}:`, err);
-      showError(
-        t.genericConfig.error,
-        err instanceof Error ? err.message : config.saveErrorMessage
-      );
+      const errorMsg = err instanceof Error ? err.message : config.saveErrorMessage;
+      showError(t.genericConfig.error, errorMsg);
+      // Refresh to revert optimistic update
+      await refresh();
     } finally {
-      setIsSaving(false);
+      setTogglingItemId(null);
     }
   };
 
@@ -344,54 +359,39 @@ export default function ConfigurationManagerAPI({
                         {config.enableActivateDeactivate && (
                           <button
                             onClick={() => handleToggleActive(item)}
-                            disabled={isSaving}
-                            className={`p-2 ${tw.rounded} transition-colors`}
-                            style={{
-                              color: item.isActive
-                                ? color.primary.action
-                                : "currentColor",
-                              backgroundColor: "transparent",
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = `${color.primary.action}10`;
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor =
-                                "transparent";
-                            }}
+                            disabled={togglingItemId === item.id}
+                            className={`p-2 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                            title={
+                              item.isActive
+                                ? `Deactivate ${item.name}`
+                                : `Activate ${item.name}`
+                            }
                           >
-                            {item.isActive ? (
-                              <Power className="w-4 h-4" />
+                            {togglingItemId === item.id ? (
+                              <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                            ) : item.isActive ? (
+                              <PowerOff className="w-4 h-4 text-orange-600" />
                             ) : (
-                              <PowerOff className="w-4 h-4" />
+                              <Power className="w-4 h-4 text-green-600" />
                             )}
                           </button>
                         )}
 
                         <button
                           onClick={() => handleEditItem(item)}
-                          disabled={isSaving}
-                          className={`p-2 ${tw.rounded} transition-colors`}
-                          style={{
-                            color: color.primary.action,
-                            backgroundColor: "transparent",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = `${color.primary.action}10`;
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor =
-                              "transparent";
-                          }}
+                          disabled={togglingItemId === item.id || deletingItemId === item.id}
+                          className={`p-2 ${tw.rounded} transition-colors hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed`}
+                          title={`Edit ${item.name}`}
                         >
-                          <Edit className="w-4 h-4" />
+                          <Edit className="w-4 h-4 text-gray-600" />
                         </button>
 
                         {!config.disableDelete && (
                           <button
                             onClick={() => handleDeleteItem(item)}
-                            disabled={isSaving}
-                            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
+                            disabled={togglingItemId === item.id || deletingItemId === item.id}
+                            className={`p-2 ${tw.rounded} transition-colors hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed`}
+                            title={`Delete ${item.name}`}
                           >
                             <Trash2 className="w-4 h-4 text-red-600" />
                           </button>

@@ -181,6 +181,7 @@ export default function DataConnectors() {
           name: formData.name.trim(),
           description: formData.description?.trim() || undefined,
           is_active: editingConnector.is_active, // keep unless you add toggle
+          connection_profile_id: formData.connection_profile_id,
           configuration: formData.configuration,
         };
 
@@ -203,6 +204,7 @@ export default function DataConnectors() {
           name: formData.name.trim(),
           type: formData.type,
           description: formData.description?.trim(),
+          connection_profile_id: formData.connection_profile_id,
           configuration: formData.configuration ?? {},
         };
 

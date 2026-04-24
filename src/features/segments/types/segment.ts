@@ -591,12 +591,13 @@ export enum ComputationStatusEnum {
 export interface SegmentCondition {
   id: string;
   conditionType:
-    | "360_profile"
+    | "customer_identity"
     | "segment"
     | "list"
     | "system_event"
-    | "revenue_metric_kpi"
-    | "usage_metric_kpi"; // Type of condition
+    | "revenue_metric"
+    | "usage_metric"
+    | "kpi"; // Type of condition
 
   // For 360 Profile conditions
   category?: number; // Category ID for filtering fields
@@ -675,7 +676,7 @@ export interface SegmentConditionGroup {
   id: string;
   operator: "AND" | "OR"; // Operator within conditions in this group
   groupOperator?: "AND" | "OR"; // Operator between this group and the next
-  conditions: SegmentCondition[]; // Each condition can have its own type (360_profile, segment, or list)
+  conditions: SegmentCondition[]; // Each condition can have its own type (customer_identity, segment, list, system_event, revenue_metric, usage_metric, kpi)
 }
 
 // Legacy aliases for backward compatibility

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -18,6 +18,8 @@ import {
   DataConnectorFormData,
 } from "../types/dataConnector";
 import { dataConnectorService } from "../services/dataConnectorService";
+import { connectionProfileService } from "../../connection-profiles/services/connectionProfileService";
+import { ConnectionProfileType } from "../../connection-profiles/types/connectionProfile";
 import { useToast } from "../../../contexts/ToastContext";
 import { tw, color, button } from "../../../shared/utils/utils";
 import ConnectorConfigDisplay from "../components/ConnectorConfigDisplay";
@@ -36,12 +38,16 @@ export default function DataConnectorDetailsPage() {
   );
   const [loading, setLoading] = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  // const [testResult, setTestResult] = useState<ConnectionTestResult | null>(
-  //   null,
-  // );
-  // const [isTesting, setIsTesting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [connectionProfiles, setConnectionProfiles] = useState<
+    ConnectionProfileType[]
+  >([]);
+  const [loadingProfiles, setLoadingProfiles] = useState(false);
+  const [testingProfileId, setTestingProfileId] = useState<number | null>(null);
+  const [testResults, setTestResults] = useState<
+    Record<number, ConnectionTestResult>
+  >({});
 
   const loadConnector = useCallback(async () => {
     if (!id) return;
@@ -57,6 +63,24 @@ export default function DataConnectorDetailsPage() {
       }
 
       setConnector(data);
+
+      // Fetch the connection profile attached to this connector using its connection_profile_id
+      setLoadingProfiles(true);
+      try {
+        if (data.connection_profile_id) {
+          const profile = await connectionProfileService.getProfile(
+            data.connection_profile_id,
+            true
+          );
+          setConnectionProfiles([profile]);
+        } else {
+          setConnectionProfiles([]);
+        }
+      } catch (profileError) {
+        console.error("Failed to fetch connection profile:", profileError);
+        // Don't fail the whole page load if profile can't be fetched
+        setConnectionProfiles([]);
+      }
     } catch (err) {
       console.error("Failed to load data connector:", err);
       showError(
@@ -65,6 +89,7 @@ export default function DataConnectorDetailsPage() {
       );
     } finally {
       setLoading(false);
+      setLoadingProfiles(false);
     }
   }, [id, navigate, showError]);
 
@@ -98,6 +123,32 @@ export default function DataConnectorDetailsPage() {
   //   }
   // };
 
+  const handleTestProfile = async (profileId: number) => {
+    try {
+      setTestingProfileId(profileId);
+      const result = await connectionProfileService.testConnectionProfile(
+        profileId,
+      );
+      setTestResults((prev) => ({ ...prev, [profileId]: result }));
+
+      if (result.success) {
+        success("Connection OK", result.message);
+      } else {
+        showError("Connection failed", result.message);
+      }
+    } catch (err: any) {
+      const errorResult = {
+        success: false,
+        message: "Test failed",
+        error_details: err.message || "Connection test error",
+      };
+      setTestResults((prev) => ({ ...prev, [profileId]: errorResult }));
+      showError("Test failed", err.message || "Connection test error");
+    } finally {
+      setTestingProfileId(null);
+    }
+  };
+
   const confirmDelete = async () => {
     if (!connector) return;
 
@@ -121,10 +172,17 @@ export default function DataConnectorDetailsPage() {
     if (!connector) return;
 
     try {
+      // Get connection_profile_id from form or from the first attached profile
+      let profileId = formData.connection_profile_id;
+      if (!profileId && connectionProfiles.length > 0) {
+        profileId = connectionProfiles[0].id;
+      }
+
       const payload: UpdateDataConnectorRequest = {
         name: formData.name.trim(),
         description: formData.description?.trim(),
         is_active: connector.is_active,
+        connection_profile_id: profileId,
         configuration: formData.configuration,
       };
 
@@ -418,6 +476,146 @@ export default function DataConnectorDetailsPage() {
               Configuration
             </h3>
             <ConnectorConfigDisplay connector={connector} isEditMode={false} />
+          </div>
+
+          {/* Connection Profiles */}
+          <div>
+            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
+              Connection Profiles
+            </h3>
+            {loadingProfiles ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
+              </div>
+            ) : connectionProfiles.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table
+                  className="w-full"
+                  style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+                >
+                  <thead style={{ background: color.surface.tableHeader }}>
+                    <tr>
+                      <th
+                        className="px-6 py-4 text-left text-xs sm:text-sm font-medium uppercase tracking-wider"
+                        style={{ color: color.surface.tableHeaderText }}
+                      >
+                        Name
+                      </th>
+                      <th
+                        className="px-6 py-4 text-left text-xs sm:text-sm font-medium uppercase tracking-wider"
+                        style={{ color: color.surface.tableHeaderText }}
+                      >
+                        ID
+                      </th>
+                      <th
+                        className="px-6 py-4 text-center text-xs sm:text-sm font-medium uppercase tracking-wider"
+                        style={{ color: color.surface.tableHeaderText }}
+                      >
+                        Action
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {connectionProfiles.map((profile) => {
+                      const testResult = testResults[profile.id];
+                      return (
+                        <React.Fragment key={profile.id}>
+                          <tr
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                            className="hover:opacity-80 transition-opacity"
+                          >
+                            <td className="px-6 py-4">
+                              <p className={`font-medium ${tw.textPrimary}`}>
+                                {profile.name}
+                              </p>
+                            </td>
+                            <td className="px-6 py-4">
+                              <button
+                                onClick={() =>
+                                  window.location.href = `/connection-profiles/${profile.id}`
+                                }
+                                className="font-medium text-sm break-all hover:underline"
+                                style={{ color: color.primary.accent }}
+                                title="Click to view connection profile details"
+                              >
+                                {profile.id}
+                              </button>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex justify-center">
+                                <button
+                                  onClick={() => handleTestProfile(profile.id)}
+                                  disabled={testingProfileId === profile.id}
+                                  className={`${
+                                    testingProfileId === profile.id
+                                      ? button.disabled
+                                      : button.bordered
+                                  } flex items-center gap-2`}
+                                >
+                                  {testingProfileId === profile.id ? (
+                                    <>
+                                      <div className="animate-spin rounded-full h-3 w-3 border-b-2" style={{ borderBottomColor: color.primary.accent }}></div>
+                                      Testing...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Play className="w-3 h-3" />
+                                      Test
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                          {testResult && (
+                            <tr style={{ backgroundColor: "transparent" }}>
+                              <td colSpan={3} className="px-6 py-3">
+                                <div
+                                  className={`p-4 rounded-md text-sm w-full ${
+                                    testResult.success
+                                      ? "bg-green-50 text-green-800 border border-green-200"
+                                      : "bg-red-50 text-red-800 border border-red-200"
+                                  }`}
+                                >
+                                  <div className="flex items-start gap-2">
+                                    {testResult.success ? (
+                                      <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                                    ) : (
+                                      <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                                    )}
+                                    <div className="w-full">
+                                      <p className="font-medium">
+                                        {testResult.success
+                                          ? "Connection OK"
+                                          : "Connection Failed"}
+                                      </p>
+                                      <p className="text-xs mt-1">
+                                        {testResult.message}
+                                      </p>
+                                      {testResult.error_details && (
+                                        <p className="text-xs mt-1 opacity-75">
+                                          {testResult.error_details}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className={`${tw.textMuted} text-sm`}>
+                  No connection profiles attached to this connector
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
