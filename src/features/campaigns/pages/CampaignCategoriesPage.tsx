@@ -11,6 +11,7 @@ import SearchInput from '../../../shared/components/ui/SearchInput';
 import { useNavigate } from "react-router-dom";
 import { Edit, Trash2, MessageSquare, Grid, List } from "lucide-react";
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
+import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
 import { useToast } from "../../../contexts/ToastContext";
@@ -31,8 +32,6 @@ import {
   X,
   Archive,
   Star,
-  Power,
-  PowerOff,
 } from "lucide-react";
 
 const CATALOG_TAG_PREFIX = "catalog:";
@@ -950,20 +949,13 @@ export default function CampaignCategoriesPage() {
                   {category.name}
                 </h3>
                 <div className="flex items-center space-x-1">
-                  <button
-                    onClick={() => handleToggleActive(category)}
+                  <ActivateDeactivateButton
+                    isActive={category.is_active}
+                    onToggle={() => handleToggleActive(category)}
                     disabled={togglingCategoryId === category.id}
-                    className={`p-2 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                    isLoading={togglingCategoryId === category.id}
                     title={category.is_active ? "Deactivate" : "Activate"}
-                  >
-                    {togglingCategoryId === category.id ? (
-                      <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                    ) : category.is_active ? (
-                      <PowerOff className="w-4 h-4 text-orange-600" />
-                    ) : (
-                      <Power className="w-4 h-4 text-green-600" />
-                    )}
-                  </button>
+                  />
                   <button
                     onClick={() => handleEditCategory(category)}
                     className={`p-2 ${tw.rounded} transition-colors`}
@@ -1054,20 +1046,13 @@ export default function CampaignCategoriesPage() {
               </div>
               <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-200">
                 <PermissionGate permission="campaign-catalog.update">
-                  <button
-                    onClick={() => handleToggleActive(category)}
+                  <ActivateDeactivateButton
+                    isActive={category.is_active}
+                    onToggle={() => handleToggleActive(category)}
                     disabled={togglingCategoryId === category.id}
-                    className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                    isLoading={togglingCategoryId === category.id}
                     title={category.is_active ? "Deactivate" : "Activate"}
-                  >
-                    {togglingCategoryId === category.id ? (
-                      <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                    ) : category.is_active ? (
-                      <PowerOff className="w-4 h-4 text-orange-600" />
-                    ) : (
-                      <Power className="w-4 h-4 text-green-600" />
-                    )}
-                  </button>
+                  />
                 </PermissionGate>
                 <button
                   onClick={() => handleEditCategory(category)}

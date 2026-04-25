@@ -422,7 +422,7 @@ export default function DNDChannelPage() {
                             className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
                             title="Remove from DND"
                           >
-                            <UserCheck className="w-4 h-4" />
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         )}
                       </div>

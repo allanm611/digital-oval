@@ -13,11 +13,10 @@ import {
   Archive,
   Star,
   X,
-  Power,
-  PowerOff,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
+import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
 import { zIndex } from "../../../shared/utils/tokens";
@@ -860,7 +859,7 @@ function OfferCategoriesPage() {
       const newActiveStatus = !category.is_active;
 
       // Optimistic update - update local state immediately
-      setCategories((prev) =>
+      setOfferCategories((prev) =>
         prev.map((cat) =>
           cat.id === category.id ? { ...cat, is_active: newActiveStatus } : cat
         )
@@ -1316,24 +1315,17 @@ function OfferCategoriesPage() {
                     <Eye className="w-4 h-4 text-gray-600" />
                   </button> */}
                   <PermissionGate permission="offer-catalog.update">
-                    <button
-                      onClick={() => handleToggleActive(category)}
+                    <ActivateDeactivateButton
+                      isActive={category.is_active}
+                      onToggle={() => handleToggleActive(category)}
                       disabled={togglingCategoryId === category.id}
-                      className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                      isLoading={togglingCategoryId === category.id}
                       title={
                         category.is_active
                           ? t.offerCatalogs.deactivate
                           : t.offerCatalogs.activate
                       }
-                    >
-                      {togglingCategoryId === category.id ? (
-                        <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                      ) : category.is_active ? (
-                        <PowerOff className="w-4 h-4 text-orange-600" />
-                      ) : (
-                        <Power className="w-4 h-4 text-green-600" />
-                      )}
-                    </button>
+                    />
                   </PermissionGate>
                   <button
                     onClick={() => handleEditCategory(category)}
@@ -1519,24 +1511,17 @@ function OfferCategoriesPage() {
                 >
                   <Eye className="w-4 h-4 text-gray-600" />
                 </button> */}
-                  <button
-                    onClick={() => handleToggleActive(category)}
+                  <ActivateDeactivateButton
+                    isActive={category.is_active}
+                    onToggle={() => handleToggleActive(category)}
                     disabled={togglingCategoryId === category.id}
-                    className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                    isLoading={togglingCategoryId === category.id}
                     title={
                       category.is_active
                         ? t.offerCatalogs.deactivate
                         : t.offerCatalogs.activate
                     }
-                  >
-                    {togglingCategoryId === category.id ? (
-                      <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                    ) : category.is_active ? (
-                      <PowerOff className="w-4 h-4 text-orange-600" />
-                    ) : (
-                      <Power className="w-4 h-4 text-green-600" />
-                    )}
-                  </button>
+                  />
                   <button
                     onClick={() => handleEditCategory(category)}
                     className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}

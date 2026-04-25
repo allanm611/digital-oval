@@ -16,7 +16,7 @@ interface MultiCategorySelectorProps {
   onCategoryCreated?: (categoryId: number) => void;
   className?: string;
   refreshTrigger?: number;
-  entityType?: "campaign" | "offer" | "product" | "segment"; // For loading correct categories
+  entityType?: "campaign" | "offer" | "product" | "segment" | "channel"; // For loading correct categories
 }
 
 export default function MultiCategorySelector({
@@ -153,6 +153,22 @@ export default function MultiCategorySelector({
               updated_at: "",
             })
           );
+      } else if (entityType === "channel") {
+        const { communicationChannelService } = await import(
+          "../../shared/services/communicationChannelService"
+        );
+        const response = await communicationChannelService.getAll();
+        // Convert channels to category format
+        categoriesData = (response || []).map(
+          (ch: { id: number; name: string; code?: string; is_active?: boolean }) => ({
+            id: ch.id,
+            name: ch.name,
+            description: ch.code || "",
+            is_active: ch.is_active !== false,
+            created_at: "",
+            updated_at: "",
+          })
+        );
       } else {
         // Default to product categories - only show active ones
         const response = await productCategoryService.getActiveCategories({

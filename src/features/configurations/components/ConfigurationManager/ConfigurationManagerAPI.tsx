@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Edit, Trash2, Power, PowerOff, LucideIcon } from "lucide-react";
+import { Edit, Trash2, LucideIcon } from "lucide-react";
 import SearchInput from "../../../../shared/components/ui/SearchInput";
 import Pagination from "../../../../shared/components/ui/Pagination";
+import ActivateDeactivateButton from "../../../../shared/components/ui/ActivateDeactivateButton";
 import { color, tw } from "../../../../shared/utils/utils";
 import { useConfirm } from "../../../../contexts/ConfirmContext";
 import { useToast } from "../../../../contexts/ToastContext";
@@ -357,24 +358,17 @@ export default function ConfigurationManagerAPI({
                     >
                       <div className="flex items-center justify-center space-x-2">
                         {config.enableActivateDeactivate && (
-                          <button
-                            onClick={() => handleToggleActive(item)}
-                            disabled={togglingItemId === item.id}
-                            className={`p-2 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                          <ActivateDeactivateButton
+                            isActive={item.isActive ?? true}
+                            onToggle={() => handleToggleActive(item)}
+                            disabled={togglingItemId === item.id || deletingItemId === item.id}
+                            isLoading={togglingItemId === item.id}
                             title={
                               item.isActive
                                 ? `Deactivate ${item.name}`
                                 : `Activate ${item.name}`
                             }
-                          >
-                            {togglingItemId === item.id ? (
-                              <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                            ) : item.isActive ? (
-                              <PowerOff className="w-4 h-4 text-orange-600" />
-                            ) : (
-                              <Power className="w-4 h-4 text-green-600" />
-                            )}
-                          </button>
+                          />
                         )}
 
                         <button

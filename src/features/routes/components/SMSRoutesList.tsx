@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, Power, PowerOff } from "lucide-react";
+import { Plus, Edit, Trash2 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { SMSRoute } from "../types/smsRoute";
 import { smsRouteService } from "../services/smsRouteService";
 import { useToast } from "../../../contexts/ToastContext";
@@ -220,28 +221,21 @@ export default function SMSRoutesList() {
                     </td>
                     <td className="px-6 py-4 text-sm">
                       <div className="flex items-center justify-end space-x-2">
-                        <button
-                          onClick={() => handleToggleStatus(route)}
+                        <ActivateDeactivateButton
+                          isActive={route.is_active}
+                          onToggle={() => handleToggleStatus(route)}
                           disabled={
                             deleting === route.id ||
                             togglingStatus === route.id ||
                             loading
                           }
-                          className={`p-2 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                          isLoading={togglingStatus === route.id}
                           title={
                             route.is_active
                               ? "Deactivate route"
                               : "Activate route"
                           }
-                        >
-                          {togglingStatus === route.id ? (
-                            <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                          ) : route.is_active ? (
-                            <PowerOff className="w-4 h-4 text-orange-600" />
-                          ) : (
-                            <Power className="w-4 h-4 text-green-600" />
-                          )}
-                        </button>
+                        />
                         <button
                           onClick={() => {
                             setEditingRoute(route);

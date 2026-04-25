@@ -13,11 +13,10 @@ import {
   X,
   Archive,
   Star,
-  Power,
-  PowerOff,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
+import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
 import { useToast } from "../../../contexts/ToastContext";
@@ -923,20 +922,13 @@ export default function SegmentCategoriesPage() {
                   {category.name}
                 </h3>
                 <div className="flex items-center space-x-1">
-                  <button
-                    onClick={() => handleToggleActive(category)}
+                  <ActivateDeactivateButton
+                    isActive={category.is_active}
+                    onToggle={() => handleToggleActive(category)}
                     disabled={togglingCategoryId === category.id}
-                    className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                    isLoading={togglingCategoryId === category.id}
                     title={category.is_active ? "Deactivate" : "Activate"}
-                  >
-                    {togglingCategoryId === category.id ? (
-                      <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                    ) : category.is_active ? (
-                      <PowerOff className="w-4 h-4 text-orange-600" />
-                    ) : (
-                      <Power className="w-4 h-4 text-green-600" />
-                    )}
-                  </button>
+                  />
                   <button
                     onClick={() => {
                       setSelectedCategory(category);
@@ -1019,20 +1011,13 @@ export default function SegmentCategoriesPage() {
               </div>
               <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-200">
                 <PermissionGate permission="segment-catalog.update">
-                  <button
-                    onClick={() => handleToggleActive(category)}
+                  <ActivateDeactivateButton
+                    isActive={category.is_active}
+                    onToggle={() => handleToggleActive(category)}
                     disabled={togglingCategoryId === category.id}
-                    className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                    isLoading={togglingCategoryId === category.id}
                     title={category.is_active ? "Deactivate" : "Activate"}
-                  >
-                    {togglingCategoryId === category.id ? (
-                      <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                    ) : category.is_active ? (
-                      <PowerOff className="w-4 h-4 text-orange-600" />
-                    ) : (
-                      <Power className="w-4 h-4 text-green-600" />
-                    )}
-                  </button>
+                  />
                 </PermissionGate>
                 <button
                   onClick={() => {

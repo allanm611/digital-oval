@@ -116,6 +116,12 @@ const CampaignPages = {
         /* webpackPrefetch: true */ "../../campaigns/pages/DNDManagementPage"
       ),
   ),
+  DNDBulkManagementPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../campaigns/pages/DNDBulkManagementPage"
+      ),
+  ),
   DNDChannelPage: lazy(
     () =>
       import(
@@ -1357,6 +1363,10 @@ export default function Dashboard() {
           <Route
             path="/dnd-management"
             element={<CampaignPages.DNDManagementPage />}
+          />
+          <Route
+            path="/dnd-management/bulk"
+            element={<CampaignPages.DNDBulkManagementPage />}
           />
           <Route
             path="/dnd-management/:channel"

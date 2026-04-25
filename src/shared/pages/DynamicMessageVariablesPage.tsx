@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Search, Power, PowerOff } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { color, tw } from '../utils/utils';
 import { useMessageVariableFields } from '../../features/manual-broadcast/hooks/useMessageVariableFields';
 import { dynamicMessageVariableService } from '../../features/manual-broadcast/services/dynamicMessageVariableService';
 import { useToast } from '../../contexts/ToastContext';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import BackButton from '../components/ui/BackButton';
+import ActivateDeactivateButton from '../components/ui/ActivateDeactivateButton';
 import HeadlessSelect from '../components/ui/HeadlessSelect';
 import SearchInput from '../components/ui/SearchInput';
 import { createPortal } from 'react-dom';
@@ -329,20 +330,13 @@ export default function DynamicMessageVariablesPage() {
                 <h3 className={`${tw.tableFirstColumn} text-gray-900 flex-1`}>
                   {category.name}
                 </h3>
-                <button
-                  onClick={() => handleToggleCategoryActive(category.id || category.name)}
+                <ActivateDeactivateButton
+                  isActive={category.is_active}
+                  onToggle={() => handleToggleCategoryActive(category.id || category.name)}
                   disabled={togglingCategoryId === (category.id || category.name)}
-                  className="p-2 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  isLoading={togglingCategoryId === (category.id || category.name)}
                   title={category.is_active ? 'Deactivate category' : 'Activate category'}
-                >
-                  {togglingCategoryId === (category.id || category.name) ? (
-                    <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                  ) : category.is_active ? (
-                    <PowerOff className="w-4 h-4 text-orange-600" />
-                  ) : (
-                    <Power className="w-4 h-4 text-green-600" />
-                  )}
-                </button>
+                />
               </div>
 
               {/* Divider with Count and Button */}

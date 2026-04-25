@@ -6,7 +6,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/20/solid";
 
-import { tw } from "../../../shared/utils/utils";
+import { tw, components } from "../../../shared/utils/utils";
 interface SelectOption {
   value: string | number;
   label: string;
@@ -73,14 +73,14 @@ export default function HeadlessMultiSelect({
         <div className="relative">
           <Listbox.Button
             className={`
-            relative w-full cursor-default ${tw.rounded} bg-white py-3 pl-4 pr-10 text-left shadow-sm border transition-all duration-200
-            ${error ? "border-red-300" : "border-gray-300"}
+            relative w-full cursor-default py-2 px-3 pr-10 text-left transition-all duration-200 text-sm
+            ${error ? components.input.error : components.input.default}
             ${
               disabled
-                ? "bg-gray-50 text-gray-500 cursor-not-allowed"
-                : "hover:border-gray-400"
+                ? "bg-gray-50 text-gray-500 cursor-not-allowed opacity-50"
+                : ""
             }
-            focus:outline-none focus:ring-0 focus:border-gray-300
+            focus:outline-none focus:ring-0
           `}
           >
             <span
@@ -104,7 +104,7 @@ export default function HeadlessMultiSelect({
               {selectedOptions.map((option) => (
                 <span
                   key={option.value}
-                  className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm bg-[#3b8169]/10 text-[#3b8169] border border-[#3b8169]/20"
+                  className="inline-flex items-center gap-2 px-2 py-1 rounded text-xs bg-gray-100 text-gray-700 border border-gray-300"
                 >
                   {option.label}
                   <button
@@ -182,6 +182,7 @@ export default function HeadlessMultiSelect({
                       )}
                     </Listbox.Option>
                   ))
+              )}
             </Listbox.Options>
           </Transition>
         </div>
