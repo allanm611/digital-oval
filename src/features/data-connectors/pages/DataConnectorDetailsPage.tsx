@@ -22,7 +22,6 @@ import { connectionProfileService } from "../../connection-profiles/services/con
 import { ConnectionProfileType } from "../../connection-profiles/types/connectionProfile";
 import { useToast } from "../../../contexts/ToastContext";
 import { tw, color, button } from "../../../shared/utils/utils";
-import ConnectorConfigDisplay from "../components/ConnectorConfigDisplay";
 import DataConnectorForm from "../components/DataConnectorForm";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import DateFormatter from "../../../shared/components/DateFormatter";
@@ -32,6 +31,10 @@ export default function DataConnectorDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { error: showError, success } = useToast();
+
+  const handleViewConnectionProfile = (profileId: number) => {
+    navigate(`/dashboard/connection-profiles/${profileId}`);
+  };
 
   const [connector, setConnector] = useState<ProcessedDataConnector | null>(
     null,
@@ -182,8 +185,6 @@ export default function DataConnectorDetailsPage() {
         name: formData.name.trim(),
         description: formData.description?.trim(),
         is_active: connector.is_active,
-        connection_profile_id: profileId,
-        configuration: formData.configuration,
       };
 
       const updated = await dataConnectorService.updateDataConnector(
@@ -304,14 +305,14 @@ export default function DataConnectorDetailsPage() {
       </div>
 
       {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         {/* Left Column */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-6 flex flex-col">
           {/* Overview Card */}
           <div
-            className={`bg-white ${tw.rounded} border border-[${tw.borderDefault}] p-6`}
+            className={`bg-white ${tw.rounded} border border-[${tw.borderDefault}] px-6 pt-6 pb-3 flex-shrink-0`}
           >
-            <div className="flex items-start space-x-4 mb-6">
+            <div className="flex items-start gap-2 mb-1">
               <div
                 className={`h-14 w-14 ${tw.rounded} flex items-center justify-center flex-shrink-0`}
                 style={{
@@ -321,7 +322,7 @@ export default function DataConnectorDetailsPage() {
                 <ConnectorIcon className="w-7 h-7 text-white" />
               </div>
               <div className="flex-1">
-                <h2 className={`${tw.tableFirstColumn} ${tw.textPrimary} mb-2`}>
+                <h2 className={`text-sm font-semibold ${tw.textPrimary} mb-2`}>
                   {connector.name}
                 </h2>
                 <p className={`${tw.textSecondary} text-sm leading-relaxed`}>
@@ -329,303 +330,96 @@ export default function DataConnectorDetailsPage() {
                 </p>
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-gray-200">
-              <span
-                className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${
-                  connector.is_active
-                    ? `bg-[${color.status.success}]/10 text-[${color.status.success}]`
-                    : `bg-[${color.surface.cards}] text-[${color.text.primary}]`
-                }`}
-              >
-                {connector.is_active ? "Active" : "Inactive"}
-              </span>
-              <span
-                className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-[${color.primary.accent}]/10 text-black`}
-              >
-                {connectorTypeLabel}
-              </span>
-            </div>
-          </div>
-
-          {/* Test Result */}
-          {/*
-          {testResult && (
-            <div
-              className={`border ${tw.rounded} p-6 ${
-                testResult.success
-                  ? "bg-green-50 border-green-200"
-                  : "bg-red-50 border-red-200"
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                {testResult.success ? (
-                  <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                ) : (
-                  <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
-                )}
-                <div>
-                  <h4
-                    className={`text-sm font-medium ${
-                      testResult.success ? "text-green-900" : "text-red-900"
-                    }`}
+            <div className="pt-3 pb-0 flex-grow">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
+                <div className="space-y-1">
+                  <label
+                    className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
                   >
-                    {testResult.success
-                      ? "Connection Successful"
-                      : "Test Failed"}
-                  </h4>
-                  <p
-                    className={`text-sm mt-1 ${
-                      testResult.success ? "text-green-800" : "text-red-800"
-                    }`}
-                  >
-                    {testResult.message}
+                    Connector ID
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary} font-mono`}>
+                    {connector.id}
                   </p>
-                  {testResult.response_time_ms && (
-                    <p className="text-xs mt-2 text-gray-600">
-                      Response time: {testResult.response_time_ms} ms
-                    </p>
-                  )}
+                </div>
+                <div className="space-y-1">
+                  <label
+                    className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
+                  >
+                    Type
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    {connectorTypeLabel}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <label
+                    className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
+                  >
+                    Status
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    {connector.is_active ? "Active" : "Inactive"}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <label
+                    className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
+                  >
+                    Created By
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    {connector.created_by || "System"}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <label
+                    className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
+                  >
+                    Updated By
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    {connector.updated_by || "—"}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <label
+                    className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
+                  >
+                    Connection Count
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    {connector.connection_count ?? 0}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  {/*
+                  <label
+                    className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
+                  >
+                    Last Connection Test
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    {testResult
+                      ? testResult.success
+                        ? "Passed"
+                        : "Failed"
+                      : "Not tested yet"}
+                  </p>
+                  */}
                 </div>
               </div>
             </div>
-          )}
-          */}
-
-          {/* Information */}
-          <div
-            className={`bg-white ${tw.rounded} border border-[${tw.borderDefault}] p-6`}
-          >
-            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
-              Information
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-1">
-                <label
-                  className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
-                >
-                  Connector ID
-                </label>
-                <p className={`text-sm ${tw.textPrimary} font-mono`}>
-                  {connector.id}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <label
-                  className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
-                >
-                  Type
-                </label>
-                <p className={`text-sm ${tw.textPrimary}`}>
-                  {connectorTypeLabel}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <label
-                  className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
-                >
-                  Status
-                </label>
-                <p className={`text-sm ${tw.textPrimary}`}>
-                  {connector.is_active ? "Active" : "Inactive"}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <label
-                  className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
-                >
-                  Created By
-                </label>
-                <p className={`text-sm ${tw.textPrimary}`}>
-                  {connector.created_by || "System"}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <label
-                  className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
-                >
-                  Connection Count
-                </label>
-                <p className={`text-sm ${tw.textPrimary}`}>
-                  {connector.connection_count ?? 0}
-                </p>
-              </div>
-              <div className="space-y-1">
-                {/*
-                <label
-                  className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
-                >
-                  Last Connection Test
-                </label>
-                <p className={`text-sm ${tw.textPrimary}`}>
-                  {testResult
-                    ? testResult.success
-                      ? "Passed"
-                      : "Failed"
-                    : "Not tested yet"}
-                </p>
-                */}
-              </div>
-            </div>
-          </div>
-
-          {/* Configuration Card */}
-          <div
-            className={`bg-white ${tw.rounded} border border-[${tw.borderDefault}] p-6`}
-          >
-            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
-              Configuration
-            </h3>
-            <ConnectorConfigDisplay connector={connector} isEditMode={false} />
-          </div>
-
-          {/* Connection Profiles */}
-          <div>
-            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
-              Connection Profiles
-            </h3>
-            {loadingProfiles ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
-              </div>
-            ) : connectionProfiles.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table
-                  className="w-full"
-                  style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-                >
-                  <thead style={{ background: color.surface.tableHeader }}>
-                    <tr>
-                      <th
-                        className="px-6 py-4 text-left text-xs sm:text-sm font-medium uppercase tracking-wider"
-                        style={{ color: color.surface.tableHeaderText }}
-                      >
-                        Name
-                      </th>
-                      <th
-                        className="px-6 py-4 text-left text-xs sm:text-sm font-medium uppercase tracking-wider"
-                        style={{ color: color.surface.tableHeaderText }}
-                      >
-                        ID
-                      </th>
-                      <th
-                        className="px-6 py-4 text-center text-xs sm:text-sm font-medium uppercase tracking-wider"
-                        style={{ color: color.surface.tableHeaderText }}
-                      >
-                        Action
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {connectionProfiles.map((profile) => {
-                      const testResult = testResults[profile.id];
-                      return (
-                        <React.Fragment key={profile.id}>
-                          <tr
-                            style={{ backgroundColor: color.surface.tablebodybg }}
-                            className="hover:opacity-80 transition-opacity"
-                          >
-                            <td className="px-6 py-4">
-                              <p className={`font-medium ${tw.textPrimary}`}>
-                                {profile.name}
-                              </p>
-                            </td>
-                            <td className="px-6 py-4">
-                              <button
-                                onClick={() =>
-                                  window.location.href = `/connection-profiles/${profile.id}`
-                                }
-                                className="font-medium text-sm break-all hover:underline"
-                                style={{ color: color.primary.accent }}
-                                title="Click to view connection profile details"
-                              >
-                                {profile.id}
-                              </button>
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className="flex justify-center">
-                                <button
-                                  onClick={() => handleTestProfile(profile.id)}
-                                  disabled={testingProfileId === profile.id}
-                                  className={`${
-                                    testingProfileId === profile.id
-                                      ? button.disabled
-                                      : button.bordered
-                                  } flex items-center gap-2`}
-                                >
-                                  {testingProfileId === profile.id ? (
-                                    <>
-                                      <div className="animate-spin rounded-full h-3 w-3 border-b-2" style={{ borderBottomColor: color.primary.accent }}></div>
-                                      Testing...
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Play className="w-3 h-3" />
-                                      Test
-                                    </>
-                                  )}
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                          {testResult && (
-                            <tr style={{ backgroundColor: "transparent" }}>
-                              <td colSpan={3} className="px-6 py-3">
-                                <div
-                                  className={`p-4 rounded-md text-sm w-full ${
-                                    testResult.success
-                                      ? "bg-green-50 text-green-800 border border-green-200"
-                                      : "bg-red-50 text-red-800 border border-red-200"
-                                  }`}
-                                >
-                                  <div className="flex items-start gap-2">
-                                    {testResult.success ? (
-                                      <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                                    ) : (
-                                      <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                                    )}
-                                    <div className="w-full">
-                                      <p className="font-medium">
-                                        {testResult.success
-                                          ? "Connection OK"
-                                          : "Connection Failed"}
-                                      </p>
-                                      <p className="text-xs mt-1">
-                                        {testResult.message}
-                                      </p>
-                                      {testResult.error_details && (
-                                        <p className="text-xs mt-1 opacity-75">
-                                          {testResult.error_details}
-                                        </p>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              </td>
-                            </tr>
-                          )}
-                        </React.Fragment>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <p className={`${tw.textMuted} text-sm`}>
-                  No connection profiles attached to this connector
-                </p>
-              </div>
-            )}
           </div>
         </div>
 
         {/* Right Sidebar */}
-        <div className="space-y-6">
+        <div className="h-full">
           {/* Timeline */}
           <div
-            className={`bg-white ${tw.rounded} border border-[${tw.borderDefault}] p-6`}
+            className={`bg-white ${tw.rounded} border border-[${tw.borderDefault}] p-6 h-full`}
           >
-            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
+            <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-6`}>
               Timeline
             </h3>
             <div className="space-y-5">
@@ -706,6 +500,138 @@ export default function DataConnectorDetailsPage() {
           </div>
 
         </div>
+      </div>
+
+      {/* Connection Profiles - Full Width */}
+      <div>
+        <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>
+          Connection Profiles
+        </h3>
+        {loadingProfiles ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
+          </div>
+        ) : connectionProfiles.length > 0 ? (
+          <table
+            className="w-full"
+            style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+          >
+            <thead style={{ background: color.surface.tableHeader }}>
+              <tr>
+                <th
+                  className="px-6 py-4 text-left text-xs sm:text-sm font-medium uppercase tracking-wider"
+                  style={{ color: color.surface.tableHeaderText }}
+                >
+                  ID
+                </th>
+                <th
+                  className="px-6 py-4 text-left text-xs sm:text-sm font-medium uppercase tracking-wider"
+                  style={{ color: color.surface.tableHeaderText }}
+                >
+                  Name
+                </th>
+                <th
+                  className="px-6 py-4 text-left text-xs sm:text-sm font-medium uppercase tracking-wider"
+                  style={{ color: color.surface.tableHeaderText }}
+                >
+                  Type
+                </th>
+                <th
+                  className="px-6 py-4 text-left text-xs sm:text-sm font-medium uppercase tracking-wider"
+                  style={{ color: color.surface.tableHeaderText }}
+                >
+                  Status
+                </th>
+                <th
+                  className="px-6 py-4 text-left text-xs sm:text-sm font-medium uppercase tracking-wider"
+                  style={{ color: color.surface.tableHeaderText }}
+                >
+                  Last Used
+                </th>
+                <th
+                  className="px-6 py-4 text-center text-xs sm:text-sm font-medium uppercase tracking-wider"
+                  style={{ color: color.surface.tableHeaderText }}
+                >
+                  Action
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {connectionProfiles.map((profile) => {
+                const testResult = testResults[profile.id];
+                return (
+                  <React.Fragment key={profile.id}>
+                    <tr
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                      className="hover:opacity-80 transition-opacity"
+                    >
+                      <td className="px-6 py-4">
+                        <button
+                          onClick={() => handleViewConnectionProfile(profile.id)}
+                          className="text-sm font-medium break-all hover:underline"
+                          style={{ color: color.primary.accent }}
+                          title="Click to view connection profile details"
+                        >
+                          {profile.id}
+                        </button>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className={`text-sm font-medium ${tw.textPrimary}`}>
+                          {(profile as any).profile_name || profile.name}
+                        </p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className={`text-sm ${tw.textPrimary}`}>
+                          {(profile as any).connection_type || "—"}
+                        </p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`text-sm ${(profile as any).is_active ? `text-green-600` : `text-gray-500`}`}>
+                          {(profile as any).is_active ? "Active" : "Inactive"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className={`text-sm ${tw.textPrimary}`}>
+                          {(profile as any).last_used_at
+                            ? new Date((profile as any).last_used_at).toLocaleDateString()
+                            : "—"}
+                        </p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex justify-center">
+                          <button
+                            onClick={() => handleTestProfile(profile.id)}
+                            disabled={testingProfileId === profile.id}
+                            className="px-4 py-2 text-white rounded font-semibold transition-all duration-200 flex items-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                            style={{ backgroundColor: button.action.background }}
+                          >
+                            {testingProfileId === profile.id ? (
+                              <>
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                                Testing...
+                              </>
+                            ) : (
+                              <>
+                                <Play className="w-3 h-3" />
+                                Test
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  </React.Fragment>
+                );
+              })}
+            </tbody>
+          </table>
+        ) : (
+          <div className="text-center py-8">
+            <p className={`${tw.textMuted} text-sm`}>
+              No connection profiles attached to this connector
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Delete Confirmation Modal */}

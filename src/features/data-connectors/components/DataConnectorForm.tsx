@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { X } from "lucide-react";
-import { Listbox } from "@headlessui/react";
 import {
   DataConnectorFormData,
   DataConnectorType,
@@ -9,6 +8,7 @@ import {
 import { getConnectorDisplayName } from "../utils/connectorIcons";
 import { color, zIndex } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
+import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 
 interface DataConnectorFormProps {
   connector?: ProcessedDataConnector;
@@ -162,24 +162,15 @@ const DataConnectorForm: React.FC<DataConnectorFormProps> = ({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Type <span className="text-red-500">*</span>
                 </label>
-                <Listbox value={formData.type} onChange={handleTypeChange}>
-                  <div className="relative">
-                    <Listbox.Button className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black bg-white text-left text-sm hover:bg-gray-50 transition-colors">
-                      {formData.type ? getConnectorDisplayName(formData.type) : "Select option"}
-                    </Listbox.Button>
-                    <Listbox.Options className="absolute top-full left-0 right-0 mt-2 border border-gray-300 rounded-md bg-white shadow-lg z-50 max-h-60 overflow-y-auto">
-                      {connectorTypes.map((type) => (
-                        <Listbox.Option
-                          key={type}
-                          value={type}
-                          className="px-3 py-2 hover:bg-blue-50 text-black cursor-pointer text-sm"
-                        >
-                          {getConnectorDisplayName(type)}
-                        </Listbox.Option>
-                      ))}
-                    </Listbox.Options>
-                  </div>
-                </Listbox>
+                <HeadlessSelect
+                  options={connectorTypes.map((type) => ({
+                    value: type,
+                    label: getConnectorDisplayName(type),
+                  }))}
+                  value={formData.type}
+                  onChange={(value) => handleTypeChange(value as DataConnectorType)}
+                  placeholder="Select option"
+                />
               </div>
             </div>
           </div>
@@ -199,7 +190,7 @@ const DataConnectorForm: React.FC<DataConnectorFormProps> = ({
                 }
                 rows={3}
                 placeholder="Enter a description for this connector"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black text-sm font-medium resize-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 text-sm resize-none"
               />
             </div>
           </div>
@@ -221,7 +212,7 @@ const DataConnectorForm: React.FC<DataConnectorFormProps> = ({
             className="px-4 py-2 text-white rounded-md font-medium text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-md"
             style={{ backgroundColor: color.primary.action }}
           >
-            {loading ? "Saving..." : "Create Connector"}
+            {loading ? "Saving..." : isEditing ? "Update Connector" : "Create Connector"}
           </button>
         </div>
       </div>

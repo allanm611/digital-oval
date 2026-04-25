@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { X } from "lucide-react";
+import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import {
-  Filter,
   Plug,
   CheckCircle,
   Database,
@@ -58,12 +58,9 @@ export default function DataConnectors() {
   const [filterStatus, setFilterStatus] = useState<
     "all" | "active" | "inactive"
   >("all");
-  const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(15);
   const [totalCount, setTotalCount] = useState(0);
-  const activeFilterCount =
-    (filterType !== "all" ? 1 : 0) + (filterStatus !== "all" ? 1 : 0);
 
   const loadConnectors = async () => {
     try {
@@ -181,8 +178,6 @@ export default function DataConnectors() {
           name: formData.name.trim(),
           description: formData.description?.trim() || undefined,
           is_active: editingConnector.is_active, // keep unless you add toggle
-          connection_profile_id: formData.connection_profile_id,
-          configuration: formData.configuration,
         };
 
         const updated = await dataConnectorService.updateDataConnector(
@@ -204,8 +199,6 @@ export default function DataConnectors() {
           name: formData.name.trim(),
           type: formData.type,
           description: formData.description?.trim(),
-          connection_profile_id: formData.connection_profile_id,
-          configuration: formData.configuration ?? {},
         };
 
         savedConnector =
@@ -268,7 +261,7 @@ export default function DataConnectors() {
       </div>
 
       {/* Stats Cards */}
-      {!loading && (
+      {statistics && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           <div
             className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
@@ -341,56 +334,23 @@ export default function DataConnectors() {
         </div>
       )}
 
-      {/* Search & Filters */}
-      {showFilterPanel && (
-        <div
-          className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-2xl z-30 p-5"
-          style={{ maxHeight: "80vh", overflowY: "auto" }}
-        >
-          <div className="flex justify-between items-center mb-5">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Filter Connectors
-            </h3>
-            <button
-              onClick={() => setShowFilterPanel(false)}
-              className="text-gray-500 hover:text-gray-800"
-            >
-              <X size={20} />
-            </button>
-          </div>
 
-          {/* Status */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Status
-            </label>
-            <select
-              value={filterStatus}
-              onChange={(e) =>
-                setFilterStatus(e.target.value as typeof filterStatus)
-              }
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="all">All Statuses</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-          </div>
+      {/* Controls */}
+      <div className="flex flex-col sm:flex-row gap-4 items-end">
+        <div className="flex-1">
+          <SearchInput
+            placeholder="Search connectors..."
+            value={searchTerm}
+            onChange={setSearchTerm}
+            onKeyDown={(e) => e.key === "Enter" && setSearchTerm(searchTerm)}
+          />
+        </div>
 
-          {/* Type – single select */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Connector Type
-            </label>
-            <select
-              value={filterType}
-              onChange={(e) =>
-                setFilterType(e.target.value as DataConnectorType | "all")
-              }
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="all">All Types</option>
-              {(connectorTypes.length
+        <div className="w-48">
+          <HeadlessSelect
+            options={[
+              { value: "all", label: "All Types" },
+              ...(connectorTypes.length
                 ? connectorTypes
                 : ([
                     "tcp",
@@ -402,63 +362,29 @@ export default function DataConnectors() {
                     "files",
                     "digital_tags",
                   ] as DataConnectorType[])
-              ).map((t) => (
-                <option key={t} value={t}>
-                  {getConnectorDisplayName(t)}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Footer buttons */}
-          <div className="flex justify-between pt-4 border-t border-gray-200">
-            <button
-              onClick={() => {
-                setFilterType("all");
-                setFilterStatus("all");
-                setShowFilterPanel(false);
-              }}
-              className="text-sm text-gray-600 hover:text-gray-900 underline"
-            >
-              Reset Filters
-            </button>
-
-            <button
-              onClick={() => setShowFilterPanel(false)}
-              className="px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition"
-            >
-              Apply
-            </button>
-          </div>
+              ).map((t) => ({
+                value: t,
+                label: getConnectorDisplayName(t),
+              })),
+            ]}
+            value={filterType}
+            onChange={(value) => setFilterType(value as DataConnectorType | "all")}
+            placeholder="Filter by type"
+          />
         </div>
-      )}
 
-      {/* Controls */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <SearchInput
-          placeholder="Search connectors..."
-          value={searchTerm}
-          onChange={setSearchTerm}
-          onKeyDown={(e) => e.key === "Enter" && setSearchTerm(searchTerm)}
-        />
-
-        <button
-          onClick={() => setShowFilterPanel((prev) => !prev)}
-          className={`relative flex items-center gap-2 px-4 py-2.5 border ${tw.borderDefault} ${tw.rounded} hover:bg-gray-50 transition font-medium text-sm`}
-          style={{
-            backgroundColor: button.secondaryAction.background,
-            color: button.secondaryAction.color,
-          }}
-        >
-          <Filter className="h-4 w-4" />
-          <span>Filters</span>
-
-          {activeFilterCount > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
-              {activeFilterCount}
-            </span>
-          )}
-        </button>
+        <div className="w-40">
+          <HeadlessSelect
+            options={[
+              { value: "all", label: "All Statuses" },
+              { value: "active", label: "Active" },
+              { value: "inactive", label: "Inactive" },
+            ]}
+            value={filterStatus}
+            onChange={(value) => setFilterStatus(value as typeof filterStatus)}
+            placeholder="Filter by status"
+          />
+        </div>
       </div>
 
       {/* Content */}
@@ -483,13 +409,7 @@ export default function DataConnectors() {
                     className="px-6 py-4 text-left text-xs sm:text-sm font-medium uppercase tracking-wider"
                     style={{ color: color.surface.tableHeaderText }}
                   >
-                    Connector
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs sm:text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Status
+                    Name
                   </th>
                   <th
                     className="px-6 py-4 text-left text-xs sm:text-sm font-medium uppercase tracking-wider"
@@ -502,6 +422,12 @@ export default function DataConnectors() {
                     style={{ color: color.surface.tableHeaderText }}
                   >
                     Connections
+                  </th>
+                  <th
+                    className="px-6 py-4 text-left text-xs sm:text-sm font-medium uppercase tracking-wider"
+                    style={{ color: color.surface.tableHeaderText }}
+                  >
+                    Status
                   </th>
                   <th
                     className="px-6 py-4 text-left text-xs sm:text-sm font-medium uppercase tracking-wider"
@@ -565,14 +491,6 @@ export default function DataConnectors() {
                         className="px-6 py-4 text-sm"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        <span className="inline-flex items-center font-medium text-gray-900">
-                          {connector.is_active ? "Active" : "Inactive"}
-                        </span>
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
                         <span className={tw.textPrimary}>
                           {getConnectorDisplayName(connector.type)}
                         </span>
@@ -583,6 +501,14 @@ export default function DataConnectors() {
                       >
                         <span className={`font-medium ${tw.textPrimary}`}>
                           {connector.connection_count ?? "--"}
+                        </span>
+                      </td>
+                      <td
+                        className="px-6 py-4 text-sm"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
+                        <span className="inline-flex items-center font-medium text-gray-900">
+                          {connector.is_active ? "Active" : "Inactive"}
                         </span>
                       </td>
                       <td
