@@ -247,10 +247,10 @@ export function getOperatorsForField(field: Record<string, any> | null | undefin
  * Maps to date operator IDs 12-15
  */
 export const DATE_OPERATORS = [
-  { value: "on", label: "On", id: 12 },
-  { value: "between", label: "Between", id: 13 },
-  { value: "since", label: "Since", id: 14 },
-  { value: "until", label: "Until", id: 15 },
+  { value: "on", label: "On Date", id: 12 },
+  { value: "between", label: "Between Dates", id: 13 },
+  { value: "since", label: "Since Date", id: 14 },
+  { value: "until", label: "Until Date", id: 15 },
 ];
 
 /**

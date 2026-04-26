@@ -168,6 +168,7 @@ export default function SegmentModal({
 
   useEffect(() => {
     const loadSegmentData = async () => {
+      console.log("📂 loadSegmentData effect triggered - isOpen:", isOpen, "segment:", segment?.id);
       if (isOpen) {
         isUserInteractionRef.current = false; // Mark as initialization
         // Trigger category refresh to ensure categories are loaded
@@ -175,6 +176,7 @@ export default function SegmentModal({
 
         if (segment && segment.id) {
           try {
+            console.log("🔄 Fetching segment from backend:", segment.id);
             // Fetch full segment data from backend to ensure we have the definition
             const fullSegmentResponse = await segmentService.getSegmentById(
               segment.id,
@@ -184,6 +186,8 @@ export default function SegmentModal({
               fullSegmentResponse && "data" in fullSegmentResponse
                 ? fullSegmentResponse.data
                 : fullSegmentResponse;
+
+            console.log("✅ Fetched full segment, definition:", fullSegment.definition);
 
             // Convert the stored definition/payload back to UI conditions
             // Keep category as string since backend returns category IDs as strings
@@ -225,6 +229,7 @@ export default function SegmentModal({
               typeId = foundType?.id;
             }
 
+            console.log("🎯 Setting formData with conditions:", conditions);
             setFormData({
               name: fullSegment.name,
               description: fullSegment.description || "",
@@ -273,6 +278,20 @@ export default function SegmentModal({
         setTimeout(() => {
           isUserInteractionRef.current = true;
         }, 0);
+      } else {
+        // Clear state when closing to prevent stale data from showing
+        console.log("🔵 Modal closed - clearing formData");
+        setFormData({
+          name: "",
+          description: "",
+          tags: [],
+          segment_type_id: undefined,
+          conditions: [],
+          category: undefined,
+          customer_identity_field_mapping: undefined,
+        });
+        setFieldErrors({});
+        setError("");
       }
     };
 
@@ -313,7 +332,9 @@ export default function SegmentModal({
   const convertPayloadToConditions = async (
     payload: SegmentPayload,
   ): Promise<SegmentConditionGroup[]> => {
+    console.log("🔄 convertPayloadToConditions START - payload:", payload);
     if (!payload.layer_filters || !payload.layer_filters.groups) {
+      console.log("❌ No layer_filters or groups found");
       return [];
     }
 
@@ -437,10 +458,41 @@ export default function SegmentModal({
         }
 
         // Build the condition with all matched field metadata
-        // Ensure we're storing field_value (might have "p_" prefix) and field_name separately
+        // Infer conditionType from matched field's category, or fallback to field name pattern
+        let inferredConditionType = "customer_identity"; // default
+
+        // First, try to infer from matchedField category
+        if (matchedField?.category) {
+          const categoryId = matchedField.category;
+          for (const cat of config) {
+            if (cat.id === categoryId) {
+              const catName = (cat.name || "").toLowerCase();
+              if (catName.includes("revenue")) {
+                inferredConditionType = "revenue_metric";
+              } else if (catName.includes("usage")) {
+                inferredConditionType = "usage_metric";
+              } else if (catName.includes("kpi")) {
+                inferredConditionType = "kpi";
+              }
+              break;
+            }
+          }
+        } else {
+          // Fallback: infer from field name pattern if field not found in config
+          const fieldNameLower = fieldName.toLowerCase();
+          if (fieldNameLower.includes("revenue") || fieldNameLower.includes("transaction_amount") || fieldNameLower.includes("total_value")) {
+            inferredConditionType = "revenue_metric";
+          } else if (fieldNameLower.includes("usage") || fieldNameLower.includes("total_sms") || fieldNameLower.includes("total_call") || fieldNameLower.includes("total_data")) {
+            inferredConditionType = "usage_metric";
+          } else if (fieldNameLower.includes("kpi")) {
+            inferredConditionType = "kpi";
+          }
+          // Otherwise remains "customer_identity"
+        }
+
         const condition: SegmentCondition = {
           id: Math.random().toString(36).substr(2, 9),
-          conditionType: "customer_identity",
+          conditionType: inferredConditionType,
           field_name: matchedField?.field_name || fieldName,
           // Store the actual field_value from the matched field (this is what SegmentConditionsBuilder looks up)
           field:
@@ -454,8 +506,14 @@ export default function SegmentModal({
           start_date: layerCond.start_date,
           end_date: layerCond.end_date,
           type: matchedField?.field_type || "string",
+          // For KPI/metric conditions, set kpi_name from field_name so MetricsConditionRow renders properly
+          kpi_name: (inferredConditionType === "revenue_metric" || inferredConditionType === "usage_metric" || inferredConditionType === "kpi")
+            ? (matchedField?.field_name || fieldName)
+            : undefined,
         };
 
+        console.log(`📋 Built condition for field "${fieldName}":`, condition);
+        console.log(`   → conditionType: ${condition.conditionType}, category: ${condition.category}`);
         conditionGroup.conditions.push(condition);
       }
 
@@ -529,6 +587,7 @@ export default function SegmentModal({
       }
     }
 
+    console.log("✅ convertPayloadToConditions COMPLETE - built conditions:", conditions);
     return conditions;
   };
 

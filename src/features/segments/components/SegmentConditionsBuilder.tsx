@@ -403,6 +403,9 @@ export default function SegmentConditionsBuilder({
             tw={tw}
             color={color}
             line="1"
+            categories={categories}
+            setFieldPickerModalOpen={setIsFieldPickerModalOpen}
+            setFieldPickerModalData={setFieldPickerModalData}
           />
         );
       default:
@@ -446,6 +449,9 @@ export default function SegmentConditionsBuilder({
             tw={tw}
             color={color}
             line="2"
+            categories={categories}
+            setFieldPickerModalOpen={setIsFieldPickerModalOpen}
+            setFieldPickerModalData={setFieldPickerModalData}
           />
         );
       default:
@@ -733,7 +739,7 @@ export default function SegmentConditionsBuilder({
                       )}
 
                       {/* Condition Type Badge - Selectable appearance */}
-                      <div className="max-w-[180px]">
+                      <div className="min-w-[180px] max-w-[220px]">
                         <div
                           className={`${tw.rounded} transition-all cursor-pointer`}
                           style={{
@@ -750,13 +756,26 @@ export default function SegmentConditionsBuilder({
                           }}
                         >
                           <HeadlessSelect
-                              options={getDataSourceOptions(categories).map((opt) => ({
-                                value: opt.value,
-                                label: opt.label,
-                              }))}
-                              value={
-                                condition.conditionType === "customer_identity"
+                              options={(() => {
+                                const opts = getDataSourceOptions(categories);
+                                const selectedValue = condition.conditionType === "customer_identity"
                                   ? `customer_identity:${condition.category}`
+                                  : condition.conditionType === "segment" || condition.conditionType === "list"
+                                    ? `${condition.conditionType}:${condition.category}`
+                                    : condition.conditionType;
+                                console.log(`🎯 Category dropdown for ${condition.conditionType}:`, {
+                                  selectedValue,
+                                  availableOptions: opts.map(o => o.value),
+                                  condition
+                                });
+                                return opts.map((opt) => ({
+                                  value: opt.value,
+                                  label: opt.label,
+                                }));
+                              })()}
+                              value={
+                                condition.conditionType === "customer_identity" || condition.conditionType === "revenue_metric" || condition.conditionType === "usage_metric"
+                                  ? `${condition.conditionType}:${condition.category}`
                                   : condition.conditionType === "segment" || condition.conditionType === "list"
                                     ? `${condition.conditionType}:${condition.category}`
                                     : condition.conditionType
@@ -893,6 +912,32 @@ export default function SegmentConditionsBuilder({
                                     kpi_id: undefined,
                                     kpi_name: undefined,
                                     kpi_category: undefined,
+                                  });
+                                } else if (condType === "revenue_metric" || condType === "usage_metric") {
+                                  // For metric types: select first field from the category
+                                  const categoryFields = Array.isArray(categories)
+                                    ? (categories.find((c) => c.id === categoryId)?.fields || [])
+                                    : [];
+                                  const firstField = categoryFields.length > 0 ? categoryFields[0] : null;
+                                  const firstOp = getFirstBackendOperator(firstField);
+
+                                  updateCondition(group.id, condition.id, {
+                                    conditionType: condType,
+                                    category: categoryId,
+                                    field: firstField?.field_value || "",
+                                    field_id: firstField?.id,
+                                    field_name: firstField?.field_name || "",
+                                    kpi_name: firstField?.field_name || "",
+                                    operator: firstOp?.label || "equals",
+                                    operator_id: firstOp?.id || 1,
+                                    value: "",
+                                    segment_id: undefined,
+                                    segment_name: undefined,
+                                    list_id: undefined,
+                                    list_name: undefined,
+                                    system_event_id: undefined,
+                                    system_event_code: undefined,
+                                    system_event_name: undefined,
                                   });
                                 }
                               }}

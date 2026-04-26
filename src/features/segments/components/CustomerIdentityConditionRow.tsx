@@ -375,15 +375,15 @@ export default function CustomerIdentityConditionRow({
             <Input type="date"
               placeholder="From date"
               value={
-                condition.value && typeof condition.value === "string"
-                  ? condition.value.split("T")[0]
+                condition.start_date
+                  ? condition.start_date.split("T")[0]
                   : ""
               }
               onChange={(value) => {
                 updateCondition(groupId, condition.id, {
-                  value: String(value)
+                  start_date: String(value)
                     ? `${String(value)}T00:00:00Z`
-                    : "",
+                    : undefined,
                 });
               }}
               max={maxDate}
@@ -396,15 +396,15 @@ export default function CustomerIdentityConditionRow({
             <Input type="date"
               placeholder="To date"
               value={
-                condition.value && typeof condition.value === "string"
-                  ? condition.value.split("T")[0]
+                condition.end_date
+                  ? condition.end_date.split("T")[0]
                   : ""
               }
               onChange={(value) => {
                 updateCondition(groupId, condition.id, {
-                  value: String(value)
+                  end_date: String(value)
                     ? `${String(value)}T23:59:59Z`
-                    : "",
+                    : undefined,
                 });
               }}
               max={maxDate}
@@ -418,19 +418,13 @@ export default function CustomerIdentityConditionRow({
               <Input type="date"
                 placeholder="From date"
                 value={
-                  condition.value && typeof condition.value === "object"
-                    ? (condition.value as { start: string; end: string }).start?.split("T")[0] || ""
+                  condition.start_date
+                    ? condition.start_date.split("T")[0]
                     : ""
                 }
                 onChange={(value) => {
-                  const endDate = condition.value && typeof condition.value === "object"
-                    ? (condition.value as { start: string; end: string }).end
-                    : "";
                   updateCondition(groupId, condition.id, {
-                    value: {
-                      start: String(value) ? `${String(value)}T00:00:00Z` : "",
-                      end: endDate,
-                    },
+                    start_date: String(value) ? `${String(value)}T00:00:00Z` : undefined,
                   });
                 }}
                 max={maxDate}
@@ -441,19 +435,13 @@ export default function CustomerIdentityConditionRow({
               <Input type="date"
                 placeholder="To date"
                 value={
-                  condition.value && typeof condition.value === "object"
-                    ? (condition.value as { start: string; end: string }).end?.split("T")[0] || ""
+                  condition.end_date
+                    ? condition.end_date.split("T")[0]
                     : ""
                 }
                 onChange={(value) => {
-                  const startDate = condition.value && typeof condition.value === "object"
-                    ? (condition.value as { start: string; end: string }).start
-                    : "";
                   updateCondition(groupId, condition.id, {
-                    value: {
-                      start: startDate,
-                      end: String(value) ? `${String(value)}T23:59:59Z` : "",
-                    },
+                    end_date: String(value) ? `${String(value)}T23:59:59Z` : undefined,
                   });
                 }}
                 max={maxDate}

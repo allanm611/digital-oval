@@ -149,6 +149,7 @@ export const getDataSourceOptions = (
   label: string;
   type: SegmentCondition["conditionType"];
 }> => {
+  console.log("📊 getDataSourceOptions called with categories:", categories);
   const options: {
     value: string;
     label: string;
@@ -158,11 +159,21 @@ export const getDataSourceOptions = (
   const categoriesArray = Array.isArray(categories) ? categories : [];
   categoriesArray.forEach((cat) => {
     let condType: SegmentCondition["conditionType"] = "customer_identity";
-    if (cat.value === "segments") {
+
+    // Map category value to conditionType
+    const catValue = (cat.value || "").toLowerCase();
+    if (catValue === "segments") {
       condType = "segment";
-    } else if (cat.value === "quicklists") {
+    } else if (catValue === "quicklists") {
       condType = "list";
+    } else if (catValue === "revenue_kpis" || catValue === "revenue") {
+      condType = "revenue_metric";
+    } else if (catValue === "usage_kpis" || catValue === "usage") {
+      condType = "usage_metric";
+    } else if (catValue === "kpi" || catValue === "kpis") {
+      condType = "kpi";
     }
+    // else: customer_360, customer_identity, etc. remain as "customer_identity"
 
     options.push({
       value: `${condType}:${cat.id}`,
@@ -177,6 +188,7 @@ export const getDataSourceOptions = (
     type: "system_event",
   });
 
+  console.log("✅ getDataSourceOptions returning:", options);
   return options;
 };
 
