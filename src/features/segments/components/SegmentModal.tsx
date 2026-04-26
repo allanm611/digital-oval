@@ -359,6 +359,28 @@ export default function SegmentModal({
     // Flatten all fields from fieldSelectorConfig into a searchable map
     const allBackendFields: Record<string, any> = {};
     for (const category of config) {
+      // Handle subcategories (for hierarchical categories like Customer 360)
+      if (category.sub_categories && Array.isArray(category.sub_categories)) {
+        for (const subcategory of category.sub_categories) {
+          if (subcategory.fields && Array.isArray(subcategory.fields)) {
+            for (const field of subcategory.fields) {
+              // Map by both field_name and field_value (with "p_" prefix handling)
+              allBackendFields[field.field_name] = field;
+              allBackendFields[field.field_value] = field;
+              // Also add with "p_" prefix if not already there
+              if (field.field_value && field.field_value.startsWith("p_")) {
+                const unprefixed = field.field_value.slice(2);
+                allBackendFields[unprefixed] = field;
+              }
+              // Store parent category and subcategory info
+              field.category = category.id;
+              field.subcategory_id = subcategory.id;
+              field.subcategory_name = subcategory.name;
+            }
+          }
+        }
+      }
+      // Handle direct fields (no subcategories)
       if (category.fields && Array.isArray(category.fields)) {
         for (const field of category.fields) {
           // Map by both field_name and field_value (with "p_" prefix handling)
@@ -500,6 +522,8 @@ export default function SegmentModal({
             (fieldName.startsWith("p_") ? fieldName : `p_${fieldName}`),
           field_id: matchedField?.id,
           category: matchedField?.category,
+          subcategory_id: matchedField?.subcategory_id,
+          subcategory_name: matchedField?.subcategory_name,
           operator_id: operatorId,
           operator: operatorLabel,
           value: layerCond.value,
