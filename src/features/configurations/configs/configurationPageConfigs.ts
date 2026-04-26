@@ -3935,6 +3935,7 @@ export function getDepartmentsApiConfig(
     descriptionRequired: false,
     nameMaxLength: 100,
     descriptionMaxLength: 500,
+    statusLabel: "Status",
     deleteConfirmTitle: "Delete Department",
     deleteConfirmMessage: (name: string) =>
       `Are you sure you want to delete "${name}"? This action cannot be undone.`,
@@ -3944,6 +3945,7 @@ export function getDepartmentsApiConfig(
     updateSuccessMessage: "Department updated successfully",
     deleteErrorMessage: "Failed to delete department",
     saveErrorMessage: "Please try again later.",
+    enableActivateDeactivate: true,
   } as APIConfigurationPageConfig;
 }
 
@@ -3970,6 +3972,7 @@ export function getLineOfBusinessApiConfig(
     descriptionRequired: false,
     nameMaxLength: 100,
     descriptionMaxLength: 500,
+    statusLabel: "Status",
     deleteConfirmTitle: "Delete Business Line",
     deleteConfirmMessage: (name: string) =>
       `Are you sure you want to delete "${name}"? This action cannot be undone.`,
@@ -3979,5 +3982,6 @@ export function getLineOfBusinessApiConfig(
     updateSuccessMessage: "Business line updated successfully",
     deleteErrorMessage: "Failed to delete business line",
     saveErrorMessage: "Please try again later.",
+    enableActivateDeactivate: true,
   } as APIConfigurationPageConfig;
 }

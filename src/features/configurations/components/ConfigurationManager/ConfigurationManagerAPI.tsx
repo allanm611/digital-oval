@@ -66,6 +66,7 @@ export default function ConfigurationManagerAPI({
   const [isSaving, setIsSaving] = useState(false);
   const [togglingItemId, setTogglingItemId] = useState<number | null>(null);
   const [deletingItemId, setDeletingItemId] = useState<number | null>(null);
+  const [displayData, setDisplayData] = useState<ConfigurationItem[]>([]);
 
   // If hook returns null (shouldn't happen), show error
   if (!backendConfig) {
@@ -80,6 +81,13 @@ export default function ConfigurationManagerAPI({
 
   const { data, loading, error, refresh, create, update, delete: deleteItem } =
     backendConfig;
+
+  // Sync displayData with backend data
+  useEffect(() => {
+    if (data) {
+      setDisplayData(data);
+    }
+  }, [data]);
 
   // Show error toast if one occurs
   useEffect(() => {
@@ -110,18 +118,23 @@ export default function ConfigurationManagerAPI({
     if (!confirmed) return;
 
     setDeletingItemId(item.id as number);
+    const previousData = displayData;
+
+    // Optimistic update: remove from display immediately
+    setDisplayData((prev) => prev.filter((i) => i.id !== item.id));
+
     try {
       await deleteItem(item.id as number);
       showToast(
         config.deleteConfirmTitle,
         config.deleteSuccessMessage(item.name)
       );
-      await refresh();
     } catch (err) {
       console.error(`Error deleting ${config.entityName}:`, err);
       const errorMsg = err instanceof Error ? err.message : config.deleteErrorMessage;
       showError(t.genericConfig.error, errorMsg);
-      await refresh();
+      // Revert optimistic update on error
+      setDisplayData(previousData);
     } finally {
       setDeletingItemId(null);
     }
@@ -130,6 +143,14 @@ export default function ConfigurationManagerAPI({
   const handleToggleActive = async (item: ConfigurationItem) => {
     const newActive = !(item.isActive ?? true);
     setTogglingItemId(item.id as number);
+    const previousData = displayData;
+
+    // Optimistic update: toggle active state immediately
+    setDisplayData((prev) =>
+      prev.map((i) =>
+        i.id === item.id ? { ...i, isActive: newActive } : i
+      )
+    );
 
     try {
       await update(item.id as number, { isActive: newActive });
@@ -144,8 +165,8 @@ export default function ConfigurationManagerAPI({
       console.error(`Error updating ${config.entityName}:`, err);
       const errorMsg = err instanceof Error ? err.message : config.saveErrorMessage;
       showError(t.genericConfig.error, errorMsg);
-      // Refresh to revert on error
-      await refresh();
+      // Revert optimistic update on error
+      setDisplayData(previousData);
     } finally {
       setTogglingItemId(null);
     }
@@ -155,15 +176,24 @@ export default function ConfigurationManagerAPI({
     try {
       setIsSaving(true);
       if (editingItem) {
-        // Update existing item
-        await update(editingItem.id as number, itemData);
+        // Update existing item - optimistically update display
+        const updatedItem = await update(editingItem.id as number, itemData);
+        setDisplayData((prev) =>
+          prev.map((i) =>
+            i.id === editingItem.id
+              ? { ...i, ...updatedItem }
+              : i
+          )
+        );
         showToast(config.updateSuccessMessage);
       } else {
-        // Create new item
-        await create(itemData);
+        // Create new item - optimistically add to display
+        const newItem = await create(itemData);
+        if (newItem && newItem.id) {
+          setDisplayData((prev) => [newItem, ...prev]);
+        }
         showToast(config.createSuccessMessage);
       }
-      await refresh();
       setIsModalOpen(false);
       setEditingItem(undefined);
     } catch (err) {
@@ -172,6 +202,8 @@ export default function ConfigurationManagerAPI({
         t.genericConfig.failedToSave.replace("{entityName}", config.entityName),
         config.saveErrorMessage
       );
+      // Refresh to sync with backend on error
+      await refresh();
     } finally {
       setIsSaving(false);
     }
@@ -179,13 +211,13 @@ export default function ConfigurationManagerAPI({
 
   const filteredItems = useMemo(
     () =>
-      (data || []).filter(
+      (displayData || []).filter(
         (item) =>
           item?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           (item?.description &&
             item.description.toLowerCase().includes(searchTerm.toLowerCase()))
       ),
-    [data, searchTerm]
+    [displayData, searchTerm]
   );
 
   useEffect(() => {
@@ -311,6 +343,15 @@ export default function ConfigurationManagerAPI({
                     style={{
                       color: color.surface.tableHeaderText,
                       backgroundColor: color.surface.tableHeader,
+                    }}
+                  >
+                    {config.statusLabel || t.genericConfig.status}
+                  </th>
+                  <th
+                    className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
+                    style={{
+                      color: color.surface.tableHeaderText,
+                      backgroundColor: color.surface.tableHeader,
                       borderTopRightRadius: "0.375rem",
                     }}
                   >
@@ -342,6 +383,15 @@ export default function ConfigurationManagerAPI({
                       <div className={`text-sm ${tw.textSecondary} max-w-md`}>
                         {item.description || t.genericConfig.noDescription}
                       </div>
+                    </td>
+
+                    <td
+                      className="px-6 py-4 text-center"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      <span className={`text-sm font-medium ${tw.textSecondary}`}>
+                        {item.isActive ?? true ? t.genericConfig.active || 'Active' : t.genericConfig.inactive || 'Inactive'}
+                      </span>
                     </td>
 
                     <td

@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Edit, Trash2, Eye, Activity, Power } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, Activity } from "lucide-react";
 import Input from "../../../shared/components/ui/Input";
 import BackButton from "../../../shared/components/ui/BackButton";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Pagination from "../../../shared/components/ui/Pagination";
+import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { UsageMetric } from "../types/usageMetrics";
 import { usageMetricService } from "../services/usageMetricService";
 import { useToast } from "../../../contexts/ToastContext";
@@ -298,14 +299,12 @@ export default function UsageMetricsPage() {
                   </td>
                   <td className="px-6 py-4 text-sm">
                     <div className="flex items-center justify-end space-x-2">
-                      <button
-                        onClick={() => handleToggleActive(metric)}
+                      <ActivateDeactivateButton
+                        isActive={activeMetrics.has(metric.id)}
+                        onToggle={() => handleToggleActive(metric)}
                         disabled={toggling === metric.id || deleting === metric.id}
-                        className={`p-2 ${tw.rounded} disabled:opacity-60 transition-colors ${activeMetrics.has(metric.id) ? 'text-green-800' : 'text-orange-800'}`}
-                        title={activeMetrics.has(metric.id) ? "Deactivate" : "Activate"}
-                      >
-                        <Power className="w-4 h-4" />
-                      </button>
+                        isLoading={toggling === metric.id}
+                      />
                       <button
                         onClick={() =>
                           navigate(`/dashboard/kpis/usage-metrics/${metric.id}`, { state: { parentLabel: "Usage Metrics" } })

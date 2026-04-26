@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Filter, Eye, ListChecks, Zap, Power } from "lucide-react";
+import { Filter, Eye, ListChecks, Zap } from "lucide-react";
 import Input from "../../../shared/components/ui/Input";
 import { SystemEvent, SYSTEM_EVENT_CATEGORIES } from "../types/systemEvent";
 import { color, tw } from "../../../shared/utils/utils";
@@ -7,6 +7,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
 import { systemEventService } from "../services/systemEventService";
@@ -308,14 +309,12 @@ export default function SystemEventsPage() {
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
                         <div className="flex items-center justify-center space-x-2">
-                          <button
-                            onClick={() => handleToggleActive(event)}
+                          <ActivateDeactivateButton
+                            isActive={activeEvents.has(event.id)}
+                            onToggle={() => handleToggleActive(event)}
                             disabled={toggling === event.id}
-                            className={`p-2 ${tw.rounded} disabled:opacity-60 transition-colors ${activeEvents.has(event.id) ? 'text-green-800' : 'text-orange-800'}`}
-                            title={activeEvents.has(event.id) ? "Deactivate" : "Activate"}
-                          >
-                            <Power className="w-4 h-4" />
-                          </button>
+                            isLoading={toggling === event.id}
+                          />
                           <button
                             onClick={() =>
                               navigate(
