@@ -7,6 +7,7 @@ import { UsageMetric } from "../types/usageMetrics";
 import { usageMetricService } from "../services/usageMetricService";
 import { useToast } from "../../../contexts/ToastContext";
 import { color, tw, button } from "../../../shared/utils/utils";
+import { getOperatorsForFieldType } from "../../../shared/utils/operatorMapper";
 
 const CATEGORY_LABELS: Record<string, string> = {
   data_usage: "Data Usage",
@@ -145,7 +146,7 @@ export default function UsageMetricDetailsPage() {
 
       {/* Metric Information */}
       <div className="space-y-6">
-          {/* Metric Overview */}
+        {/* Metric Overview & Basic Information */}
           <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
             <div className="flex items-start space-x-4 mb-6">
               <div
@@ -161,27 +162,6 @@ export default function UsageMetricDetailsPage() {
                 </p>
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-gray-200">
-              <span
-                className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium text-white"
-                style={{ backgroundColor: color.primary.accent }}
-              >
-                {CATEGORY_LABELS[metric.category]}
-              </span>
-              <span
-                className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium text-white"
-                style={{ backgroundColor: color.primary.accent }}
-              >
-                {metric.field_type === "decimal" ? "Decimal" : "Numeric"}
-              </span>
-            </div>
-          </div>
-
-          {/* Basic Information */}
-          <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
-            <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-6`}>
-              Basic Information
-            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-1">
                 <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
@@ -191,23 +171,11 @@ export default function UsageMetricDetailsPage() {
               </div>
               <div className="space-y-1">
                 <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
-                  Category
-                </label>
-                <p className={`text-sm ${tw.textPrimary}`}>{CATEGORY_LABELS[metric.category]}</p>
-              </div>
-              <div className="space-y-1">
-                <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
                   Field Type
                 </label>
                 <p className={`text-sm ${tw.textPrimary}`}>
                   {metric.field_type === "decimal" ? "Decimal" : "Numeric"}
                 </p>
-              </div>
-              <div className="space-y-1">
-                <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
-                  Unit
-                </label>
-                <p className={`text-sm ${tw.textPrimary}`}>{metric.unit || "—"}</p>
               </div>
             </div>
           </div>
@@ -217,42 +185,115 @@ export default function UsageMetricDetailsPage() {
             <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-6`}>
               Data Source Information
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
               <div className="space-y-1">
                 <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
                   Source Table
                 </label>
-                <p className={`text-sm ${tw.textPrimary} font-mono`}>{metric.source_table}</p>
+                <p className={`text-sm ${tw.textPrimary}`}>—</p>
               </div>
               <div className="space-y-1">
                 <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
                   Data Source
                 </label>
-                <p className={`text-sm ${tw.textPrimary}`}>{metric.data_source}</p>
+                <p className={`text-sm ${tw.textPrimary}`}>—</p>
               </div>
               <div className="space-y-1">
                 <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
                   Frequency
                 </label>
-                <p className={`text-sm ${tw.textPrimary}`}>{metric.frequency}</p>
+                <p className={`text-sm ${tw.textPrimary}`}>—</p>
               </div>
             </div>
           </div>
 
           {/* Operators */}
-          <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
-            <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-6`}>
-              Operators
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {metric.operators.map((op) => (
-                <span
-                  key={op}
-                  className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium text-white"
-                  style={{ backgroundColor: color.primary.accent }}
+          <div className={`${tw.rounded} border overflow-hidden`} style={{ borderColor: color.border.default }}>
+            <div className="hidden lg:block overflow-x-auto">
+              <table
+                className="w-full min-w-[720px]"
+                style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+              >
+                <thead style={{ background: color.surface.tableHeader }}>
+                  <tr>
+                    {["Label", "Symbol", "Requires Value", "Requires Two Values"].map((header) => (
+                      <th
+                        key={header}
+                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        style={{ color: color.surface.tableHeaderText }}
+                      >
+                        {header}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {getOperatorsForFieldType(metric.field_type).map((operator) => (
+                    <tr key={operator.id}>
+                      <td
+                        className="px-6 py-4 text-sm text-gray-900 font-medium"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
+                        {operator.label
+                          .split("_")
+                          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                          .join(" ")}
+                      </td>
+                      <td
+                        className="px-6 py-4 text-sm text-gray-700"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
+                        {operator.symbol}
+                      </td>
+                      <td
+                        className="px-6 py-4 text-sm text-gray-700"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
+                        {operator.requiresValue ? "Yes" : "No"}
+                      </td>
+                      <td
+                        className="px-6 py-4 text-sm text-gray-700"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
+                        {operator.requiresTwoValues ? "Yes" : "No"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="lg:hidden p-6 space-y-4">
+              {getOperatorsForFieldType(metric.field_type).map((operator) => (
+                <div
+                  key={operator.id}
+                  className="border border-gray-200 rounded p-4 space-y-2"
                 >
-                  {op.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
-                </span>
+                  <div>
+                    <p className="text-xs font-medium text-gray-600 uppercase">Label</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {operator.label
+                        .split("_")
+                        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                        .join(" ")}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-xs">
+                    <div>
+                      <p className="font-medium text-gray-600 uppercase">Symbol</p>
+                      <p className="text-gray-900">{operator.symbol}</p>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-600 uppercase">Req Value</p>
+                      <p className="text-gray-900">{operator.requiresValue ? "Yes" : "No"}</p>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-600 uppercase">Req Two</p>
+                      <p className="text-gray-900">{operator.requiresTwoValues ? "Yes" : "No"}</p>
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
           </div>

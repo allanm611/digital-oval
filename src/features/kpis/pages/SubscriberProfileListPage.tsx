@@ -213,7 +213,7 @@ export default function SubscriberProfileListPage() {
                       Status
                     </th>
                     <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                      className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
                       style={{ color: color.surface.tableHeaderText }}
                     >
                       Actions
@@ -231,8 +231,8 @@ export default function SubscriberProfileListPage() {
                       <td className="px-6 py-4 text-sm text-gray-600">{profile.dataSource}</td>
                       <td className="px-6 py-4 text-sm text-gray-600">{profile.frequency}</td>
                       <td className="px-6 py-4 text-sm text-gray-900">{profile.status}</td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex gap-1 justify-end">
+                      <td className="px-3 py-4">
+                        <div className="flex gap-1 justify-center">
                           <button
                             onClick={() => handleViewDetails(profile)}
                             className="p-2 hover:bg-gray-100 rounded transition-colors"

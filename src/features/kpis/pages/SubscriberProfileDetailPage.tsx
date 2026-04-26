@@ -1,40 +1,22 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Edit, Trash2, Users } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
+import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { segmentService } from "../../segments/services/segmentService";
+import { getOperatorsForFieldType } from "../../../shared/utils/operatorMapper";
 
-// Dummy data - same as list page
-const DUMMY_PROFILE_FIELDS = [
-  {
-    id: 1,
-    name: "Account Type",
-    description: "",
-    dataSource: "DB",
-    frequency: "D-1",
-    status: "Available",
-    extractionLogic: "",
-  },
-  {
-    id: 2,
-    name: "Activation Date",
-    description: "",
-    dataSource: "DB",
-    frequency: "D-1",
-    status: "Available",
-    extractionLogic: "BIB_ADM.FLYTXT_DX_DAILY_KPI.ACTIVATION_DATE",
-  },
-  {
-    id: 3,
-    name: "CELL_ID",
-    description: "",
-    dataSource: "DB",
-    frequency: "D-1",
-    status: "Available",
-    extractionLogic: "BIB_ADM.FLYTXT_DX_DAILY_KPI.CELL_ID",
-  },
-];
+interface Profile {
+  id: number | string;
+  name: string;
+  description?: string;
+  dataSource: string;
+  frequency: string;
+  status: string;
+  field_type?: string;
+}
 
 export default function SubscriberProfileDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -44,21 +26,60 @@ export default function SubscriberProfileDetailPage() {
   const { showToast } = useToast();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<Profile | null>(null);
 
-  const profile = DUMMY_PROFILE_FIELDS.find((p) => p.id === Number(id));
+  useEffect(() => {
+    loadProfile();
+  }, [id]);
 
-  if (!profile) {
-    return (
-      <div className="space-y-6">
-        <BackButton fallbackTo="/dashboard/kpis/subscriber-profiles" showBreadcrumb={true} currentLabel="Subscriber Profile Details" parentLabel={parentLabel} />
-        <div className="text-center py-12">
-          <p className="text-gray-600">Profile field not found</p>
-        </div>
-      </div>
-    );
-  }
+  const loadProfile = async () => {
+    if (!id) return;
+    try {
+      setLoading(true);
+      const response = await segmentService.getSegmentationFields(true);
+      if (response && response.success && response.data && response.data.length > 0) {
+        const config = response.data[0]?.field_selector_config || [];
+        const customer360Category = config.find(
+          (cat: any) => cat.value === "customer_360" || cat.value === "customer_identity"
+        );
+
+        if (customer360Category && customer360Category.sub_categories) {
+          let foundProfile: Profile | null = null;
+          for (const subCat of customer360Category.sub_categories) {
+            if (subCat.fields && Array.isArray(subCat.fields)) {
+              const field = subCat.fields.find((f: any) => (f.id || 0) === Number(id));
+              if (field) {
+                foundProfile = {
+                  id: field.id || Number(id),
+                  name: field.field_name || field.name || "",
+                  description: field.field_description || field.description || "",
+                  dataSource: subCat.display_name || subCat.name || "—",
+                  frequency: field.data_latency || "—",
+                  status: "—",
+                  field_type: field.field_type || "text",
+                };
+                break;
+              }
+            }
+          }
+          setProfile(foundProfile);
+          if (!foundProfile) {
+            showToast("error", "Profile field not found");
+            navigate("/dashboard/kpis/subscriber-profiles");
+          }
+        }
+      }
+    } catch (err) {
+      showToast("error", "Failed to load profile details");
+      navigate("/dashboard/kpis/subscriber-profiles");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleDelete = async () => {
+    if (!profile) return;
     try {
       setIsDeleting(true);
       showToast("info", `Delete functionality will be implemented soon`);
@@ -71,6 +92,28 @@ export default function SubscriberProfileDetailPage() {
       setIsDeleting(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16">
+        <LoadingSpinner variant="modern" size="xl" color="primary" />
+        <p className={`${tw.textMuted} font-medium mt-4`}>
+          Loading profile details...
+        </p>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="space-y-6">
+        <BackButton fallbackTo="/dashboard/kpis/subscriber-profiles" showBreadcrumb={true} currentLabel="Subscriber Profile Details" parentLabel={parentLabel} />
+        <div className="text-center py-12">
+          <p className="text-gray-600">Profile field not found</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -122,7 +165,7 @@ export default function SubscriberProfileDetailPage() {
 
       {/* Profile Information */}
       <div className="space-y-6">
-        {/* Profile Overview */}
+        {/* Profile Overview & Basic Information */}
         <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
           <div className="flex items-start space-x-4 mb-6">
             <div
@@ -138,28 +181,7 @@ export default function SubscriberProfileDetailPage() {
               </p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-gray-200">
-            <span
-              className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium text-white"
-              style={{ backgroundColor: color.primary.accent }}
-            >
-              {profile.status}
-            </span>
-            <span
-              className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium text-white"
-              style={{ backgroundColor: color.primary.accent }}
-            >
-              {profile.dataSource}
-            </span>
-          </div>
-        </div>
-
-        {/* Basic Information */}
-        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
-          <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-6`}>
-            Basic Information
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
             <div className="space-y-1">
               <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
                 Field Name
@@ -178,27 +200,97 @@ export default function SubscriberProfileDetailPage() {
               </label>
               <p className={`text-sm ${tw.textPrimary}`}>{profile.frequency}</p>
             </div>
-            <div className="space-y-1">
-              <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
-                Platform Status
-              </label>
-              <p className={`text-sm ${tw.textPrimary}`}>{profile.status}</p>
-            </div>
           </div>
         </div>
 
-        {/* Extraction Logic */}
-        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
-          <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-6`}>
-            Extraction Logic
-          </h3>
-          <div className="space-y-1">
-            <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
-              Logic Definition
-            </label>
-            <pre className={`text-sm ${tw.textPrimary} font-mono bg-gray-50 p-4 ${tw.rounded} overflow-x-auto border border-gray-200`}>
-              {profile.extractionLogic || "—"}
-            </pre>
+        {/* Operators */}
+        <div className={`${tw.rounded} border overflow-hidden`} style={{ borderColor: color.border.default }}>
+          <div className="hidden lg:block overflow-x-auto">
+            <table
+              className="w-full min-w-[720px]"
+              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+            >
+              <thead style={{ background: color.surface.tableHeader }}>
+                <tr>
+                  {["Label", "Symbol", "Requires Value", "Requires Two Values"].map((header) => (
+                    <th
+                      key={header}
+                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: color.surface.tableHeaderText }}
+                    >
+                      {header}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {getOperatorsForFieldType(profile.field_type || "text").map((operator) => (
+                  <tr key={operator.id}>
+                    <td
+                      className="px-6 py-4 text-sm text-gray-900 font-medium"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      {operator.label
+                        .split("_")
+                        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                        .join(" ")}
+                    </td>
+                    <td
+                      className="px-6 py-4 text-sm text-gray-700"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      {operator.symbol}
+                    </td>
+                    <td
+                      className="px-6 py-4 text-sm text-gray-700"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      {operator.requiresValue ? "Yes" : "No"}
+                    </td>
+                    <td
+                      className="px-6 py-4 text-sm text-gray-700"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      {operator.requiresTwoValues ? "Yes" : "No"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Cards */}
+          <div className="lg:hidden p-6 space-y-4">
+            {getOperatorsForFieldType(profile.field_type || "text").map((operator) => (
+              <div
+                key={operator.id}
+                className="border border-gray-200 rounded p-4 space-y-2"
+              >
+                <div>
+                  <p className="text-xs font-medium text-gray-600 uppercase">Label</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {operator.label
+                      .split("_")
+                      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                      .join(" ")}
+                  </p>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-xs">
+                  <div>
+                    <p className="font-medium text-gray-600 uppercase">Symbol</p>
+                    <p className="text-gray-900">{operator.symbol}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-600 uppercase">Req Value</p>
+                    <p className="text-gray-900">{operator.requiresValue ? "Yes" : "No"}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-600 uppercase">Req Two</p>
+                    <p className="text-gray-900">{operator.requiresTwoValues ? "Yes" : "No"}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

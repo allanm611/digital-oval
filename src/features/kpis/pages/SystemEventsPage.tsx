@@ -1,11 +1,12 @@
 import { useState, useMemo, useEffect } from "react";
-import { Filter, Eye, ListChecks, Zap, Power, Loader2 } from "lucide-react";
+import { Filter, Eye, ListChecks, Zap, Power } from "lucide-react";
 import Input from "../../../shared/components/ui/Input";
 import { SystemEvent, SYSTEM_EVENT_CATEGORIES } from "../types/systemEvent";
 import { color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
 import BackButton from "../../../shared/components/ui/BackButton";
+import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
 import { systemEventService } from "../services/systemEventService";
@@ -181,9 +182,11 @@ export default function SystemEventsPage() {
       >
         {isLoading ? (
           <div className="p-8 md:p-16 text-center">
-            <div className="flex items-center justify-center gap-2">
-              <Loader2 className="w-5 h-5 animate-spin" style={{ color: color.primary.accent }} />
-              <span className={`${tw.textSecondary} text-sm`}>Loading events...</span>
+            <div className="flex flex-col items-center justify-center gap-4">
+              <LoadingSpinner size="xl" color="primary" />
+              <p className={`${tw.textMuted} font-medium text-sm`}>
+                Loading events...
+              </p>
             </div>
           </div>
         ) : filteredEvents.length === 0 ? (
