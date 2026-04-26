@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Edit, Trash2, Eye, Activity, Power } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, Activity, Power, Loader2 } from "lucide-react";
 import Input from "../../../shared/components/ui/Input";
 import BackButton from "../../../shared/components/ui/BackButton";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -15,6 +15,7 @@ export default function UsageMetricsPage() {
   const { success, error: showError } = useToast();
 
   const [metrics, setMetrics] = useState<UsageMetric[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [deleting, setDeleting] = useState<number | null>(null);
   const [toggling, setToggling] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -34,11 +35,14 @@ export default function UsageMetricsPage() {
   }, [searchTerm, categoryFilter]);
 
   const loadMetrics = async () => {
+    setIsLoading(true);
     try {
       const data = await usageMetricService.getAllMetrics();
       setMetrics(data);
     } catch (err) {
       showError("Error", "Failed to load usage metrics");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -250,7 +254,16 @@ export default function UsageMetricsPage() {
             </tr>
           </thead>
           <tbody>
-            {filteredMetrics.length === 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan={5} className="px-6 py-12 text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    <Loader2 className="w-5 h-5 animate-spin" style={{ color: color.primary.accent }} />
+                    <span className={`${tw.textSecondary} text-sm`}>Loading metrics...</span>
+                  </div>
+                </td>
+              </tr>
+            ) : filteredMetrics.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-6 py-12 text-center">
                   <p className={`${tw.textSecondary} text-sm`}>

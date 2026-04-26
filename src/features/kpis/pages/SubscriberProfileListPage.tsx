@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { Eye, Edit, Trash2 } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Eye, Edit, Trash2, Loader2 } from "lucide-react";
 import Input from "../../../shared/components/ui/Input";
 import Pagination from "../../../shared/components/ui/Pagination";
 import { color, tw } from "../../../shared/utils/utils";
@@ -8,223 +8,103 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import CreateButton from "../../../shared/components/ui/CreateButton";
-
-const DUMMY_PROFILE_FIELDS = [
-  {
-    id: 1,
-    name: "Account Type",
-    description: "",
-    dataSource: "DB",
-    frequency: "D-1",
-    status: "Available",
-    extractionLogic: "",
-  },
-  {
-    id: 2,
-    name: "Activation Date",
-    description: "",
-    dataSource: "DB",
-    frequency: "D-1",
-    status: "Available",
-    extractionLogic: "BIB_ADM.FLYTXT_DX_DAILY_KPI.ACTIVATION_DATE",
-  },
-  {
-    id: 3,
-    name: "CELL_ID",
-    description: "",
-    dataSource: "DB",
-    frequency: "D-1",
-    status: "Available",
-    extractionLogic: "BIB_ADM.FLYTXT_DX_DAILY_KPI.CELL_ID",
-  },
-  {
-    id: 4,
-    name: "Consumer Address",
-    description: "(Site Id)",
-    dataSource: "DB",
-    frequency: "D-1",
-    status: "Available",
-    extractionLogic: "",
-  },
-  {
-    id: 5,
-    name: "Date of last activity",
-    description: "",
-    dataSource: "DB",
-    frequency: "D-1",
-    status: "Available",
-    extractionLogic: "BIB_ADM.FLYTXT_DX_DAILY_KPI.LAST_ACTIVITY_DATE",
-  },
-  {
-    id: 6,
-    name: "Device Category",
-    description: "",
-    dataSource: "DB",
-    frequency: "D-1",
-    status: "Available",
-    extractionLogic: "BIB_ADM.FLYTXT_DX_DAILY_KPI.DEVICE_CATEGORY",
-  },
-  {
-    id: 7,
-    name: "Device Type (4G/3G/2G)",
-    description: "",
-    dataSource: "DB",
-    frequency: "D-1",
-    status: "Available",
-    extractionLogic: "BIB_ADM.FLYTXT_DX_DAILY_KPI.DEVICE_TYPE",
-  },
-  {
-    id: 8,
-    name: "EOD_Balance",
-    description: "",
-    dataSource: "DB",
-    frequency: "D-1",
-    status: "Available",
-    extractionLogic: "BIB_ADM.FLYTXT_DX_DAILY_KPI.EOD_BALANCE",
-  },
-  {
-    id: 9,
-    name: "First Name",
-    description: "",
-    dataSource: "DB",
-    frequency: "D-1",
-    status: "Available",
-    extractionLogic: "BIB_ADM.FLYTXT_DX_DAILY_KPI.FIRST_NAME",
-  },
-  {
-    id: 10,
-    name: "Last Name",
-    description: "",
-    dataSource: "DB",
-    frequency: "D-1",
-    status: "Available",
-    extractionLogic: "BIB_ADM.FLYTXT_DX_DAILY_KPI.LAST_NAME",
-  },
-  {
-    id: 11,
-    name: "Last Recharge Date",
-    description: "",
-    dataSource: "Live",
-    frequency: "Per Min",
-    status: "Available",
-    extractionLogic: "OCS_VOU.TRADETIME",
-  },
-  {
-    id: 12,
-    name: "Last Recharge Value",
-    description: "",
-    dataSource: "Live",
-    frequency: "Per Min",
-    status: "Available",
-    extractionLogic: "OCS_VOU.CARDVALUEADDED/1000000",
-  },
-  {
-    id: 13,
-    name: "Phone Brand",
-    description: "",
-    dataSource: "DB",
-    frequency: "D-1",
-    status: "Available",
-    extractionLogic: "BIB_ADM.FLYTXT_DX_DAILY_KPI.PHONE_BRAND",
-  },
-  {
-    id: 14,
-    name: "preferred Language",
-    description: "",
-    dataSource: "DB",
-    frequency: "D-1",
-    status: "Available",
-    extractionLogic: "",
-  },
-  {
-    id: 15,
-    name: "Province",
-    description: "",
-    dataSource: "DB",
-    frequency: "D-1",
-    status: "Available",
-    extractionLogic: "BIB_ADM.FLYTXT_DX_DAILY_KPI.PROVINCE",
-  },
-  {
-    id: 16,
-    name: "RGS status",
-    description: "",
-    dataSource: "DB",
-    frequency: "D-1",
-    status: "Available",
-    extractionLogic: "BIB_ADM.FLYTXT_DX_DAILY_KPI.RGS_STATUS",
-  },
-  {
-    id: 17,
-    name: "Service_Class",
-    description: "",
-    dataSource: "DB",
-    frequency: "D-1",
-    status: "Available",
-    extractionLogic: "BIB_ADM.FLYTXT_DX_DAILY_KPI.SERVICE_CLASS",
-  },
-  {
-    id: 18,
-    name: "SIM Support",
-    description: "",
-    dataSource: "DB",
-    frequency: "D-1",
-    status: "Available",
-    extractionLogic: "BIB_ADM.FLYTXT_DX_DAILY_KPI.SIM_SUPPORT",
-  },
-  {
-    id: 19,
-    name: "SIM Type (4G USIM /3G SIM/Normal)",
-    description: "",
-    dataSource: "DB",
-    frequency: "D-1",
-    status: "Available",
-    extractionLogic: "BIB_ADM.FLYTXT_DX_DAILY_KPI.SIM_TYPE",
-  },
-  {
-    id: 20,
-    name: "Smartphone",
-    description: "",
-    dataSource: "DB",
-    frequency: "D-1",
-    status: "Available",
-    extractionLogic: "BIB_ADM.FLYTXT_DX_DAILY_KPI.SMARTPHONE",
-  },
-];
+import { segmentService } from "../../segments/services/segmentService";
 
 const ITEMS_PER_PAGE = 10;
+
+interface Profile {
+  id: number;
+  name: string;
+  description?: string;
+  dataSource: string;
+  frequency: string;
+  status: string;
+}
 
 export default function SubscriberProfileListPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [profileToDelete, setProfileToDelete] = useState<{ id: number; name: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  useEffect(() => {
+    loadProfiles();
+  }, []);
+
+  const loadProfiles = async () => {
+    setIsLoading(true);
+    try {
+      const response = await segmentService.getSegmentationFields(true);
+      if (response && response.success && response.data && response.data.length > 0) {
+        const config = response.data[0]?.field_selector_config || [];
+
+        // Find Customer 360 category and extract fields from sub-categories
+        const customer360Category = config.find(
+          (cat: any) => cat.value === "customer_360" || cat.value === "customer_identity"
+        );
+
+        if (customer360Category) {
+          const loadedProfiles: Profile[] = [];
+
+          // Extract fields from sub-categories
+          if (customer360Category.sub_categories && Array.isArray(customer360Category.sub_categories)) {
+            customer360Category.sub_categories.forEach((subCat: any) => {
+              if (subCat.fields && Array.isArray(subCat.fields)) {
+                subCat.fields.forEach((field: any, index: number) => {
+                  loadedProfiles.push({
+                    id: field.id || index,
+                    name: field.field_name || field.name || "",
+                    description: field.field_description || field.description || "",
+                    dataSource: subCat.display_name || subCat.name || "Customer 360",
+                    frequency: field.data_latency || "Real-time",
+                    status: "Active",
+                  });
+                });
+              }
+            });
+          }
+
+          setProfiles(loadedProfiles);
+        } else {
+          setProfiles([]);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load subscriber profiles:", err);
+      showToast("error", "Failed to load subscriber profiles");
+      setProfiles([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const filteredProfiles = useMemo(() => {
-    return DUMMY_PROFILE_FIELDS.filter((profile) => {
+    return profiles.filter((profile) => {
       const matchesSearch =
         profile.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (profile.description && profile.description.toLowerCase().includes(searchTerm.toLowerCase()));
       return matchesSearch;
     });
-  }, [searchTerm]);
+  }, [searchTerm, profiles]);
 
   const totalPages = Math.ceil(filteredProfiles.length / ITEMS_PER_PAGE);
   const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
   const paginatedProfiles = filteredProfiles.slice(startIdx, startIdx + ITEMS_PER_PAGE);
 
-  const handleViewDetails = (profile: typeof DUMMY_PROFILE_FIELDS[0]) => {
+  const handleViewDetails = (profile: Profile) => {
     navigate(`/dashboard/kpis/subscriber-profiles/${profile.id}`, { state: { parentLabel: "Subscriber Profiles" } });
   };
 
-  const handleEdit = (profile: typeof DUMMY_PROFILE_FIELDS[0]) => {
+  const handleEdit = (profile: Profile) => {
     navigate(`/dashboard/kpis/subscriber-profiles/${profile.id}/edit`, { state: { parentLabel: "Subscriber Profiles" } });
   };
 
-  const handleDeleteClick = (profile: typeof DUMMY_PROFILE_FIELDS[0]) => {
+  const handleDeleteClick = (profile: Profile) => {
     setProfileToDelete({ id: profile.id, name: profile.name });
     setShowDeleteModal(true);
   };
@@ -279,7 +159,14 @@ export default function SubscriberProfileListPage() {
         className={`${tw.rounded} border overflow-hidden`}
         style={{ borderColor: color.border.default }}
       >
-        {filteredProfiles.length === 0 ? (
+        {isLoading ? (
+          <div className="p-8 md:p-16 text-center">
+            <div className="flex items-center justify-center gap-2">
+              <Loader2 className="w-5 h-5 animate-spin" style={{ color: color.primary.accent }} />
+              <span className={`${tw.textSecondary} text-sm`}>Loading profile fields...</span>
+            </div>
+          </div>
+        ) : filteredProfiles.length === 0 ? (
           <div className="p-8 md:p-16 text-center">
             <div className={`bg-gradient-to-br from-[${color.primary.accent}]/5 to-[${color.primary.accent}]/10 ${tw.rounded} p-6 md:p-12`}>
               <h3 className={`${tw.cardHeading} ${tw.textPrimary} mb-1`}>No profile fields found</h3>
@@ -305,7 +192,7 @@ export default function SubscriberProfileListPage() {
                       className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                       style={{ color: color.surface.tableHeaderText }}
                     >
-                      Data Source
+                      Category
                     </th>
                     <th
                       className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
