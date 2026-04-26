@@ -84,9 +84,12 @@ export default function SegmentConditionsBuilder({
       return false;
     }
 
+    // Normalize operator label for comparison (handle both "greater than" and "greater_than" formats)
+    const normalizedOperator = condition.operator.toLowerCase().replace(/_/g, " ");
+
     // Check if operator requires a value
     const operatorDef = Object.values(OPERATORS).find(
-      (op) => op.label === condition.operator
+      (op) => op.label === normalizedOperator || op.label === condition.operator
     );
 
     // If operator requires a value, check if value is provided

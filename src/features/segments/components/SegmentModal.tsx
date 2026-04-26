@@ -168,7 +168,6 @@ export default function SegmentModal({
 
   useEffect(() => {
     const loadSegmentData = async () => {
-      console.log("📂 loadSegmentData effect triggered - isOpen:", isOpen, "segment:", segment?.id);
       if (isOpen) {
         isUserInteractionRef.current = false; // Mark as initialization
         // Trigger category refresh to ensure categories are loaded
@@ -176,7 +175,6 @@ export default function SegmentModal({
 
         if (segment && segment.id) {
           try {
-            console.log("🔄 Fetching segment from backend:", segment.id);
             // Fetch full segment data from backend to ensure we have the definition
             const fullSegmentResponse = await segmentService.getSegmentById(
               segment.id,
@@ -186,8 +184,6 @@ export default function SegmentModal({
               fullSegmentResponse && "data" in fullSegmentResponse
                 ? fullSegmentResponse.data
                 : fullSegmentResponse;
-
-            console.log("✅ Fetched full segment, definition:", fullSegment.definition);
 
             // Convert the stored definition/payload back to UI conditions
             // Keep category as string since backend returns category IDs as strings
@@ -229,7 +225,6 @@ export default function SegmentModal({
               typeId = foundType?.id;
             }
 
-            console.log("🎯 Setting formData with conditions:", conditions);
             setFormData({
               name: fullSegment.name,
               description: fullSegment.description || "",
@@ -280,7 +275,6 @@ export default function SegmentModal({
         }, 0);
       } else {
         // Clear state when closing to prevent stale data from showing
-        console.log("🔵 Modal closed - clearing formData");
         setFormData({
           name: "",
           description: "",
@@ -332,9 +326,7 @@ export default function SegmentModal({
   const convertPayloadToConditions = async (
     payload: SegmentPayload,
   ): Promise<SegmentConditionGroup[]> => {
-    console.log("🔄 convertPayloadToConditions START - payload:", payload);
     if (!payload.layer_filters || !payload.layer_filters.groups) {
-      console.log("❌ No layer_filters or groups found");
       return [];
     }
 
@@ -536,8 +528,6 @@ export default function SegmentModal({
             : undefined,
         };
 
-        console.log(`📋 Built condition for field "${fieldName}":`, condition);
-        console.log(`   → conditionType: ${condition.conditionType}, category: ${condition.category}`);
         conditionGroup.conditions.push(condition);
       }
 
@@ -611,7 +601,6 @@ export default function SegmentModal({
       }
     }
 
-    console.log("✅ convertPayloadToConditions COMPLETE - built conditions:", conditions);
     return conditions;
   };
 
