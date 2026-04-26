@@ -108,7 +108,7 @@ export const MetricsConditionRow: React.FC<MetricsConditionRowProps> = ({
         </div>
 
         {/* Time Window Dropdown - Hidden when date operator is selected from main operator dropdown */}
-        {!isDateOperator && !condition.date_operator_id && (
+        {!isDateOperator && (
           <div className="flex-1 min-w-[120px]">
             <HeadlessSelect
               options={TIME_WINDOWS.map((tw) => ({
@@ -208,31 +208,20 @@ export const MetricsConditionRow: React.FC<MetricsConditionRowProps> = ({
             onChange={(value) => {
               const operatorId = parseInt(value);
               const operator = DATE_OPERATORS.find((op) => op.id === operatorId);
-              const updates: Partial<SegmentCondition> = {
+              updateCondition(groupId, condition.id, {
                 date_operator_id: operatorId,
                 date_operator: operator?.value,
                 start_date: undefined,
                 end_date: undefined,
-              };
-
-              // For "between" operator, set default dates (last 30 days)
-              if (operatorId === 13) {
-                const today = new Date();
-                const thirtyDaysAgo = new Date(today);
-                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-                updates.start_date = thirtyDaysAgo.toISOString().split('T')[0];
-                updates.end_date = today.toISOString().split('T')[0];
-              }
-
-              updateCondition(groupId, condition.id, updates);
+              });
             }}
             placeholder="Select date operator"
-            className="text-sm min-w-[130px]"
+            className="text-sm min-w-[150px]"
             zIndex={zIndex.popover}
           />
 
           {/* Date input fields based on selected operator */}
-          {(condition.date_operator_id === 12 || condition.date_operator_id === 14 || condition.date_operator_id === 15) && (
+          {(!condition.date_operator_id || condition.date_operator_id === 12 || condition.date_operator_id === 14 || condition.date_operator_id === 15) && (
             <Input
               type="date"
               value={condition.start_date || ""}
