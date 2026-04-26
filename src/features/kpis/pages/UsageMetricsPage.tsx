@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Edit, Trash2, Eye, Activity, Power, Loader2 } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, Activity, Power } from "lucide-react";
 import Input from "../../../shared/components/ui/Input";
 import BackButton from "../../../shared/components/ui/BackButton";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Pagination from "../../../shared/components/ui/Pagination";
 import { UsageMetric } from "../types/usageMetrics";
 import { usageMetricService } from "../services/usageMetricService";
@@ -199,71 +200,75 @@ export default function UsageMetricsPage() {
       </div>
 
       {/* Table Container */}
-      <div className="overflow-x-auto">
-        <table
-          className="w-full min-w-[720px]"
-          style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-        >
-          <thead>
-            <tr>
-              <th
-                className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider rounded-tl-md"
-                style={{
-                  color: color.surface.tableHeaderText,
-                  backgroundColor: color.surface.tableHeader,
-                }}
-              >
-                Metric Name
-              </th>
-              <th
-                className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                style={{
-                  color: color.surface.tableHeaderText,
-                  backgroundColor: color.surface.tableHeader,
-                }}
-              >
-                Category
-              </th>
-              <th
-                className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                style={{
-                  color: color.surface.tableHeaderText,
-                  backgroundColor: color.surface.tableHeader,
-                }}
-              >
-                Type
-              </th>
-              <th
-                className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                style={{
-                  color: color.surface.tableHeaderText,
-                  backgroundColor: color.surface.tableHeader,
-                }}
-              >
-                Description
-              </th>
-              <th
-                className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider rounded-tr-md"
-                style={{
-                  color: color.surface.tableHeaderText,
-                  backgroundColor: color.surface.tableHeader,
-                }}
-              >
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
+      {isLoading ? (
+        <div className="p-8 md:p-16 text-center">
+          <div className="flex flex-col items-center justify-center gap-4">
+            <LoadingSpinner
+              size="xl"
+              color="primary"
+            />
+            <p className={`${tw.textMuted} font-medium text-sm`}>
+              Loading metrics...
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table
+            className="w-full min-w-[720px]"
+            style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+          >
+            <thead>
               <tr>
-                <td colSpan={5} className="px-6 py-12 text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <Loader2 className="w-5 h-5 animate-spin" style={{ color: color.primary.accent }} />
-                    <span className={`${tw.textSecondary} text-sm`}>Loading metrics...</span>
-                  </div>
-                </td>
+                <th
+                  className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider rounded-tl-md"
+                  style={{
+                    color: color.surface.tableHeaderText,
+                    backgroundColor: color.surface.tableHeader,
+                  }}
+                >
+                  Metric Name
+                </th>
+                <th
+                  className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                  style={{
+                    color: color.surface.tableHeaderText,
+                    backgroundColor: color.surface.tableHeader,
+                  }}
+                >
+                  Category
+                </th>
+                <th
+                  className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                  style={{
+                    color: color.surface.tableHeaderText,
+                    backgroundColor: color.surface.tableHeader,
+                  }}
+                >
+                  Type
+                </th>
+                <th
+                  className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                  style={{
+                    color: color.surface.tableHeaderText,
+                    backgroundColor: color.surface.tableHeader,
+                  }}
+                >
+                  Description
+                </th>
+                <th
+                  className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider rounded-tr-md"
+                  style={{
+                    color: color.surface.tableHeaderText,
+                    backgroundColor: color.surface.tableHeader,
+                  }}
+                >
+                  Actions
+                </th>
               </tr>
-            ) : filteredMetrics.length === 0 ? (
+            </thead>
+            <tbody>
+              {filteredMetrics.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-6 py-12 text-center">
                   <p className={`${tw.textSecondary} text-sm`}>
@@ -338,9 +343,10 @@ export default function UsageMetricsPage() {
             )}
           </tbody>
         </table>
-      </div>
+        </div>
+      )}
 
-      {paginatedMetrics.length > 0 && filteredMetrics.length > 0 && (
+      {!isLoading && paginatedMetrics.length > 0 && filteredMetrics.length > 0 && (
         <Pagination
           currentPage={currentPage}
           pageSize={pageSize}

@@ -1,28 +1,121 @@
-import { useState, useMemo } from "react";
-import { Eye, Edit, Trash2, ListChecks, Activity, DollarSign,  ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Eye, Edit, Trash2, ListChecks, Activity, DollarSign, ChevronLeft, ChevronRight, Users } from "lucide-react";
 import Input from "../../../shared/components/ui/Input";
-import { generateAllKPIs } from "../utils/kpiGenerator";
 import { color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import CreateButton from "../../../shared/components/ui/CreateButton";
-
-const allKPIs = generateAllKPIs();
+import { usageMetricService } from "../services/usageMetricService";
+import { revenueMetricService } from "../services/revenueMetricService";
+import { systemEventService } from "../services/systemEventService";
+import { segmentService } from "../../segments/services/segmentService";
+import { type KPI } from "../types/kpi";
 
 const ITEMS_PER_PAGE = 10;
 
 export default function AllKPIsPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const [allKPIs, setAllKPIs] = useState<KPI[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [kpiToDelete, setKpiToDelete] = useState<{ id: string; name: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    loadAllKPIs();
+  }, []);
+
+  const loadAllKPIs = async () => {
+    setIsLoading(true);
+    try {
+      const [usageMetrics, revenueMetrics, systemEvents, segmentationResponse] = await Promise.all([
+        usageMetricService.getAllMetrics(),
+        revenueMetricService.getAllMetrics(),
+        systemEventService.getAllEvents(),
+        segmentService.getSegmentationFields(true),
+      ]);
+
+      const kpis: KPI[] = [];
+
+      // Add subscriber profiles from Customer 360 sub-categories
+      if (segmentationResponse && segmentationResponse.success && segmentationResponse.data && segmentationResponse.data.length > 0) {
+        const config = segmentationResponse.data[0]?.field_selector_config || [];
+        const customer360Category = config.find(
+          (cat: any) => cat.value === "customer_360" || cat.value === "customer_identity"
+        );
+
+        if (customer360Category && customer360Category.sub_categories) {
+          customer360Category.sub_categories.forEach((subCat: any) => {
+            if (subCat.fields && Array.isArray(subCat.fields)) {
+              subCat.fields.forEach((field: any, idx: number) => {
+                kpis.push({
+                  id: `sp-${field.id || idx + 1}`,
+                  name: field.field_name || field.name || "",
+                  category: "Subscriber Profile",
+                  subcategory: subCat.display_name || subCat.name || "",
+                  description: field.field_description || field.description || "",
+                  source: "Subscriber Profiles",
+                  field_type: field.field_type || "",
+                });
+              });
+            }
+          });
+        }
+      }
+
+      systemEvents.forEach((event, idx) => {
+        kpis.push({
+          id: `se-${event.id || idx + 1}`,
+          name: event.name || event.event_name || "",
+          category: "System Event",
+          subcategory: event.category || "",
+          description: event.description || event.event_description || "",
+          source: "System Events",
+          field_type: "",
+        });
+      });
+
+      revenueMetrics.forEach((metric, idx) => {
+        kpis.push({
+          id: `rm-${metric.id || idx + 1}`,
+          name: metric.name || "",
+          category: "Revenue Metric",
+          subcategory: metric.category || "",
+          description: metric.description || "",
+          source: "Revenue Metrics",
+          field_type: metric.field_type || "",
+        });
+      });
+
+      usageMetrics.forEach((metric, idx) => {
+        kpis.push({
+          id: `um-${metric.id || idx + 1}`,
+          name: metric.name || "",
+          category: "Usage Metric",
+          subcategory: metric.category || "",
+          description: metric.description || "",
+          source: "Usage Metrics",
+          field_type: metric.field_type || "",
+        });
+      });
+
+      setAllKPIs(kpis);
+    } catch (err) {
+      console.error("Failed to load KPIs:", err);
+      showToast("error", "Failed to load KPIs");
+      setAllKPIs([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const categories = Array.from(new Set(allKPIs.map((kpi) => kpi.category)));
 
@@ -36,7 +129,7 @@ export default function AllKPIsPage() {
 
       return matchesSearch && matchesCategory;
     });
-  }, [searchTerm, categoryFilter]);
+  }, [searchTerm, categoryFilter, allKPIs]);
 
   const totalPages = Math.ceil(filteredKPIs.length / ITEMS_PER_PAGE);
   const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -50,6 +143,7 @@ export default function AllKPIsPage() {
   // Calculate statistics
   const stats = {
     totalKPIs: allKPIs.length,
+    subscriberProfiles: allKPIs.filter((k) => k.category === "Subscriber Profile").length,
     systemEvents: allKPIs.filter((k) => k.category === "System Event").length,
     usageMetrics: allKPIs.filter((k) => k.category === "Usage Metric").length,
     revenueMetrics: allKPIs.filter((k) => k.category === "Revenue Metric").length,
@@ -60,6 +154,11 @@ export default function AllKPIsPage() {
       name: "Total KPIs",
       value: stats.totalKPIs,
       icon: ListChecks,
+    },
+    {
+      name: "Subscriber Profiles",
+      value: stats.subscriberProfiles,
+      icon: Users,
     },
     {
       name: "System Events",
@@ -150,7 +249,7 @@ export default function AllKPIsPage() {
             View all available KPIs across all categories
           </p>
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
         {statCards.map((stat) => {
           const Icon = stat.icon;
           return (
@@ -197,7 +296,19 @@ export default function AllKPIsPage() {
         className={`${tw.rounded} border overflow-hidden`}
         style={{ borderColor: color.border.default }}
       >
-        {filteredKPIs.length === 0 ? (
+        {isLoading ? (
+          <div className="p-8 md:p-16 text-center">
+            <div className="flex flex-col items-center justify-center gap-4">
+              <LoadingSpinner
+                size="xl"
+                color="primary"
+              />
+              <p className={`${tw.textMuted} font-medium text-sm`}>
+                Loading KPIs...
+              </p>
+            </div>
+          </div>
+        ) : filteredKPIs.length === 0 ? (
           <div className="p-8 md:p-16 text-center">
             <div className={`bg-gradient-to-br from-[${color.primary.accent}]/5 to-[${color.primary.accent}]/10 ${tw.rounded} p-6 md:p-12`}>
               <h3 className={`${tw.cardHeading} ${tw.textPrimary} mb-1`}>No KPIs found</h3>
@@ -237,18 +348,6 @@ export default function AllKPIsPage() {
                       Type
                     </th>
                     <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Description
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider hidden lg:table-cell"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Source
-                    </th>
-                    <th
                       className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
                       style={{ color: color.surface.tableHeaderText }}
                     >
@@ -285,22 +384,8 @@ export default function AllKPIsPage() {
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
                         <p className="text-sm text-gray-700">
-                          {kpi.subcategory ? kpi.subcategory.replace(/_/g, " ") : "-"}
+                          {kpi.field_type ? kpi.field_type.charAt(0).toUpperCase() + kpi.field_type.slice(1) : "-"}
                         </p>
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm max-w-xs"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <p className="text-sm text-gray-900 truncate" title={kpi.description}>
-                          {kpi.description}
-                        </p>
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm hidden lg:table-cell"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <p className="text-sm text-gray-900">{kpi.source}</p>
                       </td>
                       <td
                         className="px-6 py-4 text-sm font-medium"
@@ -353,7 +438,6 @@ export default function AllKPIsPage() {
                         <h4 className="font-semibold text-sm text-gray-900">
                           {kpi.name}
                         </h4>
-                        <p className="text-xs text-gray-600 mt-1">{kpi.description}</p>
                       </div>
                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 text-gray-900">
                         {kpi.category}
@@ -363,15 +447,7 @@ export default function AllKPIsPage() {
                       <div>
                         <span className="text-gray-600">Type:</span>
                         <span className="ml-1 font-medium text-gray-900">
-                          {kpi.subcategory ? kpi.subcategory.replace(/_/g, " ") : "-"}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4 text-xs">
-                      <div>
-                        <span className="text-gray-600">Source:</span>
-                        <span className="ml-1 font-medium text-gray-900">
-                          {kpi.source}
+                          {kpi.field_type ? kpi.field_type.charAt(0).toUpperCase() + kpi.field_type.slice(1) : "-"}
                         </span>
                       </div>
                     </div>

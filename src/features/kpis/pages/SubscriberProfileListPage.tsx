@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect } from "react";
-import { Eye, Edit, Trash2, Loader2 } from "lucide-react";
+import { Eye, Edit, Trash2 } from "lucide-react";
 import Input from "../../../shared/components/ui/Input";
 import Pagination from "../../../shared/components/ui/Pagination";
+import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { useNavigate } from "react-router-dom";
@@ -161,9 +162,14 @@ export default function SubscriberProfileListPage() {
       >
         {isLoading ? (
           <div className="p-8 md:p-16 text-center">
-            <div className="flex items-center justify-center gap-2">
-              <Loader2 className="w-5 h-5 animate-spin" style={{ color: color.primary.accent }} />
-              <span className={`${tw.textSecondary} text-sm`}>Loading profile fields...</span>
+            <div className="flex flex-col items-center justify-center gap-4">
+              <LoadingSpinner
+                size="xl"
+                color="primary"
+              />
+              <p className={`${tw.textMuted} font-medium text-sm`}>
+                Loading profile fields...
+              </p>
             </div>
           </div>
         ) : filteredProfiles.length === 0 ? (

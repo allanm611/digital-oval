@@ -9,6 +9,7 @@ import { color, tw } from "../../../shared/utils/utils";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 
 const KPI_TYPE_OPTIONS = [
+  { label: "Subscriber Profile", value: "subscriber" },
   { label: "Revenue Metric", value: "revenue" },
   { label: "Usage Metric", value: "usage" },
   { label: "System Event", value: "system" },
@@ -51,7 +52,7 @@ export default function CreateKPIPage() {
 
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
-    kpiType: "revenue" as "revenue" | "usage" | "system",
+    kpiType: "subscriber" as "subscriber" | "revenue" | "usage" | "system",
     name: "",
     description: "",
     field_type: "numeric" as "numeric" | "decimal",

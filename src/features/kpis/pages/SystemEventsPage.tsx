@@ -1,32 +1,51 @@
-import { useState, useMemo } from "react";
-import { Filter, Eye, ListChecks, Zap, Power } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Filter, Eye, ListChecks, Zap, Power, Loader2 } from "lucide-react";
 import Input from "../../../shared/components/ui/Input";
-import { SYSTEM_EVENTS, SYSTEM_EVENT_CATEGORIES } from "../types/systemEvent";
+import { SystemEvent, SYSTEM_EVENT_CATEGORIES } from "../types/systemEvent";
 import { color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
+import { systemEventService } from "../services/systemEventService";
 
 const ITEMS_PER_PAGE = 10;
 
 export default function SystemEventsPage() {
   const navigate = useNavigate();
-  const { success } = useToast();
+  const { success, error: showError } = useToast();
+  const [events, setEvents] = useState<SystemEvent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [toggling, setToggling] = useState<number | null>(null);
   const [activeEvents, setActiveEvents] = useState<Set<number>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
 
+  useEffect(() => {
+    loadEvents();
+  }, []);
+
+  const loadEvents = async () => {
+    setIsLoading(true);
+    try {
+      const data = await systemEventService.getAllEvents();
+      setEvents(data);
+    } catch (err) {
+      console.error("Failed to load system events:", err);
+      showError("Error", "Failed to load system events");
+      setEvents([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const filteredEvents = useMemo(() => {
-    return SYSTEM_EVENTS.filter((event) => {
+    return events.filter((event) => {
       const matchesSearch =
         event.event_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.event_description
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
+        event.event_description.toLowerCase().includes(searchTerm.toLowerCase()) ||
         event.event_code.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesCategory =
@@ -34,7 +53,7 @@ export default function SystemEventsPage() {
 
       return matchesSearch && matchesCategory;
     });
-  }, [searchTerm, categoryFilter]);
+  }, [searchTerm, categoryFilter, events]);
 
   const totalPages = Math.ceil(filteredEvents.length / ITEMS_PER_PAGE);
   const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -48,7 +67,7 @@ export default function SystemEventsPage() {
     setCurrentPage(1);
   };
 
-  const handleToggleActive = async (event: typeof SYSTEM_EVENTS[0]) => {
+  const handleToggleActive = async (event: SystemEvent) => {
     setToggling(event.id);
     try {
       const isCurrentlyActive = activeEvents.has(event.id);
@@ -68,10 +87,10 @@ export default function SystemEventsPage() {
 
   // Calculate statistics
   const stats = {
-    totalEvents: SYSTEM_EVENTS.length,
-    email: SYSTEM_EVENTS.filter((e) => e.category === "email").length,
-    sms: SYSTEM_EVENTS.filter((e) => e.category === "sms").length,
-    campaign: SYSTEM_EVENTS.filter((e) => e.category === "campaign").length,
+    totalEvents: events.length,
+    email: events.filter((e) => e.category === "email").length,
+    sms: events.filter((e) => e.category === "sms").length,
+    campaign: events.filter((e) => e.category === "campaign").length,
   };
 
   const statCards = [
@@ -160,7 +179,14 @@ export default function SystemEventsPage() {
         className={`${tw.rounded} border overflow-hidden`}
         style={{ borderColor: color.border.default }}
       >
-        {filteredEvents.length === 0 ? (
+        {isLoading ? (
+          <div className="p-8 md:p-16 text-center">
+            <div className="flex items-center justify-center gap-2">
+              <Loader2 className="w-5 h-5 animate-spin" style={{ color: color.primary.accent }} />
+              <span className={`${tw.textSecondary} text-sm`}>Loading events...</span>
+            </div>
+          </div>
+        ) : filteredEvents.length === 0 ? (
           <div className="p-8 md:p-16 text-center">
             <div
               className={`bg-gradient-to-br from-[${color.primary.accent}]/5 to-[${color.primary.accent}]/10 ${tw.rounded} p-6 md:p-12`}
