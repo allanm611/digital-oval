@@ -622,6 +622,7 @@ export default function CampaignDefinitionStep({
                         </div>
                       ) : (
                         linesOfBusiness
+                          .filter((lob) => lob.is_active !== false)
                           .filter(
                             (lob) =>
                               lob.name
@@ -744,6 +745,7 @@ export default function CampaignDefinitionStep({
                         </div>
                       ) : (
                         departmentsData
+                          .filter((dept) => dept.is_active !== false)
                           .filter(
                             (dept) =>
                               dept.name
@@ -1047,6 +1049,7 @@ export default function CampaignDefinitionStep({
                         </div>
                       ) : (
                         objectives
+                          .filter((objective) => objective.is_active !== false)
                           .filter(
                             (objective) =>
                               objective.name

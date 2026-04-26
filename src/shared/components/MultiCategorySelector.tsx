@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { ChevronDown, Plus, X, Check } from "lucide-react";
+import { ChevronDown, Plus, X } from "lucide-react";
 import SearchInput from "./ui/SearchInput";
+import Checkbox from "./ui/Checkbox";
 import { ProductCategory } from "../../features/products/types/productCategory";
 import { productCategoryService } from "../../features/products/services/productCategoryService";
 import { color, tw } from "../utils/utils";
@@ -377,17 +378,11 @@ export default function MultiCategorySelector({
                       }`}
                     >
                       <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <div
-                          className={`w-4 h-4 border-2 rounded flex items-center justify-center flex-shrink-0 ${
-                            isSelected
-                              ? "border-black bg-black"
-                              : "border-gray-300"
-                          }`}
-                        >
-                          {isSelected && (
-                            <Check className="w-3 h-3 text-white" />
-                          )}
-                        </div>
+                        <Checkbox
+                          id={`category-${category.id}`}
+                          checked={isSelected}
+                          onChange={() => handleToggle(category.id)}
+                        />
                         <div className="flex-1 min-w-0">
                           <div className="truncate">{category.name}</div>
                           {category.description && (

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { X, CheckCircle } from "lucide-react";
+import { X, Check } from "lucide-react";
 import { customerService } from "../../customers360/services/customerServices";
 import Pagination from "../../../shared/components/ui/Pagination";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -56,6 +56,8 @@ export default function AddDNDBulkModal({
   const [customerSearchTerm, setCustomerSearchTerm] = useState("");
   const [selectedDNDTypeId, setSelectedDNDTypeId] = useState<string>("");
   const [selectedChannelIds, setSelectedChannelIds] = useState<number[]>([]);
+  const [selectedDuration, setSelectedDuration] = useState<string>("0");
+  const [customDurationDays, setCustomDurationDays] = useState<string>("");
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [totalCustomers, setTotalCustomers] = useState(0);
@@ -84,6 +86,7 @@ export default function AddDNDBulkModal({
       setPage(1);
       setSelectedDNDTypeId(String(dndTypes[0].id));
       setSelectedChannelIds([]);
+      setSelectedDuration("0");
       loadCustomers();
       loadExistingSubscriptions();
     }
@@ -126,8 +129,16 @@ export default function AddDNDBulkModal({
     });
   }, [customers, customerSearchTerm]);
 
-  const isCustomerInDND = (customerId: number): boolean => {
-    return existingSubscriptions.some((sub) => sub.customer_id === customerId);
+  const isCustomerInDNDForChannels = (
+    customerId: number,
+    channelCodes: string[]
+  ): string[] => {
+    return channelCodes.filter((channelCode) =>
+      existingSubscriptions.some(
+        (sub) =>
+          sub.customer_id === customerId && sub.channel === channelCode
+      )
+    );
   };
 
   const handleCustomerSelect = (customer: Customer) => {
@@ -138,8 +149,6 @@ export default function AddDNDBulkModal({
           (typeof customer.id === "string"
             ? parseInt(customer.id, 10)
             : customer.id);
-
-    if (isCustomerInDND(customerId)) return;
 
     const fullName = `${customer.first_name || ""} ${customer.last_name || ""}`.trim();
 
@@ -173,10 +182,25 @@ export default function AddDNDBulkModal({
       selectedDNDTypeId &&
       selectedChannelCodes.length > 0
     ) {
+      const channelsToAdd = selectedChannelCodes.filter((channelCode) => {
+        const alreadyInAny = selectedMembers.some((member) =>
+          isCustomerInDNDForChannels(member.customer_id, [channelCode])
+            .length > 0
+        );
+        return !alreadyInAny;
+      });
+
+      if (channelsToAdd.length === 0) {
+        alert(
+          "All selected customers are already in DND for the selected channels."
+        );
+        return;
+      }
+
       onAdd?.(
         selectedMembers.map((m) => m.customer_id),
         Number(selectedDNDTypeId),
-        selectedChannelCodes
+        channelsToAdd
       );
     }
   };
@@ -186,6 +210,8 @@ export default function AddDNDBulkModal({
     setCustomerSearchTerm("");
     setSelectedDNDTypeId(dndTypes.length > 0 ? String(dndTypes[0].id) : "");
     setSelectedChannelIds([]);
+    setSelectedDuration("0");
+    setCustomDurationDays("");
     onClose();
   };
 
@@ -214,8 +240,8 @@ export default function AddDNDBulkModal({
         </div>
 
         <div className="p-6 space-y-4">
-          {/* Top row - DND Type and Select Channels */}
-          <div className="grid grid-cols-2 gap-6">
+          {/* Top row - DND Type, Duration, and Select Channels */}
+          <div className="grid grid-cols-3 gap-6">
             {/* DND Type Selector */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -230,6 +256,39 @@ export default function AddDNDBulkModal({
                 }))}
                 placeholder="Select DND type"
               />
+            </div>
+
+            {/* Duration Selector */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Duration (Optional)
+              </label>
+              <div className="space-y-2">
+                <HeadlessSelect
+                  value={selectedDuration}
+                  onChange={setSelectedDuration}
+                  options={[
+                    { value: "0", label: "Never expires" },
+                    { value: "7", label: "7 days" },
+                    { value: "30", label: "30 days" },
+                    { value: "90", label: "90 days" },
+                    { value: "180", label: "180 days" },
+                    { value: "365", label: "1 year" },
+                    { value: "custom", label: "Custom days" },
+                  ]}
+                  placeholder="Select duration"
+                />
+                {selectedDuration === "custom" && (
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder="Enter number of days"
+                    value={customDurationDays}
+                    onChange={(e) => setCustomDurationDays(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                )}
+              </div>
             </div>
 
             {/* Select Channels */}
@@ -304,39 +363,50 @@ export default function AddDNDBulkModal({
                     const isSelected = selectedMembers.some(
                       (m) => m.customer_id === customerId
                     );
-                    const alreadyInDND = isCustomerInDND(customerId);
+                    const selectedChannelCodes = channels
+                      .filter((ch) => selectedChannelIds.includes(ch.id))
+                      .map((ch) => ch.code.toUpperCase());
+                    const alreadyInSelectedChannels = isCustomerInDNDForChannels(
+                      customerId,
+                      selectedChannelCodes
+                    );
 
                     return (
                       <div
                         key={customerId}
-                        className={`px-4 py-3 flex items-center gap-3 ${
-                          alreadyInDND
-                            ? "bg-gray-50 cursor-not-allowed"
-                            : "hover:bg-gray-50 cursor-pointer"
-                        }`}
-                        onClick={() =>
-                          !alreadyInDND && handleCustomerSelect(customer)
-                        }
+                        className="px-4 py-3 flex items-center gap-3 hover:bg-gray-50 cursor-pointer"
+                        onClick={() => handleCustomerSelect(customer)}
                       >
-                        {alreadyInDND ? (
-                          <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                        ) : (
-                          <Checkbox
-                            id={`customer-${customerId}`}
-                            checked={isSelected}
-                            onChange={() => handleCustomerSelect(customer)}
-                          />
-                        )}
+                        <Checkbox
+                          id={`customer-${customerId}`}
+                          checked={isSelected}
+                          onChange={() => handleCustomerSelect(customer)}
+                        />
                         <div className="flex-1 min-w-0">
-                          <p
-                            className={`text-sm font-medium ${
-                              alreadyInDND
-                                ? "text-gray-500"
-                                : "text-gray-900"
-                            }`}
-                          >
-                            {fullName || customer.msisdn || "Unknown"}
-                          </p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-medium text-gray-900">
+                              {fullName || customer.msisdn || "Unknown"}
+                            </p>
+                            {alreadyInSelectedChannels.length > 0 && (
+                              <div
+                                className="flex items-center gap-1 px-2 py-0.5 rounded-full"
+                                style={{
+                                  backgroundColor: `${color.primary.accent}20`,
+                                }}
+                              >
+                                <Check
+                                  className="w-3 h-3 flex-shrink-0"
+                                  style={{ color: color.primary.accent }}
+                                />
+                                <span
+                                  className="text-xs font-medium"
+                                  style={{ color: color.primary.accent }}
+                                >
+                                  In {alreadyInSelectedChannels.join(", ")}
+                                </span>
+                              </div>
+                            )}
+                          </div>
                           <div className="mt-1 flex flex-wrap gap-2 text-xs text-gray-500">
                             {customer.msisdn && <span>{customer.msisdn}</span>}
                             {customer.email && <span>{customer.email}</span>}

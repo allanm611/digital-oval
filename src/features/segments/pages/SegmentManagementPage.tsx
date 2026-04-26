@@ -29,6 +29,7 @@ import {
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import { Segment, SegmentFilters, SortDirection } from "../types/segment";
 import { segmentService } from "../services/segmentService";
+import { segmentTypeService } from "../services/segmentTypeService";
 import { useToast } from "../../../contexts/ToastContext";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import { useConfirm } from "../../../contexts/ConfirmContext";
@@ -72,16 +73,8 @@ export default function SegmentManagementPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [typeFilter, setTypeFilter] = useState<
-    | "static"
-    | "dynamic"
-    | "predictive"
-    | "behavioral"
-    | "demographic"
-    | "geographic"
-    | "transactional"
-    | "all"
-  >("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [segmentTypes, setSegmentTypes] = useState<Array<{ id: number; name: string }>>([]);
   const [filterTab, setFilterTab] = useState<
     "all" | "active" | "empty" | "needs-refresh" | "parents" | "most-used"
   >("all");
@@ -338,6 +331,23 @@ export default function SegmentManagementPage() {
 
     return () => clearTimeout(timer);
   }, [searchTerm]);
+
+  // Load segment types
+  useEffect(() => {
+    const loadSegmentTypes = async () => {
+      try {
+        const response = await segmentTypeService.getAllSegmentTypes();
+        if (response.data) {
+          setSegmentTypes(response.data);
+        }
+      } catch (error) {
+        // Silent fail - keep segmentTypes empty if load fails
+        setSegmentTypes([]);
+      }
+    };
+
+    loadSegmentTypes();
+  }, []);
 
   // Load analytics data
   const loadAnalytics = useCallback(async () => {
@@ -1129,32 +1139,17 @@ export default function SegmentManagementPage() {
         return sum;
       }, 0);
     })(),
-    // Use type distribution from analytics if available
-    typeCounts: analyticsData?.typeDistribution
-      ? {
-          dynamic: analyticsData.typeDistribution.dynamic || 0,
-          static: analyticsData.typeDistribution.static || 0,
-          trigger: analyticsData.typeDistribution.trigger || 0,
-          predictive: allSegments.filter((s) => s.type === "predictive").length,
-          behavioral: allSegments.filter((s) => s.type === "behavioral").length,
-          demographic: allSegments.filter((s) => s.type === "demographic")
-            .length,
-          geographic: allSegments.filter((s) => s.type === "geographic").length,
-          transactional: allSegments.filter((s) => s.type === "transactional")
-            .length,
-        }
-      : {
-          dynamic: allSegments.filter((s) => s.type === "dynamic").length,
-          static: allSegments.filter((s) => s.type === "static").length,
-          trigger: 0, // Trigger type not in SegmentType union
-          predictive: allSegments.filter((s) => s.type === "predictive").length,
-          behavioral: allSegments.filter((s) => s.type === "behavioral").length,
-          demographic: allSegments.filter((s) => s.type === "demographic")
-            .length,
-          geographic: allSegments.filter((s) => s.type === "geographic").length,
-          transactional: allSegments.filter((s) => s.type === "transactional")
-            .length,
-        },
+    // Build type counts dynamically from segment types
+    typeCounts: (() => {
+      const counts: Record<string, number> = {};
+      segmentTypes.forEach((type) => {
+        const typeName = type.name.toLowerCase();
+        counts[typeName] = allSegments.filter(
+          (s) => s.type?.toLowerCase() === typeName
+        ).length;
+      });
+      return counts;
+    })(),
     healthScore: analyticsData?.healthSummary?.health_score ?? null,
     staleSegmentsCount: analyticsData?.staleSegments?.length ?? 0,
     largestSegments: analyticsData?.largestSegments || [],
@@ -2154,28 +2149,13 @@ export default function SegmentManagementPage() {
                   <HeadlessSelect
                     options={[
                       { value: "all", label: "All Types" },
-                      { value: "static", label: "Static" },
-                      { value: "dynamic", label: "Dynamic" },
-                      { value: "predictive", label: "Predictive" },
-                      { value: "behavioral", label: "Behavioral" },
-                      { value: "demographic", label: "Demographic" },
-                      { value: "geographic", label: "Geographic" },
-                      { value: "transactional", label: "Transactional" },
+                      ...segmentTypes.map((type) => ({
+                        value: type.name.toLowerCase(),
+                        label: type.name,
+                      })),
                     ]}
                     value={typeFilter}
-                    onChange={(value) =>
-                      setTypeFilter(
-                        (value as
-                          | "all"
-                          | "static"
-                          | "dynamic"
-                          | "predictive"
-                          | "behavioral"
-                          | "demographic"
-                          | "geographic"
-                          | "transactional") || "all",
-                      )
-                    }
+                    onChange={(value) => setTypeFilter(value as string)}
                     placeholder="Select segment type"
                   />
                 </div>

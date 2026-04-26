@@ -79,12 +79,12 @@ export function useSegmentationFields(): UseSegmentationFieldsReturn {
   const getOperatorsForField = useCallback((fieldId: number): SegmentationOperator[] => {
     const field = getFieldById(fieldId);
     return field?.operators || [];
-  }, [allFields, getFieldById]);
+  }, [getFieldById]);
 
   const getFieldType = useCallback((fieldId: number): string | null => {
     const field = getFieldById(fieldId);
     return field?.field_type || null;
-  }, [allFields, getFieldById]);
+  }, [getFieldById]);
 
   return {
     categories,

@@ -552,24 +552,24 @@ export default function CustomerDetailPage() {
     },
     {
       id: "monthly-revenue",
-      name: "Monthly Revenue",
+      name: "30-Day Revenue",
       category: "Revenue",
       value: "12,450",
       unit: "KES",
-      description: "Average monthly spending on telecom services",
+      description: "Average spending on telecom services (30 days)",
       trend: "up",
       trendPercent: 8,
       detailedInfo: (
         <div className="space-y-3">
           <div>
-            <p className="text-xs font-semibold text-gray-700 mb-1">Monthly Spending Pattern:</p>
+            <p className="text-xs font-semibold text-gray-700 mb-1">30-Day Spending Pattern:</p>
             <ul className="text-sm text-gray-900 space-y-1 list-disc list-inside">
-              <li>Last Month: 12,450 KES</li>
-              <li>Previous Month: 11,520 KES</li>
-              <li>3-Month Average: 11,850 KES</li>
+              <li>Last 30 Days: 12,450 KES</li>
+              <li>Previous 30 Days: 11,520 KES</li>
+              <li>90-Day Average: 11,850 KES</li>
             </ul>
           </div>
-          <p className="text-sm text-gray-900">Customer shows consistent monthly spending with growth trend. Primary usage: voice calls (62%) and SMS (28%).</p>
+          <p className="text-sm text-gray-900">Customer shows consistent spending over 30 days with growth trend. Primary usage: voice calls (62%) and SMS (28%).</p>
         </div>
       ),
     },
@@ -619,11 +619,11 @@ export default function CustomerDetailPage() {
     // Usage KPIs
     {
       id: "voice-minutes",
-      name: "Voice Minutes (Monthly)",
+      name: "Voice Minutes (30 Days)",
       category: "Usage",
       value: "3,450",
       unit: "mins",
-      description: "Average monthly voice call minutes",
+      description: "Average voice call minutes (30 days)",
       trend: "up",
       trendPercent: 6,
       detailedInfo: (
@@ -642,11 +642,11 @@ export default function CustomerDetailPage() {
     },
     {
       id: "sms-count",
-      name: "SMS Volume (Monthly)",
+      name: "SMS Volume (30 Days)",
       category: "Usage",
       value: "8,230",
       unit: "msgs",
-      description: "Total SMS messages sent/received monthly",
+      description: "Total SMS messages sent/received (30 days)",
       trend: "up",
       trendPercent: 9,
       detailedInfo: (
@@ -665,11 +665,11 @@ export default function CustomerDetailPage() {
     },
     {
       id: "data-usage",
-      name: "Data Usage (Monthly)",
+      name: "Data Usage (30 Days)",
       category: "Usage",
       value: "12.5",
       unit: "GB",
-      description: "Average monthly data consumption",
+      description: "Average data consumption (30 days)",
       trend: "up",
       trendPercent: 18,
       detailedInfo: (
@@ -688,11 +688,11 @@ export default function CustomerDetailPage() {
     },
     {
       id: "active-days",
-      name: "Active Days (Monthly)",
+      name: "Active Days (30 Days)",
       category: "Usage",
       value: 28,
       unit: "days",
-      description: "Days per month with network activity",
+      description: "Days in 30-day period with network activity",
       trend: "up",
       trendPercent: 3,
       detailedInfo: (

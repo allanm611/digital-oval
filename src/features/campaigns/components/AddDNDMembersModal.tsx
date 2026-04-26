@@ -49,6 +49,8 @@ export default function AddDNDMembersModal({
   const [customerLoading, setCustomerLoading] = useState(false);
   const [customerSearchTerm, setCustomerSearchTerm] = useState("");
   const [selectedDNDTypeId, setSelectedDNDTypeId] = useState<string>("");
+  const [selectedDuration, setSelectedDuration] = useState<string>("0");
+  const [customDurationDays, setCustomDurationDays] = useState<string>("");
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [totalCustomers, setTotalCustomers] = useState(0);
@@ -75,6 +77,7 @@ export default function AddDNDMembersModal({
     if (isOpen && dndTypes.length > 0) {
       setPage(1);
       setSelectedDNDTypeId(String(dndTypes[0].id));
+      setSelectedDuration("0");
       loadCustomers();
       loadExistingSubscriptions();
     }
@@ -156,6 +159,8 @@ export default function AddDNDMembersModal({
     setSelectedMembers([]);
     setCustomerSearchTerm("");
     setSelectedDNDTypeId(dndTypes.length > 0 ? String(dndTypes[0].id) : "");
+    setSelectedDuration("0");
+    setCustomDurationDays("");
     onClose();
   };
 
@@ -182,20 +187,56 @@ export default function AddDNDMembersModal({
         </div>
 
         <div className="p-6 space-y-4">
-          {/* DND Type Selector */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              DND Type *
-            </label>
-            <HeadlessSelect
-              value={selectedDNDTypeId}
-              onChange={setSelectedDNDTypeId}
-              options={dndTypes.map((type) => ({
-                value: String(type.id),
-                label: type.name,
-              }))}
-              placeholder="Select DND type"
-            />
+          {/* DND Type and Duration Selectors */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* DND Type Selector */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                DND Type *
+              </label>
+              <HeadlessSelect
+                value={selectedDNDTypeId}
+                onChange={setSelectedDNDTypeId}
+                options={dndTypes.map((type) => ({
+                  value: String(type.id),
+                  label: type.name,
+                }))}
+                placeholder="Select DND type"
+              />
+            </div>
+
+            {/* Duration Selector */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Duration (Optional)
+              </label>
+              <div className="space-y-2">
+                <HeadlessSelect
+                  value={selectedDuration}
+                  onChange={setSelectedDuration}
+                  options={[
+                    { value: "0", label: "Never expires" },
+                    { value: "7", label: "7 days" },
+                    { value: "30", label: "30 days" },
+                    { value: "90", label: "90 days" },
+                    { value: "180", label: "180 days" },
+                    { value: "365", label: "1 year" },
+                    { value: "custom", label: "Custom days" },
+                  ]}
+                  placeholder="Select duration"
+                />
+                {selectedDuration === "custom" && (
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder="Enter number of days"
+                    value={customDurationDays}
+                    onChange={(e) => setCustomDurationDays(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Search Input */}

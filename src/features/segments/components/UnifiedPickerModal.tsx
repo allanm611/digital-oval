@@ -7,7 +7,7 @@ import { color, tw, zIndex } from "../../../shared/utils/utils";
 export interface UnifiedPickerItem<T = unknown> {
   id: string | number;
   title: string;
-  description?: string;
+  description?: string | null;
   meta?: string;
   raw: T;
 }

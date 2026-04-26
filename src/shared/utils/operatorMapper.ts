@@ -7,7 +7,7 @@ export type OperatorType = {
 };
 
 
-const OPERATORS: Record<string, OperatorType> = {
+export const OPERATORS: Record<string, OperatorType> = {
   EQUALS: {
     id: 1,
     symbol: "=",
@@ -187,19 +187,12 @@ export function getOperatorsForFieldType(fieldType: string): OperatorType[] {
         OPERATORS.IS_NOT_NULL,
       ];
 
-    // Date/Timestamp fields — includes date-specific operators
-    // The frontend renders date pickers and sends start_date/end_date
+    // Date/Timestamp fields — only date-specific operators
     case "date":
     case "timestamp":
     case "timestamptz":
     case "datetime":
       return [
-        OPERATORS.EQUALS,
-        OPERATORS.GREATER_THAN,
-        OPERATORS.LESS_THAN,
-        OPERATORS.GREATER_THAN_OR_EQUAL,
-        OPERATORS.LESS_THAN_OR_EQUAL,
-        OPERATORS.BETWEEN,
         OPERATORS.ON_DATE,
         OPERATORS.BETWEEN_DATES,
         OPERATORS.SINCE_DATE,
@@ -236,12 +229,6 @@ export function getOperatorsForField(field: Record<string, any> | null | undefin
 
   if (fieldType === "date" || fieldType === "timestamp" || fieldType === "timestamptz" || fieldType === "datetime") {
     return [
-      OPERATORS.EQUALS,
-      OPERATORS.GREATER_THAN,
-      OPERATORS.LESS_THAN,
-      OPERATORS.GREATER_THAN_OR_EQUAL,
-      OPERATORS.LESS_THAN_OR_EQUAL,
-      OPERATORS.BETWEEN,
       OPERATORS.ON_DATE,
       OPERATORS.BETWEEN_DATES,
       OPERATORS.SINCE_DATE,

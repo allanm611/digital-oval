@@ -5,6 +5,7 @@ import SearchInput from "../../../shared/components/ui/SearchInput";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { segmentService } from "../services/segmentService";
+import { segmentTypeService } from "../services/segmentTypeService";
 import { SegmentType } from "../types/segment";
 
 interface SegmentPickerModalProps {
@@ -25,12 +26,33 @@ export default function SegmentPickerModal({
   const [segments, setSegments] = useState<SegmentType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hoveredSegmentId, setHoveredSegmentId] = useState<number | null>(null);
+  const [segmentTypes, setSegmentTypes] = useState<Array<{ id: number; name: string }>>([]);
+
+  useEffect(() => {
+    const loadSegmentTypes = async () => {
+      try {
+        const response = await segmentTypeService.getAllSegmentTypes();
+        if (response.data) {
+          setSegmentTypes(response.data);
+        }
+      } catch (error) {
+        setSegmentTypes([
+          { id: 1, name: "Static" },
+          { id: 2, name: "Dynamic" },
+          { id: 3, name: "Trigger" },
+        ]);
+      }
+    };
+
+    loadSegmentTypes();
+  }, []);
 
   const filterOptions = [
     { value: "all", label: "All Segments" },
-    { value: "static", label: "Static" },
-    { value: "dynamic", label: "Dynamic" },
-    { value: "trigger", label: "Trigger" },
+    ...segmentTypes.map((type) => ({
+      value: type.name.toLowerCase(),
+      label: type.name,
+    })),
   ];
 
   // Load segments from backend
@@ -46,7 +68,7 @@ export default function SegmentPickerModal({
               q: searchTerm,
               type:
                 selectedFilter !== "all"
-                  ? (selectedFilter as "static" | "dynamic" | "trigger")
+                  ? (selectedFilter as string)
                   : undefined,
               skipCache: true,
             });
@@ -54,7 +76,7 @@ export default function SegmentPickerModal({
             response = await segmentService.getSegments({
               type:
                 selectedFilter !== "all"
-                  ? (selectedFilter as "static" | "dynamic" | "trigger")
+                  ? (selectedFilter as string)
                   : undefined,
               skipCache: true,
             });

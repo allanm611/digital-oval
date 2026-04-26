@@ -103,12 +103,15 @@ export default function DNDChannelPage() {
     return matchesSearch && matchesType;
   });
 
-  const handleAddCustomers = async (members: Array<{
-    customer_id: number;
-    customer_name?: string;
-    customer_email?: string;
-    customer_phone?: string;
-  }>, dndTypeId: number) => {
+  const handleAddCustomers = async (
+    members: Array<{
+      customer_id: number;
+      customer_name?: string;
+      customer_email?: string;
+      customer_phone?: string;
+    }>,
+    dndTypeId: number
+  ) => {
     try {
       setIsAddingCustomers(true);
       await Promise.all(

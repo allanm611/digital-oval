@@ -920,6 +920,11 @@ export type SegmentationFieldCategory = {
   name?: string; // Alternative name field
   value?: string; // Alternative backend value field
   fields: SegmentationField[];
+  sub_categories?: Array<{
+    id?: number;
+    name?: string;
+    fields: SegmentationField[];
+  }>;
 };
 
 /**

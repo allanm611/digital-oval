@@ -669,11 +669,11 @@ export const SMSInboxConfig: React.FC<ConfigComponentProps> = ({config, updateCo
       <div className="space-y-3">
         <div>
           <label className="block text-sm font-medium text-black mb-1">Connection Name <span className="text-red-500">*</span></label>
-          <Input placeholder="MTN_Inbox_Test" required value={config.connection_name || "MTN_Inbox_Test"} onChange={(value) => updateConfiguration("connection_name", value)} variant="medium" />
+          <Input placeholder="" required value={config.connection_name} onChange={(value) => updateConfiguration("connection_name", value)} variant="medium" />
         </div>
         <div>
           <label className="block text-sm font-medium text-black mb-1">Select Inbox <span className="text-red-500">*</span></label>
-          <Input placeholder="2112" required value={config.short_code || "2112"} onChange={(value) => updateConfiguration("short_code", value)} variant="medium" />
+          <Input placeholder="" required value={config.short_code } onChange={(value) => updateConfiguration("short_code", value)} variant="medium" />
         </div>
         <div>
           <label className="block text-sm font-medium text-black mb-1">Provider</label>

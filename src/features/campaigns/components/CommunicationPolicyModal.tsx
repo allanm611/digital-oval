@@ -20,7 +20,6 @@ import {
   CommunicationPolicyType,
   CommunicationChannel,
   COMMUNICATION_POLICY_TYPES,
-  COMMUNICATION_CHANNELS,
   TimeWindowConfig,
   MaximumCommunicationConfig,
   DNDConfig,
@@ -30,6 +29,8 @@ import {
   DAYS_OF_WEEK,
 } from "../types/communicationPolicyConfig";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import MultiCategorySelector from "../../../shared/components/MultiCategorySelector";
+import { communicationChannelService } from "../../../shared/services/communicationChannelService";
 
 interface CommunicationPolicyModalProps {
   isOpen: boolean;
@@ -68,7 +69,7 @@ export default function CommunicationPolicyModal({
 }: CommunicationPolicyModalProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [channels, setChannels] = useState<CommunicationChannel[]>(["EMAIL"]);
+  const [selectedChannelIds, setSelectedChannelIds] = useState<(number | string)[]>([]);
   const [isActive, setIsActive] = useState(true);
 
   const [configs, setConfigs] = useState<AllPolicyConfigs>({
@@ -96,9 +97,6 @@ export default function CommunicationPolicyModal({
   const [expandedSection, setExpandedSection] =
     useState<CommunicationPolicyType | null>("timeWindow");
 
-  // Track channel dropdown state
-  const [isChannelDropdownOpen, setIsChannelDropdownOpen] = useState(false);
-
   // Maximum communication periods (multiple)
   const [maxCommPeriods, setMaxCommPeriods] = useState<MaxCommPeriod[]>([]);
 
@@ -108,12 +106,12 @@ export default function CommunicationPolicyModal({
     if (policy) {
       setName(policy.name);
       setDescription(policy.description || "");
-      setChannels(policy.channels);
+      setSelectedChannelIds([]);
       setIsActive(policy.isActive);
     } else {
       setName("");
       setDescription("");
-      setChannels(["EMAIL"]);
+      setSelectedChannelIds([]);
       setIsActive(true);
       setConfigs({
         timeWindow: {
@@ -137,8 +135,7 @@ export default function CommunicationPolicyModal({
       });
     }
     setError("");
-    setIsChannelDropdownOpen(false); // Reset dropdown state when modal opens/closes
-    setMaxCommPeriods([]); // Reset periods when modal opens/closes
+    setMaxCommPeriods([]);
   }, [policy, isOpen]);
 
   const toggleSection = (type: CommunicationPolicyType) => {
@@ -164,19 +161,36 @@ export default function CommunicationPolicyModal({
       return;
     }
 
+    if (selectedChannelIds.length === 0) {
+      setError("At least one communication channel is required");
+      return;
+    }
+
     setError("");
 
-    // Create policies for each type with configurations
-    const policyData: CreateCommunicationPolicyRequest = {
-      name,
-      description,
-      channels,
-      type: "timeWindow",
-      config: configs.timeWindow,
-      isActive,
-    };
+    try {
+      // Fetch all channels to map IDs to codes
+      const allChannels = await communicationChannelService.getAll();
+      const channelCodes = selectedChannelIds.map((id) => {
+        const channel = allChannels.find((ch) => ch.id === Number(id));
+        return channel?.code as CommunicationChannel;
+      }).filter(Boolean);
 
-    await onSave(policyData);
+      // Create policies for each type with configurations
+      const policyData: CreateCommunicationPolicyRequest = {
+        name,
+        description,
+        channels: channelCodes,
+        type: "timeWindow",
+        config: configs.timeWindow,
+        isActive,
+      };
+
+      await onSave(policyData);
+    } catch (err) {
+      setError("Failed to process communication channels");
+      console.error("Error in handleSubmit:", err);
+    }
   };
 
   const getTypeIcon = (type: CommunicationPolicyType) => {
@@ -750,94 +764,18 @@ export default function CommunicationPolicyModal({
                 />
               </div>
 
-              {/* Communication Channels (Multi-select Dropdown) */}
+              {/* Communication Channels */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Communication Channels <span className="text-red-500">*</span>
                 </label>
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setIsChannelDropdownOpen(!isChannelDropdownOpen)
-                    }
-                    className={`w-full px-4 py-2.5 border border-gray-300 ${tw.rounded} text-left flex items-center justify-between hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white`}
-                  >
-                    <div className="flex items-center space-x-2">
-                      {channels.length === 0 ? (
-                        <span className={tw.textMuted}>Select channels...</span>
-                      ) : (
-                        <div className="flex items-center">
-                          <span className={`${tw.caption} ${tw.textPrimary}`}>
-                            {channels.length === 1
-                              ? COMMUNICATION_CHANNELS.find(
-                                  (ch) => ch.value === channels[0]
-                                )?.label
-                              : channels
-                                  .map(
-                                    (c) =>
-                                      COMMUNICATION_CHANNELS.find(
-                                        (ch) => ch.value === c
-                                      )?.label
-                                  )
-                                  .join(", ")}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <ChevronDown
-                      className={`w-4 h-4 ${
-                        tw.textMuted
-                      } transition-transform ${
-                        isChannelDropdownOpen ? "rotate-180" : ""
-                      }`}
-                    />
-                  </button>
-
-                  {isChannelDropdownOpen && (
-                    <div
-                      className={`absolute z-[10000] w-full mt-1 bg-white border border-gray-200 ${tw.rounded} max-h-64 overflow-y-auto`}
-                    >
-                      {COMMUNICATION_CHANNELS.map((ch) => (
-                        <div
-                          key={ch.value}
-                          className="flex items-start space-x-3 px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
-                          onClick={() => {
-                            if (channels.includes(ch.value)) {
-                              setChannels((prev) =>
-                                prev.filter((c) => c !== ch.value)
-                              );
-                            } else {
-                              setChannels((prev) => [...prev, ch.value]);
-                            }
-                          }}
-                        >
-                          <Checkbox
-                            id={`channel-${ch.value}`}
-                            checked={channels.includes(ch.value)}
-                            onChange={() => {
-                              if (channels.includes(ch.value)) {
-                                setChannels((prev) =>
-                                  prev.filter((c) => c !== ch.value)
-                                );
-                              } else {
-                                setChannels((prev) => [...prev, ch.value]);
-                              }
-                            }}
-                          />
-                          <div className="flex-1">
-                            <div className="text-sm font-medium text-gray-900">
-                              {ch.label}
-                            </div>
-                            <div className="text-xs text-gray-500 mt-0.5">
-                              {ch.description}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <MultiCategorySelector
+                  value={selectedChannelIds}
+                  onChange={setSelectedChannelIds}
+                  placeholder="Select channels..."
+                  entityType="channel"
+                  className="w-full"
+                />
                 <p className="text-xs text-gray-500 mt-2">
                   Select one or more communication channels for this policy
                 </p>
@@ -883,10 +821,12 @@ export default function CommunicationPolicyModal({
             {/* Active Status */}
             <div className="px-4 pt-4">
               <label className="flex items-center space-x-3 cursor-pointer">
-                <Checkbox checked={isActive}
-                  onChange={(value) => setIsActive(e.target.checked)}
+                <Checkbox
+                  checked={isActive}
+                  onChange={(value) => setIsActive(!!value)}
                   className="rounded w-5 h-5"
-                  style={{ accentColor: color.primary.action }} />
+                  style={{ accentColor: color.primary.action }}
+                />
                 <div>
                   <span className={`${tw.body} font-medium ${tw.textPrimary}`}>
                     Active Policy

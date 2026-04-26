@@ -28,7 +28,11 @@ const buildLayerCondition = (condition: SegmentCondition): LayerCondition | null
       condition.value !== null;
   const hasDateRange = condition.start_date || condition.end_date;
   const isNullOp =
-    condition.operator_id === 13 || condition.operator_id === 14;
+    condition.operator_id === 10 || condition.operator_id === 11; // IS NULL (10), IS NOT NULL (11)
+
+  const isDateOperator = ["on_date", "since_date", "until_date", "between_dates"].includes(
+    condition.operator?.toLowerCase() || ""
+  );
 
   if (!hasValue && !hasDateRange && !isNullOp) {
     return null;
@@ -50,20 +54,56 @@ const buildLayerCondition = (condition: SegmentCondition): LayerCondition | null
     }
   }
 
+  // Handle date operators: convert to start_date/end_date format per backend spec
+  let startDate: string | null = condition.start_date || null;
+  let endDate: string | null = condition.end_date || null;
+
+  if (isDateOperator) {
+    if (condition.operator === "between_dates" && condValue && !hasDateRange) {
+      // between_dates: value is "date1,date2"
+      if (typeof condValue === "string") {
+        const [start, end] = condValue.split(",").map((v: string) => v.trim());
+        startDate = start || null;
+        endDate = end || null;
+      }
+    } else if (condition.operator === "since_date") {
+      // since_date: value becomes start_date (>= logic)
+      startDate = (condValue as string) || condition.start_date || null;
+      endDate = null;
+    } else if (condition.operator === "until_date") {
+      // until_date: value becomes end_date (<= logic)
+      startDate = null;
+      endDate = (condValue as string) || condition.end_date || null;
+    } else if (condition.operator === "on_date") {
+      // on_date: keep as value, clear date ranges
+      startDate = null;
+      endDate = null;
+    }
+  }
+
+  // For date operators, send as start_date/end_date instead of value
+  let layerCondValue: any;
+  if (isDateOperator && condition.operator !== "on_date") {
+    // Date range operators (since_date, until_date, between_dates)
+    layerCondValue = {
+      start_date: startDate,
+      end_date: endDate,
+    };
+  } else if (isNullOp) {
+    // Null operators (IS NULL, IS NOT NULL) - send null value
+    layerCondValue = { value: null };
+  } else {
+    // Non-date, non-null operators: use value
+    layerCondValue = { value: condValue };
+  }
+
   const layerCond: LayerCondition = {
     column_ref: {
       layer_index: 0,
       column: condition.field_name || "",
     },
     operator_id: condition.operator_id,
-    ...(isNullOp
-      ? {}
-      : hasDateRange
-        ? {
-            start_date: condition.start_date || null,
-            end_date: condition.end_date || null,
-          }
-        : { value: condValue || undefined }),
+    ...layerCondValue,
   };
   return layerCond;
 };

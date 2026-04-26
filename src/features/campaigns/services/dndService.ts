@@ -27,6 +27,8 @@ export interface DNDSubscription {
   removed_at?: string;
   removed_by?: number;
   removed_by_name?: string;
+  expires_at?: string;
+  duration_days?: number;
   created_at?: string;
   updated_at?: string;
 }

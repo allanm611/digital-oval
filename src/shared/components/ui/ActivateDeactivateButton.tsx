@@ -1,4 +1,4 @@
-import { getButtonStyles, button } from "../../utils/utils";
+import { Power } from "lucide-react";
 
 interface ActivateDeactivateButtonProps {
   isActive: boolean;
@@ -15,20 +15,21 @@ export default function ActivateDeactivateButton({
   isLoading = false,
   title,
 }: ActivateDeactivateButtonProps) {
-  const buttonStyles = getButtonStyles(button.bordered);
-
   return (
     <button
       onClick={onToggle}
       disabled={disabled || isLoading}
-      style={buttonStyles}
-      title={title}
-      className="transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+      className="p-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+      style={{
+        color: isActive ? "#FF9500" : "#10B981",
+      }}
+      title={title || (isActive ? "Deactivate" : "Activate")}
     >
       {isLoading ? (
-        <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-      ) : null}
-      <span>{isActive ? "Deactivate" : "Activate"}</span>
+        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+      ) : (
+        <Power className="w-4 h-4" />
+      )}
     </button>
   );
 }

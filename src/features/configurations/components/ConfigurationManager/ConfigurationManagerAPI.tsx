@@ -132,11 +132,7 @@ export default function ConfigurationManagerAPI({
     setTogglingItemId(item.id as number);
 
     try {
-      // Optimistic update - update backend
       await update(item.id as number, { isActive: newActive });
-
-      // Refresh data to get updated state
-      await refresh();
 
       showToast(
         newActive ? "Activated" : "Deactivated",
@@ -148,7 +144,7 @@ export default function ConfigurationManagerAPI({
       console.error(`Error updating ${config.entityName}:`, err);
       const errorMsg = err instanceof Error ? err.message : config.saveErrorMessage;
       showError(t.genericConfig.error, errorMsg);
-      // Refresh to revert optimistic update
+      // Refresh to revert on error
       await refresh();
     } finally {
       setTogglingItemId(null);
