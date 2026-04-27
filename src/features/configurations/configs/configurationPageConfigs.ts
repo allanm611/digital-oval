@@ -992,20 +992,6 @@ const hardcodedSenderIds: ConfigurationItem[] = [
   },
 ];
 
-// Hardcoded SMS routes/gateways data
-const hardcodedSMSRoutes: ConfigurationItem[] = [
-  {
-    id: 1,
-    name: "Effortel SMS Gateway",
-    description: "Effortel SMS Gateway route",
-    isActive: true,
-    metadataValue: "Effortel",
-    communication_channel_id: 1,
-    created_at: "2025-01-15T10:30:00Z",
-    updated_at: "2025-01-20T14:45:00Z",
-  },
-];
-
 const hardcodedEmailRoutes: ConfigurationItem[] = [
   {
     id: 1,
@@ -2696,54 +2682,6 @@ export const senderIdsConfig: TypeConfigurationPageConfig = {
   saveErrorMessage: "Please try again later.",
 };
 
-// SMS Routes/Gateways Configuration
-export const smsRoutesConfig: TypeConfigurationPageConfig = {
-  title: "SMS Routes",
-  subtitle:
-    "Manage SMS gateway routes for message delivery. Routes determine which gateway provider is used to send SMS messages.",
-  entityName: "SMS route",
-  entityNamePlural: "SMS routes",
-  configType: "smsRoutes",
-  backPath: "/dashboard/communication-channels",
-  icon: MessageSquare,
-  searchPlaceholder: "Search routes...",
-  initialData: hardcodedSMSRoutes,
-  createButtonText: "Create",
-  modalTitle: {
-    create: "Create New SMS Route",
-    edit: "Edit SMS Route",
-  },
-  nameLabel: "Route Name",
-  nameRequired: true,
-  descriptionLabel: "Description",
-  descriptionRequired: false,
-  nameMaxLength: 100,
-  descriptionMaxLength: 500,
-  metadataField: {
-    label: "Gateway Provider",
-    type: "text",
-  },
-  customFields: [
-    {
-      fieldKey: "communication_channel_id",
-      label: "Communication Channel",
-      type: "select",
-      required: true,
-      dynamicOptions: "communicationChannels",
-    },
-  ],
-  statusLabel: "Status",
-  deleteConfirmTitle: "Delete SMS Route",
-  deleteConfirmMessage: (name: string) =>
-    `Are you sure you want to delete "${name}"? This may affect SMS delivery.`,
-  deleteSuccessMessage: (name: string) =>
-    `"${name}" has been deleted successfully.`,
-  createSuccessMessage: "SMS route created successfully",
-  updateSuccessMessage: "SMS route updated successfully",
-  deleteErrorMessage: "Failed to delete SMS route",
-  saveErrorMessage: "Please try again later.",
-};
-
 export const emailRoutesConfig: TypeConfigurationPageConfig = {
   title: "Email Routes",
   subtitle:
@@ -3549,12 +3487,6 @@ export function getCharacterSetsConfig(
   return characterSetsConfig;
 }
 
-export function getSmsRoutesConfig(
-  _t: (key: string) => string,
-): TypeConfigurationPageConfig {
-  return smsRoutesConfig;
-}
-
 export function getEmailRoutesConfig(
   _t: (key: string) => string,
 ): TypeConfigurationPageConfig {
@@ -3628,12 +3560,6 @@ export function getNotificationTypesApiConfig(
   _t: (key: string) => string,
 ): APIConfigurationPageConfig {
   return notificationTypesConfig as APIConfigurationPageConfig;
-}
-
-export function getSmsRoutesApiConfig(
-  _t: (key: string) => string,
-): APIConfigurationPageConfig {
-  return smsRoutesConfig as APIConfigurationPageConfig;
 }
 
 export function getEmailRoutesApiConfig(

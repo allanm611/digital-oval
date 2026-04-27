@@ -55,7 +55,7 @@ class CommunicationPolicyService {
 
     // Get active policies only
     getActivePolicies(): CommunicationPolicyConfiguration[] {
-        return this.policies.filter(policy => policy.isActive);
+        return this.policies.filter(policy => policy.is_active);
     }
 
     // Get policy by ID
@@ -82,7 +82,7 @@ class CommunicationPolicyService {
         const newPolicy: CommunicationPolicyConfiguration = {
             id: Math.max(...this.policies.map(p => p.id), 0) + 1,
             ...policyData,
-            isActive: policyData.isActive ?? true,
+            is_active: policyData.is_active ?? true,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
         };

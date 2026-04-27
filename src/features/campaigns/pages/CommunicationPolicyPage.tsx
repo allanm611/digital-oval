@@ -1,17 +1,17 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Edit, Trash2, ArrowLeft } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, ShieldCheck } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import BackButton from "../../../shared/components/ui/BackButton";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import SearchInput from "../../../shared/components/ui/SearchInput";
+import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { color, tw, components, helpers } from "../../../shared/utils/utils";
 import {
   CommunicationPolicyConfiguration,
   CreateCommunicationPolicyRequest,
-  COMMUNICATION_CHANNELS,
   TimeWindowConfig,
   MaximumCommunicationConfig,
   DNDConfig,
@@ -32,7 +32,8 @@ export default function CommunicationPolicyPage() {
   const [policies, setPolicies] = useState<CommunicationPolicyConfiguration[]>(
     []
   );
-  const [loading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [togglingId, setTogglingId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPolicy, setEditingPolicy] = useState<
@@ -43,9 +44,12 @@ export default function CommunicationPolicyPage() {
   // Load policies from service and subscribe to changes
   useEffect(() => {
     const loadPolicies = async () => {
-      const data = await communicationPolicyService.getAllPolicies();
-      if (Array.isArray(data)) {
-        setPolicies(data);
+      setLoading(true);
+      try {
+        const data = await communicationPolicyService.getAllPolicies();
+        if (Array.isArray(data)) setPolicies(data);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -62,6 +66,25 @@ export default function CommunicationPolicyPage() {
 
     return unsubscribe;
   }, []);
+
+  const handleToggleActive = async (policy: CommunicationPolicyConfiguration) => {
+    const newActive = !policy.is_active;
+    setTogglingId(policy.id);
+    setPolicies((prev) =>
+      prev.map((p) => (p.id === policy.id ? { ...p, is_active: newActive } : p))
+    );
+    try {
+      await communicationPolicyService.updatePolicy(policy.id, { is_active: newActive } as any);
+      showToast(newActive ? "Activated" : "Deactivated", `${policy.name} has been ${newActive ? "activated" : "deactivated"}`);
+    } catch {
+      showError("Error", "Failed to update policy status");
+      setPolicies((prev) =>
+        prev.map((p) => (p.id === policy.id ? { ...p, is_active: !newActive } : p))
+      );
+    } finally {
+      setTogglingId(null);
+    }
+  };
 
   const handleCreatePolicy = () => {
     setEditingPolicy(undefined);
@@ -106,17 +129,15 @@ export default function CommunicationPolicyPage() {
     try {
       setIsSaving(true);
       if (editingPolicy) {
-        // Update existing policy
-        await communicationPolicyService.updatePolicy(
-          editingPolicy.id,
-          policyData
-        );
+        await communicationPolicyService.updatePolicy(editingPolicy.id, policyData);
         showToast(t.communicationPolicy.updateSuccess);
       } else {
-        // Create new policy
         await communicationPolicyService.createPolicy(policyData);
         showToast(t.communicationPolicy.createSuccess);
       }
+      // Re-fetch from server to ensure list is up to date
+      const fresh = await communicationPolicyService.getAllPolicies();
+      if (Array.isArray(fresh)) setPolicies(fresh);
       setIsModalOpen(false);
       setEditingPolicy(undefined);
     } catch (err) {
@@ -132,23 +153,16 @@ export default function CommunicationPolicyPage() {
 
     return (
       <div className="flex flex-wrap items-center gap-2">
-        {channelValues.map((channelValue) => {
-          const channel = COMMUNICATION_CHANNELS.find(
-            (ch) => ch.value === channelValue
-          );
-          if (!channel) return null;
-
-          return (
-            <div
-              key={channelValue}
-              className={`flex items-center px-2 py-1 rounded ${tw.accent10}`}
-            >
-              <span className={`${tw.caption} font-medium ${tw.textPrimary}`}>
-                {channel.label}
-              </span>
-            </div>
-          );
-        })}
+        {channelValues.map((channelValue) => (
+          <div
+            key={channelValue}
+            className={`flex items-center px-2 py-1 rounded ${tw.accent10}`}
+          >
+            <span className={`${tw.caption} font-medium ${tw.textPrimary}`}>
+              {channelValue}
+            </span>
+          </div>
+        ))}
       </div>
     );
   };
@@ -160,7 +174,7 @@ export default function CommunicationPolicyPage() {
     // when backend supports multiple configs per policy
     const summaryParts = [];
 
-    switch (policy.type) {
+    switch (policy.type_code) {
       case "timeWindow": {
         const timeConfig = policy.config as TimeWindowConfig;
         summaryParts.push(`${timeConfig.startTime}-${timeConfig.endTime}`);
@@ -245,9 +259,13 @@ export default function CommunicationPolicyPage() {
           </div>
         ) : filteredPolicies.length === 0 ? (
           <div className="text-center py-12">
+            <ShieldCheck className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+            <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
+              {searchTerm ? t.communicationPolicy.noPoliciesFound : "No policies yet"}
+            </h3>
             <p className={`${tw.textMuted} mb-6`}>
               {searchTerm
-                ? t.communicationPolicy.noPoliciesFound
+                ? "Try adjusting your search term"
                 : t.communicationPolicy.createFirstPolicy}
             </p>
             {!searchTerm && (
@@ -280,6 +298,12 @@ export default function CommunicationPolicyPage() {
                       className={`px-6 py-4 text-left text-xs font-medium uppercase tracking-wider`}
                       style={{ color: color.surface.tableHeaderText }}
                     >
+                      Description
+                    </th>
+                    <th
+                      className={`px-6 py-4 text-left text-xs font-medium uppercase tracking-wider`}
+                      style={{ color: color.surface.tableHeaderText }}
+                    >
                       {t.communicationPolicy.channels}
                     </th>
                     <th
@@ -304,29 +328,31 @@ export default function CommunicationPolicyPage() {
                 </thead>
                 <tbody>
                   {filteredPolicies.map((policy) => (
-                    <tr key={policy.id} className="transition-colors">
+                    <tr
+                      key={policy.id}
+                      className="transition-colors"
+                    >
                       <td
                         className="px-6 py-4"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        <div>
-                          <div
-                            className={`font-semibold text-sm sm:text-base ${tw.textPrimary} truncate`}
-                            title={policy.name}
-                          >
-                            {policy.name}
-                          </div>
-                          <div
-                            className={`text-xs sm:text-sm ${tw.textMuted} truncate mt-1`}
-                            title={
-                              policy.description ||
-                              t.communicationPolicy.noDescription
-                            }
-                          >
-                            {policy.description ||
-                              t.communicationPolicy.noDescription}
-                          </div>
-                        </div>
+                        <span
+                          className={`font-semibold text-sm ${tw.textPrimary} truncate`}
+                          title={policy.name}
+                        >
+                          {policy.name}
+                        </span>
+                      </td>
+                      <td
+                        className="px-6 py-4"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
+                        <span
+                          className={`text-sm ${tw.textMuted} truncate`}
+                          title={policy.description || t.communicationPolicy.noDescription}
+                        >
+                          {policy.description || t.communicationPolicy.noDescription}
+                        </span>
                       </td>
                       <td
                         className="px-6 py-4"
@@ -338,12 +364,9 @@ export default function CommunicationPolicyPage() {
                         className={`px-6 py-4 hidden md:table-cell`}
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        <div
-                          className={`text-xs sm:text-sm ${tw.textSecondary} truncate max-w-xs`}
-                          title={getComprehensiveConfigSummary(policy)}
-                        >
-                          {getComprehensiveConfigSummary(policy)}
-                        </div>
+                        <span className={`text-sm ${tw.textSecondary}`}>
+                          {(policy as any).type_name || policy.type_code}
+                        </span>
                       </td>
                       <td
                         className="px-6 py-4"
@@ -351,12 +374,12 @@ export default function CommunicationPolicyPage() {
                       >
                         <span
                           className={
-                            policy.isActive
+                            policy.is_active
                               ? helpers.badge("success")
                               : helpers.badge("info")
                           }
                         >
-                          {policy.isActive
+                          {policy.is_active
                             ? t.communicationPolicy.active
                             : t.communicationPolicy.inactive}
                         </span>
@@ -366,13 +389,26 @@ export default function CommunicationPolicyPage() {
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
                         <div className="flex items-center justify-end gap-2">
+                          <ActivateDeactivateButton
+                            isActive={policy.is_active}
+                            onToggle={() => handleToggleActive(policy)}
+                            isLoading={togglingId === policy.id}
+                            disabled={togglingId === policy.id}
+                            title={policy.is_active ? `Deactivate ${policy.name}` : `Activate ${policy.name}`}
+                          />
+                          <button
+                            onClick={() => navigate(`/dashboard/campaign-communication-policy/${policy.id}`)}
+                            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
+                            title="View details"
+                          >
+                            <Eye className="w-4 h-4 text-gray-500" />
+                          </button>
                           <button
                             onClick={() => handleEditPolicy(policy)}
-                            className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
-                            style={{ color: color.primary.action }}
+                            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
                             title={t.communicationPolicy.edit}
                           >
-                            <Edit className="w-4 h-4" />
+                            <Edit className="w-4 h-4" style={{ color: color.primary.action }} />
                           </button>
                           <button
                             onClick={() => handleDeletePolicy(policy)}
@@ -404,12 +440,12 @@ export default function CommunicationPolicyPage() {
                         </div>
                         <span
                           className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                            policy.isActive
+                            policy.is_active
                               ? "bg-green-100 text-green-800"
                               : "bg-gray-100 text-gray-800"
                           }`}
                         >
-                          {policy.isActive ? "Active" : "Inactive"}
+                          {policy.is_active ? "Active" : "Inactive"}
                         </span>
                       </div>
                       <div className="mb-2">

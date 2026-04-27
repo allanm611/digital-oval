@@ -17,20 +17,18 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import {
   CommunicationPolicyConfiguration,
   CreateCommunicationPolicyRequest,
-  CommunicationPolicyType,
-  CommunicationChannel,
   COMMUNICATION_POLICY_TYPES,
   TimeWindowConfig,
   MaximumCommunicationConfig,
   DNDConfig,
   VIPListConfig,
   DNDCategory,
-  DND_CATEGORIES,
   DAYS_OF_WEEK,
 } from "../types/communicationPolicyConfig";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import MultiCategorySelector from "../../../shared/components/MultiCategorySelector";
 import { communicationChannelService } from "../../../shared/services/communicationChannelService";
+import { useBackendConfigurationData } from "../../../shared/hooks/useBackendConfigurationData";
 
 interface CommunicationPolicyModalProps {
   isOpen: boolean;
@@ -67,6 +65,10 @@ export default function CommunicationPolicyModal({
   onSave,
   isSaving = false,
 }: CommunicationPolicyModalProps) {
+  const { data: policyTypesData = [] } =
+    useBackendConfigurationData("policyTypes") || { data: [] };
+  const { data: dndTypesData = [] } =
+    useBackendConfigurationData("dndTypes") || { data: [] };
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [selectedChannelIds, setSelectedChannelIds] = useState<(number | string)[]>([]);
@@ -93,9 +95,8 @@ export default function CommunicationPolicyModal({
     },
   });
 
-  // Track which section is currently expanded (only one at a time)
-  const [expandedSection, setExpandedSection] =
-    useState<CommunicationPolicyType | null>("timeWindow");
+  // Track which section is currently expanded (only one at a time) — also serves as selected type
+  const [expandedSection, setExpandedSection] = useState<string | null>("timeWindow");
 
   // Maximum communication periods (multiple)
   const [maxCommPeriods, setMaxCommPeriods] = useState<MaxCommPeriod[]>([]);
@@ -138,9 +139,7 @@ export default function CommunicationPolicyModal({
     setMaxCommPeriods([]);
   }, [policy, isOpen]);
 
-  const toggleSection = (type: CommunicationPolicyType) => {
-    // If clicking the currently expanded section, collapse it
-    // Otherwise, expand the clicked section (and collapse others)
+  const toggleSection = (type: string) => {
     setExpandedSection((current) => (current === type ? null : type));
   };
 
@@ -166,24 +165,36 @@ export default function CommunicationPolicyModal({
       return;
     }
 
+    if (!expandedSection) {
+      setError("Please select a policy type by expanding one of the sections below");
+      return;
+    }
+
     setError("");
 
     try {
-      // Fetch all channels to map IDs to codes
       const allChannels = await communicationChannelService.getAll();
       const channelCodes = selectedChannelIds.map((id) => {
         const channel = allChannels.find((ch) => ch.id === Number(id));
-        return channel?.code as CommunicationChannel;
+        return channel?.code as string;
       }).filter(Boolean);
 
-      // Create policies for each type with configurations
+      const getConfig = () => {
+        switch (expandedSection) {
+          case "maximumCommunication": return configs.maximumCommunication;
+          case "dnd": return configs.dnd;
+          case "vipList": return configs.vipList;
+          default: return configs.timeWindow;
+        }
+      };
+
       const policyData: CreateCommunicationPolicyRequest = {
         name,
         description,
         channels: channelCodes,
-        type: "timeWindow",
-        config: configs.timeWindow,
-        isActive,
+        type_code: expandedSection,
+        config: getConfig(),
+        is_active: isActive,
       };
 
       await onSave(policyData);
@@ -193,16 +204,13 @@ export default function CommunicationPolicyModal({
     }
   };
 
-  const getTypeIcon = (type: CommunicationPolicyType) => {
-    switch (type) {
-      case "timeWindow":
-        return <Clock className="w-5 h-5" />;
-      case "maximumCommunication":
-        return <BarChart3 className="w-5 h-5" />;
-      case "dnd":
-        return <BellOff className="w-5 h-5" />;
-      case "vipList":
-        return <Star className="w-5 h-5" />;
+  const getTypeIcon = (code: string) => {
+    switch (code) {
+      case "timeWindow": return <Clock className="w-5 h-5" />;
+      case "maximumCommunication": return <BarChart3 className="w-5 h-5" />;
+      case "dnd": return <BellOff className="w-5 h-5" />;
+      case "vipList": return <Star className="w-5 h-5" />;
+      default: return <Clock className="w-5 h-5" />;
     }
   };
 
@@ -217,6 +225,7 @@ export default function CommunicationPolicyModal({
             </label>
             <Input
               type="time"
+              placeholder=""
               value={timeConfig.startTime}
               onChange={(value) =>
                 updateConfig("timeWindow", (prev) => ({
@@ -224,7 +233,6 @@ export default function CommunicationPolicyModal({
                   startTime: String(value),
                 }))
               }
-              className={`w-full px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white`}
             />
           </div>
           <div>
@@ -233,6 +241,7 @@ export default function CommunicationPolicyModal({
             </label>
             <Input
               type="time"
+              placeholder=""
               value={timeConfig.endTime}
               onChange={(value) =>
                 updateConfig("timeWindow", (prev) => ({
@@ -240,7 +249,6 @@ export default function CommunicationPolicyModal({
                   endTime: String(value),
                 }))
               }
-              className={`w-full px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white`}
             />
           </div>
         </div>
@@ -379,6 +387,7 @@ export default function CommunicationPolicyModal({
                 <div>
                   <Input
                     type="number"
+                    placeholder="0"
                     min="1"
                     value={period.maxCount}
                     onChange={(value) => {
@@ -390,7 +399,6 @@ export default function CommunicationPolicyModal({
                         )
                       );
                     }}
-                    className={`w-full px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white`}
                   />
                 </div>
                 <button
@@ -427,10 +435,8 @@ export default function CommunicationPolicyModal({
 
     // Find first available type for new categories
     const getFirstAvailableType = () => {
-      const availableType = DND_CATEGORIES.find(
-        (cat) => !selectedTypes.includes(cat.type)
-      );
-      return availableType?.type || "marketing";
+      const available = dndTypesData.find((dt: any) => !selectedTypes.includes(String(dt.id)));
+      return available ? String((available as any).id) : "";
     };
 
     return (
@@ -455,7 +461,7 @@ export default function CommunicationPolicyModal({
               }));
             }}
             className={`${tw.button} flex items-center gap-2 text-xs px-3 py-1.5`}
-            disabled={selectedTypes.length >= DND_CATEGORIES.length}
+            disabled={selectedTypes.length >= dndTypesData.length}
           >
             <Plus className="w-3 h-3" />
             Add Category
@@ -492,20 +498,19 @@ export default function CommunicationPolicyModal({
                       const newCategories = [...dndConfig.categories];
                       newCategories[index] = {
                         ...category,
-                        type: value as DNDCategory["type"],
+                        type: String(value),
                       };
                       updateConfig("dnd", (prev) => ({
                         ...prev,
                         categories: newCategories,
                       }));
                     }}
-                    options={DND_CATEGORIES.map((cat) => ({
-                      label: cat.label,
-                      value: cat.type,
-                      // Disable if already selected in another row (but not current row)
+                    options={dndTypesData.map((dt: any) => ({
+                      label: dt.name,
+                      value: String(dt.id),
                       disabled:
-                        selectedTypes.includes(cat.type) &&
-                        category.type !== cat.type,
+                        selectedTypes.includes(String(dt.id)) &&
+                        category.type !== String(dt.id),
                     }))}
                     placeholder="Select type"
                     className="w-full"
@@ -600,6 +605,7 @@ export default function CommunicationPolicyModal({
             </label>
             <Input
               type="number"
+              placeholder="1"
               min="1"
               value={vipConfig.priority || 1}
               onChange={(value) =>
@@ -608,7 +614,6 @@ export default function CommunicationPolicyModal({
                   priority: parseInt(String(value)) || 1,
                 }))
               }
-              className={`w-full px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white`}
             />
           </div>
         </div>
@@ -622,28 +627,25 @@ export default function CommunicationPolicyModal({
     );
   };
 
-  const renderPolicySection = (type: CommunicationPolicyType) => {
-    const policyType = COMMUNICATION_POLICY_TYPES.find((t) => t.value === type);
-    if (!policyType) return null;
-
-    const isExpanded = expandedSection === type;
+  const renderPolicySection = (policyType: { code: string; name: string; description?: string }) => {
+    const { code, name: typeName, description: typeDesc } = policyType;
+    const isExpanded = expandedSection === code;
 
     return (
       <div
-        key={type}
+        key={code}
         className={`border ${
           tw.rounded
         } overflow-visible transition-all duration-200 ${
           isExpanded ? "border-2" : tw.borderDefault
         }`}
         style={{
-          backgroundColor: isExpanded ? "white" : "white",
           borderColor: isExpanded ? color.primary.accent : undefined,
         }}
       >
         <button
           type="button"
-          onClick={() => toggleSection(type)}
+          onClick={() => toggleSection(code)}
           className={`w-full px-5 py-4 flex items-center justify-between transition-all duration-200 ${
             isExpanded ? "bg-gray-50" : "bg-white hover:bg-gray-50"
           }`}
@@ -651,25 +653,19 @@ export default function CommunicationPolicyModal({
           <div className="flex items-center gap-3">
             <div
               className={`p-2.5 ${tw.rounded} transition-all duration-200`}
-              style={{
-                color: isExpanded ? color.primary.accent : "#6b7280",
-              }}
+              style={{ color: isExpanded ? color.primary.accent : "#6b7280" }}
             >
-              {getTypeIcon(type)}
+              {getTypeIcon(code)}
             </div>
             <div className="text-left">
               <h3
-                className={`text-base transition-colors duration-200 ${
-                  isExpanded
-                    ? "font-semibold text-gray-900"
-                    : "font-medium text-gray-700"
+                className={`text-sm transition-colors duration-200 ${
+                  isExpanded ? "font-semibold text-gray-900" : "font-medium text-gray-700"
                 }`}
               >
-                {policyType.label}
+                {typeName}
               </h3>
-              <p className="text-xs text-gray-500 mt-0.5">
-                {policyType.description}
-              </p>
+              <p className="text-xs text-gray-500 mt-0.5">{typeDesc}</p>
             </div>
           </div>
           {isExpanded ? (
@@ -681,10 +677,10 @@ export default function CommunicationPolicyModal({
 
         {isExpanded && (
           <div className="px-5 py-6 bg-white border-t border-gray-100 overflow-visible">
-            {type === "timeWindow" && renderTimeWindowConfig()}
-            {type === "maximumCommunication" && renderMaxCommunicationConfig()}
-            {type === "dnd" && renderDNDConfig()}
-            {type === "vipList" && renderVIPListConfig()}
+            {code === "timeWindow" && renderTimeWindowConfig()}
+            {code === "maximumCommunication" && renderMaxCommunicationConfig()}
+            {code === "dnd" && renderDNDConfig()}
+            {code === "vipList" && renderVIPListConfig()}
           </div>
         )}
       </div>
@@ -706,7 +702,7 @@ export default function CommunicationPolicyModal({
         <div style={{ backgroundColor: color.surface.background }}>
           <div className="flex items-center justify-between pt-5 pb-3 px-4">
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">
+              <h2 className="text-sm font-semibold text-gray-900">
                 {policy
                   ? "Edit Communication Policy"
                   : "Create Communication Policy"}
@@ -745,7 +741,6 @@ export default function CommunicationPolicyModal({
                   type="text"
                   value={name}
                   onChange={(value) => setName(String(value))}
-                  className={`w-full px-4 py-2.5 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white`}
                   placeholder="Enter policy name"
                   required
                 />
@@ -786,36 +781,25 @@ export default function CommunicationPolicyModal({
             <div className="px-4 space-y-4 pb-2">
               <div className="flex items-center justify-between pb-3">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">
+                  <h3 className="text-sm font-semibold text-gray-900">
                     Policy Configurations
                   </h3>
                   <p className="text-xs text-gray-500 mt-1">
-                    Configure different policy types. Expand a section to
-                    configure it.
+                    Expand a section to select and configure that policy type. Only one type will be saved.
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setExpandedSection("timeWindow")}
-                    className="text-xs text-gray-600 hover:text-gray-900 hover:underline transition-colors"
-                  >
-                    Open First
-                  </button>
-                  <span className="text-gray-300">|</span>
-                  <button
-                    type="button"
-                    onClick={() => setExpandedSection(null)}
-                    className="text-xs text-gray-600 hover:text-gray-900 hover:underline transition-colors"
-                  >
-                    Collapse All
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setExpandedSection(null)}
+                  className="text-xs text-gray-600 hover:text-gray-900 hover:underline transition-colors"
+                >
+                  Collapse All
+                </button>
               </div>
-              {renderPolicySection("timeWindow")}
-              {renderPolicySection("maximumCommunication")}
-              {renderPolicySection("dnd")}
-              {renderPolicySection("vipList")}
+              {(policyTypesData.length > 0
+                ? policyTypesData.map((pt: any) => ({ code: pt.code, name: pt.name, description: pt.description }))
+                : COMMUNICATION_POLICY_TYPES.map((t) => ({ code: t.value, name: t.label, description: t.description }))
+              ).map((pt) => renderPolicySection(pt))}
             </div>
 
             {/* Active Status */}
@@ -828,7 +812,7 @@ export default function CommunicationPolicyModal({
                   style={{ accentColor: color.primary.action }}
                 />
                 <div>
-                  <span className={`${tw.body} font-medium ${tw.textPrimary}`}>
+                  <span className={`text-sm font-medium ${tw.textPrimary}`}>
                     Active Policy
                   </span>
                   <p className={`${tw.caption} ${tw.textMuted}`}>

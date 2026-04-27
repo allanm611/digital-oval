@@ -68,6 +68,12 @@ const CampaignPages = {
         /* webpackPrefetch: true */ "../../campaigns/pages/CommunicationPolicyPage"
       ),
   ),
+  CommunicationPolicyDetailPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../campaigns/pages/CommunicationPolicyDetailPage"
+      ),
+  ),
   DepartmentPage: lazy(
     () =>
       import(
@@ -529,10 +535,6 @@ const SettingsPages = {
         /* webpackPrefetch: true */ "../../settings/pages/CommunicationChannelsPage"
       ),
   ),
-  SettingsSMSRoutesPage: lazy(
-    () =>
-      import(/* webpackPrefetch: true */ "../../settings/pages/SMSRoutesPage"),
-  ),
   EmailRoutesPage: lazy(
     () =>
       import(/* webpackPrefetch: true */ "../../offers/pages/EmailRoutesPage"),
@@ -544,6 +546,14 @@ const SettingsPages = {
   SMSTestPage: lazy(
     () =>
       import(/* webpackPrefetch: true */ "../../settings/pages/SMSTestPage"),
+  ),
+  PushNotificationRoutesPage: lazy(
+    () =>
+      import(/* webpackPrefetch: true */ "../../routes/pages/PushNotificationRoutesContainer"),
+  ),
+  WhatsAppRoutesPage: lazy(
+    () =>
+      import(/* webpackPrefetch: true */ "../../routes/pages/WhatsAppRoutesContainer"),
   ),
   DNDTypesPage: lazy(
     () =>
@@ -889,6 +899,10 @@ export default function Dashboard() {
             path="/campaign-communication-policy"
             element={<CampaignPages.CommunicationPolicyPage />}
           />
+          <Route
+            path="/campaign-communication-policy/:id"
+            element={<CampaignPages.CommunicationPolicyDetailPage />}
+          />
           <Route path="/offers" element={<OfferPages.OffersPage />} />
           <Route
             path="/offers/create"
@@ -1178,6 +1192,14 @@ export default function Dashboard() {
           <Route
             path="/email-routes/*"
             element={<SettingsPages.EmailRoutesPage />}
+          />
+          <Route
+            path="/push-notification-routes/*"
+            element={<SettingsPages.PushNotificationRoutesPage />}
+          />
+          <Route
+            path="/whatsapp-routes/*"
+            element={<SettingsPages.WhatsAppRoutesPage />}
           />
           <Route path="/sms-test" element={<SettingsPages.SMSTestPage />} />
           <Route path="/manual-rewards-test" element={<OtherPages.ManualRewardsTestPage />} />

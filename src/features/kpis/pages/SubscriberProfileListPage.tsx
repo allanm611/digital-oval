@@ -18,7 +18,6 @@ interface Profile {
   name: string;
   description?: string;
   dataSource: string;
-  frequency: string;
   status: string;
 }
 
@@ -62,7 +61,6 @@ export default function SubscriberProfileListPage() {
                     name: field.field_name || field.name || "",
                     description: field.field_description || field.description || "",
                     dataSource: subCat.display_name || subCat.name || "Customer 360",
-                    frequency: field.data_latency || "Real-time",
                     status: "Active",
                   });
                 });
@@ -204,12 +202,6 @@ export default function SubscriberProfileListPage() {
                       className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                       style={{ color: color.surface.tableHeaderText }}
                     >
-                      Frequency
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
                       Status
                     </th>
                     <th
@@ -229,7 +221,6 @@ export default function SubscriberProfileListPage() {
                     >
                       <td className="px-6 py-4 text-sm text-gray-900 font-medium">{profile.name}</td>
                       <td className="px-6 py-4 text-sm text-gray-600">{profile.dataSource}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{profile.frequency}</td>
                       <td className="px-6 py-4 text-sm text-gray-900">{profile.status}</td>
                       <td className="px-3 py-4">
                         <div className="flex gap-1 justify-center">
@@ -273,7 +264,7 @@ export default function SubscriberProfileListPage() {
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <h3 className="font-medium text-gray-900 text-sm">{profile.name}</h3>
-                      <p className="text-xs text-gray-500 mt-1">{profile.dataSource} • {profile.frequency}</p>
+                      <p className="text-xs text-gray-500 mt-1">{profile.dataSource}</p>
                     </div>
                     <span className="text-sm text-gray-900">{profile.status}</span>
                   </div>

@@ -5,16 +5,16 @@ import SearchInput from "../../../shared/components/ui/SearchInput";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
-import { SMSRoute } from "../types/smsRoute";
-import { smsRouteService } from "../services/smsRouteService";
+import { WhatsAppRoute } from "../types/whatsappRoute";
+import { whatsappRouteService } from "../services/whatsappRouteService";
 import { useToast } from "../../../contexts/ToastContext";
 import { color, tw } from "../../../shared/utils/utils";
 
-export default function SMSRoutesList() {
+export default function WhatsAppRoutesList() {
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
 
-  const [routes, setRoutes] = useState<SMSRoute[]>([]);
+  const [routes, setRoutes] = useState<WhatsAppRoute[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<number | null>(null);
   const [togglingStatus, setTogglingStatus] = useState<number | null>(null);
@@ -29,16 +29,16 @@ export default function SMSRoutesList() {
   const loadRoutes = async () => {
     try {
       setLoading(true);
-      const data = await smsRouteService.getAllRoutes();
+      const data = await whatsappRouteService.getAllRoutes();
       setRoutes(data);
     } catch (err) {
-      showError("Error", "Failed to load SMS routes");
+      showError("Error", "Failed to load WhatsApp routes");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDeleteClick = (route: SMSRoute) => {
+  const handleDeleteClick = (route: WhatsAppRoute) => {
     setDeleteConfirmId(route.id);
     setDeleteConfirmName(route.name);
   };
@@ -48,7 +48,7 @@ export default function SMSRoutesList() {
 
     try {
       setDeleting(deleteConfirmId);
-      await smsRouteService.deleteRoute(deleteConfirmId);
+      await whatsappRouteService.deleteRoute(deleteConfirmId);
       success(
         "Success",
         `"${deleteConfirmName}" has been deleted successfully`,
@@ -57,13 +57,13 @@ export default function SMSRoutesList() {
       setDeleteConfirmId(null);
       setDeleteConfirmName("");
     } catch (err) {
-      showError("Error", "Failed to delete SMS route");
+      showError("Error", "Failed to delete WhatsApp route");
     } finally {
       setDeleting(null);
     }
   };
 
-  const handleToggleStatus = async (route: SMSRoute) => {
+  const handleToggleStatus = async (route: WhatsAppRoute) => {
     const nextStatus = !route.is_active;
 
     try {
@@ -74,7 +74,7 @@ export default function SMSRoutesList() {
         ),
       );
 
-      await smsRouteService.updateRoute(route.id, {
+      await whatsappRouteService.updateRoute(route.id, {
         is_active: nextStatus,
       });
 
@@ -83,7 +83,6 @@ export default function SMSRoutesList() {
         `"${route.name}" has been ${nextStatus ? "activated" : "deactivated"} successfully`,
       );
     } catch (err) {
-      // Revert optimistic update if API call fails
       setRoutes((prev) =>
         prev.map((r) =>
           r.id === route.id ? { ...r, is_active: route.is_active } : r,
@@ -108,14 +107,14 @@ export default function SMSRoutesList() {
       <BackButton
         fallbackTo="/dashboard/configuration"
         showBreadcrumb={true}
-        currentLabel="SMS Routes"
+        currentLabel="WhatsApp Routes"
       />
 
       {/* Description and Create Button */}
       <div className="flex items-start justify-between gap-4">
         <p className={`text-sm ${tw.textSecondary}`}>
-          Manage SMS gateway routes for message delivery. Routes determine which
-          gateway provider is used to send SMS messages.
+          Manage WhatsApp gateway routes for message delivery. Routes determine which
+          gateway provider is used to send WhatsApp messages.
         </p>
         <button
           onClick={() => navigate("create")}
@@ -263,7 +262,7 @@ export default function SMSRoutesList() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-md p-6 max-w-md w-full mx-4">
             <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-2`}>
-              Delete SMS Route
+              Delete WhatsApp Route
             </h3>
             <p className={`${tw.textSecondary} text-sm mb-6`}>
               Are you sure you want to delete "{deleteConfirmName}"? This action
@@ -288,7 +287,6 @@ export default function SMSRoutesList() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

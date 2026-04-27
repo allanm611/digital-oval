@@ -5,9 +5,9 @@ import BackButton from "../../../shared/components/ui/BackButton";
 import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import { SMSRoute, CreateSMSRouteRequest } from "../types/smsRoute";
-import { smsRouteService } from "../services/smsRouteService";
-import { SMS_GATEWAY_OPTIONS } from "../constants/smsRouteEnums";
+import { PushNotificationRoute, CreatePushNotificationRouteRequest } from "../types/pushNotificationRoute";
+import { pushNotificationRouteService } from "../services/pushNotificationRouteService";
+import { PUSH_GATEWAY_OPTIONS, PUSH_PLATFORM_OPTIONS, PRIORITY_LEVEL_OPTIONS } from "../constants/pushNotificationRouteEnums";
 import { useToast } from "../../../contexts/ToastContext";
 import { color, tw } from "../../../shared/utils/utils";
 
@@ -16,20 +16,20 @@ const STATUS_OPTIONS = [
   { label: "Inactive", value: "false" },
 ];
 
-interface SMSRouteFormPageProps {
+interface PushNotificationRouteFormPageProps {
   mode: "create" | "edit";
 }
 
-export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
+export default function PushNotificationRouteFormPage({ mode }: PushNotificationRouteFormPageProps) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
 
   const [loading, setLoading] = useState(mode === "edit");
   const [saving, setSaving] = useState(false);
-  const [route, setRoute] = useState<SMSRoute | null>(null);
+  const [route, setRoute] = useState<PushNotificationRoute | null>(null);
 
-  const [formData, setFormData] = useState<CreateSMSRouteRequest>({
+  const [formData, setFormData] = useState<CreatePushNotificationRouteRequest>({
     name: "",
     gateway_provider: undefined,
     is_active: true,
@@ -38,17 +38,17 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
 
   const [extendedFormData, setExtendedFormData] = useState({
     apiEndpoint: "",
-    apiKey: "",
+    serverKey: "",
     apiSecret: "",
-    senderId: "",
-    requestMethod: "POST",
-    requestFormat: "JSON",
-    priority: "5",
+    appId: "",
+    platforms: [] as string[],
+    defaultTTL: "3600",
+    priorityLevel: "NORMAL",
+    webhookUrl: "",
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  // Load route if editing
   useEffect(() => {
     if (mode === "edit" && id) {
       loadRoute();
@@ -59,7 +59,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
     if (!id) return;
     try {
       setLoading(true);
-      const data = await smsRouteService.getRouteById(Number(id));
+      const data = await pushNotificationRouteService.getRouteById(Number(id));
       if (data) {
         setRoute(data);
         setFormData({
@@ -70,8 +70,8 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
         });
       }
     } catch (err) {
-      showError("Error", "Failed to load SMS route");
-      navigate("/dashboard/sms-routes");
+      showError("Error", "Failed to load push notification route");
+      navigate("/dashboard/push-notification-routes");
     } finally {
       setLoading(false);
     }
@@ -103,16 +103,16 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
       setSaving(true);
 
       if (mode === "edit" && id) {
-        await smsRouteService.updateRoute(Number(id), {
+        await pushNotificationRouteService.updateRoute(Number(id), {
           ...formData,
         });
-        success("Success", "SMS route updated successfully");
+        success("Success", "Push notification route updated successfully");
       } else {
-        await smsRouteService.createRoute(formData);
-        success("Success", "SMS route created successfully");
+        await pushNotificationRouteService.createRoute(formData);
+        success("Success", "Push notification route created successfully");
       }
 
-      navigate("/dashboard/sms-routes");
+      navigate("/dashboard/push-notification-routes");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to save route";
       showError("Error", errorMessage);
@@ -121,7 +121,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
     }
   };
 
-  const handleInputChange = (fieldName: keyof CreateSMSRouteRequest) => (value: string | number) => {
+  const handleInputChange = (fieldName: keyof CreatePushNotificationRouteRequest) => (value: string | number) => {
     setFormData((prev) => ({
       ...prev,
       [fieldName]: value,
@@ -175,18 +175,30 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
     }
   };
 
-  const handleExtendedFieldChange = (fieldName: string, value: string) => {
+  const handleExtendedFieldChange = (fieldName: string, value: string | string[]) => {
     setExtendedFormData((prev) => ({
       ...prev,
       [fieldName]: value,
     }));
   };
 
+  const handlePlatformToggle = (platform: string) => {
+    setExtendedFormData((prev) => {
+      const platforms = prev.platforms.includes(platform)
+        ? prev.platforms.filter(p => p !== platform)
+        : [...prev.platforms, platform];
+      return {
+        ...prev,
+        platforms,
+      };
+    });
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
         <LoadingSpinner variant="modern" size="xl" color="primary" />
-        <p className={`${tw.textMuted} font-medium mt-4`}>Loading SMS route...</p>
+        <p className={`${tw.textMuted} font-medium mt-4`}>Loading push notification route...</p>
       </div>
     );
   }
@@ -194,7 +206,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
   return (
     <div className="space-y-6">
       {/* Header with Back Button */}
-      <BackButton fallbackTo="/dashboard/sms-routes" showBreadcrumb={true} currentLabel={mode === "create" ? "Create SMS Route" : "Edit SMS Route"} />
+      <BackButton fallbackTo="/dashboard/push-notification-routes" showBreadcrumb={true} currentLabel={mode === "create" ? "Create Push Notification Route" : "Edit Push Notification Route"} />
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -208,7 +220,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
                   Route Name *
                 </label>
                 <Input
-                  placeholder="e.g., Primary SMS Gateway"
+                  placeholder="e.g., Firebase Production Gateway"
                   value={formData.name}
                   onChange={handleInputChange('name')}
                   hasError={!!errors.name}
@@ -256,7 +268,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
               Gateway Provider *
             </label>
             <HeadlessSelect
-              options={SMS_GATEWAY_OPTIONS.map(opt => ({
+              options={PUSH_GATEWAY_OPTIONS.map(opt => ({
                 value: opt.value,
                 label: opt.label
               }))}
@@ -281,7 +293,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
                 API Endpoint
               </label>
               <Input
-                placeholder="e.g., https://api.example.com/sms/send"
+                placeholder="e.g., https://fcm.googleapis.com/fcm/send"
                 value={extendedFormData.apiEndpoint}
                 onChange={(value) => handleExtendedFieldChange("apiEndpoint", value)}
                 variant="medium"
@@ -292,13 +304,13 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  API Key
+                  Server Key
                 </label>
                 <Input
                   type="password"
                   placeholder="••••••••••••••••••••••"
-                  value={extendedFormData.apiKey}
-                  onChange={(value) => handleExtendedFieldChange("apiKey", value)}
+                  value={extendedFormData.serverKey}
+                  onChange={(value) => handleExtendedFieldChange("serverKey", value)}
                   variant="medium"
                   disabled={saving}
                 />
@@ -318,6 +330,32 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
                 />
               </div>
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                App ID / Project ID
+              </label>
+              <Input
+                placeholder="e.g., my-firebase-project"
+                value={extendedFormData.appId}
+                onChange={(value) => handleExtendedFieldChange("appId", value)}
+                variant="medium"
+                disabled={saving}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Webhook URL
+              </label>
+              <Input
+                placeholder="e.g., https://api.example.com/webhooks/push-notifications"
+                value={extendedFormData.webhookUrl}
+                onChange={(value) => handleExtendedFieldChange("webhookUrl", value)}
+                variant="medium"
+                disabled={saving}
+              />
+            </div>
           </div>
         </div>
 
@@ -327,63 +365,51 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Sender ID
+                Supported Platforms
               </label>
-              <Input
-                placeholder="e.g., COMPANY or +1234567890"
-                value={extendedFormData.senderId}
-                onChange={(value) => handleExtendedFieldChange("senderId", value)}
-                variant="medium"
-                disabled={saving}
-              />
+              <div className="space-y-2">
+                {PUSH_PLATFORM_OPTIONS.map((platform) => (
+                  <label key={platform.value} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={extendedFormData.platforms.includes(platform.value)}
+                      onChange={() => handlePlatformToggle(platform.value)}
+                      disabled={saving}
+                      className="w-4 h-4 rounded border-gray-300"
+                    />
+                    <span className="text-sm text-gray-700">{platform.label}</span>
+                  </label>
+                ))}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Request Method
-                </label>
-                <HeadlessSelect
-                  options={[
-                    { value: "POST", label: "POST" },
-                    { value: "GET", label: "GET" },
-                    { value: "PUT", label: "PUT" },
-                    { value: "PATCH", label: "PATCH" },
-                  ]}
-                  value={extendedFormData.requestMethod}
-                  onChange={(value) => handleExtendedFieldChange("requestMethod", value as string)}
-                  disabled={saving}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Request Format
-                </label>
-                <HeadlessSelect
-                  options={[
-                    { value: "JSON", label: "JSON" },
-                    { value: "XML", label: "XML" },
-                    { value: "FORM_DATA", label: "Form Data" },
-                  ]}
-                  value={extendedFormData.requestFormat}
-                  onChange={(value) => handleExtendedFieldChange("requestFormat", value as string)}
-                  disabled={saving}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Priority
+                  Default TTL (seconds)
                 </label>
                 <Input
                   type="number"
-                  placeholder="1-10"
-                  value={extendedFormData.priority}
-                  onChange={(value) => handleExtendedFieldChange("priority", value)}
+                  placeholder="3600"
+                  value={extendedFormData.defaultTTL}
+                  onChange={(value) => handleExtendedFieldChange("defaultTTL", value)}
                   variant="medium"
                   min="1"
-                  max="10"
+                  disabled={saving}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Priority Level
+                </label>
+                <HeadlessSelect
+                  options={PRIORITY_LEVEL_OPTIONS.map(opt => ({
+                    value: opt.value,
+                    label: opt.label
+                  }))}
+                  value={extendedFormData.priorityLevel}
+                  onChange={(value) => handleExtendedFieldChange("priorityLevel", value as string)}
                   disabled={saving}
                 />
               </div>
@@ -395,7 +421,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
         <div className="flex items-center justify-between pt-6 border-t border-gray-200">
           <button
             type="button"
-            onClick={() => navigate("/dashboard/sms-routes")}
+            onClick={() => navigate("/dashboard/push-notification-routes")}
             disabled={saving}
             className="px-6 py-2 text-sm font-medium border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-60"
           >

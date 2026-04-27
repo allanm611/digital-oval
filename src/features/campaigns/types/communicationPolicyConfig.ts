@@ -5,8 +5,6 @@ export type CommunicationPolicyType =
   | "dnd"
   | "vipList";
 
-export type CommunicationChannel = "SMS" | "EMAIL" | "USSD" | "APP";
-
 export interface TimeWindowConfig {
   startTime: string;
   endTime: string;
@@ -30,7 +28,7 @@ export interface DNDCategory {
   name: string;
   description?: string;
   status: "start" | "stop";
-  type: "marketing" | "promotional" | "transactional" | "service" | "other";
+  type: string;
   value?: "allowed" | "not allowed";
 }
 
@@ -52,14 +50,14 @@ export interface CommunicationPolicyConfiguration {
   id: number;
   name: string;
   description?: string;
-  channels: CommunicationChannel[];
-  type: CommunicationPolicyType;
+  channels: string[];
+  type_code: string;
   config:
     | TimeWindowConfig
     | MaximumCommunicationConfig
     | DNDConfig
     | VIPListConfig;
-  isActive: boolean;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -67,14 +65,14 @@ export interface CommunicationPolicyConfiguration {
 export interface CreateCommunicationPolicyRequest {
   name: string;
   description?: string;
-  channels: CommunicationChannel[];
-  type: CommunicationPolicyType;
+  channels: string[];
+  type_code: string;
   config:
     | TimeWindowConfig
     | MaximumCommunicationConfig
     | DNDConfig
     | VIPListConfig;
-  isActive?: boolean;
+  is_active?: boolean;
 }
 
 export const COMMUNICATION_POLICY_TYPES = [
@@ -145,21 +143,3 @@ export const DAYS_OF_WEEK = [
   { value: "sunday", label: "Sunday" },
 ] as const;
 
-export const COMMUNICATION_CHANNELS = [
-  { value: "SMS" as const, label: "SMS", description: "Short Message Service" },
-  {
-    value: "EMAIL" as const,
-    label: "Email",
-    description: "Email Communication",
-  },
-  {
-    value: "USSD" as const,
-    label: "USSD",
-    description: "Unstructured Supplementary Service Data",
-  },
-  {
-    value: "APP" as const,
-    label: "App Notification",
-    description: "In-App Push Notification",
-  },
-] as const;

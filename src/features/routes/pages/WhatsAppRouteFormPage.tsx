@@ -5,9 +5,9 @@ import BackButton from "../../../shared/components/ui/BackButton";
 import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import { SMSRoute, CreateSMSRouteRequest } from "../types/smsRoute";
-import { smsRouteService } from "../services/smsRouteService";
-import { SMS_GATEWAY_OPTIONS } from "../constants/smsRouteEnums";
+import { WhatsAppRoute, CreateWhatsAppRouteRequest } from "../types/whatsappRoute";
+import { whatsappRouteService } from "../services/whatsappRouteService";
+import { WHATSAPP_GATEWAY_OPTIONS, MESSAGE_TEMPLATE_OPTIONS } from "../constants/whatsappRouteEnums";
 import { useToast } from "../../../contexts/ToastContext";
 import { color, tw } from "../../../shared/utils/utils";
 
@@ -16,20 +16,20 @@ const STATUS_OPTIONS = [
   { label: "Inactive", value: "false" },
 ];
 
-interface SMSRouteFormPageProps {
+interface WhatsAppRouteFormPageProps {
   mode: "create" | "edit";
 }
 
-export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
+export default function WhatsAppRouteFormPage({ mode }: WhatsAppRouteFormPageProps) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
 
   const [loading, setLoading] = useState(mode === "edit");
   const [saving, setSaving] = useState(false);
-  const [route, setRoute] = useState<SMSRoute | null>(null);
+  const [route, setRoute] = useState<WhatsAppRoute | null>(null);
 
-  const [formData, setFormData] = useState<CreateSMSRouteRequest>({
+  const [formData, setFormData] = useState<CreateWhatsAppRouteRequest>({
     name: "",
     gateway_provider: undefined,
     is_active: true,
@@ -38,17 +38,17 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
 
   const [extendedFormData, setExtendedFormData] = useState({
     apiEndpoint: "",
-    apiKey: "",
+    accessToken: "",
     apiSecret: "",
-    senderId: "",
-    requestMethod: "POST",
-    requestFormat: "JSON",
-    priority: "5",
+    businessAccountId: "",
+    businessPhoneNumber: "",
+    webhookUrl: "",
+    templateSupport: "false",
+    qualityThreshold: "50",
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  // Load route if editing
   useEffect(() => {
     if (mode === "edit" && id) {
       loadRoute();
@@ -59,7 +59,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
     if (!id) return;
     try {
       setLoading(true);
-      const data = await smsRouteService.getRouteById(Number(id));
+      const data = await whatsappRouteService.getRouteById(Number(id));
       if (data) {
         setRoute(data);
         setFormData({
@@ -70,8 +70,8 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
         });
       }
     } catch (err) {
-      showError("Error", "Failed to load SMS route");
-      navigate("/dashboard/sms-routes");
+      showError("Error", "Failed to load WhatsApp route");
+      navigate("/dashboard/whatsapp-routes");
     } finally {
       setLoading(false);
     }
@@ -103,16 +103,16 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
       setSaving(true);
 
       if (mode === "edit" && id) {
-        await smsRouteService.updateRoute(Number(id), {
+        await whatsappRouteService.updateRoute(Number(id), {
           ...formData,
         });
-        success("Success", "SMS route updated successfully");
+        success("Success", "WhatsApp route updated successfully");
       } else {
-        await smsRouteService.createRoute(formData);
-        success("Success", "SMS route created successfully");
+        await whatsappRouteService.createRoute(formData);
+        success("Success", "WhatsApp route created successfully");
       }
 
-      navigate("/dashboard/sms-routes");
+      navigate("/dashboard/whatsapp-routes");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to save route";
       showError("Error", errorMessage);
@@ -121,7 +121,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
     }
   };
 
-  const handleInputChange = (fieldName: keyof CreateSMSRouteRequest) => (value: string | number) => {
+  const handleInputChange = (fieldName: keyof CreateWhatsAppRouteRequest) => (value: string | number) => {
     setFormData((prev) => ({
       ...prev,
       [fieldName]: value,
@@ -186,7 +186,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
         <LoadingSpinner variant="modern" size="xl" color="primary" />
-        <p className={`${tw.textMuted} font-medium mt-4`}>Loading SMS route...</p>
+        <p className={`${tw.textMuted} font-medium mt-4`}>Loading WhatsApp route...</p>
       </div>
     );
   }
@@ -194,7 +194,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
   return (
     <div className="space-y-6">
       {/* Header with Back Button */}
-      <BackButton fallbackTo="/dashboard/sms-routes" showBreadcrumb={true} currentLabel={mode === "create" ? "Create SMS Route" : "Edit SMS Route"} />
+      <BackButton fallbackTo="/dashboard/whatsapp-routes" showBreadcrumb={true} currentLabel={mode === "create" ? "Create WhatsApp Route" : "Edit WhatsApp Route"} />
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -208,7 +208,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
                   Route Name *
                 </label>
                 <Input
-                  placeholder="e.g., Primary SMS Gateway"
+                  placeholder="e.g., Meta WhatsApp Business"
                   value={formData.name}
                   onChange={handleInputChange('name')}
                   hasError={!!errors.name}
@@ -256,7 +256,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
               Gateway Provider *
             </label>
             <HeadlessSelect
-              options={SMS_GATEWAY_OPTIONS.map(opt => ({
+              options={WHATSAPP_GATEWAY_OPTIONS.map(opt => ({
                 value: opt.value,
                 label: opt.label
               }))}
@@ -281,7 +281,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
                 API Endpoint
               </label>
               <Input
-                placeholder="e.g., https://api.example.com/sms/send"
+                placeholder="e.g., https://graph.instagram.com/v18.0"
                 value={extendedFormData.apiEndpoint}
                 onChange={(value) => handleExtendedFieldChange("apiEndpoint", value)}
                 variant="medium"
@@ -292,13 +292,13 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  API Key
+                  Access Token
                 </label>
                 <Input
                   type="password"
                   placeholder="••••••••••••••••••••••"
-                  value={extendedFormData.apiKey}
-                  onChange={(value) => handleExtendedFieldChange("apiKey", value)}
+                  value={extendedFormData.accessToken}
+                  onChange={(value) => handleExtendedFieldChange("accessToken", value)}
                   variant="medium"
                   disabled={saving}
                 />
@@ -318,6 +318,47 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
                 />
               </div>
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Business Account ID
+                </label>
+                <Input
+                  placeholder="e.g., 123456789"
+                  value={extendedFormData.businessAccountId}
+                  onChange={(value) => handleExtendedFieldChange("businessAccountId", value)}
+                  variant="medium"
+                  disabled={saving}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Business Phone Number
+                </label>
+                <Input
+                  placeholder="e.g., +1234567890"
+                  value={extendedFormData.businessPhoneNumber}
+                  onChange={(value) => handleExtendedFieldChange("businessPhoneNumber", value)}
+                  variant="medium"
+                  disabled={saving}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Webhook URL
+              </label>
+              <Input
+                placeholder="e.g., https://api.example.com/webhooks/whatsapp"
+                value={extendedFormData.webhookUrl}
+                onChange={(value) => handleExtendedFieldChange("webhookUrl", value)}
+                variant="medium"
+                disabled={saving}
+              />
+            </div>
           </div>
         </div>
 
@@ -325,65 +366,34 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Delivery Configuration</h2>
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Sender ID
-              </label>
-              <Input
-                placeholder="e.g., COMPANY or +1234567890"
-                value={extendedFormData.senderId}
-                onChange={(value) => handleExtendedFieldChange("senderId", value)}
-                variant="medium"
-                disabled={saving}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Request Method
+                  Message Template Support
                 </label>
                 <HeadlessSelect
-                  options={[
-                    { value: "POST", label: "POST" },
-                    { value: "GET", label: "GET" },
-                    { value: "PUT", label: "PUT" },
-                    { value: "PATCH", label: "PATCH" },
-                  ]}
-                  value={extendedFormData.requestMethod}
-                  onChange={(value) => handleExtendedFieldChange("requestMethod", value as string)}
+                  options={MESSAGE_TEMPLATE_OPTIONS.map(opt => ({
+                    value: opt.value,
+                    label: opt.label
+                  }))}
+                  value={extendedFormData.templateSupport}
+                  onChange={(value) => handleExtendedFieldChange("templateSupport", value as string)}
                   disabled={saving}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Request Format
-                </label>
-                <HeadlessSelect
-                  options={[
-                    { value: "JSON", label: "JSON" },
-                    { value: "XML", label: "XML" },
-                    { value: "FORM_DATA", label: "Form Data" },
-                  ]}
-                  value={extendedFormData.requestFormat}
-                  onChange={(value) => handleExtendedFieldChange("requestFormat", value as string)}
-                  disabled={saving}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Priority
+                  Quality Threshold (%)
                 </label>
                 <Input
                   type="number"
-                  placeholder="1-10"
-                  value={extendedFormData.priority}
-                  onChange={(value) => handleExtendedFieldChange("priority", value)}
+                  placeholder="50"
+                  value={extendedFormData.qualityThreshold}
+                  onChange={(value) => handleExtendedFieldChange("qualityThreshold", value)}
                   variant="medium"
-                  min="1"
-                  max="10"
+                  min="0"
+                  max="100"
                   disabled={saving}
                 />
               </div>
@@ -395,7 +405,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
         <div className="flex items-center justify-between pt-6 border-t border-gray-200">
           <button
             type="button"
-            onClick={() => navigate("/dashboard/sms-routes")}
+            onClick={() => navigate("/dashboard/whatsapp-routes")}
             disabled={saving}
             className="px-6 py-2 text-sm font-medium border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-60"
           >
