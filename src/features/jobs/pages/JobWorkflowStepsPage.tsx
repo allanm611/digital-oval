@@ -504,7 +504,7 @@ export default function JobWorkflowStepsPage() {
     } finally {
       setIsLoadingStats(false);
     }
-  }, [jobIdFilter, steps]);
+  }, [jobIdFilter]);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -1119,6 +1119,7 @@ export default function JobWorkflowStepsPage() {
           placeholder="Search by step name or code"
           value={searchTerm}
           onChange={setSearchTerm}
+          className="flex-1"
         />
         <HeadlessSelect
           value={stepTypeFilter}
@@ -1129,16 +1130,6 @@ export default function JobWorkflowStepsPage() {
           }))}
           placeholder="All Types"
           className="w-auto min-w-[180px]"
-        />
-        <Input
-          type="number"
-          className="w-auto min-w-[120px]"
-          placeholder="Job ID"
-          value={jobIdFilter || ""}
-          onChange={(value) =>
-            setJobIdFilter(value ? Number(value) : "")
-          }
-          variant="medium"
         />
         <div className="flex gap-2">
           <button
@@ -1675,6 +1666,22 @@ export default function JobWorkflowStepsPage() {
                       <p className="mt-1 text-xs text-gray-500">
                         Use with Job ID for precise lookup
                       </p>
+                    </div>
+
+                    {/* Job ID Filter */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Job ID
+                      </label>
+                      <Input
+                        type="number"
+                        value={jobIdFilter || ""}
+                        onChange={(value) =>
+                          setJobIdFilter(value ? Number(value) : "")
+                        }
+                        placeholder="Enter job ID"
+                        variant="medium"
+                      />
                     </div>
 
                     {/* Critical Filter */}

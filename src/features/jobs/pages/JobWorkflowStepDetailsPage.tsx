@@ -347,7 +347,6 @@ export default function JobWorkflowStepDetailsPage() {
             </button>
           </PermissionGate>
         </div>
-      </div>
 
       {/* Main Content Grid */}
       <div className="space-y-6">
