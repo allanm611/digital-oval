@@ -84,13 +84,13 @@ export default function SchedulingComponent({
 
   // Initialize with defaults if not provided (mount-only)
   useEffect(() => {
-    if (!scheduling || !scheduling.start_date) {
+    if (!scheduling || !scheduling.start_date || !scheduling.time_zone) {
       const settingsTimezone = getSettingsTimezone();
       const defaultScheduling = {
         ...(scheduling || {}),
         type: (scheduling && scheduling.type) || "scheduled",
         time_zone: (scheduling && scheduling.time_zone) || settingsTimezone,
-        start_date: new Date().toISOString().split("T")[0],
+        start_date: (scheduling && scheduling.start_date) || new Date().toISOString().split("T")[0],
         end_date: (scheduling && scheduling.end_date) || "",
       };
       onSchedulingChange(defaultScheduling);
@@ -394,31 +394,35 @@ export default function SchedulingComponent({
                 Loading timezones...
               </div>
             ) : (
-              <HeadlessSelect
-                value={scheduling.time_zone || getSettingsTimezone()}
-                onChange={(value) => {
-                  if (value) {
-                    updateScheduling({ time_zone: value as string });
+              <>
+                <HeadlessSelect
+                  value={scheduling.time_zone || getSettingsTimezone()}
+                  onChange={(value) => {
+                    if (value) {
+                      updateScheduling({ time_zone: value as string });
+                    }
+                  }}
+                  options={
+                    Array.isArray(timezoneList)
+                      ? timezoneList
+                          .filter((tz) => tz && tz.value)
+                          .map((tz) => ({
+                            value: tz.value || "",
+                            label: tz.label || tz.value || "",
+                          }))
+                      : []
                   }
-                }}
-                options={
-                  Array.isArray(timezoneList)
-                    ? timezoneList
-                        .filter((tz) => tz && tz.value)
-                        .map((tz) => ({
-                          value: tz.value || "",
-                          label: tz.label || tz.value || "",
-                        }))
-                    : []
-                }
-                placeholder="Select timezone"
-                searchable={true}
-                className="w-full"
-              />
+                  placeholder="Select timezone"
+                  searchable={true}
+                  className="w-full"
+                />
+                {scheduling.time_zone === getSettingsTimezone() && (
+                  <p className="text-xs text-gray-500 mt-2">
+                    Using default timezone from settings
+                  </p>
+                )}
+              </>
             )}
-            <p className="text-xs text-gray-500 mt-2">
-              Default: {getSettingsTimezone()} (from settings)
-            </p>
           </div>
         </div>
       </div>
@@ -560,12 +564,6 @@ export default function SchedulingComponent({
             </div>
           )}
 
-          {/* Time Zone Display */}
-          <div className="mb-6">
-            <span className="text-sm text-gray-600">
-              {scheduling.time_zone || getSettingsTimezone()}
-            </span>
-          </div>
 
           {/* Additional Options */}
           <div className="space-y-3">
@@ -791,12 +789,6 @@ export default function SchedulingComponent({
             </div>
           )}
 
-          {/* Time Zone Display for Target Render Time */}
-          <div className="mt-4">
-            <span className="text-sm text-gray-600">
-              {scheduling.time_zone || "(GMT+02:00) Sudan"}
-            </span>
-          </div>
         </div>
       </div>
 

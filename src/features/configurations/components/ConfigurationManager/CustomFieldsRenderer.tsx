@@ -15,18 +15,26 @@ export default function CustomFieldsRenderer({
   formData,
   onFieldChange,
 }: CustomFieldsRendererProps) {
-  return (
-    <>
-      {fields.map((field) => {
-        const shouldShow = field.condition ? field.condition(formData) : true;
+  // Group fields by row
+  const fieldsByRow = fields.reduce(
+    (acc, field) => {
+      const rowNum = field.row ?? 0;
+      if (!acc[rowNum]) acc[rowNum] = [];
+      acc[rowNum].push(field);
+      return acc;
+    },
+    {} as Record<number, MetadataField[]>
+  );
 
-        if (!shouldShow) return null;
+  const renderField = (field: MetadataField) => {
+    const shouldShow = field.condition ? field.condition(formData) : true;
+    if (!shouldShow) return null;
 
-        return (
-          <div key={field.key}>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {field.label} {field.required && "*"}
-            </label>
+    return (
+      <div key={field.key} className="flex flex-col flex-1">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          {field.label} {field.required && "*"}
+        </label>
 
             {field.type === "text" && (
               <input
@@ -86,29 +94,39 @@ export default function CustomFieldsRenderer({
               />
             )}
 
-            {field.type === "toggle" && (
-              <div
-                className="flex items-center gap-2 cursor-pointer"
-                onClick={() =>
-                  onFieldChange(field.key, !(formData[field.key] ?? false))
-                }
-              >
-                <Checkbox
-                  id={`field-${field.key}`}
-                  checked={formData[field.key] ?? false}
-                  onChange={() =>
-                    onFieldChange(field.key, !(formData[field.key] ?? false))
-                  }
-                  className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-2 focus:ring-purple-500"
-                />
-                <label htmlFor={`field-${field.key}`} className="text-sm">
-                  {field.label}
-                </label>
-              </div>
-            )}
+        {field.type === "toggle" && (
+          <div
+            className="flex items-center gap-2 cursor-pointer"
+            onClick={() =>
+              onFieldChange(field.key, !(formData[field.key] ?? false))
+            }
+          >
+            <Checkbox
+              id={`field-${field.key}`}
+              checked={formData[field.key] ?? false}
+              onChange={() =>
+                onFieldChange(field.key, !(formData[field.key] ?? false))
+              }
+              className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-2 focus:ring-purple-500"
+            />
+            <label htmlFor={`field-${field.key}`} className="text-sm">
+              {field.label}
+            </label>
           </div>
-        );
-      })}
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <>
+      {Object.entries(fieldsByRow)
+        .sort(([rowA], [rowB]) => Number(rowA) - Number(rowB))
+        .map(([row, rowFields]) => (
+          <div key={row} className="flex gap-4">
+            {rowFields.map((field) => renderField(field))}
+          </div>
+        ))}
     </>
   );
 }

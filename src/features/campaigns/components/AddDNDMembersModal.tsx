@@ -50,7 +50,7 @@ export default function AddDNDMembersModal({
   const [customerSearchTerm, setCustomerSearchTerm] = useState("");
   const [selectedDNDTypeId, setSelectedDNDTypeId] = useState<string>("");
   const [selectedDuration, setSelectedDuration] = useState<string>("0");
-  const [customDurationDays, setCustomDurationDays] = useState<string>("");
+  const [customDurationDate, setCustomDurationDate] = useState<string>("");
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [totalCustomers, setTotalCustomers] = useState(0);
@@ -61,7 +61,7 @@ export default function AddDNDMembersModal({
     try {
       setLoadingSubscriptions(true);
       const subscriptions = await dndService.getDNDSubscriptions({
-        channel: channel.toUpperCase(),
+        channel,
         status: "active",
       });
       setExistingSubscriptions(subscriptions);
@@ -151,6 +151,21 @@ export default function AddDNDMembersModal({
 
   const handleAddMembers = () => {
     if (selectedMembers.length > 0 && selectedDNDTypeId) {
+      const duplicates = selectedMembers.filter((member) =>
+        existingSubscriptions.some(
+          (sub) =>
+            sub.customer_phone === member.customer_phone &&
+            sub.status === "active"
+        )
+      );
+
+      if (duplicates.length > 0) {
+        alert(
+          `${duplicates.length} customer(s) are already in DND for ${channel}`
+        );
+        return;
+      }
+
       onAdd?.(selectedMembers, Number(selectedDNDTypeId));
     }
   };
@@ -160,7 +175,7 @@ export default function AddDNDMembersModal({
     setCustomerSearchTerm("");
     setSelectedDNDTypeId(dndTypes.length > 0 ? String(dndTypes[0].id) : "");
     setSelectedDuration("0");
-    setCustomDurationDays("");
+    setCustomDurationDate("");
     onClose();
   };
 
@@ -171,7 +186,7 @@ export default function AddDNDMembersModal({
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
       style={{ zIndex: zIndex.modal }}
     >
-      <div className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto`}>
+      <div className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto`}>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-lg font-bold text-gray-900">
@@ -188,7 +203,7 @@ export default function AddDNDMembersModal({
 
         <div className="p-6 space-y-4">
           {/* DND Type and Duration Selectors */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className={`grid ${selectedDuration === "custom" ? "grid-cols-3" : "grid-cols-2"} gap-4`}>
             {/* DND Type Selector */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -208,35 +223,38 @@ export default function AddDNDMembersModal({
             {/* Duration Selector */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Duration (Optional)
+                Duration
               </label>
-              <div className="space-y-2">
-                <HeadlessSelect
-                  value={selectedDuration}
-                  onChange={setSelectedDuration}
-                  options={[
-                    { value: "0", label: "Never expires" },
-                    { value: "7", label: "7 days" },
-                    { value: "30", label: "30 days" },
-                    { value: "90", label: "90 days" },
-                    { value: "180", label: "180 days" },
-                    { value: "365", label: "1 year" },
-                    { value: "custom", label: "Custom days" },
-                  ]}
-                  placeholder="Select duration"
-                />
-                {selectedDuration === "custom" && (
-                  <input
-                    type="number"
-                    min="1"
-                    placeholder="Enter number of days"
-                    value={customDurationDays}
-                    onChange={(e) => setCustomDurationDays(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                )}
-              </div>
+              <HeadlessSelect
+                value={selectedDuration}
+                onChange={setSelectedDuration}
+                options={[
+                  { value: "0", label: "Never expires" },
+                  { value: "7", label: "7 days" },
+                  { value: "30", label: "30 days" },
+                  { value: "90", label: "90 days" },
+                  { value: "180", label: "180 days" },
+                  { value: "365", label: "1 year" },
+                  { value: "custom", label: "Custom date" },
+                ]}
+                placeholder="Select duration"
+              />
             </div>
+
+            {/* Custom Date Input - only shown when custom is selected */}
+            {selectedDuration === "custom" && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select Expiry Date
+                </label>
+                <input
+                  type="date"
+                  value={customDurationDate}
+                  onChange={(e) => setCustomDurationDate(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            )}
           </div>
 
           {/* Search Input */}
@@ -288,7 +306,7 @@ export default function AddDNDMembersModal({
                       onClick={() => !alreadyInDND && handleCustomerSelect(customer)}
                     >
                       {alreadyInDND ? (
-                        <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                        <CheckCircle className="w-5 h-5 flex-shrink-0" style={{ color: color.primary.accent }} />
                       ) : (
                         <Checkbox
                           id={`customer-${customerId}`}
@@ -304,7 +322,7 @@ export default function AddDNDMembersModal({
                           {customer.msisdn && <span>{customer.msisdn}</span>}
                           {customer.email && <span>{customer.email}</span>}
                           {alreadyInDND && (
-                            <span className="text-green-600 font-medium">
+                            <span className="font-medium" style={{ color: color.primary.accent }}>
                               Already in DND
                             </span>
                           )}

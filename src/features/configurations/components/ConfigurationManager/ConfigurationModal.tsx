@@ -131,7 +131,8 @@ export default function ConfigurationModal({
       style={{ zIndex: zIndex.modal }}
     >
       <div
-        className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto`}
+        className={`bg-white ${tw.rounded} shadow-2xl w-full max-h-[90vh] overflow-y-auto`}
+        style={{ maxWidth: config.modalWidth || "42rem" }}
       >
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-bold text-gray-900">
@@ -147,25 +148,50 @@ export default function ConfigurationModal({
 
         <form onSubmit={handleSubmit} className="p-6">
           <div className="space-y-4">
-            {/* Name Field */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {config.nameLabel} {config.nameRequired && "*"}
-              </label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, name: e.target.value }))
-                }
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
-                placeholder={t.genericConfig.enter.replace(
-                  "{field}",
-                  config.nameLabel.toLowerCase()
-                )}
-                maxLength={config.nameMaxLength}
-                required={config.nameRequired}
-              />
+            {/* Name and From Address on same line */}
+            <div className="flex gap-4">
+              {/* Name Field */}
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {config.nameLabel} {config.nameRequired && "*"}
+                </label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, name: e.target.value }))
+                  }
+                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                  placeholder={t.genericConfig.enter.replace(
+                    "{field}",
+                    config.nameLabel.toLowerCase()
+                  )}
+                  maxLength={config.nameMaxLength}
+                  required={config.nameRequired}
+                />
+              </div>
+
+              {/* From Address Field (if it exists in metadata) */}
+              {config.metadataFields?.find((f) => f.key === "from_address") && (
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    From Email Address *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.from_address || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        from_address: e.target.value,
+                      }))
+                    }
+                    className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                    placeholder="Enter email address"
+                    required
+                  />
+                </div>
+              )}
             </div>
 
             {/* Description Field */}
@@ -192,10 +218,12 @@ export default function ConfigurationModal({
               />
             </div>
 
-            {/* Metadata Fields */}
+            {/* Metadata Fields (excluding from_address) */}
             {config.metadataFields && (
               <CustomFieldsRenderer
-                fields={config.metadataFields}
+                fields={config.metadataFields.filter(
+                  (f) => f.key !== "from_address"
+                )}
                 formData={formData}
                 onFieldChange={(key, value) =>
                   setFormData((prev) => ({ ...prev, [key]: value }))

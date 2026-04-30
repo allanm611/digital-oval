@@ -10,6 +10,7 @@ import LoadingSpinner from "../../../../shared/components/ui/LoadingSpinner";
 import BackButton from "../../../../shared/components/ui/BackButton";
 import CreateButton from "../../../../shared/components/ui/CreateButton";
 import Checkbox from "../../../../shared/components/ui/Checkbox";
+import ActivateDeactivateButton from "../../../../shared/components/ui/ActivateDeactivateButton";
 import ConfigurationModal from "./ConfigurationModal";
 
 export interface ConfigurationItem {
@@ -30,6 +31,7 @@ export interface MetadataField {
   options?: { value: string | number | boolean; label: string }[];
   placeholder?: string;
   condition?: (values: Record<string, any>) => boolean;
+  row?: number;
 }
 
 export interface ConfigurationPageConfig {
@@ -81,6 +83,7 @@ export default function ConfigurationManager({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ConfigurationItem | undefined>();
   const [isSaving, setIsSaving] = useState(false);
+  const [togglingItemId, setTogglingItemId] = useState<number | string | null>(null);
 
   const handleCreateItem = () => {
     setEditingItem(undefined);
@@ -116,6 +119,23 @@ export default function ConfigurationManager({
         err instanceof Error ? err.message : config.deleteErrorMessage
       );
     }
+  };
+
+  const handleToggleActive = (item: ConfigurationItem) => {
+    const newActive = !(item.isActive ?? true);
+    setTogglingItemId(item.id);
+    setItems((prev) =>
+      prev.map((i) =>
+        i.id === item.id ? { ...i, isActive: newActive } : i
+      )
+    );
+    setTimeout(() => setTogglingItemId(null), 300);
+    showToast(
+      newActive ? "Activated" : "Deactivated",
+      newActive
+        ? `${item.name} has been activated`
+        : `${item.name} has been deactivated`
+    );
   };
 
   const handleItemSaved = async (itemData: Record<string, any>) => {
@@ -293,6 +313,15 @@ export default function ConfigurationManager({
                     style={{
                       color: color.surface.tableHeaderText,
                       backgroundColor: color.surface.tableHeader,
+                    }}
+                  >
+                    {t.genericConfig.status}
+                  </th>
+                  <th
+                    className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
+                    style={{
+                      color: color.surface.tableHeaderText,
+                      backgroundColor: color.surface.tableHeader,
                       borderTopRightRadius: "0.375rem",
                     }}
                   >
@@ -328,6 +357,15 @@ export default function ConfigurationManager({
 
                     <td
                       className="px-6 py-4 text-center"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      <span className={`text-sm font-medium ${tw.textSecondary}`}>
+                        {item.isActive ?? true ? t.genericConfig.active || 'Active' : t.genericConfig.inactive || 'Inactive'}
+                      </span>
+                    </td>
+
+                    <td
+                      className="px-6 py-4 text-center"
                       style={{
                         backgroundColor: color.surface.tablebodybg,
                         borderTopRightRadius: "0.375rem",
@@ -335,6 +373,18 @@ export default function ConfigurationManager({
                       }}
                     >
                       <div className="flex items-center justify-center space-x-2">
+                        <ActivateDeactivateButton
+                          isActive={item.isActive ?? true}
+                          onToggle={() => handleToggleActive(item)}
+                          disabled={togglingItemId === item.id}
+                          isLoading={togglingItemId === item.id}
+                          title={
+                            item.isActive
+                              ? `Deactivate ${item.name}`
+                              : `Activate ${item.name}`
+                          }
+                        />
+
                         <button
                           onClick={() => handleEditItem(item)}
                           className={`p-2 ${tw.rounded} transition-colors`}

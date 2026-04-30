@@ -14,7 +14,6 @@ import {
   rewardTypesConfig,
   communicationChannelsConfig,
   senderIdsConfig,
-  smsRoutesConfig,
   emailRoutesConfig,
   languagesConfig,
   characterSetsConfig,
@@ -39,7 +38,6 @@ export type ConfigurationType =
   | "rewardTypes"
   | "communicationChannels"
   | "senderIds"
-  | "smsRoutes"
   | "emailRoutes"
   | "languages"
   | "characterSets"
@@ -105,7 +103,6 @@ class ConfigurationDataService {
       ...communicationChannelsConfig.initialData,
     ]);
     this.data.set("senderIds", [...senderIdsConfig.initialData]);
-    this.data.set("smsRoutes", [...smsRoutesConfig.initialData]);
     this.data.set("emailRoutes", [...emailRoutesConfig.initialData]);
     this.data.set("languages", [...languagesConfig.initialData]);
     this.data.set("characterSets", [...characterSetsConfig.initialData]);
@@ -247,9 +244,6 @@ class ConfigurationDataService {
         break;
       case "senderIds":
         this.setData(type, [...senderIdsConfig.initialData]);
-        break;
-      case "smsRoutes":
-        this.setData(type, [...smsRoutesConfig.initialData]);
         break;
       case "emailRoutes":
         this.setData(type, [...emailRoutesConfig.initialData]);

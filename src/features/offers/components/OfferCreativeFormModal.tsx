@@ -36,6 +36,8 @@ import {
   validateInsertPosition,
 } from "../../../shared/utils/variableInsertion";
 import type { TemplateVariable } from "../../manual-broadcast/types";
+import CreateLanguageModal from "./CreateLanguageModal";
+import CreativeTemplateFormModal from "./CreativeTemplateFormModal";
 
 interface OfferCreativeFormModalProps {
   isOpen: boolean;
@@ -106,6 +108,7 @@ export default function OfferCreativeFormModal({
     html_body: "",
     is_active: true,
   });
+  const [selectedLanguageId, setSelectedLanguageId] = useState<number | string>("");  // Track language ID for dropdown
 
   const [isSaving, setIsSaving] = useState(false);
   const [isRichText, setIsRichText] = useState(false);
@@ -115,6 +118,8 @@ export default function OfferCreativeFormModal({
   const [cursorPosition, setCursorPosition] = useState(0);
   const [variableError, setVariableError] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
 
   // Data loading
   const [channels, setChannels] = useState<CommunicationChannel[]>([]);
@@ -221,6 +226,8 @@ export default function OfferCreativeFormModal({
         is_active: initialCreative.is_active ?? true,
         sms_route: initialCreative.sms_route,
       });
+      const matchingLang = languages.find((l) => l.language_code === initialCreative.locale);
+      if (matchingLang) setSelectedLanguageId(matchingLang.id);
     } else {
       setFormData({
         channel: "SMS",
@@ -230,6 +237,9 @@ export default function OfferCreativeFormModal({
         html_body: "",
         is_active: true,
       });
+      const defaultLang = languages.find((l) => l.language_code === "en");
+      if (defaultLang) setSelectedLanguageId(defaultLang.id);
+      else setSelectedLanguageId("");
     }
 
     setIsRichText(false);
@@ -327,6 +337,21 @@ export default function OfferCreativeFormModal({
       rendered_html_body: formData.html_body,
     });
     setShowPreview(true);
+  };
+
+  const handleLanguageCreated = (language: Language) => {
+    setLanguages((prev) => [...prev, language]);
+    setIsLanguageModalOpen(false);
+    setFormData((prev) => ({ ...prev, locale: language.language_code }));
+    setSelectedLanguageId(language.id);
+    success("Success", `Language "${language.name}" created successfully`);
+  };
+
+  const handleTemplateCreated = async (template: any) => {
+    setTemplates((prev) => [...prev, template]);
+    setIsTemplateModalOpen(false);
+    handleTemplateSelect(template.id);
+    success("Success", `Template "${template.name}" created successfully`);
   };
 
   const handleSave = async () => {
@@ -441,18 +466,28 @@ export default function OfferCreativeFormModal({
                           .filter((lang) => lang.is_active)
                           .map((lang) => ({
                             label: lang.name,
-                            value: lang.language_code,
+                            value: lang.id,
                           }))
                       : COMMON_LOCALES.map((locale) => ({
                           label: locale,
                           value: locale,
                         }))
                   }
-                  value={formData.locale}
-                  onChange={(value) => setFormData((prev) => ({ ...prev, locale: String(value) }))}
+                  value={selectedLanguageId}
+                  onChange={(value) => {
+                    setSelectedLanguageId(value);
+                    if (languages.length > 0) {
+                      const selectedLang = languages.find((l) => l.id === value);
+                      if (selectedLang) {
+                        setFormData((prev) => ({ ...prev, locale: selectedLang.language_code }));
+                      }
+                    } else {
+                      setFormData((prev) => ({ ...prev, locale: String(value) }));
+                    }
+                  }}
                   placeholder="Select language"
                   allowCreate={true}
-                  onCreate={() => window.open("/dashboard/languages", "_blank")}
+                  onCreate={() => setIsLanguageModalOpen(true)}
                 />
               </div>
             </div>
@@ -474,7 +509,7 @@ export default function OfferCreativeFormModal({
                 placeholder="Select template..."
                 disabled={templatesLoading || !formData.channel}
                 allowCreate={true}
-                onCreate={() => window.open("/dashboard/creative-templates", "_blank")}
+                onCreate={() => setIsTemplateModalOpen(true)}
               />
             </div>
 
@@ -861,6 +896,27 @@ export default function OfferCreativeFormModal({
           )}
         </div>
       </RegularModal>
+
+      {/* Create Language Modal */}
+      <CreateLanguageModal
+        isOpen={isLanguageModalOpen}
+        onClose={() => setIsLanguageModalOpen(false)}
+        onLanguageCreated={handleLanguageCreated}
+      />
+
+      {/* Create Creative Template Modal */}
+      <CreativeTemplateFormModal
+        isOpen={isTemplateModalOpen}
+        onClose={() => setIsTemplateModalOpen(false)}
+        onSave={async (formData) => {
+          const response = await creativeTemplateService.createCreativeTemplate(formData);
+          const newTemplate = response.data;
+          if (newTemplate) {
+            const template = Array.isArray(newTemplate) ? newTemplate[0] : newTemplate;
+            await handleTemplateCreated(template);
+          }
+        }}
+      />
     </>
   );
 }

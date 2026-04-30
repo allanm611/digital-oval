@@ -34,7 +34,6 @@ class DepartmentService {
   async getDepartments(): Promise<ConfigurationItem[]> {
     try {
       const data = await this.request<ApiResponse<ConfigurationItem[]>>("");
-      console.log("Department response:", data);
       if (data && Array.isArray(data.data)) {
         return data.data;
       }

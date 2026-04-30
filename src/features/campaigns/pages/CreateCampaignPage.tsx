@@ -617,8 +617,10 @@ export default function CreateCampaignPage() {
         return { isValid: Object.keys(errors).length === 0, errors };
 
       case 4: // Scheduling step
-        // Scheduling step has default values, no validation needed
-        return { isValid: true, errors: {} };
+        if (!formData.scheduling?.start_date) {
+          errors.start_date = "Start date is required";
+        }
+        return { isValid: Object.keys(errors).length === 0, errors };
 
       case 5: // Preview step
         // Preview step doesn't need validation

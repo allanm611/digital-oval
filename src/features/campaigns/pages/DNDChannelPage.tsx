@@ -162,7 +162,7 @@ export default function DNDChannelPage() {
 
       showToast(
         `success`,
-        `Customer removed from ${dndType?.name || "DND"} list`,
+        `${subscription?.customer_name || "Customer"} removed from ${dndType?.name || "DND"} for ${channelInfo?.name || "channel"}`,
         "The customer has been removed successfully"
       );
       setDeleteConfirmId(null);
@@ -170,6 +170,7 @@ export default function DNDChannelPage() {
     } catch (err) {
       setDndSubscriptions(oldSubscriptions);
       showError("Error", "Failed to remove customer from DND list");
+    } finally {
       setIsRemoving(false);
     }
   };
@@ -443,7 +444,7 @@ export default function DNDChannelPage() {
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         dndTypes={dndTypes}
-        channel={channelInfo?.name || "Channel"}
+        channel={channelInfo?.code?.toUpperCase() || "CHANNEL"}
         onAdd={handleAddCustomers}
         isLoading={isAddingCustomers}
       />

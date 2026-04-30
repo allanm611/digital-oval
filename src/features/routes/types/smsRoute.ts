@@ -10,6 +10,9 @@ export interface SMSRoute {
   gateway_provider?: SmsGatewayEnum;
   communication_channel?: NotificationChannelEnum;
   is_active: boolean;
+  backup_route_id?: number;
+  use_backup_on_failure?: boolean;
+  retry_attempts?: number;
   created_at: string;
   updated_at: string;
   created_by?: number;
@@ -22,6 +25,9 @@ export interface CreateSMSRouteRequest {
   gateway_provider?: SmsGatewayEnum;
   communication_channel?: NotificationChannelEnum;
   is_active?: boolean;
+  backup_route_id?: number;
+  use_backup_on_failure?: boolean;
+  retry_attempts?: number;
 }
 
 export interface UpdateSMSRouteRequest {
@@ -30,4 +36,7 @@ export interface UpdateSMSRouteRequest {
   gateway_provider?: SmsGatewayEnum;
   communication_channel?: NotificationChannelEnum;
   is_active?: boolean;
+  backup_route_id?: number;
+  use_backup_on_failure?: boolean;
+  retry_attempts?: number;
 }

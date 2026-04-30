@@ -1,15 +1,20 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Save } from "lucide-react";
+import { Save, Plus } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import Input from "../../../shared/components/ui/Input";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { SMSRoute, CreateSMSRouteRequest } from "../types/smsRoute";
 import { smsRouteService } from "../services/smsRouteService";
-import { SMS_GATEWAY_OPTIONS } from "../constants/smsRouteEnums";
 import { useToast } from "../../../contexts/ToastContext";
 import { color, tw } from "../../../shared/utils/utils";
+import { senderIdService } from "../../configurations/services/senderIdService";
+import ConfigurationModal from "../../configurations/components/ConfigurationManager/ConfigurationModal";
+import { getSenderIdsApiConfig } from "../../configurations/configs/configurationPageConfigs";
+import { useLanguage } from "../../../contexts/LanguageContext";
+import { GATEWAY_KEY_OPTIONS } from "../../configurations/configs/ts/gatewayKeyEnum";
 
 const STATUS_OPTIONS = [
   { label: "Active", value: "true" },
@@ -24,16 +29,23 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
+  const { t } = useLanguage();
 
   const [loading, setLoading] = useState(mode === "edit");
   const [saving, setSaving] = useState(false);
   const [route, setRoute] = useState<SMSRoute | null>(null);
+  const [allRoutes, setAllRoutes] = useState<SMSRoute[]>([]);
+  const [senderIds, setSenderIds] = useState<any[]>([]);
+  const [showCreateSenderId, setShowCreateSenderId] = useState(false);
 
   const [formData, setFormData] = useState<CreateSMSRouteRequest>({
     name: "",
     gateway_provider: undefined,
     is_active: true,
     description: "",
+    backup_route_id: undefined,
+    use_backup_on_failure: false,
+    retry_attempts: 3,
   });
 
   const [extendedFormData, setExtendedFormData] = useState({
@@ -43,13 +55,34 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
     senderId: "",
     requestMethod: "POST",
     requestFormat: "JSON",
-    priority: "5",
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  // Load route if editing
+  // Load route if editing and load all routes for backup selection
   useEffect(() => {
+    const loadAllRoutes = async () => {
+      try {
+        const routes = await smsRouteService.getRoutes();
+        setAllRoutes(routes);
+      } catch (err) {
+        // Silent fail - routes dropdown will be empty
+      }
+    };
+
+    const loadSenderIds = async () => {
+      try {
+        const response = await senderIdService.getSenderIds();
+        const ids = Array.isArray(response) ? response : response?.data || [];
+        setSenderIds(ids);
+      } catch (err) {
+        // Silent fail
+      }
+    };
+
+    loadAllRoutes();
+    loadSenderIds();
+
     if (mode === "edit" && id) {
       loadRoute();
     }
@@ -67,6 +100,9 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
           gateway_provider: data.gateway_provider,
           is_active: data.is_active,
           description: data.description,
+          backup_route_id: data.backup_route_id,
+          use_backup_on_failure: data.use_backup_on_failure,
+          retry_attempts: data.retry_attempts,
         });
       }
     } catch (err) {
@@ -182,6 +218,31 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
     }));
   };
 
+  const handleSaveSenderId = async (formData: Record<string, any>) => {
+    try {
+      setSaving(true);
+      const response = await senderIdService.createSenderId({
+        name: formData.name,
+        description: formData.description || undefined,
+        gateway_key: formData.gateway_key,
+        is_active: true,
+      });
+
+      const createdId = response.data?.id || response?.id;
+      const createdData = response.data || response;
+
+      setSenderIds((prev) => [...prev, createdData]);
+      setExtendedFormData((prev) => ({
+        ...prev,
+        senderId: String(createdId),
+      }));
+
+      setShowCreateSenderId(false);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
@@ -202,33 +263,19 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Basic Information</h2>
           <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Route Name *
-                </label>
-                <Input
-                  placeholder="e.g., Primary SMS Gateway"
-                  value={formData.name}
-                  onChange={handleInputChange('name')}
-                  hasError={!!errors.name}
-                  variant="medium"
-                  disabled={saving}
-                />
-                {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Status
-                </label>
-                <HeadlessSelect
-                  options={STATUS_OPTIONS}
-                  value={formData.is_active ? "true" : "false"}
-                  onChange={(value) => handleSelectChange("is_active", value)}
-                  disabled={saving}
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Route Name *
+              </label>
+              <Input
+                placeholder="e.g., Primary SMS Gateway"
+                value={formData.name}
+                onChange={handleInputChange('name')}
+                hasError={!!errors.name}
+                variant="medium"
+                disabled={saving}
+              />
+              {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
             </div>
 
             <div>
@@ -256,10 +303,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
               Gateway Provider *
             </label>
             <HeadlessSelect
-              options={SMS_GATEWAY_OPTIONS.map(opt => ({
-                value: opt.value,
-                label: opt.label
-              }))}
+              options={GATEWAY_KEY_OPTIONS}
               value={formData.gateway_provider || ""}
               onChange={(value) => handleSelectChange("gateway_provider", value)}
               placeholder="Select gateway provider"
@@ -275,7 +319,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
         {/* API Configuration Section */}
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>API Configuration</h2>
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 API Endpoint
@@ -289,34 +333,32 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  API Key
-                </label>
-                <Input
-                  type="password"
-                  placeholder="••••••••••••••••••••••"
-                  value={extendedFormData.apiKey}
-                  onChange={(value) => handleExtendedFieldChange("apiKey", value)}
-                  variant="medium"
-                  disabled={saving}
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                API Key
+              </label>
+              <Input
+                type="password"
+                placeholder="••••••••••••••••••••••"
+                value={extendedFormData.apiKey}
+                onChange={(value) => handleExtendedFieldChange("apiKey", value)}
+                variant="medium"
+                disabled={saving}
+              />
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  API Secret
-                </label>
-                <Input
-                  type="password"
-                  placeholder="Your API secret"
-                  value={extendedFormData.apiSecret}
-                  onChange={(value) => handleExtendedFieldChange("apiSecret", value)}
-                  variant="medium"
-                  disabled={saving}
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                API Secret
+              </label>
+              <Input
+                type="password"
+                placeholder="Your API secret"
+                value={extendedFormData.apiSecret}
+                onChange={(value) => handleExtendedFieldChange("apiSecret", value)}
+                variant="medium"
+                disabled={saving}
+              />
             </div>
           </div>
         </div>
@@ -324,72 +366,169 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
         {/* Delivery Configuration Section */}
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Delivery Configuration</h2>
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Sender ID
               </label>
-              <Input
-                placeholder="e.g., COMPANY or +1234567890"
-                value={extendedFormData.senderId}
-                onChange={(value) => handleExtendedFieldChange("senderId", value)}
-                variant="medium"
+              <div className="flex">
+                <div className="flex-1" style={{ borderTopRightRadius: "0", borderBottomRightRadius: "0", overflow: "hidden" }}>
+                  <HeadlessSelect
+                    options={[
+                      { value: "", label: "Select Sender ID" },
+                      ...(senderIds.map((sender) => ({
+                        value: String(sender.id),
+                        label: sender.name,
+                      })) || []),
+                    ]}
+                    value={extendedFormData.senderId}
+                    onChange={(value) => handleExtendedFieldChange("senderId", value as string)}
+                    disabled={saving}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowCreateSenderId(true)}
+                  disabled={saving}
+                  className="px-3 py-2 text-white rounded-r-md flex items-center justify-center text-sm border-l-0 transition-opacity disabled:opacity-50"
+                  style={{
+                    backgroundColor: color.primary.action,
+                    borderColor: color.primary.action,
+                    border: "1px solid",
+                  }}
+                  title="Create new Sender ID"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Request Method
+              </label>
+              <HeadlessSelect
+                options={[
+                  { value: "POST", label: "POST" },
+                  { value: "GET", label: "GET" },
+                  { value: "PUT", label: "PUT" },
+                  { value: "PATCH", label: "PATCH" },
+                ]}
+                value={extendedFormData.requestMethod}
+                onChange={(value) => handleExtendedFieldChange("requestMethod", value as string)}
                 disabled={saving}
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Request Method
-                </label>
-                <HeadlessSelect
-                  options={[
-                    { value: "POST", label: "POST" },
-                    { value: "GET", label: "GET" },
-                    { value: "PUT", label: "PUT" },
-                    { value: "PATCH", label: "PATCH" },
-                  ]}
-                  value={extendedFormData.requestMethod}
-                  onChange={(value) => handleExtendedFieldChange("requestMethod", value as string)}
-                  disabled={saving}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Request Format
-                </label>
-                <HeadlessSelect
-                  options={[
-                    { value: "JSON", label: "JSON" },
-                    { value: "XML", label: "XML" },
-                    { value: "FORM_DATA", label: "Form Data" },
-                  ]}
-                  value={extendedFormData.requestFormat}
-                  onChange={(value) => handleExtendedFieldChange("requestFormat", value as string)}
-                  disabled={saving}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Priority
-                </label>
-                <Input
-                  type="number"
-                  placeholder="1-10"
-                  value={extendedFormData.priority}
-                  onChange={(value) => handleExtendedFieldChange("priority", value)}
-                  variant="medium"
-                  min="1"
-                  max="10"
-                  disabled={saving}
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Request Format
+              </label>
+              <HeadlessSelect
+                options={[
+                  { value: "JSON", label: "JSON" },
+                  { value: "XML", label: "XML" },
+                  { value: "FORM_DATA", label: "Form Data" },
+                ]}
+                value={extendedFormData.requestFormat}
+                onChange={(value) => handleExtendedFieldChange("requestFormat", value as string)}
+                disabled={saving}
+              />
             </div>
           </div>
         </div>
+
+        {/* Failover Configuration Section */}
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Failover Configuration</h2>
+
+          <div className="space-y-4">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <Checkbox
+                id="use_backup_on_failure"
+                checked={formData.use_backup_on_failure || false}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    use_backup_on_failure: e.target.checked,
+                  }))
+                }
+                disabled={saving}
+              />
+              <div className="flex-1">
+                <span className="block text-sm font-medium text-gray-700">
+                  Use backup route if this route fails
+                </span>
+                <p className={`text-xs ${tw.textSecondary} mt-1`}>
+                  Enable automatic failover to a backup route when delivery fails
+                </p>
+              </div>
+            </label>
+
+            {formData.use_backup_on_failure && (
+              <div className="space-y-4 mt-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Backup Route
+                  </label>
+                  <HeadlessSelect
+                    options={[
+                      { value: "", label: "Select a backup route" },
+                      ...(allRoutes
+                        .filter((r) => r.id !== (route?.id || formData.backup_route_id))
+                        .map((route) => ({
+                          value: String(route.id),
+                          label: route.name,
+                        })) || []),
+                    ]}
+                    value={String(formData.backup_route_id || "")}
+                    onChange={(value) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        backup_route_id: value ? Number(value) : undefined,
+                      }))
+                    }
+                    disabled={saving}
+                  />
+                  <p className={`text-xs ${tw.textSecondary} mt-2`}>
+                    This route will be used if the primary route fails
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Retry Attempts Before Failover
+                  </label>
+                  <Input
+                    type="number"
+                    placeholder="3"
+                    value={String(formData.retry_attempts || 3)}
+                    onChange={(value) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        retry_attempts: value ? Number(value) : 3,
+                      }))
+                    }
+                    variant="medium"
+                    disabled={saving}
+                  />
+                  <p className={`text-xs ${tw.textSecondary} mt-2`}>
+                    Number of times to retry this route before using the backup route
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Create Sender ID Modal */}
+        <ConfigurationModal
+          isOpen={showCreateSenderId}
+          onClose={() => setShowCreateSenderId(false)}
+          onSave={handleSaveSenderId}
+          isSaving={saving}
+          config={getSenderIdsApiConfig(t)}
+        />
 
         {/* Form Actions */}
         <div className="flex items-center justify-between pt-6 border-t border-gray-200">

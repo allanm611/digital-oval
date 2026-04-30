@@ -992,7 +992,7 @@ const hardcodedSenderIds: ConfigurationItem[] = [
   },
 ];
 
-const hardcodedEmailRoutes: ConfigurationItem[] = [
+export const hardcodedEmailRoutes: ConfigurationItem[] = [
   {
     id: 1,
     name: "SendGrid Primary Route",
@@ -2664,12 +2664,17 @@ export const senderIdsConfig: TypeConfigurationPageConfig = {
   descriptionRequired: false,
   nameMaxLength: 128,
   descriptionMaxLength: 1000,
-  metadataField: {
-    label: "Gateway",
-    type: "select",
-    placeholder: "Select gateway",
-    options: GATEWAY_KEY_OPTIONS,
-  },
+  metadataFields: [
+    {
+      key: "gateway_key",
+      label: "Gateway",
+      type: "select",
+      required: true,
+      row: 0,
+      options: GATEWAY_KEY_OPTIONS,
+    },
+  ],
+  modalWidth: "32rem",
   statusLabel: "Status",
   deleteConfirmTitle: "Delete Sender ID",
   deleteConfirmMessage: (name: string) =>
@@ -2689,7 +2694,7 @@ export const emailRoutesConfig: TypeConfigurationPageConfig = {
   entityName: "Email route",
   entityNamePlural: "Email routes",
   configType: "emailRoutes",
-  backPath: "/dashboard/communication-channels",
+  backPath: "/dashboard/configurations",
   icon: Mail,
   searchPlaceholder: "Search routes...",
   initialData: hardcodedEmailRoutes,
@@ -2704,12 +2709,13 @@ export const emailRoutesConfig: TypeConfigurationPageConfig = {
   descriptionRequired: false,
   nameMaxLength: 100,
   descriptionMaxLength: 500,
-  customFields: [
+  metadataFields: [
     {
-      fieldKey: "gateway_provider",
+      key: "gateway_provider",
       label: "Gateway Provider",
       type: "select",
       required: true,
+      row: 0,
       options: [
         { value: "SENDGRID", label: "SendGrid" },
         { value: "AWS_SES", label: "AWS SES" },
@@ -2720,36 +2726,42 @@ export const emailRoutesConfig: TypeConfigurationPageConfig = {
       ],
     },
     {
-      fieldKey: "smtp_host",
+      key: "smtp_host",
       label: "SMTP Host",
       type: "text",
       required: true,
+      row: 1,
     },
     {
-      fieldKey: "smtp_port",
+      key: "smtp_port",
       label: "SMTP Port",
-      type: "number",
+      type: "text",
       required: true,
+      row: 1,
     },
     {
-      fieldKey: "smtp_username",
+      key: "smtp_username",
       label: "SMTP Username",
       type: "text",
       required: true,
+      row: 2,
     },
     {
-      fieldKey: "smtp_password",
+      key: "smtp_password",
       label: "SMTP Password",
-      type: "password",
+      type: "text",
       required: true,
+      row: 2,
     },
     {
-      fieldKey: "from_address",
+      key: "from_address",
       label: "From Email Address",
-      type: "email",
+      type: "text",
       required: true,
+      row: 3,
     },
   ],
+  modalWidth: "52rem",
   statusLabel: "Status",
   deleteConfirmTitle: "Delete Email Route",
   deleteConfirmMessage: (name: string) =>

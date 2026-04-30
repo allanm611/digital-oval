@@ -38,6 +38,7 @@ export default function DNDBulkManagementPage() {
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
+  const [showBatchDeleteModal, setShowBatchDeleteModal] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -98,15 +99,11 @@ export default function DNDBulkManagementPage() {
     setSelectedRows(newSelected);
   };
 
-  const handleBatchRemove = async () => {
-    if (selectedRows.size === 0) return;
+  const handleBatchRemove = () => {
+    setShowBatchDeleteModal(true);
+  };
 
-    if (!window.confirm(
-      `Are you sure you want to remove ${selectedRows.size} customer(s) from DND? This action cannot be undone.`
-    )) {
-      return;
-    }
-
+  const handleConfirmBatchRemove = async () => {
     const subscriptionIds = Array.from(selectedRows);
     setIsBatchProcessing(true);
 
@@ -122,6 +119,7 @@ export default function DNDBulkManagementPage() {
       );
       setSelectedRows(new Set());
       setIsSelectionMode(false);
+      setShowBatchDeleteModal(false);
       await loadData();
     } catch (err) {
       showError("Error", "Failed to remove some customers from DND");
@@ -187,7 +185,7 @@ export default function DNDBulkManagementPage() {
 
       showToast(
         "success",
-        `Customer removed from ${dndType?.name || "DND"} list`,
+        `${subscription?.customer_name || "Customer"} removed from ${dndType?.name || "DND"} for ${subscription?.channel || "channel"}`,
         "The customer has been removed successfully"
       );
       setDeleteConfirmId(null);
@@ -195,6 +193,7 @@ export default function DNDBulkManagementPage() {
     } catch (err) {
       setDndSubscriptions(oldSubscriptions);
       showError("Error", "Failed to remove customer from DND list");
+    } finally {
       setIsRemoving(false);
     }
   };
@@ -551,7 +550,7 @@ export default function DNDBulkManagementPage() {
         isLoading={false}
       />
 
-      {/* Remove Confirmation Modal */}
+      {/* Remove Confirmation Modal - Individual */}
       <DeleteConfirmModal
         isOpen={deleteConfirmId !== null}
         onClose={() => setDeleteConfirmId(null)}
@@ -560,6 +559,18 @@ export default function DNDBulkManagementPage() {
         description="Are you sure you want to remove this customer from the DND list? They will be able to receive messages again."
         itemName={deleteConfirmName}
         isLoading={isRemoving}
+        confirmText="Remove"
+      />
+
+      {/* Remove Confirmation Modal - Batch */}
+      <DeleteConfirmModal
+        isOpen={showBatchDeleteModal}
+        onClose={() => setShowBatchDeleteModal(false)}
+        onConfirm={handleConfirmBatchRemove}
+        title="Remove Customers from DND"
+        description="Are you sure you want to remove these customers from DND? This action cannot be undone."
+        itemName={`${selectedRows.size} customer${selectedRows.size !== 1 ? "s" : ""}`}
+        isLoading={isBatchProcessing}
         confirmText="Remove"
       />
     </div>

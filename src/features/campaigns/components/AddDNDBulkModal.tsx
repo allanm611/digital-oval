@@ -57,7 +57,7 @@ export default function AddDNDBulkModal({
   const [selectedDNDTypeId, setSelectedDNDTypeId] = useState<string>("");
   const [selectedChannelIds, setSelectedChannelIds] = useState<number[]>([]);
   const [selectedDuration, setSelectedDuration] = useState<string>("0");
-  const [customDurationDays, setCustomDurationDays] = useState<string>("");
+  const [customDurationDate, setCustomDurationDate] = useState<string>("");
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [totalCustomers, setTotalCustomers] = useState(0);
@@ -74,7 +74,6 @@ export default function AddDNDBulkModal({
       });
       setExistingSubscriptions(subscriptions);
     } catch (error) {
-      console.error("Failed to load existing subscriptions:", error);
       setExistingSubscriptions([]);
     } finally {
       setLoadingSubscriptions(false);
@@ -105,7 +104,6 @@ export default function AddDNDBulkModal({
       const total = (response as any).pagination?.total || data.length || 0;
       setTotalCustomers(total);
     } catch (error) {
-      console.error("Failed to load customers:", error);
       setCustomers([]);
       setTotalCustomers(0);
     } finally {
@@ -211,7 +209,7 @@ export default function AddDNDBulkModal({
     setSelectedDNDTypeId(dndTypes.length > 0 ? String(dndTypes[0].id) : "");
     setSelectedChannelIds([]);
     setSelectedDuration("0");
-    setCustomDurationDays("");
+    setCustomDurationDate("");
     onClose();
   };
 
@@ -240,8 +238,8 @@ export default function AddDNDBulkModal({
         </div>
 
         <div className="p-6 space-y-4">
-          {/* Top row - DND Type, Duration, and Select Channels */}
-          <div className="grid grid-cols-3 gap-6">
+          {/* Top row - DND Type and Duration */}
+          <div className={`grid ${selectedDuration === "custom" ? "grid-cols-3" : "grid-cols-2"} gap-6`}>
             {/* DND Type Selector */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -261,49 +259,52 @@ export default function AddDNDBulkModal({
             {/* Duration Selector */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Duration (Optional)
+                Duration
               </label>
-              <div className="space-y-2">
-                <HeadlessSelect
-                  value={selectedDuration}
-                  onChange={setSelectedDuration}
-                  options={[
-                    { value: "0", label: "Never expires" },
-                    { value: "7", label: "7 days" },
-                    { value: "30", label: "30 days" },
-                    { value: "90", label: "90 days" },
-                    { value: "180", label: "180 days" },
-                    { value: "365", label: "1 year" },
-                    { value: "custom", label: "Custom days" },
-                  ]}
-                  placeholder="Select duration"
-                />
-                {selectedDuration === "custom" && (
-                  <input
-                    type="number"
-                    min="1"
-                    placeholder="Enter number of days"
-                    value={customDurationDays}
-                    onChange={(e) => setCustomDurationDays(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                )}
-              </div>
-            </div>
-
-            {/* Select Channels */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Select Channels *
-              </label>
-              <MultiCategorySelector
-                value={selectedChannelIds}
-                onChange={setSelectedChannelIds}
-                placeholder="Select channels..."
-                entityType="channel"
-                className="w-full"
+              <HeadlessSelect
+                value={selectedDuration}
+                onChange={setSelectedDuration}
+                options={[
+                  { value: "0", label: "Never expires" },
+                  { value: "7", label: "7 days" },
+                  { value: "30", label: "30 days" },
+                  { value: "90", label: "90 days" },
+                  { value: "180", label: "180 days" },
+                  { value: "365", label: "1 year" },
+                  { value: "custom", label: "Custom date" },
+                ]}
+                placeholder="Select duration"
               />
             </div>
+
+            {/* Custom Date Input - only shown when custom is selected */}
+            {selectedDuration === "custom" && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select Expiry Date
+                </label>
+                <input
+                  type="date"
+                  value={customDurationDate}
+                  onChange={(e) => setCustomDurationDate(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Select Channels - full width */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Select Channels *
+            </label>
+            <MultiCategorySelector
+              value={selectedChannelIds}
+              onChange={setSelectedChannelIds}
+              placeholder="Select channels..."
+              entityType="channel"
+              className="w-full"
+            />
           </div>
 
           {/* Customers section - Full width */}
