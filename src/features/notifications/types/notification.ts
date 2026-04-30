@@ -42,7 +42,7 @@ export interface NotificationPayload {
 
 // Inbox notification structure (from GET /notifications/inbox)
 export interface InboxNotification {
-  id: number;
+  id: number | string;
   user_id: number;
   notification_log_id: number;
   title: string;
@@ -50,6 +50,8 @@ export interface InboxNotification {
   payload: NotificationPayload;
   is_read: boolean;
   created_at: string;
+  rule_name?: string;
+  rule_id?: number;
 }
 
 // User's subscription to a notification rule (from API)

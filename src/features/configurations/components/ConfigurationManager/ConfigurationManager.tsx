@@ -341,7 +341,7 @@ export default function ConfigurationManager({
                         borderBottomLeftRadius: "0.375rem",
                       }}
                     >
-                      <div className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
+                      <div className={`text-sm ${tw.tableFirstColumn} ${tw.textPrimary}`}>
                         {item.name}
                       </div>
                     </td>

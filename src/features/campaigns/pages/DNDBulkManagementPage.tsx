@@ -152,9 +152,10 @@ export default function DNDBulkManagementPage() {
         );
       }
 
+      const dndType = dndTypes.find((t) => t.id === dndTypeId);
       showToast(
         "success",
-        `Customers added to ${selectedChannels.length} channel${selectedChannels.length !== 1 ? "s" : ""}`,
+        `Customers added to ${dndType?.name || "DND"} for ${selectedChannels.length} channel${selectedChannels.length !== 1 ? "s" : ""}`,
         "Bulk addition completed successfully"
       );
       setShowAddModal(false);

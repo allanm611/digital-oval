@@ -129,7 +129,7 @@ export default function DNDChannelPage() {
       const dndType = dndTypes.find((t) => t.id === dndTypeId);
       showToast(
         `success`,
-        `${members.length} customer${members.length !== 1 ? "s" : ""} added to ${dndType?.name || "DND"} list`,
+        `${members.length} customer${members.length !== 1 ? "s" : ""} added to ${dndType?.name || "DND"} for ${channelInfo?.name || "channel"}`,
         "Customers have been added successfully"
       );
       setShowAddModal(false);

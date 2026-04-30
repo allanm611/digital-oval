@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, Trash2, X, ExternalLink } from "lucide-react";
+import { Bell, Trash2, X } from "lucide-react";
 import { useNotifications } from "../../../contexts/NotificationContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { InboxNotification } from "../types/notification";
 import { color, tw } from "../../../shared/utils/utils";
-import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import SearchInput from "../../../shared/components/ui/SearchInput";
+import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 
 export default function NotificationsPage() {
   const navigate = useNavigate();
@@ -32,6 +32,13 @@ export default function NotificationsPage() {
   >(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [readFilter, setReadFilter] = useState<"all" | "read" | "unread">("all");
+  const [loadingMarkAllRead, setLoadingMarkAllRead] = useState(false);
+  const [loadingDeleteAll, setLoadingDeleteAll] = useState(false);
+  const [loadingBulkAction, setLoadingBulkAction] = useState(false);
+  const [loadingIndividual, setLoadingIndividual] = useState<Record<string | number, string>>({});
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | string | null>(null);
+  const [deleteConfirmTitle, setDeleteConfirmTitle] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Refresh notifications on mount
   useEffect(() => {
@@ -69,26 +76,93 @@ export default function NotificationsPage() {
   const handleMarkSelectedAsRead = async () => {
     if (selectedNotifications.length === 0) return;
     try {
+      setLoadingBulkAction(true);
       await markAsRead(selectedNotifications);
       setSelectedNotifications([]);
     } catch (err) {
       console.error("Failed to mark as read:", err);
+    } finally {
+      setLoadingBulkAction(false);
     }
   };
 
   const handleDeleteSelected = async () => {
     if (selectedNotifications.length === 0) return;
     try {
+      setLoadingBulkAction(true);
       await deleteNotifications(selectedNotifications);
       setSelectedNotifications([]);
     } catch (err) {
       console.error("Failed to delete notifications:", err);
+    } finally {
+      setLoadingBulkAction(false);
     }
   };
 
+  const getRouteFromNotification = (notification: InboxNotification): string | null => {
+    const entityId = notification.payload?.id;
+    if (!entityId) return null;
+
+    const ruleName = notification.rule_name?.toLowerCase() || "";
+
+    // Campaign-related notifications
+    if (ruleName.includes("campaign")) {
+      return `/dashboard/campaigns/${entityId}`;
+    }
+
+    // Offer-related notifications
+    if (ruleName.includes("offer")) {
+      return `/dashboard/offers/${entityId}`;
+    }
+
+    // Segment-related notifications
+    if (ruleName.includes("segment")) {
+      return `/dashboard/segments/${entityId}`;
+    }
+
+    // Default to campaign if no rule match
+    return `/dashboard/campaigns/${entityId}`;
+  };
+
   const handleNotificationClick = async (notification: InboxNotification) => {
-    if (!notification.is_read) {
-      await markAsRead([notification.id]);
+    try {
+      setLoadingIndividual((prev) => ({ ...prev, [notification.id]: "navigating" }));
+
+      if (!notification.is_read) {
+        await markAsRead([notification.id]);
+      }
+
+      // Navigate to appropriate details page based on entity type
+      const route = getRouteFromNotification(notification);
+      if (route) {
+        navigate(route);
+      }
+    } finally {
+      setLoadingIndividual((prev) => {
+        const updated = { ...prev };
+        delete updated[notification.id];
+        return updated;
+      });
+    }
+  };
+
+  const handleDeleteClick = (notification: InboxNotification) => {
+    setDeleteConfirmId(notification.id);
+    setDeleteConfirmTitle(notification.title);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirmId) return;
+
+    try {
+      setIsDeleting(true);
+      await deleteNotification(deleteConfirmId);
+      setDeleteConfirmId(null);
+      setDeleteConfirmTitle("");
+    } catch (err) {
+      console.error("Failed to delete notification:", err);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -125,6 +199,7 @@ export default function NotificationsPage() {
                     } else {
                       // If already in bulk mode, execute the action
                       if (selectedNotifications.length > 0) {
+                        setLoadingMarkAllRead(true);
                         await markAsRead(selectedNotifications);
                         setBulkMode(false);
                         setBulkActionType(null);
@@ -133,11 +208,21 @@ export default function NotificationsPage() {
                     }
                   } catch (err) {
                     console.error("Failed to mark all as read:", err);
+                  } finally {
+                    setLoadingMarkAllRead(false);
                   }
                 }}
-                className={`${tw.button} text-sm px-4 py-2`}
+                disabled={loadingMarkAllRead}
+                className={`${tw.button} text-sm px-4 py-2 flex items-center justify-center gap-2 disabled:opacity-50`}
               >
-                {t.notifications.markAllAsRead}
+                {loadingMarkAllRead ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-gray-300 border-t-current rounded-full animate-spin" />
+                    {t.notifications.markAllAsRead}
+                  </>
+                ) : (
+                  t.notifications.markAllAsRead
+                )}
               </button>
               <button
                 onClick={async () => {
@@ -151,6 +236,7 @@ export default function NotificationsPage() {
                     } else {
                       // If already in bulk mode, execute the action
                       if (selectedNotifications.length > 0) {
+                        setLoadingDeleteAll(true);
                         await deleteNotifications(selectedNotifications);
                         setBulkMode(false);
                         setBulkActionType(null);
@@ -159,11 +245,21 @@ export default function NotificationsPage() {
                     }
                   } catch (err) {
                     console.error("Failed to delete notifications:", err);
+                  } finally {
+                    setLoadingDeleteAll(false);
                   }
                 }}
-                className={`bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors px-4 py-2 ${tw.rounded} cursor-pointer`}
+                disabled={loadingDeleteAll}
+                className={`bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors px-4 py-2 ${tw.rounded} cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50`}
               >
-                {t.notifications.deleteAll}
+                {loadingDeleteAll ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    {t.notifications.deleteAll}
+                  </>
+                ) : (
+                  t.notifications.deleteAll
+                )}
               </button>
             </div>
           )}
@@ -171,27 +267,39 @@ export default function NotificationsPage() {
       </div>
 
       {/* Filters */}
-      <div className="mb-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Search */}
-          <SearchInput
-            placeholder={t.notifications.searchPlaceholder}
-            value={searchTerm}
-            onChange={(value) => setSearchTerm(value)}
-          />
+      <div className="mb-8 space-y-4">
+        {/* Search */}
+        <SearchInput
+          placeholder={t.notifications.searchPlaceholder}
+          value={searchTerm}
+          onChange={(value) => setSearchTerm(value)}
+        />
 
-          {/* Read Status Filter */}
-          <HeadlessSelect
-            value={readFilter}
-            onChange={(value) => setReadFilter(value as "all" | "read" | "unread")}
-            options={[
-              { label: t.notifications.statusAll, value: "all" },
-              { label: t.notifications.statusUnread, value: "unread" },
-              { label: t.notifications.statusRead, value: "read" },
-            ]}
-            placeholder={t.notifications.statusAll}
-            className="w-full"
-          />
+        {/* Read Status Tabs */}
+        <div className="flex gap-1 border-b border-gray-200">
+          {[
+            { id: "all", label: t.notifications.statusAll },
+            { id: "unread", label: t.notifications.statusUnread },
+            { id: "read", label: t.notifications.statusRead },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setReadFilter(tab.id as "all" | "read" | "unread")}
+              className={`px-4 py-2.5 text-sm font-medium transition-colors relative ${
+                readFilter === tab.id
+                  ? "text-black"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              {tab.label}
+              {readFilter === tab.id && (
+                <div
+                  className="absolute bottom-0 left-0 right-0 h-0.5"
+                  style={{ backgroundColor: color.primary.accent }}
+                />
+              )}
+            </button>
+          ))}
         </div>
 
         {/* Clear Filters */}
@@ -201,7 +309,7 @@ export default function NotificationsPage() {
               setSearchTerm("");
               setReadFilter("all");
             }}
-            className="mt-3 text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
+            className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
           >
             <X className="h-4 w-4" />
             {t.notifications.clearFilters}
@@ -238,18 +346,36 @@ export default function NotificationsPage() {
                 {bulkActionType === "mark-read" && (
                   <button
                     onClick={handleMarkSelectedAsRead}
-                    className={`${tw.button} text-sm px-4 py-2`}
+                    disabled={loadingBulkAction}
+                    className={`${tw.button} text-sm px-4 py-2 flex items-center justify-center gap-2 disabled:opacity-50`}
                   >
-                    {t.notifications.bulkMarkAsRead}
+                    {loadingBulkAction ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-gray-300 border-t-current rounded-full animate-spin" />
+                        {t.notifications.bulkMarkAsRead}
+                      </>
+                    ) : (
+                      t.notifications.bulkMarkAsRead
+                    )}
                   </button>
                 )}
                 {bulkActionType === "delete" && (
                   <button
                     onClick={handleDeleteSelected}
-                    className={`bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors px-4 py-2 ${tw.rounded} cursor-pointer flex items-center justify-center gap-2`}
+                    disabled={loadingBulkAction}
+                    className={`bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors px-4 py-2 ${tw.rounded} cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50`}
                   >
-                    <Trash2 className="h-4 w-4" />
-                    {t.notifications.bulkDelete}
+                    {loadingBulkAction ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        {t.notifications.bulkDelete}
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="h-4 w-4" />
+                        {t.notifications.bulkDelete}
+                      </>
+                    )}
                   </button>
                 )}
               </>
@@ -312,7 +438,9 @@ export default function NotificationsPage() {
                 return (
                   <div
                     key={notification.id}
-                    className="p-4 hover:bg-gray-50 transition-colors"
+                    className={`p-4 hover:bg-gray-50 transition-colors ${
+                      loadingIndividual[notification.id] ? "opacity-60" : ""
+                    }`}
                   >
                     <div className="flex items-start gap-3 sm:gap-4">
                       {bulkMode && (
@@ -333,10 +461,14 @@ export default function NotificationsPage() {
                       )}
                       <div
                         onClick={() =>
-                          !bulkMode && handleNotificationClick(notification)
+                          !bulkMode && !loadingIndividual[notification.id] && handleNotificationClick(notification)
                         }
                         className={`flex-1 min-w-0 ${
-                          !bulkMode ? "cursor-pointer" : ""
+                          !bulkMode && !loadingIndividual[notification.id]
+                            ? "cursor-pointer"
+                            : loadingIndividual[notification.id]
+                              ? "cursor-wait"
+                              : ""
                         }`}
                       >
                         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
@@ -374,24 +506,41 @@ export default function NotificationsPage() {
                                 <button
                                   onClick={async (e) => {
                                     e.stopPropagation();
-                                    await markAsRead([notification.id]);
+                                    try {
+                                      setLoadingIndividual((prev) => ({ ...prev, [notification.id]: "marking" }));
+                                      await markAsRead([notification.id]);
+                                    } finally {
+                                      setLoadingIndividual((prev) => {
+                                        const updated = { ...prev };
+                                        delete updated[notification.id];
+                                        return updated;
+                                      });
+                                    }
                                   }}
                                   style={{
                                     borderColor: color.primary.action,
                                     color: color.primary.action,
                                   }}
-                                  className={`${tw.borderedButton} text-xs sm:text-sm px-3 py-1.5 sm:px-4 sm:py-2 whitespace-nowrap`}
+                                  disabled={loadingIndividual[notification.id] === "marking"}
+                                  className={`${tw.borderedButton} text-xs sm:text-sm px-3 py-1.5 sm:px-4 sm:py-2 whitespace-nowrap flex items-center justify-center gap-1 disabled:opacity-50`}
                                   title={t.notifications.bulkMarkAsRead}
                                 >
-                                  {t.notifications.bulkMarkAsRead}
+                                  {loadingIndividual[notification.id] === "marking" ? (
+                                    <>
+                                      <div className="w-3 h-3 border-2 rounded-full animate-spin" style={{ borderColor: "currentColor", borderTopColor: "transparent" }} />
+                                      {t.notifications.bulkMarkAsRead}
+                                    </>
+                                  ) : (
+                                    t.notifications.bulkMarkAsRead
+                                  )}
                                 </button>
                               )}
                               <button
-                                onClick={async (e) => {
+                                onClick={(e) => {
                                   e.stopPropagation();
-                                  await deleteNotification(notification.id);
+                                  handleDeleteClick(notification);
                                 }}
-                                className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors flex-shrink-0"
+                                className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors flex-shrink-0 disabled:opacity-50 flex items-center justify-center"
                                 title={t.notifications.bulkDelete}
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -408,6 +557,21 @@ export default function NotificationsPage() {
           </>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={deleteConfirmId !== null}
+        onClose={() => {
+          setDeleteConfirmId(null);
+          setDeleteConfirmTitle("");
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Delete Notification"
+        description="Are you sure you want to delete this notification? This action cannot be undone."
+        itemName={deleteConfirmTitle}
+        isLoading={isDeleting}
+        confirmText="Delete"
+      />
     </div>
   );
 }
