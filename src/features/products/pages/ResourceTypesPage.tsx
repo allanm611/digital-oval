@@ -1,8 +1,6 @@
-import { ConfigurationManagerAPI } from "../../configurations/components/ConfigurationManager";
-import { getResourceTypesApiConfig } from "../../configurations/configs/configurationPageConfigs";
-import { useLanguage } from "../../../contexts/LanguageContext";
+import { ConfigurationManager } from "../../configurations/components/ConfigurationManager";
+import { resourceTypesConfig } from "../../configurations/configs/configurationPageConfigs";
 
 export default function ResourceTypesPage() {
-  const { t } = useLanguage();
-  return <ConfigurationManagerAPI config={getResourceTypesApiConfig(t)} />;
+  return <ConfigurationManager config={resourceTypesConfig} />;
 }

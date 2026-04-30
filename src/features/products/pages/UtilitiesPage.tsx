@@ -1,8 +1,6 @@
-import { ConfigurationManagerAPI } from "../../configurations/components/ConfigurationManager";
-import { getUtilitiesApiConfig } from "../../configurations/configs/configurationPageConfigs";
-import { useLanguage } from "../../../contexts/LanguageContext";
+import { ConfigurationManager } from "../../configurations/components/ConfigurationManager";
+import { utilitiesConfig } from "../../configurations/configs/configurationPageConfigs";
 
 export default function UtilitiesPage() {
-  const { t } = useLanguage();
-  return <ConfigurationManagerAPI config={getUtilitiesApiConfig(t)} />;
+  return <ConfigurationManager config={utilitiesConfig} />;
 }

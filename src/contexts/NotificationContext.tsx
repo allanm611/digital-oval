@@ -12,6 +12,9 @@ import {
   InboxNotification,
   NotificationStats,
 } from "../features/notifications/types/notification";
+import { useNotificationSettings } from "./NotificationSettingsContext";
+import { useToast } from "./ToastContext";
+import { playNotificationSound } from "../shared/utils/notificationSound";
 
 interface NotificationContextType {
   notifications: InboxNotification[];
@@ -39,7 +42,7 @@ interface NotificationProviderProps {
 
 export function NotificationProvider({
   children,
-  pollInterval = 30000, // 30 seconds default
+  pollInterval = 10000, // 10 seconds default (was 30 seconds)
 }: NotificationProviderProps) {
   const [notifications, setNotifications] = useState<InboxNotification[]>([]);
   const [stats, setStats] = useState<NotificationStats | null>(null);
@@ -48,6 +51,9 @@ export function NotificationProvider({
   const [isPolling, setIsPolling] = useState(false);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef(true);
+  const previousUnreadCountRef = useRef<number>(0);
+  const { settings: notificationSettings } = useNotificationSettings();
+  const { success: showToast } = useToast();
 
   // Fetch notifications from inbox
   const refreshNotifications = useCallback(async () => {
@@ -59,6 +65,29 @@ export function NotificationProvider({
         setNotifications(response.data || []);
         // Calculate stats from notifications
         const unread = response.data?.filter((n) => !n.is_read).length || 0;
+
+        // Detect new unread notifications
+        if (previousUnreadCountRef.current > 0 && unread > previousUnreadCountRef.current) {
+          const newCount = unread - previousUnreadCountRef.current;
+
+          // Play sound if enabled
+          if (notificationSettings.in_app_sound_enabled) {
+            playNotificationSound(notificationSettings.notification_sound || "default");
+          }
+
+          // Get the latest unread notification to show in toast
+          const latestUnread = (response.data || []).find((n) => !n.is_read);
+          if (latestUnread) {
+            showToast(
+              "success",
+              `${newCount} new notification${newCount !== 1 ? "s" : ""}`,
+              latestUnread.message || latestUnread.title
+            );
+          }
+        }
+
+        previousUnreadCountRef.current = unread;
+
         setStats({
           total: response.data?.length || 0,
           unread,
@@ -88,7 +117,7 @@ export function NotificationProvider({
         setIsLoading(false);
       }
     }
-  }, []);
+  }, [notificationSettings, showToast]);
 
   // Mark single notification as read
   const markAsRead = useCallback(async (ids: (string | number)[]) => {
@@ -206,6 +235,25 @@ export function NotificationProvider({
     }
     setIsPolling(false);
   }, []);
+
+  // Handle page visibility changes
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Page is hidden - stop polling to save resources
+        stopPolling();
+      } else {
+        // Page is visible - resume polling and refresh immediately
+        refreshNotifications();
+        startPolling();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [startPolling, stopPolling, refreshNotifications]);
 
   // Initial load
   useEffect(() => {

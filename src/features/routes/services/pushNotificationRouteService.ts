@@ -3,7 +3,7 @@ import { PushNotificationRoute, CreatePushNotificationRouteRequest, UpdatePushNo
 
 const BASE_URL = buildApiUrl("/push-notification-routes");
 
-const DUMMY_DATA: PushNotificationRoute[] = [
+export const PUSH_ROUTES_PUSH_ROUTES_DUMMY_DATA: PushNotificationRoute[] = [
   {
     id: 1,
     name: "Firebase Production",
@@ -59,7 +59,7 @@ class PushNotificationRouteService {
       const data = await this.request<{ success: boolean; data: PushNotificationRoute[] }>("");
       return data.data;
     } catch (err) {
-      return DUMMY_DATA;
+      return PUSH_ROUTES_DUMMY_DATA;
     }
   }
 
@@ -70,7 +70,7 @@ class PushNotificationRouteService {
       );
       return data.data;
     } catch (err) {
-      const route = DUMMY_DATA.find(r => r.id === id);
+      const route = PUSH_ROUTES_DUMMY_DATA.find(r => r.id === id);
       if (route) return route;
       throw err;
     }

@@ -559,6 +559,16 @@ class ProductService {
     );
   }
 
+  async batchAssignCategory(
+    productIds: number[],
+    categoryId: number
+  ): Promise<{ success: boolean; message: string; updated_count: number }> {
+    return this.request("/batch/category", {
+      method: "PATCH",
+      body: JSON.stringify({ product_ids: productIds, category_id: categoryId }),
+    });
+  }
+
   // 5. Product Operations Endpoints
 
   async checkAvailability(

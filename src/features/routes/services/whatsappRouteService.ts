@@ -3,7 +3,7 @@ import { WhatsAppRoute, CreateWhatsAppRouteRequest, UpdateWhatsAppRouteRequest }
 
 const BASE_URL = buildApiUrl("/whatsapp-routes");
 
-const DUMMY_DATA: WhatsAppRoute[] = [
+export const WHATSAPP_ROUTES_WHATSAPP_ROUTES_DUMMY_DATA: WhatsAppRoute[] = [
   {
     id: 1,
     name: "Meta Business API",
@@ -59,7 +59,7 @@ class WhatsAppRouteService {
       const data = await this.request<{ success: boolean; data: WhatsAppRoute[] }>("");
       return data.data;
     } catch (err) {
-      return DUMMY_DATA;
+      return WHATSAPP_ROUTES_DUMMY_DATA;
     }
   }
 
@@ -70,7 +70,7 @@ class WhatsAppRouteService {
       );
       return data.data;
     } catch (err) {
-      const route = DUMMY_DATA.find(r => r.id === id);
+      const route = WHATSAPP_ROUTES_DUMMY_DATA.find(r => r.id === id);
       if (route) return route;
       throw err;
     }

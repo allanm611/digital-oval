@@ -781,6 +781,20 @@ class SegmentService {
     });
   }
 
+  /**
+   * PATCH /segments/batch/category - Batch assign segments to a category
+   * Supports up to 500 segments per request
+   */
+  async batchAssignCategory(
+    segmentIds: number[],
+    categoryId: number,
+  ): Promise<{ success: boolean; message: string; updated_count: number }> {
+    return this.request("/batch/category", {
+      method: "PATCH",
+      body: JSON.stringify({ segment_ids: segmentIds, category_id: categoryId }),
+    });
+  }
+
   // ==================== CATEGORIES (NESTED UNDER /segments) (6 endpoints) ====================
 
   /**

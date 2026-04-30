@@ -409,6 +409,17 @@ class CampaignService {
     return this.getCollection(`/category/${categoryId}`, params);
   }
 
+  async batchAssignCategory(
+    campaignIds: number[],
+    categoryId: number,
+  ): Promise<{ success: boolean; message: string; updated_count: number }> {
+    return this.request("/batch/category", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ campaign_ids: campaignIds, category_id: categoryId }),
+    });
+  }
+
   async getCampaignsByProgram(
     programId: number,
     params?: CampaignListQuery,

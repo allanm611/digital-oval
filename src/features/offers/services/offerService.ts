@@ -442,6 +442,16 @@ class OfferService {
     return response;
   }
 
+  async batchAssignCategory(
+    offerIds: number[],
+    categoryId: number
+  ): Promise<{ success: boolean; message: string; updated_count: number }> {
+    return this.request("/batch/category", {
+      method: "PATCH",
+      body: JSON.stringify({ offer_ids: offerIds, category_id: categoryId }),
+    });
+  }
+
   async getOffersByProduct(
     productId: number,
     params: FilterParams = {}

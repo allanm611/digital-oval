@@ -17,8 +17,14 @@ import currencyCodes from "currency-codes";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import { characterSetService } from "../../configurations/services/characterSetService";
 import { senderIdService } from "../../configurations/services/senderIdService";
-import { communicationChannelService } from "../../../shared/services/communicationChannelService";
+import { communicationChannelService, CommunicationChannel } from "../../../shared/services/communicationChannelService";
 import { timezoneService } from "../../configurations/services/timezoneService";
+import { smsRouteService } from "../../routes/services/smsRouteService";
+import { WHATSAPP_ROUTES_DUMMY_DATA } from "../../routes/services/whatsappRouteService";
+import { PUSH_ROUTES_DUMMY_DATA } from "../../routes/services/pushNotificationRouteService";
+import { SMSRoute } from "../../routes/types/smsRoute";
+import { useConfigurationData } from "../../../shared/services/configurationDataService";
+import { hardcodedEmailRoutes } from "../../configurations/configs/configurationPageConfigs";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import { notificationService } from "../../notifications/services/notificationService";
 import { NotificationSubscription } from "../../notifications/types/notification";
@@ -67,11 +73,6 @@ const dateFormats = [
 
 const numberFormats = ["1,234.56", "1 234,56", "1.234,56", "1'234.56"];
 
-// Routes - Using actual hardcoded data from configurationPageConfigs
-const routes = [
-  { value: "Effortel SMS Gateway", label: "Effortel SMS Gateway" },
-];
-
 // DND Days
 const dndDays = [
   { value: "weekdays", label: "Weekdays (Mon-Fri)" },
@@ -92,16 +93,13 @@ const notificationChannels = [
   { id: "whatsapp", label: "WhatsApp" },
 ];
 
-// Notification Sounds
+// Notification Sounds (Web Audio API generated)
 const notificationSounds = [
-  { value: "none", label: "None (Silent)" },
-  { value: "bell", label: "Bell" },
+  { value: "default", label: "Default" },
   { value: "chime", label: "Chime" },
   { value: "ding", label: "Ding" },
-  { value: "notification", label: "Notification" },
-  { value: "alert", label: "Alert" },
   { value: "pop", label: "Pop" },
-  { value: "ping", label: "Ping" },
+  { value: "tone", label: "Tone" },
 ];
 
 // Time options for DND hours
@@ -126,7 +124,10 @@ interface SettingsType {
   character_set: string;
   default_communication_channel: string;
   default_sender_id: string;
-  default_route: string;
+  default_sms_route_id: number | null;
+  default_email_route_id: number | null;
+  default_whatsapp_route_id: number | null;
+  default_push_route_id: number | null;
   dnd_enabled: boolean;
   dnd_start_time: string;
   dnd_end_time: string;
@@ -162,13 +163,16 @@ export default function SettingsPage() {
           default_communication_channel:
             parsed.default_communication_channel || "sms",
           default_sender_id: parsed.default_sender_id || "",
-          default_route: parsed.default_route || "Effortel SMS Gateway",
+          default_sms_route_id: parsed.default_sms_route_id || null,
+          default_email_route_id: parsed.default_email_route_id || null,
+          default_whatsapp_route_id: parsed.default_whatsapp_route_id || null,
+          default_push_route_id: parsed.default_push_route_id || null,
           dnd_enabled:
             parsed.dnd_enabled !== undefined ? parsed.dnd_enabled : true,
           dnd_start_time: parsed.dnd_start_time || "21:00",
           dnd_end_time: parsed.dnd_end_time || "08:00",
           dnd_days: parsed.dnd_days || "daily",
-          notificationSound: parsed.notificationSound || "notification",
+          notificationSound: parsed.notificationSound || "default",
           theme: parsed.theme || "light",
         };
       }
@@ -187,12 +191,15 @@ export default function SettingsPage() {
       character_set: "",
       default_communication_channel: "sms",
       default_sender_id: "",
-      default_route: "Effortel SMS Gateway",
+      default_sms_route_id: null,
+      default_email_route_id: null,
+      default_whatsapp_route_id: null,
+      default_push_route_id: null,
       dnd_enabled: true,
       dnd_start_time: "21:00",
       dnd_end_time: "08:00",
       dnd_days: "daily",
-      notificationSound: "notification",
+      notificationSound: "default",
       theme: "light",
     };
   };
@@ -231,6 +238,20 @@ export default function SettingsPage() {
       return ["sms", "email"];
     });
 
+  // Routes and communication channels
+  const [communicationChannels, setCommunicationChannels] = useState<CommunicationChannel[]>([]);
+  const [smsRoutes, setSmsRoutes] = useState<SMSRoute[]>([]);
+  const [smsRoutesLoading, setSmsRoutesLoading] = useState(false);
+
+  // Hardcoded routes from configuration
+  const whatsappRoutes = WHATSAPP_ROUTES_DUMMY_DATA;
+  const pushRoutes = PUSH_ROUTES_DUMMY_DATA;
+  const emailRoutes = hardcodedEmailRoutes.map(r => ({
+    id: r.id,
+    name: r.name,
+    is_active: r.isActive || r.is_active
+  }));
+
   // Load timezones from API on mount
   useEffect(() => {
     const loadTimezones = async () => {
@@ -268,6 +289,34 @@ export default function SettingsPage() {
       }
     };
     loadSubscriptions();
+  }, []);
+
+  // Load SMS routes and communication channels
+  useEffect(() => {
+    const loadRoutes = async () => {
+      try {
+        setSmsRoutesLoading(true);
+        const smsRoutesData = await smsRouteService.getAllRoutes();
+        setSmsRoutes(Array.isArray(smsRoutesData) ? smsRoutesData.filter((r: any) => r.is_active) : []);
+      } catch {
+        setSmsRoutes([]);
+      } finally {
+        setSmsRoutesLoading(false);
+      }
+    };
+
+    const loadCommunicationChannels = async () => {
+      try {
+        const channels = await communicationChannelService.getAll();
+        const activeChannels = Array.isArray(channels) ? channels.filter((ch) => ch.is_active) : [];
+        setCommunicationChannels(activeChannels);
+      } catch {
+        setCommunicationChannels([]);
+      }
+    };
+
+    loadRoutes();
+    loadCommunicationChannels();
   }, []);
 
   // Handle subscription toggle
@@ -486,8 +535,18 @@ export default function SettingsPage() {
     setSettings({ ...settings, default_sender_id });
   };
 
-  const handleRouteChange = (default_route: string) => {
-    setSettings({ ...settings, default_route });
+  const handleRouteChange = (routeId: number | string, channelType: string) => {
+    const id = typeof routeId === 'string' ? Number(routeId) : routeId;
+    const channelUpper = channelType.toUpperCase();
+    if (channelUpper.includes("SMS")) {
+      setSettings({ ...settings, default_sms_route_id: id });
+    } else if (channelUpper === "EMAIL") {
+      setSettings({ ...settings, default_email_route_id: id });
+    } else if (channelUpper.includes("WHATSAPP")) {
+      setSettings({ ...settings, default_whatsapp_route_id: id });
+    } else if (channelUpper.includes("PUSH")) {
+      setSettings({ ...settings, default_push_route_id: id });
+    }
   };
 
   const handleDNDEnabledChange = (enabled: boolean) => {
@@ -573,8 +632,6 @@ export default function SettingsPage() {
     value: format,
     label: format,
   }));
-
-  const routeOptions = routes;
 
   const dndDaysOptions = dndDays;
 
@@ -876,37 +933,6 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* Communication Channel Card */}
-        <div
-          className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
-        >
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              Default Communication Channel
-            </h2>
-            <p className="text-sm text-gray-500">
-              Set the default channel when none is specified
-            </p>
-          </div>
-
-          <div>
-            <label
-              htmlFor="communication-channel"
-              className="block text-sm font-semibold text-gray-700 mb-2.5"
-            >
-              Channel
-            </label>
-            <HeadlessSelect
-              value={settings.default_communication_channel}
-              onChange={(value) =>
-                handleCommunicationChannelChange(value as string)
-              }
-              options={communicationChannelOptions}
-              placeholder="Select default channel"
-            />
-          </div>
-        </div>
-
         {/* Sender ID Card */}
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
@@ -936,34 +962,109 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* Routes Card */}
+        {/* Communication Channel & Route Card */}
         <div
-          className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
+          className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8 lg:col-span-2`}
         >
           <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              Default Route
+              Default Communication Channel & Route
             </h2>
             <p className="text-sm text-gray-500">
-              Set the default message routing strategy
+              Set the default channel and its corresponding route
             </p>
           </div>
 
-          <div>
-            <label
-              htmlFor="route"
-              className="block text-sm font-semibold text-gray-700 mb-2.5"
-            >
-              Route
-            </label>
-            <HeadlessSelect
-              value={settings.default_route}
-              onChange={(value) => handleRouteChange(value as string)}
-              options={routeOptions}
-              placeholder="Select route"
-            />
-          </div>
+          {(() => {
+            const selectedChannelLabel = communicationChannelOptions?.find(
+              (opt) => opt.value === settings.default_communication_channel
+            )?.label || "";
+            const selectedChannelUpper = selectedChannelLabel.toUpperCase();
+
+            // Determine which routes to show
+            let routesList: any[] = [];
+            let routeLoading = false;
+            let routeType = "";
+            let selectedRouteId: number | null = null;
+
+            if (selectedChannelUpper.includes("SMS")) {
+              routesList = smsRoutes;
+              routeLoading = smsRoutesLoading;
+              routeType = "SMS";
+              selectedRouteId = settings.default_sms_route_id;
+            } else if (selectedChannelUpper === "EMAIL") {
+              routesList = emailRoutes.filter((r: any) => r.is_active);
+              routeLoading = false;
+              routeType = "Email";
+              selectedRouteId = settings.default_email_route_id;
+            } else if (selectedChannelUpper.includes("WHATSAPP")) {
+              routesList = whatsappRoutes.filter((r: any) => r.is_active);
+              routeLoading = false;
+              routeType = "WhatsApp";
+              selectedRouteId = settings.default_whatsapp_route_id;
+            } else if (selectedChannelUpper.includes("PUSH")) {
+              routesList = pushRoutes.filter((r: any) => r.is_active);
+              routeLoading = false;
+              routeType = "Push Notification";
+              selectedRouteId = settings.default_push_route_id;
+            }
+
+            // If no routes available, channel takes full width
+            const hasRoutes = routesList.length > 0;
+
+            return (
+              <div className={!hasRoutes ? "" : "grid grid-cols-1 lg:grid-cols-2 gap-6"}>
+                {/* Communication Channel */}
+                <div>
+                  <label
+                    htmlFor="communication-channel"
+                    className="block text-sm font-semibold text-gray-700 mb-2.5"
+                  >
+                    Channel
+                  </label>
+                  <HeadlessSelect
+                    value={settings.default_communication_channel}
+                    onChange={(value) =>
+                      handleCommunicationChannelChange(value as string)
+                    }
+                    options={communicationChannelOptions}
+                    placeholder="Select default channel"
+                  />
+                </div>
+
+                {/* Route - only show if routes available */}
+                {hasRoutes && (
+                  <div>
+                    <label
+                      htmlFor="route"
+                      className="block text-sm font-semibold text-gray-700 mb-2.5"
+                    >
+                      {routeType} Route
+                    </label>
+                    <HeadlessSelect
+                      options={
+                        routesList?.map((route: any) => ({
+                          value: String(route.id),
+                          label: route.name,
+                        })) || []
+                      }
+                      disabled={routeLoading}
+                      value={selectedRouteId ? String(selectedRouteId) : ""}
+                      onChange={(value) => {
+                        if (!value) return;
+                        handleRouteChange(Number(value), selectedChannelLabel);
+                      }}
+                      placeholder={
+                        routeLoading ? "Loading..." : `Select ${routeType} route`
+                      }
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </div>
+
 
         {/* Do Not Disturb (DND) Settings Card */}
         <div
