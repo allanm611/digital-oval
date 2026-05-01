@@ -1368,6 +1368,7 @@ export const trackingSourcesConfig: ConfigurationPageConfig = {
       key: "type",
       type: "select",
       required: true,
+      row: 0,
       options: [
         { value: "recharge", label: "Recharge" },
         { value: "usage_metric", label: "Usage" },
@@ -1382,6 +1383,7 @@ export const trackingSourcesConfig: ConfigurationPageConfig = {
       key: "dataSource",
       type: "select",
       required: true,
+      row: 1,
       options: [
         { value: "cdr_file", label: "CDR File" },
         { value: "usage_logs", label: "Usage Logs" },
@@ -1396,6 +1398,7 @@ export const trackingSourcesConfig: ConfigurationPageConfig = {
       key: "lookbackPeriod",
       type: "select",
       required: false,
+      row: 1,
       options: [
         { value: "24h", label: "24 Hours" },
         { value: "7d", label: "7 Days" },
@@ -1409,6 +1412,7 @@ export const trackingSourcesConfig: ConfigurationPageConfig = {
       key: "customLookbackDate",
       type: "date",
       required: false,
+      row: 2,
       condition: (values: any) => values.lookbackPeriod === "custom",
     },
   ],

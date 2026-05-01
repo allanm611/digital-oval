@@ -30,9 +30,70 @@ export default function PushNotificationRoutesList() {
     try {
       setLoading(true);
       const data = await pushNotificationRouteService.getAllRoutes();
-      setRoutes(data);
+      // Use dummy data if no routes returned
+      const dummyRoutes: PushNotificationRoute[] = [
+        {
+          id: 1,
+          name: "Firebase Production",
+          description: "Firebase Cloud Messaging for production environment",
+          gateway_provider: "FIREBASE",
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        {
+          id: 2,
+          name: "OneSignal Backup",
+          description: "OneSignal backup gateway for redundancy",
+          gateway_provider: "ONESIGNAL",
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        {
+          id: 3,
+          name: "Pusher Staging",
+          description: "Pusher gateway for staging environment testing",
+          gateway_provider: "PUSHER",
+          is_active: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+      ];
+      setRoutes(data && data.length > 0 ? data : dummyRoutes);
     } catch (err) {
       showError("Error", "Failed to load push notification routes");
+      // Set dummy data on error too
+      const dummyRoutes: PushNotificationRoute[] = [
+        {
+          id: 1,
+          name: "Firebase Production",
+          description: "Firebase Cloud Messaging for production environment",
+          gateway_provider: "FIREBASE",
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        {
+          id: 2,
+          name: "OneSignal Backup",
+          description: "OneSignal backup gateway for redundancy",
+          gateway_provider: "ONESIGNAL",
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        {
+          id: 3,
+          name: "Pusher Staging",
+          description: "Pusher gateway for staging environment testing",
+          gateway_provider: "PUSHER",
+          is_active: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+      ];
+      setRoutes(dummyRoutes);
     } finally {
       setLoading(false);
     }
@@ -135,17 +196,26 @@ export default function PushNotificationRoutesList() {
       />
 
       {/* Table Container */}
-      <div className="overflow-x-auto">
-        {loading ? (
-          <div className="px-6 py-12 text-center">
-            <div className="flex flex-col items-center justify-center">
-              <LoadingSpinner variant="modern" size="md" color="primary" />
-              <p className={`${tw.textMuted} font-medium mt-4`}>
-                Loading routes...
-              </p>
-            </div>
+      {loading ? (
+        <div className="px-6 py-12 text-center">
+          <div className="flex flex-col items-center justify-center">
+            <LoadingSpinner variant="modern" size="md" color="primary" />
+            <p className={`${tw.textMuted} font-medium mt-4`}>
+              Loading routes...
+            </p>
           </div>
-        ) : (
+        </div>
+      ) : filteredRoutes.length === 0 ? (
+        <div className="text-center py-12">
+          <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
+            No routes found
+          </h3>
+          <p className={`${tw.textMuted}`}>
+            No routes match your search
+          </p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
           <table
             className="w-full min-w-[720px]"
             style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
@@ -191,16 +261,7 @@ export default function PushNotificationRoutesList() {
               </tr>
             </thead>
             <tbody>
-              {filteredRoutes.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center">
-                    <p className={`${tw.textSecondary} text-sm`}>
-                      No routes match your search
-                    </p>
-                  </td>
-                </tr>
-              ) : (
-                filteredRoutes.map((route) => (
+              {filteredRoutes.map((route) => (
                   <tr
                     key={route.id}
                     style={{ backgroundColor: color.surface.tablebodybg }}
@@ -250,12 +311,11 @@ export default function PushNotificationRoutesList() {
                       </div>
                     </td>
                   </tr>
-                ))
-              )}
+              ))}
             </tbody>
           </table>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       {deleteConfirmId !== null && (
