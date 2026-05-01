@@ -1182,7 +1182,7 @@ export default function Dashboard() {
             element={<SettingsPages.TimezonesPage />}
           />
           <Route
-            path="/team-roles"
+            path="/roles"
             element={<SettingsPages.TeamRolesPage />}
           />
           <Route

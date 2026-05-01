@@ -29,14 +29,42 @@ export default function WhatsAppRoutesList() {
   const loadRoutes = async () => {
     try {
       setLoading(true);
-      const data = await whatsappRouteService.getAllRoutes();
-      setRoutes(data);
-    } catch (err) {
-      showError("Error", "Failed to load WhatsApp routes");
+      // Using dummy data - API not yet available
+      setRoutes(WHATSAPP_ROUTES_DUMMY_DATA);
     } finally {
       setLoading(false);
     }
   };
+
+  const WHATSAPP_ROUTES_DUMMY_DATA = [
+    {
+      id: 1,
+      name: "Meta Business API",
+      description: "Meta Business API WhatsApp integration for main channel",
+      gateway_provider: "META_BUSINESS_API",
+      is_active: true,
+      created_at: "2026-01-20T10:30:00Z",
+      updated_at: "2026-04-22T14:45:00Z",
+    },
+    {
+      id: 2,
+      name: "Twilio WhatsApp",
+      description: "Twilio WhatsApp API for backup and testing",
+      gateway_provider: "TWILIO_WHATSAPP",
+      is_active: true,
+      created_at: "2026-02-14T09:15:00Z",
+      updated_at: "2026-04-19T16:20:00Z",
+    },
+    {
+      id: 3,
+      name: "Custom WhatsApp Gateway",
+      description: "Custom WhatsApp gateway for special campaigns",
+      gateway_provider: "CUSTOM",
+      is_active: false,
+      created_at: "2026-03-10T11:00:00Z",
+      updated_at: "2026-04-16T13:30:00Z",
+    },
+  ];
 
   const handleDeleteClick = (route: WhatsAppRoute) => {
     setDeleteConfirmId(route.id);
@@ -44,54 +72,13 @@ export default function WhatsAppRoutesList() {
   };
 
   const handleConfirmDelete = async () => {
-    if (!deleteConfirmId) return;
-
-    try {
-      setDeleting(deleteConfirmId);
-      await whatsappRouteService.deleteRoute(deleteConfirmId);
-      success(
-        "Success",
-        `"${deleteConfirmName}" has been deleted successfully`,
-      );
-      setRoutes((prev) => prev.filter((route) => route.id !== deleteConfirmId));
-      setDeleteConfirmId(null);
-      setDeleteConfirmName("");
-    } catch (err) {
-      showError("Error", "Failed to delete WhatsApp route");
-    } finally {
-      setDeleting(null);
-    }
+    showError("Error", "API not yet available - using dummy data only");
+    setDeleteConfirmId(null);
+    setDeleteConfirmName("");
   };
 
   const handleToggleStatus = async (route: WhatsAppRoute) => {
-    const nextStatus = !route.is_active;
-
-    try {
-      setTogglingStatus(route.id);
-      setRoutes((prev) =>
-        prev.map((r) =>
-          r.id === route.id ? { ...r, is_active: nextStatus } : r,
-        ),
-      );
-
-      await whatsappRouteService.updateRoute(route.id, {
-        is_active: nextStatus,
-      });
-
-      success(
-        "Success",
-        `"${route.name}" has been ${nextStatus ? "activated" : "deactivated"} successfully`,
-      );
-    } catch (err) {
-      setRoutes((prev) =>
-        prev.map((r) =>
-          r.id === route.id ? { ...r, is_active: route.is_active } : r,
-        ),
-      );
-      showError("Error", "Failed to update route status");
-    } finally {
-      setTogglingStatus(null);
-    }
+    showError("Error", "API not yet available - using dummy data only");
   };
 
   const filteredRoutes = routes.filter(
@@ -117,7 +104,7 @@ export default function WhatsAppRoutesList() {
           gateway provider is used to send WhatsApp messages.
         </p>
         <button
-          onClick={() => navigate("create")}
+          onClick={() => showError("Error", "API not yet available")}
           disabled={loading}
           className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-md whitespace-nowrap disabled:opacity-60"
           style={{ backgroundColor: color.primary.action }}
@@ -135,17 +122,26 @@ export default function WhatsAppRoutesList() {
       />
 
       {/* Table Container */}
-      <div className="overflow-x-auto">
-        {loading ? (
-          <div className="px-6 py-12 text-center">
-            <div className="flex flex-col items-center justify-center">
-              <LoadingSpinner variant="modern" size="md" color="primary" />
-              <p className={`${tw.textMuted} font-medium mt-4`}>
-                Loading routes...
-              </p>
-            </div>
+      {loading ? (
+        <div className="px-6 py-12 text-center">
+          <div className="flex flex-col items-center justify-center">
+            <LoadingSpinner variant="modern" size="md" color="primary" />
+            <p className={`${tw.textMuted} font-medium mt-4`}>
+              Loading routes...
+            </p>
           </div>
-        ) : (
+        </div>
+      ) : filteredRoutes.length === 0 ? (
+        <div className="text-center py-12">
+          <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
+            No routes found
+          </h3>
+          <p className={`${tw.textMuted}`}>
+            No routes match your search
+          </p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
           <table
             className="w-full min-w-[720px]"
             style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
@@ -191,71 +187,61 @@ export default function WhatsAppRoutesList() {
               </tr>
             </thead>
             <tbody>
-              {filteredRoutes.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center">
-                    <p className={`${tw.textSecondary} text-sm`}>
-                      No routes match your search
-                    </p>
+              {filteredRoutes.map((route) => (
+                <tr
+                  key={route.id}
+                  style={{ backgroundColor: color.surface.tablebodybg }}
+                >
+                  <td className="px-6 py-4 text-sm font-medium text-black">
+                    {route.name}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-black">
+                    {route.description || "—"}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-black">
+                    {route.is_active ? "Active" : "Inactive"}
+                  </td>
+                  <td className="px-6 py-4 text-sm">
+                    <div className="flex items-center justify-end space-x-2">
+                      <ActivateDeactivateButton
+                        isActive={route.is_active}
+                        onToggle={() => handleToggleStatus(route)}
+                        disabled={
+                          deleting === route.id ||
+                          togglingStatus === route.id ||
+                          loading
+                        }
+                        isLoading={togglingStatus === route.id}
+                        title={
+                          route.is_active
+                            ? "Deactivate route"
+                            : "Activate route"
+                        }
+                      />
+                      <button
+                        onClick={() => showError("Error", "API not yet available")}
+                        disabled={deleting === route.id || loading}
+                        className={`p-2 ${tw.rounded} text-black disabled:opacity-60`}
+                        title="Edit route"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClick(route)}
+                        disabled={deleting === route.id || loading}
+                        className={`p-2 text-red-600 hover:bg-red-50 ${tw.rounded} disabled:opacity-60`}
+                        title="Delete route"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
-              ) : (
-                filteredRoutes.map((route) => (
-                  <tr
-                    key={route.id}
-                    style={{ backgroundColor: color.surface.tablebodybg }}
-                  >
-                    <td className="px-6 py-4 text-sm font-medium text-black">
-                      {route.name}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-black">
-                      {route.description || "—"}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-black">
-                      {route.is_active ? "Active" : "Inactive"}
-                    </td>
-                    <td className="px-6 py-4 text-sm">
-                      <div className="flex items-center justify-end space-x-2">
-                        <ActivateDeactivateButton
-                          isActive={route.is_active}
-                          onToggle={() => handleToggleStatus(route)}
-                          disabled={
-                            deleting === route.id ||
-                            togglingStatus === route.id ||
-                            loading
-                          }
-                          isLoading={togglingStatus === route.id}
-                          title={
-                            route.is_active
-                              ? "Deactivate route"
-                              : "Activate route"
-                          }
-                        />
-                        <button
-                          onClick={() => navigate(`${route.id}/edit`)}
-                          disabled={deleting === route.id || loading}
-                          className={`p-2 ${tw.rounded} text-black disabled:opacity-60`}
-                          title="Edit route"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(route)}
-                          disabled={deleting === route.id || loading}
-                          className={`p-2 text-red-600 hover:bg-red-50 ${tw.rounded} disabled:opacity-60`}
-                          title="Delete route"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
+              ))}
             </tbody>
           </table>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       {deleteConfirmId !== null && (

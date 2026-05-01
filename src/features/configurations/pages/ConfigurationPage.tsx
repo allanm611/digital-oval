@@ -355,13 +355,13 @@ export default function ConfigurationPage() {
         navigationPath: "/dashboard/sms-routes",
       },
       {
-        id: "team-roles",
-        name: "Team Roles",
+        id: "roles",
+        name: "Roles",
         description: "Define and manage team roles and role assignments",
         type: "user",
         category: "User Configuration",
         status: "active",
-        navigationPath: "/dashboard/team-roles",
+        navigationPath: "/dashboard/roles",
       },
       {
         id: "timezones",

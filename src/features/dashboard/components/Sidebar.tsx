@@ -163,6 +163,8 @@ const SIDEBAR_ROUTE_PRELOADERS: Record<string, () => Promise<unknown>> = {
     import("../../customerIdentity/pages/CustomerIdentityPage"),
   "/dashboard/user-management": () =>
     import("../../users/pages/UserManagementPageWrapper"),
+  "/dashboard/roles": () =>
+    import("../../configurations/pages/TeamRolesPage"),
   "/dashboard/access-control": () =>
     import("../../roles/pages/TeamRolesPermissionsPage"),
   "/dashboard/reports/overview": () =>
@@ -515,6 +517,13 @@ export default function Sidebar({
             name: t.sidebar.navigation.allUsers,
             href: "/dashboard/user-management",
             icon: Users,
+            type: "single",
+            entity: "users",
+          },
+          {
+            name: "Roles",
+            href: "/dashboard/roles",
+            icon: Briefcase,
             type: "single",
             entity: "users",
           },
