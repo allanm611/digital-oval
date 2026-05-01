@@ -127,6 +127,13 @@ export default function ComboTypeFormPage() {
               sharedValidity: data.combo_resources[0]?.shared_validity ?? true,
               sharedPrice: !!data.combo_resources[0]?.price || false,
             });
+            // Preload the shared validity hours and price from the combo type
+            setTempResourceData({
+              value: "",
+              unit: "",
+              price: data.price ? String(data.price) : "",
+              validityHours: data.validity_hours ? String(data.validity_hours) : "",
+            });
           }
         } catch (err) {
           console.error("Failed to load combo type:", err);

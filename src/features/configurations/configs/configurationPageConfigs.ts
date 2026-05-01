@@ -3443,12 +3443,6 @@ export function getEmailRoutesApiConfig(
   return emailRoutesConfig as APIConfigurationPageConfig;
 }
 
-export function getComboTypesApiConfig(
-  _t: (key: string) => string,
-): APIConfigurationPageConfig {
-  return comboTypesConfig as APIConfigurationPageConfig;
-}
-
 export function getUtilitiesApiConfig(
   _t: (key: string) => string,
 ): APIConfigurationPageConfig {
