@@ -51,7 +51,8 @@ class LanguageService {
   }
 
   async getLanguages(): Promise<Language[]> {
-    return this.request<Language[]>("");
+    const response = await this.request<{ success: boolean; data: Language[] }>("");
+    return response.data || [];
   }
 
   async getLanguageById(id: number): Promise<Language> {

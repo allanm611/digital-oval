@@ -3431,12 +3431,6 @@ export function getSenderIdsApiConfig(
   return senderIdsConfig as APIConfigurationPageConfig;
 }
 
-export function getNotificationTypesApiConfig(
-  _t: (key: string) => string,
-): APIConfigurationPageConfig {
-  return notificationTypesConfig as APIConfigurationPageConfig;
-}
-
 export function getEmailRoutesApiConfig(
   _t: (key: string) => string,
 ): APIConfigurationPageConfig {
@@ -3453,12 +3447,6 @@ export function getResourceTypesApiConfig(
   _t: (key: string) => string,
 ): APIConfigurationPageConfig {
   return resourceTypesConfig as APIConfigurationPageConfig;
-}
-
-export function getLanguagesApiConfig(
-  _t: (key: string) => string,
-): APIConfigurationPageConfig {
-  return languagesConfig as APIConfigurationPageConfig;
 }
 
 export function getCharacterSetsApiConfig(

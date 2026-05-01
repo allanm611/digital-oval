@@ -59,7 +59,8 @@ class CharacterSetService {
   }
 
   async getCharacterSets(): Promise<CharacterSet[]> {
-    return this.request<CharacterSet[]>("");
+    const response = await this.request<{ success: boolean; data: CharacterSet[] }>("");
+    return response.data || [];
   }
 
   async getCharacterSetById(id: number): Promise<CharacterSet> {
