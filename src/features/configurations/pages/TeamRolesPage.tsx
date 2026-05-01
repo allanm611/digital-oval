@@ -8,8 +8,8 @@ import Pagination from "../../../shared/components/ui/Pagination";
 import { useToast } from "../../../contexts/ToastContext";
 import { useConfirm } from "../../../contexts/ConfirmContext";
 import { useAuth } from "../../../contexts/AuthContext";
-import { roleService, Role } from "../../roles/services/roleService";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { roleService, Role } from "../../roles/services/roleService";
 import RolesModal from "../components/RolesModal";
 
 export default function TeamRolesPage() {
@@ -32,7 +32,7 @@ export default function TeamRolesPage() {
     setIsLoading(true);
     try {
       const { roles: data } = await roleService.listRoles({
-        limit: 1000,
+        limit: 100,
         offset: 0,
       });
       setRoles(data || []);
@@ -49,20 +49,21 @@ export default function TeamRolesPage() {
   }, [loadRoles]);
 
   const handleToggleActive = async (role: Role) => {
+    const nextStatus = !role.is_active;
     setToggling(role.id);
     try {
       const userId = user?.user_id || 0;
       await roleService.updateRole(role.id, {
-        is_active: !role.is_active,
+        is_active: nextStatus,
         userId,
       });
       setRoles((prev) =>
         prev.map((r) =>
-          r.id === role.id ? { ...r, is_active: !r.is_active } : r
+          r.id === role.id ? { ...r, is_active: nextStatus } : r
         )
       );
       showSuccess(
-        `Role ${!role.is_active ? "activated" : "deactivated"} successfully`
+        `Role ${nextStatus ? "activated" : "deactivated"} successfully`
       );
     } catch (error) {
       showError(
@@ -87,7 +88,7 @@ export default function TeamRolesPage() {
 
     setDeleting(role.id);
     try {
-      // Note: deleteRole endpoint not yet implemented, will throw
+      // Note: deleteRole endpoint may not be available yet
       // await roleService.deleteRole(role.id);
       setRoles((prev) => prev.filter((r) => r.id !== role.id));
       showSuccess("Role deleted successfully");
@@ -131,20 +132,15 @@ export default function TeamRolesPage() {
   return (
     <div className="space-y-6">
       <BackButton
-        fallbackTo="/dashboard/user-management"
+        fallbackTo="/dashboard/configuration"
         showBreadcrumb={true}
         currentLabel="Roles"
       />
 
       <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
-            Roles
-          </h1>
-          <p className={`text-sm ${tw.textSecondary} mt-1`}>
-            Define and manage team roles and role assignments
-          </p>
-        </div>
+        <p className={`text-sm ${tw.textSecondary}`}>
+          Define and manage team roles and role assignments
+        </p>
         <button
           onClick={handleOpenCreateModal}
           className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors hover:opacity-90`}

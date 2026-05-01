@@ -80,7 +80,6 @@ export default function RolesModal({
       if (editingRole) {
         const payload: UpdateRoleRequest = {
           name: formData.name.trim(),
-          code: formData.code.trim(),
           description: formData.description.trim() || undefined,
           data_access_level: formData.data_access_level,
           role_level: formData.role_level || undefined,

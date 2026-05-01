@@ -29,42 +29,15 @@ export default function WhatsAppRoutesList() {
   const loadRoutes = async () => {
     try {
       setLoading(true);
-      // Using dummy data - API not yet available
-      setRoutes(WHATSAPP_ROUTES_DUMMY_DATA);
+      const data = await whatsappRouteService.getAllRoutes();
+      setRoutes(data && data.length > 0 ? data : []);
+    } catch (err) {
+      showError("Error", "Failed to load WhatsApp routes");
+      setRoutes([]);
     } finally {
       setLoading(false);
     }
   };
-
-  const WHATSAPP_ROUTES_DUMMY_DATA = [
-    {
-      id: 1,
-      name: "Meta Business API",
-      description: "Meta Business API WhatsApp integration for main channel",
-      gateway_provider: "META_BUSINESS_API",
-      is_active: true,
-      created_at: "2026-01-20T10:30:00Z",
-      updated_at: "2026-04-22T14:45:00Z",
-    },
-    {
-      id: 2,
-      name: "Twilio WhatsApp",
-      description: "Twilio WhatsApp API for backup and testing",
-      gateway_provider: "TWILIO_WHATSAPP",
-      is_active: true,
-      created_at: "2026-02-14T09:15:00Z",
-      updated_at: "2026-04-19T16:20:00Z",
-    },
-    {
-      id: 3,
-      name: "Custom WhatsApp Gateway",
-      description: "Custom WhatsApp gateway for special campaigns",
-      gateway_provider: "CUSTOM",
-      is_active: false,
-      created_at: "2026-03-10T11:00:00Z",
-      updated_at: "2026-04-16T13:30:00Z",
-    },
-  ];
 
   const handleDeleteClick = (route: WhatsAppRoute) => {
     setDeleteConfirmId(route.id);
@@ -72,13 +45,54 @@ export default function WhatsAppRoutesList() {
   };
 
   const handleConfirmDelete = async () => {
-    showError("Error", "API not yet available - using dummy data only");
-    setDeleteConfirmId(null);
-    setDeleteConfirmName("");
+    if (!deleteConfirmId) return;
+
+    setDeleting(deleteConfirmId);
+    try {
+      await whatsappRouteService.deleteRoute(deleteConfirmId);
+      success(
+        "Success",
+        `"${deleteConfirmName}" has been deleted successfully`,
+      );
+      setRoutes((prev) => prev.filter((route) => route.id !== deleteConfirmId));
+      setDeleteConfirmId(null);
+      setDeleteConfirmName("");
+    } catch (err) {
+      showError("Error", "Failed to delete WhatsApp route");
+    } finally {
+      setDeleting(null);
+    }
   };
 
   const handleToggleStatus = async (route: WhatsAppRoute) => {
-    showError("Error", "API not yet available - using dummy data only");
+    const nextStatus = !route.is_active;
+
+    try {
+      setTogglingStatus(route.id);
+      setRoutes((prev) =>
+        prev.map((r) =>
+          r.id === route.id ? { ...r, is_active: nextStatus } : r,
+        ),
+      );
+
+      await whatsappRouteService.updateRoute(route.id, {
+        is_active: nextStatus,
+      });
+
+      success(
+        "Success",
+        `"${route.name}" has been ${nextStatus ? "activated" : "deactivated"} successfully`,
+      );
+    } catch (err) {
+      setRoutes((prev) =>
+        prev.map((r) =>
+          r.id === route.id ? { ...r, is_active: route.is_active } : r,
+        ),
+      );
+      showError("Error", "Failed to update route status");
+    } finally {
+      setTogglingStatus(null);
+    }
   };
 
   const filteredRoutes = routes.filter(
@@ -104,7 +118,7 @@ export default function WhatsAppRoutesList() {
           gateway provider is used to send WhatsApp messages.
         </p>
         <button
-          onClick={() => showError("Error", "API not yet available")}
+          onClick={() => navigate("create")}
           disabled={loading}
           className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-md whitespace-nowrap disabled:opacity-60"
           style={{ backgroundColor: color.primary.action }}
@@ -219,7 +233,7 @@ export default function WhatsAppRoutesList() {
                         }
                       />
                       <button
-                        onClick={() => showError("Error", "API not yet available")}
+                        onClick={() => navigate(`${route.id}/edit`)}
                         disabled={deleting === route.id || loading}
                         className={`p-2 ${tw.rounded} text-black disabled:opacity-60`}
                         title="Edit route"
