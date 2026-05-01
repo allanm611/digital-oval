@@ -84,125 +84,6 @@ export interface TypeConfigurationPageConfig {
   enableActivateDeactivate?: boolean;
 }
 
-// Hardcoded objectives data
-const hardcodedObjectives: ConfigurationItem[] = [
-  {
-    id: 1,
-    name: "New Customer Acquisition",
-    description: "Attract and convert new customers to your service",
-    created_at: "2025-01-15T10:30:00Z",
-    updated_at: "2025-01-20T14:45:00Z",
-  },
-  {
-    id: 2,
-    name: "Customer Retention",
-    description: "Keep existing customers engaged and loyal",
-    created_at: "2025-01-10T09:15:00Z",
-    updated_at: "2025-01-18T16:20:00Z",
-  },
-  {
-    id: 3,
-    name: "Churn Prevention",
-    description: "Prevent at-risk customers from leaving",
-    created_at: "2025-01-12T11:00:00Z",
-    updated_at: "2025-01-19T13:30:00Z",
-  },
-  {
-    id: 4,
-    name: "Upsell/Cross-sell",
-    description: "Increase revenue from existing customers",
-    created_at: "2025-01-14T15:30:00Z",
-    updated_at: "2025-01-21T10:15:00Z",
-  },
-  {
-    id: 5,
-    name: "Dormant Customer Reactivation",
-    description: "Re-engage inactive or dormant customers",
-    created_at: "2025-01-08T08:45:00Z",
-    updated_at: "2025-01-15T12:00:00Z",
-  },
-];
-
-// Hardcoded departments data
-const hardcodedDepartments: ConfigurationItem[] = [
-  {
-    id: 1,
-    name: "Marketing",
-    description: "Responsible for marketing campaigns and customer acquisition",
-    created_at: "2025-01-15T10:30:00Z",
-    updated_at: "2025-01-20T14:45:00Z",
-  },
-  {
-    id: 2,
-    name: "Sales",
-    description: "Handles sales operations and customer relationships",
-    created_at: "2025-01-10T09:15:00Z",
-    updated_at: "2025-01-18T16:20:00Z",
-  },
-  {
-    id: 3,
-    name: "Customer Support",
-    description: "Provides customer service and technical support",
-    created_at: "2025-01-12T11:00:00Z",
-    updated_at: "2025-01-19T13:30:00Z",
-  },
-  {
-    id: 4,
-    name: "Product Management",
-    description: "Manages product development and strategy",
-    created_at: "2025-01-14T15:30:00Z",
-    updated_at: "2025-01-21T10:15:00Z",
-  },
-  {
-    id: 5,
-    name: "Finance",
-    description: "Handles financial operations and budget management",
-    created_at: "2025-01-08T08:45:00Z",
-    updated_at: "2025-01-15T12:00:00Z",
-  },
-];
-
-// Hardcoded line of business data
-const hardcodedLineOfBusiness: ConfigurationItem[] = [
-  {
-    id: 1,
-    name: "GSM",
-    description:
-      "Global System for Mobile Communications - Mobile network services",
-    created_at: "2025-01-15T10:30:00Z",
-    updated_at: "2025-01-20T14:45:00Z",
-  },
-  {
-    id: 2,
-    name: "Internet",
-    description:
-      "Internet and broadband services for residential and business customers",
-    created_at: "2025-01-10T09:15:00Z",
-    updated_at: "2025-01-18T16:20:00Z",
-  },
-  {
-    id: 3,
-    name: "Fixed Line",
-    description: "Traditional landline telephone services",
-    created_at: "2025-01-12T11:00:00Z",
-    updated_at: "2025-01-19T13:30:00Z",
-  },
-  {
-    id: 4,
-    name: "Enterprise Solutions",
-    description: "Business telecommunications and IT solutions",
-    created_at: "2025-01-14T15:30:00Z",
-    updated_at: "2025-01-21T10:15:00Z",
-  },
-  {
-    id: 5,
-    name: "Digital Services",
-    description: "Digital transformation and cloud services",
-    created_at: "2025-01-08T08:45:00Z",
-    updated_at: "2025-01-15T12:00:00Z",
-  },
-];
-
 // Hardcoded tracking sources data (for offer performance measurement)
 const hardcodedTrackingSources: ConfigurationItem[] = [
   {
@@ -1345,9 +1226,6 @@ export const campaignObjectivesConfig: ConfigurationPageConfig = {
   icon: Flag,
   searchPlaceholder: "Search objectives by name or description...",
 
-  // Data
-  initialData: hardcodedObjectives,
-
   // Labels
   createButtonText: "Create",
   modalTitle: {
@@ -1391,9 +1269,6 @@ export const departmentsConfig: ConfigurationPageConfig = {
   icon: Building2,
   searchPlaceholder: "Search departments by name or description...",
 
-  // Data
-  initialData: hardcodedDepartments,
-
   // Labels
   createButtonText: "Create",
   modalTitle: {
@@ -1436,9 +1311,6 @@ export const lineOfBusinessConfig: ConfigurationPageConfig = {
   // UI
   icon: Briefcase,
   searchPlaceholder: "Search business lines by name or description...",
-
-  // Data
-  initialData: hardcodedLineOfBusiness,
 
   // Labels
   createButtonText: "Create",
@@ -3767,42 +3639,6 @@ export function getPolicyTypesApiConfig(
   } as APIConfigurationPageConfig;
 }
 
-export function getCommunicationPoliciesApiConfig(
-  _t: (key: string) => string,
-): APIConfigurationPageConfig {
-  return {
-    title: "Communication Policies",
-    subtitle: "Define and manage communication policies",
-    entityName: "policy",
-    entityNamePlural: "policies",
-    configType: "communicationPolicies",
-    icon: MessageSquare,
-    backPath: "/dashboard/configuration",
-    searchPlaceholder: "Search policies by name or description...",
-    createButtonText: "Create",
-    modalTitle: {
-      create: "Create Communication Policy",
-      edit: "Edit Communication Policy",
-    },
-    nameLabel: "Policy Name",
-    nameRequired: true,
-    descriptionLabel: "Description",
-    descriptionRequired: false,
-    nameMaxLength: 100,
-    descriptionMaxLength: 500,
-    statusLabel: "Status",
-    deleteConfirmTitle: "Delete Communication Policy",
-    deleteConfirmMessage: (name: string) =>
-      `Are you sure you want to delete "${name}"?`,
-    deleteSuccessMessage: (name: string) =>
-      `"${name}" has been deleted successfully.`,
-    createSuccessMessage: "Communication policy created successfully",
-    updateSuccessMessage: "Communication policy updated successfully",
-    deleteErrorMessage: "Failed to delete communication policy",
-    saveErrorMessage: "Please try again later.",
-    enableActivateDeactivate: true,
-  } as APIConfigurationPageConfig;
-}
 
 export function getRolesApiConfig(
   _t: (key: string) => string,

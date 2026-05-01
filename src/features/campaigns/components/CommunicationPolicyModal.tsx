@@ -52,6 +52,14 @@ interface MaxCommPeriod {
   maxCount: number;
 }
 
+// VIP List row item (with id for list management)
+interface VIPListRow {
+  id: string;
+  vipListId: string;
+  action: "include" | "exclude";
+  priority: number;
+}
+
 const PERIOD_OPTIONS = [
   { label: "Daily", value: "daily" as const },
   { label: "Weekly", value: "weekly" as const },
@@ -69,6 +77,8 @@ export default function CommunicationPolicyModal({
     useBackendConfigurationData("policyTypes") || { data: [] };
   const { data: dndTypesData = [] } =
     useBackendConfigurationData("dndTypes") || { data: [] };
+  const { data: vipListsData = [] } =
+    useBackendConfigurationData("vipLists") || { data: [] };
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [selectedChannelIds, setSelectedChannelIds] = useState<(number | string)[]>([]);
@@ -100,6 +110,9 @@ export default function CommunicationPolicyModal({
 
   // Maximum communication periods (multiple)
   const [maxCommPeriods, setMaxCommPeriods] = useState<MaxCommPeriod[]>([]);
+
+  // VIP List rows (multiple)
+  const [vipListRows, setVipListRows] = useState<VIPListRow[]>([]);
 
   const [error, setError] = useState("");
 
@@ -137,6 +150,7 @@ export default function CommunicationPolicyModal({
     }
     setError("");
     setMaxCommPeriods([]);
+    setVipListRows([]);
   }, [policy, isOpen]);
 
   const toggleSection = (type: string) => {
@@ -574,54 +588,153 @@ export default function CommunicationPolicyModal({
   };
 
   const renderVIPListConfig = () => {
-    const vipConfig = configs.vipList;
+    const selectedListIds = vipListRows.map((row) => row.vipListId);
+
     return (
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+      <div className="space-y-4 overflow-visible">
+        <div className="flex items-center justify-between">
+          <p className={`${tw.caption} ${tw.textSecondary}`}>
+            Manage VIP list handling with custom actions and priorities
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              const newRow: VIPListRow = {
+                id: Date.now().toString(),
+                vipListId: "",
+                action: "include",
+                priority: 1,
+              };
+              setVipListRows((prev) => [...prev, newRow]);
+            }}
+            className={`${tw.button} flex items-center gap-2 text-xs px-3 py-1.5`}
+            disabled={vipListsData.length === 0 || selectedListIds.length >= vipListsData.length}
+          >
+            <Plus className="w-3 h-3" />
+            Add VIP List
+          </button>
+        </div>
+
+        {/* Column Headers - only show when there are rows */}
+        {vipListRows.length > 0 && (
+          <div className="grid grid-cols-[2fr_1fr_1fr_auto] gap-4 px-4">
+            <label className="block text-sm font-medium text-gray-700">
+              VIP List
+            </label>
+            <label className="block text-sm font-medium text-gray-700">
               Action
             </label>
-            <HeadlessSelect
-              value={vipConfig.action}
-              onChange={(value) =>
-                updateConfig("vipList", (prev) => ({
-                  ...prev,
-                  action: value as "include" | "exclude",
-                }))
-              }
-              options={[
-                { label: "Include VIP List", value: "include" },
-                { label: "Exclude VIP List", value: "exclude" },
-              ]}
-              placeholder="Select action"
-              className="w-full"
-              zIndex={zIndex.popover}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700">
               Priority
             </label>
-            <Input
-              type="number"
-              placeholder="1"
-              min="1"
-              value={vipConfig.priority || 1}
-              onChange={(value) =>
-                updateConfig("vipList", (prev) => ({
-                  ...prev,
-                  priority: parseInt(String(value)) || 1,
-                }))
-              }
-            />
+            <div className="w-8" /> {/* Spacer for delete button */}
           </div>
-        </div>
-        <div className={`p-3 ${tw.rounded} ${tw.statusInfo10}`}>
-          <p className={`${tw.caption} ${tw.textSecondary}`}>
-            VIP lists will be managed separately. This configuration defines how
-            VIP customers are handled.
-          </p>
+        )}
+
+        <div className="space-y-2">
+          {vipListRows.map((row, index) => (
+            <div
+              key={row.id}
+              className={`px-4 py-3 ${tw.rounded} bg-white transition-colors hover:bg-gray-50`}
+            >
+              <div className="grid grid-cols-[2fr_1fr_1fr_auto] gap-4 items-center">
+                {/* VIP List Dropdown */}
+                <div
+                  className="relative overflow-visible"
+                  style={{ zIndex: zIndex.popover - index }}
+                >
+                  <HeadlessSelect
+                    value={row.vipListId}
+                    onChange={(value) => {
+                      setVipListRows((prev) =>
+                        prev.map((r) =>
+                          r.id === row.id ? { ...r, vipListId: String(value) } : r
+                        )
+                      );
+                    }}
+                    options={vipListsData.map((list: any) => ({
+                      label: list.name,
+                      value: String(list.id),
+                      disabled:
+                        selectedListIds.includes(String(list.id)) &&
+                        row.vipListId !== String(list.id),
+                    }))}
+                    placeholder="Select VIP list"
+                    className="w-full"
+                    zIndex={zIndex.popover}
+                  />
+                </div>
+
+                {/* Action Dropdown */}
+                <div
+                  className="relative overflow-visible"
+                  style={{ zIndex: zIndex.popover - index }}
+                >
+                  <HeadlessSelect
+                    value={row.action}
+                    onChange={(value) => {
+                      setVipListRows((prev) =>
+                        prev.map((r) =>
+                          r.id === row.id
+                            ? { ...r, action: value as "include" | "exclude" }
+                            : r
+                        )
+                      );
+                    }}
+                    options={[
+                      { label: "Include", value: "include" },
+                      { label: "Exclude", value: "exclude" },
+                    ]}
+                    placeholder="Select action"
+                    className="w-full"
+                    zIndex={zIndex.popover}
+                  />
+                </div>
+
+                {/* Priority Input */}
+                <div>
+                  <Input
+                    type="number"
+                    placeholder="1"
+                    min="1"
+                    value={row.priority}
+                    onChange={(value) => {
+                      setVipListRows((prev) =>
+                        prev.map((r) =>
+                          r.id === row.id
+                            ? { ...r, priority: parseInt(String(value)) || 1 }
+                            : r
+                        )
+                      );
+                    }}
+                  />
+                </div>
+
+                {/* Delete Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVipListRows((prev) =>
+                      prev.filter((r) => r.id !== row.id)
+                    );
+                  }}
+                  className="p-2 rounded transition-colors"
+                  style={{ color: "#dc2626" }}
+                  title="Delete VIP list"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          ))}
+
+          {vipListRows.length === 0 && (
+            <p className={`${tw.caption} ${tw.textMuted} text-center py-6`}>
+              {vipListsData.length === 0
+                ? "No VIP lists available. Create VIP lists in configurations first."
+                : 'No VIP list configurations yet. Click "Add VIP List" to get started.'}
+            </p>
+          )}
         </div>
       </div>
     );
