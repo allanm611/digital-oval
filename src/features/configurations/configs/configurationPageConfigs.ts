@@ -3467,12 +3467,6 @@ export function getCharacterSetsApiConfig(
   return characterSetsConfig as APIConfigurationPageConfig;
 }
 
-export function getCreativeTemplatesApiConfig(
-  _t: (key: string) => string,
-): APIConfigurationPageConfig {
-  return creativeTemplatesConfig as APIConfigurationPageConfig;
-}
-
 export function getVIPListsApiConfig(
   _t: (key: string) => string,
 ): APIConfigurationPageConfig {
