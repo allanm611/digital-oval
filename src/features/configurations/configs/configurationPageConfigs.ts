@@ -23,6 +23,10 @@ import {
 } from "../components/ConfigurationManager";
 import type { ConfigurationType } from "../../../shared/services/configurationDataService";
 import { GATEWAY_KEY_OPTIONS, CHARACTER_SET_TYPE_OPTIONS } from "./ts";
+import { notificationTypeService } from "../../../shared/services/notificationTypeService";
+
+// Default modal width for configuration modals (32rem = ~512px)
+export const DEFAULT_MODAL_WIDTH = "32rem";
 
 // Type definitions (previously in TypeConfigurationPage.tsx)
 interface MetadataFieldConfig {
@@ -2533,19 +2537,22 @@ export const notificationTypesConfig: TypeConfigurationPageConfig = {
   nameMaxLength: 150,
   descriptionMaxLength: 600,
   statusLabel: "Active",
-  customFields: [
+  metadataFields: [
     {
+      key: "table_name",
       label: "Table Name",
       type: "select",
-      fieldKey: "table_name",
       required: true,
       placeholder: "Select a table",
-      dynamicOptions: "notificationTables",
+      loadOptions: async () => {
+        const tables = await notificationTypeService.getTables();
+        return tables.map((t: string) => ({ value: t, label: t }));
+      },
     },
     {
+      key: "action_type",
       label: "Action Type",
       type: "select",
-      fieldKey: "action_type",
       required: true,
       options: [
         { value: "CREATE", label: "Create" },
@@ -2554,9 +2561,9 @@ export const notificationTypesConfig: TypeConfigurationPageConfig = {
       ],
     },
     {
+      key: "message_template",
       label: "Message Template",
       type: "textarea",
-      fieldKey: "message_template",
       required: true,
       placeholder: "e.g., A new {table_name} has been {action_type}",
     },
@@ -2674,7 +2681,6 @@ export const senderIdsConfig: TypeConfigurationPageConfig = {
       options: GATEWAY_KEY_OPTIONS,
     },
   ],
-  modalWidth: "32rem",
   statusLabel: "Status",
   deleteConfirmTitle: "Delete Sender ID",
   deleteConfirmMessage: (name: string) =>
@@ -3240,7 +3246,6 @@ export const resourceTypesConfig: TypeConfigurationPageConfig = {
   nameMaxLength: 100,
   descriptionMaxLength: 500,
   statusLabel: "Active",
-  modalWidth: "32rem",
   metadataFields: [
     {
       key: "unit",
@@ -3333,7 +3338,6 @@ export const utilitiesConfig: TypeConfigurationPageConfig = {
   nameMaxLength: 100,
   descriptionMaxLength: 500,
   statusLabel: "Active",
-  modalWidth: "32rem",
   metadataFields: [
     {
       key: "value",

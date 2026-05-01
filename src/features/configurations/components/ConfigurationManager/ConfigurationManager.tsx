@@ -29,6 +29,7 @@ export interface MetadataField {
   type: "text" | "select" | "toggle" | "textarea" | "date";
   required?: boolean;
   options?: { value: string | number | boolean; label: string }[];
+  loadOptions?: () => Promise<{ value: string | number; label: string }[]>;
   placeholder?: string;
   condition?: (values: Record<string, any>) => boolean;
   row?: number;

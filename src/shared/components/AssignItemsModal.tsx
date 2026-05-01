@@ -23,6 +23,7 @@ import { segmentService } from "../../features/segments/services/segmentService"
 import { offerCategoryService } from "../../features/offers/services/offerCategoryService";
 import { productCategoryService } from "../../features/products/services/productCategoryService";
 import { campaignService } from "../../features/campaigns/services/campaignService";
+import { buildCatalogTag } from "../utils/catalogTags";
 import {
   Offer,
   OfferStatusEnum,
@@ -266,16 +267,48 @@ function AssignItemsModal({
                     { limit: 100, skipCache: true }
                   );
                 const offers = (offersResponse.data || []) as Offer[];
-                assigned = offers.map((offer) => offer.id);
+                const assignedSet = new Set<number | string>(
+                  offers.map((offer) => offer.id)
+                );
+                const catalogTag = buildCatalogTag(catalogId);
+                (itemsData as Offer[]).forEach((offer) => {
+                  if (
+                    Array.isArray(offer.tags) &&
+                    offer.tags.includes(catalogTag)
+                  ) {
+                    assignedSet.add(offer.id);
+                  }
+                });
+                assigned = Array.from(assignedSet);
                 break;
               }
               case "products": {
-                const productsResponse = await productService.getProductsByCategory(
-                  Number(catalogId),
-                  { limit: 100, skipCache: true }
-                );
-                const products = (productsResponse.data || []) as Product[];
-                assigned = products.map((product) => product.id);
+                const catalogTag = buildCatalogTag(catalogId);
+                const [productsResponse, taggedResponse] = await Promise.all([
+                  productService.getProductsByCategory(Number(catalogId), {
+                    limit: 100,
+                    skipCache: true,
+                  }),
+                  productService.getProductsByTag({
+                    tag: catalogTag,
+                    limit: 100,
+                    skipCache: true,
+                  }),
+                ]);
+
+                const assignedSet = new Set<number | string>();
+                (productsResponse.data || []).forEach((product: Product) => {
+                  if (product?.id !== undefined) {
+                    assignedSet.add(product.id);
+                  }
+                });
+                (taggedResponse.data || []).forEach((product: Product) => {
+                  if (product?.id !== undefined) {
+                    assignedSet.add(product.id);
+                  }
+                });
+
+                assigned = Array.from(assignedSet);
                 break;
               }
               case "segments": {
@@ -297,7 +330,19 @@ function AssignItemsModal({
                   } else if (Array.isArray(segmentsResponse)) {
                     categorySegments = segmentsResponse as Segment[];
                   }
-                  assigned = categorySegments.map((s: Segment) => s.id);
+                  const assignedSet = new Set<number | string>(
+                    categorySegments.map((s: Segment) => s.id)
+                  );
+                  const catalogTag = buildCatalogTag(catalogId);
+                  (itemsData as Segment[]).forEach((segment) => {
+                    if (
+                      Array.isArray(segment.tags) &&
+                      segment.tags.includes(catalogTag)
+                    ) {
+                      assignedSet.add(segment.id);
+                    }
+                  });
+                  assigned = Array.from(assignedSet);
                 } catch {
                   try {
                     const allSegmentsResponse =
@@ -317,7 +362,13 @@ function AssignItemsModal({
                       allSegments = allSegmentsResponse as Segment[];
                     }
                     assigned = allSegments
-                      .filter((s: Segment) => String(s.category) === String(catalogId))
+                      .filter(
+                        (s: Segment) =>
+                          (s.category &&
+                            String(s.category) === String(catalogId)) ||
+                          (Array.isArray(s.tags) &&
+                            s.tags.includes(buildCatalogTag(catalogId)))
+                      )
                       .map((s: Segment) => s.id);
                   } catch {
                     assigned = [];
@@ -334,13 +385,34 @@ function AssignItemsModal({
                     );
                   const campaigns = (campaignsResponse.data ||
                     []) as BackendCampaignType[];
-                  assigned = campaigns.map((campaign) => campaign.id);
+                  const assignedSet = new Set<number | string>(
+                    campaigns.map((campaign) => campaign.id)
+                  );
+                  const catalogTag = buildCatalogTag(catalogId);
+                  (itemsData as BackendCampaignType[]).forEach((campaign) => {
+                    if (
+                      Array.isArray(campaign.tags) &&
+                      campaign.tags.includes(catalogTag)
+                    ) {
+                      assignedSet.add(campaign.id);
+                    }
+                    if (
+                      campaign.category_id &&
+                      Number(campaign.category_id) === Number(catalogId)
+                    ) {
+                      assignedSet.add(campaign.id);
+                    }
+                  });
+                  assigned = Array.from(assignedSet);
                 } catch {
+                  const catalogTag = buildCatalogTag(catalogId);
                   assigned = (itemsData as BackendCampaignType[])
                     .filter(
                       (campaign) =>
-                        campaign.category_id &&
-                        Number(campaign.category_id) === Number(catalogId)
+                        (campaign.category_id &&
+                          Number(campaign.category_id) === Number(catalogId)) ||
+                        (Array.isArray(campaign.tags) &&
+                          campaign.tags.includes(catalogTag))
                     )
                     .map((campaign) => campaign.id);
                 }
@@ -471,7 +543,9 @@ function AssignItemsModal({
       setAssigning(true);
       const ids = Array.from(selectedItemIds).map(Number);
       const catalogIdNumber = Number(catalogId);
+      const catalogTag = buildCatalogTag(catalogIdNumber);
 
+      // Step 1: Batch assign category_id
       switch (itemType) {
         case "segments":
           await segmentService.batchAssignCategory(ids, catalogIdNumber);
@@ -487,12 +561,58 @@ function AssignItemsModal({
           break;
       }
 
-      showSuccess(`${ids.length} ${typeInfo.plural} assigned successfully`);
-      setAssignedItemIds((prev) =>
-        Array.from(new Set([...prev, ...Array.from(selectedItemIds)]))
-      );
-      setSelectedItemIds(new Set());
-      onAssignComplete?.();
+      // Step 2: Add catalog tags to items (will be removed when backend supports batch tags)
+      let tagSuccess = 0;
+      let tagFailed = 0;
+      for (const itemId of ids) {
+        try {
+          const item = items.find((i) => i.id === itemId);
+          if (!item) continue;
+
+          const existingTags = Array.isArray(item.tags) ? item.tags : [];
+          if (existingTags.includes(catalogTag)) continue;
+
+          const updatedTags = [...existingTags, catalogTag];
+
+          switch (itemType) {
+            case "offers": {
+              const offer = item as Offer;
+              await offerService.updateOffer(Number(itemId), { tags: updatedTags });
+              break;
+            }
+            case "products": {
+              await productService.addProductTag(Number(itemId), catalogTag);
+              break;
+            }
+            case "segments": {
+              const segment = item as Segment;
+              await segmentService.updateSegment(Number(itemId), { tags: updatedTags });
+              break;
+            }
+            case "campaigns": {
+              const campaign = item as BackendCampaignType;
+              await campaignService.updateCampaign(Number(itemId), { tags: updatedTags });
+              break;
+            }
+          }
+          tagSuccess++;
+        } catch {
+          tagFailed++;
+        }
+      }
+
+      if (tagSuccess > 0 || tagFailed === 0) {
+        showSuccess(`${ids.length} ${typeInfo.plural} assigned successfully`);
+        setAssignedItemIds((prev) =>
+          Array.from(new Set([...prev, ...Array.from(selectedItemIds)]))
+        );
+        setSelectedItemIds(new Set());
+        onAssignComplete?.();
+      } else {
+        showError(
+          `Failed to assign ${typeInfo.plural}. Please try again.`
+        );
+      }
     } catch (err) {
       showError(
         `Failed to assign ${typeInfo.plural}`,
@@ -506,6 +626,11 @@ function AssignItemsModal({
   // Handle removal - uses confirmation modal first
   const handleRemoveItem = async (itemId: number | string) => {
     if (!catalogId || !typeInfo) return;
+
+    const catalogIdNumber = Number(catalogId);
+    const catalogTag = buildCatalogTag(
+      Number.isNaN(catalogIdNumber) ? catalogId || "" : catalogIdNumber
+    );
 
     // Get the appropriate service methods based on item type
     const getEntityById = async (id: number) => {
@@ -551,6 +676,19 @@ function AssignItemsModal({
     // Callback to update local state after successful removal
     const handleRemoveSuccess = () => {
       setAssignedItemIds((prev) => prev.filter((id) => id !== itemId));
+      setItems((prev) =>
+        prev.map((item) => {
+          if (item.id === itemId) {
+            return {
+              ...item,
+              tags: Array.isArray(item.tags)
+                ? item.tags.filter((tag) => tag !== catalogTag)
+                : [],
+            };
+          }
+          return item;
+        })
+      );
       onAssignComplete?.();
     };
 

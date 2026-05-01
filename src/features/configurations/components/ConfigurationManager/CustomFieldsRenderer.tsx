@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { tw } from "../../../../shared/utils/utils";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../../shared/components/ui/Checkbox";
@@ -27,8 +27,23 @@ export default function CustomFieldsRenderer({
   );
 
   const renderField = (field: MetadataField) => {
+    const [loadedOptions, setLoadedOptions] = useState<{ value: string | number; label: string }[] | null>(null);
+    const [isLoadingOptions, setIsLoadingOptions] = useState(false);
+
+    useEffect(() => {
+      if (field.type === "select" && field.loadOptions && !field.options) {
+        setIsLoadingOptions(true);
+        field.loadOptions()
+          .then((opts) => setLoadedOptions(opts))
+          .catch(() => setLoadedOptions([]))
+          .finally(() => setIsLoadingOptions(false));
+      }
+    }, [field]);
+
     const shouldShow = field.condition ? field.condition(formData) : true;
     if (!shouldShow) return null;
+
+    const selectOptions = field.options || loadedOptions || [];
 
     return (
       <div key={field.key} className="flex flex-col flex-1">
@@ -79,17 +94,18 @@ export default function CustomFieldsRenderer({
               />
             )}
 
-            {field.type === "select" && field.options && (
+            {field.type === "select" && selectOptions.length > 0 && (
               <HeadlessSelect
                 options={
-                  field.options as Array<{
+                  selectOptions as Array<{
                     value: string | number;
                     label: string;
                   }>
                 }
                 value={formData[field.key] || ""}
                 onChange={(value) => onFieldChange(field.key, value)}
-                placeholder={field.placeholder || "Select..."}
+                placeholder={isLoadingOptions ? "Loading..." : field.placeholder || "Select..."}
+                disabled={isLoadingOptions}
                 className="w-full"
               />
             )}

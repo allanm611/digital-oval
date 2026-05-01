@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Input from '../../../shared/components/ui/Input';
-import { Save } from "lucide-react";
+import { Save, Volume2 } from "lucide-react";
+import { playNotificationSound, NotificationSoundType } from "../../../shared/utils/notificationSound";
 import { Link } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -20,8 +21,8 @@ import { senderIdService } from "../../configurations/services/senderIdService";
 import { communicationChannelService, CommunicationChannel } from "../../../shared/services/communicationChannelService";
 import { timezoneService } from "../../configurations/services/timezoneService";
 import { smsRouteService } from "../../routes/services/smsRouteService";
-import { WHATSAPP_ROUTES_DUMMY_DATA } from "../../routes/services/whatsappRouteService";
-import { PUSH_ROUTES_DUMMY_DATA } from "../../routes/services/pushNotificationRouteService";
+import { WHATSAPP_ROUTES_WHATSAPP_ROUTES_DUMMY_DATA } from "../../routes/services/whatsappRouteService";
+import { PUSH_ROUTES_PUSH_ROUTES_DUMMY_DATA } from "../../routes/services/pushNotificationRouteService";
 import { SMSRoute } from "../../routes/types/smsRoute";
 import { useConfigurationData } from "../../../shared/services/configurationDataService";
 import { hardcodedEmailRoutes } from "../../configurations/configs/configurationPageConfigs";
@@ -238,14 +239,21 @@ export default function SettingsPage() {
       return ["sms", "email"];
     });
 
+  // Play sound when notification sound setting changes
+  useEffect(() => {
+    if (settings.notificationSound && settings.notificationSound !== originalSettings.notificationSound) {
+      playNotificationSound(settings.notificationSound as NotificationSoundType);
+    }
+  }, [settings.notificationSound]);
+
   // Routes and communication channels
   const [communicationChannels, setCommunicationChannels] = useState<CommunicationChannel[]>([]);
   const [smsRoutes, setSmsRoutes] = useState<SMSRoute[]>([]);
   const [smsRoutesLoading, setSmsRoutesLoading] = useState(false);
 
   // Hardcoded routes from configuration
-  const whatsappRoutes = WHATSAPP_ROUTES_DUMMY_DATA;
-  const pushRoutes = PUSH_ROUTES_DUMMY_DATA;
+  const whatsappRoutes = WHATSAPP_ROUTES_WHATSAPP_ROUTES_DUMMY_DATA;
+  const pushRoutes = PUSH_ROUTES_PUSH_ROUTES_DUMMY_DATA;
   const emailRoutes = hardcodedEmailRoutes.map(r => ({
     id: r.id,
     name: r.name,
@@ -1191,7 +1199,7 @@ export default function SettingsPage() {
               </p>
               <HeadlessSelect
                 options={notificationSounds}
-                value={settings.notificationSound || "notification"}
+                value={settings.notificationSound || "default"}
                 onChange={(value) =>
                   setSettings({
                     ...settings,
@@ -1201,6 +1209,23 @@ export default function SettingsPage() {
                 placeholder="Select a sound"
                 className="w-full"
               />
+
+              {/* Sound Test Panel */}
+              <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <p className="text-xs font-semibold text-gray-700 mb-2">Test Sounds</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {notificationSounds.map((sound) => (
+                    <button
+                      key={sound.value}
+                      onClick={() => playNotificationSound(sound.value as NotificationSoundType)}
+                      className="flex items-center justify-center gap-1 px-3 py-2 bg-white border border-gray-300 rounded text-xs font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                    >
+                      <Volume2 className="w-3 h-3" />
+                      {sound.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
             <div>

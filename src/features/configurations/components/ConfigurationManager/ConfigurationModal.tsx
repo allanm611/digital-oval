@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { color, tw, zIndex } from "../../../../shared/utils/utils";
 import { useLanguage } from "../../../../contexts/LanguageContext";
 import CustomFieldsRenderer from "./CustomFieldsRenderer";
+import { DEFAULT_MODAL_WIDTH } from "../../configs/configurationPageConfigs";
 import type {
   ConfigurationItem,
   ConfigurationPageConfig,
@@ -132,7 +133,7 @@ export default function ConfigurationModal({
     >
       <div
         className={`bg-white ${tw.rounded} shadow-2xl w-full max-h-[90vh] overflow-y-auto`}
-        style={{ maxWidth: config.modalWidth || "42rem" }}
+        style={{ maxWidth: config.modalWidth || DEFAULT_MODAL_WIDTH }}
       >
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-bold text-gray-900">
