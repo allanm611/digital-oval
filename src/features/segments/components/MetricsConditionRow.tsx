@@ -226,11 +226,15 @@ export const MetricsConditionRow: React.FC<MetricsConditionRowProps> = ({
             onChange={(value) => {
               const operatorId = parseInt(value);
               const operator = DATE_OPERATORS.find((op) => op.id === operatorId);
+              const operatorLabel = operator?.label.toLowerCase().replace(/\s+/g, "_") || "";
+              const defaultDates = getDefaultDatesForOperator(operatorLabel);
+
               updateCondition(groupId, condition.id, {
                 date_operator_id: operatorId,
                 date_operator: operator?.value,
-                start_date: undefined,
-                end_date: undefined,
+                start_date: defaultDates.start_date,
+                end_date: defaultDates.end_date,
+                value: defaultDates.value,
               });
             }}
             placeholder="Select date operator"

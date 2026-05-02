@@ -426,8 +426,8 @@ export const getDefaultDatesForOperator = (operator: string): { start_date?: str
       const thirtyDaysAgo = new Date(today);
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       return {
-        start_date: thirtyDaysAgo.toISOString().split('T')[0] + "T00:00:00Z",
-        end_date: todayStr + "T23:59:59Z",
+        start_date: thirtyDaysAgo.toISOString().split('T')[0],
+        end_date: todayStr,
       };
     }
     case "since_date":
@@ -445,4 +445,47 @@ export const getDefaultDatesForOperator = (operator: string): { start_date?: str
     default:
       return {};
   }
+};
+
+export const detectTimeWindowFromDates = (startDate?: string, endDate?: string): string => {
+  if (!startDate || !endDate) return "custom";
+
+  const today = new Date();
+  const todayStr = getTodayDateString();
+
+  // Parse the date strings (handle both date-only and full ISO formats)
+  const start = new Date(startDate.split('T')[0]);
+  const end = new Date(endDate.split('T')[0]);
+  const todayDate = new Date(todayStr);
+
+  // Calculate the difference in days
+  const diffMs = todayDate.getTime() - start.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  // Check if end date matches today
+  if (end.toISOString().split('T')[0] !== todayStr) {
+    return "custom";
+  }
+
+  // Check for last_7_days
+  if (diffDays === 7) {
+    return "last_7_days";
+  }
+
+  // Check for last_30_days
+  if (diffDays === 30) {
+    return "last_30_days";
+  }
+
+  // Check for last_90_days
+  if (diffDays === 90) {
+    return "last_90_days";
+  }
+
+  // Check for current_month (start date is 1st of current month)
+  if (start.getDate() === 1 && start.getMonth() === today.getMonth() && start.getFullYear() === today.getFullYear()) {
+    return "current_month";
+  }
+
+  return "custom";
 };

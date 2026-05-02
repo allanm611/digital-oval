@@ -929,6 +929,7 @@ export default function SegmentConditionsBuilder({
                                     operator: firstOp?.label || "equals",
                                     operator_id: firstOp?.id || 1,
                                     value: "",
+                                    time_window: "last_7_days",
                                     segment_id: undefined,
                                     segment_name: undefined,
                                     list_id: undefined,

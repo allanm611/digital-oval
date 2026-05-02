@@ -21,7 +21,7 @@ import { senderIdService } from "../../configurations/services/senderIdService";
 import { communicationChannelService, CommunicationChannel } from "../../../shared/services/communicationChannelService";
 import { timezoneService } from "../../configurations/services/timezoneService";
 import { smsRouteService } from "../../routes/services/smsRouteService";
-import { WHATSAPP_ROUTES_WHATSAPP_ROUTES_DUMMY_DATA } from "../../routes/services/whatsappRouteService";
+import { WHATSAPP_ROUTES_DUMMY_DATA } from "../../routes/services/whatsappRouteService";
 import { PUSH_ROUTES_PUSH_ROUTES_DUMMY_DATA } from "../../routes/services/pushNotificationRouteService";
 import { SMSRoute } from "../../routes/types/smsRoute";
 import { useConfigurationData } from "../../../shared/services/configurationDataService";
@@ -252,7 +252,7 @@ export default function SettingsPage() {
   const [smsRoutesLoading, setSmsRoutesLoading] = useState(false);
 
   // Hardcoded routes from configuration
-  const whatsappRoutes = WHATSAPP_ROUTES_WHATSAPP_ROUTES_DUMMY_DATA;
+  const whatsappRoutes = WHATSAPP_ROUTES_DUMMY_DATA;
   const pushRoutes = PUSH_ROUTES_PUSH_ROUTES_DUMMY_DATA;
   const emailRoutes = hardcodedEmailRoutes.map(r => ({
     id: r.id,
