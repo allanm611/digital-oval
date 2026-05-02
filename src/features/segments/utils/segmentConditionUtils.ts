@@ -149,7 +149,6 @@ export const getDataSourceOptions = (
   label: string;
   type: SegmentCondition["conditionType"];
 }> => {
-  console.log("📊 getDataSourceOptions called with categories:", categories);
   const options: {
     value: string;
     label: string;
@@ -188,7 +187,6 @@ export const getDataSourceOptions = (
     type: "system_event",
   });
 
-  console.log("✅ getDataSourceOptions returning:", options);
   return options;
 };
 
@@ -347,6 +345,7 @@ export const createNewCondition = (
     operator_id: firstOp?.id || 1,
     value: "",
     type: "string",
+    time_window: "last_7_days",
   };
 };
 
