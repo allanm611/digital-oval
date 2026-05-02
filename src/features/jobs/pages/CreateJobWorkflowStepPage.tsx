@@ -1,8 +1,7 @@
-import { Fragment, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Save, X, Plus } from "lucide-react";
-import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
-import { Listbox, Transition } from "@headlessui/react";
+import { Save, X, Plus } from "lucide-react";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { jobWorkflowStepService } from "../services/jobWorkflowStepService";
 import { scheduledJobService } from "../services/scheduledJobService";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -18,7 +17,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import { color, tw, noteStyles, zIndex } from "../../../shared/utils/utils";
+import { color, tw, noteStyles } from "../../../shared/utils/utils";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 
 const getStepTypes = (t: any): { value: StepType; label: string }[] => [
@@ -427,17 +426,17 @@ export default function CreateJobWorkflowStepPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <button
-          onClick={() => navigate(-1)}
-          className={`p-2 ${tw.rounded} text-gray-600 transition-colors`}
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-          {isEditMode ? t.jobs.jobWorkflow.editWorkflowStep : t.jobs.jobWorkflow.createWorkflowStep}
-        </h1>
-      </div>
+      <BackButton
+        fallbackTo={`/dashboard/job-workflow-steps${
+          formData.job_id ? `?job_id=${formData.job_id}` : ""
+        }`}
+        showBreadcrumb={true}
+        currentLabel={
+          isEditMode
+            ? t.jobs.jobWorkflow.editWorkflowStep
+            : t.jobs.jobWorkflow.createWorkflowStep
+        }
+      />
 
       {batchMode && batchSteps.length === 0 && (
         <div
@@ -755,75 +754,18 @@ export default function CreateJobWorkflowStepPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       {t.jobs.jobWorkflow.stepType} <span className="text-red-500">*</span>
                     </label>
-                    <Listbox
+                    <HeadlessSelect
+                      options={getStepTypes(t).map((type) => ({
+                        value: type.value,
+                        label: type.label,
+                      }))}
                       value={formData.step_type}
                       onChange={(value) =>
-                        setFormData({ ...formData, step_type: value })
+                        setFormData({ ...formData, step_type: value as StepType })
                       }
-                    >
-                      <div className="relative">
-                        <Listbox.Button
-                          className={`relative w-full cursor-default ${tw.rounded} border border-gray-300 bg-white py-2 pl-3 pr-10 text-left text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
-                        >
-                          <span className="block truncate">
-                            {getStepTypes(t).find(
-                              (type) => type.value === formData.step_type
-                            )?.label || t.jobs.jobWorkflow.selectType}
-                          </span>
-                          <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                            <ChevronUpDownIcon
-                              className="h-5 w-5 text-gray-400"
-                              aria-hidden="true"
-                            />
-                          </span>
-                        </Listbox.Button>
-                        <Transition
-                          as={Fragment}
-                          leave="transition ease-in duration-100"
-                          leaveFrom="opacity-100"
-                          leaveTo="opacity-0"
-                        >
-                          <Listbox.Options
-                            className={`absolute mt-1 max-h-60 w-full overflow-auto ${tw.rounded} bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm`}
-                            style={{ zIndex: zIndex.dropdown }}
-                          >
-                            {getStepTypes(t).map((type) => (
-                              <Listbox.Option
-                                key={type.value}
-                                className={({ active }) =>
-                                  `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                                    active
-                                      ? "bg-[#3b8169] text-white"
-                                      : "text-gray-900"
-                                  }`
-                                }
-                                value={type.value}
-                              >
-                                {({ selected }) => (
-                                  <>
-                                    <span
-                                      className={`block truncate ${
-                                        selected ? "font-medium" : "font-normal"
-                                      }`}
-                                    >
-                                      {type.label}
-                                    </span>
-                                    {selected ? (
-                                      <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-[#3b8169]">
-                                        <CheckIcon
-                                          className="h-5 w-5"
-                                          aria-hidden="true"
-                                        />
-                                      </span>
-                                    ) : null}
-                                  </>
-                                )}
-                              </Listbox.Option>
-                            ))}
-                          </Listbox.Options>
-                        </Transition>
-                      </div>
-                    </Listbox>
+                      placeholder={t.jobs.jobWorkflow.selectType}
+                      className="w-full"
+                    />
                   </div>
 
                   <div>
@@ -924,77 +866,21 @@ export default function CreateJobWorkflowStepPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         {t.jobs.jobWorkflow.onFailureAction}
                       </label>
-                      <Listbox
+                      <HeadlessSelect
+                        options={getFailureActions(t).map((action) => ({
+                          value: action.value,
+                          label: action.label,
+                        }))}
                         value={formData.on_failure_action}
                         onChange={(value) =>
-                          setFormData({ ...formData, on_failure_action: value })
+                          setFormData({
+                            ...formData,
+                            on_failure_action: value as FailureAction,
+                          })
                         }
-                      >
-                        <div className="relative">
-                          <Listbox.Button
-                            className={`relative w-full cursor-default ${tw.rounded} border border-gray-300 bg-white py-2 pl-3 pr-10 text-left text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
-                          >
-                            <span className="block truncate">
-                              {getFailureActions(t).find(
-                                (a) => a.value === formData.on_failure_action
-                              )?.label || t.jobs.jobWorkflow.selectAction}
-                            </span>
-                            <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                              <ChevronUpDownIcon
-                                className="h-5 w-5 text-gray-400"
-                                aria-hidden="true"
-                              />
-                            </span>
-                          </Listbox.Button>
-                          <Transition
-                            as={Fragment}
-                            leave="transition ease-in duration-100"
-                            leaveFrom="opacity-100"
-                            leaveTo="opacity-0"
-                          >
-                            <Listbox.Options
-                              className={`absolute mt-1 max-h-60 w-full overflow-auto ${tw.rounded} bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm`}
-                              style={{ zIndex: zIndex.dropdown }}
-                            >
-                              {getFailureActions(t).map((action) => (
-                                <Listbox.Option
-                                  key={action.value}
-                                  className={({ active }) =>
-                                    `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                                      active
-                                        ? "bg-[#3b8169] text-white"
-                                        : "text-gray-900"
-                                    }`
-                                  }
-                                  value={action.value}
-                                >
-                                  {({ selected }) => (
-                                    <>
-                                      <span
-                                        className={`block truncate ${
-                                          selected
-                                            ? "font-medium"
-                                            : "font-normal"
-                                        }`}
-                                      >
-                                        {action.label}
-                                      </span>
-                                      {selected ? (
-                                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-[#3b8169]">
-                                          <CheckIcon
-                                            className="h-5 w-5"
-                                            aria-hidden="true"
-                                          />
-                                        </span>
-                                      ) : null}
-                                    </>
-                                  )}
-                                </Listbox.Option>
-                              ))}
-                            </Listbox.Options>
-                          </Transition>
-                        </div>
-                      </Listbox>
+                        placeholder={t.jobs.jobWorkflow.selectAction}
+                        className="w-full"
+                      />
                     </div>
                   </div>
 

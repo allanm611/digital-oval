@@ -15,7 +15,6 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
-import CreateButton from "../../../shared/components/ui/CreateButton";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -24,6 +23,7 @@ import { workflowService } from "../services/workflowService";
 import type { Workflow } from "../types/workflow";
 import { useAuth } from "../../../contexts/AuthContext";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import WorkflowModal from "../components/WorkflowModal";
 
 export default function WorkflowsPage() {
   const navigate = useNavigate();
@@ -79,6 +79,7 @@ export default function WorkflowsPage() {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [totalCount, setTotalCount] = useState(0);
+  const [showWorkflowModal, setShowWorkflowModal] = useState(false);
 
   const fetchWorkflows = useCallback(async () => {
     setIsLoading(true);
@@ -394,7 +395,14 @@ export default function WorkflowsPage() {
             </button>
           </PermissionGate>
           <PermissionGate permission="job-workflows.create">
-            <CreateButton route="/dashboard/workflows/create" />
+            <button
+              onClick={() => setShowWorkflowModal(true)}
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-semibold text-white`}
+              style={{ backgroundColor: color.primary.action }}
+            >
+              <Plus className="h-4 w-4" />
+              {t.workflows.createWorkflow}
+            </button>
           </PermissionGate>
         </div>
       </div>
@@ -810,6 +818,16 @@ export default function WorkflowsPage() {
         description="This action cannot be undone."
         itemName={deleteName}
         isLoading={isDeleting}
+      />
+
+      <WorkflowModal
+        isOpen={showWorkflowModal}
+        onClose={() => setShowWorkflowModal(false)}
+        onSuccess={() => {
+          setShowWorkflowModal(false);
+          setPage(1);
+          fetchWorkflows();
+        }}
       />
     </div>
   );

@@ -17,7 +17,7 @@ import { etlService } from "../services/etlService";
 import { EtlFileRegistryRowType, FileStatsResponse } from "../types/etl";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
-import { color, tw, button } from "../../../shared/utils/utils";
+import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
@@ -184,11 +184,8 @@ export default function EtlFileRegistryPage() {
             <button
               type="button"
               onClick={() => setShowFetchDropdown(!showFetchDropdown)}
-              className={`inline-flex items-center gap-2 text-sm font-medium text-white ${tw.rounded} transition-colors`}
-              style={{
-                backgroundColor: color.primary.action,
-                padding: `${button.action.paddingY} ${button.action.paddingX}`,
-              }}
+              className="inline-flex items-center gap-2 transition-colors"
+              style={getButtonStyles(button.action)}
             >
               <Play className="h-4 w-4" />
               {t.etl.fetchControlsButton}
@@ -233,11 +230,8 @@ export default function EtlFileRegistryPage() {
             <button
               type="button"
               onClick={() => setIsUploadModalOpen(true)}
-              className={`inline-flex items-center gap-2 text-sm font-medium text-white ${tw.rounded} transition-colors`}
-              style={{
-                backgroundColor: color.primary.action,
-                padding: `${button.action.paddingY} ${button.action.paddingX}`,
-              }}
+              className="inline-flex items-center gap-2 transition-colors"
+              style={getButtonStyles(button.action)}
             >
               <Upload className="h-4 w-4" />
               Upload

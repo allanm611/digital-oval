@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Edit, Trash2, Copy, Play, Pause } from "lucide-react";
+import { Edit, Trash2, Copy, Play, Pause, MoreVertical } from "lucide-react";
 import { workflowService } from "../services/workflowService";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -24,6 +24,8 @@ export default function WorkflowDetailsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCloning, setIsCloning] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const loadWorkflow = async () => {
@@ -52,6 +54,24 @@ export default function WorkflowDetailsPage() {
 
     loadWorkflow();
   }, [id, showError]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target as Node)
+      ) {
+        setShowMenu(false);
+      }
+    };
+
+    if (showMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [showMenu]);
 
   const handleToggleActive = async () => {
     if (!id) return;
@@ -150,7 +170,7 @@ export default function WorkflowDetailsPage() {
             {workflow.name}
           </h1>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {!isActive && (
             <button
               onClick={handleToggleActive}
@@ -193,32 +213,16 @@ export default function WorkflowDetailsPage() {
               Deactivate
             </button>
           )}
-          <PermissionGate permission="job-workflows.create">
-            <button
-              onClick={handleClone}
-              disabled={isCloning}
-              className={`inline-flex items-center gap-2 ${tw.rounded} text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50`}
-              style={{
-                paddingTop: button.bordered.paddingY,
-                paddingBottom: button.bordered.paddingY,
-                paddingLeft: button.bordered.paddingX,
-                paddingRight: button.bordered.paddingX,
-                borderRadius: button.bordered.borderRadius,
-                fontSize: button.bordered.fontSize,
-              }}
-              title="Clone"
-            >
-              {isCloning ? <LoadingSpinner /> : <Copy className="h-4 w-4" />}
-              Clone
-            </button>
-          </PermissionGate>
           <PermissionGate permission="job-workflows.update">
             <button
               onClick={() =>
                 navigate(`/dashboard/workflows/${workflow.id}/edit`)
               }
-              className={`inline-flex items-center gap-2 ${tw.rounded} text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50`}
+              className={`inline-flex items-center gap-2 ${tw.rounded} text-sm font-medium disabled:opacity-50`}
               style={{
+                background: button.bordered.background,
+                color: button.bordered.color,
+                border: button.bordered.border,
                 paddingTop: button.bordered.paddingY,
                 paddingBottom: button.bordered.paddingY,
                 paddingLeft: button.bordered.paddingX,
@@ -232,11 +236,14 @@ export default function WorkflowDetailsPage() {
               Edit
             </button>
           </PermissionGate>
-          <PermissionGate permission="job-workflows.delete">
+          <div className="relative" ref={menuRef}>
             <button
-              onClick={() => setShowDeleteModal(true)}
-              className={`inline-flex items-center gap-2 ${tw.rounded} text-sm font-medium text-red-700 bg-white border border-red-300 hover:bg-red-50`}
+              onClick={() => setShowMenu(!showMenu)}
+              className={`inline-flex items-center gap-2 ${tw.rounded} text-sm font-medium disabled:opacity-50`}
               style={{
+                background: button.bordered.background,
+                color: button.bordered.color,
+                border: button.bordered.border,
                 paddingTop: button.bordered.paddingY,
                 paddingBottom: button.bordered.paddingY,
                 paddingLeft: button.bordered.paddingX,
@@ -244,12 +251,42 @@ export default function WorkflowDetailsPage() {
                 borderRadius: button.bordered.borderRadius,
                 fontSize: button.bordered.fontSize,
               }}
-              title="Delete"
+              title="More actions"
             >
-              <Trash2 className="h-4 w-4" />
-              Delete
+              <MoreVertical className="h-4 w-4" />
             </button>
-          </PermissionGate>
+            {showMenu && (
+              <div
+                className={`absolute right-0 top-full mt-1 w-48 bg-white ${tw.rounded} shadow-lg border border-gray-200 py-1 z-10`}
+              >
+                <PermissionGate permission="job-workflows.update">
+                  <button
+                    onClick={() => {
+                      handleClone();
+                      setShowMenu(false);
+                    }}
+                    disabled={isCloning}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-900 hover:bg-gray-50 flex items-center gap-2 disabled:opacity-60"
+                  >
+                    {isCloning ? <LoadingSpinner /> : <Copy className="h-4 w-4" />}
+                    Clone
+                  </button>
+                </PermissionGate>
+                <PermissionGate permission="job-workflows.delete">
+                  <button
+                    onClick={() => {
+                      setShowDeleteModal(true);
+                      setShowMenu(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete
+                  </button>
+                </PermissionGate>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
