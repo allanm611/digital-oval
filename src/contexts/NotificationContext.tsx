@@ -42,7 +42,7 @@ interface NotificationProviderProps {
 
 export function NotificationProvider({
   children,
-  pollInterval = 10000, // 10 seconds default (was 30 seconds)
+  pollInterval = 30000, // 30 seconds default
 }: NotificationProviderProps) {
   const [notifications, setNotifications] = useState<InboxNotification[]>([]);
   const [stats, setStats] = useState<NotificationStats | null>(null);
@@ -51,7 +51,7 @@ export function NotificationProvider({
   const [isPolling, setIsPolling] = useState(false);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef(true);
-  const previousUnreadCountRef = useRef<number>(0);
+  const seenNotificationIdsRef = useRef<Set<string | number>>(new Set());
   const { settings: notificationSettings } = useNotificationSettings();
   const { success: showToast } = useToast();
 
@@ -66,27 +66,31 @@ export function NotificationProvider({
         // Calculate stats from notifications
         const unread = response.data?.filter((n) => !n.is_read).length || 0;
 
-        // Detect new unread notifications
-        if (previousUnreadCountRef.current > 0 && unread > previousUnreadCountRef.current) {
-          const newCount = unread - previousUnreadCountRef.current;
+        // Detect truly new notifications by ID
+        const newNotifications = (response.data || []).filter(
+          (n) => !seenNotificationIdsRef.current.has(n.id)
+        );
 
+        if (newNotifications.length > 0) {
           // Play sound if enabled
           if (notificationSettings.in_app_sound_enabled) {
             playNotificationSound(notificationSettings.notification_sound || "default");
           }
 
-          // Get the latest unread notification to show in toast
-          const latestUnread = (response.data || []).find((n) => !n.is_read);
-          if (latestUnread) {
-            showToast(
-              "success",
-              `${newCount} new notification${newCount !== 1 ? "s" : ""}`,
-              latestUnread.message || latestUnread.title
-            );
-          }
+          // Show toast with latest new notification
+          const latestNew = newNotifications[0];
+          showToast(
+            "success",
+            `${newNotifications.length} new notification${newNotifications.length !== 1 ? "s" : ""}`,
+            latestNew.message || latestNew.title
+          );
+
+          // Add new notification IDs to seen set
+          newNotifications.forEach((n) => seenNotificationIdsRef.current.add(n.id));
         }
 
-        previousUnreadCountRef.current = unread;
+        // Ensure all current notifications are in the seen set
+        (response.data || []).forEach((n) => seenNotificationIdsRef.current.add(n.id));
 
         setStats({
           total: response.data?.length || 0,

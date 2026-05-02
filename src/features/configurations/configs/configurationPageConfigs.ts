@@ -1241,6 +1241,9 @@ export const campaignObjectivesConfig: ConfigurationPageConfig = {
   nameMaxLength: 100,
   descriptionMaxLength: 500,
 
+  // Initial data
+  initialData: [],
+
   // Messages
   deleteConfirmTitle: "Delete Objective",
   deleteConfirmMessage: (name: string) =>
@@ -1284,6 +1287,9 @@ export const departmentsConfig: ConfigurationPageConfig = {
   nameMaxLength: 100,
   descriptionMaxLength: 500,
 
+  // Initial data
+  initialData: [],
+
   // Messages
   deleteConfirmTitle: "Delete Department",
   deleteConfirmMessage: (name: string) =>
@@ -1326,6 +1332,9 @@ export const lineOfBusinessConfig: ConfigurationPageConfig = {
   // Validation
   nameMaxLength: 100,
   descriptionMaxLength: 500,
+
+  // Initial data
+  initialData: [],
 
   // Messages
   deleteConfirmTitle: "Delete Business Line",

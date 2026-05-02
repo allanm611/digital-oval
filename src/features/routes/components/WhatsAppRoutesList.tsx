@@ -6,9 +6,38 @@ import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { WhatsAppRoute } from "../types/whatsappRoute";
-import { whatsappRouteService } from "../services/whatsappRouteService";
 import { useToast } from "../../../contexts/ToastContext";
 import { color, tw } from "../../../shared/utils/utils";
+
+const DUMMY_WHATSAPP_ROUTES: WhatsAppRoute[] = [
+  {
+    id: 1,
+    name: "Meta Business API",
+    description: "Meta Business API WhatsApp integration for main channel",
+    gateway_provider: "META_BUSINESS_API",
+    is_active: true,
+    created_at: "2026-01-20T10:30:00Z",
+    updated_at: "2026-04-22T14:45:00Z",
+  },
+  {
+    id: 2,
+    name: "Twilio WhatsApp",
+    description: "Twilio WhatsApp API for backup and testing",
+    gateway_provider: "TWILIO_WHATSAPP",
+    is_active: true,
+    created_at: "2026-02-14T09:15:00Z",
+    updated_at: "2026-04-19T16:20:00Z",
+  },
+  {
+    id: 3,
+    name: "Custom WhatsApp Gateway",
+    description: "Custom WhatsApp gateway for special campaigns",
+    gateway_provider: "CUSTOM",
+    is_active: false,
+    created_at: "2026-03-10T11:00:00Z",
+    updated_at: "2026-04-16T13:30:00Z",
+  },
+];
 
 export default function WhatsAppRoutesList() {
   const navigate = useNavigate();
@@ -26,17 +55,13 @@ export default function WhatsAppRoutesList() {
     loadRoutes();
   }, []);
 
-  const loadRoutes = async () => {
-    try {
-      setLoading(true);
-      const data = await whatsappRouteService.getAllRoutes();
-      setRoutes(data && data.length > 0 ? data : []);
-    } catch (err) {
-      showError("Error", "Failed to load WhatsApp routes");
-      setRoutes([]);
-    } finally {
+  const loadRoutes = () => {
+    setLoading(true);
+    // Simulate loading delay
+    setTimeout(() => {
+      setRoutes(DUMMY_WHATSAPP_ROUTES);
       setLoading(false);
-    }
+    }, 500);
   };
 
   const handleDeleteClick = (route: WhatsAppRoute) => {
@@ -44,12 +69,12 @@ export default function WhatsAppRoutesList() {
     setDeleteConfirmName(route.name);
   };
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = () => {
     if (!deleteConfirmId) return;
 
     setDeleting(deleteConfirmId);
-    try {
-      await whatsappRouteService.deleteRoute(deleteConfirmId);
+    // Mock API call
+    setTimeout(() => {
       success(
         "Success",
         `"${deleteConfirmName}" has been deleted successfully`,
@@ -57,42 +82,27 @@ export default function WhatsAppRoutesList() {
       setRoutes((prev) => prev.filter((route) => route.id !== deleteConfirmId));
       setDeleteConfirmId(null);
       setDeleteConfirmName("");
-    } catch (err) {
-      showError("Error", "Failed to delete WhatsApp route");
-    } finally {
       setDeleting(null);
-    }
+    }, 600);
   };
 
-  const handleToggleStatus = async (route: WhatsAppRoute) => {
+  const handleToggleStatus = (route: WhatsAppRoute) => {
     const nextStatus = !route.is_active;
+    setTogglingStatus(route.id);
 
-    try {
-      setTogglingStatus(route.id);
+    // Mock API call
+    setTimeout(() => {
       setRoutes((prev) =>
         prev.map((r) =>
           r.id === route.id ? { ...r, is_active: nextStatus } : r,
         ),
       );
-
-      await whatsappRouteService.updateRoute(route.id, {
-        is_active: nextStatus,
-      });
-
       success(
         "Success",
         `"${route.name}" has been ${nextStatus ? "activated" : "deactivated"} successfully`,
       );
-    } catch (err) {
-      setRoutes((prev) =>
-        prev.map((r) =>
-          r.id === route.id ? { ...r, is_active: route.is_active } : r,
-        ),
-      );
-      showError("Error", "Failed to update route status");
-    } finally {
       setTogglingStatus(null);
-    }
+    }, 600);
   };
 
   const filteredRoutes = routes.filter(

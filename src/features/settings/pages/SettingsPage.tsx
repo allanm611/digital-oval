@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import Input from '../../../shared/components/ui/Input';
-import { Save, Volume2 } from "lucide-react";
+import { Save } from "lucide-react";
 import { playNotificationSound, NotificationSoundType } from "../../../shared/utils/notificationSound";
 import { Link } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
@@ -1210,22 +1210,6 @@ export default function SettingsPage() {
                 className="w-full"
               />
 
-              {/* Sound Test Panel */}
-              <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <p className="text-xs font-semibold text-gray-700 mb-2">Test Sounds</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {notificationSounds.map((sound) => (
-                    <button
-                      key={sound.value}
-                      onClick={() => playNotificationSound(sound.value as NotificationSoundType)}
-                      className="flex items-center justify-center gap-1 px-3 py-2 bg-white border border-gray-300 rounded text-xs font-medium text-gray-700 hover:bg-gray-100 transition-colors"
-                    >
-                      <Volume2 className="w-3 h-3" />
-                      {sound.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
 
             <div>

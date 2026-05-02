@@ -88,8 +88,8 @@ export default function TeamRolesPage() {
 
     setDeleting(role.id);
     try {
-      // Note: deleteRole endpoint may not be available yet
-      // await roleService.deleteRole(role.id);
+      const userId = user?.user_id || 0;
+      await roleService.deleteRole(role.id, { userId });
       setRoles((prev) => prev.filter((r) => r.id !== role.id));
       showSuccess("Role deleted successfully");
     } catch (error) {
