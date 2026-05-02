@@ -410,6 +410,15 @@ export default function ConfigurationPage() {
         status: "active",
         navigationPath: "/dashboard/whatsapp-routes",
       },
+      {
+        id: "ussd-routes",
+        name: "USSD Routes",
+        description: "Manage USSD gateway routes for USSD message delivery",
+        type: "offer",
+        category: "Offer Configuration",
+        status: "active",
+        navigationPath: "/dashboard/ussd-routes",
+      },
     ];
 
     setConfigurations(allConfigurations);

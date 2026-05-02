@@ -4,6 +4,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { SegmentCondition } from "../types/segment";
 import { getOperatorsForFieldType, TIME_WINDOWS, DATE_OPERATORS } from "../../../shared/utils/operatorMapper";
 import { getKPICategoryForConditionType } from "../../kpis/types/kpiConditionMapping";
+import { getTodayDateString, getDefaultDatesForOperator } from "../utils/segmentConditionUtils";
 
 interface MetricsConditionRowProps {
   groupId: string;
@@ -96,10 +97,27 @@ export const MetricsConditionRow: React.FC<MetricsConditionRowProps> = ({
             onChange={(value) => {
               const [operator, operatorIdStr] = (value as string).split("|");
               const operatorId = parseInt(operatorIdStr);
-              updateCondition(groupId, condition.id, {
+              const isDateOp = ["on_date", "since_date", "until_date", "between_dates"].includes(operator.toLowerCase());
+
+              const updates: Partial<SegmentCondition> = {
                 operator: operator as SegmentCondition["operator"],
                 operator_id: operatorId,
-              });
+              };
+
+              if (isDateOp) {
+                const defaultDates = getDefaultDatesForOperator(operator);
+                if (operator === "on_date") {
+                  updates.value = defaultDates.value;
+                  updates.start_date = undefined;
+                  updates.end_date = undefined;
+                } else {
+                  updates.start_date = defaultDates.start_date;
+                  updates.end_date = defaultDates.end_date;
+                  updates.value = undefined;
+                }
+              }
+
+              updateCondition(groupId, condition.id, updates);
             }}
             placeholder="Select operator"
             className="text-sm"
@@ -157,7 +175,7 @@ export const MetricsConditionRow: React.FC<MetricsConditionRowProps> = ({
               start_date: value as string,
             });
           }}
-          max={new Date().toISOString().split("T")[0]}
+          max={getTodayDateString()}
           placeholder="Date"
           className="min-w-[140px]"
           style={{ borderColor: color.border.default }}
@@ -175,7 +193,7 @@ export const MetricsConditionRow: React.FC<MetricsConditionRowProps> = ({
                 start_date: value as string,
               });
             }}
-            max={new Date().toISOString().split("T")[0]}
+            max={getTodayDateString()}
             placeholder="Start date"
             className="min-w-[140px]"
             style={{ borderColor: color.border.default }}
@@ -188,7 +206,7 @@ export const MetricsConditionRow: React.FC<MetricsConditionRowProps> = ({
                 end_date: value as string,
               });
             }}
-            max={new Date().toISOString().split("T")[0]}
+            max={getTodayDateString()}
             placeholder="End date"
             className="min-w-[140px]"
             style={{ borderColor: color.border.default }}
@@ -230,7 +248,7 @@ export const MetricsConditionRow: React.FC<MetricsConditionRowProps> = ({
                   start_date: value as string,
                 });
               }}
-              max={new Date().toISOString().split("T")[0]}
+              max={getTodayDateString()}
               placeholder="Start date"
               className="min-w-[140px]"
               style={{ borderColor: color.border.default }}
@@ -248,7 +266,7 @@ export const MetricsConditionRow: React.FC<MetricsConditionRowProps> = ({
                     start_date: value as string,
                   });
                 }}
-                max={new Date().toISOString().split("T")[0]}
+                max={getTodayDateString()}
                 placeholder="Start date"
                 className="min-w-[140px]"
                 style={{ borderColor: color.border.default }}
@@ -261,7 +279,7 @@ export const MetricsConditionRow: React.FC<MetricsConditionRowProps> = ({
                     end_date: value as string,
                   });
                 }}
-                max={new Date().toISOString().split("T")[0]}
+                max={getTodayDateString()}
                 placeholder="End date"
                 className="min-w-[140px]"
                 style={{ borderColor: color.border.default }}

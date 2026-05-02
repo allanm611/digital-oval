@@ -15,7 +15,7 @@ import {
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useSegmentationFields } from "../hooks/useSegmentationFields";
-import {  getOperatorsForField,  TIME_WINDOWS, getDateRangeForTimeWindow, OPERATORS } from "../../../shared/utils/operatorMapper";
+import {  getOperatorsForField,  TIME_WINDOWS, OPERATORS } from "../../../shared/utils/operatorMapper";
 import UnifiedPickerModal from "./UnifiedPickerModal";
 import SystemEventPickerModal from "./SystemEventPickerModal";
 import FieldPickerModal from "./FieldPickerModal";

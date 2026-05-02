@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Calendar, AlertCircle, Trash2 } from "lucide-react";
 import { tw } from "../utils/utils";
 import { buttons } from "../utils/tokens";
@@ -61,6 +61,9 @@ export default function SchedulingComponent({
   const [timezoneList, setTimezoneList] = useState<TimeZone[]>([]);
   const [timezonesLoading, setTimezonesLoading] = useState(true);
 
+  // Prevent re-initialization loop
+  const initializedRef = useRef(false);
+
   // Fetch timezones from API
   useEffect(() => {
     const loadTimezones = async () => {
@@ -84,6 +87,9 @@ export default function SchedulingComponent({
 
   // Initialize with defaults if not provided (mount-only)
   useEffect(() => {
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+
     if (!scheduling || !scheduling.start_date || !scheduling.time_zone) {
       const settingsTimezone = getSettingsTimezone();
       const defaultScheduling = {
@@ -95,8 +101,7 @@ export default function SchedulingComponent({
       };
       onSchedulingChange(defaultScheduling);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [onSchedulingChange, scheduling]);
 
   useEffect(() => {
     if (!scheduling) return;

@@ -4,7 +4,8 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Input from "../../../shared/components/ui/Input";
 import { Trash2 } from "lucide-react";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
-import { getOperatorsForField, TIME_WINDOWS, getDateRangeForTimeWindow } from "../../../shared/utils/operatorMapper";
+import { getOperatorsForField, TIME_WINDOWS } from "../../../shared/utils/operatorMapper";
+import { getDefaultDatesForOperator, getTodayDateString } from "../utils/segmentConditionUtils";
 
 interface CustomerIdentityConditionRowProps {
   groupId: string;
@@ -111,7 +112,7 @@ export default function CustomerIdentityConditionRow({
       }))
     : [];
 
-  const maxDate = new Date().toISOString().split("T")[0];
+  const maxDate = getTodayDateString();
 
   // Line 1: SubCategory | Field Picker | Operators
   if (line === "1") {
@@ -247,13 +248,10 @@ export default function CustomerIdentityConditionRow({
                         end_date: undefined,
                       };
 
-                      if (operator === "between_dates") {
-                        const today = new Date();
-                        const thirtyDaysAgo = new Date(today);
-                        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-                        updates.start_date = thirtyDaysAgo.toISOString().split('T')[0] + "T00:00:00Z";
-                        updates.end_date = today.toISOString().split('T')[0] + "T23:59:59Z";
+                      const defaultDates = getDefaultDatesForOperator(operator);
+                      if (defaultDates.start_date || defaultDates.end_date) {
+                        updates.start_date = defaultDates.start_date;
+                        updates.end_date = defaultDates.end_date;
                       }
 
                       updateCondition(groupId, condition.id, updates);
@@ -273,18 +271,10 @@ export default function CustomerIdentityConditionRow({
                     }))}
                     value={condition.time_window || "last_7_days"}
                     onChange={(value) => {
-                      const tw = value as SegmentCondition["time_window"];
-                      const dateRange = tw !== "custom" ? getDateRangeForTimeWindow(tw) : null;
-
                       updateCondition(groupId, condition.id, {
-                        time_window: tw,
-                        ...(dateRange ? {
-                          start_date: dateRange.start_date,
-                          end_date: dateRange.end_date,
-                        } : {
-                          start_date: undefined,
-                          end_date: undefined,
-                        }),
+                        time_window: value as SegmentCondition["time_window"],
+                        start_date: undefined,
+                        end_date: undefined,
                       });
                     }}
                     placeholder="Select time window"

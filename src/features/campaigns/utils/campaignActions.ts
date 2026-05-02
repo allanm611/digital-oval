@@ -16,7 +16,7 @@ export function canShowCampaignButton(
 
   switch (buttonType) {
     case "pause":
-      return campaign.approval_status === "approved" && campaign.status === "active";
+      return campaign.approval_status === "approved" && campaign.status !== "paused" && campaign.status !== "draft";
     case "resume":
       return campaign.approval_status === "approved" && campaign.status === "paused";
     case "activate":

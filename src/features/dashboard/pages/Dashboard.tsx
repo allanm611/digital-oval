@@ -555,6 +555,10 @@ const SettingsPages = {
     () =>
       import(/* webpackPrefetch: true */ "../../routes/pages/WhatsAppRoutesContainer"),
   ),
+  USSDRoutesPage: lazy(
+    () =>
+      import(/* webpackPrefetch: true */ "../../routes/pages/USSDRoutesContainer"),
+  ),
   DNDTypesPage: lazy(
     () =>
       import(/* webpackPrefetch: true */ "../../configurations/pages/DNDTypesPage"),
@@ -1200,6 +1204,10 @@ export default function Dashboard() {
           <Route
             path="/whatsapp-routes/*"
             element={<SettingsPages.WhatsAppRoutesPage />}
+          />
+          <Route
+            path="/ussd-routes/*"
+            element={<SettingsPages.USSDRoutesPage />}
           />
           <Route path="/sms-test" element={<SettingsPages.SMSTestPage />} />
           <Route path="/manual-rewards-test" element={<OtherPages.ManualRewardsTestPage />} />

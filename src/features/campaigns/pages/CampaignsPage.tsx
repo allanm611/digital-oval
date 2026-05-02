@@ -1212,65 +1212,6 @@ export default function CampaignsPage() {
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        {canShowCampaignButton(campaign, "resume") ? (
-                          <button
-                            onClick={() =>
-                              handleAction({
-                                campaignId: campaign.id,
-                                campaignName: campaign.name,
-                                action: "resume",
-                                successMessage: `Campaign "${campaign.name}" resumed successfully!`,
-                                errorMessage: "Failed to resume campaign",
-                                updateFields: { status: "active" },
-                              })
-                            }
-                            className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-all duration-300 relative`}
-                            title="Resume Campaign"
-                            disabled={loadingActionIds.has(campaign.id)}
-                          >
-                            {loadingActionIds.has(campaign.id) ? (
-                              <LoadingSpinner
-                                variant="modern"
-                                size="sm"
-                                color="primary"
-                              />
-                            ) : (
-                              <Play className="w-4 h-4" />
-                            )}
-                          </button>
-                        ) : canShowCampaignButton(campaign, "pause") ? (
-                          <button
-                            onClick={() =>
-                              handleAction({
-                                campaignId: campaign.id,
-                                campaignName: campaign.name,
-                                action: "pause",
-                                successMessage: `Campaign "${campaign.name}" paused successfully!`,
-                                errorMessage: "Failed to pause campaign",
-                                updateFields: { status: "paused" },
-                              })
-                            }
-                            className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-orange-500 transition-all duration-300`}
-                            style={{ backgroundColor: "transparent" }}
-                            onMouseLeave={(e) => {
-                              (
-                                e.target as HTMLButtonElement
-                              ).style.backgroundColor = "transparent";
-                            }}
-                            title="Pause Campaign"
-                            disabled={loadingActionIds.has(campaign.id)}
-                          >
-                            {loadingActionIds.has(campaign.id) ? (
-                              <LoadingSpinner
-                                variant="modern"
-                                size="sm"
-                                color="primary"
-                              />
-                            ) : (
-                              <Pause className="w-4 h-4" />
-                            )}
-                          </button>
-                        ) : null}
                         <PermissionGate permission="campaigns.update">
                           <button
                             onClick={() =>
@@ -1354,9 +1295,8 @@ export default function CampaignsPage() {
                         </PermissionGate>
 
                         {/* Pause Campaign Button */}
-                        {canShowCampaignButton(campaign, "pause") ? (
-                          <PermissionGate permission="campaigns.run">
-                            <button
+                        {canShowCampaignButton(campaign, "pause") && (
+                          <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleAction({
@@ -1383,13 +1323,11 @@ export default function CampaignsPage() {
                               )}
                               Pause Campaign
                             </button>
-                          </PermissionGate>
-                        ) : null}
+                        )}
 
                         {/* Resume Campaign Button */}
-                        {canShowCampaignButton(campaign, "resume") ? (
-                          <PermissionGate permission="campaigns.run">
-                            <button
+                        {canShowCampaignButton(campaign, "resume") && (
+                          <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleAction({
@@ -1416,8 +1354,7 @@ export default function CampaignsPage() {
                               )}
                               Resume Campaign
                             </button>
-                          </PermissionGate>
-                        ) : null}
+                        )}
 
                         {canShowCampaignButton(campaign, "activate") ? (
                           <PermissionGate permission="campaigns.activate">

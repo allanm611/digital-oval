@@ -413,3 +413,37 @@ export const addConditionToGroup = (
       : group
   );
 };
+
+export const getTodayDateString = (): string => {
+  return new Date().toISOString().split('T')[0];
+};
+
+export const getDefaultDatesForOperator = (operator: string): { start_date?: string; end_date?: string; value?: string } => {
+  const today = new Date();
+  const todayStr = getTodayDateString();
+
+  switch (operator) {
+    case "between_dates": {
+      const thirtyDaysAgo = new Date(today);
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      return {
+        start_date: thirtyDaysAgo.toISOString().split('T')[0] + "T00:00:00Z",
+        end_date: todayStr + "T23:59:59Z",
+      };
+    }
+    case "since_date":
+      return {
+        start_date: todayStr,
+      };
+    case "until_date":
+      return {
+        end_date: todayStr,
+      };
+    case "on_date":
+      return {
+        value: todayStr,
+      };
+    default:
+      return {};
+  }
+};

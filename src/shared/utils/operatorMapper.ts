@@ -295,7 +295,8 @@ export function getDateRangeForTimeWindow(window: string): { start_date: string;
       };
     }
     case "current_month": {
-      const start = new Date(now.getFullYear(), now.getMonth(), 1);
+      const start = new Date(now);
+      start.setDate(1);
       return {
         start_date: start.toISOString().split('T')[0],
         end_date: today,

@@ -3,7 +3,7 @@ import { WhatsAppRoute, CreateWhatsAppRouteRequest, UpdateWhatsAppRouteRequest }
 
 const BASE_URL = buildApiUrl("/whatsapp-routes");
 
-export const WHATSAPP_ROUTES_WHATSAPP_ROUTES_DUMMY_DATA: WhatsAppRoute[] = [
+export const WHATSAPP_ROUTES_DUMMY_DATA: WhatsAppRoute[] = [
   {
     id: 1,
     name: "Meta Business API",

@@ -1,4 +1,5 @@
 import type { SegmentCondition, SegmentConditionGroup, LayerCondition, SourceLayer, LayerColumnRef, SegmentPayload } from "../types/segment";
+import { getDateRangeForTimeWindow } from "../../../shared/utils/operatorMapper";
 
 /**
  * Checks if a condition is a profile-type condition (has field_id and operator_id)
@@ -26,7 +27,14 @@ const buildLayerCondition = (condition: SegmentCondition): LayerCondition | null
     : condition.value !== "" &&
       condition.value !== undefined &&
       condition.value !== null;
-  const hasDateRange = condition.start_date || condition.end_date;
+
+  // Calculate dates from time_window if present
+  let calculatedDateRange: { start_date: string; end_date: string } | null = null;
+  if (condition.time_window && condition.time_window !== "custom") {
+    calculatedDateRange = getDateRangeForTimeWindow(condition.time_window);
+  }
+
+  const hasDateRange = condition.start_date || condition.end_date || !!calculatedDateRange;
   const isNullOp =
     condition.operator_id === 10 || condition.operator_id === 11; // IS NULL (10), IS NOT NULL (11)
 
@@ -55,8 +63,8 @@ const buildLayerCondition = (condition: SegmentCondition): LayerCondition | null
   }
 
   // Handle date operators: use start_date/end_date fields per backend spec
-  let startDate: string | null = condition.start_date || null;
-  let endDate: string | null = condition.end_date || null;
+  let startDate: string | null = condition.start_date || calculatedDateRange?.start_date || null;
+  let endDate: string | null = condition.end_date || calculatedDateRange?.end_date || null;
 
   if (isDateOperator) {
     if (condition.operator === "on_date") {
@@ -67,20 +75,35 @@ const buildLayerCondition = (condition: SegmentCondition): LayerCondition | null
     // between_dates, since_date, until_date: use start_date/end_date fields directly (no value conversion needed)
   }
 
-  // For date operators, send as start_date/end_date instead of value
+  // For date operators, send appropriate date fields based on operator type
   let layerCondValue: any;
   if (isDateOperator && condition.operator !== "on_date") {
-    // Date range operators (since_date, until_date, between_dates)
-    layerCondValue = {
-      start_date: startDate,
-      end_date: endDate,
-    };
+    // Date range operators - send only the fields that operator needs
+    if (condition.operator === "between_dates") {
+      layerCondValue = {
+        start_date: startDate,
+        end_date: endDate,
+      };
+    } else if (condition.operator === "since_date") {
+      layerCondValue = {
+        start_date: startDate,
+      };
+    } else if (condition.operator === "until_date") {
+      layerCondValue = {
+        end_date: endDate,
+      };
+    }
   } else if (isNullOp) {
     // Null operators (IS NULL, IS NOT NULL) - send null value
     layerCondValue = { value: null };
   } else {
     // Non-date, non-null operators: use value
     layerCondValue = { value: condValue };
+    // If time_window is selected, also include calculated dates
+    if (calculatedDateRange) {
+      layerCondValue.start_date = calculatedDateRange.start_date;
+      layerCondValue.end_date = calculatedDateRange.end_date;
+    }
   }
 
   const layerCond: LayerCondition = {

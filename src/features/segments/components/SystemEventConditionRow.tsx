@@ -4,6 +4,7 @@ import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { SegmentCondition } from "../types/segment";
 import { SYSTEM_EVENTS, SystemEventTimeOperator, TIME_OPERATOR_OPTIONS } from "../../kpis/types/systemEvent";
+import { getDefaultDatesForOperator, getTodayDateString } from "../utils/segmentConditionUtils";
 
 interface SystemEventConditionRowProps {
   groupId: string;
@@ -79,23 +80,21 @@ export const SystemEventConditionRow: React.FC<SystemEventConditionRowProps> = (
               options={availableOperators}
               value={condition.operator || ""}
               onChange={(value) => {
-                const today = new Date().toISOString().split("T")[0];
-                const thirtyDaysAgo = new Date();
-                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-                const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split("T")[0];
+                const defaultDates = getDefaultDatesForOperator(value);
+                const today = getTodayDateString();
 
                 let defaultValue: any = "";
-                if (value === "on_date") {
-                  defaultValue = today;
+                if (value === "on_date" || value === "until_date") {
+                  defaultValue = defaultDates.start_date || today;
                 } else if (value === "between_dates") {
-                  defaultValue = { start: thirtyDaysAgoStr, end: today };
+                  defaultValue = {
+                    start: defaultDates.start_date?.split("T")[0] || today,
+                    end: defaultDates.end_date?.split("T")[0] || today,
+                  };
                 } else if (value === "since_date") {
-                  defaultValue = thirtyDaysAgoStr;
-                } else if (value === "until_date") {
-                  defaultValue = today;
+                  defaultValue = defaultDates.start_date?.split("T")[0] || today;
                 }
 
-                console.log("System Event operator changed to:", value, "default value:", defaultValue);
                 updateCondition(groupId, condition.id, {
                   operator: value as SystemEventTimeOperator,
                   value: defaultValue,
