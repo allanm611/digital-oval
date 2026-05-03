@@ -113,7 +113,6 @@ export const MetricsConditionRow: React.FC<MetricsConditionRowProps> = ({
                 } else {
                   updates.start_date = defaultDates.start_date;
                   updates.end_date = defaultDates.end_date;
-                  updates.value = undefined;
                 }
               }
 

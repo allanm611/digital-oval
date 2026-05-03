@@ -66,32 +66,25 @@ const buildLayerCondition = (condition: SegmentCondition): LayerCondition | null
   let startDate: string | null = condition.start_date || calculatedDateRange?.start_date || null;
   let endDate: string | null = condition.end_date || calculatedDateRange?.end_date || null;
 
-  if (isDateOperator) {
-    if (condition.operator === "on_date") {
-      // on_date: keep as value, clear date ranges
-      startDate = null;
-      endDate = null;
-    }
-    // between_dates, since_date, until_date: use start_date/end_date fields directly (no value conversion needed)
-  }
+  const isMetricCondition = ["revenue_metric", "usage_metric", "kpi"].includes(condition.conditionType);
 
   // For date operators, send appropriate date fields based on operator type
   let layerCondValue: any;
-  if (isDateOperator && condition.operator !== "on_date") {
-    // Date range operators - send only the fields that operator needs
-    if (condition.operator === "between_dates") {
-      layerCondValue = {
-        start_date: startDate,
-        end_date: endDate,
-      };
+  if (isDateOperator) {
+    // Date operators: structure depends on operator type
+    if (condition.operator === "on_date") {
+      layerCondValue = { start_date: startDate };
+    } else if (condition.operator === "between_dates") {
+      layerCondValue = { start_date: startDate, end_date: endDate };
     } else if (condition.operator === "since_date") {
-      layerCondValue = {
-        start_date: startDate,
-      };
+      layerCondValue = { start_date: startDate };
     } else if (condition.operator === "until_date") {
-      layerCondValue = {
-        end_date: endDate,
-      };
+      layerCondValue = { end_date: endDate };
+    }
+
+    // For metric conditions, also include the numeric value
+    if (isMetricCondition) {
+      layerCondValue.value = condValue;
     }
   } else if (isNullOp) {
     // Null operators (IS NULL, IS NOT NULL) - send null value
@@ -100,7 +93,6 @@ const buildLayerCondition = (condition: SegmentCondition): LayerCondition | null
     // Non-date, non-null operators: use value
     layerCondValue = { value: condValue };
     // If time_window is selected, only include calculated dates for metric conditions
-    const isMetricCondition = ["revenue_metric", "usage_metric", "kpi"].includes(condition.conditionType);
     if (calculatedDateRange && isMetricCondition) {
       layerCondValue.start_date = calculatedDateRange.start_date;
       layerCondValue.end_date = calculatedDateRange.end_date;
