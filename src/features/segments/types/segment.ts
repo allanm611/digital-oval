@@ -660,12 +660,14 @@ export interface SegmentCondition {
     | string; // Allow backend operator labels not explicitly listed
   operator_id?: number; // Backend operator ID - used for API calls
   value: string | number | string[] | { start: string; end: string };
+  value_end?: string | number; // Upper bound for "between" operator
   type: "string" | "number" | "boolean" | "array";
 
   // For date filtering
   start_date?: string; // ISO 8601 date for "from" date or range start
   end_date?: string; // ISO 8601 date for "to" date or range end
   date_operator?: "on" | "between" | "since" | "until"; // Date context operator for metric-based conditions
+  date_operator_id?: number; // Backend ID for custom date operator (when time_window is "custom")
 
   // For computable KPI fields
   time_window?: "last_7_days" | "last_30_days" | "last_90_days" | "current_month" | "custom"; // Predefined or custom time window

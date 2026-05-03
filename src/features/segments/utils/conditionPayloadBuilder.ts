@@ -42,13 +42,22 @@ const buildLayerCondition = (condition: SegmentCondition): LayerCondition | null
     condition.operator?.toLowerCase() || ""
   );
 
-  if (!hasValue && !hasDateRange && !isNullOp) {
+  // Check if using custom time window with a date operator
+  const isCustomDateOperator = condition.time_window === "custom" && condition.date_operator_id;
+
+  if (!hasValue && !hasDateRange && !isNullOp && !isCustomDateOperator) {
     return null;
   }
 
   let condValue: string | number | (string | number)[] | undefined =
     condition.value as string | number | (string | number)[] | undefined;
-  if (
+
+  // Handle "between" operator - combine value and value_end into array
+  if (condition.operator_id === 9 && condValue !== undefined && condition.value_end !== undefined) {
+    condValue = [condValue, condition.value_end];
+  }
+  // Handle IN and NOT IN operators - convert to array
+  else if (
     (condition.operator_id === 7 || condition.operator_id === 8) &&
     condValue
   ) {
@@ -83,6 +92,29 @@ const buildLayerCondition = (condition: SegmentCondition): LayerCondition | null
     }
 
     // For metric conditions, also include the numeric value
+    if (isMetricCondition) {
+      layerCondValue.value = condValue;
+    }
+  } else if (isCustomDateOperator) {
+    // Handle custom time window with date operator selection
+    if (condition.date_operator === "on") {
+      layerCondValue = { start_date: startDate };
+    } else if (condition.date_operator === "between") {
+      layerCondValue = { start_date: startDate, end_date: endDate };
+    } else if (condition.date_operator === "since") {
+      layerCondValue = { start_date: startDate };
+    } else if (condition.date_operator === "until") {
+      layerCondValue = { end_date: endDate };
+    } else {
+      layerCondValue = { value: condValue };
+    }
+
+    // Include the date operator ID for custom selections
+    if (condition.date_operator_id) {
+      layerCondValue.date_operator_id = condition.date_operator_id;
+    }
+
+    // For metric conditions with custom date operator, include the value
     if (isMetricCondition) {
       layerCondValue.value = condValue;
     }

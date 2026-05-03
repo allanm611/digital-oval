@@ -92,6 +92,29 @@ export default function SegmentConditionsBuilder({
       (op) => op.label === normalizedOperator || op.label === condition.operator
     );
 
+    // For metric conditions, require both value and date range
+    const isMetricCondition = ["revenue_metric", "usage_metric", "kpi"].includes(condition.conditionType);
+    if (isMetricCondition) {
+      const hasValue = Array.isArray(condition.value)
+        ? (condition.value as (string | number)[]).length > 0
+        : condition.value !== "" && condition.value !== undefined && condition.value !== null;
+
+      const hasDateRange = condition.start_date || condition.end_date;
+
+      // For custom time window with date operator, need both value and date
+      if (condition.time_window === "custom" && condition.date_operator_id) {
+        return hasValue && hasDateRange;
+      }
+
+      // For preset time window (last_7_days, etc.), only need value
+      if (condition.time_window && condition.time_window !== "custom") {
+        return hasValue;
+      }
+
+      // No time window selected - need both value and date
+      return hasValue && hasDateRange;
+    }
+
     // If operator requires a value, check if value is provided
     if (operatorDef?.requiresValue) {
       const hasValue = Array.isArray(condition.value)

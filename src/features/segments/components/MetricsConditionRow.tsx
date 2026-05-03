@@ -134,9 +134,21 @@ export const MetricsConditionRow: React.FC<MetricsConditionRowProps> = ({
               }))}
               value={condition.time_window || "last_7_days"}
               onChange={(value) => {
-                updateCondition(groupId, condition.id, {
+                const updates: Partial<SegmentCondition> = {
                   time_window: value as string,
-                });
+                };
+
+                // When selecting "custom", set a default date operator (on_date = 12)
+                if (value === "custom") {
+                  updates.date_operator_id = 12; // on_date default
+                  updates.date_operator = "on";
+                } else {
+                  // Clear custom date operator when switching away from custom
+                  updates.date_operator_id = undefined;
+                  updates.date_operator = undefined;
+                }
+
+                updateCondition(groupId, condition.id, updates);
               }}
               placeholder="Last 7 Days"
               className="text-sm"
@@ -159,10 +171,26 @@ export const MetricsConditionRow: React.FC<MetricsConditionRowProps> = ({
             value: String(value) ? parseFloat(String(value)) : "",
           });
         }}
-        placeholder="Enter value"
+        placeholder={condition.operator === "between" ? "Min value" : "Enter value"}
         className="min-w-[140px] max-w-[200px]"
         style={{ borderColor: color.border.default }}
       />
+
+      {/* Show second value input for between operator */}
+      {condition.operator === "between" && (
+        <Input
+          type="number"
+          value={condition.value_end as string | number}
+          onChange={(value) => {
+            updateCondition(groupId, condition.id, {
+              value_end: String(value) ? parseFloat(String(value)) : "",
+            });
+          }}
+          placeholder="Max value"
+          className="min-w-[140px] max-w-[200px]"
+          style={{ borderColor: color.border.default }}
+        />
+      )}
 
       {/* Show date inputs when main operator is a date operator */}
       {isDateOperator && (condition.operator === "on_date" || condition.operator === "since_date" || condition.operator === "until_date") && (
@@ -233,7 +261,6 @@ export const MetricsConditionRow: React.FC<MetricsConditionRowProps> = ({
                 date_operator: operator?.value,
                 start_date: defaultDates.start_date,
                 end_date: defaultDates.end_date,
-                value: defaultDates.value,
               });
             }}
             placeholder="Select date operator"

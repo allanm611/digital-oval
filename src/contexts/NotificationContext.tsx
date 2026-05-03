@@ -53,7 +53,6 @@ export function NotificationProvider({
   const isMountedRef = useRef(true);
   const seenNotificationIdsRef = useRef<Set<string | number>>(new Set());
   const { settings: notificationSettings } = useNotificationSettings();
-  const { success: showToast } = useToast();
 
   // Fetch notifications from inbox
   const refreshNotifications = useCallback(async () => {
@@ -76,14 +75,6 @@ export function NotificationProvider({
           if (notificationSettings.in_app_sound_enabled) {
             playNotificationSound(notificationSettings.notification_sound || "default");
           }
-
-          // Show toast with latest new notification
-          const latestNew = newNotifications[0];
-          showToast(
-            "success",
-            `${newNotifications.length} new notification${newNotifications.length !== 1 ? "s" : ""}`,
-            latestNew.message || latestNew.title
-          );
 
           // Add new notification IDs to seen set
           newNotifications.forEach((n) => seenNotificationIdsRef.current.add(n.id));
@@ -121,7 +112,7 @@ export function NotificationProvider({
         setIsLoading(false);
       }
     }
-  }, [notificationSettings, showToast]);
+  }, [notificationSettings]);
 
   // Mark single notification as read
   const markAsRead = useCallback(async (ids: (string | number)[]) => {
