@@ -231,37 +231,16 @@ export function NotificationProvider({
     setIsPolling(false);
   }, []);
 
-  // Handle page visibility changes
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        // Page is hidden - stop polling to save resources
-        stopPolling();
-      } else {
-        // Page is visible - resume polling and refresh immediately
-        refreshNotifications();
-        startPolling();
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [startPolling, stopPolling, refreshNotifications]);
-
   // Initial load
   useEffect(() => {
     isMountedRef.current = true;
     refreshNotifications();
-    // Start polling automatically
-    startPolling();
 
     return () => {
       isMountedRef.current = false;
       stopPolling();
     };
-  }, [refreshNotifications, startPolling, stopPolling]);
+  }, [refreshNotifications, stopPolling]);
 
   const value: NotificationContextType = {
     notifications,
