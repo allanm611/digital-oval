@@ -67,6 +67,7 @@ export default function RevenueMetricFormPage({ mode }: RevenueMetricFormPagePro
     data_source: "Live" as "Live" | "DB",
     frequency: "Per Min" as "Per Min" | "D-1" | "Monthly",
     unit: "",
+    default_value: "" as string | number,
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -95,6 +96,7 @@ export default function RevenueMetricFormPage({ mode }: RevenueMetricFormPagePro
           data_source: data.data_source,
           frequency: data.frequency,
           unit: data.unit || "",
+          default_value: data.default_value || "",
         });
       }
     } catch (err) {
@@ -119,6 +121,9 @@ export default function RevenueMetricFormPage({ mode }: RevenueMetricFormPagePro
     }
     if (formData.operators.length === 0) {
       newErrors.operators = "At least one operator must be selected";
+    }
+    if (formData.default_value === "" || formData.default_value === null) {
+      newErrors.default_value = "Default value is required";
     }
 
     setErrors(newErrors);
@@ -147,6 +152,7 @@ export default function RevenueMetricFormPage({ mode }: RevenueMetricFormPagePro
           data_source: formData.data_source,
           frequency: formData.frequency,
           unit: formData.unit || undefined,
+          default_value: formData.default_value || undefined,
         });
         success("Success", "Revenue metric updated successfully");
       } else {
@@ -160,6 +166,7 @@ export default function RevenueMetricFormPage({ mode }: RevenueMetricFormPagePro
           data_source: formData.data_source,
           frequency: formData.frequency,
           unit: formData.unit || undefined,
+          default_value: formData.default_value || undefined,
         });
         success("Success", "Revenue metric created successfully");
       }
@@ -244,7 +251,7 @@ export default function RevenueMetricFormPage({ mode }: RevenueMetricFormPagePro
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Basic Information</h2>
           <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Metric Name *
@@ -270,6 +277,23 @@ export default function RevenueMetricFormPage({ mode }: RevenueMetricFormPagePro
                   onChange={(value) => handleSelectChange("field_type", value)}
                   disabled={saving}
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Default Value *
+                </label>
+                <Input
+                  type={formData.field_type === "numeric" || formData.field_type === "decimal" ? "number" : "text"}
+                  placeholder={formData.field_type === "decimal" ? "e.g., 100.50" : formData.field_type === "numeric" ? "e.g., 100" : "e.g., Default value"}
+                  value={formData.default_value}
+                  onChange={(value) => handleChange({ target: { name: "default_value", value } } as any)}
+                  hasError={!!errors.default_value}
+                  variant="medium"
+                  disabled={saving}
+                  step={formData.field_type === "decimal" ? "0.01" : undefined}
+                />
+                {errors.default_value && <p className="text-red-500 text-xs mt-1">{errors.default_value}</p>}
               </div>
             </div>
 

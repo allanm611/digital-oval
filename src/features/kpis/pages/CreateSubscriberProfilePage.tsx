@@ -78,6 +78,7 @@ export default function CreateSubscriberProfilePage() {
     status: (existingProfile?.status as "Available" | "Not Available") || "Available",
     extractionLogicType: existingProfile?.extractionLogic ? "data_source" : "not_applicable" as "segment" | "sql_script" | "data_source" | "not_applicable",
     extractionLogic: existingProfile?.extractionLogic || "",
+    default_value: "",
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -87,6 +88,9 @@ export default function CreateSubscriberProfilePage() {
 
     if (!formData.name.trim()) {
       newErrors.name = "Profile field name is required";
+    }
+    if (!formData.default_value.toString().trim()) {
+      newErrors.default_value = "Default value is required";
     }
     if (formData.extractionLogicType !== "not_applicable" && !formData.extractionLogic.trim()) {
       newErrors.extractionLogic = "Extraction logic is required";
@@ -158,20 +162,39 @@ export default function CreateSubscriberProfilePage() {
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Basic Information</h2>
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Profile Field Name *
-              </label>
-              <Input
-                placeholder="e.g., Account Type"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                hasError={!!errors.name}
-                variant="medium"
-                disabled={saving}
-              />
-              {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Profile Field Name *
+                </label>
+                <Input
+                  placeholder="e.g., Account Type"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  hasError={!!errors.name}
+                  variant="medium"
+                  disabled={saving}
+                />
+                {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Default Value *
+                </label>
+                <Input
+                  type="text"
+                  placeholder="e.g., Default value"
+                  name="default_value"
+                  value={formData.default_value}
+                  onChange={handleChange}
+                  hasError={!!errors.default_value}
+                  variant="medium"
+                  disabled={saving}
+                />
+                {errors.default_value && <p className="text-red-500 text-xs mt-1">{errors.default_value}</p>}
+              </div>
             </div>
 
             <div>

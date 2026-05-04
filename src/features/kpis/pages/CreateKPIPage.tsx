@@ -16,8 +16,10 @@ const KPI_TYPE_OPTIONS = [
 ];
 
 const FIELD_TYPE_OPTIONS = [
-  { label: "Numeric", value: "numeric" },
+  { label: "Number", value: "number" },
   { label: "Decimal", value: "decimal" },
+  { label: "Text", value: "text" },
+  { label: "Money", value: "money" },
 ];
 
 const DATA_SOURCE_OPTIONS = [
@@ -55,7 +57,7 @@ export default function CreateKPIPage() {
     kpiType: "subscriber" as "subscriber" | "revenue" | "usage" | "system",
     name: "",
     description: "",
-    field_type: "numeric" as "numeric" | "decimal",
+    field_type: "number" as "number" | "decimal" | "text" | "money",
     calculationType: "value_set" as "value_set" | "computed" | "static",
     data_source: "Live" as "Live" | "DB",
     source_table: "",
@@ -63,6 +65,7 @@ export default function CreateKPIPage() {
     unit: "",
     operators: [] as string[],
     extractionLogic: "",
+    default_value: "" as string | number,
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -84,6 +87,9 @@ export default function CreateKPIPage() {
     }
     if (!formData.extractionLogic.trim()) {
       newErrors.extractionLogic = "Extraction logic is required";
+    }
+    if (formData.default_value === "" || formData.default_value === null) {
+      newErrors.default_value = "Default value is required";
     }
 
     setErrors(newErrors);
@@ -210,19 +216,43 @@ export default function CreateKPIPage() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                KPI Name *
-              </label>
-              <Input
-                placeholder="e.g., Data 2G Revenue"
-                value={formData.name}
-                onChange={handleInputChange('name')}
-                hasError={!!errors.name}
-                variant="medium"
-                disabled={saving}
-              />
-              {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  KPI Name *
+                </label>
+                <Input
+                  placeholder="e.g., Data 2G Revenue"
+                  value={formData.name}
+                  onChange={handleInputChange('name')}
+                  hasError={!!errors.name}
+                  variant="medium"
+                  disabled={saving}
+                />
+                {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Default Value *
+                </label>
+                <Input
+                  type={formData.field_type === "text" ? "text" : "number"}
+                  placeholder={
+                    formData.field_type === "text" ? "e.g., Default text" :
+                    formData.field_type === "decimal" ? "e.g., 100.50" :
+                    formData.field_type === "money" ? "e.g., 1000.00" :
+                    "e.g., 100"
+                  }
+                  value={formData.default_value}
+                  onChange={handleInputChange('default_value')}
+                  hasError={!!errors.default_value}
+                  variant="medium"
+                  disabled={saving}
+                  step={formData.field_type === "decimal" || formData.field_type === "money" ? "0.01" : undefined}
+                />
+                {errors.default_value && <p className="text-red-500 text-xs mt-1">{errors.default_value}</p>}
+              </div>
             </div>
 
             <div>

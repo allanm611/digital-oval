@@ -26,6 +26,7 @@ export interface RevenueMetric {
   data_source: "Live" | "DB";
   frequency: "Per Min" | "D-1" | "Monthly";
   unit?: string;
+  default_value?: string | number;
 }
 
 export const REVENUE_METRICS: RevenueMetric[] = [

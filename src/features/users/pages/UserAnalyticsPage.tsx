@@ -847,6 +847,27 @@ export default function UserAnalyticsPage() {
                           >
                             {user.email_address || user.email}
                           </td>
+                          <td
+                            className="px-4 sm:px-6 py-3 sm:py-4 text-center"
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                          >
+                            <button
+                              onClick={() => navigate(`/dashboard/user-management/${user.id}`)}
+                              className="p-2 transition-colors"
+                              style={{
+                                color: color.primary.action,
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = `${color.primary.action}15`;
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = "transparent";
+                              }}
+                              title="View user details"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -914,6 +935,27 @@ export default function UserAnalyticsPage() {
                             style={{ backgroundColor: color.surface.tablebodybg }}
                           >
                             {user.email_address || user.email}
+                          </td>
+                          <td
+                            className="px-4 sm:px-6 py-3 sm:py-4 text-center"
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                          >
+                            <button
+                              onClick={() => navigate(`/dashboard/user-management/${user.id}`)}
+                              className="p-2 transition-colors"
+                              style={{
+                                color: color.primary.accent,
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = `${color.primary.accent}15`;
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = "transparent";
+                              }}
+                              title="View user details"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
                           </td>
                         </tr>
                       ))}
