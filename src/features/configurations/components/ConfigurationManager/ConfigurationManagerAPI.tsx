@@ -33,7 +33,9 @@ type BackendConfigType =
   | "offerCreatives"
   | "communicationChannels"
   | "dndTypes"
-  | "timezones";
+  | "timezones"
+  | "resourceTypes"
+  | "utilities";
 
 export interface APIConfigurationPageConfig
   extends Omit<ConfigurationPageConfig, "initialData"> {

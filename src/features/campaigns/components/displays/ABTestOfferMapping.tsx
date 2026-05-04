@@ -9,6 +9,7 @@ interface ABTestOfferMappingProps {
   selectedOffers: CampaignOffer[];
   offerMappings: { [segmentId: string]: string[] }; // segmentId -> offerIds[]
   onMapOffers: (segmentId: string) => void;
+  onEditOffer?: (offerId: number) => void;
   onRemoveOfferFromSegment: (segmentId: string, offerId: string) => void;
 }
 
@@ -18,6 +19,7 @@ export default function ABTestOfferMapping({
   selectedOffers,
   offerMappings,
   onMapOffers,
+  onEditOffer,
   onRemoveOfferFromSegment,
 }: ABTestOfferMappingProps) {
   const navigate = useNavigate();
@@ -138,7 +140,7 @@ export default function ABTestOfferMapping({
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <button
-                        onClick={() => navigate(`/dashboard/offers/${offer.id}/edit`)}
+                        onClick={() => onEditOffer?.(Number(offer.id))}
                         className="p-1.5 text-gray-400 hover:text-blue-600 rounded"
                         title="Edit offer"
                       >
@@ -230,7 +232,7 @@ export default function ABTestOfferMapping({
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <button
-                        onClick={() => navigate(`/dashboard/offers/${offer.id}/edit`)}
+                        onClick={() => onEditOffer?.(Number(offer.id))}
                         className="p-1.5 text-gray-400 hover:text-blue-600 rounded"
                         title="Edit offer"
                       >

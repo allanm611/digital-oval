@@ -1,6 +1,6 @@
-import { ConfigurationManager } from "../../configurations/components/ConfigurationManager";
-import { utilitiesConfig } from "../../configurations/configs/configurationPageConfigs";
+import { ConfigurationManagerAPI } from "../../configurations/components/ConfigurationManager";
+import { getUtilitiesApiConfig } from "../../configurations/configs/configurationPageConfigs";
 
 export default function UtilitiesPage() {
-  return <ConfigurationManager config={utilitiesConfig} />;
+  return <ConfigurationManagerAPI config={getUtilitiesApiConfig(() => "")} />;
 }

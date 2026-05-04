@@ -422,8 +422,8 @@ export default function ProductSelector({
                   <div
                     className={`${tw.rounded} p-4 border text-sm`}
                     style={{
-                      backgroundColor: `${color.primary.accent}15`,
-                      borderColor: `${color.primary.accent}40`,
+                      backgroundColor: "white",
+                      borderColor: color.primary.accent,
                       color: color.primary.accent,
                     }}
                   >
@@ -558,13 +558,7 @@ export default function ProductSelector({
                                 )}
                               </td>
                               <td className="px-4 py-3">
-                                <span
-                                  className={`inline-block text-xs px-2 py-1 rounded-full ${
-                                    product.is_active
-                                      ? "bg-green-100 text-green-700"
-                                      : "bg-gray-100 text-gray-700"
-                                  }`}
-                                >
+                                <span className="text-sm text-gray-600">
                                   {product.is_active ? "Active" : "Inactive"}
                                 </span>
                               </td>

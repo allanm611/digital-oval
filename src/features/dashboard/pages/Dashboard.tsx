@@ -559,6 +559,10 @@ const SettingsPages = {
     () =>
       import(/* webpackPrefetch: true */ "../../routes/pages/USSDRoutesContainer"),
   ),
+  RoutesManagementPage: lazy(
+    () =>
+      import(/* webpackPrefetch: true */ "../../routes/pages/RoutesManagementPage"),
+  ),
   DNDTypesPage: lazy(
     () =>
       import(/* webpackPrefetch: true */ "../../configurations/pages/DNDTypesPage"),
@@ -1208,6 +1212,10 @@ export default function Dashboard() {
           <Route
             path="/ussd-routes/*"
             element={<SettingsPages.USSDRoutesPage />}
+          />
+          <Route
+            path="/routes"
+            element={<SettingsPages.RoutesManagementPage />}
           />
           <Route path="/sms-test" element={<SettingsPages.SMSTestPage />} />
           <Route path="/manual-rewards-test" element={<OtherPages.ManualRewardsTestPage />} />

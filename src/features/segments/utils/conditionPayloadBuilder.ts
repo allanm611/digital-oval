@@ -114,6 +114,11 @@ const buildLayerCondition = (condition: SegmentCondition): LayerCondition | null
       layerCondValue.date_operator_id = condition.date_operator_id;
     }
 
+    // Include time_window_id for custom date operators
+    if (condition.time_window_id) {
+      layerCondValue.time_window_id = condition.time_window_id;
+    }
+
     // For metric conditions with custom date operator, include the value
     if (isMetricCondition) {
       layerCondValue.value = condValue;
@@ -128,6 +133,10 @@ const buildLayerCondition = (condition: SegmentCondition): LayerCondition | null
     if (calculatedDateRange && isMetricCondition) {
       layerCondValue.start_date = calculatedDateRange.start_date;
       layerCondValue.end_date = calculatedDateRange.end_date;
+      // Include time_window_id for metrics
+      if (condition.time_window_id) {
+        layerCondValue.time_window_id = condition.time_window_id;
+      }
     }
   }
 

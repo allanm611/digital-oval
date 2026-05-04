@@ -114,43 +114,67 @@ export default function CommunicationPolicyModal({
   // VIP List rows (multiple)
   const [vipListRows, setVipListRows] = useState<VIPListRow[]>([]);
 
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState<{
+    name?: string;
+    channels?: string;
+    policyType?: string;
+  }>({});
 
   useEffect(() => {
-    if (policy) {
-      setName(policy.name);
-      setDescription(policy.description || "");
-      setSelectedChannelIds([]);
-      setIsActive(policy.isActive);
-    } else {
-      setName("");
-      setDescription("");
-      setSelectedChannelIds([]);
-      setIsActive(true);
-      setConfigs({
-        timeWindow: {
-          startTime: "09:00",
-          endTime: "18:00",
-          timezone: "UTC",
-          days: [],
-        },
-        maximumCommunication: {
-          type: "daily",
-          maxCount: 3,
-        },
-        dnd: {
-          categories: [],
-        },
-        vipList: {
-          action: "include",
-          vipLists: [],
-          priority: 1,
-        },
-      });
-    }
-    setError("");
-    setMaxCommPeriods([]);
-    setVipListRows([]);
+    const initializeForm = async () => {
+      if (policy) {
+        setName(policy.name);
+        setDescription(policy.description || "");
+        setIsActive(policy.isActive);
+
+        // Convert channel codes back to IDs for the modal
+        if (policy.channels && policy.channels.length > 0) {
+          try {
+            const allChannels = await communicationChannelService.getAll();
+            const channelIds = policy.channels.map((code: string) => {
+              const channel = allChannels.find((ch) => ch.code === code);
+              return channel?.id;
+            }).filter(Boolean);
+            setSelectedChannelIds(channelIds);
+          } catch (err) {
+            console.error("Failed to load channels:", err);
+            setSelectedChannelIds([]);
+          }
+        } else {
+          setSelectedChannelIds([]);
+        }
+      } else {
+        setName("");
+        setDescription("");
+        setSelectedChannelIds([]);
+        setIsActive(true);
+        setConfigs({
+          timeWindow: {
+            startTime: "09:00",
+            endTime: "18:00",
+            timezone: "UTC",
+            days: [],
+          },
+          maximumCommunication: {
+            type: "daily",
+            maxCount: 3,
+          },
+          dnd: {
+            categories: [],
+          },
+          vipList: {
+            action: "include",
+            vipLists: [],
+            priority: 1,
+          },
+        });
+      }
+      setErrors({});
+      setMaxCommPeriods([]);
+      setVipListRows([]);
+    };
+
+    initializeForm();
   }, [policy, isOpen]);
 
   const toggleSection = (type: string) => {
@@ -169,22 +193,26 @@ export default function CommunicationPolicyModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const newErrors: typeof errors = {};
+
     if (!name.trim()) {
-      setError("Policy name is required");
-      return;
+      newErrors.name = "Policy name is required";
     }
 
     if (selectedChannelIds.length === 0) {
-      setError("At least one communication channel is required");
-      return;
+      newErrors.channels = "At least one communication channel is required";
     }
 
     if (!expandedSection) {
-      setError("Please select a policy type by expanding one of the sections below");
+      newErrors.policyType = "Please select a policy type";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
-    setError("");
+    setErrors({});
 
     try {
       const allChannels = await communicationChannelService.getAll();
@@ -213,7 +241,7 @@ export default function CommunicationPolicyModal({
 
       await onSave(policyData);
     } catch (err) {
-      setError("Failed to process communication channels");
+      setErrors({ channels: "Failed to process communication channels" });
       console.error("Error in handleSubmit:", err);
     }
   };
@@ -857,6 +885,9 @@ export default function CommunicationPolicyModal({
                   placeholder="Enter policy name"
                   required
                 />
+                {errors.name && (
+                  <p className="text-xs text-red-600 mt-1.5">{errors.name}</p>
+                )}
               </div>
 
               <div>
@@ -884,9 +915,13 @@ export default function CommunicationPolicyModal({
                   entityType="channel"
                   className="w-full"
                 />
-                <p className="text-xs text-gray-500 mt-2">
-                  Select one or more communication channels for this policy
-                </p>
+                {errors.channels ? (
+                  <p className="text-xs text-red-600 mt-1.5">{errors.channels}</p>
+                ) : (
+                  <p className="text-xs text-gray-500 mt-2">
+                    Select one or more communication channels for this policy
+                  </p>
+                )}
               </div>
             </div>
 
@@ -913,6 +948,9 @@ export default function CommunicationPolicyModal({
                 ? policyTypesData.map((pt: any) => ({ code: pt.code, name: pt.name, description: pt.description }))
                 : COMMUNICATION_POLICY_TYPES.map((t) => ({ code: t.value, name: t.label, description: t.description }))
               ).map((pt) => renderPolicySection(pt))}
+              {errors.policyType && (
+                <p className="text-xs text-red-600 mt-2">{errors.policyType}</p>
+              )}
             </div>
 
             {/* Active Status */}
@@ -934,14 +972,6 @@ export default function CommunicationPolicyModal({
                 </div>
               </label>
             </div>
-
-            {error && (
-              <div
-                className={`px-4 p-4 ${tw.statusDanger10} ${tw.borderDefault} border ${tw.rounded}`}
-              >
-                <p className={`${tw.caption} ${tw.danger}`}>{error}</p>
-              </div>
-            )}
           </div>
 
           {/* Footer Actions */}

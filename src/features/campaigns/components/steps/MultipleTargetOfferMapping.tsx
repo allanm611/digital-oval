@@ -12,6 +12,7 @@ interface MultipleTargetOfferMappingProps {
   setSegmentOfferMappings: (mappings: SegmentOfferMapping[]) => void;
   selectedOffers: CampaignOffer[];
   setSelectedOffers: (offers: CampaignOffer[]) => void;
+  onEditOffer?: (offerId: number) => void;
 }
 
 export default function MultipleTargetOfferMapping({
@@ -20,6 +21,7 @@ export default function MultipleTargetOfferMapping({
   setSegmentOfferMappings,
   selectedOffers,
   setSelectedOffers,
+  onEditOffer,
 }: MultipleTargetOfferMappingProps) {
   const navigate = useNavigate();
   const [showOfferModal, setShowOfferModal] = useState(false);
@@ -191,7 +193,10 @@ export default function MultipleTargetOfferMapping({
                           </div>
                           <div className="flex items-center gap-2">
                             <button
-                              onClick={() => navigate(`/dashboard/offers/${offer.id}/edit`)}
+                              onClick={() => {
+                                console.log("Edit clicked for offer ID:", offer.id);
+                                onEditOffer?.(Number(offer.id));
+                              }}
                               className={`p-1.5 ${tw.rounded} text-gray-400 hover:text-blue-600`}
                               title="Edit offer"
                             >

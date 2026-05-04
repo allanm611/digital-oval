@@ -54,7 +54,7 @@ export default function CreateProductPage({
     currency: "KES",
     da_id: "",
     scope: "segment",
-    unit: "data_mb",
+    unit: "",
     unit_value: 1,
     validity_hours: 24,
     tags: [],

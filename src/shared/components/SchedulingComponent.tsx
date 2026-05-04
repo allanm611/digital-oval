@@ -101,7 +101,15 @@ export default function SchedulingComponent({
       };
       onSchedulingChange(defaultScheduling);
     }
-  }, [onSchedulingChange, scheduling]);
+  }, []);
+
+  // Ensure timezone is set from settings if missing (after timezones load)
+  useEffect(() => {
+    if (scheduling && !scheduling.time_zone && timezoneList.length > 0) {
+      const settingsTimezone = getSettingsTimezone();
+      updateScheduling({ time_zone: settingsTimezone });
+    }
+  }, [timezoneList, scheduling, onSchedulingChange]);
 
   useEffect(() => {
     if (!scheduling) return;
@@ -401,27 +409,32 @@ export default function SchedulingComponent({
             ) : (
               <>
                 <HeadlessSelect
-                  value={scheduling.time_zone || getSettingsTimezone()}
+                  value={scheduling?.time_zone || getSettingsTimezone()}
                   onChange={(value) => {
                     if (value) {
                       updateScheduling({ time_zone: value as string });
                     }
                   }}
                   options={
-                    Array.isArray(timezoneList)
+                    Array.isArray(timezoneList) && timezoneList.length > 0
                       ? timezoneList
                           .filter((tz) => tz && tz.value)
                           .map((tz) => ({
                             value: tz.value || "",
                             label: tz.label || tz.value || "",
                           }))
-                      : []
+                      : [
+                          {
+                            value: getSettingsTimezone(),
+                            label: getSettingsTimezone(),
+                          },
+                        ]
                   }
                   placeholder="Select timezone"
                   searchable={true}
                   className="w-full"
                 />
-                {scheduling.time_zone === getSettingsTimezone() && (
+                {scheduling?.time_zone === getSettingsTimezone() && (
                   <p className="text-xs text-gray-500 mt-2">
                     Using default timezone from settings
                   </p>

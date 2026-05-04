@@ -46,7 +46,7 @@ export const MetricsConditionRow: React.FC<MetricsConditionRowProps> = ({
     (condition.operator || "").toLowerCase()
   );
 
-  // LINE 1: Field | Operator | Time Window (no redundant category label)
+  // LINE 1: Field | Operator | Value Input
   if (line === "1") {
     return (
       <div className="flex items-center gap-3 flex-1">
@@ -124,63 +124,66 @@ export const MetricsConditionRow: React.FC<MetricsConditionRowProps> = ({
           />
         </div>
 
-        {/* Time Window Dropdown - Hidden when date operator is selected from main operator dropdown */}
-        {!isDateOperator && (
-          <div className="flex-1 min-w-[120px]">
-            <HeadlessSelect
-              options={TIME_WINDOWS.map((tw) => ({
-                value: tw.value,
-                label: tw.label,
-              }))}
-              value={condition.time_window || "last_7_days"}
-              onChange={(value) => {
-                const updates: Partial<SegmentCondition> = {
-                  time_window: value as string,
-                };
-
-                // When selecting "custom", set a default date operator (on_date = 12)
-                if (value === "custom") {
-                  updates.date_operator_id = 12; // on_date default
-                  updates.date_operator = "on";
-                } else {
-                  // Clear custom date operator when switching away from custom
-                  updates.date_operator_id = undefined;
-                  updates.date_operator = undefined;
-                }
-
-                updateCondition(groupId, condition.id, updates);
-              }}
-              placeholder="Last 7 Days"
-              className="text-sm"
-              zIndex={zIndex.popover}
-            />
-          </div>
-        )}
+        {/* Value Input */}
+        <Input
+          type="number"
+          value={condition.value ?? ""}
+          onChange={(value) => {
+            updateCondition(groupId, condition.id, {
+              value: String(value) ? parseFloat(String(value)) : "",
+            });
+          }}
+          placeholder="Enter value"
+          className="flex-1 min-w-[140px] max-w-[200px]"
+          style={{ borderColor: color.border.default }}
+        />
       </div>
     );
   }
 
-  // LINE 2: Value Input + Date Inputs + Optional Date Operator Dropdown (when custom time window)
+  // LINE 2: Time Window + Date Inputs / Date Operator Dropdown (when custom time window)
   return (
     <div className="flex items-center gap-3">
-      <Input
-        type="number"
-        value={condition.value as string | number}
-        onChange={(value) => {
-          updateCondition(groupId, condition.id, {
-            value: String(value) ? parseFloat(String(value)) : "",
-          });
-        }}
-        placeholder={condition.operator === "between" ? "Min value" : "Enter value"}
-        className="min-w-[140px] max-w-[200px]"
-        style={{ borderColor: color.border.default }}
-      />
+      {/* Time Window Dropdown - Hidden when date operator is selected from main operator dropdown */}
+      {!isDateOperator && (
+        <div className="flex-1 min-w-[120px]">
+          <HeadlessSelect
+            options={TIME_WINDOWS.map((tw) => ({
+              value: tw.value,
+              label: tw.label,
+            }))}
+            value={condition.time_window || "last_7_days"}
+            onChange={(value) => {
+              const selectedTimeWindow = TIME_WINDOWS.find((tw) => tw.value === value);
+              const updates: Partial<SegmentCondition> = {
+                time_window: value as string,
+                time_window_id: selectedTimeWindow?.id,
+              };
+
+              // When selecting "custom", set a default date operator (on_date = 12)
+              if (value === "custom") {
+                updates.date_operator_id = 12; // on_date default
+                updates.date_operator = "on";
+              } else {
+                // Clear custom date operator when switching away from custom
+                updates.date_operator_id = undefined;
+                updates.date_operator = undefined;
+              }
+
+              updateCondition(groupId, condition.id, updates);
+            }}
+            placeholder="Last 7 Days"
+            className="text-sm"
+            zIndex={zIndex.popover}
+          />
+        </div>
+      )}
 
       {/* Show second value input for between operator */}
       {condition.operator === "between" && (
         <Input
           type="number"
-          value={condition.value_end as string | number}
+          value={condition.value_end ?? ""}
           onChange={(value) => {
             updateCondition(groupId, condition.id, {
               value_end: String(value) ? parseFloat(String(value)) : "",
@@ -196,7 +199,7 @@ export const MetricsConditionRow: React.FC<MetricsConditionRowProps> = ({
       {isDateOperator && (condition.operator === "on_date" || condition.operator === "since_date" || condition.operator === "until_date") && (
         <Input
           type="date"
-          value={condition.start_date || ""}
+          value={condition.start_date ?? ""}
           onChange={(value) => {
             updateCondition(groupId, condition.id, {
               start_date: value as string,
@@ -214,7 +217,7 @@ export const MetricsConditionRow: React.FC<MetricsConditionRowProps> = ({
         <>
           <Input
             type="date"
-            value={condition.start_date || ""}
+            value={condition.start_date ?? ""}
             onChange={(value) => {
               updateCondition(groupId, condition.id, {
                 start_date: value as string,
@@ -227,7 +230,7 @@ export const MetricsConditionRow: React.FC<MetricsConditionRowProps> = ({
           />
           <Input
             type="date"
-            value={condition.end_date || ""}
+            value={condition.end_date ?? ""}
             onChange={(value) => {
               updateCondition(groupId, condition.id, {
                 end_date: value as string,
@@ -253,7 +256,10 @@ export const MetricsConditionRow: React.FC<MetricsConditionRowProps> = ({
             onChange={(value) => {
               const operatorId = parseInt(value);
               const operator = DATE_OPERATORS.find((op) => op.id === operatorId);
-              const operatorLabel = operator?.label.toLowerCase().replace(/\s+/g, "_") || "";
+              if (!operator || !operator.label) {
+                return;
+              }
+              const operatorLabel = operator.label.toLowerCase().replace(/\s+/g, "_");
               const defaultDates = getDefaultDatesForOperator(operatorLabel);
 
               updateCondition(groupId, condition.id, {
@@ -272,7 +278,7 @@ export const MetricsConditionRow: React.FC<MetricsConditionRowProps> = ({
           {(!condition.date_operator_id || condition.date_operator_id === 12 || condition.date_operator_id === 14 || condition.date_operator_id === 15) && (
             <Input
               type="date"
-              value={condition.start_date || ""}
+              value={condition.start_date ?? ""}
               onChange={(value) => {
                 updateCondition(groupId, condition.id, {
                   start_date: value as string,
@@ -290,7 +296,7 @@ export const MetricsConditionRow: React.FC<MetricsConditionRowProps> = ({
             <>
               <Input
                 type="date"
-                value={condition.start_date || ""}
+                value={condition.start_date ?? ""}
                 onChange={(value) => {
                   updateCondition(groupId, condition.id, {
                     start_date: value as string,
@@ -303,7 +309,7 @@ export const MetricsConditionRow: React.FC<MetricsConditionRowProps> = ({
               />
               <Input
                 type="date"
-                value={condition.end_date || ""}
+                value={condition.end_date ?? ""}
                 onChange={(value) => {
                   updateCondition(groupId, condition.id, {
                     end_date: value as string,

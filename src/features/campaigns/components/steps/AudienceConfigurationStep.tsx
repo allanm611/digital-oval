@@ -33,6 +33,7 @@ import { useLanguage } from "../../../../contexts/LanguageContext";
 import Checkbox from "../../../../shared/components/ui/Checkbox";
 import Radio from "../../../../shared/components/ui/Radio";
 import { controlGroupService } from "../../../control-groups/services/controlGroupService";
+import { seedListService, SeedList } from "../../../../shared/services/seedListService";
 
 interface AvailableControlGroup {
   id: string;
@@ -44,14 +45,6 @@ interface AvailableControlGroup {
 import SegmentSelectionModal from "./SegmentSelectionModal";
 import SeedListConfigModal from "./SeedListConfigModal";
 import SegmentModal from "../../../segments/components/SegmentModal";
-
-
-const AVAILABLE_SEED_LISTS = [
-  { id: "marketing-staff", name: "Marketing Staff" },
-  { id: "sales-staff", name: "Sales Staff" },
-  { id: "support-staff", name: "Support Staff" },
-  { id: "finance-staff", name: "Finance Staff" },
-];
 
 interface AudienceConfigurationStepProps {
   formData: CreateCampaignRequest;
@@ -103,6 +96,10 @@ export default function AudienceConfigurationStep({
   const [editingSeedListSegmentId, setEditingSeedListSegmentId] = useState<string | null>(null);
   const [segmentSeedLists, setSegmentSeedLists] = useState<Record<string, string[]>>(propSegmentSeedLists || {});
 
+  // Fetch available seed lists from API
+  const [availableSeedLists, setAvailableSeedLists] = useState<SeedList[]>([]);
+  const [seedListsLoading, setSeedListsLoading] = useState(false);
+
   const { t } = useLanguage();
 
   const handleSetSeedListMode = (mode: "all" | "per-segment") => {
@@ -112,10 +109,10 @@ export default function AudienceConfigurationStep({
     }
 
     // When switching to "apply to all", populate with all available seed lists
-    if (mode === "all") {
-      const allSeedListIds = AVAILABLE_SEED_LISTS.map((list) => list.id);
+    if (mode === "all" && availableSeedLists && availableSeedLists.length > 0) {
+      const allSeedListIds = availableSeedLists.map((list) => String(list.id));
       handleSetSegmentSeedLists({ all: allSeedListIds });
-    } else {
+    } else if (mode === "per-segment") {
       // When switching to "per-segment", clear the global setting
       handleSetSegmentSeedLists({});
     }
@@ -134,13 +131,13 @@ export default function AudienceConfigurationStep({
     setIsCampaignTypeDropdownOpen(false),
   );
 
-  // Initialize seed lists when mode is "apply to all"
+  // Initialize seed lists when mode is "apply to all" or when available seed lists change
   useEffect(() => {
-    if (seedListMode === "all" && (!segmentSeedLists["all"] || segmentSeedLists["all"].length === 0)) {
-      const allSeedListIds = AVAILABLE_SEED_LISTS.map((list) => list.id);
+    if (seedListMode === "all" && (!segmentSeedLists["all"] || segmentSeedLists["all"].length === 0) && availableSeedLists && availableSeedLists.length > 0) {
+      const allSeedListIds = availableSeedLists.map((list) => String(list.id));
       handleSetSegmentSeedLists({ all: allSeedListIds });
     }
-  }, [seedListMode]);
+  }, [seedListMode, availableSeedLists]);
 
   useEffect(() => {
     const audienceConfig = {
@@ -243,6 +240,24 @@ export default function AudienceConfigurationStep({
     };
 
     fetchControlGroups();
+  }, []);
+
+  // Fetch seed lists on component mount
+  useEffect(() => {
+    const fetchSeedLists = async () => {
+      setSeedListsLoading(true);
+      try {
+        const seedLists = await seedListService.getAll();
+        setAvailableSeedLists(seedLists || []);
+      } catch (error) {
+        console.error("Failed to fetch seed lists:", error);
+        setAvailableSeedLists([]);
+      } finally {
+        setSeedListsLoading(false);
+      }
+    };
+
+    fetchSeedLists();
   }, []);
 
   const handleSegmentSelect = (segments: CampaignSegment[]) => {

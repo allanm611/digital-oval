@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense, lazy } from "react";
 import { Gift } from "lucide-react";
 import {
   CreateCampaignRequest,
@@ -17,6 +17,8 @@ import MultipleTargetOfferMapping from "./MultipleTargetOfferMapping";
 import { SegmentOfferMapping } from "../../pages/CreateCampaignPage";
 
 import { tw } from "../../../../shared/utils/utils";
+
+const CreateOfferModalWrapper = lazy(() => import("./CreateOfferModalWrapper"));
 interface OfferMappingStepProps {
   currentStep: number;
   totalSteps: number;
@@ -53,6 +55,8 @@ export default function OfferMappingStep({
   setValidationErrors,
 }: OfferMappingStepProps) {
   const [showOfferModal, setShowOfferModal] = useState(false);
+  const [showEditOfferModal, setShowEditOfferModal] = useState(false);
+  const [editingOfferId, setEditingOfferId] = useState<number | null>(null);
   const hasAutoOpenedRef = useRef(false);
   const [offerMappings, setOfferMappings] = useState<{
     [segmentId: string]: CampaignOffer[];
@@ -336,6 +340,10 @@ export default function OfferMappingStep({
             setEditingSegmentId(segmentId);
             setShowOfferModal(true);
           }}
+          onEditOffer={(offerId) => {
+            setEditingOfferId(offerId);
+            setShowEditOfferModal(true);
+          }}
           onRemoveOfferFromSegment={handleRemoveOfferFromSegment}
         />
       )}
@@ -350,6 +358,10 @@ export default function OfferMappingStep({
           onMapOffers={(segmentId) => {
             setEditingSegmentId(segmentId);
             setShowOfferModal(true);
+          }}
+          onEditOffer={(offerId) => {
+            setEditingOfferId(offerId);
+            setShowEditOfferModal(true);
           }}
           onRemoveOfferFromSegment={handleRemoveOfferFromSegment}
         />
@@ -378,6 +390,10 @@ export default function OfferMappingStep({
             setSegmentOfferMappings={setSegmentOfferMappings}
             selectedOffers={selectedOffers}
             setSelectedOffers={setSelectedOffers}
+            onEditOffer={(offerId) => {
+              setEditingOfferId(offerId);
+              setShowEditOfferModal(true);
+            }}
           />
         )}
 
@@ -453,6 +469,23 @@ export default function OfferMappingStep({
           }}
         />
       )}
+
+      {/* Edit Offer Modal */}
+      <Suspense fallback={null}>
+        <CreateOfferModalWrapper
+          isOpen={showEditOfferModal}
+          onClose={() => {
+            setShowEditOfferModal(false);
+            setEditingOfferId(null);
+          }}
+          onOfferCreated={(offerId) => {
+            // Close modal and refresh selected offers
+            setShowEditOfferModal(false);
+            setEditingOfferId(null);
+          }}
+          offerId={editingOfferId || undefined}
+        />
+      </Suspense>
     </div>
   );
 }

@@ -43,8 +43,13 @@ import { offerCreativeService } from "../services/offerCreativeService";
 import { communicationChannelService, CommunicationChannel } from "../../../shared/services/communicationChannelService";
 import { smsRouteService } from "../../routes/services/smsRouteService";
 import { emailRouteService } from "../../routes/services/emailRouteService";
+import { whatsappRouteService } from "../../routes/services/whatsappRouteService";
+import { ussdRouteService } from "../../routes/services/ussdRouteService";
+import { pushNotificationRouteService } from "../../routes/services/pushNotificationRouteService";
 import { SMSRoute } from "../../routes/types/smsRoute";
 import { EmailRoute } from "../../routes/types/emailRoute";
+import { WhatsAppRoute } from "../../routes/types/whatsappRoute";
+import { PushNotificationRoute } from "../../routes/types/pushNotificationRoute";
 import { useConfigurationData } from "../../../shared/services/configurationDataService";
 // import { productCategoryService } from "../../products/services/productCategoryService";
 import { OfferCategoryType } from "../types/offerCategory";
@@ -198,6 +203,12 @@ interface StepProps {
   smsRoutesLoading?: boolean;
   emailRoutes?: EmailRoute[];
   emailRoutesLoading?: boolean;
+  whatsappRoutes?: WhatsAppRoute[];
+  whatsappRoutesLoading?: boolean;
+  ussdRoutes?: SMSRoute[];
+  ussdRoutesLoading?: boolean;
+  pushRoutes?: PushNotificationRoute[];
+  pushRoutesLoading?: boolean;
   onSaveDraft?: () => void;
   onCancel?: () => void;
   offerTypes?: OfferTypeEnum[];
@@ -259,6 +270,12 @@ function BasicInfoStep({
   smsRoutesLoading,
   emailRoutes,
   emailRoutesLoading,
+  whatsappRoutes,
+  whatsappRoutesLoading,
+  ussdRoutes,
+  ussdRoutesLoading,
+  pushRoutes,
+  pushRoutesLoading,
   offerTypes,
   offerTypesLoading,
   categoryRefreshTrigger,
@@ -489,6 +506,9 @@ function BasicInfoStep({
                   communication_channel_id: Number(value),
                   sms_route_id: undefined, // Reset SMS route when channel changes
                   email_route_id: undefined, // Reset email route when channel changes
+                  whatsapp_route_id: undefined, // Reset WhatsApp route when channel changes
+                  ussd_route_id: undefined, // Reset USSD route when channel changes
+                  push_notification_route_id: undefined, // Reset Push route when channel changes
                 });
                 if (validationErrors?.communication_channel && clearValidationErrors) {
                   clearValidationErrors();
@@ -574,6 +594,114 @@ function BasicInfoStep({
                 </div>
               ) : null;
             })()}
+
+          {/* WhatsApp Route - only show when WHATSAPP channel is selected */}
+          {(() => {
+            const selectedChannel = communicationChannels?.find(
+              (ch) => String(ch.id) === String(formData.communication_channel_id)
+            );
+            return selectedChannel?.name?.toUpperCase().includes("WHATSAPP") && whatsappRoutes ? (
+              <div className="flex-1">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  WhatsApp Route
+                </label>
+                <HeadlessSelect
+                  options={
+                    Array.isArray(whatsappRoutes) ? whatsappRoutes.map((route) => ({
+                      value: String(route.id),
+                      label: route.name,
+                    })) : []
+                  }
+                  disabled={whatsappRoutesLoading}
+                  value={
+                    formData.whatsapp_route_id
+                      ? String(formData.whatsapp_route_id)
+                      : ""
+                  }
+                  onChange={(value) => {
+                    if (!value) return;
+                    setFormData({
+                      ...formData,
+                      whatsapp_route_id: Number(value),
+                    });
+                  }}
+                  placeholder={whatsappRoutesLoading ? "Loading..." : "Select WhatsApp route"}
+                />
+              </div>
+            ) : null;
+          })()}
+
+          {/* USSD Route - only show when USSD channel is selected */}
+          {(() => {
+            const selectedChannel = communicationChannels?.find(
+              (ch) => String(ch.id) === String(formData.communication_channel_id)
+            );
+            return selectedChannel?.name?.toUpperCase().includes("USSD") && ussdRoutes ? (
+              <div className="flex-1">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  USSD Route
+                </label>
+                <HeadlessSelect
+                  options={
+                    Array.isArray(ussdRoutes) ? ussdRoutes.map((route) => ({
+                      value: String(route.id),
+                      label: route.name,
+                    })) : []
+                  }
+                  disabled={ussdRoutesLoading}
+                  value={
+                    formData.ussd_route_id
+                      ? String(formData.ussd_route_id)
+                      : ""
+                  }
+                  onChange={(value) => {
+                    if (!value) return;
+                    setFormData({
+                      ...formData,
+                      ussd_route_id: Number(value),
+                    });
+                  }}
+                  placeholder={ussdRoutesLoading ? "Loading..." : "Select USSD route"}
+                />
+              </div>
+            ) : null;
+          })()}
+
+          {/* Push Notification Route - only show when PUSH NOTIFICATION channel is selected */}
+          {(() => {
+            const selectedChannel = communicationChannels?.find(
+              (ch) => String(ch.id) === String(formData.communication_channel_id)
+            );
+            return selectedChannel?.name?.toUpperCase().includes("PUSH") && pushRoutes ? (
+              <div className="flex-1">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Push Notification Route
+                </label>
+                <HeadlessSelect
+                  options={
+                    Array.isArray(pushRoutes) ? pushRoutes.map((route) => ({
+                      value: String(route.id),
+                      label: route.name,
+                    })) : []
+                  }
+                  disabled={pushRoutesLoading}
+                  value={
+                    formData.push_notification_route_id
+                      ? String(formData.push_notification_route_id)
+                      : ""
+                  }
+                  onChange={(value) => {
+                    if (!value) return;
+                    setFormData({
+                      ...formData,
+                      push_notification_route_id: Number(value),
+                    });
+                  }}
+                  placeholder={pushRoutesLoading ? "Loading..." : "Select push notification route"}
+                />
+              </div>
+            ) : null;
+          })()}
         </div>
 
         <div>
@@ -1452,14 +1580,17 @@ function ReviewStep({
 
 interface CreateOfferPageProps {
   onSuccess?: (offerId: number) => void;
+  offerId?: number; // For modal-based editing
 }
 
 export default function CreateOfferPage({
   onSuccess,
+  offerId: propOfferId,
 }: CreateOfferPageProps = {}) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { id } = useParams<{ id: string }>();
+  const { id: urlId } = useParams<{ id: string }>();
+  const id = propOfferId ? String(propOfferId) : urlId; // Use prop ID if provided, otherwise use URL param
   const [searchParams] = useSearchParams();
   const { success: showToast, error: showError } = useToast();
 
@@ -1499,6 +1630,10 @@ export default function CreateOfferPage({
     category_id: undefined,
     communication_channel_id: undefined,
     sms_route_id: undefined,
+    email_route_id: undefined,
+    whatsapp_route_id: undefined,
+    ussd_route_id: undefined,
+    push_notification_route_id: undefined,
     max_usage_per_customer: 1,
     eligibility_rules: {},
   });
@@ -1894,6 +2029,14 @@ export default function CreateOfferPage({
   const emailRoutes = emailRoutesConfig?.data?.filter((r: any) => r.isActive || r.is_active) || [];
   const emailRoutesLoading = !emailRoutesConfig;
 
+  // Load WhatsApp, USSD, and Push Notification routes (with dummy data)
+  const [whatsappRoutes, setWhatsappRoutes] = useState<WhatsAppRoute[]>([]);
+  const [whatsappRoutesLoading, setWhatsappRoutesLoading] = useState(false);
+  const [ussdRoutes, setUssdRoutes] = useState<SMSRoute[]>([]);
+  const [ussdRoutesLoading, setUssdRoutesLoading] = useState(false);
+  const [pushRoutes, setPushRoutes] = useState<PushNotificationRoute[]>([]);
+  const [pushRoutesLoading, setPushRoutesLoading] = useState(false);
+
   // Load routes and communication channels on component mount
   useEffect(() => {
     const loadRoutes = async () => {
@@ -1905,6 +2048,39 @@ export default function CreateOfferPage({
         setSmsRoutes([]);
       } finally {
         setSmsRoutesLoading(false);
+      }
+
+      // Load WhatsApp routes
+      try {
+        setWhatsappRoutesLoading(true);
+        const whatsappRoutesData = await whatsappRouteService.getAllRoutes();
+        setWhatsappRoutes(Array.isArray(whatsappRoutesData) ? whatsappRoutesData.filter((r: any) => r.is_active) : []);
+      } catch {
+        setWhatsappRoutes([]);
+      } finally {
+        setWhatsappRoutesLoading(false);
+      }
+
+      // Load USSD routes
+      try {
+        setUssdRoutesLoading(true);
+        const ussdRoutesData = await ussdRouteService.getAllRoutes();
+        setUssdRoutes(Array.isArray(ussdRoutesData) ? ussdRoutesData.filter((r: any) => r.is_active) : []);
+      } catch {
+        setUssdRoutes([]);
+      } finally {
+        setUssdRoutesLoading(false);
+      }
+
+      // Load Push Notification routes
+      try {
+        setPushRoutesLoading(true);
+        const pushRoutesData = await pushNotificationRouteService.getAllRoutes();
+        setPushRoutes(Array.isArray(pushRoutesData) ? pushRoutesData.filter((r: any) => r.is_active) : []);
+      } catch {
+        setPushRoutes([]);
+      } finally {
+        setPushRoutesLoading(false);
       }
     };
 
@@ -1943,6 +2119,11 @@ export default function CreateOfferPage({
 
   // Detect edit mode and load data
   useEffect(() => {
+    // Skip loading if in modal mode AND creating new offer (no ID provided)
+    if (onSuccess && !id && !duplicateIdParam) {
+      return;
+    }
+
     if (id) {
       setIsEditMode(true);
       loadOfferData(id, false);
@@ -1950,7 +2131,7 @@ export default function CreateOfferPage({
       setIsDuplicateMode(true);
       loadOfferData(duplicateIdParam, true);
     }
-  }, [id, duplicateIdParam, loadOfferData]);
+  }, [id, duplicateIdParam, loadOfferData, onSuccess]);
 
   // When offerTypes load and we're in edit mode without a type ID, try to find it by name
   useEffect(() => {
@@ -2623,6 +2804,12 @@ export default function CreateOfferPage({
       smsRoutesLoading,
       emailRoutes,
       emailRoutesLoading,
+      whatsappRoutes,
+      whatsappRoutesLoading,
+      ussdRoutes,
+      ussdRoutesLoading,
+      pushRoutes,
+      pushRoutesLoading,
       onSaveDraft: handleSaveDraft,
       onCancel: handleCancel,
       offerTypes,
@@ -2654,6 +2841,12 @@ export default function CreateOfferPage({
       smsRoutesLoading,
       emailRoutes,
       emailRoutesLoading,
+      whatsappRoutes,
+      whatsappRoutesLoading,
+      ussdRoutes,
+      ussdRoutesLoading,
+      pushRoutes,
+      pushRoutesLoading,
       handleSaveDraft,
       handleCancel,
       offerTypes,

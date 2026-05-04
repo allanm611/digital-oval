@@ -21,6 +21,8 @@ import {
   utilitiesConfig,
   offerCreativesConfig,
 } from "../../features/configurations/configs/configurationPageConfigs";
+import { resourceTypesService, ResourceTypeDto } from "./resourceTypesService";
+import { utilitiesService, UtilityDto } from "./utilitiesService";
 
 // Type pour identifier les différents types de configuration
 export type ConfigurationType =
@@ -51,6 +53,7 @@ class ConfigurationDataService {
     ConfigurationType,
     Set<(data: ConfigurationItem[]) => void>
   > = new Map();
+  private loadingPromises: Map<ConfigurationType, Promise<void>> = new Map();
 
   constructor() {
     // Initialiser les listeners
@@ -108,6 +111,69 @@ class ConfigurationDataService {
     this.data.set("characterSets", [...characterSetsConfig.initialData]);
     this.data.set("resourceTypes", [...resourceTypesConfig.initialData]);
     this.data.set("utilities", [...utilitiesConfig.initialData]);
+  }
+
+  // Load resource types from API
+  async loadResourceTypes(): Promise<void> {
+    if (this.loadingPromises.has("resourceTypes")) {
+      return this.loadingPromises.get("resourceTypes");
+    }
+
+    const loadPromise = (async () => {
+      try {
+        const resourceTypes = await resourceTypesService.getAllResourceTypes();
+        const mappedData: ConfigurationItem[] = resourceTypes.map(
+          (rt: ResourceTypeDto) => ({
+            id: rt.id,
+            name: rt.name,
+            description: rt.description,
+            isActive: rt.isActive,
+            created_at: rt.createdAt,
+            updated_at: rt.updatedAt,
+            value: rt.value,
+            unit: rt.unit,
+          })
+        );
+        this.setData("resourceTypes", mappedData);
+      } catch (error) {
+        console.error("Failed to load resource types from API:", error);
+        // Keep existing data if API fails
+      }
+    })();
+
+    this.loadingPromises.set("resourceTypes", loadPromise);
+    await loadPromise;
+  }
+
+  // Load utilities from API
+  async loadUtilities(): Promise<void> {
+    if (this.loadingPromises.has("utilities")) {
+      return this.loadingPromises.get("utilities");
+    }
+
+    const loadPromise = (async () => {
+      try {
+        const utilities = await utilitiesService.getAllUtilities();
+        const mappedData: ConfigurationItem[] = utilities.map(
+          (util: UtilityDto) => ({
+            id: util.id,
+            name: util.name,
+            description: util.description,
+            isActive: util.isActive,
+            created_at: util.createdAt,
+            updated_at: util.updatedAt,
+            value: util.value,
+          })
+        );
+        this.setData("utilities", mappedData);
+      } catch (error) {
+        console.error("Failed to load utilities from API:", error);
+        // Keep existing data if API fails
+      }
+    })();
+
+    this.loadingPromises.set("utilities", loadPromise);
+    await loadPromise;
   }
 
   // Obtenir les données pour un type de configuration
@@ -254,8 +320,19 @@ class ConfigurationDataService {
       case "characterSets":
         this.setData(type, [...characterSetsConfig.initialData]);
         break;
+      case "resourceTypes":
+        // Clear loading promise to allow re-fetching
+        this.loadingPromises.delete("resourceTypes");
+        this.loadResourceTypes().catch((error) =>
+          console.error("Failed to reload resource types:", error)
+        );
+        break;
       case "utilities":
-        this.setData(type, [...utilitiesConfig.initialData]);
+        // Clear loading promise to allow re-fetching
+        this.loadingPromises.delete("utilities");
+        this.loadUtilities().catch((error) =>
+          console.error("Failed to reload utilities:", error)
+        );
         break;
     }
   }
@@ -277,8 +354,29 @@ export function useConfigurationData(type: ConfigurationType) {
   const [data, setData] = React.useState<ConfigurationItem[]>(() =>
     configurationDataService.getData(type),
   );
+  const [loading, setLoading] = React.useState(false);
 
   React.useEffect(() => {
+    // Load from API for resource types and utilities
+    if (type === "resourceTypes" || type === "utilities") {
+      setLoading(true);
+      const loadData = async () => {
+        try {
+          if (type === "resourceTypes") {
+            await configurationDataService.loadResourceTypes();
+          } else if (type === "utilities") {
+            await configurationDataService.loadUtilities();
+          }
+        } catch (error) {
+          console.error(`Failed to load ${type}:`, error);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      loadData();
+    }
+
     // S'abonner aux changements
     const unsubscribe = configurationDataService.subscribe(type, setData);
 
@@ -288,6 +386,7 @@ export function useConfigurationData(type: ConfigurationType) {
 
   return {
     data,
+    loading,
     addItem: (
       item: Omit<ConfigurationItem, "id" | "created_at" | "updated_at">,
     ) => configurationDataService.addItem(type, item),

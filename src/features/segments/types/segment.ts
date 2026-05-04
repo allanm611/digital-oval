@@ -30,6 +30,7 @@ export type SegmentType = {
   segment_type_id?: number; // ID of the segment type (from segment type catalog)
   segment_type_label?: string; // Display label of the segment type (e.g., "Behavioral")
   customer_identity_field_mapping?: string; // Maps segment to customer identity field
+  unique_identifier?: string; // Unique identifier selected from customer identity fields
 };
 
 export type SegmentCategoryType = {
@@ -172,6 +173,7 @@ export type CreateSegmentRequest = {
   visibility?: string; // Optional
   created_by_user_id?: number; // Optional
   customer_identity_field_mapping?: string; // Optional - maps segment to customer identity field
+  unique_identifier?: string; // Optional - unique identifier from customer identity field
 };
 
 export type UpdateSegmentRequest = {
@@ -192,6 +194,7 @@ export type UpdateSegmentRequest = {
   count_query?: string; // Optional
   size_estimate?: number; // Optional
   customer_identity_field_mapping?: string; // Optional - maps segment to customer identity field
+  unique_identifier?: string; // Optional - unique identifier from customer identity field
   tags?: string[]; // Optional
   is_active?: boolean; // Optional
   visibility?: string; // Optional
@@ -671,6 +674,7 @@ export interface SegmentCondition {
 
   // For computable KPI fields
   time_window?: "last_7_days" | "last_30_days" | "last_90_days" | "current_month" | "custom"; // Predefined or custom time window
+  time_window_id?: number; // Backend ID for time window (1=last_7_days, 2=last_30_days, 3=last_90_days, 4=current_month, 5=custom)
   is_computable?: boolean; // Flag indicating if field is computable (user can customize time window)
 }
 

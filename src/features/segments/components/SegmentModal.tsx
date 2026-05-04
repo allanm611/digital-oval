@@ -46,6 +46,7 @@ export default function SegmentModal({
     segment_type_id: undefined as number | undefined,
     category: undefined as string | number | undefined,
     customer_identity_field_mapping: undefined as string | undefined,
+    unique_identifier: undefined as string | undefined,
   });
   const [tagInput, setTagInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -67,6 +68,7 @@ export default function SegmentModal({
     description?: string;
     conditions?: string;
     segment_type_id?: string;
+    unique_identifier?: string;
   }>({});
   const [existingQuery, setExistingQuery] = useState<string | null>(null);
   const [existingCountQuery, setExistingCountQuery] = useState<string | null>(
@@ -236,6 +238,7 @@ export default function SegmentModal({
               category,
               customer_identity_field_mapping: (fullSegment as any)
                 .customer_identity_field_mapping,
+              unique_identifier: (fullSegment as any).unique_identifier,
             });
             // Store existing queries (not displayed in edit mode, but kept for reference)
             setExistingQuery(fullSegment.query || null);
@@ -255,6 +258,7 @@ export default function SegmentModal({
             conditions: [],
             category: undefined,
             customer_identity_field_mapping: undefined,
+            unique_identifier: undefined,
           });
           // Reset selectedCategoryIds for new segment
           setSelectedCategoryIds([]);
@@ -283,6 +287,7 @@ export default function SegmentModal({
           conditions: [],
           category: undefined,
           customer_identity_field_mapping: undefined,
+          unique_identifier: undefined,
         });
         setFieldErrors({});
         setError("");
@@ -771,6 +776,14 @@ export default function SegmentModal({
       return;
     }
 
+    if (!formData.unique_identifier) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        unique_identifier: "Customer identity field is required",
+      }));
+      return;
+    }
+
     if (formData.conditions.length === 0) {
       setFieldErrors((prev) => ({
         ...prev,
@@ -829,9 +842,7 @@ export default function SegmentModal({
           query: queries.segment_query,
           count_query: queries.count_query,
           definition: queries.payload, // Store the original payload for editing
-          // TODO: Backend doesn't accept customer_identity_field_mapping yet
-          // customer_identity_field_mapping:
-          //   formData.customer_identity_field_mapping,
+          unique_identifier: formData.unique_identifier,
         });
 
         // Extract segment from response - backend returns {success: true, data: [segment]}
@@ -867,9 +878,7 @@ export default function SegmentModal({
           is_active: true,
           visibility: "private",
           definition: queries.payload, // Store the original payload for editing
-          // TODO: Backend doesn't accept customer_identity_field_mapping yet
-          // customer_identity_field_mapping:
-          //   formData.customer_identity_field_mapping,
+          unique_identifier: formData.unique_identifier,
         };
 
         const createResponse =
@@ -1046,7 +1055,7 @@ export default function SegmentModal({
                     <label
                       className={`block text-sm font-medium ${tw.textPrimary} `}
                     >
-                      Map to Customer Identity Field
+                      Map to Customer Identity Field *
                     </label>
                     <p className={`text-xs ${tw.textSecondary} mb-2`}>
                       Select which customer field this segment represents
@@ -1056,19 +1065,29 @@ export default function SegmentModal({
                         value: field.field_value,
                         label: field.field_name,
                       }))}
-                      value={formData.customer_identity_field_mapping || ""}
-                      onChange={(value) =>
+                      value={formData.unique_identifier || ""}
+                      onChange={(value) => {
                         setFormData((prev) => ({
                           ...prev,
+                          unique_identifier: String(value),
                           customer_identity_field_mapping: String(value),
-                        }))
-                      }
+                        }));
+                        setFieldErrors((prev) => ({
+                          ...prev,
+                          unique_identifier: undefined,
+                        }));
+                      }}
                       placeholder="Select identity field..."
                       disabled={
                         isLoadingIdentityFields ||
                         customerIdentityFields.length === 0
                       }
                     />
+                    {fieldErrors.unique_identifier && (
+                      <p className="mt-2 text-sm text-red-600">
+                        {fieldErrors.unique_identifier}
+                      </p>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

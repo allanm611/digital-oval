@@ -49,6 +49,8 @@ export default function OfferSelectionModal({
   const [error, setError] = useState<string | null>(null);
   const [updatingOfferId, setUpdatingOfferId] = useState<number | null>(null);
   const [createOfferModalOpen, setCreateOfferModalOpen] = useState(false);
+  const [editOfferModalOpen, setEditOfferModalOpen] = useState(false);
+  const [editingOfferId, setEditingOfferId] = useState<number | null>(null);
   const [categories, setCategories] = useState<Map<number, string>>(new Map());
 
   const filterOptions = [
@@ -173,11 +175,27 @@ export default function OfferSelectionModal({
 
           if (validOfferIds.length > 0) {
             const campaignFlowOffersPromises = validOfferIds.map(
-              (offerId) =>
-                offerService.getOfferById(offerId, true).catch((err) => {
-                  console.warn(`Failed to load offer ${offerId}:`, err);
-                  return null;
-                }),
+              (offerId) => {
+                // Retry logic for newly created offers that might not be immediately available
+                const fetchWithRetry = async (id: number, retries = 3): Promise<any> => {
+                  for (let attempt = 0; attempt < retries; attempt++) {
+                    try {
+                      const result = await offerService.getOfferById(id, true);
+                      return result;
+                    } catch (err) {
+                      if (attempt < retries - 1) {
+                        // Wait before retrying (exponential backoff)
+                        await new Promise(resolve => setTimeout(resolve, 300 * (attempt + 1)));
+                      } else {
+                        console.warn(`Failed to load offer ${id} after ${retries} attempts:`, err);
+                        return null;
+                      }
+                    }
+                  }
+                };
+
+                return fetchWithRetry(offerId);
+              }
             );
             const campaignFlowOffersResults = await Promise.all(
               campaignFlowOffersPromises,
@@ -252,6 +270,19 @@ export default function OfferSelectionModal({
     setCreateOfferModalOpen(true);
   }, []);
 
+  const handleOfferEdited = useCallback(
+    (offerId: number) => {
+      // Close the edit modal and refresh offers
+      setEditOfferModalOpen(false);
+      setEditingOfferId(null);
+      // Reload offers to show updated data
+      setTimeout(() => {
+        memoLoadOffers();
+      }, 500);
+    },
+    [memoLoadOffers],
+  );
+
   const handleOfferCreated = useCallback(
     (offerId: number) => {
       // Only store valid offer IDs (not undefined, not null, not 0)
@@ -287,10 +318,14 @@ export default function OfferSelectionModal({
         );
       }
 
-      // Reload offers to show newly created offer with action buttons
-      memoLoadOffers();
       // Close the create offer modal so you see the created offer in the selection modal
       setCreateOfferModalOpen(false);
+
+      // Add a small delay before reloading to ensure offer is fully persisted
+      // This prevents race conditions where the offer is created but not yet queryable
+      setTimeout(() => {
+        memoLoadOffers();
+      }, 800);
     },
     [memoLoadOffers],
   );
@@ -623,7 +658,10 @@ export default function OfferSelectionModal({
                         >
                           <div className="flex items-center gap-2">
                             <button
-                              onClick={() => navigate(`/dashboard/offers/${offer.id}/edit`)}
+                              onClick={() => {
+                                setEditingOfferId(Number(offer.id));
+                                setEditOfferModalOpen(true);
+                              }}
                               className="p-1.5 text-gray-400 hover:text-gray-600 rounded"
                               title="Edit offer"
                             >
@@ -745,6 +783,19 @@ export default function OfferSelectionModal({
           isOpen={createOfferModalOpen}
           onClose={() => setCreateOfferModalOpen(false)}
           onOfferCreated={handleOfferCreated}
+        />
+      </Suspense>
+
+      {/* Edit Offer Modal */}
+      <Suspense fallback={null}>
+        <CreateOfferModalWrapper
+          isOpen={editOfferModalOpen}
+          onClose={() => {
+            setEditOfferModalOpen(false);
+            setEditingOfferId(null);
+          }}
+          onOfferCreated={handleOfferEdited}
+          offerId={editingOfferId || undefined}
         />
       </Suspense>
     </div>,

@@ -9,39 +9,47 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Input from "../../../shared/components/ui/Input";
 import { tw, color, getButtonStyles, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
-import { resourceTypesConfig, utilitiesConfig } from "../../configurations/configs/configurationPageConfigs";
+import { useConfigurationData } from "../../../shared/services/configurationDataService";
 import CreateUtilityModal from "../../configurations/components/CreateUtilityModal";
 
-// Build resource type options from config
-const RESOURCE_TYPE_OPTIONS = resourceTypesConfig.initialData
-  .filter((rt: any) => rt.isActive)
-  .map((rt: any) => ({
-    value: rt.value,
-    label: rt.name,
-  }));
-
-// Helper to get valid units for a selected resource type
-const getValidUnitsForResourceType = (
-  resourceTypeValue: string
-): { value: string; label: string }[] => {
-  const resourceType = resourceTypesConfig.initialData.find(
-    (rt: any) => rt.value === resourceTypeValue
-  ) as any;
-
-  if (!resourceType || !resourceType.validUnits) {
-    return [];
-  }
-
-  return resourceType.validUnits.map((unit: string) => ({
-    value: unit,
-    label: unit,
-  }));
-};
-
 export default function ComboTypeFormPage() {
+  // Get resource types and utilities from configuration
+  const { data: resourceTypesData = [] } = useConfigurationData("resourceTypes");
+  const { data: utilitiesData = [] } = useConfigurationData("utilities");
+
+  // Build resource type options from config
+  const RESOURCE_TYPE_OPTIONS = useMemo(
+    () =>
+      resourceTypesData
+        .filter((rt: any) => rt.isActive)
+        .map((rt: any) => ({
+          value: rt.value,
+          label: rt.name,
+        })),
+    [resourceTypesData]
+  );
+
+  // Helper to get valid units for a selected resource type
+  const getValidUnitsForResourceType = (
+    resourceTypeValue: string
+  ): { value: string; label: string }[] => {
+    const resourceType = resourceTypesData.find(
+      (rt: any) => rt.value === resourceTypeValue
+    ) as any;
+
+    if (!resourceType || !resourceType.validUnits) {
+      return [];
+    }
+
+    return resourceType.validUnits.map((unit: string) => ({
+      value: unit,
+      label: unit,
+    }));
+  };
+
   // Helper to get utilities from config
   const getUtilitiesOptions = () => {
-    const configUtilities = utilitiesConfig.initialData
+    const configUtilities = (utilitiesData || [])
       .filter((u: any) => u.isActive)
       .map((u: any) => ({
         value: u.value,
@@ -545,7 +553,7 @@ export default function ComboTypeFormPage() {
                           setSelectedResourceType(newType);
 
                           // Auto-select the mapped unit for the selected resource type
-                          const resourceType = resourceTypesConfig.initialData.find(
+                          const resourceType = resourceTypesData.find(
                             (rt: any) => rt.value === newType
                           ) as any;
                           const defaultUnit = resourceType?.validUnits?.[0] || "";

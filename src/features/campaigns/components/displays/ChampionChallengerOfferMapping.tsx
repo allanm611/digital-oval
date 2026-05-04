@@ -9,6 +9,7 @@ interface ChampionChallengerOfferMappingProps {
   selectedOffers: CampaignOffer[];
   offerMappings: { [segmentId: string]: string[] }; // segmentId -> offerIds[]
   onMapOffers: (segmentId: string) => void;
+  onEditOffer?: (offerId: number) => void;
   onRemoveOfferFromSegment: (segmentId: string, offerId: string) => void;
 }
 
@@ -18,6 +19,7 @@ export default function ChampionChallengerOfferMapping({
   selectedOffers,
   offerMappings,
   onMapOffers,
+  onEditOffer,
   onRemoveOfferFromSegment,
 }: ChampionChallengerOfferMappingProps) {
   const navigate = useNavigate();
@@ -143,7 +145,7 @@ export default function ChampionChallengerOfferMapping({
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => navigate(`/dashboard/offers/${offer.id}/edit`)}
+                      onClick={() => onEditOffer?.(Number(offer.id))}
                       className="p-1.5 text-gray-400 hover:text-blue-600 rounded"
                       title="Edit offer"
                     >
@@ -247,7 +249,7 @@ export default function ChampionChallengerOfferMapping({
                         </div>
                         <div className="flex items-center gap-1 flex-shrink-0">
                           <button
-                            onClick={() => navigate(`/dashboard/offers/${offer.id}/edit`)}
+                            onClick={() => onEditOffer?.(Number(offer.id))}
                             className="p-1 text-gray-400 hover:text-blue-600 rounded"
                             title="Edit offer"
                           >

@@ -138,6 +138,8 @@ class SegmentService {
       created_by_user_id: data.created_by_user_id || null,
       segment_type_id: data.segment_type_id || undefined,
       segment_type_label: data.segment_type_label || undefined,
+      customer_identity_field_mapping: data.customer_identity_field_mapping || undefined,
+      unique_identifier: data.unique_identifier || undefined,
     };
   }
 

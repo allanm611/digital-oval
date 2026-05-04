@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense, lazy } from "react";
 import Input from '../../../../shared/components/ui/Input';
 import { useNavigate } from "react-router-dom";
 import { Plus, Trash2, Eye, Edit } from "lucide-react";
@@ -12,6 +12,8 @@ import { color, tw, components, getButtonStyles, button } from "../../../../shar
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
 import OfferSelectionModal from "./OfferSelectionModal";
 import OfferPreviewModal from "./OfferPreviewModal";
+
+const CreateOfferModalWrapper = lazy(() => import("./CreateOfferModalWrapper"));
 
 interface CampaignFlowsStepProps {
   currentStep: number;
@@ -52,6 +54,8 @@ export default function CampaignFlowsStep({
   const [editingSegmentId, setEditingSegmentId] = useState<string | null>(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewOffer, setPreviewOffer] = useState<CampaignOffer | null>(null);
+  const [showEditOfferModal, setShowEditOfferModal] = useState(false);
+  const [editingOfferId, setEditingOfferId] = useState<number | null>(null);
   const [segmentFlows, setSegmentFlows] = useState<{
     [segmentId: string]: SegmentFlowState;
   }>({});
@@ -452,7 +456,10 @@ export default function CampaignFlowsStep({
                             <Eye className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => navigate(`/dashboard/offers/${offer.id}/edit`)}
+                            onClick={() => {
+                              setEditingOfferId(Number(offer.id));
+                              setShowEditOfferModal(true);
+                            }}
                             className="p-1.5 text-gray-900 rounded transition-colors cursor-pointer hover:bg-gray-100"
                             title="Edit Offer"
                           >
@@ -512,6 +519,22 @@ export default function CampaignFlowsStep({
           setPreviewOffer(null);
         }}
       />
+
+      {/* Edit Offer Modal */}
+      <Suspense fallback={null}>
+        <CreateOfferModalWrapper
+          isOpen={showEditOfferModal}
+          onClose={() => {
+            setShowEditOfferModal(false);
+            setEditingOfferId(null);
+          }}
+          onOfferCreated={(offerId) => {
+            setShowEditOfferModal(false);
+            setEditingOfferId(null);
+          }}
+          offerId={editingOfferId || undefined}
+        />
+      </Suspense>
     </div>
   );
 }

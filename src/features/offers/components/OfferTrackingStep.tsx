@@ -438,14 +438,16 @@ export default function OfferTrackingStep({
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Source Name
                       </label>
-                      <Input type="text"
+                      <Input
+                        type="text"
+                        placeholder="Enter source name"
                         value={selectedSourceData.name}
                         onChange={(value) =>
                           updateTrackingSource(selectedSourceData.id, {
                             name: String(value),
                           })
                         }
-                        className={`w-full px-4 py-3 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
+                        variant="medium"
                       />
                     </div>
 
@@ -641,12 +643,14 @@ export default function OfferTrackingStep({
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Rule Name
                   </label>
-                  <Input type="text"
+                  <Input
+                    type="text"
+                    placeholder="Rule name"
                     value={editingRule.name}
                     onChange={(value) =>
                       setEditingRule({ ...editingRule, name: String(value) })
                     }
-                    className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
+                    variant="medium"
                   />
                 </div>
 
@@ -654,7 +658,9 @@ export default function OfferTrackingStep({
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Priority
                   </label>
-                  <Input type="number"
+                  <Input
+                    type="number"
+                    placeholder="Priority"
                     min="1"
                     value={editingRule.priority}
                     onChange={(value) =>
@@ -663,7 +669,7 @@ export default function OfferTrackingStep({
                         priority: parseInt(String(value)) || 1,
                       })
                     }
-                    className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
+                    variant="medium"
                   />
                 </div>
 
@@ -720,13 +726,14 @@ export default function OfferTrackingStep({
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Value
                   </label>
-                  <Input type="text"
+                  <Input
+                    type="text"
+                    placeholder="Enter value..."
                     value={editingRule.value}
                     onChange={(value) =>
                       setEditingRule({ ...editingRule, value: String(value) })
                     }
-                    placeholder="Enter value..."
-                    className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
+                    variant="medium"
                   />
                 </div>
 

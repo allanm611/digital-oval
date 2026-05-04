@@ -22,7 +22,6 @@ import { useBackendProductTypeData } from "../../../shared/hooks/useBackendProdu
 import { useBackendComboTypeData } from "../../../shared/hooks/useBackendComboTypeData";
 import { ComboType } from "../services/comboTypeService";
 import Checkbox from "../../../shared/components/ui/Checkbox";
-import { utilitiesConfig } from "../../configurations/configs/configurationPageConfigs";
 import CreateUtilityModal from "../../configurations/components/CreateUtilityModal";
 
 interface ProductFormProps {
@@ -66,8 +65,9 @@ export default function ProductForm({
   const { data: comboTypes, loading: comboTypesLoading } =
     useBackendComboTypeData();
 
-  // Get resource types from configuration
+  // Get resource types and utilities from configuration
   const { data: resourceTypesData } = useConfigurationData("resourceTypes");
+  const { data: utilitiesData } = useConfigurationData("utilities");
 
   // Error state
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -371,24 +371,6 @@ export default function ProductForm({
   // Track which resources are already in the combo
   const existingResourceTypes = comboData.resources.map((r) => r.resource_type);
 
-  // Users can add all 3 resource types (Data, Voice, SMS), but only once each
-
-  const unitOptions: { label: string; value: ProductUnit }[] = [
-    { label: "Data", value: "data_mb" },
-    { label: "SMS Bundles", value: "sms_count" },
-    { label: "Airtime", value: "airtime" },
-    { label: "On-net Minutes", value: "onnet_minutes" },
-    { label: "Off-net Minutes", value: "offnet_minutes" },
-    { label: "All-net Minutes", value: "allnet_minutes" },
-    { label: "Voice Bundles", value: "voice_bundles" },
-    { label: "Roaming Data", value: "roaming_data_mb" },
-    { label: "Roaming Minutes", value: "roaming_minutes" },
-    { label: "Roaming SMS Count", value: "roaming_sms_count" },
-    { label: "Utility", value: "utility" },
-    { label: "Points", value: "points" },
-    { label: "Others", value: "other" },
-  ];
-
   // Resource type options from configuration
   const resourceTypeOptions: {
     label: string;
@@ -423,7 +405,7 @@ export default function ProductForm({
 
   // Helper to get utilities from config
   const getUtilitiesOptions = () => {
-    const configUtilities = (utilitiesConfig?.initialData || [])
+    const configUtilities = (utilitiesData || [])
       .filter((u: any) => u.isActive)
       .map((u: any) => ({
         value: u.value,
@@ -476,7 +458,7 @@ export default function ProductForm({
   };
 
   const currentUnitLabel =
-    unitOptions.find((option) => option.value === formData.unit)?.label ||
+    resourceTypeOptions.find((option) => option.value === formData.unit)?.label ||
     "Value";
 
   const scopeOptions: { label: string; value: ProductScope }[] = [
@@ -1856,15 +1838,15 @@ export default function ProductForm({
                     />
                   </label>
                   <HeadlessSelect
-                    options={unitOptions.map((opt) => ({
+                    options={resourceTypeOptions.map((opt) => ({
                       value: opt.value,
                       label: opt.label,
                     }))}
-                    value={formData.unit || "data_mb"}
+                    value={formData.unit || resourceTypeOptions[0]?.value || ""}
                     onChange={(value) =>
                       onInputChange("unit", value as ProductUnit)
                     }
-                    placeholder="Select unit"
+                    placeholder="Select resource type"
                     className="w-full"
                     zIndex={zIndex.popover}
                   />

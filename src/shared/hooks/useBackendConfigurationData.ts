@@ -101,6 +101,18 @@ import { lineOfBusinessService } from "../../features/campaigns/services/lineOfB
 import { policyTypeService } from "../../features/campaigns/services/policyTypeService";
 import { communicationPolicyService } from "../../features/campaigns/services/communicationPolicyService";
 import { roleService } from "../services/roleService";
+import {
+  resourceTypesService,
+  ResourceTypeDto,
+  CreateResourceTypeRequest,
+  UpdateResourceTypeRequest,
+} from "../services/resourceTypesService";
+import {
+  utilitiesService,
+  UtilityDto,
+  CreateUtilityRequest,
+  UpdateUtilityRequest,
+} from "../services/utilitiesService";
 
 /**
  * Normalize API response to TypeConfigurationItem format
@@ -630,6 +642,8 @@ export function useBackendConfigurationData(
     | "communicationChannels"
     | "dndTypes"
     | "timezones"
+    | "resourceTypes"
+    | "utilities"
     | undefined,
 ): UseBackendConfigDataResult<any, any, any> | null {
   const [data, setData] = useState<CampaignType[]>([]);
@@ -939,6 +953,24 @@ export function useBackendConfigurationData(
 
         case "timezones":
           response = await timezoneService.getTimezones();
+          if (Array.isArray(response)) {
+            setData(normalizeApiResponse(type, response));
+          } else {
+            setData([]);
+          }
+          break;
+
+        case "resourceTypes":
+          response = await resourceTypesService.getAllResourceTypes();
+          if (Array.isArray(response)) {
+            setData(normalizeApiResponse(type, response));
+          } else {
+            setData([]);
+          }
+          break;
+
+        case "utilities":
+          response = await utilitiesService.getAllUtilities();
           if (Array.isArray(response)) {
             setData(normalizeApiResponse(type, response));
           } else {

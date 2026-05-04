@@ -258,11 +258,11 @@ export const DATE_OPERATORS = [
  * Allows users to quickly select common time periods without manual date entry
  */
 export const TIME_WINDOWS = [
-  { value: "last_7_days", label: "Last 7 Days" },
-  { value: "last_30_days", label: "Last 30 Days" },
-  { value: "last_90_days", label: "Last 90 Days" },
-  { value: "current_month", label: "Current Month" },
-  { value: "custom", label: "Custom" },
+  { id: 1, value: "last_7_days", label: "Last 7 Days" },
+  { id: 2, value: "last_30_days", label: "Last 30 Days" },
+  { id: 3, value: "last_90_days", label: "Last 90 Days" },
+  { id: 4, value: "current_month", label: "Current Month" },
+  { id: 5, value: "custom", label: "Custom" },
 ];
 
 export function getDateRangeForTimeWindow(window: string): { start_date: string; end_date: string } | null {

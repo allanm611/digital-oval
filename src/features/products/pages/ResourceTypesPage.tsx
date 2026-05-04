@@ -1,6 +1,6 @@
-import { ConfigurationManager } from "../../configurations/components/ConfigurationManager";
-import { resourceTypesConfig } from "../../configurations/configs/configurationPageConfigs";
+import { ConfigurationManagerAPI } from "../../configurations/components/ConfigurationManager";
+import { getResourceTypesApiConfig } from "../../configurations/configs/configurationPageConfigs";
 
 export default function ResourceTypesPage() {
-  return <ConfigurationManager config={resourceTypesConfig} />;
+  return <ConfigurationManagerAPI config={getResourceTypesApiConfig(() => "")} />;
 }

@@ -53,7 +53,7 @@ export default function EditProductPage() {
     price: 0,
     currency: "KES",
     scope: "segment",
-    unit: "data_mb",
+    unit: "",
     unit_value: 0,
     validity_hours: undefined,
     tags: [],

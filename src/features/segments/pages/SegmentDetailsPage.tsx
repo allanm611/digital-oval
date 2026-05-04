@@ -1403,6 +1403,16 @@ export default function SegmentDetailsPage() {
               </label>
               <p className={`text-sm ${tw.textPrimary}`}>{categoryName}</p>
             </div>
+            <div>
+              <label
+                className={`text-sm font-medium ${tw.textMuted} block mb-1`}
+              >
+                Customer Identity Field
+              </label>
+              <p className={`text-sm ${tw.textPrimary}`}>
+                {(segment as any).unique_identifier || "—"}
+              </p>
+            </div>
           </div>
           <div className="pt-6 mt-6">
             <h4 className={`text-sm font-semibold ${tw.textPrimary} mb-5`}>

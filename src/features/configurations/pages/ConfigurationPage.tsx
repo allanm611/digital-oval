@@ -291,6 +291,15 @@ export default function ConfigurationPage() {
         navigationPath: "/dashboard/push-notification-routes",
       },
       {
+        id: "routes-management",
+        name: "Routes Management",
+        description: "Manage all communication routes (SMS, Email, WhatsApp, USSD, Push) in one unified view",
+        type: "offer",
+        category: "Offer Configuration",
+        status: "active",
+        navigationPath: "/dashboard/routes",
+      },
+      {
         id: "resource-types",
         name: "Resource Types",
         description: "Manage resource types and their units",
