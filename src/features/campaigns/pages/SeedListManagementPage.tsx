@@ -9,9 +9,9 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import Input from "../../../shared/components/ui/Input";
-import { getLineOfBusinessConfig } from "../../configurations/configs/configurationPageConfigs";
 import { userService } from "../../users/services/userService";
 import { seedListService } from "../../../shared/services/seedListService";
+import { lineOfBusinessService } from "../services/lineOfBusinessService";
 import CreateTestListModal from "../components/CreateTestListModal";
 import { validateMSISDN } from "../../../shared/utils/validation";
 import { buttons } from "../../../shared/utils/tokens";
@@ -171,7 +171,8 @@ export default function SeedListManagementPage() {
   const { t } = useLanguage();
   const [recipients, setRecipients] = useState<SeedListRecipient[]>([]);
   const [seedLists, setSeedLists] = useState<Array<{ id: string | number; name: string; description?: string; member_count?: number }>>([]);
-  const linesOfBusiness = getLineOfBusinessConfig(() => "").initialData;
+  const [linesOfBusiness, setLinesOfBusiness] = useState<Array<{ id: number; name: string }>>([]);
+  const [linesOfBusinessLoading, setLinesOfBusinessLoading] = useState(true);
 
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -223,6 +224,30 @@ export default function SeedListManagementPage() {
   // Load system users on mount
   useEffect(() => {
     loadUsers();
+  }, []);
+
+  // Load lines of business on mount
+  useEffect(() => {
+    const loadLinesOfBusiness = async () => {
+      try {
+        setLinesOfBusinessLoading(true);
+        const data = await lineOfBusinessService.getLinesOfBusiness();
+        setLinesOfBusiness(
+          Array.isArray(data)
+            ? data.map((item) => ({
+                id: item.id || 0,
+                name: item.name || "",
+              }))
+            : []
+        );
+      } catch (error) {
+        console.error("Failed to load lines of business:", error);
+        setLinesOfBusiness([]);
+      } finally {
+        setLinesOfBusinessLoading(false);
+      }
+    };
+    loadLinesOfBusiness();
   }, []);
 
   // Load seed lists on mount
@@ -1459,12 +1484,13 @@ export default function SeedListManagementPage() {
                       }}
                       options={[
                         { value: "", label: "Select Line of Business" },
-                        ...linesOfBusiness.map((lob: any) => ({
+                        ...linesOfBusiness.map((lob) => ({
                           value: lob.id.toString(),
                           label: lob.name,
                         })),
                       ]}
                       placeholder="Select Line of Business"
+                      disabled={linesOfBusinessLoading}
                       zIndex={zIndex.popover}
                     />
                   </div>

@@ -8,6 +8,7 @@ interface SelectOption {
   value: string | number;
   label: string;
   disabled?: boolean;
+  id?: string | number; // Unique identifier for React key
 }
 
 interface HeadlessSelectProps {
@@ -157,7 +158,7 @@ export default function HeadlessSelect({
               ) : (
                 filteredOptions.map((option) => (
                   <div
-                    key={option.value}
+                    key={option.id ?? option.value}
                     onClick={(e) => {
                       e.stopPropagation();
                       onChange(option.value);

@@ -703,6 +703,7 @@ export default function OfferCreativeStep({
         // Safely access properties with null checks
         const name = lang?.name ?? "Unknown Language";
         const value = lang?.language_code ?? "";
+        const id = lang?.id;
 
         // Only include in options if we have a valid value
         if (!value) {
@@ -712,6 +713,7 @@ export default function OfferCreativeStep({
         return {
           label: name,
           value: String(value),
+          id: id,
           isUsed: usedLanguages.includes(value),
         };
       })

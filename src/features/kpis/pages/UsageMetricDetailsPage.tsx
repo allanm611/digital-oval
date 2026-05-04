@@ -146,7 +146,7 @@ export default function UsageMetricDetailsPage() {
 
       {/* Metric Information */}
       <div className="space-y-6">
-        {/* Metric Overview & Basic Information */}
+        {/* Metric Overview & Data Source Information */}
           <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
             <div className="flex items-start space-x-4 mb-6">
               <div
@@ -177,15 +177,6 @@ export default function UsageMetricDetailsPage() {
                   {metric.field_type === "decimal" ? "Decimal" : "Numeric"}
                 </p>
               </div>
-            </div>
-          </div>
-
-          {/* Data Source Information */}
-          <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
-            <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-6`}>
-              Data Source Information
-            </h3>
-            <div className="space-y-4">
               <div className="space-y-1">
                 <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
                   Source Table
