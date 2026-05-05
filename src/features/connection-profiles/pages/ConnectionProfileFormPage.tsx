@@ -402,29 +402,6 @@ export default function ConnectionProfileFormPage({
                 />
               )}
             </div>
-            {formData.connection_type === "database" && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Database Type
-                  </label>
-                  <HeadlessSelect
-                    options={DATABASE_TYPE_OPTIONS.map((opt) => ({
-                      value: opt.value,
-                      label: opt.label,
-                    }))}
-                    value={formData.database_type || ""}
-                    onChange={(value) =>
-                      setFormData({
-                        ...formData,
-                        database_type: (value as DatabaseTypeEnum) || undefined,
-                      })
-                    }
-                    placeholder="Select database type..."
-                  />
-                </div>
-              </>
-            )}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Environment *
@@ -516,29 +493,6 @@ export default function ConnectionProfileFormPage({
                 />
               )}
             </div>
-            {formData.connection_type === "database" && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Database Name
-                  </label>
-                  {/* <p className="text-xs text-gray-500 mb-2">
-                    Name of the database to connect to.
-                  </p> */}
-                  <Input
-                    placeholder="Database name"
-                    value={formData.database_name || ""}
-                    onChange={(val) =>
-                      setFormData({
-                        ...formData,
-                        database_name: val || undefined,
-                      })
-                    }
-                    variant="medium"
-                  />
-                </div>
-              </>
-            )}
           </div>
         </div>
 

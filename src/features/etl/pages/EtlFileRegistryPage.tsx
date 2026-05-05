@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import Input from '../../../shared/components/ui/Input';
-import SearchInput from '../../../shared/components/ui/SearchInput';
+import Input from "../../../shared/components/ui/Input";
+import SearchInput from "../../../shared/components/ui/SearchInput";
 import { useNavigate } from "react-router-dom";
 import {
   Download,
@@ -17,7 +17,12 @@ import { etlService } from "../services/etlService";
 import { EtlFileRegistryRowType, FileStatsResponse } from "../types/etl";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
-import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
+import {
+  color,
+  tw,
+  button,
+  getButtonStyles,
+} from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
@@ -165,7 +170,8 @@ export default function EtlFileRegistryPage() {
   });
 
   const displayedFiles = filteredFiles.length > 0 ? filteredFiles : files;
-  const showNoResults = !isLoadingFiles && searchTerm && filteredFiles.length === 0;
+  const showNoResults =
+    !isLoadingFiles && searchTerm && filteredFiles.length === 0;
 
   return (
     <div className="space-y-6">
@@ -180,18 +186,19 @@ export default function EtlFileRegistryPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setShowFetchDropdown(!showFetchDropdown)}
-              className="inline-flex items-center gap-2 transition-colors"
-              style={getButtonStyles(button.action)}
-            >
-              <Play className="h-4 w-4" />
-              {t.etl.fetchControlsButton}
-              <ChevronDown className="h-4 w-4" />
-            </button>
+          <button
+            type="button"
+            onClick={() => setShowFetchDropdown(!showFetchDropdown)}
+            className="inline-flex items-center gap-2 transition-colors"
+            style={getButtonStyles(button.action)}
+          >
+            {t.etl.fetchControlsButton}
+            <ChevronDown
+              className={`h-4 w-4 transition-transform ${showFetchDropdown ? "rotate-180" : ""}`}
+            />{" "}
+          </button>
 
+          <div className="relative">
             {showFetchDropdown && (
               <div
                 className={`absolute top-full right-0 mt-2 ${tw.rounded} border shadow-lg z-40`}
@@ -225,7 +232,6 @@ export default function EtlFileRegistryPage() {
               </div>
             )}
           </div>
-
           <PermissionGate permission="etl.create">
             <button
               type="button"
@@ -785,9 +791,7 @@ export default function EtlFileRegistryPage() {
 
             {/* Error Message */}
             {uploadError && (
-              <p className="text-sm text-red-600">
-                {uploadError}
-              </p>
+              <p className="text-sm text-red-600">{uploadError}</p>
             )}
 
             {/* Buttons */}
@@ -836,18 +840,33 @@ export default function EtlFileRegistryPage() {
                       await loadStats();
                     } else {
                       // Display user-friendly error for duplicate file
-                      if (response.message && (response.message.includes("duplicate key") || response.message.includes("unique constraint"))) {
-                        setUploadError(`A file named "${uploadFile.name}" already exists in the ${uploadCategory} category.`);
+                      if (
+                        response.message &&
+                        (response.message.includes("duplicate key") ||
+                          response.message.includes("unique constraint"))
+                      ) {
+                        setUploadError(
+                          `A file named "${uploadFile.name}" already exists in the ${uploadCategory} category.`,
+                        );
                       } else {
-                        const errorMessage = response.error || response.message || "An error occurred during upload";
+                        const errorMessage =
+                          response.error ||
+                          response.message ||
+                          "An error occurred during upload";
                         setUploadError(errorMessage);
                       }
                     }
                   } catch (err) {
-                    const errorMsg = (err as Error).message || "Failed to upload file";
+                    const errorMsg =
+                      (err as Error).message || "Failed to upload file";
                     // Show user-friendly message for duplicate file error
-                    if (errorMsg.includes("duplicate key") || errorMsg.includes("unique constraint")) {
-                      setUploadError(`A file named "${uploadFile.name}" already exists in the ${uploadCategory} category.`);
+                    if (
+                      errorMsg.includes("duplicate key") ||
+                      errorMsg.includes("unique constraint")
+                    ) {
+                      setUploadError(
+                        `A file named "${uploadFile.name}" already exists in the ${uploadCategory} category.`,
+                      );
                     } else {
                       setUploadError(errorMsg);
                     }

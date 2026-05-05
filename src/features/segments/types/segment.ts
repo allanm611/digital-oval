@@ -1050,6 +1050,8 @@ export type LayerCondition = {
   value?: string | number | (string | number)[] | null;
   start_date?: string | null;
   end_date?: string | null;
+  time_window_id?: number;
+  date_operator_id?: number;
 };
 
 /**

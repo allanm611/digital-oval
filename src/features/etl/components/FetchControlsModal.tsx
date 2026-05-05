@@ -8,7 +8,7 @@ import {
 } from "../types/etl";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
-import { color, tw, zIndex } from "../../../shared/utils/utils";
+import { color, tw, zIndex, button, getButtonStyles } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { scheduledJobService } from "../../jobs/services/scheduledJobService";
 import { ScheduledJob } from "../../jobs/types/scheduledJob";
@@ -36,9 +36,9 @@ export default function FetchControlsModal({
   const { success, error: toastError } = useToast();
 
   // Wrapper to bypass silent mode for ETL errors
-  const showError = (title: string, message: string) => {
+  const showError = useCallback((title: string, message: string) => {
     toastError(title, message, true); // true = bypassSilentMode
-  };
+  }, [toastError]);
   const { user } = useAuth();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -599,8 +599,8 @@ export default function FetchControlsModal({
               else if (mode === "by-range") handleFetchByRange();
             }}
             disabled={isLoading}
-            className={`px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
-            style={{ backgroundColor: color.primary.action }}
+            className="inline-flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            style={getButtonStyles(button.action)}
           >
             {isLoading ? (
               <>

@@ -133,11 +133,12 @@ const buildLayerCondition = (condition: SegmentCondition): LayerCondition | null
     if (calculatedDateRange && isMetricCondition) {
       layerCondValue.start_date = calculatedDateRange.start_date;
       layerCondValue.end_date = calculatedDateRange.end_date;
-      // Include time_window_id for metrics
-      if (condition.time_window_id) {
-        layerCondValue.time_window_id = condition.time_window_id;
-      }
     }
+  }
+
+  // Always include time_window_id when it's selected (for last_7_days, last_30_days, last_90_days, current, or custom)
+  if (condition.time_window_id && condition.time_window_id > 0) {
+    layerCondValue.time_window_id = condition.time_window_id;
   }
 
   const layerCond: LayerCondition = {

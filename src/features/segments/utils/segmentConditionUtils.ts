@@ -346,6 +346,7 @@ export const createNewCondition = (
     value: "",
     type: "string",
     time_window: "last_7_days",
+    time_window_id: 1, // Corresponds to "last_7_days"
   };
 };
 
