@@ -3,7 +3,7 @@ import { X, CheckCircle } from "lucide-react";
 import { campaignService } from "../services/campaignService";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
 
 interface ApproveCampaignModalProps {
   isOpen: boolean;
@@ -83,17 +83,9 @@ export default function ApproveCampaignModal({
             className="flex items-center justify-between p-6 border-b"
             style={{ borderColor: color.border.default }}
           >
-            <div className="flex items-center gap-3">
-              <div
-                className={`w-10 h-10 ${tw.rounded} flex items-center justify-center`}
-                style={{ backgroundColor: "#10B98120" }}
-              >
-                <CheckCircle className="w-5 h-5 text-green-600" />
-              </div>
-              <h2 className={`text-xl font-semibold ${tw.textPrimary}`}>
-                Approve Campaign
-              </h2>
-            </div>
+            <h2 className={`text-base font-semibold ${tw.textPrimary}`}>
+              Approve Campaign
+            </h2>
             <button
               onClick={onClose}
               className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
@@ -107,7 +99,7 @@ export default function ApproveCampaignModal({
             <p className={`text-sm ${tw.textSecondary} mb-4`}>
               Are you sure you want to approve the campaign:
             </p>
-            <p className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
+            <p className={`text-sm font-semibold ${tw.textPrimary} mb-6`}>
               "{campaignName}"
             </p>
             <p className={`text-sm ${tw.textSecondary}`}>
@@ -133,7 +125,7 @@ export default function ApproveCampaignModal({
               onClick={handleApprove}
               disabled={isApproving}
               className={`px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
-              style={{ backgroundColor: "#10B981" }}
+              style={getButtonStyles(button.action)}
             >
               {isApproving ? (
                 <>

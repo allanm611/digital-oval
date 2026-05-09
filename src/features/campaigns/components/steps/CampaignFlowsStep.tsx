@@ -518,6 +518,11 @@ export default function CampaignFlowsStep({
           setShowPreviewModal(false);
           setPreviewOffer(null);
         }}
+        onEditOffer={(offerId) => {
+          setEditingOfferId(offerId);
+          setShowEditOfferModal(true);
+          setShowPreviewModal(false);
+        }}
       />
 
       {/* Edit Offer Modal */}

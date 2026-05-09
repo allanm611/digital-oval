@@ -3,7 +3,7 @@ import { X, XCircle } from "lucide-react";
 import { campaignService } from "../services/campaignService";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
 
 interface RejectCampaignModalProps {
   isOpen: boolean;
@@ -89,12 +89,9 @@ export default function RejectCampaignModal({
             className="flex items-center justify-between p-6 border-b"
             style={{ borderColor: color.border.default }}
           >
-            <div className="flex items-center gap-3">
-              <XCircle className="w-5 h-5 text-red-600" />
-              <h2 className={`text-xl font-semibold ${tw.textPrimary}`}>
-                Reject Campaign
-              </h2>
-            </div>
+            <h2 className={`text-base font-semibold ${tw.textPrimary}`}>
+              Reject Campaign
+            </h2>
             <button
               onClick={onClose}
               className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
@@ -108,7 +105,7 @@ export default function RejectCampaignModal({
             <p className={`text-sm ${tw.textSecondary} mb-2`}>
               You are about to reject the campaign:
             </p>
-            <p className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
+            <p className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>
               "{campaignName}"
             </p>
 

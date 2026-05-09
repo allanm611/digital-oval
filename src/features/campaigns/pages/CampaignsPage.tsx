@@ -1470,43 +1470,44 @@ export default function CampaignsPage() {
                           </PermissionGate>
                         )}
 
-                        {campaign.status === "pending_approval" && (
-                          <>
-                            <PermissionGate permission="campaigns.approve">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setCampaignToApprove({
-                                    id: campaign.id,
-                                    name: campaign.name,
-                                  });
-                                  setShowApproveModal(true);
-                                  setShowActionMenu(null);
-                                }}
-                                className="w-full flex items-center px-4 py-3 text-sm text-black"
-                              >
-                                <CheckCircle className="w-4 h-4 mr-4 text-black" />
-                                Approve Campaign
-                              </button>
-                            </PermissionGate>
-                            <PermissionGate permission="campaigns.reject">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setCampaignToReject({
-                                    id: campaign.id,
-                                    name: campaign.name,
-                                  });
-                                  setShowRejectModal(true);
-                                  setShowActionMenu(null);
-                                }}
-                                className="w-full flex items-center px-4 py-3 text-sm text-black"
-                              >
-                                <Trash2 className="w-4 h-4 mr-4 text-red-600" />
-                                Reject Campaign
-                              </button>
-                            </PermissionGate>
-                          </>
+                        {canShowCampaignButton(campaign, "approve") && (
+                          <PermissionGate permission="campaigns.approve">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setCampaignToApprove({
+                                  id: campaign.id,
+                                  name: campaign.name,
+                                });
+                                setShowApproveModal(true);
+                                setShowActionMenu(null);
+                              }}
+                              className="w-full flex items-center px-4 py-3 text-sm text-black"
+                            >
+                              <CheckCircle className="w-4 h-4 mr-4 text-black" />
+                              Approve Campaign
+                            </button>
+                          </PermissionGate>
+                        )}
+
+                        {canShowCampaignButton(campaign, "reject") && (
+                          <PermissionGate permission="campaigns.reject">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setCampaignToReject({
+                                  id: campaign.id,
+                                  name: campaign.name,
+                                });
+                                setShowRejectModal(true);
+                                setShowActionMenu(null);
+                              }}
+                              className="w-full flex items-center px-4 py-3 text-sm text-black"
+                            >
+                              <Trash2 className="w-4 h-4 mr-4 text-red-600" />
+                              Reject Campaign
+                            </button>
+                          </PermissionGate>
                         )}
 
                         <button

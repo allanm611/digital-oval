@@ -1881,7 +1881,6 @@ export default function CreateOfferPage({
         code: offer.code || "",
         description: offer.description || "",
         offer_type_id: offerTypeId,
-        offer_type: offer.offer_type,
         category_id: offer.category_id ? String(offer.category_id) : undefined,
         communication_channel_id: offer.communication_channel_id,
         sms_route_id: offer.sms_route_id,
@@ -2754,7 +2753,7 @@ export default function CreateOfferPage({
       const baseDraftData = {
         name: formData.name,
         code: formData.code,
-        offer_type: formData.offer_type_id || OfferTypeEnum.DATA,
+        offer_type_id: formData.offer_type_id,
         max_usage_per_customer: formData.max_usage_per_customer,
         ...(formData.description && { description: formData.description }),
         ...(formData.category_id && { category_id: formData.category_id }),

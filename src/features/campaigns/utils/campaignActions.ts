@@ -28,7 +28,7 @@ export function canShowCampaignButton(
     case "approve":
       return campaign.approval_status === "pending";
     case "reject":
-      return campaign.approval_status === "pending";
+      return (campaign.approval_status === "pending" && campaign.status === "pending_approval") || campaign.approval_status === "approved";
     default:
       return false;
   }

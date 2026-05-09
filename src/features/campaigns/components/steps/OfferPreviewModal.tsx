@@ -12,6 +12,7 @@ interface OfferPreviewModalProps {
   isOpen: boolean;
   offer: CampaignOffer | null;
   onClose: () => void;
+  onEditOffer?: (offerId: number) => void;
 }
 
 interface OfferCreative {
@@ -32,6 +33,7 @@ export default function OfferPreviewModal({
   isOpen,
   offer,
   onClose,
+  onEditOffer,
 }: OfferPreviewModalProps) {
   const navigate = useNavigate();
   const [offerDetails, setOfferDetails] = useState<Offer | null>(null);
@@ -302,7 +304,12 @@ export default function OfferPreviewModal({
             Close
           </button>
           <button
-            onClick={handleViewDetails}
+            onClick={() => {
+              if (onEditOffer && offer) {
+                onEditOffer(Number(offer.id));
+                onClose();
+              }
+            }}
             style={{
               ...getButtonStyles(button.action),
               fontWeight: "500",
