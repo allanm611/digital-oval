@@ -1035,8 +1035,7 @@ export default function SegmentModal({
                         entityType="segment"
                         refreshTrigger={categoryRefreshTrigger}
                         className="w-full"
-                        allowCreate={true}
-                        onCreateCategory={() => setShowCreateCatalogModal(true)}
+                        allowCreate={false}
                         onCategoryCreated={(categoryId) => {
                           isUserInteractionRef.current = true;
                           setSelectedCategoryIds([categoryId]);

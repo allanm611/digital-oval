@@ -38,33 +38,8 @@ import {
   CampaignFlowConfig,
   CampaignFlowResponseData,
 } from "../types/campaignFlow";
-import { departmentsConfig } from "../../configurations/configs/configurationPageConfigs";
 
-const objectiveOptions = [
-  { value: "acquisition", label: "New Customer Acquisition" },
-  { value: "retention", label: "Customer Retention" },
-  { value: "churn_prevention", label: "Churn Prevention" },
-  { value: "upsell_cross_sell", label: "Upsell/Cross-sell" },
-  { value: "reactivation", label: "Dormant Customer Reactivation" },
-];
-
-/** Convert objective label to value or return existing value */
-const mapObjectiveLabelToValue = (labelOrValue: string | undefined): string => {
-  if (!labelOrValue) return "acquisition";
-  if (
-    [
-      "acquisition",
-      "retention",
-      "churn_prevention",
-      "upsell_cross_sell",
-      "reactivation",
-    ].includes(labelOrValue)
-  ) {
-    return labelOrValue;
-  }
-  const found = objectiveOptions.find((o) => o.label === labelOrValue);
-  return found?.value || "acquisition";
-};
+import { useBackendConfigurationData } from "../../../shared/hooks/useBackendConfigurationData";
 import CampaignDefinitionStep from "../components/steps/CampaignDefinitionStep";
 import AudienceConfigurationStep from "../components/steps/AudienceConfigurationStep";
 import CampaignFlowsStep from "../components/steps/CampaignFlowsStep";
@@ -113,6 +88,8 @@ export default function CreateCampaignPage() {
   const { showToast } = useToast();
   const { user } = useAuth();
   const { t } = useLanguage();
+  const { data: objectives } = useBackendConfigurationData("campaignObjectives") || { data: [] };
+  const { data: departments } = useBackendConfigurationData("departments") || { data: [] };
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
@@ -288,12 +265,20 @@ export default function CreateCampaignPage() {
         if (!skipFormData) {
           // Set form data with all available fields
           // If duplicating, prefix name with "Copy of "
+
+          // Map objective - backend returns name/id, store as ID from objectives list
+          let objectiveValue = "acquisition";
+          if (campaign?.objective) {
+            // Use objective as-is since backend already returns the ID
+            objectiveValue = String(campaign.objective);
+          }
+
           const newFormData: CampaignFormData = {
             name: isDuplicate
               ? `Copy of ${campaign?.name}`
               : campaign?.name || "",
             description: campaign?.description || "",
-            objective: mapObjectiveLabelToValue(campaign?.objective),
+            objective: objectiveValue,
             category_id: campaign?.category_id || undefined,
             program_id: campaign?.program_id || undefined,
             start_date: campaign?.start_date || undefined,
@@ -308,7 +293,7 @@ export default function CreateCampaignPage() {
               ? parseFloat(campaign.budget_allocated)
               : undefined,
             priority: campaign?.priority || undefined,
-            priority_rank: campaign?.priority_rank || undefined,
+            // priority_rank: campaign?.priority_rank || undefined, // NOT ALLOWED
           };
           setFormData(newFormData);
         }
@@ -745,16 +730,16 @@ export default function CreateCampaignPage() {
         return;
       }
 
-      const objectiveOption = objectiveOptions.find(
-        (o) => o.value === formData.objective,
+      const objectiveData = objectives.find(
+        (o: any) => String(o.id) === String(formData.objective),
       );
       const objectiveLabel =
-        objectiveOption?.label || formData.objective || "acquisition";
+        objectiveData?.name || formData.objective || "acquisition";
       const tagsArray = formData.tags || [];
       const departmentId = (formData as any)?.department_id;
       const department =
-        departmentId && departmentsConfig?.initialData
-          ? departmentsConfig.initialData.find(
+        departmentId && departments?.length > 0
+          ? departments.find(
               (d: any) => Number(d?.id) === Number(departmentId),
             )
           : undefined;
@@ -776,7 +761,7 @@ export default function CreateCampaignPage() {
             budget_allocated: String(formData.budget_allocated),
           }),
           ...(formData.priority && { priority: formData.priority }),
-          ...(formData.priority_rank && { priority_rank: formData.priority_rank }),
+          // ...(formData.priority_rank && { priority_rank: formData.priority_rank }), // NOT ALLOWED
           ...((formData as any)?.line_of_business && {
             line_of_business: (formData as any).line_of_business,
           }),
@@ -895,7 +880,7 @@ export default function CreateCampaignPage() {
             budget_allocated: String(formData.budget_allocated),
           }),
           ...(formData.priority && { priority: formData.priority }),
-          ...(formData.priority_rank && { priority_rank: formData.priority_rank }),
+          // ...(formData.priority_rank && { priority_rank: formData.priority_rank }), // NOT ALLOWED
           ...((formData as any)?.line_of_business && {
             line_of_business: (formData as any).line_of_business,
           }),
@@ -1006,12 +991,11 @@ export default function CreateCampaignPage() {
         // Create new campaign first time - POST endpoint
         const campaignCode = generateCampaignCode(formData.name);
 
-        const objectiveOption = objectiveOptions.find(
-          (o: { value: string; label: string }) =>
-            o.value === formData.objective,
+        const objectiveData = objectives.find(
+          (o: any) => String(o.id) === String(formData.objective),
         );
-        const objectiveLabel = objectiveOption
-          ? objectiveOption.label
+        const objectiveLabel = objectiveData
+          ? objectiveData.name
           : formData.objective;
 
         const tagsArray = formData.tags || [];
@@ -1019,7 +1003,7 @@ export default function CreateCampaignPage() {
         const departmentId = (formData as { department_id?: number })
           .department_id;
         const department = departmentId
-          ? departmentsConfig.initialData.find(
+          ? departments.find(
               (d: { id: number | string; name: string }) =>
                 Number(d.id) === Number(departmentId),
             )
@@ -1041,7 +1025,7 @@ export default function CreateCampaignPage() {
           ...(ownerTeam && { owner_team: ownerTeam }),
           budget_allocated: String(formData.budget_allocated || 0),
           ...(formData.priority && { priority: formData.priority }),
-          ...(formData.priority_rank && { priority_rank: formData.priority_rank }),
+          // ...(formData.priority_rank && { priority_rank: formData.priority_rank }), // NOT ALLOWED
           ...((formData as any)?.line_of_business && {
             line_of_business: (formData as any).line_of_business,
           }),
@@ -1285,11 +1269,11 @@ export default function CreateCampaignPage() {
       const campaignCode = generateCampaignCode(formData.name);
 
       // Get objective label from value
-      const objectiveOption = objectiveOptions.find(
-        (o: { value: string; label: string }) => o.value === formData.objective,
+      const objectiveData = objectives.find(
+        (o: any) => String(o.id) === String(formData.objective),
       );
-      const objectiveLabel = objectiveOption
-        ? objectiveOption.label
+      const objectiveLabel = objectiveData
+        ? objectiveData.name
         : formData.objective;
 
       // Get tags array directly from formData
@@ -1299,7 +1283,7 @@ export default function CreateCampaignPage() {
       const departmentId = (formData as { department_id?: number })
         .department_id;
       const department = departmentId
-        ? departmentsConfig.initialData.find(
+        ? departments.find(
             (d: { id: number | string; name: string }) =>
               Number(d.id) === Number(departmentId),
           )
@@ -1320,9 +1304,9 @@ export default function CreateCampaignPage() {
         ...(ownerTeam && { owner_team: ownerTeam }),
         budget_allocated: String(formData.budget_allocated || 0),
         ...(formData.priority && { priority: formData.priority }),
-        ...(formData.priority_rank && {
-          priority_rank: formData.priority_rank,
-        }),
+        // ...(formData.priority_rank && { // NOT ALLOWED
+        //   priority_rank: formData.priority_rank,
+        // }),
         ...((formData as any)?.line_of_business && {
           line_of_business: (formData as any).line_of_business,
         }),

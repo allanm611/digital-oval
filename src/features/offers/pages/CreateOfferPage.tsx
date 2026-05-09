@@ -439,7 +439,7 @@ function BasicInfoStep({
               }
             }}
             placeholder={offerTypesLoading ? "Loading..." : "Select offer type"}
-            allowCreate={true}
+            allowCreate={false}
             onCreate={() => setShowCreateTypeModal(true)}
           />
           {validationErrors?.offer_type && (
@@ -464,7 +464,7 @@ function BasicInfoStep({
             disabled={categoriesLoading}
             refreshTrigger={categoryRefreshTriggerState}
             className="w-full"
-            allowCreate={true}
+            allowCreate={false}
             onCreateCategory={() => setShowCreateCatalogModal(true)}
             onCategoryCreated={(categoryId) => {
               userInitiatedUpdateRef.current = true;

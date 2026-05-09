@@ -481,8 +481,7 @@ export default function CampaignDefinitionStep({
                 placeholder="Select catalog(s)"
                 entityType="campaign"
                 className="w-full"
-                allowCreate={true}
-                onCreateCategory={() => setShowCreateCatalogModal(true)}
+                allowCreate={false}
                 onCategoryCreated={(categoryId) => {
                   setSelectedCategoryIds([categoryId]);
                   setCategoryRefreshTriggerState((prev) => prev + 1);
@@ -653,11 +652,6 @@ export default function CampaignDefinitionStep({
                               className="w-full text-left px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
                             >
                               <div className="font-medium">{lob.name}</div>
-                              {lob.description && (
-                                <div className="text-gray-500 text-xs">
-                                  {lob.description}
-                                </div>
-                              )}
                             </button>
                           ))
                       )}
@@ -773,11 +767,6 @@ export default function CampaignDefinitionStep({
                               className="w-full text-left px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
                             >
                               <div className="font-medium">{dept.name}</div>
-                              {dept.description && (
-                                <div className="text-gray-500 text-xs">
-                                  {dept.description}
-                                </div>
-                              )}
                             </button>
                           ))
                       )}
@@ -959,11 +948,6 @@ export default function CampaignDefinitionStep({
                             className="w-full text-left px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
                           >
                             <div className="font-medium">{program.name}</div>
-                            {program.description && (
-                              <div className="text-gray-500 text-xs">
-                                {program.description}
-                              </div>
-                            )}
                           </button>
                         ))
                     )}
@@ -1086,11 +1070,6 @@ export default function CampaignDefinitionStep({
                                 <div className="font-medium">
                                   {objective.name}
                                 </div>
-                                {objective.description && (
-                                  <div className="text-gray-500 text-xs">
-                                    {objective.description}
-                                  </div>
-                                )}
                               </div>
                             </button>
                           ))
@@ -1194,6 +1173,7 @@ export default function CampaignDefinitionStep({
               })}
             </div>
             {/* Priority Rank - Only shows when priority is selected */}
+            {/* DISABLED: priority_rank is not allowed by backend
             {formData.priority && (
               <div
                 className={`mt-3 p-3 bg-gray-50 border border-gray-200 ${tw.rounded}`}
@@ -1226,6 +1206,7 @@ export default function CampaignDefinitionStep({
                 </p>
               </div>
             )}
+            */}
           </div>
         </div>
 
@@ -1334,11 +1315,6 @@ export default function CampaignDefinitionStep({
                           {policy.name}
                         </div>
                       </div>
-                      {policy.description && (
-                        <div className="text-xs text-gray-500 ml-4">
-                          {policy.description}
-                        </div>
-                      )}
                     </button>
                   ))}
                 </div>
