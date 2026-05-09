@@ -13,7 +13,7 @@ import {
   Loader,
   AlertCircle,
 } from "lucide-react";
-import { color, tw, components, zIndex } from "../../../shared/utils/utils";
+import { color, tw, components, zIndex, getButtonStyles, button } from "../../../shared/utils/utils";
 import { ManualBroadcastData } from "../pages/CreateManualBroadcastPage";
 import PreviewPanel from "../../communications/components/PreviewPanel";
 import RichTextEditor from "../../communications/components/RichTextEditor";
@@ -40,14 +40,14 @@ import {
   validatePhoneOnly,
   isValidEmail,
 } from "../../../shared/utils/validation";
-import { DUMMY_RECIPIENTS } from "../../campaigns/pages/SeedListManagementPage";
-import type { SeedListRecipient } from "../../campaigns/pages/SeedListManagementPage";
+import type { SeedListRecipient } from "../../../shared/services/seedListService";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import { smsRouteService } from "../../routes/services/smsRouteService";
 import { SMSRoute } from "../../routes/types/smsRoute";
 import { emailRouteService } from "../../routes/services/emailRouteService";
 import { EmailRoute } from "../../routes/types/emailRoute";
 import { communicationChannelService } from "../../../shared/services/communicationChannelService";
+import SeedListRecipientsModal from "../../../shared/components/SeedListRecipientsModal";
 
 interface DefineCommunicationStepProps {
   data: ManualBroadcastData;
@@ -99,9 +99,13 @@ export default function DefineCommunicationStep({
   const [isTesting, setIsTesting] = useState(false);
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [testError, setTestError] = useState("");
-  const [selectedTestContacts, setSelectedTestContacts] = useState<Set<string>>(
+  const [selectedTestContactIds, setSelectedTestContactIds] = useState<Set<number>>(
     new Set(),
   );
+
+  // Seedlist modal state
+  const [showSeedListModal, setShowSeedListModal] = useState(false);
+  const [selectedRecipients, setSelectedRecipients] = useState<SeedListRecipient[]>([]);
 
   const titleInputRef = useRef<HTMLInputElement>(null);
   const bodyTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -181,38 +185,77 @@ export default function DefineCommunicationStep({
 
   // Get active seed list recipients
   const getActiveRecipients = (): SeedListRecipient[] => {
-    return DUMMY_RECIPIENTS.filter((r) => r.status === "active");
+    return selectedRecipients;
   };
 
-  // Derive all available test contacts from active recipients based on channel
+  // Handle saving selected recipients from modal
+  const handleSaveSelectedRecipients = (_segmentId: string, recipients: SeedListRecipient[]) => {
+    if (!recipients || !Array.isArray(recipients)) {
+      console.warn("Invalid recipients data received");
+      return;
+    }
+    setSelectedRecipients(recipients);
+    setShowSeedListModal(false);
+    // Reset test contact selections when changing recipients
+    setSelectedTestContactIds(new Set());
+  };
+
+  // Derive all available test contacts from selected recipients based on channel
   const getAvailableTestContacts = (): string[] => {
-    const activeRecipients = getActiveRecipients();
-    return activeRecipients
+    if (!selectedRecipients || !Array.isArray(selectedRecipients)) {
+      return [];
+    }
+    if (selectedRecipients.length === 0) {
+      return [];
+    }
+    return selectedRecipients
       .map((r) => {
+        if (!r) return "";
         const contact =
           selectedChannel === "EMAIL" ? r.customer_email : r.customer_phone;
+        if (!contact) return "";
         // Remove + prefix from phone numbers
-        return contact?.replace(/^\+/, "") || "";
+        return contact.replace(/^\+/, "");
       })
       .filter(Boolean) as string[];
   };
 
   // Get only the selected/checked test contacts
   const getSelectedTestContacts = (): string[] => {
-    return getAvailableTestContacts().filter((contact) =>
-      selectedTestContacts.has(contact),
-    );
+    if (!selectedRecipients || !Array.isArray(selectedRecipients)) {
+      return [];
+    }
+    if (!selectedTestContactIds || selectedTestContactIds.size === 0) {
+      return [];
+    }
+    return selectedRecipients
+      .filter((r) => {
+        if (!r || typeof r.id !== "number") return false;
+        return selectedTestContactIds.has(r.id);
+      })
+      .map((r) => {
+        if (!r) return "";
+        const contact =
+          selectedChannel === "EMAIL" ? r.customer_email : r.customer_phone;
+        if (!contact) return "";
+        return contact.replace(/^\+/, "");
+      })
+      .filter(Boolean) as string[];
   };
 
   // Toggle selection of a test contact
-  const toggleTestContact = (contact: string) => {
-    const newSelected = new Set(selectedTestContacts);
-    if (newSelected.has(contact)) {
-      newSelected.delete(contact);
-    } else {
-      newSelected.add(contact);
+  const toggleTestContact = (recipientId: number) => {
+    if (typeof recipientId !== "number" || recipientId < 0) {
+      console.warn("Invalid recipientId:", recipientId);
+      return;
     }
-    setSelectedTestContacts(newSelected);
+    const newSelected = new Set(selectedTestContactIds);
+    if (newSelected.has(recipientId)) {
+      newSelected.delete(recipientId);
+    } else {
+      newSelected.add(recipientId);
+    }
+    setSelectedTestContactIds(newSelected);
   };
 
   // Validate contact based on channel
@@ -959,8 +1002,7 @@ export default function DefineCommunicationStep({
               <button
                 type="button"
                 onClick={() => handleCustomizePolicy(selectedPolicy)}
-                className={`px-3 py-1 text-xs flex items-center gap-1 ${tw.rounded} text-white hover:opacity-90`}
-                style={{ backgroundColor: color.primary.action }}
+                style={getButtonStyles(button.action)}
               >
                 <Settings className="w-3 h-3" />
                 Customize
@@ -1005,11 +1047,7 @@ export default function DefineCommunicationStep({
                     onClick={() =>
                       setShowVariableSelector(!showVariableSelector)
                     }
-                    className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors"
-                    style={{
-                      backgroundColor: color.primary.accent,
-                      color: "white",
-                    }}
+                    style={getButtonStyles(button.action)}
                   >
                     <Variable className="w-4 h-4" />
                     <span>Insert Variable</span>
@@ -1137,146 +1175,233 @@ export default function DefineCommunicationStep({
                 sampleData={getSampleDataForPreview()}
               />
             </div>
+          </div>
+        </div>
 
-            {/* Test Contacts Selection */}
-            {getAvailableTestContacts().length > 0 && (
+        {/* Test Contacts Selection - Below grid */}
+        <div
+          className="bg-white rounded-md shadow-sm border p-4"
+          style={{ borderColor: color.border.default }}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <h3 className={`text-sm font-semibold ${tw.textPrimary}`}>
+              Select Test Contacts
+            </h3>
+            <button
+              onClick={() => setShowSeedListModal(true)}
+              style={getButtonStyles(button.action)}
+            >
+              Select from Seed List
+            </button>
+          </div>
+          <p className={`text-sm ${tw.textSecondary} mb-3`}>
+            Check the contacts you want to test (
+            {getSelectedTestContacts().length} selected)
+          </p>
+
+          {selectedRecipients.length > 0 ? (
+            <>
               <div
-                className="bg-white rounded-md shadow-sm border p-4"
+                className={`border ${tw.rounded} overflow-hidden`}
                 style={{ borderColor: color.border.default }}
               >
-                <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-3`}>
-                  Select Test Contacts
-                </h3>
-                <p className={`text-xs ${tw.textSecondary} mb-3`}>
-                  Check the contacts you want to test (
-                  {getSelectedTestContacts().length} selected)
-                </p>
-                <div className="space-y-2 max-h-64 overflow-y-auto mb-4">
-                  {getAvailableTestContacts().map((contact, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-2 p-2 rounded-md cursor-pointer hover:bg-gray-50 transition-colors"
-                      onClick={() => toggleTestContact(contact)}
-                    >
-                      <Checkbox
-                        id={`test-contact-${index}`}
-                        checked={selectedTestContacts.has(contact)}
-                        onChange={() => toggleTestContact(contact)}
-                        disabled={isTesting}
-                        className="w-4 h-4 rounded cursor-pointer"
-                      />
-                      <span
-                        className={`text-sm ${tw.textPrimary} flex-1 truncate`}
-                      >
-                        {contact}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Send Test Button */}
-                <div className="mb-4">
-                  <button
-                    onClick={handleSendTest}
-                    disabled={
-                      getSelectedTestContacts().length === 0 || isTesting
-                    }
-                    className="w-auto px-4 py-2.5 text-white rounded-md text-sm font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                    style={{ backgroundColor: color.primary.accent }}
-                  >
-                    {isTesting ? (
-                      <>
-                        <Loader className="w-4 h-4 animate-spin flex-shrink-0" />
-                        <span>Sending Tests...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Send className="w-4 h-4 flex-shrink-0" />
-                        <span>Send Test</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                {/* Test Error */}
-                {testError && (
-                  <div
-                    className="p-3 rounded-md flex items-start gap-2 mb-4"
-                    style={{
-                      backgroundColor: `${color.status.danger}10`,
-                      border: `1px solid ${color.status.danger}30`,
-                    }}
-                  >
-                    <AlertCircle
-                      className="w-5 h-5 flex-shrink-0"
-                      style={{ color: color.status.danger }}
-                    />
-                    <p
-                      className="text-sm"
-                      style={{ color: color.status.danger }}
-                    >
-                      {testError}
-                    </p>
-                  </div>
-                )}
-
-                {/* Test Results */}
-                {testResults.length > 0 && (
-                  <div>
-                    <label
-                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                    >
-                      Test Results
-                    </label>
-                    <div className="space-y-2 max-h-48 overflow-y-auto">
-                      {testResults.map((result, index) => (
-                        <div
-                          key={index}
-                          className="flex items-start gap-2 p-2 rounded-md text-sm"
-                          style={{
-                            backgroundColor:
-                              result.status === "success"
-                                ? `${color.status.success}10`
-                                : `${color.status.danger}10`,
-                          }}
-                        >
-                          {result.status === "success" ? (
-                            <CheckCircle
-                              className="w-4 h-4 flex-shrink-0 mt-0.5"
-                              style={{ color: color.status.success }}
+                <table className="min-w-full divide-y" style={{ borderColor: color.border.default }}>
+                  <thead style={{ backgroundColor: color.surface.cards }}>
+                    <tr>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-12">
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            id="select-all-test-contacts"
+                            checked={selectedTestContactIds.size === selectedRecipients.length && selectedRecipients.length > 0}
+                            onChange={() => {
+                              if (selectedTestContactIds.size === selectedRecipients.length) {
+                                setSelectedTestContactIds(new Set());
+                              } else {
+                                setSelectedTestContactIds(new Set(selectedRecipients.map((r) => r.id)));
+                              }
+                            }}
+                          />
+                        </div>
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                        Name
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                        Email
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                        Phone
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y" style={{ borderColor: color.border.default }}>
+                    {selectedRecipients.map((recipient) => {
+                      const contact = selectedChannel === "EMAIL" ? recipient.customer_email : recipient.customer_phone;
+                      const isSelected = selectedTestContactIds.has(recipient.id);
+                      return (
+                        <tr key={recipient.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-4 py-3">
+                            <Checkbox
+                              id={`test-contact-${recipient.id}`}
+                              checked={isSelected}
+                              onChange={() => toggleTestContact(recipient.id)}
+                              disabled={isTesting}
                             />
-                          ) : (
-                            <XCircle
-                              className="w-4 h-4 flex-shrink-0 mt-0.5"
-                              style={{ color: color.status.danger }}
-                            />
-                          )}
-                          <div className="flex-1">
-                            <p
-                              className="text-xs font-medium"
+                          </td>
+                          <td className="px-4 py-3">
+                            <p className="text-sm font-medium text-gray-900">
+                              {recipient.customer_name || "-"}
+                            </p>
+                          </td>
+                          <td className="px-4 py-3">
+                            <p className="text-sm text-gray-600 truncate">
+                              {recipient.customer_email || "-"}
+                            </p>
+                          </td>
+                          <td className="px-4 py-3">
+                            <p className="text-sm text-gray-600">
+                              {recipient.customer_phone || "-"}
+                            </p>
+                          </td>
+                          <td className="px-4 py-3">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedTestContactIds(new Set([recipient.id]));
+                                handleSendTest();
+                              }}
+                              disabled={isTesting}
                               style={{
-                                color:
-                                  result.status === "success"
-                                    ? color.status.success
-                                    : color.status.danger,
+                                ...getButtonStyles(button.action),
+                                opacity: isTesting ? 0.5 : 1,
                               }}
                             >
-                              {result.contact}
-                            </p>
-                            {result.message && (
-                              <p className={`text-xs ${tw.textMuted} mt-0.5`}>
-                                {result.message}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      ))}
+                              Test
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Send All Tests Button */}
+              <div className="mt-4">
+                <button
+                  onClick={handleSendTest}
+                  disabled={
+                    getSelectedTestContacts().length === 0 || isTesting
+                  }
+                  style={{
+                    ...getButtonStyles(button.action),
+                    opacity: (getSelectedTestContacts().length === 0 || isTesting) ? 0.5 : 1,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                  }}
+                >
+                  {isTesting ? (
+                    <>
+                      <Loader className="w-4 h-4 animate-spin flex-shrink-0" />
+                      <span>Sending Tests...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4 flex-shrink-0" />
+                      <span>Send All Tests</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-8">
+              <p className={`text-sm ${tw.textSecondary} mb-3`}>
+                No test contacts available. Select recipients from a seed list.
+              </p>
+            </div>
+          )}
+
+          {/* Test Error */}
+          {testError && (
+            <div
+              className="p-3 rounded-md flex items-start gap-2 mb-4"
+              style={{
+                backgroundColor: `${color.status.danger}10`,
+                border: `1px solid ${color.status.danger}30`,
+              }}
+            >
+              <AlertCircle
+                className="w-5 h-5 flex-shrink-0"
+                style={{ color: color.status.danger }}
+              />
+              <p
+                className="text-sm"
+                style={{ color: color.status.danger }}
+              >
+                {testError}
+              </p>
+            </div>
+          )}
+
+          {/* Test Results */}
+          {testResults.length > 0 && (
+            <div>
+              <label
+                className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+              >
+                Test Results
+              </label>
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {testResults.map((result, index) => (
+                  <div
+                    key={index}
+                    className="flex items-start gap-2 p-2 rounded-md text-sm"
+                    style={{
+                      backgroundColor:
+                        result.status === "success"
+                          ? `${color.status.success}10`
+                          : `${color.status.danger}10`,
+                    }}
+                  >
+                    {result.status === "success" ? (
+                      <CheckCircle
+                        className="w-4 h-4 flex-shrink-0 mt-0.5"
+                        style={{ color: color.status.success }}
+                      />
+                    ) : (
+                      <XCircle
+                        className="w-4 h-4 flex-shrink-0 mt-0.5"
+                        style={{ color: color.status.danger }}
+                      />
+                    )}
+                    <div className="flex-1">
+                      <p
+                        className="text-xs font-medium"
+                        style={{
+                          color:
+                            result.status === "success"
+                              ? color.status.success
+                              : color.status.danger,
+                        }}
+                      >
+                        {result.contact}
+                      </p>
+                      {result.message && (
+                        <p className={`text-xs ${tw.textMuted} mt-0.5`}>
+                          {result.message}
+                        </p>
+                      )}
                     </div>
                   </div>
-                )}
+                ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1302,6 +1427,15 @@ export default function DefineCommunicationStep({
         defaultName={
           policyToCustomize?.name.replace(" - Customizing...", "") || ""
         }
+      />
+
+      {/* Seed List Recipients Modal */}
+      <SeedListRecipientsModal
+        isOpen={showSeedListModal}
+        onClose={() => setShowSeedListModal(false)}
+        segmentId="broadcast"
+        selectedSeedLists={selectedRecipients.map((r) => String(r.id))}
+        onSave={handleSaveSelectedRecipients}
       />
     </div>
   );

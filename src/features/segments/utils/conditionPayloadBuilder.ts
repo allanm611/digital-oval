@@ -203,69 +203,69 @@ export const convertConditionsToPayload = (
   conditions: SegmentConditionGroup[],
   includeLimit: boolean = true
 ): SegmentPayload => {
-  const sourceLayers: SourceLayer[] = [
-    {
-      source_type: "subscribers",
-    },
-  ];
+  // const sourceLayers: SourceLayer[] = [
+  //   {
+  //     source_type: "subscribers",
+  //   },
+  // ];
 
-  const addedSegments = new Set<number>();
-  const addedQuicklists = new Set<number>();
-  let currentLayerIndex = 1;
+  // const addedSegments = new Set<number>();
+  // const addedQuicklists = new Set<number>();
+  // let currentLayerIndex = 1;
 
-  // First pass: add segment and quicklist layers
-  for (const group of conditions) {
-    for (const condition of group.conditions) {
-      if (condition.conditionType === "segment" && condition.segment_id) {
-        if (!addedSegments.has(condition.segment_id)) {
-          sourceLayers.push({
-            source_type: "segment",
-            segment_id: condition.segment_id,
-            join_config: {
-              join_type: "INNER JOIN",
-              left_column_ref: { layer_index: 0, column: "customer_id" },
-              right_column: "customer_id",
-            },
-          });
-          addedSegments.add(condition.segment_id);
-          currentLayerIndex++;
-        }
-      } else if (condition.conditionType === "list" && condition.list_id) {
-        if (!addedQuicklists.has(condition.list_id)) {
-          sourceLayers.push({
-            source_type: "quicklist",
-            quicklist_id: condition.list_id,
-            join_config: {
-              join_type: "INNER JOIN",
-              left_column_ref: { layer_index: 0, column: "msisdn" },
-              right_column: "msisdn",
-            },
-          });
-          addedQuicklists.add(condition.list_id);
-          currentLayerIndex++;
-        }
-      }
-    }
-  }
+  // // First pass: add segment and quicklist layers
+  // for (const group of conditions) {
+  //   for (const condition of group.conditions) {
+  //     if (condition.conditionType === "segment" && condition.segment_id) {
+  //       if (!addedSegments.has(condition.segment_id)) {
+  //         sourceLayers.push({
+  //           source_type: "segment",
+  //           segment_id: condition.segment_id,
+  //           join_config: {
+  //             join_type: "INNER JOIN",
+  //             left_column_ref: { layer_index: 0, column: "customer_id" },
+  //             right_column: "customer_id",
+  //           },
+  //         });
+  //         addedSegments.add(condition.segment_id);
+  //         currentLayerIndex++;
+  //       }
+  //     } else if (condition.conditionType === "list" && condition.list_id) {
+  //       if (!addedQuicklists.has(condition.list_id)) {
+  //         sourceLayers.push({
+  //           source_type: "quicklist",
+  //           quicklist_id: condition.list_id,
+  //           join_config: {
+  //             join_type: "INNER JOIN",
+  //             left_column_ref: { layer_index: 0, column: "msisdn" },
+  //             right_column: "msisdn",
+  //           },
+  //         });
+  //         addedQuicklists.add(condition.list_id);
+  //         currentLayerIndex++;
+  //       }
+  //     }
+  //   }
+  // }
 
-  // Check if we need layer_fields
-  const hasSegmentsOrQuicklists = sourceLayers.some(
-    (layer) =>
-      layer.source_type === "segment" || layer.source_type === "quicklist"
-  );
+  // // Check if we need layer_fields
+  // const hasSegmentsOrQuicklists = sourceLayers.some(
+  //   (layer) =>
+  //     layer.source_type === "segment" || layer.source_type === "quicklist"
+  // );
 
-  const STANDARD_LAYER_FIELDS: LayerColumnRef[] = [
-    { layer_index: 0, column: "msisdn" },
-    { layer_index: 0, column: "customer_id" },
-    { layer_index: 0, column: "first_name" },
-    { layer_index: 0, column: "last_name" },
-    { layer_index: 0, column: "customer_type" },
-    { layer_index: 0, column: "status" },
-    { layer_index: 0, column: "activation_date" },
-    { layer_index: 0, column: "city" },
-  ];
+  // const STANDARD_LAYER_FIELDS: LayerColumnRef[] = [
+  //   { layer_index: 0, column: "msisdn" },
+  //   { layer_index: 0, column: "customer_id" },
+  //   { layer_index: 0, column: "first_name" },
+  //   { layer_index: 0, column: "last_name" },
+  //   { layer_index: 0, column: "customer_type" },
+  //   { layer_index: 0, column: "status" },
+  //   { layer_index: 0, column: "activation_date" },
+  //   { layer_index: 0, column: "city" },
+  // ];
 
-  const layerFields = hasSegmentsOrQuicklists ? STANDARD_LAYER_FIELDS : undefined;
+  // const layerFields = hasSegmentsOrQuicklists ? STANDARD_LAYER_FIELDS : undefined;
 
   // Build layer_filters
   const layerFilterGroups = buildLayerFilterGroups(conditions);
@@ -278,8 +278,8 @@ export const convertConditionsToPayload = (
   }
 
   const payload: SegmentPayload = {
-    source_layers: sourceLayers,
-    layer_fields: layerFields,
+    // source_layers: sourceLayers,
+    // layer_fields: layerFields,
     layer_filters:
       layerFilterGroups.length > 0
         ? {

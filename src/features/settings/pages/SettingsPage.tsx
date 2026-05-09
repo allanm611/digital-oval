@@ -23,6 +23,7 @@ import { timezoneService } from "../../configurations/services/timezoneService";
 import { smsRouteService } from "../../routes/services/smsRouteService";
 import { WHATSAPP_ROUTES_DUMMY_DATA } from "../../routes/services/whatsappRouteService";
 import { PUSH_ROUTES_PUSH_ROUTES_DUMMY_DATA } from "../../routes/services/pushNotificationRouteService";
+import { USSD_ROUTES_DUMMY_DATA } from "../../routes/services/ussdRouteService";
 import { SMSRoute } from "../../routes/types/smsRoute";
 import { useConfigurationData } from "../../../shared/services/configurationDataService";
 import { hardcodedEmailRoutes } from "../../configurations/configs/configurationPageConfigs";
@@ -82,6 +83,16 @@ const dndDays = [
   { value: "custom", label: "Custom Days" },
 ];
 
+// Days of week for custom DND selection
+const daysOfWeek = [
+  { value: 0, label: "Sunday" },
+  { value: 1, label: "Monday" },
+  { value: 2, label: "Tuesday" },
+  { value: 3, label: "Wednesday" },
+  { value: 4, label: "Thursday" },
+  { value: 5, label: "Friday" },
+  { value: 6, label: "Saturday" },
+];
 
 // Notification Channels
 const notificationChannels = [
@@ -127,12 +138,14 @@ interface SettingsType {
   default_sender_id: string;
   default_sms_route_id: number | null;
   default_email_route_id: number | null;
+  default_ussd_route_id: number | null;
   default_whatsapp_route_id: number | null;
   default_push_route_id: number | null;
   dnd_enabled: boolean;
   dnd_start_time: string;
   dnd_end_time: string;
   dnd_days: string;
+  custom_dnd_days: number[];
   notificationSound?: string;
   theme: "light" | "dark";
 }
@@ -166,6 +179,7 @@ export default function SettingsPage() {
           default_sender_id: parsed.default_sender_id || "",
           default_sms_route_id: parsed.default_sms_route_id || null,
           default_email_route_id: parsed.default_email_route_id || null,
+          default_ussd_route_id: parsed.default_ussd_route_id || null,
           default_whatsapp_route_id: parsed.default_whatsapp_route_id || null,
           default_push_route_id: parsed.default_push_route_id || null,
           dnd_enabled:
@@ -173,6 +187,7 @@ export default function SettingsPage() {
           dnd_start_time: parsed.dnd_start_time || "21:00",
           dnd_end_time: parsed.dnd_end_time || "08:00",
           dnd_days: parsed.dnd_days || "daily",
+          custom_dnd_days: parsed.custom_dnd_days || [1, 2, 3, 4, 5],
           notificationSound: parsed.notificationSound || "default",
           theme: parsed.theme || "light",
         };
@@ -194,12 +209,14 @@ export default function SettingsPage() {
       default_sender_id: "",
       default_sms_route_id: null,
       default_email_route_id: null,
+      default_ussd_route_id: null,
       default_whatsapp_route_id: null,
       default_push_route_id: null,
       dnd_enabled: true,
       dnd_start_time: "21:00",
       dnd_end_time: "08:00",
       dnd_days: "daily",
+      custom_dnd_days: [1, 2, 3, 4, 5],
       notificationSound: "default",
       theme: "light",
     };
@@ -252,6 +269,7 @@ export default function SettingsPage() {
   const [smsRoutesLoading, setSmsRoutesLoading] = useState(false);
 
   // Hardcoded routes from configuration
+  const ussdRoutes = USSD_ROUTES_DUMMY_DATA;
   const whatsappRoutes = WHATSAPP_ROUTES_DUMMY_DATA;
   const pushRoutes = PUSH_ROUTES_PUSH_ROUTES_DUMMY_DATA;
   const emailRoutes = hardcodedEmailRoutes.map(r => ({
@@ -550,6 +568,8 @@ export default function SettingsPage() {
       setSettings({ ...settings, default_sms_route_id: id });
     } else if (channelUpper === "EMAIL") {
       setSettings({ ...settings, default_email_route_id: id });
+    } else if (channelUpper === "USSD") {
+      setSettings({ ...settings, default_ussd_route_id: id });
     } else if (channelUpper.includes("WHATSAPP")) {
       setSettings({ ...settings, default_whatsapp_route_id: id });
     } else if (channelUpper.includes("PUSH")) {
@@ -571,6 +591,15 @@ export default function SettingsPage() {
 
   const handleDNDDaysChange = (dnd_days: string) => {
     setSettings({ ...settings, dnd_days });
+  };
+
+  const handleToggleDayOfWeek = (day: number) => {
+    setSettings((prev) => ({
+      ...prev,
+      custom_dnd_days: prev.custom_dnd_days.includes(day)
+        ? prev.custom_dnd_days.filter((d) => d !== day)
+        : [...prev.custom_dnd_days, day].sort(),
+    }));
   };
 
   const handleThemeChange = (newTheme: "light" | "dark") => {
@@ -1005,6 +1034,11 @@ export default function SettingsPage() {
               routeLoading = false;
               routeType = "Email";
               selectedRouteId = settings.default_email_route_id;
+            } else if (selectedChannelUpper === "USSD") {
+              routesList = ussdRoutes.filter((r: any) => r.is_active);
+              routeLoading = false;
+              routeType = "USSD";
+              selectedRouteId = settings.default_ussd_route_id;
             } else if (selectedChannelUpper.includes("WHATSAPP")) {
               routesList = whatsappRoutes.filter((r: any) => r.is_active);
               routeLoading = false;
@@ -1101,24 +1135,25 @@ export default function SettingsPage() {
 
             {/* DND Settings - Only show if enabled */}
             {settings.dnd_enabled && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-gray-50 rounded-lg">
-                {/* DND Days */}
-                <div>
-                  <label
-                    htmlFor="dnd-days"
-                    className="block text-sm font-semibold text-gray-700 mb-2.5"
-                  >
-                    Apply To
-                  </label>
-                  <HeadlessSelect
-                    value={settings.dnd_days}
-                    onChange={(value) => handleDNDDaysChange(value as string)}
-                    options={dndDaysOptions}
-                    placeholder="Select days"
-                  />
-                </div>
+              <div className="space-y-6 p-4 bg-gray-50 rounded-lg">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* DND Days */}
+                  <div>
+                    <label
+                      htmlFor="dnd-days"
+                      className="block text-sm font-semibold text-gray-700 mb-2.5"
+                    >
+                      Apply To
+                    </label>
+                    <HeadlessSelect
+                      value={settings.dnd_days}
+                      onChange={(value) => handleDNDDaysChange(value as string)}
+                      options={dndDaysOptions}
+                      placeholder="Select days"
+                    />
+                  </div>
 
-                {/* DND Start Time */}
+                  {/* DND Start Time */}
                 <div>
                   <label
                     htmlFor="dnd-start-time"
@@ -1126,13 +1161,12 @@ export default function SettingsPage() {
                   >
                     Start Time (DND begins)
                   </label>
-                  <HeadlessSelect
+                  <input
+                    id="dnd-start-time"
+                    type="time"
                     value={settings.dnd_start_time}
-                    onChange={(value) =>
-                      handleDNDStartTimeChange(value as string)
-                    }
-                    options={startTimeOptions}
-                    placeholder="Select start time"
+                    onChange={(e) => handleDNDStartTimeChange(e.target.value)}
+                    className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   />
                 </div>
 
@@ -1144,18 +1178,44 @@ export default function SettingsPage() {
                   >
                     End Time (DND ends)
                   </label>
-                  <HeadlessSelect
+                  <input
+                    id="dnd-end-time"
+                    type="time"
                     value={settings.dnd_end_time}
-                    onChange={(value) =>
-                      handleDNDEndTimeChange(value as string)
-                    }
-                    options={endTimeOptions}
-                    placeholder="Select end time"
+                    onChange={(e) => handleDNDEndTimeChange(e.target.value)}
+                    className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   />
                 </div>
+                </div>
+
+                {/* Custom Days Selector - Only show when custom is selected */}
+                {settings.dnd_days === "custom" && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                      Select Days
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {daysOfWeek.map((day) => (
+                        <div key={day.value} className="flex items-center">
+                          <Checkbox
+                            id={`dnd-day-${day.value}`}
+                            checked={(settings.custom_dnd_days || []).includes(day.value)}
+                            onChange={() => handleToggleDayOfWeek(day.value)}
+                          />
+                          <label
+                            htmlFor={`dnd-day-${day.value}`}
+                            className="ml-2 text-sm font-medium text-gray-700 cursor-pointer"
+                          >
+                            {day.label.slice(0, 3)}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Preview */}
-                <div className="md:col-span-2 p-3 bg-white border border-gray-200 rounded-lg">
+                <div className="p-3 bg-white border border-gray-200 rounded-lg">
                   <p className="text-xs text-gray-500 mb-1">
                     DND Window Preview:
                   </p>
@@ -1163,7 +1223,11 @@ export default function SettingsPage() {
                     {settings.dnd_days === "weekdays" && "Monday - Friday: "}
                     {settings.dnd_days === "weekends" && "Saturday - Sunday: "}
                     {settings.dnd_days === "daily" && "Daily: "}
-                    {settings.dnd_days === "custom" && "Custom Days: "}
+                    {settings.dnd_days === "custom" &&
+                      `${(settings.custom_dnd_days || [])
+                        .map((day) => daysOfWeek.find((d) => d.value === day)?.label.slice(0, 3))
+                        .join(", ")}: `
+                    }
                     {settings.dnd_start_time} to {settings.dnd_end_time}
                   </p>
                   <p className="text-xs text-gray-400 mt-2">

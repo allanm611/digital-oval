@@ -7,20 +7,21 @@ import {
   Percent,
   DollarSign,
   ChevronDown,
-  FlaskConical,
+  Send,
   CheckCircle,
   XCircle,
   Mail,
   MessageSquare,
   Phone,
   Bell,
+  Loader,
 } from "lucide-react";
 import { communicationChannelService } from "../../../shared/services/communicationChannelService";
 import { smsRouteService } from "../../routes/services/smsRouteService";
 import { SMSRoute } from "../../routes/types/smsRoute";
 import { emailRouteService } from "../../routes/services/emailRouteService";
 import { EmailRoute } from "../../routes/types/emailRoute";
-import { color, tw, zIndex, components } from "../../../shared/utils/utils";
+import { color, tw, zIndex, components, getButtonStyles, button } from "../../../shared/utils/utils";
 import { ManualRewardData } from "../pages/CreateManualRewardPage";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useConfigurationData } from "../../../shared/services/configurationDataService";
@@ -28,13 +29,14 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { communicationPolicyService } from "../../campaigns/services/communicationPolicyService";
 import type { CommunicationPolicyConfiguration } from "../../campaigns/types/communicationPolicyConfig";
 import { useClickOutside } from "../../../shared/hooks/useClickOutside";
-import { DUMMY_RECIPIENTS } from "../../campaigns/pages/SeedListManagementPage";
 import {
   isValidCountryCodePhone,
   isValidEmail,
 } from "../../../shared/utils/validation";
 import { getSettingsCommunicationChannel } from "../../../shared/utils/settingsHelper";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import { SeedListRecipient } from "../../../shared/services/seedListService";
+import SeedListRecipientsModal from "../../../shared/components/SeedListRecipientsModal";
 
 interface DefineRewardStepProps {
   data: ManualRewardData;
@@ -76,12 +78,16 @@ export default function DefineRewardStep({
   const [error, setError] = useState("");
   const [isTesting, setIsTesting] = useState(false);
   const [seedTestError, setSeedTestError] = useState("");
-  const [selectedSeedContacts, setSelectedSeedContacts] = useState<Set<string>>(
-    new Set(data.seedTestContacts || []),
+  const [selectedSeedContactIds, setSelectedSeedContactIds] = useState<Set<number>>(
+    new Set(),
   );
   const [seedTestResults, setSeedTestResults] = useState<
     RewardSeedTestResult[]
   >([]);
+
+  // Seedlist modal state
+  const [showSeedListModal, setShowSeedListModal] = useState(false);
+  const [selectedRecipients, setSelectedRecipients] = useState<SeedListRecipient[]>([]);
 
   // Channel states
   const [channels, setChannels] = useState<Array<{ id: Channel; name: string; icon: any }>>([]);
@@ -218,9 +224,7 @@ export default function DefineRewardStep({
     },
   ];
 
-  const activeSeedRecipients = DUMMY_RECIPIENTS.filter(
-    (recipient) => recipient.status === "active",
-  );
+  const activeSeedRecipients: SeedListRecipient[] = selectedRecipients;
 
   const availableSeedContacts = activeSeedRecipients
     .map(
@@ -228,24 +232,42 @@ export default function DefineRewardStep({
     )
     .filter(Boolean);
 
+  // Handle saving selected recipients from modal
+  const handleSaveSelectedRecipients = (_segmentId: string, recipients: SeedListRecipient[]) => {
+    if (!recipients || !Array.isArray(recipients)) {
+      console.warn("Invalid recipients data received");
+      return;
+    }
+    setSelectedRecipients(recipients);
+    setShowSeedListModal(false);
+    // Reset test contact selections when changing recipients
+    setSelectedSeedContactIds(new Set());
+  };
+
   const resetRewardValidation = () => {
     setSeedTestResults([]);
     setSeedTestError("");
     onUpdate({ rewardValidation: undefined });
   };
 
-  const toggleSeedContact = (contact: string) => {
-    const next = new Set(selectedSeedContacts);
-    if (next.has(contact)) {
-      next.delete(contact);
-    } else {
-      next.add(contact);
+  const toggleSeedContact = (recipientId: number) => {
+    if (typeof recipientId !== "number" || recipientId < 0) {
+      console.warn("Invalid recipientId:", recipientId);
+      return;
     }
-    setSelectedSeedContacts(next);
-    onUpdate({ seedTestContacts: Array.from(next) });
+    const next = new Set(selectedSeedContactIds);
+    if (next.has(recipientId)) {
+      next.delete(recipientId);
+    } else {
+      next.add(recipientId);
+    }
+    setSelectedSeedContactIds(next);
   };
 
   const validateSeedContact = (contact: string): boolean => {
+    if (!contact || typeof contact !== "string") {
+      return false;
+    }
     if (contact.includes("@")) {
       return isValidEmail(contact);
     }
@@ -253,9 +275,26 @@ export default function DefineRewardStep({
   };
 
   const handleRunSeedTest = async () => {
-    const contactsToTest = availableSeedContacts.filter((contact) =>
-      selectedSeedContacts.has(contact),
-    );
+    if (!activeSeedRecipients || !Array.isArray(activeSeedRecipients)) {
+      setSeedTestError("No recipients available");
+      return;
+    }
+    if (!selectedSeedContactIds || selectedSeedContactIds.size === 0) {
+      setSeedTestError("Select at least one seed-list recipient for testing");
+      return;
+    }
+
+    const selectedRecipientsList = activeSeedRecipients.filter((r) => {
+      if (!r || typeof r.id !== "number") return false;
+      return selectedSeedContactIds.has(r.id);
+    });
+
+    const contactsToTest = selectedRecipientsList
+      .map((r) => {
+        if (!r) return "";
+        return r.customer_phone || r.customer_email || "";
+      })
+      .filter(Boolean);
 
     if (contactsToTest.length === 0) {
       setSeedTestError("Select at least one seed-list recipient for testing");
@@ -727,52 +766,132 @@ export default function DefineRewardStep({
             <label className={`block text-sm font-medium ${tw.textPrimary}`}>
               Seed List Test
             </label>
-            <span className={`text-xs ${tw.textMuted}`}>
-              {selectedSeedContacts.size} selected
-            </span>
+            <button
+              onClick={() => setShowSeedListModal(true)}
+              style={getButtonStyles(button.action)}
+            >
+              Select from Seed List
+            </button>
           </div>
 
-          <div
-            className={`p-3 ${tw.rounded} border max-h-40 overflow-y-auto`}
-            style={{ borderColor: color.border.default }}
-          >
-            {availableSeedContacts.length === 0 ? (
-              <p className={`text-sm ${tw.textMuted}`}>
-                No active seed-list recipients available.
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {availableSeedContacts.map((contact) => (
-                  <div
-                    key={contact}
-                    className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer"
-                    onClick={() => toggleSeedContact(contact)}
-                  >
-                    <Checkbox
-                      id={`seed-contact-${contact}`}
-                      checked={selectedSeedContacts.has(contact)}
-                      onChange={() => toggleSeedContact(contact)}
-                    />
-                    <span>{contact}</span>
-                  </div>
-                ))}
+          <div className={`text-sm ${tw.textSecondary} mb-3`}>
+            {selectedSeedContactIds.size} of {activeSeedRecipients.length} recipients selected
+          </div>
+
+          {activeSeedRecipients.length === 0 ? (
+            <p className={`text-sm ${tw.textMuted}`}>
+              No active seed-list recipients available.
+            </p>
+          ) : (
+            <div
+              className={`border ${tw.rounded} overflow-hidden`}
+              style={{ borderColor: color.border.default }}
+            >
+                <table className="min-w-full divide-y" style={{ borderColor: color.border.default }}>
+                  <thead style={{ backgroundColor: color.surface.cards }}>
+                    <tr>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-12">
+                        <Checkbox
+                          id="select-all-seed-contacts"
+                          checked={selectedSeedContactIds.size === activeSeedRecipients.length && activeSeedRecipients.length > 0}
+                          onChange={() => {
+                            if (selectedSeedContactIds.size === activeSeedRecipients.length) {
+                              setSelectedSeedContactIds(new Set());
+                            } else {
+                              setSelectedSeedContactIds(new Set(activeSeedRecipients.map((r) => r.id)));
+                            }
+                          }}
+                        />
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                        Name
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                        Email
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                        Phone
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y" style={{ borderColor: color.border.default }}>
+                    {activeSeedRecipients.map((recipient) => {
+                      const contact = recipient.customer_phone || recipient.customer_email || "";
+                      const isSelected = selectedSeedContactIds.has(recipient.id);
+                      return (
+                        <tr key={recipient.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-4 py-3">
+                            <Checkbox
+                              id={`seed-contact-${recipient.id}`}
+                              checked={isSelected}
+                              onChange={() => toggleSeedContact(recipient.id)}
+                            />
+                          </td>
+                          <td className="px-4 py-3">
+                            <p className="text-sm font-medium text-gray-900">
+                              {recipient.customer_name || "-"}
+                            </p>
+                          </td>
+                          <td className="px-4 py-3">
+                            <p className="text-sm text-gray-600 truncate">
+                              {recipient.customer_email || "-"}
+                            </p>
+                          </td>
+                          <td className="px-4 py-3">
+                            <p className="text-sm text-gray-600">
+                              {recipient.customer_phone || "-"}
+                            </p>
+                          </td>
+                          <td className="px-4 py-3">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedSeedContactIds(new Set([recipient.id]));
+                                handleRunSeedTest();
+                              }}
+                              disabled={isTesting}
+                              style={{
+                                ...getButtonStyles(button.action),
+                                opacity: isTesting ? 0.5 : 1,
+                              }}
+                            >
+                              Test
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             )}
-          </div>
 
           <button
             type="button"
             onClick={handleRunSeedTest}
-            disabled={isTesting || availableSeedContacts.length === 0}
-            className={`mt-3 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border ${tw.rounded} disabled:opacity-50`}
+            disabled={isTesting || selectedSeedContactIds.size === 0}
             style={{
-              borderColor: color.border.default,
-              color: color.text.primary,
-              backgroundColor: "white",
+              ...getButtonStyles(button.action),
+              opacity: (isTesting || selectedSeedContactIds.size === 0) ? 0.5 : 1,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.5rem",
             }}
           >
-            <FlaskConical className="w-4 h-4" />
-            {isTesting ? "Testing..." : "Run Seed-List Test"}
+            {isTesting ? (
+              <>
+                <Loader className="w-4 h-4 animate-spin flex-shrink-0" />
+                <span>Testing...</span>
+              </>
+            ) : (
+              <>
+                <Send className="w-4 h-4 flex-shrink-0" />
+                <span>Run Seed-List Test</span>
+              </>
+            )}
           </button>
 
           {seedTestError && (
@@ -846,6 +965,15 @@ export default function DefineRewardStep({
             </p>
           </div>
         )}
+
+        {/* Seed List Recipients Modal */}
+        <SeedListRecipientsModal
+          isOpen={showSeedListModal}
+          onClose={() => setShowSeedListModal(false)}
+          segmentId="reward"
+          selectedSeedLists={selectedRecipients.map((r) => String(r.id))}
+          onSave={handleSaveSelectedRecipients}
+        />
       </div>
     </div>
   );

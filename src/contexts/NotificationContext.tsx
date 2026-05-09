@@ -51,7 +51,11 @@ export function NotificationProvider({
   const [isPolling, setIsPolling] = useState(false);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef(true);
-  const seenNotificationIdsRef = useRef<Set<string | number>>(new Set());
+  const seenNotificationIdsRef = useRef<Set<string | number>>(
+    new Set(
+      JSON.parse(localStorage.getItem("notificationSeenIds") || "[]")
+    )
+  );
   const { settings: notificationSettings } = useNotificationSettings();
 
   // Fetch notifications from inbox
@@ -82,6 +86,12 @@ export function NotificationProvider({
 
         // Ensure all current notifications are in the seen set
         (response.data || []).forEach((n) => seenNotificationIdsRef.current.add(n.id));
+
+        // Persist seen IDs to localStorage
+        localStorage.setItem(
+          "notificationSeenIds",
+          JSON.stringify(Array.from(seenNotificationIdsRef.current))
+        );
 
         setStats({
           total: response.data?.length || 0,

@@ -41,8 +41,7 @@ import { communicationPolicyService } from "../../features/campaigns/services/co
 import CommunicationPolicyModal from "../../features/campaigns/components/CommunicationPolicyModal";
 import PolicyNameModal from "../../features/campaigns/components/PolicyNameModal";
 import { Segment } from "../../features/segments/types/segment";
-import { DUMMY_RECIPIENTS } from "../../features/campaigns/pages/SeedListManagementPage";
-import type { SeedListRecipient } from "../../features/campaigns/pages/SeedListManagementPage";
+import type { SeedListRecipient } from "../services/seedListService";
 import { validatePhoneOnly, isValidEmail } from "../utils/validation";
 import Checkbox from "./ui/Checkbox";
 import type { CustomerSubscriptionRecord } from "../../features/customers360/types/customerSubscription";
@@ -180,7 +179,7 @@ export default function CreateCommunicationModal({
 
   // Get active seed list recipients
   const getActiveRecipients = (): SeedListRecipient[] => {
-    return DUMMY_RECIPIENTS.filter((r) => r.status === "active");
+    return [];
   };
 
   // Derive all available test contacts from active recipients based on channel

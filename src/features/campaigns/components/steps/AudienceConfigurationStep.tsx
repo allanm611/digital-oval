@@ -43,7 +43,7 @@ interface AvailableControlGroup {
   created_at: string;
 }
 import SegmentSelectionModal from "./SegmentSelectionModal";
-import SeedListConfigModal from "./SeedListConfigModal";
+import SeedListRecipientsModal from "../../../../shared/components/SeedListRecipientsModal";
 import SegmentModal from "../../../segments/components/SegmentModal";
 
 interface AudienceConfigurationStepProps {
@@ -1067,7 +1067,7 @@ export default function AudienceConfigurationStep({
 
       {/* Seed List Configuration Modal */}
       {showSeedListModal && editingSeedListSegmentId && (
-        <SeedListConfigModal
+        <SeedListRecipientsModal
           isOpen={showSeedListModal}
           onClose={() => {
             setShowSeedListModal(false);
@@ -1075,10 +1075,23 @@ export default function AudienceConfigurationStep({
           }}
           segmentId={editingSeedListSegmentId}
           selectedSeedLists={segmentSeedLists[editingSeedListSegmentId] || []}
-          onSave={(segmentId, seedListIds) => {
+          onSave={(segmentId, recipients) => {
+            if (!segmentId || typeof segmentId !== "string") {
+              return;
+            }
+            if (!recipients || !Array.isArray(recipients) || recipients.length === 0) {
+              setShowSeedListModal(false);
+              setEditingSeedListSegmentId(null);
+              return;
+            }
+            const firstRecipient = recipients[0];
+            if (!firstRecipient || typeof firstRecipient.seed_list_id !== "number") {
+              return;
+            }
+            const recipientIds = recipients.map((r) => String(r.id));
             const newSeedLists = {
               ...segmentSeedLists,
-              [segmentId]: seedListIds,
+              [segmentId]: recipientIds,
             };
             handleSetSegmentSeedLists(newSeedLists);
             setShowSeedListModal(false);

@@ -1234,7 +1234,7 @@ export default function JobExecutionsPage() {
                           execution.execution_status === "failure" && (
                             <button
                               onClick={() => handleAction(execution, "retry")}
-                              className={`p-2 ${tw.rounded} text-blue-600`}
+                              className={`p-2 ${tw.rounded} text-gray-600`}
                               aria-label="Retry execution"
                               title="Retry execution"
                             >
