@@ -111,11 +111,17 @@ class CreativeTemplateService {
     return template;
   }
 
-  async createCreativeTemplate(data: CreateCreativeTemplateRequest): Promise<ApiResponse<CreativeTemplate>> {
-    return this.request<ApiResponse<CreativeTemplate>>("", {
+  async createCreativeTemplate(data: CreateCreativeTemplateRequest): Promise<CreativeTemplate> {
+    const response = await this.request<{ success: boolean; data?: CreativeTemplate; error?: string }>("", {
       method: "POST",
       body: JSON.stringify(data),
     });
+
+    if (!response.success) {
+      throw new Error(response.error || "Failed to create template");
+    }
+
+    return response.data || (response as unknown as CreativeTemplate);
   }
 
   async createCreativeTemplates(data: CreateCreativeTemplateRequest[]): Promise<ApiResponse<CreativeTemplate[]>> {
@@ -126,10 +132,19 @@ class CreativeTemplateService {
   }
 
   async updateCreativeTemplate(id: number, data: UpdateCreativeTemplateRequest): Promise<ApiResponse<CreativeTemplate>> {
-    return this.request<ApiResponse<CreativeTemplate>>(`/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    });
+    const response = await this.request<{ success: boolean; data?: CreativeTemplate; error?: string }>(
+      `/${id}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }
+    );
+
+    if (!response.success) {
+      throw new Error(response.error || "Failed to update template");
+    }
+
+    return response as ApiResponse<CreativeTemplate>;
   }
 
   async deleteCreativeTemplate(id: number): Promise<ApiResponse<{ message: string }>> {

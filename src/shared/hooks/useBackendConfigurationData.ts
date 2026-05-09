@@ -964,6 +964,8 @@ export function useBackendConfigurationData(
           response = await resourceTypesService.getAllResourceTypes();
           if (Array.isArray(response)) {
             setData(normalizeApiResponse(type, response));
+          } else if (response && typeof response === "object" && "data" in response && Array.isArray(response.data)) {
+            setData(normalizeApiResponse(type, response.data));
           } else {
             setData([]);
           }
@@ -973,6 +975,8 @@ export function useBackendConfigurationData(
           response = await utilitiesService.getAllUtilities();
           if (Array.isArray(response)) {
             setData(normalizeApiResponse(type, response));
+          } else if (response && typeof response === "object" && "data" in response && Array.isArray(response.data)) {
+            setData(normalizeApiResponse(type, response.data));
           } else {
             setData([]);
           }
@@ -1087,6 +1091,12 @@ export function useBackendConfigurationData(
             return response;
           case "timezones":
             response = await timezoneService.createTimezone(payload);
+            return response;
+          case "resourceTypes":
+            response = await resourceTypesService.createResourceType(payload);
+            return response;
+          case "utilities":
+            response = await utilitiesService.createUtility(payload);
             return response;
           default:
             throw new Error(`Unknown configuration type: ${type}`);
@@ -1204,6 +1214,12 @@ export function useBackendConfigurationData(
           case "timezones":
             response = await timezoneService.updateTimezone(id, payload);
             return response;
+          case "resourceTypes":
+            response = await resourceTypesService.updateResourceType(id, payload);
+            return response;
+          case "utilities":
+            response = await utilitiesService.updateUtility(id, payload);
+            return response;
           default:
             throw new Error(`Unknown configuration type: ${type}`);
         }
@@ -1300,6 +1316,12 @@ export function useBackendConfigurationData(
             break;
           case "timezones":
             await timezoneService.deleteTimezone(id);
+            break;
+          case "resourceTypes":
+            await resourceTypesService.deleteResourceType(id);
+            break;
+          case "utilities":
+            await utilitiesService.deleteUtility(id);
             break;
           default:
             throw new Error(`Unknown configuration type: ${type}`);

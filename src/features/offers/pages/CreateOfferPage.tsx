@@ -880,6 +880,7 @@ function OfferCreativeStepWrapper({
   setCreatives,
   validationErrors,
   communicationChannelId,
+  communicationChannels,
 }: Omit<
   StepProps,
   | "currentStep"
@@ -899,7 +900,7 @@ function OfferCreativeStepWrapper({
   | "categoriesLoading"
   | "onSaveDraft"
   | "onCancel"
-> & { communicationChannelId?: number }) {
+> & { communicationChannelId?: number; communicationChannels?: CommunicationChannel[] }) {
   return (
     <div className="space-y-6">
       <div className="mt-8 mb-8">
@@ -915,6 +916,7 @@ function OfferCreativeStepWrapper({
         onCreativesChange={setCreatives}
         validationError={validationErrors?.creatives}
         communicationChannelId={communicationChannelId}
+        communicationChannels={communicationChannels?.map((ch) => ({ id: ch.id, name: ch.name }))}
       />
     </div>
   );
@@ -2228,7 +2230,7 @@ export default function CreateOfferPage({
           const hasTextBody = creative.text_body && creative.text_body.trim() !== "";
           const isEmailWithHtml = creative.channel === "Email"
             ? creative.html_body && creative.html_body.trim() !== ""
-            : true; // Non-Email channels don't need HTML
+            : true;
 
           return hasLanguage && hasTextBody && isEmailWithHtml;
         });
@@ -2301,7 +2303,35 @@ export default function CreateOfferPage({
     } else {
       // Set validation errors based on current step
       const errors: Record<string, string> = {};
-      if (currentStep === 6) {
+
+      if (currentStep === 3) {
+        // Step 3: Creative validation errors
+        if (creatives.length === 0) {
+          errors.creatives = "At least one creative is required";
+        } else {
+          const creativeErrors: string[] = [];
+          creatives.forEach((creative, index) => {
+            const hasLanguage = creative.locale && creative.locale.trim() !== "";
+            const hasTextBody = creative.text_body && creative.text_body.trim() !== "";
+            const isEmailWithHtml = creative.channel === "Email"
+              ? creative.html_body && creative.html_body.trim() !== ""
+              : true;
+
+            if (!hasLanguage) {
+              creativeErrors.push(`Creative ${index + 1}: Language is required`);
+            }
+            if (!hasTextBody) {
+              creativeErrors.push(`Creative ${index + 1}: Message body is required`);
+            }
+            if (creative.channel === "Email" && !isEmailWithHtml) {
+              creativeErrors.push(`Creative ${index + 1}: For Email channels, HTML body is required`);
+            }
+          });
+          if (creativeErrors.length > 0) {
+            errors.creatives = creativeErrors.join(" • ");
+          }
+        }
+      } else if (currentStep === 6) {
         if (!formData.name?.trim()) errors.name = "Offer name is required";
         if (!formData.code?.trim()) errors.code = "Offer code is required";
         if (!formData.offer_type_id) errors.offer_type = "Offer type is required";
@@ -2948,6 +2978,7 @@ export default function CreateOfferPage({
               <OfferCreativeStepWrapper
                 {...stepProps}
                 communicationChannelId={formData.communication_channel_id}
+                communicationChannels={communicationChannels}
               />
             )}
             {currentStep === 4 && <OfferTrackingStepWrapper {...stepProps} />}

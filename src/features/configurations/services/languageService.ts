@@ -60,17 +60,22 @@ class LanguageService {
   }
 
   async createLanguage(data: CreateLanguageRequest): Promise<Language> {
-    return this.request<Language>("", {
+    const response = await this.request<{ success: boolean; data: Language }>("", {
       method: "POST",
       body: JSON.stringify(data),
     });
+    return response.data || response as unknown as Language;
   }
 
   async updateLanguage(id: number, data: UpdateLanguageRequest): Promise<Language> {
-    return this.request<Language>(`/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    });
+    const response = await this.request<{ success: boolean; data: Language }>(
+      `/${id}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }
+    );
+    return response.data || response as unknown as Language;
   }
 
   async deleteLanguage(id: number): Promise<void> {

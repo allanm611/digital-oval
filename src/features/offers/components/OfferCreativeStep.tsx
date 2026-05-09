@@ -73,6 +73,7 @@ interface OfferCreativeStepProps {
   onCreativesChange: (creatives: LocalOfferCreative[]) => void;
   validationError?: string; // Optional validation error message
   communicationChannelId?: number; // Communication channel ID from step 1
+  communicationChannels?: Array<{ id: number; name: string }>; // Available channels from config
 }
 
 type ActiveField = "title" | "body";
@@ -491,6 +492,7 @@ export default function OfferCreativeStep({
   onCreativesChange,
   validationError,
   communicationChannelId,
+  communicationChannels,
 }: OfferCreativeStepProps) {
   const { t } = useLanguage();
 
@@ -498,20 +500,24 @@ export default function OfferCreativeStep({
   const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
 
-  // Map communication channel ID to creative channel name
+  // Map communication channel ID to creative channel name using actual channel config
   const getDefaultChannelFromId = (channelId?: number): CreativeChannel => {
-    switch (channelId) {
-      case 2:
-        return "SMS";
-      case 3:
-        return "USSD";
-      case 4:
-        return "Email";
-      case 5:
-        return "Push";
-      default:
-        return "SMS"; // Default fallback
+    if (!channelId || !communicationChannels) return "SMS";
+
+    const channel = communicationChannels.find(ch => ch.id === channelId);
+    if (!channel) return "SMS";
+
+    const channelName = channel.name.toUpperCase();
+    const validChannels: CreativeChannel[] = ["Email", "SMS", "USSD", "WhatsApp", "Push"];
+
+    // Try to match the channel name with valid creative channels
+    for (const validChannel of validChannels) {
+      if (channelName.includes(validChannel.toUpperCase())) {
+        return validChannel;
+      }
     }
+
+    return "SMS"; // Fallback to SMS if no match
   };
 
   // Fetch creative templates from backend
@@ -1516,6 +1522,15 @@ export default function OfferCreativeStep({
                       </div>
                     )} */}
 
+                    {/* Email HTML Body Requirement Hint */}
+                    {editingCreative.channel === "Email" && (
+                      <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
+                        <p className="text-xs text-blue-700">
+                          ℹ️ For Email channels, you need to enable <strong>Rich Text</strong> mode to generate the HTML body required by the backend.
+                        </p>
+                      </div>
+                    )}
+
                     {/* Message content toolbar */}
                     <div
                       className="flex items-center justify-between p-3 rounded-lg"
@@ -1821,12 +1836,13 @@ export default function OfferCreativeStep({
       <CreativeTemplateFormModal
         isOpen={isTemplateModalOpen}
         onClose={() => setIsTemplateModalOpen(false)}
+        defaultChannelId={communicationChannelId}
+        defaultLocale={editingCreative.locale}
+        communicationChannels={communicationChannels?.map((ch) => ({ id: ch.id, name: ch.name, code: ch.code }))}
         onSave={async (formData) => {
-          const response = await creativeTemplateService.createCreativeTemplate(formData);
-          const newTemplate = response.data;
+          const newTemplate = await creativeTemplateService.createCreativeTemplate(formData);
           if (newTemplate) {
-            const template = Array.isArray(newTemplate) ? newTemplate[0] : newTemplate;
-            handleTemplateCreated(template);
+            handleTemplateCreated(newTemplate);
           }
         }}
       />

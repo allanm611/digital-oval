@@ -17,9 +17,9 @@ import Input from "../../../shared/components/ui/Input";
 import { ConfigurationItem } from "../../configurations/components/ConfigurationManager";
 import { tw, color, zIndex, getButtonStyles, button } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
-import { useConfigurationData } from "../../../shared/services/configurationDataService";
 import { useBackendProductTypeData } from "../../../shared/hooks/useBackendProductTypeData";
 import { useBackendComboTypeData } from "../../../shared/hooks/useBackendComboTypeData";
+import { useBackendConfigurationData } from "../../../shared/hooks/useBackendConfigurationData";
 import { ComboType } from "../services/comboTypeService";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import CreateUtilityModal from "../../configurations/components/CreateUtilityModal";
@@ -65,9 +65,9 @@ export default function ProductForm({
   const { data: comboTypes, loading: comboTypesLoading } =
     useBackendComboTypeData();
 
-  // Get resource types and utilities from configuration
-  const { data: resourceTypesData } = useConfigurationData("resourceTypes");
-  const { data: utilitiesData } = useConfigurationData("utilities");
+  // Get resource types and utilities from backend hooks
+  const { data: resourceTypesData } = useBackendConfigurationData("resourceTypes");
+  const { data: utilitiesData } = useBackendConfigurationData("utilities");
 
   // Error state
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -379,9 +379,9 @@ export default function ProductForm({
     validUnits?: string[];
   }[] = (resourceTypesData || []).map((rt: any) => ({
     label: rt.name,
-    value: rt.value,
-    category: rt.category,
-    validUnits: rt.validUnits,
+    value: rt.value as ProductUnit,
+    category: rt.category || "other",
+    validUnits: rt.unit ? [rt.unit] : [],
   })) || [];
 
   // Get valid units for a selected resource type

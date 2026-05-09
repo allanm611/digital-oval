@@ -5,7 +5,6 @@ import { zIndex } from "../../../shared/utils/tokens";
 import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import type { CreativeTemplate } from "../../configurations/services/creativeTemplateService";
-import { getChannelOptionsFromAPI, CHANNEL_OPTIONS as DEFAULT_CHANNEL_OPTIONS } from "../../configurations/services/creativeTemplateService";
 import { languageService, Language } from "../../configurations/services/languageService";
 
 interface CreativeTemplateFormModalProps {
@@ -13,6 +12,9 @@ interface CreativeTemplateFormModalProps {
   onClose: () => void;
   onSave: (data: any) => Promise<void>;
   template?: CreativeTemplate | null;
+  defaultChannelId?: number;
+  defaultLocale?: string;
+  communicationChannels?: Array<{ id: number; name: string; code: string }>;
 }
 
 export default function CreativeTemplateFormModal({
@@ -20,14 +22,27 @@ export default function CreativeTemplateFormModal({
   onClose,
   onSave,
   template,
+  defaultChannelId,
+  defaultLocale = "en",
+  communicationChannels = [],
 }: CreativeTemplateFormModalProps) {
+  // Get the default channel name from the communicationChannels
+  const getDefaultChannelName = () => {
+    if (!defaultChannelId || !communicationChannels || communicationChannels.length === 0) {
+      return "";
+    }
+    const channel = communicationChannels.find(ch => ch.id === defaultChannelId);
+    return channel?.name || "";
+  };
+
+  const defaultChannelName = getDefaultChannelName();
+
   const [formData, setFormData] = useState({
     name: "",
     code: "",
     description: "",
-    is_active: true,
-    primaryChannel: "SMS" as const,
-    locale: "en",
+    primaryChannel: defaultChannelName,
+    locale: defaultLocale,
     title: "",
     text_body: "",
     html_body: "",
@@ -41,11 +56,15 @@ export default function CreativeTemplateFormModal({
 
   useEffect(() => {
     const loadData = async () => {
-      try {
-        const options = await getChannelOptionsFromAPI();
+      // Use actual channels passed as props
+      if (communicationChannels && communicationChannels.length > 0) {
+        const options = communicationChannels.map((ch) => ({
+          label: ch.name,
+          value: ch.name,
+        }));
         setChannelOptions(options);
-      } catch {
-        setChannelOptions(DEFAULT_CHANNEL_OPTIONS);
+      } else {
+        setChannelOptions([]);
       }
 
       try {
@@ -60,7 +79,7 @@ export default function CreativeTemplateFormModal({
     if (isOpen) {
       loadData();
     }
-  }, [isOpen]);
+  }, [isOpen, communicationChannels]);
 
   useEffect(() => {
     if (template) {
@@ -68,7 +87,6 @@ export default function CreativeTemplateFormModal({
         name: template.name || "",
         code: template.code || "",
         description: template.description || "",
-        is_active: template.is_active ?? true,
         primaryChannel: template.channel,
         locale: template.locale || "en",
         title: template.title || "",
@@ -77,8 +95,22 @@ export default function CreativeTemplateFormModal({
         variables: template.variables || {},
       });
       setErrors({});
+    } else if (isOpen && !template) {
+      // Reset form with default values when opening for new template creation
+      setFormData({
+        name: "",
+        code: "",
+        description: "",
+        primaryChannel: getDefaultChannelName(),
+        locale: defaultLocale,
+        title: "",
+        text_body: "",
+        html_body: "",
+        variables: {} as Record<string, any>,
+      });
+      setErrors({});
     }
-  }, [template, isOpen]);
+  }, [template, isOpen, defaultChannelId, defaultLocale, communicationChannels]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -111,13 +143,6 @@ export default function CreativeTemplateFormModal({
     }
   };
 
-  const handleCheckboxChange = (fieldName: keyof typeof formData) => (checked: boolean) => {
-    setFormData((prev) => ({
-      ...prev,
-      [fieldName]: checked,
-    }));
-  };
-
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -148,13 +173,32 @@ export default function CreativeTemplateFormModal({
     }
   };
 
+  // Map channel name to enum value for submission
+  const mapChannelNameToEnum = (channelName: string): string => {
+    const nameUpper = channelName.toUpperCase();
+    if (nameUpper.includes("WHATSAPP")) return "WhatsApp";
+    if (nameUpper.includes("EMAIL")) return "Email";
+    if (nameUpper.includes("SMS")) return "SMS";
+    if (nameUpper.includes("PUSH")) return "Push";
+    if (nameUpper.includes("USSD")) return "USSD";
+    return channelName; // Fallback
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
 
+    const dataToSubmit = {
+      ...formData,
+      primaryChannel: mapChannelNameToEnum(formData.primaryChannel),
+    };
+
     try {
       setIsSaving(true);
-      await onSave(formData);
+      await onSave(dataToSubmit);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to save template";
+      showError("Error", errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -217,7 +261,6 @@ export default function CreativeTemplateFormModal({
               onChange={handleInputChange('code')}
               hasError={!!errors.code}
               variant="medium"
-              className="font-mono"
             />
             {errors.code && (
               <p className="mt-1 text-sm text-red-600">{errors.code}</p>
@@ -260,11 +303,21 @@ export default function CreativeTemplateFormModal({
                 Language
               </label>
               <HeadlessSelect
-                value={formData.locale}
-                onChange={(value) => setFormData((prev) => ({ ...prev, locale: value as string }))}
+                value={
+                  formData.locale
+                    ? languages.find((lang) => lang.language_code === formData.locale)?.id?.toString() || ""
+                    : ""
+                }
+                onChange={(value) => {
+                  const selectedLang = languages.find((lang) => lang.id === parseInt(value));
+                  setFormData((prev) => ({
+                    ...prev,
+                    locale: selectedLang?.language_code || "",
+                  }));
+                }}
                 options={[
                   { value: "", label: "Select a language" },
-                  ...languages.map((lang) => ({ value: lang.language_code, label: lang.name }))
+                  ...languages.map((lang) => ({ value: lang.id.toString(), label: lang.name }))
                 ]}
                 placeholder="Select a language"
                 zIndex={zIndex.popover}
@@ -310,25 +363,12 @@ export default function CreativeTemplateFormModal({
               value={formData.html_body}
               onChange={handleTextareaChange}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none font-mono"
+              className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               placeholder="Enter template HTML body"
             />
             {errors.body && (
               <p className="mt-1 text-sm text-red-600">{errors.body}</p>
             )}
-          </div>
-
-          {/* Status */}
-          <div className="flex items-center">
-            <Input
-              type="checkbox"
-              checked={formData.is_active}
-              onChange={handleCheckboxChange('is_active')}
-              className="w-4 h-4 rounded border-gray-300 cursor-pointer"
-            />
-            <label className={`ml-2 text-sm font-medium ${tw.textPrimary}`}>
-              Active
-            </label>
           </div>
 
           {/* Footer */}
