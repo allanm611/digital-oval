@@ -8,8 +8,10 @@ import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { departmentService } from "../../campaigns/services/departmentService";
 import { roleService } from "../../roles/services/roleService";
+import { workflowService } from "../../jobs/services/workflowService";
 import { ConfigurationItem } from "../../configurations/components/ConfigurationManager";
 import { Role } from "../../roles/types/role";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 
 export default function RequestAccountPage() {
   const { t } = useLanguage();
@@ -21,6 +23,12 @@ export default function RequestAccountPage() {
     department: "",
     roleId: "",
     reason: "",
+    workflowId: "",
+    accessDurationDays: "",
+    consentGiven: false,
+    privacyPolicyAccepted: false,
+    termsAccepted: false,
+    dataProcessingConsent: false,
   });
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,8 +38,10 @@ export default function RequestAccountPage() {
   >({});
   const [departments, setDepartments] = useState<ConfigurationItem[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
+  const [workflows, setWorkflows] = useState<any[]>([]);
   const [loadingDepartments, setLoadingDepartments] = useState(true);
   const [loadingRoles, setLoadingRoles] = useState(true);
+  const [loadingWorkflows, setLoadingWorkflows] = useState(true);
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
 
@@ -62,8 +72,26 @@ export default function RequestAccountPage() {
       }
     };
 
+    const loadWorkflows = async () => {
+      try {
+        const response = await workflowService.getActiveWorkflows({
+          limit: 100,
+          skipCache: true,
+        });
+        if (response.data && Array.isArray(response.data)) {
+          setWorkflows(response.data);
+        }
+      } catch (error) {
+        console.error("Failed to load workflows:", error);
+        showError("Error", "Failed to load workflows");
+      } finally {
+        setLoadingWorkflows(false);
+      }
+    };
+
     loadDepartments();
     loadRoles();
+    loadWorkflows();
   }, [showError]);
 
   const goHome = () => {
@@ -120,40 +148,109 @@ export default function RequestAccountPage() {
     return Object.keys(errors).length === 0;
   };
 
+  const validateStep3 = () => {
+    const errors: Record<string, string> = {};
+
+    if (!formData.workflowId) {
+      errors.workflowId = "Workflow is required";
+    }
+
+    if (!formData.consentGiven) {
+      errors.consentGiven = "You must consent to data processing";
+    }
+
+    if (!formData.privacyPolicyAccepted) {
+      errors.privacyPolicyAccepted = "You must accept the privacy policy";
+    }
+
+    if (!formData.termsAccepted) {
+      errors.termsAccepted = "You must accept the terms of use";
+    }
+
+    if (!formData.dataProcessingConsent) {
+      errors.dataProcessingConsent = "You must consent to automated data processing";
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const nextStep = () => {
-    if (validateStep1()) {
+    if (currentStep === 1 && validateStep1()) {
       setCurrentStep(2);
+    } else if (currentStep === 2 && validateStep2()) {
+      setCurrentStep(3);
     }
   };
 
   const prevStep = () => {
-    setCurrentStep(1);
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
   };
 
   const submitRequest = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateStep2()) {
+    if (!validateStep3()) {
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      await accountService.createAccountRequest({
-        email_address: formData.email,
+      // Step 1: Create request (Draft)
+      const createData = await accountService.createAccountRequest({
         first_name: formData.firstName,
         last_name: formData.lastName,
+        email_address: formData.email,
         business_justification: formData.reason,
         created_by_source: "online_portal",
         department: formData.department || undefined,
-        primary_role_id: formData.roleId ? parseInt(formData.roleId) : undefined,
+        // requested_role_id: formData.roleId ? parseInt(formData.roleId) : undefined,
+        access_duration_days: formData.accessDurationDays ? parseInt(formData.accessDurationDays) : undefined,
       });
+
+      if (!createData.success) {
+        throw new Error(createData.error || "Failed to create request");
+      }
+
+      console.log("Create response:", createData);
+      const requestId = createData.data?.id || (createData.data as any)?.requestId || (createData as any)?.requestId;
+
+      if (!requestId) {
+        throw new Error("No request ID returned from backend");
+      }
+
+      console.log("Request created with ID:", requestId);
+
+      // Step 2: Record Consents
+      try {
+        console.log("Recording consents for request ID:", requestId);
+        await accountService.recordConsents(requestId, {
+          termsVersion: "1.0",
+        });
+        console.log("Consents recorded successfully");
+      } catch (err) {
+        console.error("Failed to record consents:", err);
+        throw err;
+      }
+
+      // Step 3: Submit request
+      const submitData = await accountService.submitAccountRequest(requestId, {
+        workflowId: parseInt(formData.workflowId),
+        approvalRequiredCount: 1,
+        approvalDeadlineDays: 7,
+      });
+
+      if (!submitData.success) {
+        throw new Error(submitData.error || "Failed to submit request");
+      }
 
       setRequestSubmitted(true);
       success(
         t.auth.requestAccount.title,
-        t.auth.requestAccount.successMessage
+        `Your request (ID: ${requestId}) has been submitted for approval.`
       );
     } catch (error: unknown) {
       console.error("Account request failed:", error);
@@ -193,6 +290,12 @@ export default function RequestAccountPage() {
       department: "",
       roleId: "",
       reason: "",
+      workflowId: "",
+      accessDurationDays: "",
+      consentGiven: false,
+      privacyPolicyAccepted: false,
+      termsAccepted: false,
+      dataProcessingConsent: false,
     });
     setCurrentStep(1);
     setRequestSubmitted(false);
@@ -280,7 +383,7 @@ export default function RequestAccountPage() {
                   >
                     <div className="step-header">
                       <h3>Personal Information</h3>
-                      <div className="step-indicator">Step 1 of 2</div>
+                      <div className="step-indicator">Step 1 of 3</div>
                     </div>
 
                     <div className="form-row">
@@ -410,7 +513,7 @@ export default function RequestAccountPage() {
                   >
                     <div className="step-header">
                       <h3>Professional Information</h3>
-                      <div className="step-indicator">Step 2 of 2</div>
+                      <div className="step-indicator">Step 2 of 3</div>
                     </div>
 
                     <div className="form-group">
@@ -518,6 +621,201 @@ export default function RequestAccountPage() {
                       >
                         {validationErrors.reason}
                       </span>
+                    </div>
+
+                    <div className="form-navigation">
+                      <button
+                        type="button"
+                        className="btn-back"
+                        onClick={prevStep}
+                      >
+                        <ArrowLeft size={16} />
+                        {t.common.previous}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-next"
+                        onClick={nextStep}
+                      >
+                        {t.common.next}
+                        <ArrowRight size={16} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div
+                    className="form-step"
+                    style={{ display: currentStep === 3 ? "block" : "none" }}
+                  >
+                    <div className="step-header">
+                      <h3>Approval & Consent</h3>
+                      <div className="step-indicator">Step 3 of 3</div>
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="workflow">
+                        Approval Workflow <span className="required">*</span>
+                      </label>
+                      <HeadlessSelect
+                        value={formData.workflowId}
+                        onChange={(value) => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            workflowId: value as string,
+                          }));
+                          clearError("workflowId");
+                        }}
+                        options={[
+                          {
+                            label: "Select a workflow",
+                            value: "",
+                            disabled: true,
+                          },
+                          ...workflows.map((workflow) => ({
+                            label: `${workflow.name} - ${workflow.description}`,
+                            value: workflow.id.toString(),
+                          })),
+                        ]}
+                        placeholder="Select approval workflow"
+                        error={!!validationErrors.workflowId}
+                        disabled={loadingWorkflows}
+                      />
+                      <span
+                        className="error-message"
+                        style={{
+                          display: validationErrors.workflowId ? "block" : "none",
+                        }}
+                      >
+                        {validationErrors.workflowId}
+                      </span>
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="accessDuration">
+                        Access Duration (days)
+                      </label>
+                      <Input
+                        id="accessDuration"
+                        value={formData.accessDurationDays}
+                        onChange={(value) => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            accessDurationDays: String(value),
+                          }));
+                        }}
+                        type="number"
+                        min="1"
+                        placeholder="Leave empty for permanent access"
+                      />
+                      <small style={{ color: "#94a3b8", marginTop: "0.25rem", display: "block" }}>
+                        Leave empty for permanent access
+                      </small>
+                    </div>
+
+                    <div style={{ marginTop: "2rem", paddingTop: "1.5rem", borderTop: "1px solid rgba(255, 255, 255, 0.1)" }}>
+                      <h4 style={{ marginBottom: "1.5rem", color: "#ffffff", fontSize: "1rem", fontWeight: "600" }}>
+                        Privacy & Consent <span className="required">*</span>
+                      </h4>
+
+                      <div className="form-group" style={{ marginBottom: "1rem" }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: "0.75rem", cursor: "pointer", marginBottom: "0" }}>
+                          <Checkbox
+                            checked={formData.consentGiven}
+                            onChange={(value) => {
+                              setFormData((prev) => ({
+                                ...prev,
+                                consentGiven: value,
+                              }));
+                              clearError("consentGiven");
+                            }}
+                          />
+                          <span>I consent to data processing as described above</span>
+                        </label>
+                        <span
+                          className="error-message"
+                          style={{
+                            display: validationErrors.consentGiven ? "block" : "none",
+                            marginTop: "0.5rem",
+                          }}
+                        >
+                          {validationErrors.consentGiven}
+                        </span>
+                      </div>
+
+                      <div className="form-group" style={{ marginBottom: "1rem" }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: "0.75rem", cursor: "pointer", marginBottom: "0" }}>
+                          <Checkbox
+                            checked={formData.privacyPolicyAccepted}
+                            onChange={(value) => {
+                              setFormData((prev) => ({
+                                ...prev,
+                                privacyPolicyAccepted: value,
+                              }));
+                              clearError("privacyPolicyAccepted");
+                            }}
+                          />
+                          <span>I have read and accept the privacy policy</span>
+                        </label>
+                        <span
+                          className="error-message"
+                          style={{
+                            display: validationErrors.privacyPolicyAccepted ? "block" : "none",
+                            marginTop: "0.5rem",
+                          }}
+                        >
+                          {validationErrors.privacyPolicyAccepted}
+                        </span>
+                      </div>
+
+                      <div className="form-group" style={{ marginBottom: "1rem" }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: "0.75rem", cursor: "pointer", marginBottom: "0" }}>
+                          <Checkbox
+                            checked={formData.termsAccepted}
+                            onChange={(value) => {
+                              setFormData((prev) => ({
+                                ...prev,
+                                termsAccepted: value,
+                              }));
+                              clearError("termsAccepted");
+                            }}
+                          />
+                          <span>I accept the terms of use</span>
+                        </label>
+                        <span
+                          className="error-message"
+                          style={{
+                            display: validationErrors.termsAccepted ? "block" : "none",
+                            marginTop: "0.5rem",
+                          }}
+                        >
+                          {validationErrors.termsAccepted}
+                        </span>
+                      </div>
+
+                      <div className="form-group">
+                        <label style={{ display: "flex", alignItems: "center", gap: "0.75rem", cursor: "pointer", marginBottom: "0" }}>
+                          <Checkbox
+                            checked={formData.dataProcessingConsent}
+                            onChange={(value) => {
+                              setFormData((prev) => ({
+                                ...prev,
+                                dataProcessingConsent: value,
+                              }));
+                              clearError("dataProcessingConsent");
+                            }}
+                          />
+                          <span>I consent to automated data processing</span>
+                        </label>
+                        <span
+                          className="error-message"
+                          style={{
+                            display: validationErrors.dataProcessingConsent ? "block" : "none",
+                            marginTop: "0.5rem",
+                          }}
+                        >
+                          {validationErrors.dataProcessingConsent}
+                        </span>
+                      </div>
                     </div>
 
                     <div className="form-navigation">

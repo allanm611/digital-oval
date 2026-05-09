@@ -197,19 +197,33 @@ export const MetricsConditionRow: React.FC<MetricsConditionRowProps> = ({
 
       {/* Show date inputs when main operator is a date operator */}
       {isDateOperator && (condition.operator === "on_date" || condition.operator === "since_date" || condition.operator === "until_date") && (
-        <Input
-          type="date"
-          value={condition.start_date ?? ""}
-          onChange={(value) => {
-            updateCondition(groupId, condition.id, {
-              start_date: value as string,
-            });
-          }}
-          max={getTodayDateString()}
-          placeholder="Date"
-          className="min-w-[140px]"
-          style={{ borderColor: color.border.default }}
-        />
+        <div className="flex items-center gap-2">
+          <Input
+            type="date"
+            value={condition.start_date ?? ""}
+            onChange={(value) => {
+              updateCondition(groupId, condition.id, {
+                start_date: value as string,
+              });
+            }}
+            max={getTodayDateString()}
+            placeholder="Date"
+            className="min-w-[140px]"
+            style={{ borderColor: color.border.default }}
+          />
+          <Input
+            type="time"
+            value={condition.start_time && condition.start_time.match(/^\d{2}:\d{2}/) ? condition.start_time : "00:00"}
+            onChange={(value) => {
+              updateCondition(groupId, condition.id, {
+                start_time: value as string,
+              });
+            }}
+            placeholder="Time"
+            className="min-w-[120px]"
+            style={{ borderColor: color.border.default }}
+          />
+        </div>
       )}
 
       {/* Show two date inputs for between_dates operator */}
@@ -229,6 +243,18 @@ export const MetricsConditionRow: React.FC<MetricsConditionRowProps> = ({
             style={{ borderColor: color.border.default }}
           />
           <Input
+            type="time"
+            value={condition.start_time ?? ""}
+            onChange={(value) => {
+              updateCondition(groupId, condition.id, {
+                start_time: value as string,
+              });
+            }}
+            placeholder="Start time"
+            className="min-w-[120px]"
+            style={{ borderColor: color.border.default }}
+          />
+          <Input
             type="date"
             value={condition.end_date ?? ""}
             onChange={(value) => {
@@ -239,6 +265,18 @@ export const MetricsConditionRow: React.FC<MetricsConditionRowProps> = ({
             max={getTodayDateString()}
             placeholder="End date"
             className="min-w-[140px]"
+            style={{ borderColor: color.border.default }}
+          />
+          <Input
+            type="time"
+            value={condition.end_time && condition.end_time.match(/^\d{2}:\d{2}/) ? condition.end_time : "00:00"}
+            onChange={(value) => {
+              updateCondition(groupId, condition.id, {
+                end_time: value as string,
+              });
+            }}
+            placeholder="End time"
+            className="min-w-[120px]"
             style={{ borderColor: color.border.default }}
           />
         </>
@@ -276,19 +314,33 @@ export const MetricsConditionRow: React.FC<MetricsConditionRowProps> = ({
 
           {/* Date input fields based on selected operator */}
           {(!condition.date_operator_id || condition.date_operator_id === 12 || condition.date_operator_id === 14 || condition.date_operator_id === 15) && (
-            <Input
-              type="date"
-              value={condition.start_date ?? ""}
-              onChange={(value) => {
-                updateCondition(groupId, condition.id, {
-                  start_date: value as string,
-                });
-              }}
-              max={getTodayDateString()}
-              placeholder="Start date"
-              className="min-w-[140px]"
-              style={{ borderColor: color.border.default }}
-            />
+            <>
+              <Input
+                type="date"
+                value={condition.start_date ?? ""}
+                onChange={(value) => {
+                  updateCondition(groupId, condition.id, {
+                    start_date: value as string,
+                  });
+                }}
+                max={getTodayDateString()}
+                placeholder="Start date"
+                className="min-w-[140px]"
+                style={{ borderColor: color.border.default }}
+              />
+              <Input
+                type="time"
+                value={condition.start_time ?? ""}
+                onChange={(value) => {
+                  updateCondition(groupId, condition.id, {
+                    start_time: value as string,
+                  });
+                }}
+                placeholder="Time"
+                className="min-w-[120px]"
+                style={{ borderColor: color.border.default }}
+              />
+            </>
           )}
 
           {/* Between operator needs two dates */}
@@ -308,6 +360,18 @@ export const MetricsConditionRow: React.FC<MetricsConditionRowProps> = ({
                 style={{ borderColor: color.border.default }}
               />
               <Input
+                type="time"
+                value={condition.start_time ?? ""}
+                onChange={(value) => {
+                  updateCondition(groupId, condition.id, {
+                    start_time: value as string,
+                  });
+                }}
+                placeholder="Start time"
+                className="min-w-[120px]"
+                style={{ borderColor: color.border.default }}
+              />
+              <Input
                 type="date"
                 value={condition.end_date ?? ""}
                 onChange={(value) => {
@@ -318,6 +382,18 @@ export const MetricsConditionRow: React.FC<MetricsConditionRowProps> = ({
                 max={getTodayDateString()}
                 placeholder="End date"
                 className="min-w-[140px]"
+                style={{ borderColor: color.border.default }}
+              />
+              <Input
+                type="time"
+                value={condition.end_time ?? ""}
+                onChange={(value) => {
+                  updateCondition(groupId, condition.id, {
+                    end_time: value as string,
+                  });
+                }}
+                placeholder="End time"
+                className="min-w-[120px]"
                 style={{ borderColor: color.border.default }}
               />
             </>

@@ -2,12 +2,17 @@ import type { SegmentCondition, SegmentConditionGroup, LayerCondition, SourceLay
 import { getDateRangeForTimeWindow } from "../../../shared/utils/operatorMapper";
 
 /**
- * Checks if a condition is a profile-type condition (has field_id and operator_id)
+ * Checks if a condition is a profile-type condition (has field_id and operator_id, or is a segment/list)
  */
 export const isProfileTypeCondition = (condition: SegmentCondition): boolean => {
+  if (!condition || !condition.conditionType) return false;
+
+  // Segment and list conditions don't need field_id/operator_id
+  if (condition.conditionType === "segment" && condition.segment_id) return true;
+  if (condition.conditionType === "list" && condition.list_id) return true;
+
+  // Other profile-type conditions require field_id and operator_id
   return (
-    condition &&
-    condition.conditionType &&
     ["customer_identity", "revenue_metric", "usage_metric", "kpi"].includes(condition.conditionType) &&
     !!condition.field_id &&
     !!condition.operator_id
@@ -20,6 +25,30 @@ export const isProfileTypeCondition = (condition: SegmentCondition): boolean => 
 const buildLayerCondition = (condition: SegmentCondition): LayerCondition | null => {
   if (!isProfileTypeCondition(condition)) {
     return null;
+  }
+
+  // Handle segment conditions
+  if (condition.conditionType === "segment" && condition.segment_id) {
+    return {
+      column_ref: {
+        layer_index: 0,
+        column: "segment_id",
+      },
+      operator_id: 1, // "equals" operator
+      value: condition.segment_id,
+    };
+  }
+
+  // Handle list conditions
+  if (condition.conditionType === "list" && condition.list_id) {
+    return {
+      column_ref: {
+        layer_index: 0,
+        column: "list_id",
+      },
+      operator_id: 1, // "equals" operator
+      value: condition.list_id,
+    };
   }
 
   const hasValue = Array.isArray(condition.value)
@@ -136,9 +165,20 @@ const buildLayerCondition = (condition: SegmentCondition): LayerCondition | null
     }
   }
 
-  // Always include time_window_id when it's selected (for last_7_days, last_30_days, last_90_days, current, or custom)
+  // Always include time_window_id and time_window when it's selected (for last_7_days, last_30_days, last_90_days, current, or custom)
   if (condition.time_window_id && condition.time_window_id > 0) {
     layerCondValue.time_window_id = condition.time_window_id;
+    if (condition.time_window) {
+      layerCondValue.time_window = condition.time_window;
+    }
+  }
+
+  // Include start_time and end_time if provided
+  if (condition.start_time) {
+    layerCondValue.start_time = condition.start_time;
+  }
+  if (condition.end_time) {
+    layerCondValue.end_time = condition.end_time;
   }
 
   const layerCond: LayerCondition = {
@@ -178,17 +218,26 @@ export const buildLayerFilterGroups = (
 ): any[] => {
   const layerFilterGroups: any[] = [];
 
-  for (const group of conditions) {
+  for (let i = 0; i < conditions.length; i++) {
+    const group = conditions[i];
     const groupConditions = buildLayerConditionsFromGroup(group);
 
     if (groupConditions.length > 0 && group) {
       const groupLogic = group.operator ? String(group.operator).toUpperCase() : "AND";
       const validLogic: "AND" | "OR" = (groupLogic === "OR" ? "OR" : "AND") as "AND" | "OR";
 
-      layerFilterGroups.push({
+      const filterGroup: any = {
         logic: validLogic,
         conditions: groupConditions,
-      });
+      };
+
+      // If this group has a groupOperator (logic to connect to next group), include it
+      if (group.groupOperator && i < conditions.length - 1) {
+        const nextGroupLogic = String(group.groupOperator).toUpperCase();
+        filterGroup.group_logic = (nextGroupLogic === "OR" ? "OR" : "AND") as "AND" | "OR";
+      }
+
+      layerFilterGroups.push(filterGroup);
     }
   }
 
@@ -270,20 +319,12 @@ export const convertConditionsToPayload = (
   // Build layer_filters
   const layerFilterGroups = buildLayerFilterGroups(conditions);
 
-  // Determine top-level logic
-  let topLevelLogic: "AND" | "OR" = "AND";
-  if (conditions && conditions.length > 0 && conditions[0]) {
-    const groupOp = conditions[0].groupOperator ? String(conditions[0].groupOperator).toUpperCase() : "AND";
-    topLevelLogic = (groupOp === "OR" ? "OR" : "AND") as "AND" | "OR";
-  }
-
   const payload: SegmentPayload = {
     // source_layers: sourceLayers,
     // layer_fields: layerFields,
     layer_filters:
       layerFilterGroups.length > 0
         ? {
-            logic: topLevelLogic,
             groups: layerFilterGroups,
           }
         : undefined,

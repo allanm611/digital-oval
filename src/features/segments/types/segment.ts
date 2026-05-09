@@ -669,6 +669,8 @@ export interface SegmentCondition {
   // For date filtering
   start_date?: string; // ISO 8601 date for "from" date or range start
   end_date?: string; // ISO 8601 date for "to" date or range end
+  start_time?: string; // HH:MM:SS format for start time
+  end_time?: string; // HH:MM:SS format for end time
   date_operator?: "on" | "between" | "since" | "until"; // Date context operator for metric-based conditions
   date_operator_id?: number; // Backend ID for custom date operator (when time_window is "custom")
 
@@ -1050,6 +1052,9 @@ export type LayerCondition = {
   value?: string | number | (string | number)[] | null;
   start_date?: string | null;
   end_date?: string | null;
+  start_time?: string; // HH:MM:SS format
+  end_time?: string; // HH:MM:SS format
+  time_window?: string; // "last_7_days", "last_30_days", "last_90_days", "current_month", "custom"
   time_window_id?: number;
   date_operator_id?: number;
 };

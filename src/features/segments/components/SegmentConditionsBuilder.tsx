@@ -942,7 +942,7 @@ export default function SegmentConditionsBuilder({
                                   const firstField = categoryFields.length > 0 ? categoryFields[0] : null;
                                   const firstOp = getFirstBackendOperator(firstField);
 
-                                  updateCondition(group.id, condition.id, {
+                                  const updates: Partial<SegmentCondition> = {
                                     conditionType: condType,
                                     category: categoryId,
                                     field: firstField?.field_value || "",
@@ -952,7 +952,6 @@ export default function SegmentConditionsBuilder({
                                     operator: firstOp?.label || "equals",
                                     operator_id: firstOp?.id || 1,
                                     value: "",
-                                    time_window: "last_7_days",
                                     segment_id: undefined,
                                     segment_name: undefined,
                                     list_id: undefined,
@@ -960,7 +959,15 @@ export default function SegmentConditionsBuilder({
                                     system_event_id: undefined,
                                     system_event_code: undefined,
                                     system_event_name: undefined,
-                                  });
+                                  };
+
+                                  // Only set default time_window if not already set
+                                  if (!condition.time_window_id) {
+                                    updates.time_window = "last_7_days";
+                                    updates.time_window_id = 1;
+                                  }
+
+                                  updateCondition(group.id, condition.id, updates);
                                 }
                               }}
                               placeholder="Select data source"

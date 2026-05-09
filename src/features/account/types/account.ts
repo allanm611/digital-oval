@@ -52,7 +52,14 @@ export type CreateAccountRequestRequest = {
   created_by_source?: CreatedBySource;
   employee_id?: string;
   department?: string;
-  role_id?: number;
+  requested_role_id?: number;
+  access_duration_days?: number;
+  phone_number?: string;
+  mobile_number?: string;
+  job_title?: string;
+  manager_email?: string;
+  metadata?: Record<string, unknown>;
+  tags?: string[];
   requested_by?: number;
 };
 
@@ -61,6 +68,9 @@ export type RecordConsentsRequest = {
 };
 
 export type SubmitAccountRequestRequest = {
+  workflowId: number;
+  approvalRequiredCount?: number;
+  approvalDeadlineDays?: number;
   notes?: string;
 };
 
