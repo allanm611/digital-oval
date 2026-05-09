@@ -127,8 +127,8 @@ export const tw = {
   // Card sub-headings - sans-serif, weight 400, 14px
   cardSubHeading: `font-sans text-[0.875rem] font-normal leading-normal`,
 
-  // Table first column (name/title) - text-base, semibold
-  tableFirstColumn: `text-base font-semibold`,
+  // Table first column (name/title) - text-sm, semibold
+  tableFirstColumn: `text-sm font-semibold`,
 
   // Legacy typography classes (for backward compatibility)
   heading: "text-3xl font-bold leading-[120%] tracking-[-0.04em]",

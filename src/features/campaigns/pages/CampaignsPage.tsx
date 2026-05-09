@@ -17,6 +17,7 @@ import {
   RotateCcw,
   Trash2,
   CheckCircle,
+  XCircle,
   Send,
   Target,
   Clock,
@@ -1504,7 +1505,7 @@ export default function CampaignsPage() {
                               }}
                               className="w-full flex items-center px-4 py-3 text-sm text-black"
                             >
-                              <Trash2 className="w-4 h-4 mr-4 text-red-600" />
+                              <XCircle className="w-4 h-4 mr-4 text-red-600" />
                               Reject Campaign
                             </button>
                           </PermissionGate>

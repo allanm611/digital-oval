@@ -755,6 +755,56 @@ class CampaignService {
     });
   }
 
+  /** Update control group configuration for a specific campaign segment */
+  async updateSegmentControlGroup(
+    campaignId: number,
+    segmentId: number,
+    payload: {
+      control_group_type: "none" | "with_control" | "universal";
+      config_method?: "fixed_percentage" | "fixed_number" | "advanced";
+      percentage?: number;
+      fixed_number?: number;
+      advanced_params?: Record<string, unknown>;
+      control_group_id?: number;
+    },
+  ): Promise<{ success: boolean; message: string }> {
+    return this.request<{ success: boolean; message: string }>(
+      `/${campaignId}/segments/${segmentId}/control-group`,
+      {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+      },
+    );
+  }
+
+  /** Generate control group members for a campaign segment */
+  async generateControlGroupMembers(
+    campaignId: number,
+    segmentId: number,
+    dryRun: boolean = false,
+  ): Promise<{
+    campaign_id: number;
+    segment_id: number;
+    control_group_type: "with_control" | "universal";
+    control_group_id: number;
+    segment_size?: number;
+    target_count?: number;
+    added_count?: number;
+    skipped_count?: number;
+    intersection_count?: number;
+    intersection_subscriber_ids?: number[];
+    dry_run: boolean;
+    message: string;
+  }> {
+    const queryParams = dryRun ? "?dry_run=true" : "";
+    return this.request(
+      `/${campaignId}/segments/${segmentId}/generate-members${queryParams}`,
+      {
+        method: "POST",
+      },
+    );
+  }
+
   /** Get campaign categories with pagination and normalize each category */
   async getCampaignCategories(params?: {
     limit?: number;
