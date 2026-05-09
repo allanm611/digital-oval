@@ -160,6 +160,16 @@ export default function SegmentConditionsBuilder({
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewQuery, setPreviewQuery] = useState<string | null>(null);
+  const [previewLimit, setPreviewLimit] = useState<number>(100);
+
+  const PREVIEW_LIMIT_OPTIONS = [
+    { value: "10", label: "10" },
+    { value: "50", label: "50" },
+    { value: "100", label: "100" },
+    { value: "500", label: "500" },
+    { value: "1000", label: "1000" },
+    { value: "5000", label: "5000" },
+  ];
 
   const handlePreview = async () => {
     if (conditions.length === 0) {
@@ -194,7 +204,7 @@ export default function SegmentConditionsBuilder({
         return;
       }
 
-      const payload = convertConditionsToPayload(conditions, true);
+      const payload = convertConditionsToPayload(conditions, true, previewLimit);
 
       const response = await segmentService.generateSegmentQueryPreview(payload);
 
@@ -542,6 +552,17 @@ export default function SegmentConditionsBuilder({
                 {previewCount.toLocaleString()} customers
               </span>
             )} */}
+            <div className="flex items-center space-x-2">
+              <label className={`text-sm ${tw.textSecondary}`}>Limit:</label>
+              <HeadlessSelect
+                options={PREVIEW_LIMIT_OPTIONS}
+                value={String(previewLimit)}
+                onChange={(value) => setPreviewLimit(parseInt(value))}
+                placeholder="Select limit"
+                className="text-sm"
+                zIndex={zIndex.popover}
+              />
+            </div>
             <button
               type="button"
               onClick={handlePreview}

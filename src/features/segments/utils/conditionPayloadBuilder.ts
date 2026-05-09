@@ -250,7 +250,8 @@ export const buildLayerFilterGroups = (
  */
 export const convertConditionsToPayload = (
   conditions: SegmentConditionGroup[],
-  includeLimit: boolean = true
+  includeLimit: boolean = true,
+  limit: number = 100
 ): SegmentPayload => {
   // const sourceLayers: SourceLayer[] = [
   //   {
@@ -331,7 +332,7 @@ export const convertConditionsToPayload = (
   };
 
   if (includeLimit) {
-    (payload as any).limit = 100;
+    (payload as any).limit = limit;
   }
 
   return payload;

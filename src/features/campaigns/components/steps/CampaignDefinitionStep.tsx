@@ -481,7 +481,7 @@ export default function CampaignDefinitionStep({
                 placeholder="Select catalog(s)"
                 entityType="campaign"
                 className="w-full"
-                allowCreate={false}
+                allowCreate={true}
                 onCategoryCreated={(categoryId) => {
                   setSelectedCategoryIds([categoryId]);
                   setCategoryRefreshTriggerState((prev) => prev + 1);
@@ -1167,13 +1167,12 @@ export default function CampaignDefinitionStep({
                         />
                       ))}
                     </div>
-                    <span className="hidden sm:inline">{priority.label}</span>
+                    <span className="hidden sm:inline">{priority.label} {priority.bars}</span>
                   </button>
                 );
               })}
             </div>
             {/* Priority Rank - Only shows when priority is selected */}
-            {/* DISABLED: priority_rank is not allowed by backend
             {formData.priority && (
               <div
                 className={`mt-3 p-3 bg-gray-50 border border-gray-200 ${tw.rounded}`}
@@ -1206,7 +1205,6 @@ export default function CampaignDefinitionStep({
                 </p>
               </div>
             )}
-            */}
           </div>
         </div>
 

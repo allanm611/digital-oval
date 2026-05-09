@@ -222,32 +222,36 @@ export default function NotificationDropdown({
             {/* Filter Tabs */}
             <div className="flex border-b border-gray-200 px-4">
               <button
-                onClick={() => setFilter("unread")}
-                style={{
-                  borderBottomColor:
-                    filter === "unread" ? color.primary.accent : "transparent",
-                }}
-                className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
-                  filter === "unread"
-                    ? "text-gray-900"
-                    : "border-transparent text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                {t.notifications.dropdownUnread}
-              </button>
-              <button
                 onClick={() => setFilter("all")}
-                style={{
-                  borderBottomColor:
-                    filter === "all" ? color.primary.accent : "transparent",
-                }}
-                className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
+                className={`px-3 py-2 text-sm font-medium transition-colors relative ${
                   filter === "all"
                     ? "text-gray-900"
-                    : "border-transparent text-gray-600 hover:text-gray-900"
+                    : "text-gray-600 hover:text-gray-900"
                 }`}
               >
                 {t.notifications.dropdownAll}
+                {filter === "all" && (
+                  <div
+                    className="absolute bottom-0 left-0 right-0 h-0.5"
+                    style={{ backgroundColor: color.primary.accent }}
+                  />
+                )}
+              </button>
+              <button
+                onClick={() => setFilter("unread")}
+                className={`px-3 py-2 text-sm font-medium transition-colors relative ${
+                  filter === "unread"
+                    ? "text-gray-900"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                {t.notifications.dropdownUnread}
+                {filter === "unread" && (
+                  <div
+                    className="absolute bottom-0 left-0 right-0 h-0.5"
+                    style={{ backgroundColor: color.primary.accent }}
+                  />
+                )}
               </button>
             </div>
 
@@ -346,7 +350,8 @@ export default function NotificationDropdown({
                     setIsOpen(false);
                     navigate("/dashboard/notifications");
                   }}
-                  className="w-full text-center text-sm text-blue-600 hover:text-blue-700 font-medium py-2 hover:bg-blue-50 rounded transition-colors"
+                  className="w-full text-center text-sm font-medium py-2 rounded transition-colors"
+                  style={{ color: color.primary.accent }}
                 >
                   {t.notifications.dropdownViewAllNotifications}
                 </button>

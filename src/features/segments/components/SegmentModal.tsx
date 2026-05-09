@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { X, Plus } from "lucide-react";
+import { format } from "sql-formatter";
 import {
   Segment,
   CreateSegmentRequest,
@@ -636,32 +637,11 @@ export default function SegmentModal({
   // Format SQL query for better readability
   const formatSQL = (sql: string): string => {
     if (!sql) return "";
-
-    // Add line breaks and indentation for better readability
-    const formatted = sql
-      // Main clauses
-      .replace(/\bSELECT\b/gi, "\nSELECT\n  ")
-      .replace(/\bFROM\b/gi, "\n\nFROM\n  ")
-      .replace(/\bWHERE\b/gi, "\n\nWHERE\n  ")
-      .replace(/\bORDER BY\b/gi, "\n\nORDER BY\n  ")
-      .replace(/\bGROUP BY\b/gi, "\n\nGROUP BY\n  ")
-      .replace(/\bHAVING\b/gi, "\n\nHAVING\n  ")
-      .replace(/\bLIMIT\b/gi, "\n\nLIMIT ")
-      .replace(/\bOFFSET\b/gi, "\nOFFSET ")
-      // Joins
-      .replace(/\bJOIN\b/gi, "\nJOIN\n  ")
-      .replace(/\bLEFT JOIN\b/gi, "\nLEFT JOIN\n  ")
-      .replace(/\bINNER JOIN\b/gi, "\nINNER JOIN\n  ")
-      .replace(/\bON\b/gi, "\n  ON ")
-      // Logical operators
-      .replace(/\bAND\b/gi, "\n  AND ")
-      .replace(/\bOR\b/gi, "\n  OR ")
-      // Clean up extra spaces and newlines
-      .replace(/\n\s*\n\s*\n/g, "\n\n")
-      .replace(/,\s*/g, ",\n  ")
-      .trim();
-
-    return formatted;
+    try {
+      return format(sql, { language: "mysql" });
+    } catch (err) {
+      return sql;
+    }
   };
 
 

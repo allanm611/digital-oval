@@ -399,9 +399,7 @@ export default function NotificationsPage() {
       )}
 
       {/* Notifications List */}
-      <div
-        className={`bg-white ${tw.rounded} border border-gray-200 overflow-hidden`}
-      >
+      <div>
         {error && (
           <div className="p-4 bg-red-50 border-b border-red-200">
             <p className="text-sm text-red-800">{error}</p>
@@ -416,7 +414,7 @@ export default function NotificationsPage() {
             </p>
           </div>
         ) : filteredNotifications.length === 0 ? (
-          <div className="p-12 text-center">
+          <div className="p-12  text-center">
             <Bell className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <p className="text-lg font-medium text-gray-900 mb-2">
               {t.notifications.emptyTitle}
@@ -429,7 +427,8 @@ export default function NotificationsPage() {
           </div>
         ) : (
           <>
-            <div className="divide-y divide-gray-200">
+          {/* <div className="p-4 bg-red-900"> */}
+            <div className=" space-y-4">
               {filteredNotifications.map((notification) => {
                 const isSelected = selectedNotifications.includes(
                   notification.id,
@@ -438,7 +437,7 @@ export default function NotificationsPage() {
                 return (
                   <div
                     key={notification.id}
-                    className={`p-4 hover:bg-gray-50 transition-colors ${
+                    className={`bg-white ${tw.rounded} border border-gray-200 p-4 hover:bg-gray-50 transition-colors ${
                       loadingIndividual[notification.id] ? "opacity-60" : ""
                     }`}
                   >
@@ -471,7 +470,7 @@ export default function NotificationsPage() {
                               : ""
                         }`}
                       >
-                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+                        <div className="flex flex-col  sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
                           <div className="flex items-start gap-3 flex-1 min-w-0">
                             <div className="flex-1 min-w-0">
                               <div className="flex flex-wrap items-center gap-2 mb-1">
@@ -554,6 +553,7 @@ export default function NotificationsPage() {
                 );
               })}
             </div>
+            {/* </div> */}
           </>
         )}
       </div>
