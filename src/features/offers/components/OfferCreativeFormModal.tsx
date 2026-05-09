@@ -38,6 +38,7 @@ import {
 import type { TemplateVariable } from "../../manual-broadcast/types";
 import CreateLanguageModal from "./CreateLanguageModal";
 import CreativeTemplateFormModal from "./CreativeTemplateFormModal";
+import { supportsHtmlBody, requiresHtmlBody } from "../utils/channelUtils";
 
 interface OfferCreativeFormModalProps {
   isOpen: boolean;
@@ -366,7 +367,7 @@ export default function OfferCreativeFormModal({
     if (!formData.text_body) {
       newErrors.text_body = "Message body is required";
     }
-    if (formData.channel === "Email" && !formData.html_body) {
+    if (requiresHtmlBody(formData.channel) && !formData.html_body) {
       newErrors.text_body = "HTML content is required for Email channel";
     }
 

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { zIndex } from "../../../shared/utils/tokens";
+import { supportsHtmlBody, requiresHtmlBody } from "../utils/channelUtils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import TypeSelector from "../../../shared/components/TypeSelector";
 import Input from "../../../shared/components/ui/Input";
@@ -1463,7 +1464,7 @@ export default function OfferCreativeStep({
                     )}
 
                     {/* Subject Line for Email */}
-                    {editingCreative.channel === "Email" && (
+                    {supportsHtmlBody(editingCreative.channel) && (
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           {t.offers.subjectLine.label} <span className="text-red-500">*</span>

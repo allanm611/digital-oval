@@ -1645,7 +1645,7 @@ Satoshi
 .form-card,
 .success-card {
   background: rgba(30, 41, 59, 0.6);
-  border-radius: 20px;
+  border-radius: 8px;
   padding: 3rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
@@ -1698,7 +1698,7 @@ Satoshi
   color: #10b981;
   background: rgba(16, 185, 129, 0.1);
   padding: 0.5rem 1rem;
-  border-radius: 20px;
+  border-radius: 6px;
   border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
@@ -1731,7 +1731,7 @@ Satoshi
   width: 100%;
   padding: 0.875rem 1rem;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
+  border-radius: 6px;
   font-size: 0.95rem;
   color: #e2e8f0;
   background: rgba(15, 23, 42, 0.6);
@@ -1784,7 +1784,7 @@ Satoshi
   justify-content: center;
   gap: 0.5rem;
   padding: 0.875rem 1.5rem;
-  border-radius: 12px;
+  border-radius: 6px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -1807,7 +1807,7 @@ Satoshi
   justify-content: center;
   gap: 0.5rem;
   padding: 0.875rem 1.5rem;
-  border-radius: 12px;
+  border-radius: 6px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -1985,7 +1985,7 @@ Satoshi
   .form-card,
   .success-card {
     padding: 1.5rem;
-    border-radius: 16px;
+    border-radius: 8px;
   }
 
   .form-header {

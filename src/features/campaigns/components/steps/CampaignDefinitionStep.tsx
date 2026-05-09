@@ -645,7 +645,8 @@ export default function CampaignDefinitionStep({
                                 setFormData({
                                   ...formData,
                                   line_of_business_id: Number(lob.id),
-                                } as CreateCampaignRequest);
+                                  line_of_business: lob.name,
+                                } as any);
                                 setIsLineOfBusinessDropdownOpen(false);
                                 setLineOfBusinessSearchTerm("");
                               }}
@@ -764,7 +765,8 @@ export default function CampaignDefinitionStep({
                                 setFormData({
                                   ...formData,
                                   department_id: Number(dept.id),
-                                } as CreateCampaignRequest);
+                                  department: dept.name,
+                                } as any);
                                 setIsDepartmentDropdownOpen(false);
                                 setDepartmentSearchTerm("");
                               }}
@@ -1289,6 +1291,10 @@ export default function CampaignDefinitionStep({
                   type="button"
                   onClick={() => {
                     setSelectedPolicy(null);
+                    setFormData({
+                      ...formData,
+                      communication_policy: undefined,
+                    } as any);
                     setIsPolicyDropdownOpen(false);
                   }}
                   className="w-full text-left px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none border-b border-gray-200"
@@ -1308,6 +1314,10 @@ export default function CampaignDefinitionStep({
                       type="button"
                       onClick={() => {
                         setSelectedPolicy(policy);
+                        setFormData({
+                          ...formData,
+                          communication_policy: policy.name,
+                        } as any);
                         setIsPolicyDropdownOpen(false);
                       }}
                       className={`w-full text-left px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none ${

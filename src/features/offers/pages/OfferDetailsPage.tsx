@@ -53,6 +53,7 @@ import {
 import { color, tw } from "../../../shared/utils/utils";
 import { zIndex } from "../../../shared/utils/tokens";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
+import { supportsHtmlBody, requiresHtmlBody } from "../utils/channelUtils";
 import BackButton from "../../../shared/components/ui/BackButton";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import { useToast } from "../../../contexts/ToastContext";

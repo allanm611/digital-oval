@@ -374,6 +374,24 @@ class UserOnboardingService {
   }
 
   /**
+   * GET /user-onboarding-requests/analytics/count-by-status - Get count of requests grouped by status
+   */
+  async getCountByStatus(
+    skipCache?: boolean
+  ): Promise<{
+    success: boolean;
+    data: Array<{ status: string; count: number }>;
+  }> {
+    const params = new URLSearchParams();
+    if (skipCache) params.append("skipCache", "true");
+    const queryString = params.toString() ? `?${params.toString()}` : "";
+    return this.request<{
+      success: boolean;
+      data: Array<{ status: string; count: number }>;
+    }>(`/analytics/count-by-status${queryString}`);
+  }
+
+  /**
    * POST /user-onboarding-requests/:id/approve - Approve an onboarding request
    */
   async approveOnboardingRequest(

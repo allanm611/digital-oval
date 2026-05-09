@@ -5,11 +5,10 @@ import { Save } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import {
   creativeTemplateService,
-  CHANNEL_OPTIONS,
   type ChannelEnum,
-  getChannelOptionsFromAPI,
 } from "../../configurations/services/creativeTemplateService";
 import { languageService } from "../../configurations/services/languageService";
+import { communicationChannelService } from "../../../shared/services/communicationChannelService";
 import BackButton from "../../../shared/components/ui/BackButton";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { tw, button, color } from "../../../shared/utils/utils";
@@ -35,7 +34,7 @@ export default function CreativeTemplateFormPage() {
   const [variablesText, setVariablesText] = useState("");
 
   const [languageOptions, setLanguageOptions] = useState<LanguageOption[]>([]);
-  const [channelOptions, setChannelOptions] = useState<Array<{ value: string; label: string }>>(CHANNEL_OPTIONS);
+  const [channelOptions, setChannelOptions] = useState<Array<{ value: string; label: string }>>([]);
 
   useEffect(() => {
     const loadLanguages = async () => {
@@ -65,10 +64,16 @@ export default function CreativeTemplateFormPage() {
   useEffect(() => {
     const loadChannels = async () => {
       try {
-        const options = await getChannelOptionsFromAPI();
+        const channels = await communicationChannelService.getAll();
+        const options = (channels || [])
+          .filter((ch: any) => ch.is_active !== false)
+          .map((ch: any) => ({
+            label: ch.name,
+            value: ch.name, // Use name as value
+          }));
         setChannelOptions(options);
       } catch {
-        setChannelOptions(CHANNEL_OPTIONS);
+        setChannelOptions([]);
       }
     };
 
@@ -117,6 +122,17 @@ export default function CreativeTemplateFormPage() {
     setLoading(false);
   }, []);
 
+  // Map channel name to enum value for submission
+  const mapChannelNameToEnum = (channelName: string): ChannelEnum => {
+    const nameUpper = channelName.toUpperCase();
+    if (nameUpper.includes("WHATSAPP")) return "WhatsApp" as ChannelEnum;
+    if (nameUpper.includes("EMAIL")) return "Email" as ChannelEnum;
+    if (nameUpper.includes("SMS")) return "SMS" as ChannelEnum;
+    if (nameUpper.includes("PUSH")) return "Push" as ChannelEnum;
+    if (nameUpper.includes("USSD")) return "USSD" as ChannelEnum;
+    return channel as ChannelEnum;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -141,7 +157,7 @@ export default function CreativeTemplateFormPage() {
         name: name.trim(),
         description: description.trim() || undefined,
         code: code.trim(),
-        primaryChannel: channel as ChannelEnum,
+        primaryChannel: mapChannelNameToEnum(channel),
         locale: locale || undefined,
         title: title.trim() || undefined,
         text_body: bodyText.trim() || undefined,

@@ -6,6 +6,7 @@ import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import type { CreativeTemplate } from "../../configurations/services/creativeTemplateService";
 import { languageService, Language } from "../../configurations/services/languageService";
+import { useToast } from "../../../contexts/ToastContext";
 
 interface CreativeTemplateFormModalProps {
   isOpen: boolean;
@@ -26,6 +27,7 @@ export default function CreativeTemplateFormModal({
   defaultLocale = "en",
   communicationChannels = [],
 }: CreativeTemplateFormModalProps) {
+  const { error: showError } = useToast();
   // Get the default channel name from the communicationChannels
   const getDefaultChannelName = () => {
     if (!defaultChannelId || !communicationChannels || communicationChannels.length === 0) {
@@ -51,7 +53,7 @@ export default function CreativeTemplateFormModal({
 
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [channelOptions, setChannelOptions] = useState<Array<{ value: string; label: string }>>(DEFAULT_CHANNEL_OPTIONS);
+  const [channelOptions, setChannelOptions] = useState<Array<{ value: string; label: string }>>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
 
   useEffect(() => {

@@ -775,6 +775,21 @@ export default function CreateCampaignPage() {
           ...(formData.budget_allocated && {
             budget_allocated: String(formData.budget_allocated),
           }),
+          ...(formData.priority && { priority: formData.priority }),
+          ...(formData.priority_rank && { priority_rank: formData.priority_rank }),
+          ...((formData as any)?.line_of_business && {
+            line_of_business: (formData as any).line_of_business,
+          }),
+          ...((formData as any)?.communication_policy && {
+            communication_policy: (formData as any).communication_policy,
+          }),
+          ...((formData as any)?.department && {
+            department: (formData as any).department,
+          }),
+          control_group_enabled: controlGroup.enabled,
+          ...(controlGroup.percentage && {
+            control_group_percentage: controlGroup.percentage,
+          }),
         };
         await campaignService.updateCampaign(parseInt(id), updateData);
 
@@ -878,6 +893,21 @@ export default function CreateCampaignPage() {
           ...(ownerTeam && { owner_team: ownerTeam }),
           ...(formData.budget_allocated && {
             budget_allocated: String(formData.budget_allocated),
+          }),
+          ...(formData.priority && { priority: formData.priority }),
+          ...(formData.priority_rank && { priority_rank: formData.priority_rank }),
+          ...((formData as any)?.line_of_business && {
+            line_of_business: (formData as any).line_of_business,
+          }),
+          ...((formData as any)?.communication_policy && {
+            communication_policy: (formData as any).communication_policy,
+          }),
+          ...((formData as any)?.department && {
+            department: (formData as any).department,
+          }),
+          control_group_enabled: controlGroup.enabled,
+          ...(controlGroup.percentage && {
+            control_group_percentage: controlGroup.percentage,
           }),
         };
 
@@ -1010,6 +1040,21 @@ export default function CreateCampaignPage() {
           ...(tagsArray.length > 0 && { tags: tagsArray }),
           ...(ownerTeam && { owner_team: ownerTeam }),
           budget_allocated: String(formData.budget_allocated || 0),
+          ...(formData.priority && { priority: formData.priority }),
+          ...(formData.priority_rank && { priority_rank: formData.priority_rank }),
+          ...((formData as any)?.line_of_business && {
+            line_of_business: (formData as any).line_of_business,
+          }),
+          ...((formData as any)?.communication_policy && {
+            communication_policy: (formData as any).communication_policy,
+          }),
+          ...((formData as any)?.department && {
+            department: (formData as any).department,
+          }),
+          control_group_enabled: controlGroup.enabled,
+          ...(controlGroup.percentage && {
+            control_group_percentage: controlGroup.percentage,
+          }),
         };
 
         const createResponse =
@@ -1277,6 +1322,19 @@ export default function CreateCampaignPage() {
         ...(formData.priority && { priority: formData.priority }),
         ...(formData.priority_rank && {
           priority_rank: formData.priority_rank,
+        }),
+        ...((formData as any)?.line_of_business && {
+          line_of_business: (formData as any).line_of_business,
+        }),
+        ...((formData as any)?.communication_policy && {
+          communication_policy: (formData as any).communication_policy,
+        }),
+        ...((formData as any)?.department && {
+          department: (formData as any).department,
+        }),
+        control_group_enabled: controlGroup.enabled,
+        ...(controlGroup.percentage && {
+          control_group_percentage: controlGroup.percentage,
         }),
       };
 

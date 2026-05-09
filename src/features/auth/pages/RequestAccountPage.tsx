@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ArrowLeft, CheckCircle2, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -6,6 +6,10 @@ import { accountService } from "../../account/services/accountService";
 import { useToast } from "../../../contexts/ToastContext";
 import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import { departmentService } from "../../campaigns/services/departmentService";
+import { roleService } from "../../roles/services/roleService";
+import { ConfigurationItem } from "../../configurations/components/ConfigurationManager";
+import { Role } from "../../roles/types/role";
 
 export default function RequestAccountPage() {
   const { t } = useLanguage();
@@ -15,7 +19,7 @@ export default function RequestAccountPage() {
     email: "",
     phone: "",
     department: "",
-    position: "",
+    roleId: "",
     reason: "",
   });
   const [currentStep, setCurrentStep] = useState(1);
@@ -24,8 +28,43 @@ export default function RequestAccountPage() {
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
   >({});
+  const [departments, setDepartments] = useState<ConfigurationItem[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [loadingDepartments, setLoadingDepartments] = useState(true);
+  const [loadingRoles, setLoadingRoles] = useState(true);
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
+
+  useEffect(() => {
+    const loadDepartments = async () => {
+      try {
+        const data = await departmentService.getDepartments();
+        setDepartments(data);
+      } catch (error) {
+        console.error("Failed to load departments:", error);
+        showError("Error", "Failed to load departments");
+      } finally {
+        setLoadingDepartments(false);
+      }
+    };
+
+    const loadRoles = async () => {
+      try {
+        const response = await roleService.listRoles({ limit: 100 });
+        if (response.roles) {
+          setRoles(response.roles);
+        }
+      } catch (error) {
+        console.error("Failed to load roles:", error);
+        showError("Error", "Failed to load roles");
+      } finally {
+        setLoadingRoles(false);
+      }
+    };
+
+    loadDepartments();
+    loadRoles();
+  }, [showError]);
 
   const goHome = () => {
     navigate("/login");
@@ -69,8 +108,8 @@ export default function RequestAccountPage() {
       errors.department = "Department is required";
     }
 
-    if (!formData.position.trim()) {
-      errors.position = "Position is required";
+    if (!formData.roleId) {
+      errors.roleId = "Role is required";
     }
 
     if (!formData.reason.trim()) {
@@ -108,6 +147,7 @@ export default function RequestAccountPage() {
         business_justification: formData.reason,
         created_by_source: "online_portal",
         department: formData.department || undefined,
+        primary_role_id: formData.roleId ? parseInt(formData.roleId) : undefined,
       });
 
       setRequestSubmitted(true);
@@ -151,7 +191,7 @@ export default function RequestAccountPage() {
       email: "",
       phone: "",
       department: "",
-      position: "",
+      roleId: "",
       reason: "",
     });
     setCurrentStep(1);
@@ -392,15 +432,14 @@ export default function RequestAccountPage() {
                             value: "",
                             disabled: true,
                           },
-                          { label: "Marketing", value: "marketing" },
-                          { label: "Sales", value: "sales" },
-                          { label: "IT", value: "it" },
-                          { label: "Human Resources", value: "hr" },
-                          { label: "Finance", value: "finance" },
-                          { label: "Operations", value: "operations" },
+                          ...departments.map((dept) => ({
+                            label: dept.name,
+                            value: dept.id?.toString() || dept.name,
+                          })),
                         ]}
                         placeholder={t.auth.requestAccount.departmentPlaceholder}
                         error={!!validationErrors.department}
+                        disabled={loadingDepartments}
                       />
                       <span
                         className="error-message"
@@ -415,31 +454,40 @@ export default function RequestAccountPage() {
                     </div>
 
                     <div className="form-group">
-                      <label htmlFor="position">
-                        Position <span className="required">*</span>
+                      <label htmlFor="role">
+                        Role <span className="required">*</span>
                       </label>
-                      <Input
-                        id="position"
-                        value={formData.position}
+                      <HeadlessSelect
+                        value={formData.roleId}
                         onChange={(value) => {
                           setFormData((prev) => ({
                             ...prev,
-                            position: String(value),
+                            roleId: value as string,
                           }));
-                          clearError("position");
+                          clearError("roleId");
                         }}
-                        type="text"
-                        required
-                        placeholder={t.auth.requestAccount.reasonPlaceholder}
-                        className={validationErrors.position ? "invalid" : ""}
+                        options={[
+                          {
+                            label: "Select a role",
+                            value: "",
+                            disabled: true,
+                          },
+                          ...roles.map((role) => ({
+                            label: role.name,
+                            value: role.id.toString(),
+                          })),
+                        ]}
+                        placeholder="Select a role"
+                        error={!!validationErrors.roleId}
+                        disabled={loadingRoles}
                       />
                       <span
                         className="error-message"
                         style={{
-                          display: validationErrors.position ? "block" : "none",
+                          display: validationErrors.roleId ? "block" : "none",
                         }}
                       >
-                        {validationErrors.position}
+                        {validationErrors.roleId}
                       </span>
                     </div>
 

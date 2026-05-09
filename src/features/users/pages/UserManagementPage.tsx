@@ -167,11 +167,13 @@ export default function UserManagementPage() {
   const [rejectedRequests, setRejectedRequests] = useState<
     AccountRequestListItem[]
   >([]);
+  const [requestCountByStatus, setRequestCountByStatus] = useState<Array<{ status: string; count: number }>>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorState, setErrorState] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [activeTab, setActiveTab] = useState<"users" | "requests">("users");
+  const { user } = useAuth();
   const [filterDepartment, setFilterDepartment] = useState<string>("all");
   const [filterRole, setFilterRole] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<
@@ -418,15 +420,17 @@ export default function UserManagementPage() {
         setErrorState("");
 
         // Fetch users and onboarding requests in parallel
-        const [usersResponse, submittedResponse, underReviewResponse, pendingApprovalResponse, rejectedResponse] = await Promise.allSettled([
+        const [usersResponse, recentlySubmittedResponse, underReviewResponse, pendingApprovalResponse, rejectedResponse, countByStatusResponse] = await Promise.allSettled([
           fetchUsers({
             skipCache,
             searchTermOverride,
           }),
-          userOnboardingService.getSubmittedRequests(skipCache, 100, 0),
+          userOnboardingService.getRecentlySubmittedRequests(skipCache, 100, 0),
           userOnboardingService.getUnderReviewRequests(skipCache, 100, 0),
+          // userOnboardingService.getApproverPendingRequests(user?.user_id, skipCache, 100, 0), // TODO: Use approver-specific pending when needed
           userOnboardingService.getPendingApprovalRequests(skipCache, 100, 0),
           userOnboardingService.getRejectedOnboardingRequests(skipCache, 100, 0),
+          userOnboardingService.getCountByStatus(skipCache),
         ]);
 
         // Process users (from users endpoint)
@@ -462,9 +466,9 @@ export default function UserManagementPage() {
           });
         }
 
-        // Process onboarding requests (submitted, under_review, pending_approval)
+        // Process onboarding requests (recently submitted, under_review, pending approval)
         const allOnboardingRequests: AccountRequestListItem[] = [];
-        const statusResponses = [submittedResponse, underReviewResponse, pendingApprovalResponse];
+        const statusResponses = [recentlySubmittedResponse, underReviewResponse, pendingApprovalResponse];
 
         statusResponses.forEach((response) => {
           if (response.status === "fulfilled" && response.value.success) {
@@ -504,6 +508,11 @@ export default function UserManagementPage() {
         }
 
         setRejectedRequests(rejectedList);
+
+        // Set request count by status
+        if (countByStatusResponse.status === "fulfilled" && countByStatusResponse.value.success) {
+          setRequestCountByStatus(countByStatusResponse.value.data);
+        }
       } catch (err) {
         const message = extractErrorMessage(err);
         setErrorState(message);
@@ -525,10 +534,11 @@ export default function UserManagementPage() {
         setErrorState("");
 
         // Fetch users, onboarding requests, and roles in parallel
-        const [usersResponse, submittedResponse, underReviewResponse, pendingApprovalResponse, rejectedResponse, rolesResponse] = await Promise.allSettled([
+        const [usersResponse, recentlySubmittedResponse, underReviewResponse, pendingApprovalResponse, rejectedResponse, rolesResponse, countByStatusResponse] = await Promise.allSettled([
           fetchUsers({ skipCache: false }),
-          userOnboardingService.getSubmittedRequests(true, 100, 0),
+          userOnboardingService.getRecentlySubmittedRequests(true, 100, 0),
           userOnboardingService.getUnderReviewRequests(true, 100, 0),
+          // userOnboardingService.getApproverPendingRequests(user?.user_id, true, 100, 0), // TODO: Use approver-specific pending when needed
           userOnboardingService.getPendingApprovalRequests(true, 100, 0),
           userOnboardingService.getRejectedOnboardingRequests(true, 100, 0),
           roleService.listRoles({
@@ -536,6 +546,7 @@ export default function UserManagementPage() {
             offset: 0,
             skipCache: true,
           }),
+          userOnboardingService.getCountByStatus(true),
         ]);
 
         if (cancelled) return;
@@ -597,9 +608,9 @@ export default function UserManagementPage() {
           showError("Error loading users", message);
         }
 
-        // Process onboarding requests (submitted, under_review, pending_approval)
+        // Process onboarding requests (recently submitted, under_review, pending approval)
         const allOnboardingRequests: AccountRequestListItem[] = [];
-        const statusResponses = [submittedResponse, underReviewResponse, pendingApprovalResponse];
+        const statusResponses = [recentlySubmittedResponse, underReviewResponse, pendingApprovalResponse];
 
         statusResponses.forEach((response) => {
           if (response.status === "fulfilled" && response.value.success) {
@@ -643,6 +654,11 @@ export default function UserManagementPage() {
         }
 
         setRejectedRequests(rejectedList);
+
+        // Set request count by status
+        if (countByStatusResponse.status === "fulfilled" && countByStatusResponse.value.success) {
+          setRequestCountByStatus(countByStatusResponse.value.data);
+        }
       } catch (err) {
         const message = extractErrorMessage(err);
         setErrorState(message);

@@ -87,6 +87,7 @@ export default function UserAnalyticsPage() {
   const [recentUsers, setRecentUsers] = useState<UserType[]>([]);
   const [inactiveUsersCount, setInactiveUsersCount] = useState(0);
   const [inactiveUsers, setInactiveUsers] = useState<UserType[]>([]);
+  const [requestCountByStatus, setRequestCountByStatus] = useState<Array<{ status: string; count: number }>>([]);
   const [roleLookup, setRoleLookup] = useState<Record<number, { id: number; name: string }>>({});
 
   const loadAnalytics = useCallback(async () => {
@@ -107,6 +108,7 @@ export default function UserAnalyticsPage() {
         expiredRes,
         recentRes,
         inactiveRes,
+        requestCountByStatusRes,
       ] = await Promise.all([
         userService.getUsers({ skipCache: true }).catch(() => null),
         userOnboardingService.getSubmittedRequests(true, 100, 0).catch(() => null),
@@ -121,6 +123,7 @@ export default function UserAnalyticsPage() {
         userService.getExpiredAccess({ limit: 100, skipCache: true }).catch(() => null),
         userService.getRecentUsers(7, { limit: 100, skipCache: true }).catch(() => null),
         userService.getInactiveUsers(30, { limit: 100, skipCache: true }).catch(() => null),
+        userOnboardingService.getCountByStatus(true).catch(() => ({ success: false, data: [] })),
       ]);
 
       // Transform array format to object format if needed
@@ -314,6 +317,11 @@ export default function UserAnalyticsPage() {
         const total = inactiveTyped.pagination?.total ?? inactiveTyped.meta?.total ?? 0;
         setInactiveUsersCount(total);
         setInactiveUsers(inactiveRes.data);
+      }
+
+      // Set request count by status
+      if (requestCountByStatusRes?.success && requestCountByStatusRes?.data) {
+        setRequestCountByStatus(requestCountByStatusRes.data);
       }
 
       // Extract unique role IDs from all user tables and fetch missing roles

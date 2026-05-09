@@ -8,6 +8,7 @@ import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { supportsHtmlBody } from "../utils/channelUtils";
 
 const DetailItem = ({ label, value }: { label: string; value: ReactNode }) => (
   <div className="space-y-1">
@@ -357,7 +358,7 @@ export default function OfferCreativeDetailsPage() {
             )}
           </div>
 
-          {(creative.channel === "Email" || creative.channel === "Web") && (
+          {supportsHtmlBody(creative.channel) && (
             <div className="space-y-2 w-full">
               <p
                 className={`text-sm font-semibold uppercase tracking-wide ${tw.textMuted}`}
