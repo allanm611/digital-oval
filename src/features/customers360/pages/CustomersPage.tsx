@@ -113,6 +113,7 @@ export default function CustomersPage() {
   const [editingCustomer, setEditingCustomer] =
     useState<CustomerSubscriptionRecord | null>(null);
   const [customers, setCustomers] = useState<CustomerSubscriptionRecord[]>([]);
+  const [allCustomers, setAllCustomers] = useState<CustomerSubscriptionRecord[]>([]);
   const loadCustomers = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -175,6 +176,7 @@ export default function CustomersPage() {
             },
           );
           setCustomers(apiCustomers);
+          setAllCustomers(apiCustomers);
 
           // Set total from response pagination.total (preferred) or top-level total
           const total =
@@ -210,8 +212,6 @@ export default function CustomersPage() {
   useEffect(() => {
     loadCustomers();
   }, [loadCustomers]);
-
-  const dataset = customers;
 
   // Debounce search term
   useEffect(() => {
@@ -292,6 +292,7 @@ export default function CustomersPage() {
       }
 
       setCustomers(allCustomers);
+      setAllCustomers(allCustomers);
       setTotalCustomers(totalCount);
     } catch (err) {
       console.error("Failed to load customers for search:", err);
@@ -349,10 +350,8 @@ export default function CustomersPage() {
             };
           });
           setCustomers(apiCustomers);
-          setTotalCustomers(apiCustomers.length);
         } else {
           setCustomers([]);
-          setTotalCustomers(0);
         }
       } catch (err: any) {
         console.error("Search error:", err);
@@ -419,7 +418,7 @@ export default function CustomersPage() {
     let tenureSamples = 0;
     const now = Date.now();
 
-    dataset.forEach((record) => {
+    allCustomers.forEach((record) => {
       uniqueCustomers.add(record.customerId);
       const status = record.status?.toLowerCase();
       if (status === "active") {
@@ -452,7 +451,7 @@ export default function CustomersPage() {
       avgTenureDays:
         tenureSamples > 0 ? Math.round(tenureDaysTotal / tenureSamples) : 0,
     };
-  }, [dataset, totalCustomers]);
+  }, [allCustomers, totalCustomers]);
 
   const statCards = useMemo(
     () => [
@@ -515,6 +514,21 @@ export default function CustomersPage() {
   };
 
   const handleCustomersAdded = (newCustomers: CustomerSubscriptionRecord[]) => {
+    setAllCustomers((prevCustomers) => {
+      // Create set of existing customer+subscription combinations
+      const existingKeys = new Set(
+        prevCustomers.map((c) => `${c.customerId}-${c.subscriptionId}`),
+      );
+
+      // Filter out duplicates
+      const uniqueNewCustomers = newCustomers.filter((customer) => {
+        const key = `${customer.customerId}-${customer.subscriptionId}`;
+        return !existingKeys.has(key);
+      });
+
+      // Prepend new customers to show at top of first page
+      return [...uniqueNewCustomers, ...prevCustomers];
+    });
     setCustomers((prevCustomers) => {
       // Create set of existing customer+subscription combinations
       const existingKeys = new Set(
@@ -527,14 +541,10 @@ export default function CustomersPage() {
         return !existingKeys.has(key);
       });
 
-      // Log duplicates if any were filtered
-      if (uniqueNewCustomers.length < newCustomers.length) {
-        const duplicateCount = newCustomers.length - uniqueNewCustomers.length;
-      }
-
       // Prepend new customers to show at top of first page
       return [...uniqueNewCustomers, ...prevCustomers];
     });
+    setTotalCustomers((prev) => prev + newCustomers.length);
     setFilters((prev) => ({ ...prev, page: 1, offset: 0 })); // Reset to first page to show newly added customers
     setIsCreateCustomerModalOpen(false);
   };
@@ -558,7 +568,12 @@ export default function CustomersPage() {
   const handleCustomerUpdated = (
     updatedCustomer: CustomerSubscriptionRecord,
   ) => {
-    // Update customer in local state
+    // Update customer in both state arrays
+    setAllCustomers((prev) =>
+      prev.map((c) =>
+        c.customerId === updatedCustomer.customerId ? updatedCustomer : c,
+      ),
+    );
     setCustomers((prev) =>
       prev.map((c) =>
         c.customerId === updatedCustomer.customerId ? updatedCustomer : c,
@@ -579,10 +594,14 @@ export default function CustomersPage() {
     try {
       await customerService.deleteCustomer(customerToDelete.customerId);
 
-      // Optimistic UI: Remove deleted customer from list
+      // Optimistic UI: Remove deleted customer from both lists
+      setAllCustomers((prev) =>
+        prev.filter((c) => c.customerId !== customerToDelete.customerId),
+      );
       setCustomers((prev) =>
         prev.filter((c) => c.customerId !== customerToDelete.customerId),
       );
+      setTotalCustomers((prev) => prev - 1);
 
       showSuccess("Success", "Customer deleted successfully");
       setDeleteModalOpen(false);

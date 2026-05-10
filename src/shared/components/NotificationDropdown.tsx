@@ -33,7 +33,7 @@ export default function NotificationDropdown({
   } = useNotifications();
 
   const [isOpen, setIsOpen] = useState(false);
-  const [filter, setFilter] = useState<"all" | "unread">("unread");
+  const [filter, setFilter] = useState<"all" | "unread">("all");
   const [dropdownPosition, setDropdownPosition] = useState({
     top: 0,
     right: 0,

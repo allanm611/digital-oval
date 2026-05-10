@@ -5,6 +5,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { lazy, Suspense } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import { ConfirmProvider } from "./contexts/ConfirmContext";
@@ -49,6 +50,16 @@ function PageLoader() {
     </div>
   );
 }
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes
+      retry: 1,
+    },
+  },
+});
 
 function AppRoutes() {
   const { isAuthenticated, loading } = useAuth();
@@ -98,35 +109,37 @@ function AppRoutes() {
 
 function App() {
   return (
-    <AppErrorBoundary>
-      <GlobalLoadingProvider>
-        <ThemeProvider>
-          <LanguageProvider>
-            <AuthProvider>
-              <ToastProvider>
-                <ConfirmProvider>
-                  <NotificationProvider>
-                    <NotificationSettingsProvider>
-                      <DocsVersionProvider>
-                        <Router>
-                          <div
-                            className="min-h-screen"
-                            style={{ backgroundColor: color.primary.background }}
-                          >
-                            <GlobalLoader />
-                            <AppRoutes />
-                          </div>
-                        </Router>
-                      </DocsVersionProvider>
-                    </NotificationSettingsProvider>
-                  </NotificationProvider>
-                </ConfirmProvider>
-              </ToastProvider>
-            </AuthProvider>
-          </LanguageProvider>
-        </ThemeProvider>
-      </GlobalLoadingProvider>
-    </AppErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <AppErrorBoundary>
+        <GlobalLoadingProvider>
+          <ThemeProvider>
+            <LanguageProvider>
+              <AuthProvider>
+                <ToastProvider>
+                  <ConfirmProvider>
+                    <NotificationProvider>
+                      <NotificationSettingsProvider>
+                        <DocsVersionProvider>
+                          <Router>
+                            <div
+                              className="min-h-screen"
+                              style={{ backgroundColor: color.primary.background }}
+                            >
+                              <GlobalLoader />
+                              <AppRoutes />
+                            </div>
+                          </Router>
+                        </DocsVersionProvider>
+                      </NotificationSettingsProvider>
+                    </NotificationProvider>
+                  </ConfirmProvider>
+                </ToastProvider>
+              </AuthProvider>
+            </LanguageProvider>
+          </ThemeProvider>
+        </GlobalLoadingProvider>
+      </AppErrorBoundary>
+    </QueryClientProvider>
   );
 }
 
