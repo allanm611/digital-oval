@@ -47,7 +47,8 @@ interface SearchResult {
     | "control-group"
     | "customer"
     | "kpi"
-    | "subscriber-profile";
+    | "subscriber-profile"
+    | "role";
   name: string;
   description?: string;
   url: string;
@@ -71,6 +72,7 @@ interface SearchResults {
   customers: SearchResult[];
   kpis: SearchResult[];
   "subscriber-profiles": SearchResult[];
+  roles: SearchResult[];
 }
 
 export default function SearchResultsPage() {
@@ -110,6 +112,7 @@ export default function SearchResultsPage() {
         customers: [],
         kpis: [],
         "subscriber-profiles": [],
+        roles: [],
       };
     }
 
@@ -129,6 +132,8 @@ export default function SearchResultsPage() {
       "control-groups": [],
       customers: [],
       kpis: [],
+      "subscriber-profiles": [],
+      roles: [],
     };
 
     cachedSuggestions.forEach((suggestion) => {
@@ -189,6 +194,9 @@ export default function SearchResultsPage() {
         case "subscriber-profile":
           searchResults["subscriber-profiles"].push(result);
           break;
+        case "role":
+          searchResults.roles.push(result);
+          break;
       }
     });
 
@@ -216,7 +224,8 @@ export default function SearchResultsPage() {
         (results["control-groups"]?.length || 0) +
         (results.customers?.length || 0) +
         (results.kpis?.length || 0) +
-        (results["subscriber-profiles"]?.length || 0),
+        (results["subscriber-profiles"]?.length || 0) +
+        (results.roles?.length || 0),
     },
     {
       id: "campaign" as const,
@@ -246,7 +255,7 @@ export default function SearchResultsPage() {
     {
       id: "user" as const,
       name: "Users",
-      count: results.users?.length || 0,
+      count: (results.users?.length || 0) + (results.roles?.length || 0),
     },
     {
       id: "configuration" as const,
@@ -283,6 +292,7 @@ export default function SearchResultsPage() {
       customers: [],
       kpis: [],
       "subscriber-profiles": [],
+      roles: [],
     };
 
     if (selectedCategory === "campaign") {
@@ -303,6 +313,7 @@ export default function SearchResultsPage() {
       filtered.programs = results.programs;
     } else if (selectedCategory === "user") {
       filtered.users = results.users;
+      filtered.roles = results.roles;
     } else if (selectedCategory === "configuration") {
       filtered.configurations = results.configurations;
       filtered.kpis = results.kpis;
@@ -382,6 +393,10 @@ export default function SearchResultsPage() {
         label: "Subscriber Profile",
         icon: Users,
       },
+      role: {
+        label: "Role",
+        icon: Shield,
+      },
     };
     return types[type];
   };
@@ -402,7 +417,8 @@ export default function SearchResultsPage() {
     (filteredResults["control-groups"]?.length || 0) +
     (filteredResults.customers?.length || 0) +
     (filteredResults.kpis?.length || 0) +
-    (filteredResults["subscriber-profiles"]?.length || 0);
+    (filteredResults["subscriber-profiles"]?.length || 0) +
+    (filteredResults.roles?.length || 0);
 
   const renderResultsSection = (
     title: string,
@@ -571,6 +587,7 @@ export default function SearchResultsPage() {
                 "program",
               )}
               {renderResultsSection("Users", filteredResults.users, "user")}
+              {renderResultsSection("Roles", filteredResults.roles, "role")}
               {renderResultsSection(
                 "Configurations",
                 filteredResults.configurations,

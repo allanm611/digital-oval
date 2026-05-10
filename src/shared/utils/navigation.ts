@@ -50,7 +50,8 @@ export function getEntityUrl(
     | "quicklist"
     | "control-group"
     | "customer"
-    | "kpi",
+    | "kpi"
+    | "role",
   id: string | number,
 ): string {
   switch (type) {
@@ -84,6 +85,8 @@ export function getEntityUrl(
       return `/dashboard/customers/details/${id}`;
     case "kpi":
       return `/dashboard/kpis/usage-metrics/${id}`;
+    case "role":
+      return `/dashboard/roles`;
     default:
       return "/dashboard";
   }

@@ -35,7 +35,8 @@ export interface SearchSuggestion {
     | "quicklist"
     | "control-group"
     | "customer"
-    | "kpi";
+    | "kpi"
+    | "role";
   name: string;
   description?: string;
   url: string;
@@ -274,16 +275,6 @@ const allConfigurations = [
     navigationPath: "/dashboard/control-groups",
   },
   {
-    id: "control-groups-segment",
-    name: "Universal Control Groups",
-    description:
-      "Configure and manage universal control groups for segments",
-    type: "segment",
-    category: "Segment Configuration",
-    status: "active",
-    navigationPath: "/dashboard/control-groups",
-  },
-  {
     id: "job-types",
     name: "Job Types",
     description: "Configure and manage job types for scheduled jobs",
@@ -385,6 +376,51 @@ const allConfigurations = [
     status: "active",
     navigationPath: "/dashboard/timezones",
   },
+  {
+    id: "policy-types",
+    name: "Policy Types",
+    description: "Manage policy types and configurations",
+    type: "campaign",
+    category: "Campaign Configuration",
+    status: "active",
+    navigationPath: "/dashboard/policy-types",
+  },
+  {
+    id: "push-notification-routes",
+    name: "Push Notification Routes",
+    description: "Manage push notification gateway routes for message delivery",
+    type: "offer",
+    category: "Offer Configuration",
+    status: "active",
+    navigationPath: "/dashboard/push-notification-routes",
+  },
+  {
+    id: "routes-management",
+    name: "Routes Management",
+    description: "Manage message delivery routes and gateways",
+    type: "offer",
+    category: "Offer Configuration",
+    status: "active",
+    navigationPath: "/dashboard/routes-management",
+  },
+  {
+    id: "ussd-routes",
+    name: "USSD Routes",
+    description: "Manage USSD gateway routes for message delivery",
+    type: "offer",
+    category: "Offer Configuration",
+    status: "active",
+    navigationPath: "/dashboard/ussd-routes",
+  },
+  {
+    id: "whatsapp-routes",
+    name: "WhatsApp Routes",
+    description: "Manage WhatsApp gateway routes for message delivery",
+    type: "offer",
+    category: "Offer Configuration",
+    status: "active",
+    navigationPath: "/dashboard/whatsapp-routes",
+  },
 ];
 
 async function performSearch(query: string): Promise<SearchSuggestion[]> {
@@ -425,6 +461,7 @@ async function performSearch(query: string): Promise<SearchSuggestion[]> {
       quicklistsRes,
       controlGroupsRes,
       customersRes,
+      rolesRes,
       kpisRes,
     ] = await Promise.allSettled([
       campaignService.getCampaigns({
@@ -488,6 +525,11 @@ async function performSearch(query: string): Promise<SearchSuggestion[]> {
         msisdn: query,
         limit: 5,
         offset: 0,
+      }),
+      roleService.listRoles({
+        limit: 50,
+        offset: 0,
+        skipCache: true,
       }),
       Promise.all([
         usageMetricService.getAllMetrics(),
@@ -797,6 +839,32 @@ async function performSearch(query: string): Promise<SearchSuggestion[]> {
             name: (customer.msisdn as string) || "Unnamed Customer",
             description: (customer.phone as string) || undefined,
             url: getEntityUrl("customer", customer.id),
+          });
+        });
+    }
+
+    if (rolesRes.status === "fulfilled" && rolesRes.value.roles) {
+      const roles = Array.isArray(rolesRes.value.roles)
+        ? rolesRes.value.roles
+        : [];
+      (roles as unknown[] as Record<string, unknown>[])
+        .filter((role: Record<string, unknown>) => {
+          const nameMatch = (role.name as string)
+            ?.toLowerCase()
+            .includes(queryLower);
+          const descMatch = (role.description as string)
+            ?.toLowerCase()
+            .includes(queryLower);
+          return nameMatch || descMatch;
+        })
+        .slice(0, 3)
+        .forEach((role: Record<string, unknown>) => {
+          allSuggestions.push({
+            id: role.id as string | number,
+            type: "role",
+            name: (role.name as string) || "Unnamed Role",
+            description: (role.description as string) || undefined,
+            url: getEntityUrl("role", role.id),
           });
         });
     }

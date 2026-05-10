@@ -152,6 +152,7 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
       "control-group": { label: "Control Group", icon: Shield },
       customer: { label: "Customer", icon: Users },
       kpi: { label: "KPI", icon: Target },
+      role: { label: "Role", icon: Shield },
     };
     return types[type];
   };
