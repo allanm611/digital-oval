@@ -59,8 +59,10 @@ export const SegmentConditionRow: React.FC<SegmentConditionRowProps> = ({
           ]}
           value={condition.operator}
           onChange={(value) => {
+            const operatorId = value === "in" ? 7 : 8; // 7 = IN, 8 = NOT IN
             updateCondition(groupId, condition.id, {
               operator: value as "in" | "not_in",
+              operator_id: operatorId,
             });
           }}
           placeholder="Select operator"

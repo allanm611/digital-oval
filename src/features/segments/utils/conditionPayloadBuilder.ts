@@ -2,6 +2,18 @@ import type { SegmentCondition, SegmentConditionGroup, LayerCondition, SourceLay
 import { getDateRangeForTimeWindow } from "../../../shared/utils/operatorMapper";
 
 /**
+ * Combines date and time into ISO 8601 timestamp format
+ */
+const combineDateTimeToISO8601 = (
+  date: string | null | undefined,
+  time: string | null | undefined
+): string | null => {
+  if (!date) return null;
+  const timeStr = time || "00:00";
+  return `${date}T${timeStr}:00Z`;
+};
+
+/**
  * Checks if a condition is a profile-type condition (has field_id and operator_id, or is a segment/list)
  */
 export const isProfileTypeCondition = (condition: SegmentCondition): boolean => {
@@ -34,7 +46,7 @@ const buildLayerCondition = (condition: SegmentCondition): LayerCondition | null
         layer_index: 0,
         column: "segment_id",
       },
-      operator_id: 1, // "equals" operator
+      operator_id: condition.operator_id || 1,
       value: condition.segment_id,
     };
   }
@@ -46,7 +58,7 @@ const buildLayerCondition = (condition: SegmentCondition): LayerCondition | null
         layer_index: 0,
         column: "list_id",
       },
-      operator_id: 1, // "equals" operator
+      operator_id: condition.operator_id || 1,
       value: condition.list_id,
     };
   }
@@ -111,13 +123,16 @@ const buildLayerCondition = (condition: SegmentCondition): LayerCondition | null
   if (isDateOperator) {
     // Date operators: structure depends on operator type
     if (condition.operator === "on_date") {
-      layerCondValue = { start_date: startDate };
+      layerCondValue = { start_date: combineDateTimeToISO8601(startDate, condition.start_time) };
     } else if (condition.operator === "between_dates") {
-      layerCondValue = { start_date: startDate, end_date: endDate };
+      layerCondValue = {
+        start_date: combineDateTimeToISO8601(startDate, condition.start_time),
+        end_date: combineDateTimeToISO8601(endDate, condition.end_time),
+      };
     } else if (condition.operator === "since_date") {
-      layerCondValue = { start_date: startDate };
+      layerCondValue = { start_date: combineDateTimeToISO8601(startDate, condition.start_time) };
     } else if (condition.operator === "until_date") {
-      layerCondValue = { end_date: endDate };
+      layerCondValue = { end_date: combineDateTimeToISO8601(endDate, condition.end_time) };
     }
 
     // For metric conditions, also include the numeric value
@@ -127,13 +142,16 @@ const buildLayerCondition = (condition: SegmentCondition): LayerCondition | null
   } else if (isCustomDateOperator) {
     // Handle custom time window with date operator selection
     if (condition.date_operator === "on") {
-      layerCondValue = { start_date: startDate };
+      layerCondValue = { start_date: combineDateTimeToISO8601(startDate, condition.start_time) };
     } else if (condition.date_operator === "between") {
-      layerCondValue = { start_date: startDate, end_date: endDate };
+      layerCondValue = {
+        start_date: combineDateTimeToISO8601(startDate, condition.start_time),
+        end_date: combineDateTimeToISO8601(endDate, condition.end_time),
+      };
     } else if (condition.date_operator === "since") {
-      layerCondValue = { start_date: startDate };
+      layerCondValue = { start_date: combineDateTimeToISO8601(startDate, condition.start_time) };
     } else if (condition.date_operator === "until") {
-      layerCondValue = { end_date: endDate };
+      layerCondValue = { end_date: combineDateTimeToISO8601(endDate, condition.end_time) };
     } else {
       layerCondValue = { value: condValue };
     }
@@ -171,14 +189,6 @@ const buildLayerCondition = (condition: SegmentCondition): LayerCondition | null
     if (condition.time_window) {
       layerCondValue.time_window = condition.time_window;
     }
-  }
-
-  // Include start_time and end_time if provided
-  if (condition.start_time) {
-    layerCondValue.start_time = condition.start_time;
-  }
-  if (condition.end_time) {
-    layerCondValue.end_time = condition.end_time;
   }
 
   const layerCond: LayerCondition = {

@@ -593,6 +593,7 @@ Satoshi
 .remember-me {
   display: flex;
   align-items: center;
+  gap: 0.75rem;
   font-size: 0.875rem;
   color: #cbd5e1;
   cursor: pointer;
