@@ -125,6 +125,17 @@ export default function RequestAccountPage() {
       errors.email = "Please enter a valid email";
     }
 
+    if (!formData.phone.trim()) {
+      errors.phone = "Phone number is required";
+    } else {
+      const digitsOnly = formData.phone.replace(/\D/g, "");
+      const isValid = digitsOnly.length >= 9 && digitsOnly.length <= 13;
+
+      if (!isValid) {
+        errors.phone = "Please enter a valid phone number (9-13 digits)";
+      }
+    }
+
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -480,19 +491,29 @@ export default function RequestAccountPage() {
                     </div>
 
                     <div className="form-group">
-                      <label htmlFor="phone">Phone</label>
+                      <label htmlFor="phone">Phone <span className="required">*</span></label>
                       <Input
                         id="phone"
                         value={formData.phone}
-                        onChange={(value) =>
+                        onChange={(value) => {
                           setFormData((prev) => ({
                             ...prev,
                             phone: String(value),
-                          }))
-                        }
+                          }));
+                          clearError("phone");
+                        }}
                         type="tel"
                         placeholder="+33 6 12 34 56 78"
+                        className={validationErrors.phone ? "invalid" : ""}
                       />
+                      <span
+                        className="error-message"
+                        style={{
+                          display: validationErrors.phone ? "block" : "none",
+                        }}
+                      >
+                        {validationErrors.phone}
+                      </span>
                     </div>
 
                     <div className="form-navigation">
@@ -712,7 +733,7 @@ export default function RequestAccountPage() {
                       </small>
                     </div>
 
-                    <div style={{ marginTop: "2rem", paddingTop: "1.5rem", borderTop: "1px solid rgba(255, 255, 255, 0.1)" }}>
+                    <div style={{ marginTop: "2rem", paddingTop: "1.5rem" }}>
                       <h4 style={{ marginBottom: "1.5rem", color: "#ffffff", fontSize: "1rem", fontWeight: "600" }}>
                         Privacy & Consent <span className="required">*</span>
                       </h4>
