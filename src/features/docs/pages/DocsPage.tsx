@@ -143,6 +143,12 @@ export function DocsPage() {
               >
                 Edit
               </button>
+              <button
+                onClick={() => navigate(`/documentation/manage-sidebar`)}
+                className={styles.editLink}
+              >
+                Manage Sidebar
+              </button>
             </PermissionGate>
           </div>
         </div>

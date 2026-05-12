@@ -11,6 +11,7 @@ interface SideModalProps {
   children: React.ReactNode;
   size?: "sm" | "md" | "lg" | "xl";
   position?: "left" | "right";
+  theme?: "light" | "dark";
 }
 
 export default function SideModal({
@@ -20,6 +21,7 @@ export default function SideModal({
   children,
   size = "md",
   position = "right",
+  theme = "light",
 }: SideModalProps) {
   if (!isOpen) return null;
 
@@ -71,17 +73,33 @@ export default function SideModal({
               }
             >
               <Dialog.Panel
-                className={`pointer-events-auto w-screen ${sizeClasses[size]} ${positionClasses[position]} fixed top-0 h-full bg-white shadow-xl`}
+                className={`pointer-events-auto w-screen ${sizeClasses[size]} ${positionClasses[position]} fixed top-0 h-full shadow-xl ${
+                  theme === "dark" ? "bg-111827" : "bg-white"
+                }`}
               >
                 <div className="flex h-full flex-col">
                   {/* Header */}
-                  <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-                    <h2 className="text-lg font-semibold text-gray-900">
+                  <div
+                    className={`flex items-center justify-between border-b px-6 py-4 ${
+                      theme === "dark"
+                        ? "border-gray-700 bg-0f172a"
+                        : "border-gray-200 bg-white"
+                    }`}
+                  >
+                    <h2
+                      className={`text-lg font-semibold ${
+                        theme === "dark" ? "text-gray-100" : "text-gray-900"
+                      }`}
+                    >
                       {title}
                     </h2>
                     <button
                       type="button"
-                      className={`${tw.rounded} text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-white`}
+                      className={`${tw.rounded} focus:outline-none focus:ring-2 ${
+                        theme === "dark"
+                          ? "text-gray-500 hover:text-gray-400 focus:ring-gray-600"
+                          : "text-gray-400 hover:text-gray-600 focus:ring-white"
+                      }`}
                       onClick={onClose}
                     >
                       <span className="sr-only">Close</span>

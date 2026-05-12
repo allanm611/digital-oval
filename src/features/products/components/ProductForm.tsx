@@ -1019,6 +1019,14 @@ export default function ProductForm({
                   >
                     Add resources (Data, Voice, SMS) to this combo product
                   </p>
+                  {errors.combo && (
+                    <p
+                      className="mt-2 text-xs font-semibold"
+                      style={{ color: color.status.danger }}
+                    >
+                      {errors.combo}
+                    </p>
+                  )}
                 </div>
 
                 {/* Combo Price and Validity Configuration */}
@@ -1175,9 +1183,22 @@ export default function ProductForm({
 
                 {/* Add Resource Accordion - Shows for custom combos */}
                 {isCustomComboMode && !comboData.combo_type_id && (
-                  <div
-                    className={`border border-gray-200 ${tw.rounded} overflow-hidden`}
-                  >
+                  <>
+                    {comboData.resources.length === 0 && (
+                      <p
+                        className="text-sm mb-4 p-3 rounded-lg"
+                        style={{
+                          backgroundColor: color.surface.cards,
+                          color: color.text.secondary,
+                          borderLeft: `3px solid ${color.primary.action}`,
+                        }}
+                      >
+                        Add at least one resource to this combo product to continue.
+                      </p>
+                    )}
+                    <div
+                      className={`border border-gray-200 ${tw.rounded} overflow-hidden`}
+                    >
                     {/* Accordion Header */}
                     <button
                       type="button"
@@ -1503,7 +1524,8 @@ export default function ProductForm({
                         </button>
                       </div>
                     )}
-                  </div>
+                    </div>
+                  </>
                 )}
 
                 {/* Resources List */}
