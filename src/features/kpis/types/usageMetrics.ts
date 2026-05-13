@@ -27,4 +27,5 @@ export interface UsageMetric {
   default_value?: string | number;
 }
 
+export const USAGE_METRICS: UsageMetric[] = [];
 

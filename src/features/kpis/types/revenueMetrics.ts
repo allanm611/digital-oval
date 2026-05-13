@@ -29,3 +29,4 @@ export interface RevenueMetric {
   default_value?: string | number;
 }
 
+export const REVENUE_METRICS: RevenueMetric[] = [];
