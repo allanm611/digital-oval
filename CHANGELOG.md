@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.0.0...v1.0.1) (2026-05-17)
+
+
+### Bug Fixes
+
+* merge staging-changes into main ([d83530d](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/d83530d2418fc07bb18f6050ec2db4612821a2f4))
+
 # 1.0.0 (2026-05-13)
 
 
