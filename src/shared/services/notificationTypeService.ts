@@ -1,3 +1,4 @@
+import { extractErrorMessage } from "../utils/errorHandler";
 import { buildApiUrl, getAuthHeaders } from "./api";
 
 export interface NotificationRule {
@@ -49,7 +50,9 @@ class NotificationRuleService {
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch from ${url}: ${response.statusText}`);
+      const errorBody = await response.text();
+      const errorMessage = extractErrorMessage(errorBody, response.status);
+      throw new Error(errorMessage);
     }
 
     return response.json();

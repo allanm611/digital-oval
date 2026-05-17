@@ -4,12 +4,7 @@ export interface EmailRoute {
   id: number;
   name: string;
   description?: string;
-  gateway_provider: EmailGatewayEnum;
-  smtp_host: string;
-  smtp_port: number;
-  smtp_username: string;
-  smtp_password: string;
-  from_address: string;
+  gateway_config_id: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -20,23 +15,13 @@ export interface EmailRoute {
 export interface CreateEmailRouteRequest {
   name: string;
   description?: string;
-  gateway_provider: EmailGatewayEnum;
-  smtp_host: string;
-  smtp_port: number;
-  smtp_username: string;
-  smtp_password: string;
-  from_address: string;
+  gateway_config_id: number;
   is_active?: boolean;
 }
 
 export interface UpdateEmailRouteRequest {
   name?: string;
   description?: string;
-  gateway_provider?: EmailGatewayEnum;
-  smtp_host?: string;
-  smtp_port?: number;
-  smtp_username?: string;
-  smtp_password?: string;
-  from_address?: string;
+  gateway_config_id?: number;
   is_active?: boolean;
 }

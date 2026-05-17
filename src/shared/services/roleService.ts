@@ -1,3 +1,4 @@
+import { extractErrorMessage } from "../utils/errorHandler";
 import { fetchWithAuthInterceptor } from "./fetchInterceptor";
 import { ApiResponse } from "../types/api";
 import { buildApiUrl } from "./api";
@@ -34,10 +35,9 @@ class RoleService {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        errorData.error || errorData.message || `HTTP ${response.status}`
-      );
+      const errorBody = await response.text();
+      const errorMessage = extractErrorMessage(errorBody, response.status);
+      throw new Error(errorMessage);
     }
 
     return response.json();

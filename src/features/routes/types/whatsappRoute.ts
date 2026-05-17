@@ -7,7 +7,7 @@ export interface WhatsAppRoute {
   id: number;
   name: string;
   description?: string;
-  gateway_provider?: WhatsAppGatewayEnum;
+  gateway_config_id: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -18,13 +18,13 @@ export interface WhatsAppRoute {
 export interface CreateWhatsAppRouteRequest {
   name: string;
   description?: string;
-  gateway_provider?: WhatsAppGatewayEnum;
+  gateway_config_id: number;
   is_active?: boolean;
 }
 
 export interface UpdateWhatsAppRouteRequest {
   name?: string;
   description?: string;
-  gateway_provider?: WhatsAppGatewayEnum;
+  gateway_config_id?: number;
   is_active?: boolean;
 }

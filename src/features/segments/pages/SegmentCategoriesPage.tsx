@@ -17,6 +17,7 @@ import {
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
+import NumberFormatter from "../../../shared/components/NumberFormatter";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
 import { useToast } from "../../../contexts/ToastContext";
@@ -442,10 +443,6 @@ export default function SegmentCategoriesPage() {
   const [catalogPage, setCatalogPage] = useState(1);
   const catalogPageSize = 9; // Show 9 items per page (3x3 grid)
 
-  const formatNumber = (value?: number | null) =>
-    typeof value === "number" && !Number.isNaN(value)
-      ? value.toLocaleString()
-      : "...";
 
   const loadCategories = useCallback(
     async (skipCache = false) => {
@@ -643,7 +640,12 @@ export default function SegmentCategoriesPage() {
 
     const segmentCount = segmentCounts[categoryToDelete.id] || 0;
     setIsDeleting(true);
+    const previousCategories = categories;
+
     try {
+      // Optimistic update: remove category from list immediately
+      setCategories((prev) => prev.filter((cat) => cat.id !== categoryToDelete.id));
+
       await segmentService.deleteSegmentCategory(categoryToDelete.id);
       success(
         "Catalog deleted",
@@ -651,11 +653,11 @@ export default function SegmentCategoriesPage() {
       );
       setShowDeleteModal(false);
       setCategoryToDelete(null);
-      // Refresh from server to ensure cache is cleared
-      await loadCategories(true); // skipCache = true
     } catch (err) {
       const errorMsg2 = extractBackendError(err, "Failed to delete segment catalog");
       showError("Error", errorMsg2, true);
+      // Revert optimistic update on error
+      setCategories(previousCategories);
     } finally {
       setIsDeleting(false);
     }
@@ -719,25 +721,25 @@ export default function SegmentCategoriesPage() {
   const catalogStatsCards = [
     {
       name: "Total Catalogs",
-      value: formatNumber(totalCategories),
+      value: totalCategories,
       icon: FolderOpen,
       color: color.tertiary.tag1,
     },
     {
       name: "Active Catalogs",
-      value: formatNumber(activeCategories),
+      value: activeCategories,
       icon: CheckCircle,
       color: color.tertiary.tag4,
     },
     {
       name: "Inactive Catalogs",
-      value: formatNumber(inactiveCategories),
+      value: inactiveCategories,
       icon: XCircle,
       color: color.tertiary.tag3,
     },
     {
       name: "Empty Catalogs",
-      value: formatNumber(emptyCategoriesCount),
+      value: emptyCategoriesCount,
       icon: Archive,
       color: color.tertiary.tag2,
     },
@@ -785,8 +787,9 @@ export default function SegmentCategoriesPage() {
             const Icon = stat.icon;
             const valueClass = stat.valueClass ?? "text-3xl";
             const shouldMask = stat.loading ?? true;
+            const isNumeric = typeof stat.value === "number";
             const displayValue =
-              statsLoading && shouldMask ? "..." : (stat.value ?? "...");
+              statsLoading && shouldMask ? "..." : (isNumeric ? <NumberFormatter value={stat.value} /> : (stat.value ?? "..."));
 
             return (
               <div

@@ -651,7 +651,7 @@ export default function SettingsPage() {
         .filter((tz) => tz && tz.value && tz.label)
         .map((tz) => ({
           value: tz.value || "",
-          label: tz.label || "",
+          label: `${tz.label || ""} (${tz.utc_offset || ""})`,
         }))
     : [];
 
@@ -1239,7 +1239,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* Notifications Settings Card */}
+        {/* Notifications Settings Card - COMMENTED OUT
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8 lg:col-span-2`}
         >
@@ -1252,7 +1252,7 @@ export default function SettingsPage() {
             </p>
           </div>
 
-          {/* Notification Sound and Preferred Channels */}
+          {/* Notification Sound and Preferred Channels *//*
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div>
               <label className="block text-sm font-semibold text-gray-900 mb-2">
@@ -1332,7 +1332,7 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Notification Types */}
+          {/* Notification Types *//*
           <div>
             <h3 className="text-sm font-semibold text-gray-900 mb-4">
               Notification Preferences
@@ -1367,7 +1367,7 @@ export default function SettingsPage() {
                       </p>
                       {/* <p className="text-xs text-gray-500 mt-0.5">
                         {subscription.description || `${subscription.table_name} - ${subscription.action_type}`}
-                      </p> */}
+                      </p> *//*
                     </div>
                   </div>
                 ))}
@@ -1375,6 +1375,7 @@ export default function SettingsPage() {
             )}
           </div>
         </div>
+        */}
 
         {/* Theme Settings Card */}
         <div

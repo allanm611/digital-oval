@@ -21,6 +21,7 @@ import type { StepExecution } from "../types/stepExecution";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import BackButton from "../../../shared/components/ui/BackButton";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import DateFormatter from "../../../shared/components/DateFormatter";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import { ENABLE_JOB_EXECUTION_WRITES_FOR_ALL } from "../../../shared/utils/featureFlags";
@@ -57,15 +58,6 @@ const getStatusColor = (status: string) => {
       return "text-purple-600 bg-purple-50";
     default:
       return "text-gray-600 bg-gray-50";
-  }
-};
-
-const formatDateTime = (value?: string | null) => {
-  if (!value) return "—";
-  try {
-    return new Date(value).toLocaleString();
-  } catch {
-    return value;
   }
 };
 
@@ -843,7 +835,7 @@ export default function StepExecutionsPage() {
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       <div className="text-sm">
-                        {formatDateTime(execution.started_at)}
+                        <DateFormatter date={execution.started_at} />
                       </div>
                     </td>
                     <td

@@ -502,10 +502,13 @@ export default function CampaignCategoriesPage() {
     if (!categoryToDelete) return;
 
     setIsDeleting(true);
+    const previousCategories = campaignCategories;
+
     try {
+      // Optimistic update: remove category from list immediately
+      setCampaignCategories((prev) => prev.filter((cat) => cat.id !== categoryToDelete.id));
+
       await campaignService.deleteCampaignCategory(categoryToDelete.id);
-      // Refresh from server to ensure cache is cleared
-      await loadCategories(true); // skipCache = true
       showToast(
         "Category Deleted",
         `"${categoryToDelete.name}" has been deleted successfully.`,
@@ -516,10 +519,12 @@ export default function CampaignCategoriesPage() {
       console.error("Failed to delete category:", err);
       const errorMessage = extractBackendError(err, "Failed to delete category");
       showError("Error", errorMessage, true);
+      // Revert optimistic update on error
+      setCampaignCategories(previousCategories);
     } finally {
       setIsDeleting(false);
     }
-  }, [categoryToDelete, loadCategories, showToast, showError]);
+  }, [categoryToDelete, campaignCategories, showToast, showError]);
 
   const handleCancelDelete = useCallback(() => {
     setShowDeleteModal(false);

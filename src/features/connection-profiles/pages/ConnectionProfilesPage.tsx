@@ -1,4 +1,5 @@
 import { createPortal } from "react-dom";
+import BackButton from '../../../shared/components/ui/BackButton';
 import Input from '../../../shared/components/ui/Input';
 import SearchInput from '../../../shared/components/ui/SearchInput';
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -30,6 +31,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
 import CreateButton from "../../../shared/components/ui/CreateButton";
+import NumberFormatter from "../../../shared/components/NumberFormatter";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { connectionProfileService } from "../services/connectionProfileService";
 import {
@@ -557,8 +559,6 @@ export default function ConnectionProfilesPage() {
     }
   };
 
-  const formatNumber = (value?: number | null) =>
-    typeof value === "number" ? value.toLocaleString() : "--";
 
   const connectionTypeOptions = useMemo(() => {
     const typesFromStats = connectionTypeStats.map(
@@ -608,25 +608,25 @@ export default function ConnectionProfilesPage() {
   const statsCards = [
     {
       name: "Total Profiles",
-      value: formatNumber(statsSummary.total),
+      value: statsSummary.total,
       icon: Database,
       color: color.primary.accent,
     },
     {
       name: "Active Profiles",
-      value: formatNumber(statsSummary.active),
+      value: statsSummary.active,
       icon: CheckCircle,
       color: color.tertiary.tag4,
     },
     {
       name: "With PII",
-      value: formatNumber(statsSummary.withPii),
+      value: statsSummary.withPii,
       icon: Shield,
       color: color.tertiary.tag3,
     },
     {
       name: "Health Enabled",
-      value: formatNumber(statsSummary.healthEnabled),
+      value: statsSummary.healthEnabled,
       icon: Activity,
       color: color.primary.accent,
     },
@@ -659,10 +659,16 @@ export default function ConnectionProfilesPage() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
           <div>
-            <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
+            <BackButton
+              fallbackTo="/dashboard/administration"
+              showBreadcrumb={true}
+              parentLabel="Admin Hub"
+              currentLabel="Connection Profiles"
+            />
+            {/* <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
               Connection Profiles
-            </h1>
-            <p className={`${tw.textSecondary} mt-2 text-sm`}>
+            </h1> */}
+            <p className={`${tw.textSecondary} mt-6 text-sm`}>
               Manage secure connections, performance tuning, and governance
               controls for every integration endpoint
             </p>
@@ -734,7 +740,7 @@ export default function ConnectionProfilesPage() {
                   <p className="text-sm font-medium text-black">{card.name}</p>
                 </div>
                 <p className="mt-2 text-3xl font-bold text-black">
-                  {loadingStats ? "..." : card.value}
+                  {loadingStats ? "..." : <NumberFormatter value={card.value} />}
                 </p>
               </div>
             );

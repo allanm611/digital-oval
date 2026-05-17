@@ -106,7 +106,7 @@ export default function CreateProductPage({
       // Map unit to unit_of_measure and exclude frontend-only fields
       // Backend doesn't accept: unit, unit_value, combo_data, validity_hours
       // Note: product_type_id is sent to backend as-is
-       
+
       const {
         unit,
         unit_value,
@@ -119,6 +119,7 @@ export default function CreateProductPage({
       const finalSubmitData: typeof submitData & {
         unit_of_measure?: string;
         validity_days?: number;
+        resources?: any[];
       } = {
         ...submitData,
       };
@@ -133,9 +134,10 @@ export default function CreateProductPage({
         finalSubmitData.unit_of_measure = unit;
       }
 
-
-      // Note: combo_data is kept for frontend only, not sent to backend yet
-      // Backend support will be added later
+      // For combo products, send resources from combo_data
+      if (combo_data && combo_data.resources) {
+        finalSubmitData.resources = combo_data.resources;
+      }
 
       // CRITICAL: Ensure tags is ALWAYS an array, NEVER a string
       // This is the most important fix - tags MUST be an array for the backend

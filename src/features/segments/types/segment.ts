@@ -1093,6 +1093,7 @@ export type SegmentPayload = {
   layer_group_by?: LayerColumnRef[];
   layer_order_by?: LayerOrderBy[];
   limit?: number;
+  unique_identifier?: string;
 };
 
 // ==================== UI-SIDE BUILDER TYPES ====================

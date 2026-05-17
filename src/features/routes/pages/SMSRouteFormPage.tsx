@@ -14,7 +14,7 @@ import { senderIdService } from "../../configurations/services/senderIdService";
 import ConfigurationModal from "../../configurations/components/ConfigurationManager/ConfigurationModal";
 import { getSenderIdsApiConfig } from "../../configurations/configs/configurationPageConfigs";
 import { useLanguage } from "../../../contexts/LanguageContext";
-import { GATEWAY_KEY_OPTIONS } from "../../configurations/configs/ts/gatewayKeyEnum";
+import { smsGatewayConfigService } from "../../configurations/services/smsGatewayConfigService";
 
 const STATUS_OPTIONS = [
   { label: "Active", value: "true" },
@@ -35,12 +35,13 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
   const [saving, setSaving] = useState(false);
   const [route, setRoute] = useState<SMSRoute | null>(null);
   const [allRoutes, setAllRoutes] = useState<SMSRoute[]>([]);
+  const [gatewayConfigs, setGatewayConfigs] = useState<any[]>([]);
   const [senderIds, setSenderIds] = useState<any[]>([]);
   const [showCreateSenderId, setShowCreateSenderId] = useState(false);
 
   const [formData, setFormData] = useState<CreateSMSRouteRequest>({
     name: "",
-    gateway_provider: undefined,
+    gateway_config_id: 0,
     is_active: true,
     description: "",
     backup_route_id: undefined,
@@ -49,12 +50,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
   });
 
   const [extendedFormData, setExtendedFormData] = useState({
-    apiEndpoint: "",
-    apiKey: "",
-    apiSecret: "",
     senderId: "",
-    requestMethod: "POST",
-    requestFormat: "JSON",
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -63,10 +59,19 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
   useEffect(() => {
     const loadAllRoutes = async () => {
       try {
-        const routes = await smsRouteService.getRoutes();
+        const routes = await smsRouteService.getAllRoutes();
         setAllRoutes(routes);
       } catch (err) {
         // Silent fail - routes dropdown will be empty
+      }
+    };
+
+    const loadGatewayConfigs = async () => {
+      try {
+        const configs = await smsGatewayConfigService.getAllConfigs();
+        setGatewayConfigs(configs);
+      } catch (err) {
+        // Silent fail
       }
     };
 
@@ -81,6 +86,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
     };
 
     loadAllRoutes();
+    loadGatewayConfigs();
     loadSenderIds();
 
     if (mode === "edit" && id) {
@@ -97,7 +103,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
         setRoute(data);
         setFormData({
           name: data.name,
-          gateway_provider: data.gateway_provider,
+          gateway_config_id: data.gateway_config_id,
           is_active: data.is_active,
           description: data.description,
           backup_route_id: data.backup_route_id,
@@ -119,8 +125,8 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
     if (!formData.name.trim()) {
       newErrors.name = "Route name is required";
     }
-    if (!formData.gateway_provider) {
-      newErrors.gateway_provider = "Gateway provider is required";
+    if (!formData.gateway_config_id) {
+      newErrors.gateway_config_id = "Gateway configuration is required";
     }
 
     setErrors(newErrors);
@@ -259,23 +265,45 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Basic Information Section */}
+        {/* Route Configuration Section */}
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Basic Information</h2>
+          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Route Configuration</h2>
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Route Name *
-              </label>
-              <Input
-                placeholder="e.g., Primary SMS Gateway"
-                value={formData.name}
-                onChange={handleInputChange('name')}
-                hasError={!!errors.name}
-                variant="medium"
-                disabled={saving}
-              />
-              {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Route Name *
+                </label>
+                <Input
+                  placeholder="e.g., Primary SMS Gateway"
+                  value={formData.name}
+                  onChange={handleInputChange('name')}
+                  hasError={!!errors.name}
+                  variant="medium"
+                  disabled={saving}
+                />
+                {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  SMS Gateway Configuration *
+                </label>
+                <HeadlessSelect
+                  options={gatewayConfigs.map((config) => ({
+                    value: String(config.id),
+                    label: `${config.name} (${config.provider_type})`,
+                  }))}
+                  value={String(formData.gateway_config_id || "")}
+                  onChange={(value) => handleSelectChange("gateway_config_id", value)}
+                  placeholder="Select gateway configuration"
+                  disabled={saving}
+                  error={!!errors.gateway_config_id}
+                />
+                {errors.gateway_config_id && (
+                  <p className="text-red-500 text-xs mt-1">{errors.gateway_config_id}</p>
+                )}
+              </div>
             </div>
 
             <div>
@@ -292,81 +320,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
                 disabled={saving}
               />
             </div>
-          </div>
-        </div>
 
-        {/* Gateway Configuration Section */}
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Gateway Configuration</h2>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Gateway Provider *
-            </label>
-            <HeadlessSelect
-              options={GATEWAY_KEY_OPTIONS}
-              value={formData.gateway_provider || ""}
-              onChange={(value) => handleSelectChange("gateway_provider", value)}
-              placeholder="Select gateway provider"
-              disabled={saving}
-              error={!!errors.gateway_provider}
-            />
-            {errors.gateway_provider && (
-              <p className="text-red-500 text-xs mt-1">{errors.gateway_provider}</p>
-            )}
-          </div>
-        </div>
-
-        {/* API Configuration Section */}
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>API Configuration</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                API Endpoint
-              </label>
-              <Input
-                placeholder="e.g., https://api.example.com/sms/send"
-                value={extendedFormData.apiEndpoint}
-                onChange={(value) => handleExtendedFieldChange("apiEndpoint", value)}
-                variant="medium"
-                disabled={saving}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                API Key
-              </label>
-              <Input
-                type="password"
-                placeholder="••••••••••••••••••••••"
-                value={extendedFormData.apiKey}
-                onChange={(value) => handleExtendedFieldChange("apiKey", value)}
-                variant="medium"
-                disabled={saving}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                API Secret
-              </label>
-              <Input
-                type="password"
-                placeholder="Your API secret"
-                value={extendedFormData.apiSecret}
-                onChange={(value) => handleExtendedFieldChange("apiSecret", value)}
-                variant="medium"
-                disabled={saving}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Delivery Configuration Section */}
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Delivery Configuration</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Sender ID
@@ -403,123 +357,86 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Request Method
+            <div className="pt-4">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <Checkbox
+                  id="use_backup_on_failure"
+                  checked={formData.use_backup_on_failure || false}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      use_backup_on_failure: e.target.checked,
+                    }))
+                  }
+                  disabled={saving}
+                />
+                <div className="flex-1">
+                  <span className="block text-sm font-medium text-gray-700">
+                    Use backup route if this route fails
+                  </span>
+                  <p className={`text-xs ${tw.textSecondary} mt-1`}>
+                    Enable automatic failover to a backup route when delivery fails
+                  </p>
+                </div>
               </label>
-              <HeadlessSelect
-                options={[
-                  { value: "POST", label: "POST" },
-                  { value: "GET", label: "GET" },
-                  { value: "PUT", label: "PUT" },
-                  { value: "PATCH", label: "PATCH" },
-                ]}
-                value={extendedFormData.requestMethod}
-                onChange={(value) => handleExtendedFieldChange("requestMethod", value as string)}
-                disabled={saving}
-              />
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Request Format
-              </label>
-              <HeadlessSelect
-                options={[
-                  { value: "JSON", label: "JSON" },
-                  { value: "XML", label: "XML" },
-                  { value: "FORM_DATA", label: "Form Data" },
-                ]}
-                value={extendedFormData.requestFormat}
-                onChange={(value) => handleExtendedFieldChange("requestFormat", value as string)}
-                disabled={saving}
-              />
+              {formData.use_backup_on_failure && (
+                <div className="space-y-4 mt-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Backup Route
+                    </label>
+                    <HeadlessSelect
+                      options={[
+                        { value: "", label: "Select a backup route" },
+                        ...(allRoutes
+                          .filter((r) => r.id !== (route?.id || formData.backup_route_id))
+                          .map((route) => ({
+                            value: String(route.id),
+                            label: route.name,
+                          })) || []),
+                      ]}
+                      value={String(formData.backup_route_id || "")}
+                      onChange={(value) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          backup_route_id: value ? Number(value) : undefined,
+                        }))
+                      }
+                      disabled={saving}
+                    />
+                    <p className={`text-xs ${tw.textSecondary} mt-2`}>
+                      This route will be used if the primary route fails
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Retry Attempts Before Failover
+                    </label>
+                    <Input
+                      type="number"
+                      placeholder="3"
+                      value={String(formData.retry_attempts || 3)}
+                      onChange={(value) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          retry_attempts: value ? Number(value) : 3,
+                        }))
+                      }
+                      variant="medium"
+                      disabled={saving}
+                    />
+                    <p className={`text-xs ${tw.textSecondary} mt-2`}>
+                      Number of times to retry this route before using the backup route
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Failover Configuration Section */}
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Failover Configuration</h2>
-
-          <div className="space-y-4">
-            <label className="flex items-start gap-3 cursor-pointer">
-              <Checkbox
-                id="use_backup_on_failure"
-                checked={formData.use_backup_on_failure || false}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    use_backup_on_failure: e.target.checked,
-                  }))
-                }
-                disabled={saving}
-              />
-              <div className="flex-1">
-                <span className="block text-sm font-medium text-gray-700">
-                  Use backup route if this route fails
-                </span>
-                <p className={`text-xs ${tw.textSecondary} mt-1`}>
-                  Enable automatic failover to a backup route when delivery fails
-                </p>
-              </div>
-            </label>
-
-            {formData.use_backup_on_failure && (
-              <div className="space-y-4 mt-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Backup Route
-                  </label>
-                  <HeadlessSelect
-                    options={[
-                      { value: "", label: "Select a backup route" },
-                      ...(allRoutes
-                        .filter((r) => r.id !== (route?.id || formData.backup_route_id))
-                        .map((route) => ({
-                          value: String(route.id),
-                          label: route.name,
-                        })) || []),
-                    ]}
-                    value={String(formData.backup_route_id || "")}
-                    onChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        backup_route_id: value ? Number(value) : undefined,
-                      }))
-                    }
-                    disabled={saving}
-                  />
-                  <p className={`text-xs ${tw.textSecondary} mt-2`}>
-                    This route will be used if the primary route fails
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Retry Attempts Before Failover
-                  </label>
-                  <Input
-                    type="number"
-                    placeholder="3"
-                    value={String(formData.retry_attempts || 3)}
-                    onChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        retry_attempts: value ? Number(value) : 3,
-                      }))
-                    }
-                    variant="medium"
-                    disabled={saving}
-                  />
-                  <p className={`text-xs ${tw.textSecondary} mt-2`}>
-                    Number of times to retry this route before using the backup route
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
 
         {/* Create Sender ID Modal */}
         <ConfigurationModal

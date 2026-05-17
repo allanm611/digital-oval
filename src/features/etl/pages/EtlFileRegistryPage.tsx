@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import BackButton from "../../../shared/components/ui/BackButton";
 import Input from "../../../shared/components/ui/Input";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import { useNavigate } from "react-router-dom";
@@ -178,10 +179,16 @@ export default function EtlFileRegistryPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
+          <BackButton
+            fallbackTo="/dashboard/administration"
+            showBreadcrumb={true}
+            parentLabel="Admin Hub"
+            currentLabel="ETL"
+          />
+          {/* <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
             {t.etl.fileRegistry}
-          </h1>
-          <p className={`${tw.textSecondary} mt-2 text-sm`}>
+          </h1> */}
+          <p className={`${tw.textSecondary} mt-6 text-sm`}>
             {t.etl.fileRegistryDescription}
           </p>
         </div>

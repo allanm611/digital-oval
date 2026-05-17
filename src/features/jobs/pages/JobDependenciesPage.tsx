@@ -16,6 +16,7 @@ import {
   MoreHorizontal,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import CreateButton from "../../../shared/components/ui/CreateButton";
@@ -1740,18 +1741,25 @@ export default function JobDependenciesPage() {
   const IconComponent = Link2;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-        <div>
-          <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
-            Job Dependencies
-          </h1>
-          <p className={`${tw.textSecondary} mt-2 text-sm`}>
-            Manage relationships between scheduled jobs to control execution
-            order.
-          </p>
-        </div>
-        <div className="flex flex-wrap justify-end gap-2">
+    <>
+      <div className="space-y-6">
+        <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+          <div>
+            <BackButton
+              fallbackTo="/dashboard/administration"
+              showBreadcrumb={true}
+              parentLabel="Admin Hub"
+              currentLabel="Job Dependencies"
+            />
+            {/* <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
+              Job Dependencies
+            </h1> */}
+            <p className={`${tw.textSecondary} mt-6 text-sm`}>
+              Manage relationships between scheduled jobs to control execution
+              order.
+            </p>
+          </div>
+          <div className="flex flex-wrap justify-end gap-2">
           <PermissionGate permission="job-dependencies.select">
             <button
               onClick={() => {
@@ -4513,5 +4521,6 @@ export default function JobDependenciesPage() {
         cancelText="Cancel"
       />
     </div>
+    </>
   );
 }

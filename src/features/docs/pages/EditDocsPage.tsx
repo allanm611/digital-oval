@@ -5,6 +5,10 @@ import MarkdownIt from 'markdown-it';
 import { useAuth } from '../../../contexts/AuthContext';
 import { PermissionGate } from '../../auth/components/PermissionGate';
 import { useDocumentation } from '../hooks/useDocumentation';
+import { documentationService } from '../services/documentationService';
+import { DocDocument, DocCategory, DocVersion, CreateDocPayload } from '../types/documentation';
+import HeadlessSelect from '../../../shared/components/ui/HeadlessSelect';
+import DeleteConfirmModal from '../../../shared/components/ui/DeleteConfirmModal';
 import styles from './EditDocsPage.module.css';
 
 const md = new MarkdownIt({
@@ -13,65 +17,84 @@ const md = new MarkdownIt({
   typographer: true,
 });
 
-interface DocData {
-  slug: string;
-  title: string;
-  content: string;
-}
-
 function EditDocsPageContent() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [doc, setDoc] = useState<DocData | null>(null);
+  const [doc, setDoc] = useState<DocDocument | null>(null);
   const [content, setContent] = useState('');
   const [title, setTitle] = useState('');
+  const [categoryId, setCategoryId] = useState<number | string>('');
+  const [categories, setCategories] = useState<DocCategory[]>([]);
+  const [versions, setVersions] = useState<DocVersion[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
   const [imageAlt, setImageAlt] = useState('');
-  const [selectedDocVersion, setSelectedDocVersion] = useState('4');
-  const [selectedDocsVersion, setSelectedDocsVersion] = useState('2.0');
-  const [currentVersion, setCurrentVersion] = useState('4');
+  const [selectedVersion, setSelectedVersion] = useState<number | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  const docVersions = ['4', '3', '2', '1'];
-  const docsVersions = ['2.0', '1.1', '1.0'];
-  const isViewingOldVersion = selectedDocVersion !== currentVersion;
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isAddMode = location.pathname.includes('/add');
   const params = new URLSearchParams(location.search);
-  const slug = params.get('slug') || 'intro';
-  const { content: loadedContent } = useDocumentation(isAddMode ? undefined : slug);
+  const slug = params.get('slug') || '';
+  const { document, content: loadedContent } = useDocumentation(isAddMode ? undefined : slug);
+
+  const isViewingOldVersion = selectedVersion !== null && document && selectedVersion !== document.version;
+
+  useEffect(() => {
+    loadCategories();
+    if (!isAddMode && slug) {
+      loadVersions();
+    }
+  }, [slug, isAddMode]);
 
   useEffect(() => {
     loadDoc();
-  }, [slug, loadedContent, isAddMode]);
+  }, [document, isAddMode]);
+
+  const loadCategories = async () => {
+    try {
+      const response = await documentationService.getCategories();
+      setCategories(response || []);
+    } catch (error) {
+      console.error('Failed to load categories:', error);
+    }
+  };
+
+  const loadVersions = async () => {
+    if (!slug) return;
+    try {
+      const response = await documentationService.getDocumentVersions(slug);
+      setVersions(response.versions || []);
+    } catch (error) {
+      console.error('Failed to load versions:', error);
+    }
+  };
 
   const loadDoc = async () => {
     try {
       setLoading(true);
       if (isAddMode) {
-        // New document mode - start with blank
-        setDoc({ slug: '', title: '', content: '' });
+        setDoc(null);
         setContent('');
         setTitle('');
-      } else if (loadedContent) {
-        // Extract title from first h1 or use slug
-        const titleMatch = loadedContent.match(/^#\s+(.+)/m);
-        setDoc({
-          slug,
-          title: titleMatch ? titleMatch[1] : slug,
-          content: loadedContent,
-        });
-        setContent(loadedContent);
-        setTitle(titleMatch ? titleMatch[1] : slug);
+        setCategoryId('');
+        setSelectedVersion(null);
+      } else if (document) {
+        setDoc(document);
+        setContent(document.markdown_content || '');
+        setTitle(document.title);
+        setCategoryId(document.category_id);
+        setSelectedVersion(document.version);
       } else {
-        // New document
-        setDoc({ slug, title: slug, content: '' });
+        setDoc(null);
         setContent('');
-        setTitle(slug);
+        setTitle('');
+        setCategoryId('');
       }
     } catch (error) {
       setMessage('Error loading document');
@@ -81,8 +104,8 @@ function EditDocsPageContent() {
   };
 
   const handleSave = async () => {
-    if (!title.trim() || !content.trim()) {
-      setMessage('Title and content are required');
+    if (!title.trim() || !content.trim() || !categoryId) {
+      setMessage('Title, category, and content are required');
       return;
     }
 
@@ -90,11 +113,24 @@ function EditDocsPageContent() {
       setIsSaving(true);
       setMessage(null);
 
-      // Simulate save - in real implementation would call API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const payload: CreateDocPayload = {
+        category_id: Number(categoryId),
+        title: title.trim(),
+        slug: isAddMode ? slug || title.toLowerCase().replace(/\s+/g, '-') : slug,
+        doc_type: 'markdown',
+        summary: content.substring(0, 200),
+        markdown_content: content,
+      };
 
-      setMessage('Document saved successfully!');
-      const destinationSlug = isAddMode ? slug || 'new-doc' : slug;
+      if (isAddMode) {
+        await documentationService.createDocument(payload);
+        setMessage('Document created successfully!');
+      } else {
+        await documentationService.updateDocument(slug, payload);
+        setMessage('Document saved successfully!');
+      }
+
+      const destinationSlug = payload.slug;
       setTimeout(() => {
         navigate(`/documentation/${destinationSlug}`);
       }, 1500);
@@ -111,20 +147,44 @@ function EditDocsPageContent() {
   };
 
   const handleRollback = async () => {
+    if (!slug || selectedVersion === null || !document) return;
+
     try {
       setIsSaving(true);
       setMessage(null);
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      setCurrentVersion(selectedDocVersion);
-      setSelectedDocVersion(selectedDocVersion);
-      setMessage(`Rolled back to Version ${selectedDocVersion}. New version created!`);
-      setTimeout(() => setMessage(null), 3000);
+      await documentationService.rollbackDocument(slug, selectedVersion);
+      setMessage(`Rolled back to Version ${selectedVersion}. New version created!`);
+      setTimeout(() => {
+        setSelectedVersion(null);
+        loadDoc();
+        setMessage(null);
+      }, 2000);
     } catch (error) {
       setMessage('Failed to rollback');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!slug) return;
+
+    try {
+      setIsDeleting(true);
+      setMessage(null);
+
+      await documentationService.deleteDocument(slug);
+      setMessage('Document deleted successfully!');
+      setTimeout(() => {
+        navigate('/documentation');
+      }, 1500);
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      setMessage(error instanceof Error ? error.message : 'Failed to delete document');
+      setShowDeleteConfirm(false);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -146,19 +206,26 @@ function EditDocsPageContent() {
     }, 0);
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
+    try {
+      setMessage(null);
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await documentationService.uploadImage(formData);
       const alt = file.name.replace(/\.[^/.]+$/, '');
-      const markdown = `![${alt}](${dataUrl})\n`;
+      const markdown = `![${alt}](${response.image_url})\n`;
       insertAtCursor(markdown);
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
+      setMessage('Image uploaded successfully!');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      setMessage(error instanceof Error ? error.message : 'Failed to upload image');
+    } finally {
+      e.target.value = '';
+    }
   };
 
   const handleInsertImageUrl = () => {
@@ -192,34 +259,35 @@ function EditDocsPageContent() {
             className={styles.titleEditInput}
           />
           <div className={styles.versionSelectors}>
-            {!isAddMode && (
+            <div className={styles.versionGroup}>
+              <label>Category</label>
+              <HeadlessSelect
+                options={categories.map(cat => ({
+                  value: cat.category_id,
+                  label: cat.label || cat.name,
+                }))}
+                value={categoryId}
+                onChange={(value) => setCategoryId(value)}
+                placeholder="Select a category"
+                disabled={isSaving}
+              />
+            </div>
+            {!isAddMode && versions.length > 0 && (
               <div className={styles.versionGroup}>
-                <label>File Version</label>
+                <label>Document Version</label>
                 <select
-                  value={selectedDocVersion}
-                  onChange={(e) => setSelectedDocVersion(e.target.value)}
+                  value={selectedVersion || ''}
+                  onChange={(e) => setSelectedVersion(e.target.value ? Number(e.target.value) : null)}
                   className={styles.versionSelect}
                   disabled={isSaving}
                 >
-                  {docVersions.map(v => (
-                    <option key={v} value={v}>{`Version ${v}`}</option>
+                  <option value="">Current Version</option>
+                  {versions.map(v => (
+                    <option key={v.version} value={v.version}>{`Version ${v.version}`}</option>
                   ))}
                 </select>
               </div>
             )}
-            <div className={styles.versionGroup}>
-              <label>Release</label>
-              <select
-                value={selectedDocsVersion}
-                onChange={(e) => setSelectedDocsVersion(e.target.value)}
-                className={styles.versionSelect}
-                disabled={isSaving}
-              >
-                {docsVersions.map(v => (
-                  <option key={v} value={v}>{`v${v}`}</option>
-                ))}
-              </select>
-            </div>
           </div>
         </div>
         <div className={styles.actions}>
@@ -228,22 +296,33 @@ function EditDocsPageContent() {
               onClick={handleRollback}
               className={styles.rollbackButton}
               disabled={isSaving}
-              title={`Rollback to Version ${selectedDocVersion}`}
+              title={`Rollback to Version ${selectedVersion}`}
             >
-              {isSaving ? 'Rolling back...' : `Rollback to v${selectedDocVersion}`}
+              {isSaving ? 'Rolling back...' : `Rollback to v${selectedVersion}`}
             </button>
+          )}
+          {!isAddMode && (
+            <PermissionGate permission="docs.delete">
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className={styles.deleteButton}
+                disabled={isSaving || isDeleting}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Document'}
+              </button>
+            </PermissionGate>
           )}
           <button
             onClick={handleCancel}
             className={styles.cancelButton}
-            disabled={isSaving}
+            disabled={isSaving || isDeleting}
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             className={styles.saveButton}
-            disabled={isSaving}
+            disabled={isSaving || isDeleting}
           >
             {isSaving ? (isAddMode ? 'Creating...' : 'Saving...') : (isAddMode ? 'Create Document' : 'Save Changes')}
           </button>
@@ -331,6 +410,15 @@ function EditDocsPageContent() {
           </div>
         </div>
       </div>
+
+      <DeleteConfirmModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDelete}
+        title="Delete Document"
+        description={`Are you sure you want to delete "${title}"? This action cannot be undone.`}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

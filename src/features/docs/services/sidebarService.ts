@@ -1,91 +1,105 @@
-import sidebarsV1_0 from '../sidebars.v1.0';
-import sidebarsV1_1 from '../sidebars.v1.1';
+import { DocCategory, CreateCategoryPayload } from '../types/documentation';
+import documentationService from './documentationService';
 
-type SidebarsConfig = {
-  [key: string]: (string | Record<string, any>)[];
+export interface SidebarItem {
+  label: string;
+  path?: string;
+  items?: SidebarItem[];
+}
+
+/**
+ * Build tree structure from flat category array using parent_category_id
+ */
+const buildCategoryTree = (
+  categories: DocCategory[],
+  parentId: number | null = null
+): DocCategory[] => {
+  return categories
+    .filter((cat) => cat.parent_category_id === parentId)
+    .sort((a, b) => a.display_order - b.display_order)
+    .map((cat) => ({
+      ...cat,
+      subcategories: buildCategoryTree(categories, cat.category_id),
+    }));
 };
 
-export const getSidebarConfig = (version: string): SidebarsConfig => {
-  switch (version) {
-    case 'v1.0':
-      return sidebarsV1_0;
-    case 'v1.1':
-      return sidebarsV1_1;
-    default:
-      return sidebarsV1_1; // Default to latest version
+/**
+ * Convert DocCategory tree to SidebarItem tree format
+ * Maps category.label → label, category.code → path, nested categories → items
+ */
+export const categoryTreeToSidebarItems = (categories: DocCategory[]): SidebarItem[] => {
+  return categories.map((category) => {
+    const item: SidebarItem = {
+      label: category.label || category.name,
+      path: category.code ? `/documentation/${category.code}` : undefined,
+    };
+
+    if ('subcategories' in category && category.subcategories && category.subcategories.length > 0) {
+      item.items = categoryTreeToSidebarItems(category.subcategories);
+    }
+
+    return item;
+  });
+};
+
+/**
+ * Get sidebar categories from API
+ */
+export const getCategories = async (): Promise<DocCategory[]> => {
+  try {
+    return await documentationService.getCategories();
+  } catch (error) {
+    console.error('Failed to load categories:', error);
+    throw error;
   }
 };
 
-export const getSidebar = (version: string) => {
-  const config = getSidebarConfig(version);
-  return config.tutorialSidebar;
+/**
+ * Get sidebar as SidebarItem tree from API
+ */
+export const getSidebar = async (): Promise<SidebarItem[]> => {
+  const categories = await getCategories();
+  const tree = buildCategoryTree(categories);
+  return categoryTreeToSidebarItems(tree);
 };
 
 /**
- * Create a new category in the sidebar
- * TODO: replace with POST /api/sidebars/{version}/categories
+ * Create a new category
  */
 export const createCategory = async (
-  version: string,
-  payload: { label: string; parentId?: string }
-): Promise<void> => {
-  console.log(`[STUB] Creating category in ${version}:`, payload);
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 300));
-  console.log('✓ Category created (stub)');
+  payload: CreateCategoryPayload
+): Promise<any> => {
+  try {
+    return await documentationService.createCategory(payload);
+  } catch (error) {
+    console.error('Failed to create category:', error);
+    throw error;
+  }
 };
 
 /**
- * Create a new doc page in the sidebar
- * TODO: replace with POST /api/sidebars/{version}/pages
+ * Update an existing category
  */
-export const createPage = async (
-  version: string,
-  payload: { label: string; path: string; parentId?: string }
-): Promise<void> => {
-  console.log(`[STUB] Creating page in ${version}:`, payload);
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 300));
-  console.log('✓ Page created (stub)');
+export const updateCategory = async (
+  id: number,
+  payload: Partial<CreateCategoryPayload>
+): Promise<any> => {
+  try {
+    return await documentationService.updateCategory(id, payload);
+  } catch (error) {
+    console.error('Failed to update category:', error);
+    throw error;
+  }
 };
 
 /**
- * Update an existing sidebar item
- * TODO: replace with PUT /api/sidebars/{version}/items/{id}
+ * Delete a category
  */
-export const updateItem = async (
-  version: string,
-  id: string,
-  payload: { label?: string; path?: string }
-): Promise<void> => {
-  console.log(`[STUB] Updating item ${id} in ${version}:`, payload);
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 300));
-  console.log('✓ Item updated (stub)');
-};
-
-/**
- * Delete a sidebar item
- * TODO: replace with DELETE /api/sidebars/{version}/items/{id}
- */
-export const deleteItem = async (version: string, id: string): Promise<void> => {
-  console.log(`[STUB] Deleting item ${id} in ${version}`);
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 300));
-  console.log('✓ Item deleted (stub)');
-};
-
-/**
- * Reorder a sidebar item
- * TODO: replace with PATCH /api/sidebars/{version}/items/{id}/reorder
- */
-export const reorderItem = async (
-  version: string,
-  id: string,
-  direction: 'up' | 'down'
-): Promise<void> => {
-  console.log(`[STUB] Reordering item ${id} in ${version} - direction: ${direction}`);
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 300));
-  console.log('✓ Item reordered (stub)');
+export const deleteCategory = async (id: number): Promise<any> => {
+  try {
+    return await documentationService.deleteCategory(id);
+  } catch (error) {
+    console.error('Failed to delete category:', error);
+    throw error;
+  }
 };

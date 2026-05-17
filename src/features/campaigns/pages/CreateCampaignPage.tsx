@@ -97,6 +97,9 @@ export default function CreateCampaignPage() {
   const [isDuplicateMode, setIsDuplicateMode] = useState(false);
   const [isLoadingCampaign, setIsLoadingCampaign] = useState(false);
   const [showRunModal, setShowRunModal] = useState(false);
+  const [isResubmit, setIsResubmit] = useState(
+    (location.state as any)?.isResubmit ?? false,
+  );
   const [createdCampaignId, setCreatedCampaignId] = useState<number | null>(
     null,
   );
@@ -144,6 +147,7 @@ export default function CreateCampaignPage() {
     start_date: undefined,
     end_date: undefined,
     budget_allocated: undefined,
+    priority: "low",
   });
 
   const [selectedSegments, setSelectedSegments] = useState<CampaignSegment[]>(
@@ -534,6 +538,15 @@ export default function CreateCampaignPage() {
         if (!formData.category_id) {
           errors.category_id = "Campaign catalog is required";
         }
+        if (!(formData as any).line_of_business_id) {
+          errors.line_of_business = "Line of Business is required";
+        }
+        if (!formData.description || !formData.description.trim()) {
+          errors.description = "Description is required";
+        }
+        if (!(formData as any).communication_policy) {
+          errors.communication_policy = "Communication Policy is required";
+        }
         if (
           formData.budget_allocated &&
           Number(formData.budget_allocated) <= 0
@@ -864,6 +877,17 @@ export default function CreateCampaignPage() {
           "success",
           `"${formData.name}" ${t.campaigns.campaignDefinition.updateSuccess}`,
         );
+
+        // If this is a resubmit of a rejected campaign, submit for approval
+        if (isResubmit && id) {
+          try {
+            await campaignService.submitForApproval(parseInt(id));
+            showToast("success", "Campaign resubmitted for approval!");
+          } catch (error) {
+            console.error("Failed to resubmit campaign:", error);
+            showToast("error", "Failed to resubmit campaign for approval");
+          }
+        }
       } else if (createdCampaignId) {
         // Create session with saved draft - UPDATE endpoint
         const updateData: Partial<CreateCampaignRequest> = {
@@ -1571,7 +1595,9 @@ export default function CreateCampaignPage() {
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                     {currentStep === 5
                       ? isEditMode
-                        ? "Updating..."
+                        ? isResubmit
+                          ? "Resubmitting..."
+                          : "Updating..."
                         : isDuplicateMode
                         ? "Creating Copy..."
                         : "Creating..."
@@ -1579,7 +1605,7 @@ export default function CreateCampaignPage() {
                   </>
                 ) : currentStep === 5 ? (
                   isEditMode ? (
-                    "Update Campaign"
+                    isResubmit ? "Edit & Resubmit" : "Update Campaign"
                   ) : isDuplicateMode ? (
                     "Create a Copy"
                   ) : (

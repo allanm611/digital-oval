@@ -26,6 +26,8 @@ import {
   formatVariablePlaceholder,
   validateInsertPosition,
   validateMessageSyntax,
+  validateNoEditInsideVariables,
+  isCursorInsideVariable,
 } from "../../../shared/utils/variableInsertion";
 import { useConfigurationData } from "../../../shared/services/configurationDataService";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -1047,7 +1049,17 @@ export default function DefineCommunicationStep({
                     onClick={() =>
                       setShowVariableSelector(!showVariableSelector)
                     }
-                    style={getButtonStyles(button.action)}
+                    style={{
+                      backgroundColor: color.primary.accent,
+                      color: "white",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: "0.5rem 1rem",
+                      borderRadius: "0.375rem",
+                      fontWeight: "500",
+                      fontSize: "0.875rem",
+                    }}
+                    className="flex items-center gap-2 whitespace-nowrap transition-all hover:opacity-90"
                   >
                     <Variable className="w-4 h-4" />
                     <span>Insert Variable</span>
@@ -1077,8 +1089,24 @@ export default function DefineCommunicationStep({
                   placeholder="Enter email subject..."
                   value={messageTitle}
                   onChange={(value) => {
+                    const editError = validateNoEditInsideVariables(messageTitle, value);
+                    if (editError) {
+                      setVariableError(editError);
+                      return;
+                    }
                     setMessageTitle(value);
                     setCursorPosition(value.length);
+                    const syntaxError = validateMessageSyntax(value);
+                    setVariableError(syntaxError);
+                  }}
+                  onKeyDown={(e) => {
+                    const cursorPos = e.currentTarget.selectionStart || 0;
+                    if (isCursorInsideVariable(messageTitle, cursorPos)) {
+                      e.preventDefault();
+                      setVariableError("You can't edit inside a variable");
+                    } else {
+                      setVariableError("");
+                    }
                   }}
                   onClick={(e) => {
                     setActiveField("title");
@@ -1117,8 +1145,24 @@ export default function DefineCommunicationStep({
                   ref={bodyTextareaRef}
                   value={messageBody}
                   onChange={(e) => {
+                    const editError = validateNoEditInsideVariables(messageBody, e.target.value);
+                    if (editError) {
+                      setVariableError(editError);
+                      return;
+                    }
                     setMessageBody(e.target.value);
                     setCursorPosition(e.target.selectionStart || 0);
+                    const syntaxError = validateMessageSyntax(e.target.value);
+                    setVariableError(syntaxError);
+                  }}
+                  onKeyDown={(e) => {
+                    const cursorPos = e.currentTarget.selectionStart || 0;
+                    if (isCursorInsideVariable(messageBody, cursorPos)) {
+                      e.preventDefault();
+                      setVariableError("You can't edit inside a variable");
+                    } else {
+                      setVariableError("");
+                    }
                   }}
                   onClick={(e) => {
                     setActiveField("body");
@@ -1296,6 +1340,7 @@ export default function DefineCommunicationStep({
                   disabled={
                     getSelectedTestContacts().length === 0 || isTesting
                   }
+                  className="text-sm"
                   style={{
                     ...getButtonStyles(button.action),
                     opacity: (getSelectedTestContacts().length === 0 || isTesting) ? 0.5 : 1,
@@ -1350,7 +1395,7 @@ export default function DefineCommunicationStep({
 
           {/* Test Results */}
           {testResults.length > 0 && (
-            <div>
+            <div className="mt-6">
               <label
                 className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
               >

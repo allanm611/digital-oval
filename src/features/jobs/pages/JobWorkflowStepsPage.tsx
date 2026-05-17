@@ -22,6 +22,7 @@ import {
   Workflow,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -919,17 +920,24 @@ export default function JobWorkflowStepsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-            Job Workflow Steps
-          </h1>
-          <p className={`${tw.textSecondary} mt-2 text-sm`}>
-            Manage and monitor workflow steps for scheduled jobs
-          </p>
-        </div>
-        <div className="flex gap-3">
+    <>
+      <div className="space-y-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <BackButton
+              fallbackTo="/dashboard/administration"
+              showBreadcrumb={true}
+              parentLabel="Admin Hub"
+              currentLabel="Job Workflow Steps"
+            />
+            {/* <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
+              Job Workflow Steps
+            </h1> */}
+            <p className={`${tw.textSecondary} mt-6 text-sm`}>
+              Manage and monitor workflow steps for scheduled jobs
+            </p>
+          </div>
+          <div className="flex gap-3">
           {jobIdFilter && (
             <>
               <button
@@ -2352,5 +2360,6 @@ export default function JobWorkflowStepsPage() {
           document.body,
         )}
     </div>
+    </>
   );
 }

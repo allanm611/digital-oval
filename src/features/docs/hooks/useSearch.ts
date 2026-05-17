@@ -1,26 +1,36 @@
 /**
  * Hook: useSearch
- * Search documentation content
+ * Search documentation content via API
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { searchService, SearchResult } from '../services/searchService';
-
-// Load all markdown files for indexing
-const markdownModules = import.meta.glob<string>('../markdown/**/*.md', { as: 'raw', eager: true });
 
 export function useSearch(query: string): SearchResult[] {
   const [results, setResults] = useState<SearchResult[]>([]);
-
-  // Build index once on mount
-  useMemo(() => {
-    searchService.buildIndex(markdownModules);
-  }, []);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Search when query changes
   useEffect(() => {
-    const searchResults = searchService.search(query);
-    setResults(searchResults);
+    if (!query.trim()) {
+      setResults([]);
+      return;
+    }
+
+    const performSearch = async () => {
+      try {
+        setIsLoading(true);
+        const searchResults = await searchService.search(query);
+        setResults(searchResults);
+      } catch (error) {
+        console.error('Search error:', error);
+        setResults([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    performSearch();
   }, [query]);
 
   return results;

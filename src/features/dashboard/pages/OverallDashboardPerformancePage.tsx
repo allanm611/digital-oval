@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { colors } from "../../../shared/utils/tokens";
 import { formatCurrency as formatCurrencyAmount } from "../../../shared/services/currencyService";
+import { formatNumber } from "../../../shared/services/numberService";
 import BackButton from "../../../shared/components/ui/BackButton";
 import type {
   RangeOption,
@@ -593,11 +594,7 @@ const mockPerformanceSnapshots: Record<RangeOption, PerformanceSnapshot> = {
   },
 };
 
-const formatNumber = (value: number) => {
-  return value.toLocaleString("en-US");
-};
-
-// Using formatCurrencyAmount from currencyService instead
+// Using formatNumber from numberService and formatCurrencyAmount from currencyService
 
 // Chart colors now use standardized colors from tokens.reportCharts
 

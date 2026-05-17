@@ -1,13 +1,13 @@
-import { useState, useMemo, useCallback } from 'react';
-import { Folder, FileText, Edit2, Trash2, Plus, ChevronDown, X } from 'lucide-react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { Folder, Edit2, Trash2, Plus, ChevronDown, X } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import {
-  getSidebar,
+  getCategories,
+  updateCategory,
+  deleteCategory,
   createCategory,
-  createPage,
-  updateItem,
-  deleteItem,
 } from '../services/sidebarService';
+import { DocCategory, CreateCategoryPayload } from '../types/documentation';
 import { PermissionGate } from '../../auth/components/PermissionGate';
 import DeleteConfirmModal from '../../../shared/components/ui/DeleteConfirmModal';
 import Input from '../../../shared/components/ui/Input';
@@ -15,12 +15,8 @@ import BackButton from '../../../shared/components/ui/BackButton';
 import { zIndex } from '../../../shared/utils/utils';
 import styles from './ManageSidebarPage.module.css';
 
-interface ManagedItem {
+interface ManagedItem extends DocCategory {
   _id: string;
-  type: 'doc' | 'category';
-  label: string;
-  path?: string;
-  items?: ManagedItem[];
 }
 
 interface ModalState {
@@ -32,64 +28,48 @@ interface ModalState {
 }
 
 export default function ManageSidebarPage() {
-  const [version, setVersion] = useState<'v1.0' | 'v1.1'>('v1.1');
   const [sidebarItems, setSidebarItems] = useState<ManagedItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [modalState, setModalState] = useState<ModalState>({ open: false, mode: null });
   const [deleteTarget, setDeleteTarget] = useState<ManagedItem | null>(null);
-  const [formData, setFormData] = useState({ label: '', path: '' });
+  const [formData, setFormData] = useState({ label: '', name: '', code: '' });
   const [placement, setPlacement] = useState<'root' | 'nested'>('root');
-  const [selectedParentId, setSelectedParentId] = useState<string>('');
-  const [childItemType, setChildItemType] = useState<'category' | 'page'>('category');
+  const [selectedParentId, setSelectedParentId] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [childItemType, setChildItemType] = useState<'category' | 'page'>('category');
 
-  let idCounter = 0;
-
-  const normalizeSidebar = useCallback((items: any[]): ManagedItem[] => {
-    idCounter = 0;
-    const traverse = (items: any[]): ManagedItem[] => {
-      return items.map(item => {
-        const _id = `item-${idCounter++}`;
-        if (typeof item === 'string') {
-          return {
-            _id,
-            type: 'doc' as const,
-            label: item.split('/').pop() || item,
-            path: item,
-          };
-        }
-        if (item.type === 'category') {
-          return {
-            _id,
-            type: 'category' as const,
-            label: item.label || 'Untitled',
-            items: item.items ? traverse(item.items) : [],
-          };
-        }
-        if (item.type === 'doc') {
-          return {
-            _id,
-            type: 'doc' as const,
-            label: item.label || (item.id || '').split('/').pop() || 'Untitled',
-            path: item.id,
-          };
-        }
-        return {
-          _id,
-          type: 'doc' as const,
-          label: 'Unknown',
-          path: '',
-        };
-      });
-    };
-    return traverse(items);
+  useEffect(() => {
+    loadCategories();
   }, []);
 
-  useMemo(() => {
-    const config = getSidebar(version);
-    const normalized = normalizeSidebar(config);
-    setSidebarItems(normalized);
-  }, [version, normalizeSidebar]);
+  const buildCategoryTree = (categories: ManagedItem[], parentId: number | null = null): ManagedItem[] => {
+    return categories
+      .filter((cat) => cat.parent_category_id === parentId)
+      .sort((a, b) => a.display_order - b.display_order)
+      .map((cat) => ({
+        ...cat,
+        subcategories: buildCategoryTree(categories, cat.category_id),
+      })) as ManagedItem[];
+  };
+
+  const loadCategories = async () => {
+    try {
+      setIsLoading(true);
+      const categories = await getCategories();
+      const managed: ManagedItem[] = (categories || []).map(cat => ({
+        ...cat,
+        _id: `cat-${cat.category_id}`,
+        subcategories: [] as ManagedItem[],
+      }));
+      const tree = buildCategoryTree(managed);
+      setSidebarItems(tree);
+    } catch (error) {
+      console.error('Failed to load categories:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const toggleExpand = useCallback((id: string) => {
     setExpandedIds(prev => {
@@ -102,16 +82,16 @@ export default function ManageSidebarPage() {
 
   const closeModal = useCallback(() => {
     setModalState({ open: false, mode: null });
-    setFormData({ label: '', path: '' });
+    setFormData({ label: '', name: '', code: '' });
     setPlacement('root');
-    setSelectedParentId('');
+    setSelectedParentId(null);
     setChildItemType('category');
   }, []);
 
-  const openAddRoot = useCallback((type: 'page' | 'category') => {
-    setFormData({ label: '', path: '' });
+  const openAddRoot = useCallback((type?: string) => {
+    setFormData({ label: '', name: '', code: '' });
     setPlacement('root');
-    setSelectedParentId('');
+    setSelectedParentId(null);
     setModalState({
       open: true,
       mode: type === 'page' ? 'add-page' : 'add-category'
@@ -119,55 +99,39 @@ export default function ManageSidebarPage() {
   }, []);
 
   const openAddChild = useCallback((parentId: string) => {
-    setFormData({ label: '', path: '' });
-    setChildItemType('category');
+    const parentIdNum = parseInt(parentId.replace('cat-', ''), 10);
+    setFormData({ label: '', name: '', code: '' });
+    setSelectedParentId(parentIdNum);
+    setPlacement('nested');
     setModalState({ open: true, mode: 'add-child', parentId });
   }, []);
 
   const openEdit = useCallback((item: ManagedItem) => {
-    setFormData({ label: item.label, path: item.path || '' });
+    setFormData({ label: item.label, name: item.name, code: item.code });
     setModalState({ open: true, mode: 'edit', item });
   }, []);
 
   async function handleSaveItem() {
-    if (!formData.label.trim()) return;
+    if (!formData.label.trim() || !formData.name.trim() || !formData.code.trim()) return;
     if (placement === 'nested' && !selectedParentId) return;
 
     setIsSaving(true);
     try {
-      if (modalState.mode === 'add-category') {
-        await createCategory(version, {
-          label: formData.label,
-          parentId: placement === 'nested' ? selectedParentId : undefined,
-        });
-      } else if (modalState.mode === 'add-page') {
-        await createPage(version, {
-          label: formData.label,
-          path: formData.path,
-          parentId: placement === 'nested' ? selectedParentId : undefined,
-        });
-      } else if (modalState.mode === 'add-child' && modalState.parentId) {
-        if (childItemType === 'page') {
-          await createPage(version, {
-            label: formData.label,
-            path: formData.path,
-            parentId: modalState.parentId,
-          });
-        } else {
-          await createCategory(version, {
-            label: formData.label,
-            parentId: modalState.parentId,
-          });
-        }
+      const payload: CreateCategoryPayload = {
+        name: formData.name,
+        label: formData.label,
+        code: formData.code,
+        parent_category_id: placement === 'nested' ? selectedParentId : undefined,
+      };
+
+      if (modalState.mode === 'add-category' || modalState.mode === 'add-child') {
+        await createCategory(payload);
       } else if (modalState.mode === 'edit' && modalState.item) {
-        await updateItem(version, modalState.item._id, {
-          label: formData.label,
-          path: formData.path,
-        });
+        await updateCategory(modalState.item.category_id, payload);
       }
+
       closeModal();
-      const config = getSidebar(version);
-      setSidebarItems(normalizeSidebar(config));
+      await loadCategories();
     } finally {
       setIsSaving(false);
     }
@@ -177,10 +141,9 @@ export default function ManageSidebarPage() {
     if (!deleteTarget) return;
     setIsSaving(true);
     try {
-      await deleteItem(version, deleteTarget._id);
+      await deleteCategory(deleteTarget.category_id);
       setDeleteTarget(null);
-      const config = getSidebar(version);
-      setSidebarItems(normalizeSidebar(config));
+      await loadCategories();
     } finally {
       setIsSaving(false);
     }
@@ -188,7 +151,7 @@ export default function ManageSidebarPage() {
 
   function TreeNode({ item, depth = 0 }: { item: ManagedItem; depth?: number }) {
     const isExpanded = expandedIds.has(item._id);
-    const isCategory = item.type === 'category';
+    const isCategory = true;
 
     return (
       <div key={item._id} className={styles.treeNode}>
@@ -245,9 +208,9 @@ export default function ManageSidebarPage() {
           </PermissionGate>
         </div>
 
-        {isCategory && isExpanded && item.items && item.items.length > 0 && (
+        {isCategory && isExpanded && item.subcategories && item.subcategories.length > 0 && (
           <div className={styles.children}>
-            {item.items.map(child => (
+            {item.subcategories.map(child => (
               <TreeNode key={child._id} item={child} depth={depth + 1} />
             ))}
           </div>
@@ -259,23 +222,16 @@ export default function ManageSidebarPage() {
   const modalTitle =
     modalState.mode === 'add-category'
       ? 'Add Category'
-      : modalState.mode === 'add-page'
-        ? 'Add Page'
-        : modalState.mode === 'add-child'
-          ? `Add ${childItemType === 'page' ? 'Page' : 'Category'} to Category`
-          : 'Edit Item';
-
-  const showPathField = modalState.mode === 'add-page' || modalState.mode === 'edit' ||
-                        (modalState.mode === 'add-child' && childItemType === 'page');
+      : modalState.mode === 'add-child'
+        ? 'Add Category to Parent'
+        : 'Edit Category';
 
   const getAllCategories = useCallback((items: ManagedItem[]): ManagedItem[] => {
     const categories: ManagedItem[] = [];
     items.forEach(item => {
-      if (item.type === 'category') {
-        categories.push(item);
-        if (item.items) {
-          categories.push(...getAllCategories(item.items));
-        }
+      categories.push(item);
+      if (item.subcategories && item.subcategories.length > 0) {
+        categories.push(...getAllCategories(item.subcategories));
       }
     });
     return categories;
@@ -296,22 +252,7 @@ export default function ManageSidebarPage() {
               <button onClick={() => openAddRoot('category')} className={styles.headerBtn}>
                 <Plus size={16} /> Category
               </button>
-              <button onClick={() => openAddRoot('page')} className={styles.headerBtn}>
-                <Plus size={16} /> Page
-              </button>
             </PermissionGate>
-            <div className={styles.versionSelector}>
-              <label htmlFor="version-select">Version:</label>
-              <select
-                id="version-select"
-                value={version}
-                onChange={e => setVersion(e.target.value as 'v1.0' | 'v1.1')}
-                className={styles.select}
-              >
-                <option value="v1.0">v1.0</option>
-                <option value="v1.1">v1.1</option>
-              </select>
-            </div>
           </div>
         </div>
       </div>
@@ -334,9 +275,8 @@ export default function ManageSidebarPage() {
                 <h2 className={styles.modalTitle}>{modalTitle}</h2>
                 <p className={styles.modalSubtitle}>
                   {modalState.mode === 'add-category' && 'Create a new category'}
-                  {modalState.mode === 'add-page' && 'Create a new page'}
-                  {modalState.mode === 'add-child' && 'Add item to category'}
-                  {modalState.mode === 'edit' && 'Update item details'}
+                  {modalState.mode === 'add-child' && 'Add a child category'}
+                  {modalState.mode === 'edit' && 'Update category details'}
                 </p>
               </div>
               <button onClick={closeModal} className={styles.closeBtn}>
@@ -346,7 +286,7 @@ export default function ManageSidebarPage() {
 
             {/* Form */}
             <div className={styles.modalContent}>
-              {(modalState.mode === 'add-category' || modalState.mode === 'add-page') && (
+              {modalState.mode === 'add-category' && (
                 <div className={styles.formGroup}>
                   <label>Placement *</label>
                   <div className={styles.radioGroup}>
@@ -357,7 +297,7 @@ export default function ManageSidebarPage() {
                         checked={placement === 'root'}
                         onChange={() => {
                           setPlacement('root');
-                          setSelectedParentId('');
+                          setSelectedParentId(null);
                         }}
                         disabled={isSaving}
                       />
@@ -377,51 +317,23 @@ export default function ManageSidebarPage() {
                 </div>
               )}
 
-              {placement === 'nested' && (modalState.mode === 'add-category' || modalState.mode === 'add-page') && (
+              {placement === 'nested' && modalState.mode === 'add-category' && (
                 <div className={styles.formGroup}>
                   <label htmlFor="parent">Parent Category *</label>
                   <select
                     id="parent"
-                    value={selectedParentId}
-                    onChange={e => setSelectedParentId(e.target.value)}
+                    value={selectedParentId || ''}
+                    onChange={e => setSelectedParentId(e.target.value ? parseInt(e.target.value, 10) : null)}
                     className={styles.select}
                     disabled={isSaving}
                   >
                     <option value="">Select a category...</option>
                     {availableCategories.map(cat => (
-                      <option key={cat._id} value={cat._id}>
+                      <option key={cat._id} value={cat.category_id.toString()}>
                         {cat.label}
                       </option>
                     ))}
                   </select>
-                </div>
-              )}
-
-              {modalState.mode === 'add-child' && (
-                <div className={styles.formGroup}>
-                  <label>Item Type *</label>
-                  <div className={styles.radioGroup}>
-                    <label className={styles.radioLabel}>
-                      <input
-                        type="radio"
-                        value="category"
-                        checked={childItemType === 'category'}
-                        onChange={() => setChildItemType('category')}
-                        disabled={isSaving}
-                      />
-                      <span>Category</span>
-                    </label>
-                    <label className={styles.radioLabel}>
-                      <input
-                        type="radio"
-                        value="page"
-                        checked={childItemType === 'page'}
-                        onChange={() => setChildItemType('page')}
-                        disabled={isSaving}
-                      />
-                      <span>Page</span>
-                    </label>
-                  </div>
                 </div>
               )}
 
@@ -436,18 +348,27 @@ export default function ManageSidebarPage() {
                 />
               </div>
 
-              {showPathField && (
-                <div className={styles.formGroup}>
-                  <label htmlFor="path">Path/ID</label>
-                  <Input
-                    id="path"
-                    placeholder="e.g., campaigns/overview"
-                    value={formData.path}
-                    onChange={v => setFormData({ ...formData, path: v })}
-                    disabled={isSaving}
-                  />
-                </div>
-              )}
+              <div className={styles.formGroup}>
+                <label htmlFor="name">Name *</label>
+                <Input
+                  id="name"
+                  placeholder="e.g., campaigns-management"
+                  value={formData.name}
+                  onChange={v => setFormData({ ...formData, name: v })}
+                  disabled={isSaving}
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label htmlFor="code">Code *</label>
+                <Input
+                  id="code"
+                  placeholder="e.g., campaigns"
+                  value={formData.code}
+                  onChange={v => setFormData({ ...formData, code: v })}
+                  disabled={isSaving}
+                />
+              </div>
             </div>
 
             {/* Footer */}

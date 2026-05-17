@@ -8,38 +8,14 @@ import Checkbox from "../../../shared/components/ui/Checkbox";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { SMSRoute, CreateSMSRouteRequest } from "../types/smsRoute";
 import { ussdRouteService } from "../services/ussdRouteService";
+import { ussdGatewayConfigService } from "../../configurations/services/ussdGatewayConfigService";
 import { useToast } from "../../../contexts/ToastContext";
 import { color, tw } from "../../../shared/utils/utils";
-
-const STATUS_OPTIONS = [
-  { label: "Active", value: "true" },
-  { label: "Inactive", value: "false" },
-];
-
-const USSD_GATEWAY_OPTIONS = [
-  { value: "INFOBIP", label: "Infobip" },
-  { value: "TWILIO", label: "Twilio" },
-  { value: "JAMBAZ", label: "Jambaz" },
-  { value: "LIQUID_INTELLIGENT", label: "Liquid Intelligent" },
-  { value: "AFRICASTALKING", label: "AfricasTalking" },
-  { value: "INTERNAL", label: "Internal Gateway" },
-];
 
 const ENCODING_OPTIONS = [
   { value: "UTF-8", label: "UTF-8" },
   { value: "GSM-7", label: "GSM-7" },
   { value: "UCS2", label: "UCS2" },
-];
-
-const REQUEST_METHOD_OPTIONS = [
-  { value: "POST", label: "POST" },
-  { value: "GET", label: "GET" },
-];
-
-const REQUEST_FORMAT_OPTIONS = [
-  { value: "JSON", label: "JSON" },
-  { value: "XML", label: "XML" },
-  { value: "FORM_DATA", label: "Form Data" },
 ];
 
 export default function CreateEditUSSDRoutePage() {
@@ -49,12 +25,14 @@ export default function CreateEditUSSDRoutePage() {
 
   const [loading, setLoading] = useState(!!id);
   const [saving, setSaving] = useState(false);
+  const [isLoadingConfigs, setIsLoadingConfigs] = useState(false);
   const [route, setRoute] = useState<SMSRoute | null>(null);
   const [allRoutes, setAllRoutes] = useState<SMSRoute[]>([]);
+  const [gatewayConfigs, setGatewayConfigs] = useState<any[]>([]);
 
   const [formData, setFormData] = useState<CreateSMSRouteRequest>({
     name: "",
-    gateway_provider: undefined,
+    gateway_config_id: 0,
     communication_channel: "USSD",
     is_active: true,
     description: "",
@@ -64,31 +42,38 @@ export default function CreateEditUSSDRoutePage() {
   });
 
   const [extendedFormData, setExtendedFormData] = useState({
-    apiEndpoint: "",
-    apiKey: "",
-    apiSecret: "",
     ussdCode: "",
     networkCode: "",
     sessionTimeout: "60",
     encoding: "UTF-8",
-    requestMethod: "POST",
-    requestFormat: "JSON",
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  // Load route if editing and load all routes for backup selection
   useEffect(() => {
     const loadAllRoutes = async () => {
       try {
         const routes = await ussdRouteService.getAllRoutes();
         setAllRoutes(routes);
       } catch (err) {
-        // Silent fail - routes dropdown will be empty
+        // Silent fail
+      }
+    };
+
+    const loadGatewayConfigs = async () => {
+      try {
+        setIsLoadingConfigs(true);
+        const configs = await ussdGatewayConfigService.getAllConfigs();
+        setGatewayConfigs(configs);
+      } catch (err) {
+        showError("Error", "Failed to load gateway configurations");
+      } finally {
+        setIsLoadingConfigs(false);
       }
     };
 
     loadAllRoutes();
+    loadGatewayConfigs();
 
     if (id) {
       loadRoute();
@@ -106,13 +91,19 @@ export default function CreateEditUSSDRoutePage() {
         setRoute(data);
         setFormData({
           name: data.name,
-          gateway_provider: data.gateway_provider,
+          gateway_config_id: (data as any).gateway_config_id || 0,
           communication_channel: data.communication_channel || "USSD",
           is_active: data.is_active,
           description: data.description,
           backup_route_id: data.backup_route_id,
           use_backup_on_failure: data.use_backup_on_failure,
           retry_attempts: data.retry_attempts || 3,
+        });
+        setExtendedFormData({
+          ussdCode: (data as any).ussdCode || "",
+          networkCode: (data as any).networkCode || "",
+          sessionTimeout: (data as any).sessionTimeout || "60",
+          encoding: (data as any).encoding || "UTF-8",
         });
       }
     } catch (err) {
@@ -129,14 +120,8 @@ export default function CreateEditUSSDRoutePage() {
     if (!formData.name.trim()) {
       newErrors.name = "Route name is required";
     }
-    if (!formData.gateway_provider) {
-      newErrors.gateway_provider = "Gateway provider is required";
-    }
-    if (!extendedFormData.apiEndpoint.trim()) {
-      newErrors.apiEndpoint = "API endpoint is required";
-    }
-    if (!extendedFormData.apiKey.trim()) {
-      newErrors.apiKey = "API key is required";
+    if (!formData.gateway_config_id) {
+      newErrors.gateway_config_id = "Gateway configuration is required";
     }
     if (!extendedFormData.ussdCode.trim()) {
       newErrors.ussdCode = "USSD code is required";
@@ -263,9 +248,9 @@ export default function CreateEditUSSDRoutePage() {
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Basic Information Section */}
+        {/* Route Configuration Section */}
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Basic Information</h2>
+          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Route Configuration</h2>
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -285,14 +270,27 @@ export default function CreateEditUSSDRoutePage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Status
+                  USSD Gateway Configuration *
                 </label>
                 <HeadlessSelect
-                  options={STATUS_OPTIONS}
-                  value={formData.is_active ? "true" : "false"}
-                  onChange={(value) => handleSelectChange("is_active", value)}
-                  disabled={saving}
+                  options={gatewayConfigs.map((config) => ({
+                    value: String(config.id),
+                    label: `${config.name} (${config.provider_type})`,
+                  }))}
+                  value={String(formData.gateway_config_id || "")}
+                  onChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      gateway_config_id: value ? Number(value) : 0,
+                    }))
+                  }
+                  placeholder="Select gateway configuration"
+                  disabled={saving || isLoadingConfigs}
+                  error={!!errors.gateway_config_id}
                 />
+                {errors.gateway_config_id && (
+                  <p className="text-red-500 text-xs mt-1">{errors.gateway_config_id}</p>
+                )}
               </div>
             </div>
 
@@ -310,110 +308,65 @@ export default function CreateEditUSSDRoutePage() {
                 disabled={saving}
               />
             </div>
-          </div>
-        </div>
 
-        {/* Gateway Configuration Section */}
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Gateway Configuration</h2>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Gateway Provider *
+            <div className="pt-4">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <Checkbox
+                  id="use_backup_on_failure"
+                  checked={formData.use_backup_on_failure || false}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      use_backup_on_failure: e.target.checked,
+                    }))
+                  }
+                  disabled={saving}
+                />
+                <div className="flex-1">
+                  <span className="block text-sm font-medium text-gray-700">
+                    Use backup route if this route fails
+                  </span>
+                  <p className={`text-xs ${tw.textSecondary} mt-1`}>
+                    Enable automatic failover to a backup route when delivery fails
+                  </p>
+                </div>
               </label>
-              <HeadlessSelect
-                options={USSD_GATEWAY_OPTIONS}
-                value={formData.gateway_provider || ""}
-                onChange={(value) => handleSelectChange("gateway_provider", value)}
-                placeholder="Select gateway provider"
-                disabled={saving}
-                error={!!errors.gateway_provider}
-              />
-              {errors.gateway_provider && (
-                <p className="text-red-500 text-xs mt-1">{errors.gateway_provider}</p>
+
+              {formData.use_backup_on_failure && (
+                <div className="space-y-4 mt-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Backup Route
+                    </label>
+                    <HeadlessSelect
+                      options={[
+                        { value: "", label: "Select a backup route" },
+                        ...(allRoutes
+                          .filter((r) => r.id !== (route?.id || formData.backup_route_id))
+                          .map((route) => ({
+                            value: String(route.id),
+                            label: route.name,
+                          })) || []),
+                      ]}
+                      value={String(formData.backup_route_id || "")}
+                      onChange={(value) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          backup_route_id: value ? Number(value) : undefined,
+                        }))
+                      }
+                      disabled={saving}
+                    />
+                    <p className={`text-xs ${tw.textSecondary} mt-2`}>
+                      This route will be used if the primary route fails
+                    </p>
+                  </div>
+                </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* API Configuration Section */}
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>API Configuration</h2>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                API Endpoint *
-              </label>
-              <Input
-                placeholder="e.g., https://api.example.com/ussd/send"
-                value={extendedFormData.apiEndpoint}
-                onChange={(value) => handleExtendedFieldChange("apiEndpoint", value)}
-                hasError={!!errors.apiEndpoint}
-                variant="medium"
-                disabled={saving}
-              />
-              {errors.apiEndpoint && <p className="text-red-500 text-xs mt-1">{errors.apiEndpoint}</p>}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  API Key *
-                </label>
-                <Input
-                  type="password"
-                  placeholder="••••••••••••••••••••••"
-                  value={extendedFormData.apiKey}
-                  onChange={(value) => handleExtendedFieldChange("apiKey", value)}
-                  hasError={!!errors.apiKey}
-                  variant="medium"
-                  disabled={saving}
-                />
-                {errors.apiKey && <p className="text-red-500 text-xs mt-1">{errors.apiKey}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  API Secret (Optional)
-                </label>
-                <Input
-                  type="password"
-                  placeholder="Your API secret"
-                  value={extendedFormData.apiSecret}
-                  onChange={(value) => handleExtendedFieldChange("apiSecret", value)}
-                  variant="medium"
-                  disabled={saving}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Request Method
-                </label>
-                <HeadlessSelect
-                  options={REQUEST_METHOD_OPTIONS}
-                  value={extendedFormData.requestMethod}
-                  onChange={(value) => handleExtendedFieldChange("requestMethod", value as string)}
-                  disabled={saving}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Request Format
-                </label>
-                <HeadlessSelect
-                  options={REQUEST_FORMAT_OPTIONS}
-                  value={extendedFormData.requestFormat}
-                  onChange={(value) => handleExtendedFieldChange("requestFormat", value as string)}
-                  disabled={saving}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* USSD-Specific Configuration Section */}
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
@@ -433,9 +386,6 @@ export default function CreateEditUSSDRoutePage() {
                   disabled={saving}
                 />
                 {errors.ussdCode && <p className="text-red-500 text-xs mt-1">{errors.ussdCode}</p>}
-                <p className={`text-xs ${tw.textSecondary} mt-1`}>
-                  The USSD shortcode users dial to access this service
-                </p>
               </div>
 
               <div>
@@ -449,9 +399,6 @@ export default function CreateEditUSSDRoutePage() {
                   variant="medium"
                   disabled={saving}
                 />
-                <p className={`text-xs ${tw.textSecondary} mt-1`}>
-                  Specific network operator code for routing
-                </p>
               </div>
             </div>
 
@@ -470,9 +417,6 @@ export default function CreateEditUSSDRoutePage() {
                   max="300"
                   disabled={saving}
                 />
-                <p className={`text-xs ${tw.textSecondary} mt-1`}>
-                  Time to keep USSD session active (10-300 seconds)
-                </p>
               </div>
 
               <div>
@@ -487,13 +431,7 @@ export default function CreateEditUSSDRoutePage() {
                 />
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Delivery Configuration Section */}
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Delivery Configuration</h2>
-          <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Retry Attempts
@@ -513,73 +451,10 @@ export default function CreateEditUSSDRoutePage() {
                 max="10"
                 disabled={saving}
               />
-              <p className={`text-xs ${tw.textSecondary} mt-2`}>
-                Number of times to retry failed USSD requests
-              </p>
             </div>
           </div>
         </div>
 
-        {/* Failover Configuration Section */}
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Failover Configuration</h2>
-
-          <div className="space-y-4">
-            <label className="flex items-start gap-3 cursor-pointer">
-              <Checkbox
-                id="use_backup_on_failure"
-                checked={formData.use_backup_on_failure || false}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    use_backup_on_failure: e.target.checked,
-                  }))
-                }
-                disabled={saving}
-              />
-              <div className="flex-1">
-                <span className="block text-sm font-medium text-gray-700">
-                  Use backup route if this route fails
-                </span>
-                <p className={`text-xs ${tw.textSecondary} mt-1`}>
-                  Enable automatic failover to a backup route when delivery fails
-                </p>
-              </div>
-            </label>
-
-            {formData.use_backup_on_failure && (
-              <div className="space-y-4 mt-4 pt-4 border-t border-gray-200">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Backup Route
-                  </label>
-                  <HeadlessSelect
-                    options={[
-                      { value: "", label: "Select a backup route" },
-                      ...(allRoutes
-                        .filter((r) => r.id !== (route?.id || formData.backup_route_id))
-                        .map((route) => ({
-                          value: String(route.id),
-                          label: route.name,
-                        })) || []),
-                    ]}
-                    value={String(formData.backup_route_id || "")}
-                    onChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        backup_route_id: value ? Number(value) : undefined,
-                      }))
-                    }
-                    disabled={saving}
-                  />
-                  <p className={`text-xs ${tw.textSecondary} mt-2`}>
-                    This route will be used if the primary route fails
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
 
         {/* Form Actions */}
         <div className="flex items-center justify-between pt-6 border-t border-gray-200">

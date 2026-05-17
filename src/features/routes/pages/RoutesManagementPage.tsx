@@ -244,13 +244,14 @@ export default function RoutesManagementPage() {
     <div className="space-y-6">
       {/* Breadcrumb */}
       <BackButton
-        fallbackTo="/dashboard/configuration"
+        fallbackTo="/dashboard/administration"
         showBreadcrumb={true}
+        parentLabel="Admin Hub"
         currentLabel="Routes Management"
       />
 
       {/* Description */}
-      <p className={`text-sm ${tw.textSecondary}`}>
+      <p className={`text-sm ${tw.textSecondary} mt-6`}>
         Manage all communication routes across channels
       </p>
 

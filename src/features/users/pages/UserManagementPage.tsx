@@ -17,6 +17,7 @@ import {
   Square,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { useNavigate } from "react-router-dom";
 import { userService } from "../../users/services/userService";
 import { accountService } from "../../account/services/accountService";
@@ -1461,14 +1462,21 @@ export default function UserManagementPage() {
   );
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="min-w-0">
-          <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
-            {t.userManagement.title}
-          </h1>
-          <p className={`${tw.textSecondary} mt-2 text-sm`}>
+    <>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="min-w-0">
+            <BackButton
+              fallbackTo="/dashboard/administration"
+              showBreadcrumb={true}
+              parentLabel="Admin Hub"
+              currentLabel="Users"
+            />
+            {/* <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
+              {t.userManagement.title}
+            </h1> */}
+            <p className={`${tw.textSecondary} mt-6 text-sm`}>
             {t.userManagement.description}
           </p>
         </div>
@@ -2862,5 +2870,6 @@ export default function UserManagementPage() {
         )}
 
     </div>
+    </>
   );
 }

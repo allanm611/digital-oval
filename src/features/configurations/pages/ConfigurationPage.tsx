@@ -25,7 +25,7 @@ export default function ConfigurationPage() {
   const [configurations, setConfigurations] = useState<ConfigurationItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // All individual configurations - flat list
+  // All individual configurations 
   useEffect(() => {
     const allConfigurations: ConfigurationItem[] = [
       {
@@ -159,6 +159,16 @@ export default function ConfigurationPage() {
         category: "Offer Configuration",
         status: "active",
         navigationPath: "/dashboard/email-routes",
+      },
+      {
+        id: "gateway-configurations",
+        name: "Gateway Configurations",
+        description:
+          "Configure communication channel gateways (Email, SMS, WhatsApp, Push) and manage provider credentials",
+        type: "offer",
+        category: "Offer Configuration",
+        status: "active",
+        navigationPath: "/dashboard/gateway-configurations",
       },
       {
         id: "job-types",

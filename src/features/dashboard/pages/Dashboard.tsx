@@ -563,6 +563,10 @@ const SettingsPages = {
     () =>
       import(/* webpackPrefetch: true */ "../../routes/pages/RoutesManagementPage"),
   ),
+  GatewayConfigurationsPage: lazy(
+    () =>
+      import(/* webpackPrefetch: true */ "../../configurations/pages/GatewayConfigurationsContainer"),
+  ),
   DNDTypesPage: lazy(
     () =>
       import(/* webpackPrefetch: true */ "../../configurations/pages/DNDTypesPage"),
@@ -570,6 +574,10 @@ const SettingsPages = {
   TimezonesPage: lazy(
     () =>
       import(/* webpackPrefetch: true */ "../../configurations/pages/TimezonesPage"),
+  ),
+  CreateEditTimezonePage: lazy(
+    () =>
+      import(/* webpackPrefetch: true */ "../../configurations/pages/CreateEditTimezonePage"),
   ),
   TeamRolesPage: lazy(
     () =>
@@ -709,6 +717,28 @@ const AnalyticsPages = {
   ),
 };
 
+// Administration Pages
+const AdministrationPages = {
+  AdminHubPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../administration/pages/AdminHubPage"
+      ),
+  ),
+  MonitoringPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../monitoring/pages/MonitoringPage"
+      ),
+  ),
+  ExecutionDetailsPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../monitoring/pages/ExecutionDetailsPage"
+      ),
+  ),
+};
+
 // Other Pages - All routes preloaded for instant access
 const OtherPages = {
   ManualBroadcastsHubPage: lazy(
@@ -807,6 +837,12 @@ const OtherPages = {
         /* webpackPrefetch: true */ "../../notifications/pages/NotificationsPage"
       ),
   ),
+  NotificationSettingsPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../notifications/pages/NotificationSettingsPage"
+      ),
+  ),
   DynamicMessageVariablesPage: lazy(
     () =>
       import(
@@ -827,6 +863,18 @@ export default function Dashboard() {
       >
         <Routes>
           <Route path="/" element={<DashboardHome />} />
+          <Route
+            path="/administration"
+            element={<AdministrationPages.AdminHubPage />}
+          />
+          <Route
+            path="/monitoring"
+            element={<AdministrationPages.MonitoringPage />}
+          />
+          <Route
+            path="/monitoring/:id"
+            element={<AdministrationPages.ExecutionDetailsPage />}
+          />
           <Route path="/campaigns" element={<CampaignPages.CampaignsPage />} />
           <Route
             path="/campaigns/analytics"
@@ -1190,6 +1238,14 @@ export default function Dashboard() {
             element={<SettingsPages.TimezonesPage />}
           />
           <Route
+            path="/timezones/create"
+            element={<SettingsPages.CreateEditTimezonePage />}
+          />
+          <Route
+            path="/timezones/:id/edit"
+            element={<SettingsPages.CreateEditTimezonePage />}
+          />
+          <Route
             path="/roles"
             element={<SettingsPages.TeamRolesPage />}
           />
@@ -1216,6 +1272,10 @@ export default function Dashboard() {
           <Route
             path="/routes"
             element={<SettingsPages.RoutesManagementPage />}
+          />
+          <Route
+            path="/gateway-configurations/*"
+            element={<SettingsPages.GatewayConfigurationsPage />}
           />
           <Route path="/sms-test" element={<SettingsPages.SMSTestPage />} />
           <Route path="/manual-rewards-test" element={<OtherPages.ManualRewardsTestPage />} />
@@ -1397,6 +1457,10 @@ export default function Dashboard() {
           <Route
             path="/notifications"
             element={<OtherPages.NotificationsPage />}
+          />
+          <Route
+            path="/notification-settings"
+            element={<OtherPages.NotificationSettingsPage />}
           />
           <Route
             path="/dnd-management"

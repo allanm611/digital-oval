@@ -42,17 +42,9 @@ import {
 } from "../types/jobExecution";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import DateFormatter from "../../../shared/components/DateFormatter";
 import { color, tw } from "../../../shared/utils/utils";
 import { ENABLE_JOB_EXECUTION_WRITES_FOR_ALL } from "../../../shared/utils/featureFlags";
-
-const formatDateTime = (value?: string | null) => {
-  if (!value) return "—";
-  try {
-    return new Date(value).toLocaleString();
-  } catch {
-    return value;
-  }
-};
 
 const formatDuration = (seconds: number | null) => {
   if (!seconds) return "—";
@@ -470,7 +462,7 @@ export default function JobExecutionDetailsPage() {
             <div>
               <dt className="text-sm font-medium text-gray-500">Started At</dt>
               <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
-                {formatDateTime(execution.started_at)}
+                <DateFormatter date={execution.started_at} />
               </dd>
             </div>
             <div>
@@ -478,7 +470,7 @@ export default function JobExecutionDetailsPage() {
                 Completed At
               </dt>
               <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
-                {formatDateTime(execution.completed_at)}
+                <DateFormatter date={execution.completed_at} />
               </dd>
             </div>
             <div>
@@ -593,7 +585,7 @@ export default function JobExecutionDetailsPage() {
                   Estimated Completion:{" "}
                 </span>
                 <span className="text-sm text-gray-600">
-                  {formatDateTime(progress.estimated_completion)}
+                  <DateFormatter date={progress.estimated_completion} />
                 </span>
               </div>
             )}
@@ -870,7 +862,7 @@ export default function JobExecutionDetailsPage() {
                             {forecast.execution_id?.substring(0, 8)}...
                           </span>
                           <span className="text-gray-600 ml-2">
-                            Est: {formatDateTime(forecast.estimated_completion)}
+                            Est: <DateFormatter date={forecast.estimated_completion} />
                             ({forecast.confidence?.toFixed(0) || 0}% confidence)
                           </span>
                         </div>

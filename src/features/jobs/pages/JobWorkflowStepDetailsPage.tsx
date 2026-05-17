@@ -23,16 +23,8 @@ import { PermissionGate } from "../../auth/components/PermissionGate";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import BackButton from "../../../shared/components/ui/BackButton";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import DateFormatter from "../../../shared/components/DateFormatter";
 import { color, tw } from "../../../shared/utils/utils";
-
-const formatDateTime = (value?: string | null) => {
-  if (!value) return "—";
-  try {
-    return new Date(value).toLocaleString();
-  } catch {
-    return value;
-  }
-};
 
 export default function JobWorkflowStepDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -419,7 +411,7 @@ export default function JobWorkflowStepDetailsPage() {
                   Created At
                 </dt>
                 <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
-                  {formatDateTime(step.created_at)}
+                  <DateFormatter date={step.created_at} />
                 </dd>
               </div>
               <div>
@@ -427,7 +419,7 @@ export default function JobWorkflowStepDetailsPage() {
                   Updated At
                 </dt>
                 <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
-                  {formatDateTime(step.updated_at)}
+                  <DateFormatter date={step.updated_at} />
                 </dd>
               </div>
               <div>

@@ -7,6 +7,7 @@ import {
   Trash2,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
+import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import Input from "../../../shared/components/ui/Input";
@@ -662,17 +663,24 @@ export default function JobTypesPage() {
   const IconComponent = Briefcase;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-        <div>
-          <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-            {t.jobs.jobTypes}
-          </h1>
-          <p className={`${tw.textSecondary} mt-2 text-sm`}>
-            Manage the classification codes used when creating scheduled jobs.
-          </p>
-        </div>
-        <div className="flex justify-end">
+    <>
+      <div className="space-y-6">
+        <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+          <div>
+            <BackButton
+              fallbackTo="/dashboard/administration"
+              showBreadcrumb={true}
+              parentLabel="Admin Hub"
+              currentLabel="Job Types"
+            />
+            {/* <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
+              {t.jobs.jobTypes}
+            </h1> */}
+            <p className={`${tw.textSecondary} mt-6 text-sm`}>
+              Manage the classification codes used when creating scheduled jobs.
+            </p>
+          </div>
+          <div className="flex justify-end">
           <PermissionGate permission="job-types.create">
             <CreateButton onClick={handleCreate} />
           </PermissionGate>
@@ -972,5 +980,6 @@ export default function JobTypesPage() {
         cancelText="Cancel"
       />
     </div>
+    </>
   );
 }

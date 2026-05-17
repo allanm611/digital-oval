@@ -29,6 +29,7 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import { getUserDisplayName } from "../../../shared/utils/userNameCache";
+import { getWorkflowStatusColor, getApprovalStatusColor, getStatusStyle, getStatusBadgeConfig } from "../../../shared/utils/statusColors";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { campaignService } from "../services/campaignService";
@@ -714,34 +715,6 @@ export default function CampaignDetailsPage() {
     }
   };
 
-  const getStatusBadge = (status: string | undefined) => {
-    if (!status) return "bg-gray-100 text-gray-800";
-    switch (status.toLowerCase()) {
-      case "active":
-        return "bg-green-100 text-green-800";
-      case "paused":
-        return "bg-yellow-100 text-yellow-800";
-      case "draft":
-        return "bg-gray-100 text-gray-800";
-      case "completed":
-        return "bg-blue-100 text-blue-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getApprovalBadge = (status?: string) => {
-    switch (status) {
-      case "approved":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "rejected":
-        return "bg-red-100 text-red-800 border-red-200";
-      case "pending":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
 
   const handleFlowEdit = async (flow: CampaignFlowResponseData) => {
     setSelectedFlow(flow);
@@ -971,88 +944,110 @@ export default function CampaignDetailsPage() {
             <Clock className="w-5 h-5" />
           </button>
 
-          {/* Step 1: Request Approval (draft status) */}
-          {campaign.status === "draft" && (
-            <button
-              onClick={handleSubmitForApproval}
-              disabled={isApproveLoading}
-              className={`flex items-center gap-2 ${tw.button} text-sm disabled:opacity-50`}
-              style={{ backgroundColor: color.primary.action }}
-            >
-              {isApproveLoading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              ) : (
-                <Send className="w-4 h-4" />
-              )}
-              {isApproveLoading ? "Requesting..." : "Request Approval"}
-            </button>
-          )}
-
-          {/* Step 2: Approve Campaign (pending_approval status) */}
-          {campaign.status === "pending_approval" && (
-            <button
-              onClick={handleApproveCampaign}
-              disabled={isApproveLoading}
-              className={`flex items-center gap-2 ${tw.button} text-sm disabled:opacity-50`}
-              style={{ backgroundColor: color.primary.action }}
-            >
-              {isApproveLoading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              ) : (
-                <CheckCircle className="w-4 h-4" />
-              )}
-              {isApproveLoading ? "Approving..." : "Approve Campaign"}
-            </button>
-          )}
-
-          {/* Step 3: Activate Campaign (approved + is_active=false) */}
-          {campaign.approval_status === "approved" &&
-            campaign?.is_active === false && (
-              <button
-                onClick={handleActivateCampaign}
-                disabled={isActionLoading}
-                className={`flex items-center gap-2 ${tw.button} text-sm disabled:opacity-50`}
-                style={{ backgroundColor: color.primary.action }}
-              >
-                {isActionLoading ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                ) : (
-                  <Zap className="w-4 h-4" />
-                )}
-                {isActionLoading ? "Activating..." : "Activate Campaign"}
-              </button>
-            )}
-
-          {/* Step 4: Execute Campaign (approved + is_active=true) */}
-          {campaign.approval_status === "approved" &&
-            campaign?.is_active === true && (
-              <PermissionGate permission="campaigns.execute">
+          {!(campaign.approval_status === "rejected" || campaign.status === "rejected") && (
+            <>
+              {/* Step 1: Request Approval (draft status) */}
+              {campaign.status === "draft" && (
                 <button
-                  onClick={() => setShowRunModal(true)}
-                  className={`flex items-center gap-2 ${tw.button} text-sm`}
+                  onClick={handleSubmitForApproval}
+                  disabled={isApproveLoading}
+                  className={`flex items-center gap-2 ${tw.button} text-sm disabled:opacity-50`}
                   style={{ backgroundColor: color.primary.action }}
                 >
-                  <Play className="w-4 h-4" />
-                  Run Now
+                  {isApproveLoading ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
+                  {isApproveLoading ? "Requesting..." : "Request Approval"}
                 </button>
-              </PermissionGate>
-            )}
+              )}
 
-          {/* Edit Button - Always Visible */}
-          <PermissionGate permission="campaigns.update">
+              {/* Step 2: Approve Campaign (pending_approval status) */}
+              {campaign.status === "pending_approval" && (
+                <button
+                  onClick={handleApproveCampaign}
+                  disabled={isApproveLoading}
+                  className={`flex items-center gap-2 ${tw.button} text-sm disabled:opacity-50`}
+                  style={{ backgroundColor: color.primary.action }}
+                >
+                  {isApproveLoading ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  ) : (
+                    <CheckCircle className="w-4 h-4" />
+                  )}
+                  {isApproveLoading ? "Approving..." : "Approve Campaign"}
+                </button>
+              )}
+            </>
+          )}
+
+              {/* Step 3: Activate Campaign (approved + is_active=false) */}
+              {campaign.approval_status === "approved" &&
+                campaign?.is_active === false && (
+                  <button
+                    onClick={handleActivateCampaign}
+                    disabled={isActionLoading}
+                    className={`flex items-center gap-2 ${tw.button} text-sm disabled:opacity-50`}
+                    style={{ backgroundColor: color.primary.action }}
+                  >
+                    {isActionLoading ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    ) : (
+                      <Zap className="w-4 h-4" />
+                    )}
+                    {isActionLoading ? "Activating..." : "Activate Campaign"}
+                  </button>
+                )}
+
+              {/* Step 4: Execute Campaign (approved + is_active=true) */}
+              {campaign.approval_status === "approved" &&
+                campaign?.is_active === true && (
+                  <PermissionGate permission="campaigns.execute">
+                    <button
+                      onClick={() => setShowRunModal(true)}
+                      className={`flex items-center gap-2 ${tw.button} text-sm`}
+                      style={{ backgroundColor: color.primary.action }}
+                    >
+                      <Play className="w-4 h-4" />
+                      Run Now
+                    </button>
+                  </PermissionGate>
+                )}
+
+          {/* Edit & Resubmit - For rejected campaigns */}
+          {canShowCampaignButton(campaign, "resubmit") && (
             <button
               onClick={() =>
                 navigate(`/dashboard/campaigns/${id}/edit`, {
                   state: { campaign: campaign },
                 })
               }
-              className={`px-4 py-2 text-white ${tw.rounded} font-semibold flex items-center gap-2 text-sm`}
+              className={`flex items-center gap-2 ${tw.button} text-sm`}
               style={{ backgroundColor: color.primary.action }}
             >
               <Edit className="w-4 h-4" />
-              Edit
+              Edit & Resubmit
             </button>
-          </PermissionGate>
+          )}
+
+          {/* Edit Button - Hidden for Rejected Campaigns */}
+          {!(campaign.approval_status === "rejected" || campaign.status === "rejected") && (
+            <PermissionGate permission="campaigns.update">
+              <button
+                onClick={() =>
+                  navigate(`/dashboard/campaigns/${id}/edit`, {
+                    state: { campaign: campaign },
+                  })
+                }
+                className={`px-4 py-2 text-white ${tw.rounded} font-semibold flex items-center gap-2 text-sm`}
+                style={{ backgroundColor: color.primary.action }}
+              >
+                <Edit className="w-4 h-4" />
+                Edit
+              </button>
+            </PermissionGate>
+          )}
 
           <div className="relative" ref={moreMenuRef}>
             <button
@@ -1075,8 +1070,9 @@ export default function CampaignDetailsPage() {
               <div
                 className={`absolute right-0 mt-2 w-52 bg-white border border-gray-200 ${tw.rounded} shadow-xl py-2 z-50`}
               >
-                {/* Pause Campaign - Only if approved and not paused */}
-                {canShowCampaignButton(campaign, "pause") && (
+                {!(campaign.approval_status === "rejected" || campaign.status === "rejected") && (
+                  <>
+                    {canShowCampaignButton(campaign, "pause") && (
                   <button
                     onClick={() => {
                       handleCampaignDetailAction({
@@ -1131,6 +1127,8 @@ export default function CampaignDetailsPage() {
                     <XCircle className="w-4 h-4 mr-3" />
                     Reject Campaign
                   </button>
+                )}
+                  </>
                 )}
 
                 {/* Delete - Always available */}
@@ -1238,6 +1236,7 @@ export default function CampaignDetailsPage() {
                     Delete Campaign
                   </button>
                 </PermissionGate>
+
               </div>
             )}
           </div>
@@ -1375,26 +1374,17 @@ export default function CampaignDetailsPage() {
               Status
             </label>
             <div className="flex items-center flex-wrap gap-2">
-              {campaign.status && (
-                <span
-                  className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-white ${getStatusBadge(
-                    campaign.status,
-                  ).replace(/text-\S+/, "")}`}
-                  style={{
-                    backgroundColor:
-                      campaign.status === "active" ||
-                      campaign.status === "approved"
-                        ? "#10B981"
-                        : campaign.status === "draft"
-                          ? "#6B7280"
-                          : campaign.status === "paused"
-                            ? "#F59E0B"
-                            : "#EF4444",
-                  }}
-                >
-                  {campaign.status?.replace(/_/g, " ")}
-                </span>
-              )}
+              {campaign.status && (() => {
+                const { className, style } = getStatusBadgeConfig(campaign.status, "workflow");
+                return (
+                  <span
+                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${className}`}
+                    style={style}
+                  >
+                    {campaign.status?.replace(/_/g, " ")}
+                  </span>
+                );
+              })()}
             </div>
           </div>
           <div>
@@ -1402,27 +1392,17 @@ export default function CampaignDetailsPage() {
               Approval Status
             </label>
             <div className="flex items-center flex-wrap gap-2">
-              {campaign.approval_status && (
-                <span
-                  className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-white`}
-                  style={{
-                    backgroundColor:
-                      campaign.approval_status === "approved"
-                        ? "#10B981"
-                        : campaign.approval_status === "rejected"
-                          ? "#EF4444"
-                          : "#F59E0B",
-                  }}
-                >
-                  {campaign.approval_status === "rejected" && (
-                    <XCircle className="w-3 h-3 mr-1" />
-                  )}
-                  {campaign.approval_status === "pending" && (
-                    <Clock className="w-3 h-3 mr-1" />
-                  )}
-                  {campaign.approval_status?.replace(/_/g, " ")}
-                </span>
-              )}
+              {campaign.approval_status && (() => {
+                const { className, style } = getStatusBadgeConfig(campaign.approval_status, "approval");
+                return (
+                  <span
+                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${className}`}
+                    style={style}
+                  >
+                    {campaign.approval_status?.replace(/_/g, " ")}
+                  </span>
+                );
+              })()}
             </div>
           </div>
           <div>
@@ -1749,7 +1729,7 @@ export default function CampaignDetailsPage() {
                     campaign.approval_status?.toLowerCase() !==
                       campaign.status?.toLowerCase()) && (
                     <span
-                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getWorkflowStatusColor(
                         campaign.status,
                       )}`}
                     >
@@ -1758,9 +1738,8 @@ export default function CampaignDetailsPage() {
                   )}
                 {campaign.approval_status && (
                   <span
-                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getApprovalBadge(
-                      campaign.approval_status,
-                    )}`}
+                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium`}
+                    style={getStatusStyle(campaign.approval_status, "approval")}
                   >
                     {campaign.approval_status === "approved" && (
                       <CheckCircle className="w-3 h-3 mr-1" />

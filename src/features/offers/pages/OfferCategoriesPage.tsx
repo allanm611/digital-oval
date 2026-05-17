@@ -28,6 +28,7 @@ import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal
 // import BackButton from "../../../shared/components/ui/BackButton";
 import { offerService } from "../services/offerService";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
+import NumberFormatter from "../../../shared/components/NumberFormatter";
 import {
   OfferCategoryType,
   CreateOfferCategoryRequest,
@@ -895,21 +896,38 @@ function OfferCategoriesPage() {
     if (!categoryToDelete) return;
 
     setIsDeleting(true);
-    try {
-      await offerCategoryService.deleteCategory(categoryToDelete.id);
+    const categoryId = categoryToDelete.id;
+    const categoryIsActive = categoryToDelete.isActive;
+    const previousCategories = offerCategories;
 
-      // Refresh from server to ensure cache is cleared
-      await loadAllOffers();
-      await loadCategories(true); // skipCache = true
-      await loadStats(); // Refresh stats too
+    try {
+      // Optimistic update: remove category from list immediately
+      setOfferCategories((prev) => prev.filter((cat) => cat.id !== categoryId));
+
+      await offerCategoryService.deleteCategory(categoryId);
 
       success(t.offerCatalogs.deleteSuccess, t.offerCatalogs.deleteSuccess);
+
+      // Update stats optimistically
+      setStats((prev) => ({
+        ...prev,
+        totalCategories: Math.max(0, prev.totalCategories - 1),
+        activeCategories: categoryIsActive
+          ? Math.max(0, prev.activeCategories - 1)
+          : prev.activeCategories,
+        inactiveCategories: !categoryIsActive
+          ? Math.max(0, prev.inactiveCategories - 1)
+          : prev.inactiveCategories,
+      }));
+
       setShowDeleteModal(false);
       setCategoryToDelete(null);
     } catch (err) {
       console.error("Error deleting category:", err);
       const errorMsg = extractBackendError(err, "Failed to delete category");
       showError(errorMsg, "", true);
+      // Revert optimistic update on error
+      setOfferCategories(previousCategories);
     } finally {
       setIsDeleting(false);
     }
@@ -973,31 +991,29 @@ function OfferCategoriesPage() {
       return dateB - dateA;
     });
 
-  const formatNumber = (value?: number | null) =>
-    typeof value === "number" ? value.toLocaleString() : "...";
 
   const catalogStatsCards = [
     {
       name: t.offerCatalogs.totalCatalogs,
-      value: formatNumber(stats?.totalCategories),
+      value: stats?.totalCategories,
       icon: FolderOpen,
       color: color.tertiary.tag1,
     },
     {
       name: t.offerCatalogs.activeCatalogs,
-      value: formatNumber(stats?.activeCategories),
+      value: stats?.activeCategories,
       icon: CheckCircle,
       color: color.tertiary.tag4,
     },
     {
       name: t.offerCatalogs.inactiveCatalogs,
-      value: formatNumber(stats?.inactiveCategories),
+      value: stats?.inactiveCategories,
       icon: XCircle,
       color: color.tertiary.tag3,
     },
     {
       name: "Unused Categories",
-      value: formatNumber(unusedCount),
+      value: unusedCount,
       icon: Archive,
       color: color.tertiary.tag2,
     },
@@ -1006,7 +1022,7 @@ function OfferCategoriesPage() {
       value: popularCategory?.name || "None",
       icon: Star,
       color: color.primary.accent,
-      description: `${formatNumber(popularCategory?.count ?? 0)} offers`,
+      description: `${(popularCategory?.count ?? 0)} offers`,
       title: popularCategory?.name || undefined,
       valueClass: "text-xl",
     },
@@ -1047,7 +1063,8 @@ function OfferCategoriesPage() {
           {catalogStatsCards.map((stat) => {
             const Icon = stat.icon;
             const valueClass = stat.valueClass ?? "text-3xl";
-            const displayValue = stat.value ?? "...";
+            const isNumeric = typeof stat.value === "number";
+            const displayValue = isNumeric ? <NumberFormatter value={stat.value} /> : (stat.value ?? "...");
 
             return (
               <div

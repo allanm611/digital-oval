@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Edit, Trash2, Plus, Loader2, Power, PowerOff } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
-import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Pagination from "../../../shared/components/ui/Pagination";
@@ -131,12 +130,6 @@ export default function TeamRolesPage() {
 
   return (
     <div className="space-y-6">
-      <BackButton
-        fallbackTo="/dashboard/configuration"
-        showBreadcrumb={true}
-        currentLabel="Roles"
-      />
-
       <div className="flex items-center justify-between gap-4">
         <p className={`text-sm ${tw.textSecondary}`}>
           Define and manage team roles and role assignments

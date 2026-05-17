@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { X } from "lucide-react";
+import BackButton from "../../../shared/components/ui/BackButton";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import {
   Plug,
@@ -239,14 +240,20 @@ export default function DataConnectors() {
   };
 
   return (
-    <div className="">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
+          <BackButton
+            fallbackTo="/dashboard/administration"
+            showBreadcrumb={true}
+            parentLabel="Admin Hub"
+            currentLabel="Data Connectors"
+          />
+          {/* <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
             Data Connectors
-          </h1>
-          <p className={`${tw.textSecondary} mt-2 text-sm`}>
+          </h1> */}
+          <p className={`${tw.textSecondary} mt-6 text-sm`}>
             Manage connector configurations and monitor integration health.
           </p>
         </div>

@@ -735,6 +735,9 @@ export interface CampaignDisplay {
   approval_status?: string;
   code?: string;
   created_at?: string;
+  updated_at?: string;
+  created_by?: number | null;
+  updated_by?: number | null;
   offer_count?: number;
   segment_count?: number;
   offers?: Array<{

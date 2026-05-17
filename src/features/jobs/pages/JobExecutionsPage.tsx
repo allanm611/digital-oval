@@ -19,11 +19,13 @@ import {
   Square,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
 import Input from "../../../shared/components/ui/Input";
+import DateFormatter from "../../../shared/components/DateFormatter";
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -58,15 +60,6 @@ const formatDuration = (seconds: number | null) => {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   return `${hours}h ${minutes}m`;
-};
-
-const formatDateTime = (value?: string | null) => {
-  if (!value) return "—";
-  try {
-    return new Date(value).toLocaleString();
-  } catch {
-    return value;
-  }
 };
 
 export default function JobExecutionsPage() {
@@ -529,22 +522,29 @@ export default function JobExecutionsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-            {((
-              (t as unknown as Record<string, unknown>)?.jobs as Record<
-                string,
-                unknown
-              >
-            )?.jobExecutions as string) || "Job Executions"}
-          </h1>
-          <p className={`${tw.textSecondary} mt-2 text-sm`}>
-            Monitor and track all job execution records
-          </p>
-        </div>
-        <div className="flex gap-3">
+    <>
+      <div className="space-y-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <BackButton
+              fallbackTo="/dashboard/administration"
+              showBreadcrumb={true}
+              parentLabel="Admin Hub"
+              currentLabel="Job Executions"
+            />
+            {/* <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
+              {((
+                (t as unknown as Record<string, unknown>)?.jobs as Record<
+                  string,
+                  unknown
+                >
+              )?.jobExecutions as string) || "Job Executions"}
+            </h1> */}
+            <p className={`${tw.textSecondary} mt-6 text-sm`}>
+              Monitor and track all job execution records
+            </p>
+          </div>
+          <div className="flex gap-3">
           <button
             onClick={() => navigate("/dashboard/job-executions/analytics")}
             className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
@@ -1179,7 +1179,7 @@ export default function JobExecutionsPage() {
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       <div className={`text-sm ${tw.textSecondary}`}>
-                        {formatDateTime(execution.started_at)}
+                        <DateFormatter date={execution.started_at} />
                       </div>
                     </td>
                     <td
@@ -1331,5 +1331,6 @@ export default function JobExecutionsPage() {
         </div>
       )}
     </div>
+    </>
   );
 }

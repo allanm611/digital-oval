@@ -7,7 +7,7 @@ export interface PushNotificationRoute {
   id: number;
   name: string;
   description?: string;
-  gateway_provider?: PushGatewayEnum;
+  gateway_config_id: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -18,13 +18,13 @@ export interface PushNotificationRoute {
 export interface CreatePushNotificationRouteRequest {
   name: string;
   description?: string;
-  gateway_provider?: PushGatewayEnum;
+  gateway_config_id: number;
   is_active?: boolean;
 }
 
 export interface UpdatePushNotificationRouteRequest {
   name?: string;
   description?: string;
-  gateway_provider?: PushGatewayEnum;
+  gateway_config_id?: number;
   is_active?: boolean;
 }

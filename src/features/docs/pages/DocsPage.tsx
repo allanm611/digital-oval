@@ -4,22 +4,20 @@
  * Serves docs from /documentation/* routes
  */
 
-import React, { useMemo, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { Link as LinkIcon } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { PermissionGate } from '../../auth/components/PermissionGate';
 import { useDocumentation } from '../hooks/useDocumentation';
-import { useDocsVersion } from '../contexts/DocsVersionContext';
 import { DocsLayout } from '../components/DocsLayout';
 import { DocsSidebar } from '../components/DocsSidebar';
 import { DocsTOC } from '../components/DocsTOC';
 import { DocsHeader } from '../components/DocsHeader';
 import { DocsBreadcrumb } from '../components/DocsBreadcrumb';
 import { DocsNavigation } from '../components/DocsNavigation';
-import { convertDocusaurusSidebar } from '../utils/sidebarConverter';
-import { getSidebar } from '../services/sidebarService';
+import { getSidebar, SidebarItem } from '../services/sidebarService';
 import styles from './DocsPage.module.css';
 
 
@@ -27,26 +25,42 @@ export function DocsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { activeVersion } = useDocsVersion();
+  const [sidebarItems, setSidebarItems] = useState<SidebarItem[]>([]);
+  const [sidebarLoading, setSidebarLoading] = useState(true);
+  const [sidebarError, setSidebarError] = useState<string | null>(null);
 
-  // Extract slug from URL path (e.g., /documentation/authentication/login → authentication/login)
-  const slug = location.pathname.replace(/^\/documentation\/?/, '') || 'intro';
+  // Extract document slug from URL path (last segment)
+  // e.g., /documentation/authentication/login → login
+  const pathSegments = location.pathname.replace(/^\/documentation\/?/, '').split('/').filter(Boolean);
+  const slug = pathSegments[pathSegments.length - 1] || 'intro';
 
   // Scroll to top when navigation slug changes
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [slug]);
 
-  // Convert Docusaurus sidebar config to React component format
-  const SIDEBAR_ITEMS = useMemo(() => {
-    const sidebarConfig = getSidebar(activeVersion);
-    if (sidebarConfig) {
-      return convertDocusaurusSidebar(sidebarConfig);
-    }
-    return [];
-  }, [activeVersion]);
+  // Load sidebar from API
+  useEffect(() => {
+    const loadSidebar = async () => {
+      try {
+        setSidebarLoading(true);
+        setSidebarError(null);
+        const items = await getSidebar();
+        setSidebarItems(items);
+      } catch (error) {
+        setSidebarError(
+          error instanceof Error ? error.message : 'Failed to load sidebar'
+        );
+        setSidebarItems([]);
+      } finally {
+        setSidebarLoading(false);
+      }
+    };
 
-  const { content, isLoading, error } = useDocumentation(slug, activeVersion);
+    loadSidebar();
+  }, []);
+
+  const { content, isLoading, error } = useDocumentation(slug);
 
   // Redirect to login if not authenticated
   if (!user) {
@@ -69,7 +83,7 @@ export function DocsPage() {
   if (error) {
     return (
       <DocsLayout
-        sidebar={<DocsSidebar items={SIDEBAR_ITEMS} />}
+        sidebar={<DocsSidebar items={sidebarItems} />}
         header={<DocsHeader />}
       >
         <div className={styles.error}>
@@ -86,10 +100,10 @@ export function DocsPage() {
     );
   }
 
-  if (!content) {
+  if (!content || isLoading) {
     return (
       <DocsLayout
-        sidebar={<DocsSidebar items={SIDEBAR_ITEMS} />}
+        sidebar={<DocsSidebar items={sidebarItems} />}
         header={<DocsHeader />}
       >
         <div className={styles.loading}>
@@ -118,13 +132,13 @@ export function DocsPage() {
 
   return (
     <DocsLayout
-      sidebar={<DocsSidebar items={SIDEBAR_ITEMS} />}
+      sidebar={<DocsSidebar items={sidebarItems} />}
       toc={<DocsTOC content={content} />}
       header={<DocsHeader />}
     >
       <article className={styles.article}>
         <div className={styles.breadcrumbRow}>
-          <DocsBreadcrumb sidebarItems={SIDEBAR_ITEMS} />
+          <DocsBreadcrumb sidebarItems={sidebarItems} />
           <div className={styles.actions}>
             {slug === 'authentication/login' && (
               <PermissionGate permission="docs.create">
@@ -195,7 +209,7 @@ export function DocsPage() {
           </ReactMarkdown>
         </div>
 
-        <DocsNavigation sidebarItems={SIDEBAR_ITEMS} currentSlug={slug} />
+        <DocsNavigation sidebarItems={sidebarItems} currentSlug={slug} />
       </article>
     </DocsLayout>
   );

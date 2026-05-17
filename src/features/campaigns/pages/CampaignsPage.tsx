@@ -1,3 +1,4 @@
+import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Input from '../../../shared/components/ui/Input';
 import SearchInput from '../../../shared/components/ui/SearchInput';
@@ -24,6 +25,8 @@ import {
   AlertCircle,
   BarChart3,
   Copy,
+  Settings,
+  ChevronDown,
 } from "lucide-react";
 import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -31,7 +34,12 @@ import CreateButton from "../../../shared/components/ui/CreateButton";
 import Pagination from "../../../shared/components/ui/Pagination";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { campaignService } from "../services/campaignService";
+import { campaignFlowService } from "../services/campaignFlowService";
 import { useClickOutside } from "../../../shared/hooks/useClickOutside";
+import { useDynamicColumns } from "../../../shared/hooks/useDynamicColumns";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
+import DateFormatter from "../../../shared/components/DateFormatter";
+import { getUserDisplayName, getUserDisplayNames } from "../../../shared/utils/userNameCache";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import {
   canShowCampaignButton,
@@ -44,6 +52,7 @@ import ApproveCampaignModal from "../components/ApproveCampaignModal";
 import RejectCampaignModal from "../components/RejectCampaignModal";
 import CampaignOffersModal from "../components/CampaignOffersModal";
 import CampaignSegmentsModal from "../components/CampaignSegmentsModal";
+import CampaignDetailsExpandedRow from "../components/CampaignDetailsExpandedRow";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import {
   CampaignApprovalStatus,
@@ -136,18 +145,153 @@ export default function CampaignsPage() {
   const [showSegmentsModal, setShowSegmentsModal] = useState(false);
   const [selectedCampaignForModal, setSelectedCampaignForModal] =
     useState<CampaignDisplay | null>(null);
+  const [userNamesCache, setUserNamesCache] = useState<Map<number, string>>(
+    new Map(),
+  );
+  const [expandedCampaignId, setExpandedCampaignId] = useState<number | null>(
+    null,
+  );
+  const [isLoadingModalData, setIsLoadingModalData] = useState(false);
+
+  // Dynamic columns hook
+  const defaultColumns = [
+    { id: "name", label: "Campaign Name", visible: true },
+    { id: "category", label: "Category", visible: true },
+    { id: "status", label: "Status", visible: true },
+    { id: "offers", label: "Offers", visible: true },
+    { id: "segments", label: "Segments", visible: true },
+    { id: "performance", label: "Performance", visible: true },
+    { id: "created_by", label: "Created By", visible: false },
+    { id: "created_on", label: "Created On", visible: false },
+    { id: "updated_by", label: "Last Updated By", visible: false },
+    { id: "updated_on", label: "Last Updated On", visible: false },
+    { id: "actions", label: "Actions", visible: true },
+  ];
+
+  const {
+    allColumns,
+    isModalOpen,
+    setIsModalOpen,
+    toggleColumn,
+    reorderColumns,
+    resetToDefaults,
+    getVisibleColumns,
+  } = useDynamicColumns({
+    tableId: "campaigns-table",
+    defaultColumns,
+  });
 
   // Helper function to update a single campaign in the list
   const updateCampaignInList = (
     campaignId: number,
-    updates: Partial<CampaignDisplay>,
+    updates: Partial<CampaignDisplay> | Partial<Campaign>,
   ) => {
+    const typedUpdates = updates as Partial<CampaignDisplay>;
     setCampaigns((prev) =>
-      prev.map((c) => (c.id === campaignId ? { ...c, ...updates } : c)),
+      prev.map((c) => (c.id === campaignId ? { ...c, ...typedUpdates } : c)),
     );
     setAllCampaignsUnfiltered((prev) =>
-      prev.map((c) => (c.id === campaignId ? { ...c, ...updates } : c)),
+      prev.map((c) => (c.id === campaignId ? { ...c, ...typedUpdates } : c)),
     );
+  };
+
+  // Helper function to render column content
+  const renderColumnContent = (colId: string, campaign: CampaignDisplay) => {
+    switch (colId) {
+      case "name":
+        return (
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() =>
+                setExpandedCampaignId(
+                  expandedCampaignId === campaign.id ? null : campaign.id,
+                )
+              }
+              className="flex items-center gap-2 text-left"
+            >
+              <div
+                className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`}
+                title={campaign.name}
+              >
+                {campaign.name}
+              </div>
+              <ChevronDown
+                size={16}
+                className={`flex-shrink-0 transition-transform ${
+                  expandedCampaignId === campaign.id ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+          </div>
+        );
+      case "category":
+        return (
+          <span className={`text-sm ${tw.textPrimary}`}>
+            {campaign.category_id
+              ? categoryMap[campaign.category_id] || "Uncategorized"
+              : "Uncategorized"}
+          </span>
+        );
+      case "status":
+        return (
+          <span
+            className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(
+              campaign.status,
+            )}`}
+          >
+            {campaign.status?.replace(/_/g, " ") || "Unknown"}
+          </span>
+        );
+      case "offers":
+        return (
+          <span className={`text-sm ${tw.textPrimary} font-medium`}>
+            {campaign.offer_count ?? 0}
+          </span>
+        );
+      case "segments":
+        return (
+          <span className={`text-sm ${tw.textPrimary} font-medium`}>
+            {campaign.segment_count ?? 0}
+          </span>
+        );
+      case "performance":
+        return (
+          <div className="flex flex-col gap-1">
+            <span className={`text-sm ${tw.textPrimary}`}>
+              Conversion: <span className="font-medium">0%</span>
+            </span>
+            <span className={`text-sm ${tw.textPrimary}`}>
+              Revenue: <span className="font-medium">0</span>
+            </span>
+          </div>
+        );
+      case "created_by":
+        return (
+          <span className={`text-sm ${tw.textPrimary}`}>
+            {campaign.created_by ? userNamesCache.get(campaign.created_by) || "—" : "—"}
+          </span>
+        );
+      case "created_on":
+        return campaign.created_at ? (
+          <DateFormatter date={campaign.created_at} className="text-sm" />
+        ) : (
+          <span className={`text-sm ${tw.textMuted}`}>—</span>
+        );
+      case "updated_by":
+        return (
+          <span className={`text-sm ${tw.textPrimary}`}>
+            {campaign.updated_by ? userNamesCache.get(campaign.updated_by) || "—" : "—"}
+          </span>
+        );
+      case "updated_on":
+        return campaign.updated_at ? (
+          <DateFormatter date={campaign.updated_at} className="text-sm" />
+        ) : (
+          <span className={`text-sm ${tw.textMuted}`}>—</span>
+        );
+      default:
+        return null;
+    }
   };
 
   const handleAction = (params: CampaignActionParams) =>
@@ -871,6 +1015,19 @@ export default function CampaignsPage() {
 
   const filteredCampaigns = campaigns;
 
+  // Batch fetch user names for created_by and updated_by columns
+  useEffect(() => {
+    const userIds = filteredCampaigns
+      .flatMap((c) => [c.created_by, c.updated_by])
+      .filter((id): id is number => Boolean(id));
+
+    if (userIds.length > 0) {
+      getUserDisplayNames(userIds).then((names) => {
+        setUserNamesCache(names);
+      });
+    }
+  }, [filteredCampaigns]);
+
   // Calculate total pages
   const totalPages = Math.ceil(totalCampaigns / pageSize);
 
@@ -1003,6 +1160,23 @@ export default function CampaignsPage() {
           <Filter className="h-4 w-4" />
           <span>Filters</span>
         </button>
+
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className={`flex items-center gap-2 ${tw.rounded} transition-colors font-medium`}
+          style={{
+            backgroundColor: button.secondaryAction.background,
+            color: button.secondaryAction.color,
+            border: button.secondaryAction.border,
+            padding: `${button.secondaryAction.paddingY} ${button.secondaryAction.paddingX}`,
+            borderRadius: button.secondaryAction.borderRadius,
+            fontSize: button.secondaryAction.fontSize,
+          }}
+          title="Customize columns"
+        >
+          <Settings className="h-4 w-4" />
+          <span>Columns</span>
+        </button>
       </div>
 
       <div
@@ -1028,225 +1202,132 @@ export default function CampaignsPage() {
             >
               <thead style={{ background: color.surface.tableHeader }}>
                 <tr>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Campaign name
-                  </th>
-                  {/* <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Objective
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Description
-                  </th> */}
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Category
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Status
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Offers
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Segments
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Performance
-                  </th>
-                  <th
-                    className="px-6 py-4 text-center text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Actions
-                  </th>
+                  {getVisibleColumns().map((col) => (
+                    <th
+                      key={col.id}
+                      className={`px-6 py-4 text-left text-sm font-medium uppercase tracking-wider whitespace-nowrap ${
+                        col.id === "actions" ? "text-center" : ""
+                      }`}
+                      style={{ color: color.surface.tableHeaderText }}
+                    >
+                      {col.label}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 {filteredCampaigns.map((campaign) => (
-                  <tr key={campaign.id} className="transition-colors">
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className="flex flex-col gap-2">
-                        <div
-                          className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`}
-                          title={campaign.name}
-                        >
-                          {campaign.name}
-                        </div>
-                        {/* Status icons - to be enabled when backend provides data fields */}
-                        {/* <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4" style={{ color: color.primary.accent }} title="Scheduled" />
-                          <Send className="w-4 h-4" style={{ color: color.primary.accent }} title="Broadcasts" />
-                          <AlertCircle className="w-4 h-4" style={{ color: color.primary.accent }} title="Failed" />
-                        </div> */}
-                      </div>
-                    </td>
-                    {/* <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span
-                        className={`text-sm ${tw.textPrimary} block truncate max-w-[200px] sm:max-w-none`}
-                        title={campaign.objective}
-                      >
-                        {campaign.objective}
-                      </span>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {campaign.description ? (
-                        <span
-                          className={`text-sm ${tw.textSecondary} truncate block`}
-                          title={campaign.description}
-                        >
-                          {campaign.description}
-                        </span>
-                      ) : (
-                        <span className={`text-sm ${tw.textMuted}`}>
-                          No description
-                        </span>
-                      )}
-                    </td> */}
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span className={`text-sm ${tw.textPrimary}`}>
-                        {campaign.category_id
-                          ? categoryMap[campaign.category_id] || "Uncategorized"
-                          : "Uncategorized"}
-                      </span>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(
-                          campaign.status,
-                        )}`}
-                      >
-                        {campaign.status?.replace(/_/g, " ") || "Unknown"}
-                      </span>
-                    </td>
-                    <td
-                      className="px-6 py-4 cursor-pointer"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                      onClick={() => {
-                        // Check if offers is an array before opening modal
-                        if (Array.isArray(campaign.offers) && campaign.offers.length > 0) {
-                          setSelectedCampaignForModal(campaign);
-                          setShowOffersModal(true);
-                        }
-                      }}
-                    >
-                      <span className={`text-sm ${tw.textPrimary} font-medium`}>
-                        {campaign.offer_count ?? 0}
-                      </span>
-                    </td>
-                    <td
-                      className="px-6 py-4 cursor-pointer"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                      onClick={() => {
-                        // Check if segments is an array before opening modal
-                        if (Array.isArray(campaign.segments) && campaign.segments.length > 0) {
-                          setSelectedCampaignForModal(campaign);
-                          setShowSegmentsModal(true);
-                        }
-                      }}
-                    >
-                      <span className={`text-sm ${tw.textPrimary} font-medium`}>
-                        {campaign.segment_count ?? 0}
-                      </span>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className="flex flex-col gap-1">
-                        <span className={`text-sm ${tw.textPrimary}`}>
-                          Conversion: <span className="font-medium">0%</span>
-                        </span>
-                        <span className={`text-sm ${tw.textPrimary}`}>
-                          Revenue: <span className="font-medium">0</span>
-                        </span>
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className="flex items-center justify-center space-x-2">
-                        <button
-                          onClick={() =>
-                            navigate(`/dashboard/campaigns/${campaign.id}`)
-                          }
-                          className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.action}]/10 transition-all duration-300`}
-                          title="View Details"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <PermissionGate permission="campaigns.update">
-                          <button
-                            onClick={() =>
-                              navigate(
-                                `/dashboard/campaigns/${campaign.id}/edit`,
-                                {
-                                  state: { campaign: campaign },
-                                },
-                              )
+                  <React.Fragment key={campaign.id}>
+                    <tr className="transition-colors">
+                      {getVisibleColumns().map((col) => (
+                        <td
+                          key={col.id}
+                          className={`px-6 py-4 ${
+                            col.id === "offers" || col.id === "segments"
+                              ? "cursor-pointer"
+                              : ""
+                          }`}
+                          style={{ backgroundColor: color.surface.tablebodybg }}
+                          onClick={async () => {
+                            if (col.id === "offers" && campaign.offer_count > 0) {
+                              if (Array.isArray(campaign.offers) && campaign.offers.length > 0) {
+                                setSelectedCampaignForModal(campaign);
+                                setShowOffersModal(true);
+                              } else {
+                                setIsLoadingModalData(true);
+                                try {
+                                  const response = await campaignFlowService.getCampaignOffers(campaign.id, true);
+                                  const updatedCampaign = { ...campaign, offers: response.data };
+                                  setSelectedCampaignForModal(updatedCampaign);
+                                  setShowOffersModal(true);
+                                } catch (error) {
+                                  console.error("Failed to fetch campaign offers:", error);
+                                  showToast("error", "Failed to load offers");
+                                } finally {
+                                  setIsLoadingModalData(false);
+                                }
+                              }
+                            } else if (col.id === "segments" && campaign.segment_count > 0) {
+                              if (Array.isArray(campaign.segments) && campaign.segments.length > 0) {
+                                setSelectedCampaignForModal(campaign);
+                                setShowSegmentsModal(true);
+                              } else {
+                                setIsLoadingModalData(true);
+                                try {
+                                  const response = await campaignFlowService.getCampaignSegments(campaign.id, true);
+                                  const updatedCampaign = { ...campaign, segments: response.data };
+                                  setSelectedCampaignForModal(updatedCampaign);
+                                  setShowSegmentsModal(true);
+                                } catch (error) {
+                                  console.error("Failed to fetch campaign segments:", error);
+                                  showToast("error", "Failed to load segments");
+                                } finally {
+                                  setIsLoadingModalData(false);
+                                }
+                              }
                             }
-                            className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-all duration-300`}
-                            title="Edit"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                        </PermissionGate>
-                        <div
-                          className="relative"
-                          ref={(el) => {
-                            actionMenuRefs.current[campaign.id] = el;
                           }}
                         >
-                          <button
-                            onClick={(e) =>
-                              handleActionMenuToggle(campaign.id, e)
-                            }
-                            className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.action}]/10 transition-all duration-300`}
-                          >
-                            <MoreHorizontal className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
+                          {col.id === "actions" ? (
+                            <div className="flex items-center justify-center space-x-2">
+                              <button
+                                onClick={() =>
+                                  navigate(`/dashboard/campaigns/${campaign.id}`)
+                                }
+                                className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.action}]/10 transition-all duration-300`}
+                                title="View Details"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+                              <PermissionGate permission="campaigns.update">
+                                <button
+                                  onClick={() => {
+                                    const isRejected = campaign.approval_status === "rejected" || campaign.status === "rejected";
+                                    navigate(
+                                      `/dashboard/campaigns/${campaign.id}/edit`,
+                                      {
+                                        state: {
+                                          campaign: campaign,
+                                          isResubmit: isRejected,
+                                        },
+                                      },
+                                    );
+                                  }}
+                                  className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-all duration-300`}
+                                  title={campaign.approval_status === "rejected" || campaign.status === "rejected" ? "Edit & Resubmit" : "Edit"}
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </button>
+                              </PermissionGate>
+                              <div
+                                className="relative"
+                                ref={(el) => {
+                                  actionMenuRefs.current[campaign.id] = el;
+                                }}
+                              >
+                                <button
+                                  onClick={(e) =>
+                                    handleActionMenuToggle(campaign.id, e)
+                                  }
+                                  className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.action}]/10 transition-all duration-300`}
+                                >
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            renderColumnContent(col.id, campaign)
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                    {expandedCampaignId === campaign.id && (
+                      <CampaignDetailsExpandedRow
+                        campaign={campaign}
+                        colSpan={getVisibleColumns().length}
+                      />
+                    )}
+                  </React.Fragment>
                 ))}
 
                 {/* Render dropdown menus via portal outside the table */}
@@ -1271,33 +1352,34 @@ export default function CampaignsPage() {
                         onClick={(e) => e.stopPropagation()}
                         onMouseDown={(e) => e.stopPropagation()}
                       >
-                        <PermissionGate permission="campaigns.run">
-                          {campaign.approval_status === "approved" &&
-                          campaign.is_active === true ? (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setCampaignToRun({
-                                  id: campaign.id,
-                                  name: campaign.name,
-                                  status: campaign.status,
-                                  approval_status: campaign.approval_status,
-                                  is_active: campaign.is_active,
-                                });
-                                setShowRunModal(true);
-                                setShowActionMenu(null);
-                              }}
-                              className="w-full flex items-center px-4 py-3 text-sm text-black"
-                            >
-                              <Play className="w-4 h-4 mr-4 text-black" />
-                              Run Campaign
-                            </button>
-                          ) : null}
-                        </PermissionGate>
+                        {!(campaign.approval_status === "rejected" || campaign.status === "rejected") && (
+                          <>
+                            <PermissionGate permission="campaigns.run">
+                              {campaign.approval_status === "approved" &&
+                              campaign.is_active === true ? (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCampaignToRun({
+                                      id: campaign.id,
+                                      name: campaign.name,
+                                      status: campaign.status,
+                                      approval_status: campaign.approval_status,
+                                      is_active: campaign.is_active,
+                                    });
+                                    setShowRunModal(true);
+                                    setShowActionMenu(null);
+                                  }}
+                                  className="w-full flex items-center px-4 py-3 text-sm text-black"
+                                >
+                                  <Play className="w-4 h-4 mr-4 text-black" />
+                                  Run Campaign
+                                </button>
+                              ) : null}
+                            </PermissionGate>
 
-                        {/* Pause Campaign Button */}
-                        {canShowCampaignButton(campaign, "pause") && (
-                          <button
+                            {canShowCampaignButton(campaign, "pause") && (
+                            <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleAction({
@@ -1324,9 +1406,8 @@ export default function CampaignsPage() {
                               )}
                               Pause Campaign
                             </button>
-                        )}
+                          )}
 
-                        {/* Resume Campaign Button */}
                         {canShowCampaignButton(campaign, "resume") && (
                           <button
                               onClick={(e) => {
@@ -1510,21 +1591,8 @@ export default function CampaignsPage() {
                             </button>
                           </PermissionGate>
                         )}
-
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(
-                              `/dashboard/campaigns/${campaign.id}/edit`,
-                              { state: { campaign: campaign } },
-                            );
-                            setShowActionMenu(null);
-                          }}
-                          className="w-full flex items-center px-4 py-3 text-sm text-black"
-                        >
-                          <Edit className="w-4 h-4 mr-4 text-black" />
-                          Edit Campaign
-                        </button>
+                          </>
+                        )}
 
                         {campaign.status === "archived" ? (
                           <button
@@ -1550,32 +1618,12 @@ export default function CampaignsPage() {
                           </button>
                         )}
 
-                        {/* <button
+                      <PermissionGate permission="campaigns.create">
+                        <button
                           onClick={(e) => {
                             e.stopPropagation();
+                            navigate(`/dashboard/campaigns/create?duplicateId=${campaign.id}`);
                             setShowActionMenu(null);
-                            showToast(
-                              "info",
-                              "Can't access this functionality"
-                            );
-                          }}
-                          className="w-full flex items-center px-4 py-3 text-sm text-black"
-                        >
-                          <History
-                            className="w-4 h-4 mr-4"
-                            style={{ color: color.primary.action }}
-                          />
-                          Lifecycle History
-                        </button> */}
-
-                        {/* <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowActionMenu(null);
-                            showToast(
-                              "info",
-                              "Can't access this functionality"
-                            );
                           }}
                           className="w-full flex items-center px-4 py-3 text-sm text-black"
                         >
@@ -1583,39 +1631,23 @@ export default function CampaignsPage() {
                             className="w-4 h-4 mr-4"
                             style={{ color: color.primary.action }}
                           />
-                          Clone Campaign
-                        </button> */}
+                          Duplicate Campaign
+                        </button>
+                      </PermissionGate>
 
-                        {/* Duplicate Campaign Button */}
-                        <PermissionGate permission="campaigns.create">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/dashboard/campaigns/create?duplicateId=${campaign.id}`);
-                              setShowActionMenu(null);
-                            }}
-                            className="w-full flex items-center px-4 py-3 text-sm text-black"
-                          >
-                            <Copy
-                              className="w-4 h-4 mr-4"
-                              style={{ color: color.primary.action }}
-                            />
-                            Duplicate Campaign
-                          </button>
-                        </PermissionGate>
+                      <PermissionGate permission="campaigns.delete">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteCampaign(campaign.id, campaign.name);
+                          }}
+                          className="w-full flex items-center px-4 py-3 text-sm text-red-600"
+                        >
+                          <Trash2 className="w-4 h-4 mr-4 text-red-600" />
+                          Delete Campaign
+                        </button>
+                      </PermissionGate>
 
-                        <PermissionGate permission="campaigns.delete">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteCampaign(campaign.id, campaign.name);
-                            }}
-                            className="w-full flex items-center px-4 py-3 text-sm text-red-600"
-                          >
-                            <Trash2 className="w-4 h-4 mr-4 text-red-600" />
-                            Delete Campaign
-                          </button>
-                        </PermissionGate>
                       </div>,
                       document.body,
                     );
@@ -1965,6 +1997,16 @@ export default function CampaignsPage() {
           campaignName={selectedCampaignForModal.name}
         />
       )}
+
+      {/* Column Picker Modal */}
+      <ColumnPickerModal
+        isOpen={isModalOpen}
+        columns={allColumns}
+        onClose={() => setIsModalOpen(false)}
+        onToggleColumn={toggleColumn}
+        onReorderColumns={reorderColumns}
+        onResetToDefaults={resetToDefaults}
+      />
     </div>
   );
 }

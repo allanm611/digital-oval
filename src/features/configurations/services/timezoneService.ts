@@ -1,7 +1,7 @@
 import { fetchWithAuthInterceptor } from "../../../shared/services/fetchInterceptor";
 import { API_CONFIG } from "../../../shared/services/api";
 import { ApiResponse } from "../../../shared/types/api";
-import { TimeZone, UpdateTimeZoneRequest } from "../types/timezone";
+import { TimeZone, UpdateTimeZoneRequest, CreateTimeZoneRequest } from "../types/timezone";
 
 class TimezoneService {
   private baseUrl = `${API_CONFIG.BASE_URL}/timezones`;
@@ -47,6 +47,19 @@ class TimezoneService {
     return {} as TimeZone;
   }
 
+  async createTimezone(
+    payload: CreateTimeZoneRequest
+  ): Promise<TimeZone> {
+    const data = await this.request<ApiResponse<TimeZone>>("", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    if (data && data.data) {
+      return data.data;
+    }
+    return {} as TimeZone;
+  }
+
   async updateTimezone(
     id: number,
     payload: UpdateTimeZoneRequest
@@ -59,6 +72,12 @@ class TimezoneService {
       return data.data;
     }
     return {} as TimeZone;
+  }
+
+  async deleteTimezone(id: number): Promise<void> {
+    await this.request<ApiResponse<null>>(`/${id}`, {
+      method: "DELETE",
+    });
   }
 }
 

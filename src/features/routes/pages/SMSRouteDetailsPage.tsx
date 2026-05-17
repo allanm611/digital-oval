@@ -5,6 +5,7 @@ import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { SMSRoute } from "../types/smsRoute";
 import { smsRouteService } from "../services/smsRouteService";
+import { smsGatewayConfigService } from "../../configurations/services/smsGatewayConfigService";
 import { useToast } from "../../../contexts/ToastContext";
 import { color, tw, button } from "../../../shared/utils/utils";
 
@@ -15,6 +16,7 @@ export default function SMSRouteDetailsPage() {
 
   const [loading, setLoading] = useState(true);
   const [route, setRoute] = useState<SMSRoute | null>(null);
+  const [gatewayConfig, setGatewayConfig] = useState<any>(null);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
@@ -29,6 +31,7 @@ export default function SMSRouteDetailsPage() {
       const data = await smsRouteService.getRouteById(Number(id));
       if (data) {
         setRoute(data);
+        loadGatewayConfig(data.gateway_config_id);
       } else {
         showError("Error", "SMS route not found");
         navigate("/dashboard/sms-routes");
@@ -38,6 +41,18 @@ export default function SMSRouteDetailsPage() {
       navigate("/dashboard/sms-routes");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadGatewayConfig = async (configId: number) => {
+    try {
+      const configs = await smsGatewayConfigService.getAllConfigs();
+      const config = configs.find(c => c.id === configId);
+      if (config) {
+        setGatewayConfig(config);
+      }
+    } catch (err) {
+      // Silent fail
     }
   };
 
@@ -172,17 +187,9 @@ export default function SMSRouteDetailsPage() {
               </div>
               <div className="space-y-1">
                 <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
-                  Gateway Provider
+                  Gateway Configuration ID
                 </label>
-                <p className={`text-base ${tw.textPrimary}`}>{route.gateway_provider || "—"}</p>
-              </div>
-              <div className="space-y-1">
-                <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
-                  Communication Channel
-                </label>
-                <p className={`text-base ${tw.textPrimary}`}>
-                  {route.communication_channel || "—"}
-                </p>
+                <p className={`text-base ${tw.textPrimary}`}>{route.gateway_config_id}</p>
               </div>
               <div className="space-y-1">
                 <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
@@ -190,6 +197,37 @@ export default function SMSRouteDetailsPage() {
                 </label>
                 <p className={`text-base ${tw.textPrimary} capitalize`}>{route.is_active ? "Active" : "Inactive"}</p>
               </div>
+            </div>
+          </div>
+
+          {/* Gateway Configuration Section */}
+          <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
+            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
+              Gateway Configuration
+            </h3>
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
+                  Configuration ID
+                </label>
+                <p className={`text-base ${tw.textPrimary}`}>{route.gateway_config_id}</p>
+              </div>
+              {gatewayConfig && (
+                <>
+                  <div className="space-y-1">
+                    <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
+                      Configuration Name
+                    </label>
+                    <p className={`text-base ${tw.textPrimary}`}>{gatewayConfig.name}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
+                      Provider Type
+                    </label>
+                    <p className={`text-base ${tw.textPrimary}`}>{gatewayConfig.provider_type}</p>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 

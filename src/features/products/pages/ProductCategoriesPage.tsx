@@ -30,6 +30,7 @@ import { productService } from "../services/productService";
 import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
+import NumberFormatter from "../../../shared/components/NumberFormatter";
 import {
   buildCatalogTag,
   parseCatalogTag,
@@ -429,10 +430,6 @@ export default function ProductCatalogsPage() {
     });
   };
 
-  const formatNumber = (value?: number | null) =>
-    typeof value === "number" && !Number.isNaN(value)
-      ? value.toLocaleString()
-      : "...";
 
   const loadCategoryProductCounts = async () => {
     try {
@@ -717,21 +714,35 @@ export default function ProductCatalogsPage() {
     if (!categoryToDelete) return;
 
     setIsDeleting(true);
+    const previousCategories = categories;
+    const previousStats = stats;
+
     try {
+      // Optimistic update: remove category from list immediately
+      setCategories((prev) => prev.filter((cat) => cat.id !== categoryToDelete.id));
+
       await productCategoryService.deleteCategory(categoryToDelete.id);
       success(t.productCatalogs.deleteSuccess, t.productCatalogs.deleteSuccess);
       setShowDeleteModal(false);
       setCategoryToDelete(null);
-      // Refresh categories and stats with cache skipped, and reload all products
-      await Promise.all([
-        loadCategories(true),
-        loadStats(true),
-        loadAllProducts(true),
-      ]);
-      // Refresh product counts after products are reloaded
-      await refreshCategoryProductCounts();
+
+      // Update stats optimistically
+      setStats((prev) => ({
+        ...prev,
+        totalCategories: Math.max(0, prev.totalCategories - 1),
+        activeCategories: categoryToDelete.isActive
+          ? Math.max(0, prev.activeCategories - 1)
+          : prev.activeCategories,
+        inactiveCategories: !categoryToDelete.isActive
+          ? Math.max(0, prev.inactiveCategories - 1)
+          : prev.inactiveCategories,
+      }));
     } catch (err) {
       console.error("Failed to delete category:", err);
+
+      // Revert optimistic updates on error
+      setCategories(previousCategories);
+      setStats(previousStats);
 
       // Extract actual error message from backend
       let errorMessage = "Please try again later.";
@@ -880,25 +891,25 @@ export default function ProductCatalogsPage() {
   const catalogStatsCards = [
     {
       name: t.productCatalogs.totalCatalogs,
-      value: formatNumber(totalCatalogs),
+      value: totalCatalogs,
       icon: FolderOpen,
       color: color.tertiary.tag1,
     },
     {
       name: t.productCatalogs.activeCatalogs,
-      value: formatNumber(activeCatalogs),
+      value: activeCatalogs,
       icon: CheckCircle,
       color: color.tertiary.tag4,
     },
     {
       name: t.productCatalogs.inactiveCatalogs,
-      value: formatNumber(inactiveCatalogs),
+      value: inactiveCatalogs,
       icon: XCircle,
       color: color.tertiary.tag3,
     },
     {
       name: t.productCatalogs.unusedCatalogs,
-      value: formatNumber(unusedCatalogs),
+      value: unusedCatalogs,
       icon: Archive,
       color: color.tertiary.tag2,
     },
@@ -907,9 +918,7 @@ export default function ProductCatalogsPage() {
       value: mostPopulatedCategory?.name || "None",
       icon: Star,
       color: color.primary.accent,
-      description: `${formatNumber(
-        mostPopulatedCategory?.count ?? 0,
-      )} products`,
+      description: `${mostPopulatedCategory?.count ?? 0} products`,
       title: mostPopulatedCategory?.name || undefined,
       valueClass: "text-xl",
       loading: false,
@@ -954,8 +963,8 @@ export default function ProductCatalogsPage() {
           const Icon = stat.icon;
           const valueClass = stat.valueClass ?? "text-3xl";
           const shouldMask = stat.loading ?? true;
-          const displayValue =
-            statsLoading && shouldMask ? "..." : (stat.value ?? "...");
+          const isNumeric = typeof stat.value === "number";
+          const displayValue = statsLoading && shouldMask ? "..." : (isNumeric ? <NumberFormatter value={stat.value} /> : (stat.value ?? "..."));
 
           return (
             <div

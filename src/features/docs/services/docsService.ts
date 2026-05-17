@@ -1,7 +1,10 @@
 /**
  * Docs Service
- * Handles loading and managing documentation markdown files
+ * Handles loading and managing documentation via API
  */
+
+import { DocDocument } from '../types/documentation';
+import documentationService from './documentationService';
 
 export interface DocMetadata {
   slug: string;
@@ -10,33 +13,16 @@ export interface DocMetadata {
   path: string;
 }
 
-// Load all markdown files for each version using Vite's glob - eager load for instant access
-const markdownV1_0Modules = import.meta.glob<string>('../markdown-v1.0/**/*.md', { as: 'raw', eager: true });
-const markdownV1_1Modules = import.meta.glob<string>('../markdown-v1.1/**/*.md', { as: 'raw', eager: true });
-
 class DocsService {
   /**
-   * Load markdown file by slug and version
+   * Load document by slug from API
    * Slug format: "intro", "authentication/login", "campaigns/create-campaign", etc.
-   * Version format: "v1.0", "v1.1", etc.
    */
-  loadMarkdown(slug: string, version: string = 'v1.0'): string {
+  async loadDocument(slug: string): Promise<DocDocument> {
     try {
-      // Select the correct module set based on version
-      const markdownModules = version === 'v1.1' ? markdownV1_1Modules : markdownV1_0Modules;
-
-      // Normalize slug: "intro" or "authentication/login"
-      const path = slug === 'intro' ? `../markdown-${version}/intro.md` : `../markdown-${version}/${slug}.md`;
-
-      const content = markdownModules[path];
-      if (!content) {
-        throw new Error(`File not found: ${path}`);
-      }
-
-      // Eager loaded modules return content directly (synchronous)
-      return content || '';
+      return await documentationService.getDocumentBySlug(slug);
     } catch (error) {
-      console.error(`Failed to load markdown for slug: ${slug}`, error);
+      console.error(`Failed to load document for slug: ${slug}`, error);
       throw new Error(`Documentation for "${slug}" not found`);
     }
   }
@@ -99,3 +85,4 @@ class DocsService {
 }
 
 export const docsService = new DocsService();
+export default docsService;

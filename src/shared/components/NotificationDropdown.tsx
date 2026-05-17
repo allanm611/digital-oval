@@ -200,7 +200,7 @@ export default function NotificationDropdown({
                 <button
                   onClick={() => {
                     setIsOpen(false);
-                    navigate("/dashboard/notifications");
+                    navigate("/dashboard/notification-settings");
                   }}
                   className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
                   title={t.notifications.dropdownViewAll}

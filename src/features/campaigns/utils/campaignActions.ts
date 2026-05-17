@@ -1,9 +1,9 @@
 import { campaignService } from "../services/campaignService";
 import { Campaign, CampaignDisplay } from "../types/campaign";
 
-// Button visibility 
+// Button visibility
 
-type CampaignButtonType = "pause" | "resume" | "activate" | "execute" | "submit" | "approve" | "reject";
+type CampaignButtonType = "pause" | "resume" | "activate" | "execute" | "submit" | "approve" | "reject" | "resubmit";
 
 /**
  *  function to check if a campaign button should be displayed
@@ -16,19 +16,41 @@ export function canShowCampaignButton(
 
   switch (buttonType) {
     case "pause":
-      return campaign.approval_status === "approved" && campaign.status !== "paused" && campaign.status !== "draft";
+      return (
+        campaign.approval_status === "approved" &&
+        campaign.status !== "paused" &&
+        campaign.status !== "draft" &&
+        campaign.approval_status !== "rejected"
+      );
     case "resume":
-      return campaign.approval_status === "approved" && campaign.status === "paused";
+      return (
+        campaign.approval_status === "approved" &&
+        campaign.status === "paused" &&
+        campaign.approval_status !== "rejected"
+      );
     case "activate":
-      return campaign.approval_status === "approved" && campaign.is_active === false;
+      return (
+        campaign.approval_status === "approved" &&
+        campaign.is_active === false &&
+        campaign.approval_status !== "rejected"
+      );
     case "execute":
-      return campaign.approval_status === "approved" && campaign.is_active === true;
+      return (
+        campaign.approval_status === "approved" &&
+        campaign.is_active === true &&
+        campaign.approval_status !== "rejected"
+      );
     case "submit":
-      return campaign.status === "draft";
+      return campaign.status === "draft" && campaign.approval_status !== "rejected";
+    case "resubmit":
+      return campaign.approval_status === "rejected" || campaign.status === "rejected";
     case "approve":
       return campaign.approval_status === "pending";
     case "reject":
-      return (campaign.approval_status === "pending" && campaign.status === "pending_approval") || campaign.approval_status === "approved";
+      return (
+        (campaign.approval_status === "pending" && campaign.status === "pending_approval") ||
+        (campaign.approval_status === "approved" && campaign.approval_status !== "rejected")
+      );
     default:
       return false;
   }
@@ -41,7 +63,7 @@ export function canShowCampaignButton(
 export interface CampaignActionParams {
   campaignId: number;
   campaignName?: string;
-  action: "pause" | "resume" | "activate" | "submit" | "delete";
+  action: "pause" | "resume" | "activate" | "submit" | "resubmit" | "delete";
   successMessage: string;
   errorMessage: string;
   updateFields: Partial<CampaignDisplay> | Partial<Campaign>;
@@ -81,6 +103,9 @@ export async function handleCampaignAction(
       case "submit":
         await campaignService.submitForApproval(campaignId);
         break;
+      case "resubmit":
+        await campaignService.submitForApproval(campaignId);
+        break;
       case "delete":
         await campaignService.deleteCampaign(campaignId);
         break;
@@ -89,9 +114,9 @@ export async function handleCampaignAction(
     // Optimistically update campaign in list or details view
     if (onUpdateCampaign) {
       onUpdateCampaign(campaignId, updateFields);
-    } else if (onSetCampaign && 'id' in updateFields) {
-      // For details page: update the full campaign object
-      onSetCampaign({ ...(updateFields as Campaign) });
+    } else if (onSetCampaign) {
+      // For details page: update the campaign object with new fields
+      onSetCampaign(updateFields as Campaign);
     }
 
     onSuccess(successMessage);

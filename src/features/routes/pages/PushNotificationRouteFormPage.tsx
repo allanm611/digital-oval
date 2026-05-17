@@ -3,11 +3,13 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Save } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import Input from "../../../shared/components/ui/Input";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { PushNotificationRoute, CreatePushNotificationRouteRequest } from "../types/pushNotificationRoute";
 import { pushNotificationRouteService } from "../services/pushNotificationRouteService";
-import { PUSH_GATEWAY_OPTIONS, PUSH_PLATFORM_OPTIONS, PRIORITY_LEVEL_OPTIONS } from "../constants/pushNotificationRouteEnums";
+import { pushGatewayConfigService } from "../../configurations/services/pushGatewayConfigService";
+import { PUSH_PLATFORM_OPTIONS, PRIORITY_LEVEL_OPTIONS } from "../constants/pushNotificationRouteEnums";
 import { useToast } from "../../../contexts/ToastContext";
 import { color, tw } from "../../../shared/utils/utils";
 
@@ -27,20 +29,22 @@ export default function PushNotificationRouteFormPage({ mode }: PushNotification
 
   const [loading, setLoading] = useState(mode === "edit");
   const [saving, setSaving] = useState(false);
+  const [isLoadingConfigs, setIsLoadingConfigs] = useState(false);
   const [route, setRoute] = useState<PushNotificationRoute | null>(null);
+  const [allRoutes, setAllRoutes] = useState<PushNotificationRoute[]>([]);
+  const [gatewayConfigs, setGatewayConfigs] = useState<any[]>([]);
 
   const [formData, setFormData] = useState<CreatePushNotificationRouteRequest>({
     name: "",
-    gateway_provider: undefined,
+    gateway_config_id: 0,
     is_active: true,
     description: "",
+    backup_route_id: undefined,
+    use_backup_on_failure: false,
+    retry_attempts: 3,
   });
 
   const [extendedFormData, setExtendedFormData] = useState({
-    apiEndpoint: "",
-    serverKey: "",
-    apiSecret: "",
-    appId: "",
     platforms: [] as string[],
     defaultTTL: "3600",
     priorityLevel: "NORMAL",
@@ -50,10 +54,33 @@ export default function PushNotificationRouteFormPage({ mode }: PushNotification
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
+    const loadAllRoutes = async () => {
+      try {
+        const routes = await pushNotificationRouteService.getAllRoutes();
+        setAllRoutes(routes);
+      } catch (err) {
+        // Silent fail
+      }
+    };
+
+    loadAllRoutes();
+    loadGatewayConfigs();
     if (mode === "edit" && id) {
       loadRoute();
     }
   }, [mode, id]);
+
+  const loadGatewayConfigs = async () => {
+    try {
+      setIsLoadingConfigs(true);
+      const configs = await pushGatewayConfigService.getAllConfigs();
+      setGatewayConfigs(configs);
+    } catch (err) {
+      showError("Error", "Failed to load gateway configurations");
+    } finally {
+      setIsLoadingConfigs(false);
+    }
+  };
 
   const loadRoute = async () => {
     if (!id) return;
@@ -64,9 +91,18 @@ export default function PushNotificationRouteFormPage({ mode }: PushNotification
         setRoute(data);
         setFormData({
           name: data.name,
-          gateway_provider: data.gateway_provider,
+          gateway_config_id: (data as any).gateway_config_id || 0,
           is_active: data.is_active,
           description: data.description,
+          backup_route_id: (data as any).backup_route_id,
+          use_backup_on_failure: (data as any).use_backup_on_failure || false,
+          retry_attempts: (data as any).retry_attempts || 3,
+        });
+        setExtendedFormData({
+          platforms: (data as any).platforms || [],
+          defaultTTL: (data as any).defaultTTL || "3600",
+          priorityLevel: (data as any).priorityLevel || "NORMAL",
+          webhookUrl: (data as any).webhookUrl || "",
         });
       }
     } catch (err) {
@@ -83,8 +119,8 @@ export default function PushNotificationRouteFormPage({ mode }: PushNotification
     if (!formData.name.trim()) {
       newErrors.name = "Route name is required";
     }
-    if (!formData.gateway_provider) {
-      newErrors.gateway_provider = "Gateway provider is required";
+    if (!formData.gateway_config_id) {
+      newErrors.gateway_config_id = "Gateway configuration is required";
     }
 
     setErrors(newErrors);
@@ -210,9 +246,9 @@ export default function PushNotificationRouteFormPage({ mode }: PushNotification
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Basic Information Section */}
+        {/* Route Configuration Section */}
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Basic Information</h2>
+          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Route Configuration</h2>
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -232,14 +268,27 @@ export default function PushNotificationRouteFormPage({ mode }: PushNotification
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Status
+                  Push Gateway Configuration *
                 </label>
                 <HeadlessSelect
-                  options={STATUS_OPTIONS}
-                  value={formData.is_active ? "true" : "false"}
-                  onChange={(value) => handleSelectChange("is_active", value)}
-                  disabled={saving}
+                  options={gatewayConfigs.map((config) => ({
+                    value: String(config.id),
+                    label: `${config.name} (${config.provider_type})`,
+                  }))}
+                  value={String(formData.gateway_config_id || "")}
+                  onChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      gateway_config_id: value ? Number(value) : 0,
+                    }))
+                  }
+                  placeholder="Select gateway configuration"
+                  disabled={saving || isLoadingConfigs}
+                  error={!!errors.gateway_config_id}
                 />
+                {errors.gateway_config_id && (
+                  <p className="text-red-500 text-xs mt-1">{errors.gateway_config_id}</p>
+                )}
               </div>
             </div>
 
@@ -257,92 +306,6 @@ export default function PushNotificationRouteFormPage({ mode }: PushNotification
                 disabled={saving}
               />
             </div>
-          </div>
-        </div>
-
-        {/* Gateway Configuration Section */}
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Gateway Configuration</h2>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Gateway Provider *
-            </label>
-            <HeadlessSelect
-              options={PUSH_GATEWAY_OPTIONS.map(opt => ({
-                value: opt.value,
-                label: opt.label
-              }))}
-              value={formData.gateway_provider || ""}
-              onChange={(value) => handleSelectChange("gateway_provider", value)}
-              placeholder="Select gateway provider"
-              disabled={saving}
-              error={!!errors.gateway_provider}
-            />
-            {errors.gateway_provider && (
-              <p className="text-red-500 text-xs mt-1">{errors.gateway_provider}</p>
-            )}
-          </div>
-        </div>
-
-        {/* API Configuration Section */}
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>API Configuration</h2>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                API Endpoint
-              </label>
-              <Input
-                placeholder="e.g., https://fcm.googleapis.com/fcm/send"
-                value={extendedFormData.apiEndpoint}
-                onChange={(value) => handleExtendedFieldChange("apiEndpoint", value)}
-                variant="medium"
-                disabled={saving}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Server Key
-                </label>
-                <Input
-                  type="password"
-                  placeholder="••••••••••••••••••••••"
-                  value={extendedFormData.serverKey}
-                  onChange={(value) => handleExtendedFieldChange("serverKey", value)}
-                  variant="medium"
-                  disabled={saving}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  API Secret
-                </label>
-                <Input
-                  type="password"
-                  placeholder="Your API secret"
-                  value={extendedFormData.apiSecret}
-                  onChange={(value) => handleExtendedFieldChange("apiSecret", value)}
-                  variant="medium"
-                  disabled={saving}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                App ID / Project ID
-              </label>
-              <Input
-                placeholder="e.g., my-firebase-project"
-                value={extendedFormData.appId}
-                onChange={(value) => handleExtendedFieldChange("appId", value)}
-                variant="medium"
-                disabled={saving}
-              />
-            </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -356,13 +319,7 @@ export default function PushNotificationRouteFormPage({ mode }: PushNotification
                 disabled={saving}
               />
             </div>
-          </div>
-        </div>
 
-        {/* Delivery Configuration Section */}
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Delivery Configuration</h2>
-          <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Supported Platforms
@@ -383,7 +340,7 @@ export default function PushNotificationRouteFormPage({ mode }: PushNotification
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Default TTL (seconds)
@@ -413,6 +370,78 @@ export default function PushNotificationRouteFormPage({ mode }: PushNotification
                   disabled={saving}
                 />
               </div>
+            </div>
+
+            <div className="pt-4">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <Checkbox
+                  id="use_backup_on_failure"
+                  checked={formData.use_backup_on_failure || false}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      use_backup_on_failure: e.target.checked,
+                    }))
+                  }
+                  disabled={saving}
+                />
+                <div className="flex-1">
+                  <span className="block text-sm font-medium text-gray-700">
+                    Use backup route if this route fails
+                  </span>
+                  <p className={`text-xs ${tw.textSecondary} mt-1`}>
+                    Enable automatic failover to a backup route when delivery fails
+                  </p>
+                </div>
+              </label>
+
+              {formData.use_backup_on_failure && (
+                <div className="space-y-4 mt-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Backup Route
+                    </label>
+                    <HeadlessSelect
+                      options={[
+                        { value: "", label: "Select a backup route" },
+                        ...(allRoutes
+                          .filter((r) => r.id !== (route?.id || formData.backup_route_id))
+                          .map((route) => ({
+                            value: String(route.id),
+                            label: route.name,
+                          })) || []),
+                      ]}
+                      value={String(formData.backup_route_id || "")}
+                      onChange={(value) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          backup_route_id: value ? Number(value) : undefined,
+                        }))
+                      }
+                      disabled={saving}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Retry Attempts Before Failover
+                    </label>
+                    <Input
+                      type="number"
+                      placeholder="3"
+                      value={String(formData.retry_attempts || 3)}
+                      onChange={(value) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          retry_attempts: value ? Number(value) : 3,
+                        }))
+                      }
+                      variant="medium"
+                      disabled={saving}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

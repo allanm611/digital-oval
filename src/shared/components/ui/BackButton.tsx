@@ -99,7 +99,7 @@ export default function BackButton({
     return (
       <nav
         aria-label="Breadcrumb"
-        className={`flex items-center gap-2 text-sm ${className || ""}`}
+        className={`flex items-center gap-2 text-base ${className || ""}`}
       >
         <button
           type="button"
@@ -110,12 +110,12 @@ export default function BackButton({
           <ArrowLeft className={iconSize || "w-5 h-5"} />
         </button>
 
-        <ol className="flex items-center gap-1 text-sm sm:text-base flex-wrap">
+        <ol className="flex items-center gap-1 text-base flex-wrap">
           <li>
             <button
               type="button"
               onClick={handleClick}
-              className="text-gray-600 hover:text-black transition-colors"
+              className="text-base text-gray-600 hover:text-black transition-colors"
             >
               {breadcrumbData.fallbackLabel}
             </button>
@@ -127,7 +127,7 @@ export default function BackButton({
               <li className="text-gray-400" aria-hidden="true">
                 <ChevronRight className="w-3 h-3" />
               </li>
-              <li className="font-medium text-gray-900" aria-current="page">
+              <li className="text-base font-medium text-gray-900" aria-current="page">
                 {breadcrumbData.computedCurrentLabel}
               </li>
             </>

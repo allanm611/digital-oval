@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import { ListChecks, DollarSign, Activity, Zap, Users, ArrowLeft } from "lucide-react";
+import { ListChecks, DollarSign, Activity, Zap, Users } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
-import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import BackButton from "../../../shared/components/ui/BackButton";
 
 export default function KPIsHubPage() {
   const navigate = useNavigate();
@@ -42,21 +42,23 @@ export default function KPIsHubPage() {
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center space-x-2 sm:space-x-4">
-         
-          <div>
-            <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
-              KPIs
-            </h1>
-            <p className={`${tw.textSecondary} mt-2 text-sm`}>
-              Manage and monitor key performance indicators
-            </p>
-          </div>
+    <>
+      <div className="space-y-6">
+        {/* Header */}
+        <div>
+          <BackButton
+            fallbackTo="/dashboard/administration"
+            showBreadcrumb={true}
+            parentLabel="Admin Hub"
+            currentLabel="KPIs"
+          />
+          {/* <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
+            KPIs
+          </h1> */}
+          <p className={`${tw.textSecondary} mt-6 text-sm`}>
+            Manage and monitor key performance indicators
+          </p>
         </div>
-      </div>
 
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -99,5 +101,6 @@ export default function KPIsHubPage() {
         })}
       </div>
     </div>
+    </>
   );
 }

@@ -187,7 +187,7 @@ export default function EditProductPage() {
       // Prepare update data with unit_of_measure and validity_hours for backend
       const finalUpdateData: typeof updateData & {
         unit_of_measure?: string;
-        combo_data?: typeof combo_data;
+        resources?: any[];
         validity_hours?: number;
       } = {
         ...updateData,
@@ -205,9 +205,9 @@ export default function EditProductPage() {
       }
 
 
-      // Include combo_data if provided (for combo products)
+      // For combo products, send resources from combo_data
       if (combo_data && combo_data.resources.length > 0) {
-        finalUpdateData.combo_data = combo_data;
+        finalUpdateData.resources = combo_data.resources;
       }
 
       // CRITICAL: Ensure tags is ALWAYS an array, NEVER a string

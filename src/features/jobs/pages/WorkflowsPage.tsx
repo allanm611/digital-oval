@@ -10,6 +10,7 @@ import {
   Pause,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -345,16 +346,23 @@ export default function WorkflowsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>Workflows</h1>
-          <p className={`${tw.textSecondary} mt-1 text-sm`}>
-            Manage and monitor workflows
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
+    <>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <BackButton
+              fallbackTo="/dashboard/administration"
+              showBreadcrumb={true}
+              parentLabel="Admin Hub"
+              currentLabel="Job Workflows"
+            />
+            {/* <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>Workflows</h1> */}
+            <p className={`${tw.textSecondary} mt-6 text-sm`}>
+              Manage and monitor workflows
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
           <button
             onClick={() => navigate("/dashboard/workflows/analytics")}
             className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
@@ -830,5 +838,6 @@ export default function WorkflowsPage() {
         }}
       />
     </div>
+    </>
   );
 }

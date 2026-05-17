@@ -774,9 +774,11 @@ export default function DefineRewardStep({
             </button>
           </div>
 
-          <div className={`text-sm ${tw.textSecondary} mb-3`}>
-            {selectedSeedContactIds.size} of {activeSeedRecipients.length} recipients selected
-          </div>
+          {activeSeedRecipients.length > 0 && (
+            <div className={`text-sm ${tw.textSecondary} mb-3`}>
+              {selectedSeedContactIds.size} of {activeSeedRecipients.length} recipients selected
+            </div>
+          )}
 
           {activeSeedRecipients.length === 0 ? (
             <p className={`text-sm ${tw.textMuted}`}>
@@ -869,30 +871,34 @@ export default function DefineRewardStep({
               </div>
             )}
 
-          <button
-            type="button"
-            onClick={handleRunSeedTest}
-            disabled={isTesting || selectedSeedContactIds.size === 0}
-            style={{
-              ...getButtonStyles(button.action),
-              opacity: (isTesting || selectedSeedContactIds.size === 0) ? 0.5 : 1,
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.5rem",
-            }}
-          >
-            {isTesting ? (
-              <>
-                <Loader className="w-4 h-4 animate-spin flex-shrink-0" />
-                <span>Testing...</span>
-              </>
-            ) : (
-              <>
-                <Send className="w-4 h-4 flex-shrink-0" />
-                <span>Run Seed-List Test</span>
-              </>
-            )}
-          </button>
+          {activeSeedRecipients.length > 0 && (
+            <button
+              type="button"
+              onClick={handleRunSeedTest}
+              disabled={isTesting || selectedSeedContactIds.size === 0}
+              className="text-sm"
+              style={{
+                ...getButtonStyles(button.action),
+                opacity: (isTesting || selectedSeedContactIds.size === 0) ? 0.5 : 1,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                marginTop: "1rem",
+              }}
+            >
+              {isTesting ? (
+                <>
+                  <Loader className="w-4 h-4 animate-spin flex-shrink-0" />
+                  <span>Sending Tests...</span>
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4 flex-shrink-0" />
+                  <span>Send Tests</span>
+                </>
+              )}
+            </button>
+          )}
 
           {seedTestError && (
             <p className="mt-2 text-sm" style={{ color: color.status.danger }}>
@@ -908,7 +914,7 @@ export default function DefineRewardStep({
           )}
 
           {seedTestResults.length > 0 && (
-            <div className="mt-3 space-y-2">
+            <div className="mt-6 space-y-2">
               {seedTestResults.map((result) => (
                 <div
                   key={`${result.contact}-${result.status}`}

@@ -118,6 +118,8 @@ interface NavigationItem {
 
 const SIDEBAR_ROUTE_PRELOADERS: Record<string, () => Promise<unknown>> = {
   "/dashboard": () => import("../components/DashboardHome"),
+  "/dashboard/administration": () =>
+    import("../../administration/pages/AdminHubPage"),
   "/dashboard/campaigns": () =>
     import("../../campaigns/pages/CampaignsPageWrapper"),
   "/dashboard/campaign-objectives": () =>
@@ -507,36 +509,6 @@ export default function Sidebar({
         ],
       },
       {
-        name: t.sidebar.navigation.userManagement,
-        href: "/dashboard/user-management",
-        icon: UserCheck,
-        type: "parent",
-        entity: "users",
-        children: [
-          {
-            name: t.sidebar.navigation.allUsers,
-            href: "/dashboard/user-management",
-            icon: Users,
-            type: "single",
-            entity: "users",
-          },
-          {
-            name: "Roles",
-            href: "/dashboard/roles",
-            icon: Briefcase,
-            type: "single",
-            entity: "users",
-          },
-          {
-            name: t.sidebar.navigation.accessControl,
-            href: "/dashboard/access-control",
-            icon: UserCheck,
-            type: "single",
-            entity: "users",
-          },
-        ],
-      },
-      {
         name: t.sidebar.navigation.reportsAndAnalytics,
         href: "/dashboard/reports",
         icon: LineChart,
@@ -587,100 +559,18 @@ export default function Sidebar({
         ],
       },
       {
-        name: t.sidebar.navigation.infrastructure,
-        href: "/dashboard/servers",
-        icon: Server,
-        type: "parent",
-        entity: "servers",
-        children: [
-          {
-            name: t.sidebar.navigation.servers,
-            href: "/dashboard/servers",
-            icon: Server,
-            type: "single",
-            entity: "servers",
-          },
-          {
-            name: t.sidebar.navigation.connectionProfiles,
-            href: "/dashboard/connection-profiles",
-            icon: Database,
-            type: "single",
-            entity: "servers",
-          },
-          {
-            name: t.sidebar.navigation.dataConnectors,
-            href: "/dashboard/data-connectors",
-            icon: Plug,
-            type: "single",
-            entity: "servers",
-          },
-          {
-            name: "ETL",
-            href: "/dashboard/etl",
-            icon: Download,
-            type: "single",
-            entity: "servers",
-          },
-        ],
+        name: "Administration",
+        href: "/dashboard/administration",
+        icon: Settings,
+        type: "single",
+        entity: "configuration",
       },
-
       {
-        name: t.sidebar.navigation.jobManagement,
-        href: "/dashboard/jobs",
-        icon: Briefcase,
-        type: "parent",
-        entity: "jobs",
-        children: [
-          {
-            name: t.sidebar.navigation.scheduledJobs,
-            href: "/dashboard/jobs",
-            icon: Briefcase,
-            type: "single",
-            entity: "jobs",
-          },
-          {
-            name: t.sidebar.navigation.jobExecutions,
-            href: "/dashboard/job-executions",
-            icon: PlayCircle,
-            type: "single",
-            entity: "jobs",
-          },
-          // {
-          //   name: "Step Executions",
-          //   href: "/dashboard/step-executions",
-          //   icon: List,
-          //   type: "single",
-          //   entity: "jobs",
-          // },
-          {
-            name: t.sidebar.navigation.jobTypes,
-            href: "/dashboard/job-types",
-            icon: Layers,
-            type: "single",
-            entity: "jobs",
-          },
-          {
-            name: t.sidebar.navigation.jobDependencies,
-            href: "/dashboard/job-dependencies",
-            icon: Link2,
-            type: "single",
-            entity: "jobs",
-          },
-          {
-            name: t.sidebar.navigation.jobWorkflowSteps,
-            href: "/dashboard/job-workflow-steps",
-            icon: Activity,
-            type: "single",
-            entity: "jobs",
-          },
-          {
-            name: t.sidebar.navigation.jobWorkflows,
-            href: "/dashboard/workflows",
-            icon: GitBranch,
-            type: "single",
-            entity: "jobs",
-          },
-        ],
+        name: "Configurations",
+        href: "/dashboard/configuration",
+        icon: Cog,
+        type: "single",
+        entity: "configuration",
       },
       {
         name: t.sidebar.navigation.manualBroadcasts,
@@ -697,13 +587,6 @@ export default function Sidebar({
         entity: "manual-actions",
       },
 
-      {
-        name: t.sidebar.navigation.configuration,
-        href: "/dashboard/configuration",
-        icon: Cog,
-        type: "single",
-        entity: "configuration",
-      },
     ],
     [t],
   );

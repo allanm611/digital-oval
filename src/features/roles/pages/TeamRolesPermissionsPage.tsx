@@ -1,4 +1,5 @@
 import Input from '../../../shared/components/ui/Input';
+import BackButton from '../../../shared/components/ui/BackButton';
 import React, { useState, useCallback, useEffect, useMemo } from "react";
 import {
   Trash2,
@@ -537,10 +538,16 @@ export default function TeamRolesPermissionsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div className="min-w-0">
-          <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
+          <BackButton
+            fallbackTo="/dashboard/administration"
+            showBreadcrumb={true}
+            parentLabel="Admin Hub"
+            currentLabel="Access Control"
+          />
+          {/* <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
             Access Control
-          </h1>
-          <p className={`${tw.textSecondary} mt-2 text-sm`}>
+          </h1> */}
+          <p className={`${tw.textSecondary} mt-6 text-sm`}>
             Manage roles, permissions, and access control
           </p>
         </div>

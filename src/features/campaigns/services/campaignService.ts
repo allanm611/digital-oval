@@ -4,6 +4,7 @@ import {
   getAuthHeaders,
 } from "../../../shared/services/api";
 import { buildQueryString } from "../utils/buildQueryString";
+import { extractErrorMessage, isHtmlError } from "../../../shared/utils/errorHandler";
 import {
   BackendCampaignType,
   CampaignResponse,
@@ -170,19 +171,7 @@ class CampaignService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-
-      let errorMessage = "An error has occurred";
-      try {
-        const errorData = JSON.parse(errorBody);
-        if (errorData.error) {
-          errorMessage = errorData.error;
-        } else if (errorData.message) {
-          errorMessage = errorData.message;
-        }
-      } catch {
-        errorMessage = errorBody || "An error has occurred";
-      }
-
+      const errorMessage = extractErrorMessage(errorBody, response.status);
       throw new Error(errorMessage);
     }
 
@@ -836,9 +825,8 @@ class CampaignService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      throw new Error(
-        errorBody || "An error has occurred",
-      );
+      const errorMessage = extractErrorMessage(errorBody, response.status);
+      throw new Error(errorMessage);
     }
 
     const result = await response.json();
@@ -871,9 +859,8 @@ class CampaignService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      throw new Error(
-        errorBody || "An error has occurred",
-      );
+      const errorMessage = extractErrorMessage(errorBody, response.status);
+      throw new Error(errorMessage);
     }
 
     return response.json();
@@ -892,33 +879,9 @@ class CampaignService {
     });
 
     if (!response.ok) {
-      try {
-        const errorData = await response.json();
-        // Extract error message from response
-        if (errorData.error) {
-          throw new Error(errorData.error);
-        }
-        if (errorData.message) {
-          throw new Error(errorData.message);
-        }
-        if (errorData.details) {
-          throw new Error(errorData.details);
-        }
-        // Fallback to status code if no error message
-        throw new Error(`Failed to update category: ${response.status}`);
-      } catch (err) {
-        // If JSON parsing fails, try text
-        if (err instanceof Error && err.message.includes("JSON")) {
-          const errorText = await response.text();
-          throw new Error(
-            errorText || `Failed to update category: ${response.status}`,
-          );
-        }
-        if (err instanceof Error) {
-          throw err;
-        }
-        throw new Error(`Failed to update category: ${response.status}`);
-      }
+      const errorBody = await response.text();
+      const errorMessage = extractErrorMessage(errorBody, response.status);
+      throw new Error(errorMessage);
     }
 
     // Check if response has content
@@ -965,9 +928,8 @@ class CampaignService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      throw new Error(
-        errorBody || "An error has occurred",
-      );
+      const errorMessage = extractErrorMessage(errorBody, response.status);
+      throw new Error(errorMessage);
     }
 
     return response.json();
@@ -988,9 +950,8 @@ class CampaignService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      throw new Error(
-        errorBody || "An error has occurred",
-      );
+      const errorMessage = extractErrorMessage(errorBody, response.status);
+      throw new Error(errorMessage);
     }
 
     return response.json();
@@ -1012,9 +973,8 @@ class CampaignService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      throw new Error(
-        errorBody || "An error has occurred",
-      );
+      const errorMessage = extractErrorMessage(errorBody, response.status);
+      throw new Error(errorMessage);
     }
 
     return response.json();
@@ -1040,9 +1000,8 @@ class CampaignService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      throw new Error(
-        errorBody || "An error has occurred",
-      );
+      const errorMessage = extractErrorMessage(errorBody, response.status);
+      throw new Error(errorMessage);
     }
 
     return response.json();
@@ -1068,9 +1027,8 @@ class CampaignService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      throw new Error(
-        errorBody || "An error has occurred",
-      );
+      const errorMessage = extractErrorMessage(errorBody, response.status);
+      throw new Error(errorMessage);
     }
 
     return response.json();
@@ -1100,9 +1058,8 @@ class CampaignService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      throw new Error(
-        errorBody || "An error has occurred",
-      );
+      const errorMessage = extractErrorMessage(errorBody, response.status);
+      throw new Error(errorMessage);
     }
 
     return response.json();
@@ -1123,9 +1080,8 @@ class CampaignService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      throw new Error(
-        errorBody || "An error has occurred",
-      );
+      const errorMessage = extractErrorMessage(errorBody, response.status);
+      throw new Error(errorMessage);
     }
 
     return response.json();
@@ -1149,9 +1105,8 @@ class CampaignService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      throw new Error(
-        errorBody || "An error has occurred",
-      );
+      const errorMessage = extractErrorMessage(errorBody, response.status);
+      throw new Error(errorMessage);
     }
 
     return response.json();

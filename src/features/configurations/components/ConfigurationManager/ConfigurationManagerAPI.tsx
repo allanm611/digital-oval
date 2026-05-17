@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Edit, Trash2, LucideIcon } from "lucide-react";
 import SearchInput from "../../../../shared/components/ui/SearchInput";
 import Pagination from "../../../../shared/components/ui/Pagination";
 import ActivateDeactivateButton from "../../../../shared/components/ui/ActivateDeactivateButton";
+import DeleteConfirmModal from "../../../../shared/components/ui/DeleteConfirmModal";
 import { color, tw } from "../../../../shared/utils/utils";
-import { useConfirm } from "../../../../contexts/ConfirmContext";
 import { useToast } from "../../../../contexts/ToastContext";
 import { useLanguage } from "../../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../../shared/components/ui/LoadingSpinner";
@@ -43,6 +44,7 @@ export interface APIConfigurationPageConfig
   disableCreate?: boolean;
   disableDelete?: boolean;
   enableActivateDeactivate?: boolean;
+  createEditPath?: string;
 }
 
 interface ConfigurationManagerAPIProps {
@@ -54,7 +56,7 @@ export default function ConfigurationManagerAPI({
   config,
   onRowClick,
 }: ConfigurationManagerAPIProps) {
-  const { confirm } = useConfirm();
+  const navigate = useNavigate();
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
 
@@ -67,7 +69,9 @@ export default function ConfigurationManagerAPI({
   const [editingItem, setEditingItem] = useState<ConfigurationItem | undefined>();
   const [isSaving, setIsSaving] = useState(false);
   const [togglingItemId, setTogglingItemId] = useState<number | null>(null);
-  const [deletingItemId, setDeletingItemId] = useState<number | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<ConfigurationItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [displayData, setDisplayData] = useState<ConfigurationItem[]>([]);
 
   // If hook returns null (shouldn't happen), show error
@@ -99,38 +103,45 @@ export default function ConfigurationManagerAPI({
   }, [error, showError, t]);
 
   const handleCreateItem = () => {
-    setEditingItem(undefined);
-    setIsModalOpen(true);
+    if (config.createEditPath) {
+      navigate(`${config.createEditPath}/create`);
+    } else {
+      setEditingItem(undefined);
+      setIsModalOpen(true);
+    }
   };
 
   const handleEditItem = (item: ConfigurationItem) => {
-    setEditingItem(item);
-    setIsModalOpen(true);
+    if (config.createEditPath) {
+      navigate(`${config.createEditPath}/${item.id}/edit`);
+    } else {
+      setEditingItem(item);
+      setIsModalOpen(true);
+    }
   };
 
-  const handleDeleteItem = async (item: ConfigurationItem) => {
-    const confirmed = await confirm({
-      title: config.deleteConfirmTitle,
-      message: config.deleteConfirmMessage(item.name),
-      type: "danger",
-      confirmText: t.genericConfig.delete,
-      cancelText: t.genericConfig.cancel,
-    });
+  const handleDeleteItem = (item: ConfigurationItem) => {
+    setItemToDelete(item);
+    setShowDeleteModal(true);
+  };
 
-    if (!confirmed) return;
+  const confirmDeleteItem = async () => {
+    if (!itemToDelete) return;
 
-    setDeletingItemId(item.id as number);
+    setIsDeleting(true);
     const previousData = displayData;
 
     // Optimistic update: remove from display immediately
-    setDisplayData((prev) => prev.filter((i) => i.id !== item.id));
+    setDisplayData((prev) => prev.filter((i) => i.id !== itemToDelete.id));
 
     try {
-      await deleteItem(item.id as number);
+      await deleteItem(itemToDelete.id as number);
       showToast(
         config.deleteConfirmTitle,
-        config.deleteSuccessMessage(item.name)
+        config.deleteSuccessMessage(itemToDelete.name)
       );
+      setShowDeleteModal(false);
+      setItemToDelete(null);
     } catch (err) {
       console.error(`Error deleting ${config.entityName}:`, err);
       const errorMsg = err instanceof Error ? err.message : config.deleteErrorMessage;
@@ -138,7 +149,7 @@ export default function ConfigurationManagerAPI({
       // Revert optimistic update on error
       setDisplayData(previousData);
     } finally {
-      setDeletingItemId(null);
+      setIsDeleting(false);
     }
   };
 
@@ -409,7 +420,7 @@ export default function ConfigurationManagerAPI({
                           <ActivateDeactivateButton
                             isActive={item.isActive ?? true}
                             onToggle={() => handleToggleActive(item)}
-                            disabled={togglingItemId === item.id || deletingItemId === item.id}
+                            disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
                             isLoading={togglingItemId === item.id}
                             title={
                               item.isActive
@@ -421,7 +432,7 @@ export default function ConfigurationManagerAPI({
 
                         <button
                           onClick={() => handleEditItem(item)}
-                          disabled={togglingItemId === item.id || deletingItemId === item.id}
+                          disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
                           className={`p-2 ${tw.rounded} transition-colors hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed`}
                           title={`Edit ${item.name}`}
                         >
@@ -431,7 +442,7 @@ export default function ConfigurationManagerAPI({
                         {!config.disableDelete && (
                           <button
                             onClick={() => handleDeleteItem(item)}
-                            disabled={togglingItemId === item.id || deletingItemId === item.id}
+                            disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
                             className={`p-2 ${tw.rounded} transition-colors hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed`}
                             title={`Delete ${item.name}`}
                           >
@@ -468,6 +479,21 @@ export default function ConfigurationManagerAPI({
         onSave={handleItemSaved}
         isSaving={isSaving}
         config={config}
+      />
+
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setItemToDelete(null);
+        }}
+        onConfirm={confirmDeleteItem}
+        title={config.deleteConfirmTitle}
+        description={config.deleteConfirmMessage(itemToDelete?.name || "")}
+        itemName={itemToDelete?.name || ""}
+        isLoading={isDeleting}
+        confirmText={t.genericConfig.delete}
+        cancelText={t.genericConfig.cancel}
       />
     </div>
   );

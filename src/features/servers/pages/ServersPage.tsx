@@ -17,6 +17,7 @@ import {
   Square,
   X,
 } from "lucide-react";
+import BackButton from "../../../shared/components/ui/BackButton";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import { serverService } from "../services/serverService";
 import CreateButton from "../../../shared/components/ui/CreateButton";
@@ -692,10 +693,16 @@ export default function ServersPage() {
     <div className="space-y-6 overflow-x-auto">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
+          <BackButton
+            fallbackTo="/dashboard/administration"
+            showBreadcrumb={true}
+            parentLabel="Admin Hub"
+            currentLabel="Servers"
+          />
+          {/* <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
             {t.servers.title}
-          </h1>
-          <p className={`${tw.textSecondary} mt-2 text-sm`}>
+          </h1> */}
+          <p className={`${tw.textSecondary} mt-6 text-sm`}>
             {t.servers.description}
           </p>
         </div>

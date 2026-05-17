@@ -29,18 +29,10 @@ import { useAuth } from "../../../contexts/AuthContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import BackButton from "../../../shared/components/ui/BackButton";
+import DateFormatter from "../../../shared/components/DateFormatter";
 import { color, tw } from "../../../shared/utils/utils";
 import { userService } from "../../users/services/userService";
 import { segmentService } from "../../segments/services/segmentService";
-
-const formatDateTime = (value?: string | null) => {
-  if (!value) return "—";
-  try {
-    return new Date(value).toLocaleString();
-  } catch {
-    return value;
-  }
-};
 
 const formatMetadataKey = (key: string) =>
   key.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
@@ -836,7 +828,7 @@ export default function ScheduledJobDetailsPage() {
                   Starts At
                 </label>
                 <p className={`text-sm ${tw.textSecondary}`}>
-                  {formatDateTime(job.starts_at)}
+                  <DateFormatter date={job.starts_at} />
                 </p>
               </div>
             )}
@@ -846,7 +838,7 @@ export default function ScheduledJobDetailsPage() {
                   Ends At
                 </label>
                 <p className={`text-sm ${tw.textSecondary}`}>
-                  {formatDateTime(job.ends_at)}
+                  <DateFormatter date={job.ends_at} />
                 </p>
               </div>
             )}
@@ -967,7 +959,7 @@ export default function ScheduledJobDetailsPage() {
                   Last Run
                 </label>
                 <p className={`text-sm font-medium ${tw.textPrimary}`}>
-                  {formatDateTime(job.last_run_at)}
+                  <DateFormatter date={job.last_run_at} />
                 </p>
                 {job.last_run_status && (
                   <span className="inline-block mt-2 px-2 py-1 text-xs font-medium rounded bg-white text-gray-700">
@@ -980,7 +972,7 @@ export default function ScheduledJobDetailsPage() {
                   Next Run
                 </label>
                 <p className={`text-sm font-medium ${tw.textPrimary}`}>
-                  {formatDateTime(job.next_run_at)}
+                  <DateFormatter date={job.next_run_at} />
                 </p>
               </div>
             </div>
@@ -992,7 +984,7 @@ export default function ScheduledJobDetailsPage() {
                   Last Success
                 </label>
                 <p className={`text-sm font-medium ${tw.textPrimary}`}>
-                  {formatDateTime(job.last_success_at)}
+                  <DateFormatter date={job.last_success_at} />
                 </p>
               </div>
               <div className={`${tw.rounded} border border-gray-200 bg-white p-4`}>
@@ -1000,7 +992,7 @@ export default function ScheduledJobDetailsPage() {
                   Last Failure
                 </label>
                 <p className={`text-sm font-medium ${tw.textPrimary}`}>
-                  {formatDateTime(job.last_failure_at)}
+                  <DateFormatter date={job.last_failure_at} />
                 </p>
               </div>
             </div>
@@ -1462,7 +1454,7 @@ export default function ScheduledJobDetailsPage() {
                       Version {version.version}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {formatDateTime(version.created_at)}
+                      <DateFormatter date={version.created_at} />
                       {version.created_by && (
                         <span className="ml-2">
                           • Created by{" "}
@@ -1511,13 +1503,13 @@ export default function ScheduledJobDetailsPage() {
             <div className="flex justify-between">
               <span className="text-gray-700">Created At</span>
               <span className={tw.textSecondary}>
-                {formatDateTime(job.created_at)}
+                <DateFormatter date={job.created_at} />
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-700">Updated At</span>
               <span className={tw.textSecondary}>
-                {formatDateTime(job.updated_at)}
+                <DateFormatter date={job.updated_at} />
               </span>
             </div>
             <div className="flex justify-between">

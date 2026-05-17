@@ -656,7 +656,7 @@ export default function SegmentModal({
     setError("");
 
     try {
-      const payload = convertConditionsToPayload(formData.conditions);
+      const payload = convertConditionsToPayload(formData.conditions, true, 100, formData.unique_identifier);
 
       // Call the query generation preview API
       const response =
@@ -705,7 +705,7 @@ export default function SegmentModal({
 
     try {
       // Convert SegmentConditionGroup to SegmentPayload (v2.0 format) using shared utility
-      const payload = convertConditionsToPayload(formData.conditions, false);
+      const payload = convertConditionsToPayload(formData.conditions, false, 100, formData.unique_identifier);
 
       // Keep a copy of the payload for storage (without limit)
       const payloadForStorage = { ...payload };

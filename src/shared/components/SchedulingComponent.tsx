@@ -421,7 +421,7 @@ export default function SchedulingComponent({
                           .filter((tz) => tz && tz.value)
                           .map((tz) => ({
                             value: tz.value || "",
-                            label: tz.label || tz.value || "",
+                            label: `${tz.label || tz.value || ""} (${tz.utc_offset  || ""})`,
                           }))
                       : [
                           {

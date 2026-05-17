@@ -1,57 +1,60 @@
 /**
  * Hook: useDocumentation
- * Load and manage documentation content
+ * Load and manage documentation content from API
  */
 
 import { useEffect, useState } from 'react';
 import { docsService } from '../services/docsService';
+import { DocDocument } from '../types/documentation';
 
 export interface UseDocumentationReturn {
   content: string;
   isLoading: boolean;
   error: string | null;
   reload: () => void;
+  document?: DocDocument;
 }
 
-export function useDocumentation(slug?: string, version: string = 'v1.0'): UseDocumentationReturn {
+export function useDocumentation(slug?: string): UseDocumentationReturn {
   const [content, setContent] = useState('');
+  const [document, setDocument] = useState<DocDocument | undefined>();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadDoc = () => {
-    if (!slug) return;
+  const loadDoc = async () => {
+    if (!slug) {
+      setContent('');
+      setDocument(undefined);
+      setError(null);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
 
     try {
-      // Synchronous load - markdown files are eagerly loaded by Vite
-      const markdown = docsService.loadMarkdown(slug, version);
-      const { body } = docsService.parseFrontmatter(markdown);
-      setContent(body);
+      const doc = await docsService.loadDocument(slug);
+      setDocument(doc);
+      setContent(doc.markdown_content || '');
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load documentation');
       setContent('');
+      setDocument(undefined);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    // Load documentation immediately (no async operations, eager-loaded files)
     loadDoc();
-    // // Reset content when slug changes to show loader briefly
-    // setContent('');
-    // setError(null);
-
-    // // Load on next tick to ensure loading state is visible
-    // const timer = setTimeout(() => {
-    //   loadDoc();
-    // }, 0);
-
-    // return () => clearTimeout(timer);
-  }, [slug, version]);
+  }, [slug]);
 
   return {
     content,
     isLoading,
     error,
     reload: loadDoc,
+    document,
   };
 }

@@ -7,7 +7,7 @@ export interface SMSRoute {
   id: number;
   name: string;
   description?: string;
-  gateway_provider?: SmsGatewayEnum;
+  gateway_config_id: number;
   communication_channel?: NotificationChannelEnum;
   is_active: boolean;
   backup_route_id?: number;
@@ -22,7 +22,7 @@ export interface SMSRoute {
 export interface CreateSMSRouteRequest {
   name: string;
   description?: string;
-  gateway_provider?: SmsGatewayEnum;
+  gateway_config_id: number;
   communication_channel?: NotificationChannelEnum;
   is_active?: boolean;
   backup_route_id?: number;
@@ -33,7 +33,7 @@ export interface CreateSMSRouteRequest {
 export interface UpdateSMSRouteRequest {
   name?: string;
   description?: string;
-  gateway_provider?: SmsGatewayEnum;
+  gateway_config_id?: number;
   communication_channel?: NotificationChannelEnum;
   is_active?: boolean;
   backup_route_id?: number;

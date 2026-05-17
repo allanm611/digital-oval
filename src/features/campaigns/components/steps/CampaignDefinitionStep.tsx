@@ -542,7 +542,7 @@ export default function CampaignDefinitionStep({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Line of Business
+              Line of Business *
             </label>
             <div className="relative" ref={lineOfBusinessDropdownRef}>
               <div className="flex">
@@ -552,7 +552,11 @@ export default function CampaignDefinitionStep({
                     onClick={() =>
                       setIsLineOfBusinessDropdownOpen(!isLineOfBusinessDropdownOpen)
                     }
-                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-1 focus:ring-[#588157] focus:border-[#588157] bg-white text-sm text-left flex items-center justify-between`}
+                    className={`w-full px-3 py-2 border ${tw.rounded} focus:ring-1 bg-white text-sm text-left flex items-center justify-between ${
+                      validationErrors?.line_of_business
+                        ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                        : "border-gray-300 focus:ring-[#588157] focus:border-[#588157]"
+                    }`}
                     style={{
                       borderTopRightRadius: "0",
                       borderBottomRightRadius: "0",
@@ -576,7 +580,7 @@ export default function CampaignDefinitionStep({
                                 .line_of_business_id
                             )
                         )?.name
-                      : lobLoading ? "Loading..." : "Select line of business (optional)"}
+                      : lobLoading ? "Loading..." : "Select line of business"}
                   </span>
                   <ChevronDown
                     className={`w-4 h-4 text-gray-400 transition-transform ${
@@ -659,6 +663,11 @@ export default function CampaignDefinitionStep({
                   </div>
                 )}
             </div>
+            {validationErrors?.line_of_business && (
+              <p className="mt-1 text-sm text-red-600">
+                {validationErrors.line_of_business}
+              </p>
+            )}
           </div>
 
           <div>
@@ -1211,7 +1220,7 @@ export default function CampaignDefinitionStep({
         {/* Communication Policy */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Communication Policy
+            Communication Policy *
           </label>
           <div className="relative" ref={policyDropdownRef}>
             <div className="flex">
@@ -1223,6 +1232,10 @@ export default function CampaignDefinitionStep({
                     components.input.default
                   } w-full px-3 py-2 text-left flex items-center justify-between ${
                     selectedPolicy ? "" : "text-gray-500"
+                  } ${
+                    validationErrors?.communication_policy
+                      ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                      : ""
                   }`}
                   style={{
                     borderTopRightRadius: "0",
@@ -1240,7 +1253,7 @@ export default function CampaignDefinitionStep({
                 <span className="text-sm">
                   {selectedPolicy
                     ? selectedPolicy.name
-                    : "Choose a communication policy (optional)"}
+                    : "Choose a communication policy"}
                 </span>
               </div>
                 <ChevronDown
@@ -1341,21 +1354,38 @@ export default function CampaignDefinitionStep({
               </button>
             </div>
           )}
+          {validationErrors?.communication_policy && (
+            <p className="mt-1 text-sm text-red-600">
+              {validationErrors.communication_policy}
+            </p>
+          )}
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            {tLanguage.campaigns.campaignDefinition.campaignDescription}
+            {tLanguage.campaigns.campaignDefinition.campaignDescription} *
           </label>
           <textarea
             value={formData.description}
-            onChange={(e) =>
-              setFormData({ ...formData, description: e.target.value })
-            }
-            className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-1 focus:ring-[#588157] focus:border-[#588157] text-sm`}
+            onChange={(e) => {
+              setFormData({ ...formData, description: e.target.value });
+              if (validationErrors?.description && clearValidationErrors) {
+                clearValidationErrors();
+              }
+            }}
+            className={`w-full px-3 py-2 border ${tw.rounded} focus:ring-1 text-sm ${
+              validationErrors?.description
+                ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                : "border-gray-300 focus:ring-[#588157] focus:border-[#588157]"
+            }`}
             placeholder="Describe your campaign goals and objectives"
             rows={3}
           />
+          {validationErrors?.description && (
+            <p className="mt-1 text-sm text-red-600">
+              {validationErrors.description}
+            </p>
+          )}
         </div>
 
         {/* Budget Allocation */}

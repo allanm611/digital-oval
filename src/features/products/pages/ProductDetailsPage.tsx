@@ -308,11 +308,11 @@ export default function ProductDetailsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Product Info */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Product Overview */}
+          {/* Product Overview & Basic Information */}
           <div
             className={`bg-white ${tw.rounded} border border-[${tw.borderDefault}] p-6`}
           >
-            <div className="flex items-start space-x-4 mb-6">
+            <div className="flex items-start space-x-4 mb-3">
               <div
                 className={`h-14 w-14 ${tw.rounded} flex items-center justify-center flex-shrink-0`}
                 style={{ backgroundColor: color.primary.accent }}
@@ -328,34 +328,9 @@ export default function ProductDetailsPage() {
                 </p>
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-gray-200">
-              <span
-                className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${
-                  product.is_active
-                    ? `bg-[${color.status.success}]/10 text-[${color.status.success}]`
-                    : `bg-[${color.surface.cards}] text-[${color.text.primary}]`
-                }`}
-              >
-                {product.is_active ? "Active" : "Inactive"}
-              </span>
-              {category && (
-                <span
-                  className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-[${color.primary.accent}]/10 text-[${color.primary.accent}]`}
-                >
-                  {category.name}
-                </span>
-              )}
-            </div>
-          </div>
 
-          {/* Basic Information */}
-          <div
-            className={`bg-white ${tw.rounded} border border-[${tw.borderDefault}] p-6`}
-          >
-            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
-              Basic Information
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Basic Information Fields */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
               <div className="space-y-1">
                 <label
                   className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
@@ -363,7 +338,7 @@ export default function ProductDetailsPage() {
                   Product Code
                 </label>
                 <p
-                  className={`text-sm ${tw.textPrimary} font-mono`}
+                  className={`text-sm ${tw.textPrimary}`}
                 >
                   {product.product_code || product.id || "N/A"}
                 </p>
@@ -375,9 +350,19 @@ export default function ProductDetailsPage() {
                   DA ID
                 </label>
                 <p
-                  className={`text-sm ${tw.textPrimary} font-mono`}
+                  className={`text-sm ${tw.textPrimary}`}
                 >
                   {product.da_id || "N/A"}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <label
+                  className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
+                >
+                  Status
+                </label>
+                <p className={`text-sm ${tw.textPrimary}`}>
+                  {product.is_active ? "Active" : "Inactive"}
                 </p>
               </div>
               <div className="space-y-1">
@@ -403,12 +388,12 @@ export default function ProductDetailsPage() {
             </div>
           </div>
 
-          {/* Pricing Information */}
+          {/* Pricing & Validity Information */}
           <div
             className={`bg-white ${tw.rounded} border border-[${tw.borderDefault}] p-6`}
           >
             <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
-              Pricing
+              Pricing & Validity
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-1">
@@ -417,7 +402,7 @@ export default function ProductDetailsPage() {
                 >
                   Price
                 </label>
-                <p className={`text-2xl font-bold ${tw.textPrimary}`}>
+                <p className={`text-sm ${tw.textPrimary} font-semibold`}>
                   <CurrencyFormatter amount={product.price} />
                 </p>
               </div>
@@ -428,94 +413,79 @@ export default function ProductDetailsPage() {
                   >
                     Cost
                   </label>
-                  <p className={`text-xl font-semibold ${tw.textPrimary}`}>
+                  <p className={`text-sm ${tw.textPrimary} font-semibold`}>
                     <CurrencyFormatter amount={product.cost} />
+                  </p>
+                </div>
+              )}
+              {product.validity_days && (
+                <div className="space-y-1">
+                  <label
+                    className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
+                  >
+                    Validity Days
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    {product.validity_days}{" "}
+                    {product.validity_days === 1 ? "day" : "days"}
+                  </p>
+                </div>
+              )}
+              {product.validity_hours && (
+                <div className="space-y-1">
+                  <label
+                    className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
+                  >
+                    Validity Hours
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    {product.validity_hours}{" "}
+                    {product.validity_hours === 1 ? "hour" : "hours"}
+                  </p>
+                </div>
+              )}
+              {product.effective_from && (
+                <div className="space-y-1">
+                  <label
+                    className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
+                  >
+                    Effective From
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    <DateFormatter
+                      date={product.effective_from}
+                      useLocale
+                      year="numeric"
+                      month="long"
+                      day="numeric"
+                    />
+                  </p>
+                </div>
+              )}
+              {product.effective_to && (
+                <div className="space-y-1">
+                  <label
+                    className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
+                  >
+                    Effective To
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    <DateFormatter
+                      date={product.effective_to}
+                      useLocale
+                      year="numeric"
+                      month="long"
+                      day="numeric"
+                    />
                   </p>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Validity Information */}
-          {(product.validity_days ||
-            product.validity_hours ||
-            product.effective_from ||
-            product.effective_to) && (
-            <div
-              className={`bg-white ${tw.rounded} border border-[${tw.borderDefault}] p-6`}
-            >
-              <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
-                Validity Period
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {product.validity_days && (
-                  <div className="space-y-1">
-                    <label
-                      className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
-                    >
-                      Validity Days
-                    </label>
-                    <p className={`text-sm ${tw.textPrimary}`}>
-                      {product.validity_days}{" "}
-                      {product.validity_days === 1 ? "day" : "days"}
-                    </p>
-                  </div>
-                )}
-                {product.validity_hours && (
-                  <div className="space-y-1">
-                    <label
-                      className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
-                    >
-                      Validity Hours
-                    </label>
-                    <p className={`text-sm ${tw.textPrimary}`}>
-                      {product.validity_hours}{" "}
-                      {product.validity_hours === 1 ? "hour" : "hours"}
-                    </p>
-                  </div>
-                )}
-                {product.effective_from && (
-                  <div className="space-y-1">
-                    <label
-                      className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
-                    >
-                      Effective From
-                    </label>
-                    <p className={`text-sm ${tw.textPrimary}`}>
-                      <DateFormatter
-                        date={product.effective_from}
-                        useLocale
-                        year="numeric"
-                        month="long"
-                        day="numeric"
-                      />
-                    </p>
-                  </div>
-                )}
-                {product.effective_to && (
-                  <div className="space-y-1">
-                    <label
-                      className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
-                    >
-                      Effective To
-                    </label>
-                    <p className={`text-sm ${tw.textPrimary}`}>
-                      <DateFormatter
-                        date={product.effective_to}
-                        useLocale
-                        year="numeric"
-                        month="long"
-                        day="numeric"
-                      />
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Sidebar - Timeline & Metadata */}
+        {/* Sidebar - Timeline & Audit Trail */}
         <div className="space-y-6">
           {/* Timeline */}
           <div
@@ -577,44 +547,37 @@ export default function ProductDetailsPage() {
             </div>
           </div>
 
-          {/* Additional Info */}
-          {(product.available_quantity !== null || product.metadata) && (
-            <div
-              className={`bg-white ${tw.rounded} border border-[${tw.borderDefault}] p-6`}
-            >
-              <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
-                Additional Information
-              </h3>
-              <div className="space-y-4">
-                {product.available_quantity !== null && (
-                  <div className="space-y-1">
-                    <label
-                      className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
-                    >
-                      Available Quantity
-                    </label>
-                    <p className={`text-sm ${tw.textPrimary}`}>
-                      {product.available_quantity}
-                    </p>
-                  </div>
-                )}
-                {product.metadata && (
-                  <div className="space-y-1">
-                    <label
-                      className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
-                    >
-                      Metadata
-                    </label>
-                    <pre
-                      className={`text-xs ${tw.textPrimary} bg-gray-50 p-3 ${tw.rounded} overflow-x-auto`}
-                    >
-                      {JSON.stringify(product.metadata, null, 2)}
-                    </pre>
-                  </div>
-                )}
+          {/* Audit Trail */}
+          <div
+            className={`bg-white ${tw.rounded} border border-[${tw.borderDefault}] p-6`}
+          >
+            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
+              Audit Trail
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-1">
+                <label
+                  className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
+                >
+                  Created By
+                </label>
+                <p className={`text-sm ${tw.textPrimary}`}>
+                  {product.created_by || "-"}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <label
+                  className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
+                >
+                  Updated By
+                </label>
+                <p className={`text-sm ${tw.textPrimary}`}>
+                  {product.updated_by || "-"}
+                </p>
               </div>
             </div>
-          )}
+          </div>
+
         </div>
       </div>
 

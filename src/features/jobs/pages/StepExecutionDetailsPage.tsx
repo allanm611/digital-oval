@@ -20,17 +20,9 @@ import { ExecutionProgress, ResourceUsage } from "../types/jobExecution";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import BackButton from "../../../shared/components/ui/BackButton";
+import DateFormatter from "../../../shared/components/DateFormatter";
 import { color, tw } from "../../../shared/utils/utils";
 import { ENABLE_JOB_EXECUTION_WRITES_FOR_ALL } from "../../../shared/utils/featureFlags";
-
-const formatDateTime = (value?: string | null) => {
-  if (!value) return "—";
-  try {
-    return new Date(value).toLocaleString();
-  } catch {
-    return value;
-  }
-};
 
 const formatDuration = (seconds: number | null) => {
   if (!seconds) return "—";
@@ -310,7 +302,7 @@ export default function StepExecutionDetailsPage() {
             <div>
               <dt className="text-sm font-medium text-gray-500">Started At</dt>
               <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
-                {formatDateTime(execution.started_at)}
+                <DateFormatter date={execution.started_at} />
               </dd>
             </div>
             <div>
@@ -318,7 +310,7 @@ export default function StepExecutionDetailsPage() {
                 Completed At
               </dt>
               <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
-                {formatDateTime(execution.completed_at)}
+                <DateFormatter date={execution.completed_at} />
               </dd>
             </div>
             <div>
@@ -362,13 +354,13 @@ export default function StepExecutionDetailsPage() {
             <div>
               <dt className="text-sm font-medium text-gray-500">Created At</dt>
               <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
-                {formatDateTime(execution.created_at)}
+                <DateFormatter date={execution.created_at} />
               </dd>
             </div>
             <div>
               <dt className="text-sm font-medium text-gray-500">Updated At</dt>
               <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
-                {formatDateTime(execution.updated_at)}
+                <DateFormatter date={execution.updated_at} />
               </dd>
             </div>
           </dl>
@@ -410,7 +402,7 @@ export default function StepExecutionDetailsPage() {
                   Estimated Completion
                 </dt>
                 <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
-                  {formatDateTime(progress.estimated_completion)}
+                  <DateFormatter date={progress.estimated_completion} />
                 </dd>
               </div>
             )}

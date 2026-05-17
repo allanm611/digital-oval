@@ -113,6 +113,71 @@ export function validateMessageSyntax(text: string): string {
 }
 
 /**
+ * Detects if any changes were made inside existing variables
+ * Returns error if user tried to edit inside a variable {{ }}
+ * Variables should be immutable - users must delete and re-insert instead
+ *
+ * Allows adding text before, between, and after variables - just not inside them
+ *
+ * @param oldText - The previous text content
+ * @param newText - The new text content
+ * @returns Error message if edit inside variable detected, empty string if valid
+ */
+export function validateNoEditInsideVariables(
+  oldText: string,
+  newText: string
+): string {
+  // Find all variable positions in oldText
+  const variableRanges: Array<{ start: number; end: number }> = [];
+  const variablePattern = /\{\{[^}]*\}\}/g;
+  let match;
+  while ((match = variablePattern.exec(oldText)) !== null) {
+    variableRanges.push({ start: match.index, end: match.index + match[0].length });
+  }
+
+  // Find the first position where oldText and newText differ
+  let diffStart = 0;
+  let diffEnd = 0;
+
+  // Find where changes start
+  for (let i = 0; i < Math.min(oldText.length, newText.length); i++) {
+    if (oldText[i] !== newText[i]) {
+      diffStart = i;
+      break;
+    }
+  }
+
+  // Find where changes end (check from the end)
+  const oldEnd = oldText.length - 1;
+  const newEnd = newText.length - 1;
+  for (let i = 0; i < Math.min(oldText.length, newText.length); i++) {
+    if (oldText[oldEnd - i] !== newText[newEnd - i]) {
+      diffEnd = Math.min(oldText.length, newText.length) - i;
+      break;
+    }
+  }
+
+  // Check if the changed range overlaps with any variable's INTERIOR (not just boundaries)
+  for (const range of variableRanges) {
+    // Only block if the change is strictly inside the variable brackets {{ }}
+    // Allow changes at the boundaries (start and end of variable)
+    const variableStart = range.start + 2; // After {{
+    const variableEnd = range.end - 2; // Before }}
+
+    // If change is inside the variable interior, block it
+    if (diffStart >= variableStart && diffStart < variableEnd) {
+      return "You can't edit inside a variable";
+    }
+
+    if (diffEnd > variableStart && diffEnd <= variableEnd) {
+      return "You can't edit inside a variable";
+    }
+  }
+
+  return "";
+}
+
+/**
  * Formats a template variable into its placeholder string representation.
  * Format: {{source_name.field_value}}
  *
@@ -185,6 +250,30 @@ export function insertVariableAtCursor(
     newText,
     newCursorPosition,
   };
+}
+
+/**
+ * Checks if the cursor position is inside a variable bracket {{ }}
+ * Used to prevent typing inside variables
+ *
+ * @param text - The current text content
+ * @param cursorPosition - The cursor position
+ * @returns True if cursor is inside a variable, false otherwise
+ */
+export function isCursorInsideVariable(text: string, cursorPosition: number): boolean {
+  let bracketDepth = 0;
+
+  for (let i = 0; i < Math.min(cursorPosition, text.length); i++) {
+    if (text[i] === "{" && text[i + 1] === "{") {
+      bracketDepth++;
+      i++; // Skip next character
+    } else if (text[i] === "}" && text[i + 1] === "}") {
+      bracketDepth--;
+      i++; // Skip next character
+    }
+  }
+
+  return bracketDepth > 0;
 }
 
 /**

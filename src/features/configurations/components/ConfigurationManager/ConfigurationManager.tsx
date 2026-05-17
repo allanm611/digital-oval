@@ -26,7 +26,7 @@ export interface ConfigurationItem {
 export interface MetadataField {
   label: string;
   key: string;
-  type: "text" | "select" | "toggle" | "textarea" | "date";
+  type: "text" | "select" | "toggle" | "textarea" | "date" | "number";
   required?: boolean;
   options?: { value: string | number | boolean; label: string }[];
   loadOptions?: () => Promise<{ value: string | number; label: string }[]>;

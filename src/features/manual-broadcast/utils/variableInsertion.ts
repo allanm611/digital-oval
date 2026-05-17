@@ -89,32 +89,8 @@ export function validateInsertPosition(
  * @param text - The text to validate
  * @returns Error message if invalid, empty string if valid
  */
-export function validateMessageSyntax(text: string): string {
-  // Check for unclosed brackets
-  const openCount = (text.match(/\{\{/g) || []).length;
-  const closeCount = (text.match(/\}\}/g) || []).length;
-
-  if (openCount !== closeCount) {
-    return `Invalid variable syntax: ${openCount} opening brackets but ${closeCount} closing brackets`;
-  }
-
-  // Check for nested brackets
-  let bracketDepth = 0;
-  for (let i = 0; i < text.length; i++) {
-    if (text[i] === "{" && text[i + 1] === "{") {
-      bracketDepth++;
-      if (bracketDepth > 1) {
-        return `Invalid variable syntax: Nested brackets found at position ${i}`;
-      }
-      i++;
-    } else if (text[i] === "}" && text[i + 1] === "}") {
-      bracketDepth--;
-      i++;
-    }
-  }
-
-  return "";
-}
+// NOTE: validateMessageSyntax and validateNoEditInsideVariables are now in shared/utils/variableInsertion.ts
+// This file kept for backwards compatibility but imports from shared location
 
 /**
  * Formats a template variable into its placeholder string representation.

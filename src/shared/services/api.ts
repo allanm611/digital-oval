@@ -38,6 +38,7 @@ export const API_CONFIG = {
     OFFER_PRODUCTS: "/offer-products",
     OFFER_CREATIVES: "/offer-creatives",
     NOTIFICATIONS: "/notifications",
+    DOCUMENTATION: "/documentation",
   },
   TIMEOUT: 30000, // 30 seconds
   RETRY_ATTEMPTS: 3,

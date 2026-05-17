@@ -50,7 +50,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
       }}
       disabled={disabled}
       onKeyDown={onKeyDown}
-      className={`w-full ${paddingClass} text-sm border ${borderClass} ${tw.rounded}
+      className={`w-full ${paddingClass} text-sm placeholder:text-sm border ${borderClass} ${tw.rounded}
         transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
         ${bgClass}
         ${className}`}
