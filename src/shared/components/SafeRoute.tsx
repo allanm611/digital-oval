@@ -47,7 +47,7 @@ export class SafeRoute extends React.Component<SafeRouteProps, SafeRouteState> {
       const isNetwork = this.isNetworkError(this.state.error);
       const title = isNetwork ? "Network Issue" : "Page Error";
       const message = isNetwork
-        ? "This page has a network issue. Please check your connection and try again."
+        ? "There is a network issue . Please check your connection and try again."
         : "This page encountered an error. Please try refreshing or going back.";
 
       return (

@@ -2014,7 +2014,7 @@ export default function OfferDetailsPage() {
             <p className={`text-base ${tw.textPrimary} flex items-center`}>
               <Clock className="w-4 h-4 mr-2 text-gray-400" />
               {offer.created_at ? (
-                <DateFormatter date={offer.created_at} />
+                <DateFormatter date={offer.created_at} useUserTimezone includeTime />
               ) : (
                 "N/A"
               )}
@@ -2026,7 +2026,7 @@ export default function OfferDetailsPage() {
             </label>
             <p className={`text-base ${tw.textPrimary}`}>
               {offer.updated_at ? (
-                <DateFormatter date={offer.updated_at} />
+                <DateFormatter date={offer.updated_at} useUserTimezone includeTime />
               ) : (
                 "N/A"
               )}

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Save, Eye, File, X } from "lucide-react";
+import { Save, Eye, File, X, Send } from "lucide-react";
 import RegularModal from "../../../shared/components/ui/RegularModal";
 import ModalFooter from "../../../shared/components/ui/ModalFooter";
 import Input from "../../../shared/components/ui/Input";
@@ -39,6 +39,7 @@ import type { TemplateVariable } from "../../manual-broadcast/types";
 import CreateLanguageModal from "./CreateLanguageModal";
 import CreativeTemplateFormModal from "./CreativeTemplateFormModal";
 import { supportsHtmlBody, requiresHtmlBody } from "../utils/channelUtils";
+import SendTestModal from "../../../shared/components/SendTestModal";
 
 interface OfferCreativeFormModalProps {
   isOpen: boolean;
@@ -121,6 +122,7 @@ export default function OfferCreativeFormModal({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [isTestModalOpen, setIsTestModalOpen] = useState(false);
 
   // Data loading
   const [channels, setChannels] = useState<CommunicationChannel[]>([]);
@@ -152,7 +154,21 @@ export default function OfferCreativeFormModal({
       try {
         setChannelsLoading(true);
         const channelsRes = await communicationChannelService.getAll();
-        setChannels(Array.isArray(channelsRes) ? channelsRes : channelsRes?.data || []);
+        const loadedChannels = Array.isArray(channelsRes) ? channelsRes : channelsRes?.data || [];
+        setChannels(loadedChannels);
+
+        // Initialize form with loaded channels
+        if (!initialCreative || mode === "create") {
+          const defaultChannel =
+            loadedChannels.find((ch) => ch.is_active && ch.name === "SMS Normal")?.name ||
+            loadedChannels.find((ch) => ch.is_active && ch.name?.includes("SMS"))?.name ||
+            loadedChannels.find((ch) => ch.is_active)?.name ||
+            "SMS Normal";
+          setFormData((prev) => ({
+            ...prev,
+            channel: defaultChannel as CreativeChannel,
+          }));
+        }
       } catch (err) {
         console.error("Failed to load channels:", err);
       } finally {
@@ -183,7 +199,18 @@ export default function OfferCreativeFormModal({
         setLanguagesLoading(true);
         const langRes = await languageService.getLanguages();
         const langData = langRes?.data || langRes || [];
-        setLanguages(Array.isArray(langData) ? langData : []);
+        const loadedLanguages = Array.isArray(langData) ? langData : [];
+        setLanguages(loadedLanguages);
+
+        // Initialize language
+        if (initialCreative && mode === "edit") {
+          const matchingLang = loadedLanguages.find((l) => l.language_code === initialCreative.locale);
+          if (matchingLang) setSelectedLanguageId(matchingLang.id);
+        } else {
+          const defaultLang = loadedLanguages.find((l) => l.language_code === "en");
+          if (defaultLang) setSelectedLanguageId(defaultLang.id);
+          else setSelectedLanguageId("");
+        }
       } catch (err) {
         console.error("Failed to load languages:", err);
       } finally {
@@ -215,7 +242,7 @@ export default function OfferCreativeFormModal({
 
     loadData();
 
-    // Initialize form data
+    // Initialize form data for edit mode
     if (initialCreative && mode === "edit") {
       setFormData({
         offer_id: initialCreative.offer_id,
@@ -227,8 +254,6 @@ export default function OfferCreativeFormModal({
         is_active: initialCreative.is_active ?? true,
         sms_route: initialCreative.sms_route,
       });
-      const matchingLang = languages.find((l) => l.language_code === initialCreative.locale);
-      if (matchingLang) setSelectedLanguageId(matchingLang.id);
     } else {
       setFormData({
         channel: "SMS",
@@ -238,9 +263,6 @@ export default function OfferCreativeFormModal({
         html_body: "",
         is_active: true,
       });
-      const defaultLang = languages.find((l) => l.language_code === "en");
-      if (defaultLang) setSelectedLanguageId(defaultLang.id);
-      else setSelectedLanguageId("");
     }
 
     setIsRichText(false);
@@ -415,9 +437,7 @@ export default function OfferCreativeFormModal({
         title={`${mode === "create" ? "Add" : "Edit"} Creative`}
         size="2xl"
       >
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column - Form */}
-          <div className="space-y-4">
+        <div className="space-y-4">
             {/* Offer Selector */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -753,36 +773,30 @@ export default function OfferCreativeFormModal({
                 confirmClassName={`px-4 py-2 text-white ${tw.rounded} transition-colors disabled:opacity-50 flex items-center gap-2`}
                 confirmStyle={{ backgroundColor: color.primary.action }}
                 leftContent={
-                  <button
-                    onClick={handlePreview}
-                    className={`inline-flex items-center px-4 py-2 text-sm font-medium ${tw.rounded} transition-colors border border-gray-300 text-gray-700 hover:bg-gray-50`}
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    Preview
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handlePreview}
+                      className={`inline-flex items-center px-4 py-2 text-sm font-medium ${tw.rounded} transition-colors border border-gray-300 text-gray-700 hover:bg-gray-50`}
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Preview
+                    </button>
+                    <button
+                      onClick={() => setIsTestModalOpen(true)}
+                      disabled={!formData.channel}
+                      className={`inline-flex items-center px-4 py-2 text-sm font-medium ${tw.rounded} transition-colors border border-gray-300 ${
+                        formData.channel
+                          ? "text-gray-700 hover:bg-gray-50"
+                          : "text-gray-400 bg-gray-50 cursor-not-allowed"
+                      }`}
+                    >
+                      <Send className="w-4 h-4 mr-2" />
+                      Send Test
+                    </button>
+                  </div>
                 }
               />
             </div>
-          </div>
-
-          {/* Right Column - Preview (shown when Preview button clicked) */}
-          {previewData && (
-            <div className="lg:col-span-1 sticky top-4">
-              <PreviewPanel
-                channel={
-                  formData.channel === "SMS"
-                    ? "SMS"
-                    : formData.channel === "Email"
-                      ? "EMAIL"
-                      : formData.channel === "WhatsApp"
-                        ? "WHATSAPP"
-                        : "PUSH"
-                }
-                title={previewData.rendered_title}
-                body={previewData.rendered_text_body || ""}
-              />
-            </div>
-          )}
         </div>
       </RegularModal>
 
@@ -917,6 +931,16 @@ export default function OfferCreativeFormModal({
             await handleTemplateCreated(template);
           }
         }}
+      />
+
+      {/* Send Test Modal */}
+      <SendTestModal
+        isOpen={isTestModalOpen}
+        onClose={() => setIsTestModalOpen(false)}
+        channel={formData.channel}
+        title={formData.title}
+        textBody={formData.text_body}
+        htmlBody={formData.html_body}
       />
     </>
   );

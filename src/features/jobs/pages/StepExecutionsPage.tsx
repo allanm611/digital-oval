@@ -835,7 +835,7 @@ export default function StepExecutionsPage() {
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       <div className="text-sm">
-                        <DateFormatter date={execution.started_at} />
+                        <DateFormatter date={execution.started_at} useUserTimezone includeTime />
                       </div>
                     </td>
                     <td

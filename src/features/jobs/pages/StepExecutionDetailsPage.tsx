@@ -302,7 +302,7 @@ export default function StepExecutionDetailsPage() {
             <div>
               <dt className="text-sm font-medium text-gray-500">Started At</dt>
               <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
-                <DateFormatter date={execution.started_at} />
+                <DateFormatter date={execution.started_at} useUserTimezone includeTime />
               </dd>
             </div>
             <div>

@@ -125,3 +125,53 @@ export const formatDateTime = (
   return formatDate(date, { includeTime: true });
 };
 
+// Format date with timezone awareness
+export const formatDateWithTimezone = (
+  date: Date | string | number | null | undefined,
+  timezoneOffset: string,
+  options?: {
+    includeTime?: boolean;
+    customFormat?: string;
+  }
+): string => {
+  if (!date) return "";
+
+  const dateObj = date instanceof Date ? date : new Date(date);
+  if (isNaN(dateObj.getTime())) return "";
+
+  // Parse timezone offset (e.g., "+03:00" or "-05:00")
+  const match = timezoneOffset.match(/([+-])(\d{2}):(\d{2})/);
+  if (!match) return formatDate(date, options); // Fallback if invalid offset
+
+  const sign = match[1] === '+' ? 1 : -1;
+  const hours = parseInt(match[2], 10);
+  const minutes = parseInt(match[3], 10);
+  const offsetMinutes = sign * (hours * 60 + minutes);
+
+  // Convert UTC to user's timezone
+  const convertedDate = new Date(dateObj.getTime() + offsetMinutes * 60 * 1000);
+
+  const settings = getDateSettings();
+  const format = options?.customFormat || settings.date_format;
+
+  const year = convertedDate.getFullYear();
+  const month = String(convertedDate.getMonth() + 1).padStart(2, "0");
+  const day = String(convertedDate.getDate()).padStart(2, "0");
+  const yearShort = String(year).slice(-2);
+
+  let formatted = format
+    .replace("YYYY", String(year))
+    .replace("YY", yearShort)
+    .replace("MM", month)
+    .replace("DD", day);
+
+  if (options?.includeTime) {
+    const hrs = String(convertedDate.getHours()).padStart(2, "0");
+    const mins = String(convertedDate.getMinutes()).padStart(2, "0");
+    const secs = String(convertedDate.getSeconds()).padStart(2, "0");
+    formatted += ` ${hrs}:${mins}:${secs}`;
+  }
+
+  return formatted;
+};
+

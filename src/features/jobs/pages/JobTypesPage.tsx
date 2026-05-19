@@ -879,7 +879,7 @@ export default function JobTypesPage() {
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       <span className="text-sm text-gray-600">
-                        <DateFormatter date={jobType.created_at} />
+                        <DateFormatter date={jobType.created_at} useUserTimezone includeTime />
                       </span>
                     </td>
                     <td

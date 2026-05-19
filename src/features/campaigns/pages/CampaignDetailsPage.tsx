@@ -1481,7 +1481,9 @@ export default function CampaignDetailsPage() {
                 {campaign.start_date ? (
                   <DateFormatter
                     date={campaign.start_date}
+                    useUserTimezone
                     useLocale
+                    includeTime
                     year="numeric"
                     month="long"
                     day="numeric"
@@ -1501,7 +1503,9 @@ export default function CampaignDetailsPage() {
                 {campaign.end_date ? (
                   <DateFormatter
                     date={campaign.end_date}
+                    useUserTimezone
                     useLocale
+                    includeTime
                     year="numeric"
                     month="long"
                     day="numeric"
@@ -1644,7 +1648,9 @@ export default function CampaignDetailsPage() {
             <p className={`text-sm ${tw.textPrimary}`}>
               <DateFormatter
                 date={campaign.created_at}
+                useUserTimezone
                 useLocale
+                includeTime
                 year="numeric"
                 month="long"
                 day="numeric"
@@ -1666,7 +1672,9 @@ export default function CampaignDetailsPage() {
             <p className={`text-sm ${tw.textPrimary}`}>
               <DateFormatter
                 date={campaign.updated_at}
+                useUserTimezone
                 useLocale
+                includeTime
                 year="numeric"
                 month="long"
                 day="numeric"
@@ -1854,7 +1862,9 @@ export default function CampaignDetailsPage() {
                     {campaign.start_date ? (
                       <DateFormatter
                         date={campaign.start_date}
+                        useUserTimezone
                         useLocale
+                        includeTime
                         year="numeric"
                         month="long"
                         day="numeric"
@@ -1874,7 +1884,9 @@ export default function CampaignDetailsPage() {
                     {campaign.end_date ? (
                       <DateFormatter
                         date={campaign.end_date}
+                        useUserTimezone
                         useLocale
+                        includeTime
                         year="numeric"
                         month="long"
                         day="numeric"

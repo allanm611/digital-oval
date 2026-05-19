@@ -8,8 +8,10 @@ import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { isValidCountryCodePhone } from "../../../shared/utils/validation";
 import { customerService } from "../services/customerServices";
+import { timezoneService } from "../../../features/configurations/services/timezoneService";
 import type { CustomerSubscriptionRecord } from "../types/customerSubscription";
 import type { CustomerFormData } from "../types/customer";
+import type { TimeZone } from "../../../features/configurations/types/timezone";
 
 interface EditCustomerModalProps {
   isOpen: boolean;
@@ -61,13 +63,6 @@ const PREFERRED_CHANNEL_OPTIONS = [
   { value: "SHORT_CODE", label: "Short Code" },
 ];
 
-const TIMEZONE_OPTIONS = [
-  { value: "Africa/Kampala", label: "Africa/Kampala" },
-  { value: "Africa/Nairobi", label: "Africa/Nairobi" },
-  { value: "Africa/Dar_es_Salaam", label: "Africa/Dar es Salaam" },
-  { value: "Africa/Kigali", label: "Africa/Kigali" },
-];
-
 const initialFormData: FormData = {
   subscriptionId: "",
   firstName: "",
@@ -98,6 +93,31 @@ export default function EditCustomerModal({
   const { success, error } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<FormData>(initialFormData);
+
+  // Timezone state - fetch from API
+  const [timezoneList, setTimezoneList] = useState<TimeZone[]>([]);
+  const [timezonesLoading, setTimezonesLoading] = useState(true);
+
+  // Fetch timezones from API
+  useEffect(() => {
+    const loadTimezones = async () => {
+      try {
+        setTimezonesLoading(true);
+        const data = await timezoneService.getTimezones();
+        if (Array.isArray(data)) {
+          setTimezoneList(data.filter((tz) => tz && tz.is_active === true));
+        } else {
+          setTimezoneList([]);
+        }
+      } catch (err) {
+        console.error("Failed to load timezones:", err);
+        setTimezoneList([]);
+      } finally {
+        setTimezonesLoading(false);
+      }
+    };
+    loadTimezones();
+  }, []);
 
   // Initialize form data when customer changes - fetch full details from API
   useEffect(() => {
@@ -576,13 +596,20 @@ export default function EditCustomerModal({
                 Timezone
               </label>
               <HeadlessSelect
-                options={TIMEZONE_OPTIONS}
+                options={timezoneList
+                  .filter((tz) => tz && tz.value && tz.label)
+                  .map((tz) => ({
+                    value: tz.value || "",
+                    label: `${tz.label || ""} (${tz.utc_offset || ""})`,
+                  }))}
                 value={formData.timezone}
                 onChange={(value) =>
                   setFormData((prev) => ({
                     ...prev,
                     timezone: String(value),
-                  }))
+                  }))}
+                placeholder={timezonesLoading ? "Loading timezones..." : "Select timezone"}
+                disabled={timezonesLoading}
                 }
                 zIndex={zIndex.popover}
               />

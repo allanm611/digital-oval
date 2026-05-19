@@ -1361,7 +1361,7 @@ export default function OffersPage() {
                       className={`px-6 py-4 hidden md:table-cell text-sm ${tw.textMuted}`}
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
-                      <DateFormatter date={offer.created_at} />
+                      <DateFormatter date={offer.created_at} useUserTimezone includeTime />
                     </td>
                     <td
                       className="px-6 py-4 text-sm font-medium"

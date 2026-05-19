@@ -462,7 +462,7 @@ export default function JobExecutionDetailsPage() {
             <div>
               <dt className="text-sm font-medium text-gray-500">Started At</dt>
               <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
-                <DateFormatter date={execution.started_at} />
+                <DateFormatter date={execution.started_at} useUserTimezone includeTime />
               </dd>
             </div>
             <div>
@@ -470,7 +470,7 @@ export default function JobExecutionDetailsPage() {
                 Completed At
               </dt>
               <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
-                <DateFormatter date={execution.completed_at} />
+                <DateFormatter date={execution.completed_at} useUserTimezone includeTime />
               </dd>
             </div>
             <div>
@@ -585,7 +585,7 @@ export default function JobExecutionDetailsPage() {
                   Estimated Completion:{" "}
                 </span>
                 <span className="text-sm text-gray-600">
-                  <DateFormatter date={progress.estimated_completion} />
+                  <DateFormatter date={progress.estimated_completion} useUserTimezone includeTime />
                 </span>
               </div>
             )}
@@ -862,7 +862,7 @@ export default function JobExecutionDetailsPage() {
                             {forecast.execution_id?.substring(0, 8)}...
                           </span>
                           <span className="text-gray-600 ml-2">
-                            Est: <DateFormatter date={forecast.estimated_completion} />
+                            Est: <DateFormatter date={forecast.estimated_completion} useUserTimezone includeTime />
                             ({forecast.confidence?.toFixed(0) || 0}% confidence)
                           </span>
                         </div>

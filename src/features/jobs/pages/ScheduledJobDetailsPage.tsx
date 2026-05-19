@@ -828,7 +828,7 @@ export default function ScheduledJobDetailsPage() {
                   Starts At
                 </label>
                 <p className={`text-sm ${tw.textSecondary}`}>
-                  <DateFormatter date={job.starts_at} />
+                  <DateFormatter date={job.starts_at} useUserTimezone includeTime />
                 </p>
               </div>
             )}

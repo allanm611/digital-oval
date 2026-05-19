@@ -10,7 +10,7 @@ import type {
 } from "../types/scheduling";
 import Checkbox from "./ui/Checkbox";
 import Radio from "./ui/Radio";
-import { getSettingsTimezone, TIMEZONE_OPTIONS } from "../utils/settingsHelper";
+import { getSettingsTimezone } from "../utils/settingsHelper";
 import { timezoneService } from "../../features/configurations/services/timezoneService";
 import type { TimeZone } from "../../features/configurations/types/timezone";
 

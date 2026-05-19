@@ -9,7 +9,9 @@ import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../../shared/components/ui/Checkbox";
 import Radio from "../../../../shared/components/ui/Radio";
 import Input from "../../../../shared/components/ui/Input";
-import { getSettingsTimezone, TIMEZONE_OPTIONS } from "../../../../shared/utils/settingsHelper";
+import { getSettingsTimezone } from "../../../../shared/utils/settingsHelper";
+import { timezoneService } from "../../../configurations/services/timezoneService";
+import type { TimeZone } from "../../../configurations/types/timezone";
 
 interface SchedulingStepProps {
   formData: CreateCampaignRequest;
@@ -56,6 +58,31 @@ export default function SchedulingStep({
   const [targetRenderTime, setTargetRenderTime] = useState("Real Time");
   const [startBroadcastBefore, setStartBroadcastBefore] = useState("Before");
   const [hoursBeforeBroadcast, setHoursBeforeBroadcast] = useState(0);
+
+  // Timezone state - fetch from API
+  const [timezoneList, setTimezoneList] = useState<TimeZone[]>([]);
+  const [timezonesLoading, setTimezonesLoading] = useState(true);
+
+  // Fetch timezones from API
+  useEffect(() => {
+    const loadTimezones = async () => {
+      try {
+        setTimezonesLoading(true);
+        const data = await timezoneService.getTimezones();
+        if (Array.isArray(data)) {
+          setTimezoneList(data.filter((tz) => tz && tz.is_active === true));
+        } else {
+          setTimezoneList([]);
+        }
+      } catch (error) {
+        console.error("Failed to load timezones:", error);
+        setTimezoneList([]);
+      } finally {
+        setTimezonesLoading(false);
+      }
+    };
+    loadTimezones();
+  }, []);
 
   // Initialize formData with default scheduling if not present
   useEffect(() => {
@@ -248,9 +275,15 @@ export default function SchedulingStep({
               onChange={(value) =>
                 updateScheduling({ time_zone: value as string })
               }
-              options={TIMEZONE_OPTIONS}
-              placeholder="Select timezone"
+              options={timezoneList
+                .filter((tz) => tz && tz.value && tz.label)
+                .map((tz) => ({
+                  value: tz.value || "",
+                  label: `${tz.label || ""} (${tz.utc_offset || ""})`,
+                }))}
+              placeholder={timezonesLoading ? "Loading timezones..." : "Select timezone"}
               searchable={true}
+              disabled={timezonesLoading}
               className="w-full"
             />
             {/* <p className="text-xs text-gray-500 mt-2">

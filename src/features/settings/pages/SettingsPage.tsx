@@ -130,6 +130,7 @@ interface SettingsType {
   country_code: string;
   language: string;
   timezone: string;
+  timezone_offset?: string; // e.g., "+03:00"
   date_format: string;
   currency: string;
   number_formatting: string;
@@ -170,6 +171,7 @@ export default function SettingsPage() {
           country_code: parsed.country_code || "KE",
           language: parsed.language || "English",
           timezone: parsed.timezone || "Africa/Nairobi",
+          timezone_offset: parsed.timezone_offset || "+03:00",
           date_format: parsed.date_format || "YYYY-MM-DD",
           currency: parsed.currency || "KES",
           number_formatting: parsed.number_formatting || "1,234.56",
@@ -201,6 +203,7 @@ export default function SettingsPage() {
       country_code: "KE",
       language: "English",
       timezone: "Africa/Nairobi",
+      timezone_offset: "+03:00",
       date_format: "YYYY-MM-DD",
       currency: "KES",
       number_formatting: "1,234.56",
@@ -532,7 +535,13 @@ export default function SettingsPage() {
   };
 
   const handleTimezoneChange = (timezone: string) => {
-    setSettings({ ...settings, timezone });
+    // Find the timezone in the list to get its offset
+    const selectedTz = timezoneList.find((tz) => tz.value === timezone);
+    setSettings({
+      ...settings,
+      timezone,
+      timezone_offset: selectedTz?.utc_offset || "+00:00",
+    });
   };
 
   const handleDateFormatChange = (date_format: string) => {

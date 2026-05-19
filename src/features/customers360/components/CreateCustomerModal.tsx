@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import {
   X,
@@ -17,8 +17,10 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { customerService } from "../services/customerServices";
+import { timezoneService } from "../../../features/configurations/services/timezoneService";
 import type { CustomerSubscriptionRecord } from "../types/customerSubscription";
 import type { CustomerFormData } from "../types/customer";
+import type { TimeZone } from "../../../features/configurations/types/timezone";
 
 interface CreateCustomerModalProps {
   isOpen: boolean;
@@ -85,13 +87,6 @@ const PREFERRED_CHANNEL_OPTIONS = [
   { value: "IVR", label: "IVR" },
   { value: "OBD", label: "OBD" },
   { value: "SHORT_CODE", label: "Short Code" },
-];
-
-const TIMEZONE_OPTIONS = [
-  { value: "Africa/Kampala", label: "Africa/Kampala" },
-  { value: "Africa/Nairobi", label: "Africa/Nairobi" },
-  { value: "Africa/Dar_es_Salaam", label: "Africa/Dar es Salaam" },
-  { value: "Africa/Kigali", label: "Africa/Kigali" },
 ];
 
 const initialFormData: FormData = {
@@ -167,6 +162,31 @@ export default function CreateCustomerModal({
     gender?: number;
   } | null>(null);
   const [mappingConfirmed, setMappingConfirmed] = useState(false);
+
+  // Timezone state - fetch from API
+  const [timezoneList, setTimezoneList] = useState<TimeZone[]>([]);
+  const [timezonesLoading, setTimezonesLoading] = useState(true);
+
+  // Fetch timezones from API
+  useEffect(() => {
+    const loadTimezones = async () => {
+      try {
+        setTimezonesLoading(true);
+        const data = await timezoneService.getTimezones();
+        if (Array.isArray(data)) {
+          setTimezoneList(data.filter((tz) => tz && tz.is_active === true));
+        } else {
+          setTimezoneList([]);
+        }
+      } catch (error) {
+        console.error("Failed to load timezones:", error);
+        setTimezoneList([]);
+      } finally {
+        setTimezonesLoading(false);
+      }
+    };
+    loadTimezones();
+  }, []);
 
   // Helper function to detect column indices from headers
   const detectColumnIndices = (headerRow: string[]) => {
@@ -1135,13 +1155,20 @@ export default function CreateCustomerModal({
                       Timezone
                     </label>
                     <HeadlessSelect
-                      options={TIMEZONE_OPTIONS}
+                      options={timezoneList
+                        .filter((tz) => tz && tz.value && tz.label)
+                        .map((tz) => ({
+                          value: tz.value || "",
+                          label: `${tz.label || ""} (${tz.utc_offset || ""})`,
+                        }))}
                       value={formData.timezone}
                       onChange={(value) =>
                         setFormData((prev) => ({
                           ...prev,
                           timezone: String(value),
-                        }))
+                        }))}
+                      placeholder={timezonesLoading ? "Loading timezones..." : "Select timezone"}
+                      disabled={timezonesLoading}
                       }
                       zIndex={zIndex.popover}
                     />

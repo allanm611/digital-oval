@@ -1171,7 +1171,7 @@ export default function JobExecutionsPage() {
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       <div className={`text-sm ${tw.textSecondary}`}>
-                        <DateFormatter date={execution.started_at} />
+                        <DateFormatter date={execution.started_at} useUserTimezone includeTime />
                       </div>
                     </td>
                     <td
