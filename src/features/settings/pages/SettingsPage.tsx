@@ -228,6 +228,7 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState<SettingsType>(loadSettings());
   const [isSaving, setIsSaving] = useState(false);
   const [originalSettings] = useState<SettingsType>(loadSettings());
+  const [savingSection, setSavingSection] = useState<string | null>(null);
   const [characterSetOptions, setCharacterSetOptions] = useState<
     Array<{ value: string; label: string }>
   >([]);
@@ -640,6 +641,35 @@ export default function SettingsPage() {
     }
   };
 
+  const handleSaveSection = async (sectionName: string) => {
+    try {
+      setSavingSection(sectionName);
+      // Simulate save delay
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      // Save to localStorage
+      localStorage.setItem("appSettings", JSON.stringify(settings));
+      localStorage.setItem(
+        "preferredNotificationChannels",
+        JSON.stringify(preferredNotificationChannels),
+      );
+      // Update language if it changed
+      if (sectionName === "localization") {
+        setLanguageSettings(settings.language);
+        setLanguage(settings.language);
+      }
+      // Update theme if it changed
+      if (sectionName === "theme") {
+        setTheme(settings.theme);
+      }
+      showToast(`${sectionName.charAt(0).toUpperCase() + sectionName.slice(1)} saved successfully`);
+    } catch (err) {
+      console.error(`Failed to save ${sectionName}:`, err);
+      showToast(`Failed to save ${sectionName}`, "error");
+    } finally {
+      setSavingSection(null);
+    }
+  };
+
   const handleReset = () => {
     setSettings({ ...originalSettings });
   };
@@ -698,8 +728,8 @@ export default function SettingsPage() {
           </p>
         </div>
 
-        {/* Save and Cancel */}
-        <div className="flex flex-row items-center gap-2 md:gap-3 w-full md:w-auto overflow-x-auto whitespace-nowrap">
+        {/* Save and Cancel - COMMENTED OUT */}
+        {/* <div className="flex flex-row items-center gap-2 md:gap-3 w-full md:w-auto overflow-x-auto whitespace-nowrap">
           <PermissionGate permission="system.settings.manage">
             <>
               <button
@@ -728,7 +758,7 @@ export default function SettingsPage() {
               </button>
             </>
           </PermissionGate>
-        </div>
+        </div> */}
       </div>
 
       {/* Settings Cards Grid */}
@@ -737,13 +767,25 @@ export default function SettingsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
         >
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              {t.settings.location}
-            </h2>
-            <p className="text-sm text-gray-500">
-              Set your country and regional information
-            </p>
+          <div className="mb-6 flex justify-between items-start">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                {t.settings.location}
+              </h2>
+              <p className="text-sm text-gray-500">
+                Set your country and regional information
+              </p>
+            </div>
+            <button
+              onClick={() => handleSaveSection('location')}
+              disabled={savingSection === 'location'}
+              className={`px-4 py-2 text-sm font-medium ${tw.rounded} text-white flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-[#252829]`}
+            >
+              {savingSection === 'location' ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : null}
+              {t.settings.saveChanges}
+            </button>
           </div>
 
           <div className="space-y-6">
@@ -788,13 +830,27 @@ export default function SettingsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
         >
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              Localization
-            </h2>
-            <p className="text-sm text-gray-500">
-              Configure language and timezone preferences
-            </p>
+          <div className="mb-6 flex justify-between items-start">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                Localization
+              </h2>
+              <p className="text-sm text-gray-500">
+                Configure language and timezone preferences
+              </p>
+            </div>
+            <button
+              onClick={() => handleSaveSection('localization')}
+              disabled={savingSection === 'localization'}
+              className={`px-4 py-2 text-sm font-medium ${tw.rounded} text-white flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-[#252829]`}
+            >
+              {savingSection === 'localization' ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <Save className="w-4 h-4" />
+              )}
+              {t.settings.saveChanges}
+            </button>
           </div>
 
           <div className="space-y-6">
@@ -835,13 +891,27 @@ export default function SettingsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
         >
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              {t.settings.dateFormat}
-            </h2>
-            <p className="text-sm text-gray-500">
-              Choose how dates are displayed throughout the system
-            </p>
+          <div className="mb-6 flex justify-between items-start">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                {t.settings.dateFormat}
+              </h2>
+              <p className="text-sm text-gray-500">
+                Choose how dates are displayed throughout the system
+              </p>
+            </div>
+            <button
+              onClick={() => handleSaveSection('dateFormat')}
+              disabled={savingSection === 'dateFormat'}
+              className={`px-4 py-2 text-sm font-medium ${tw.rounded} text-white flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-[#252829]`}
+            >
+              {savingSection === 'dateFormat' ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <Save className="w-4 h-4" />
+              )}
+              {t.settings.saveChanges}
+            </button>
           </div>
 
           <div>
@@ -872,13 +942,27 @@ export default function SettingsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
         >
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              {t.settings.currency} & Formatting
-            </h2>
-            <p className="text-sm text-gray-500">
-              Set currency and number display preferences
-            </p>
+          <div className="mb-6 flex justify-between items-start">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                {t.settings.currency} & Formatting
+              </h2>
+              <p className="text-sm text-gray-500">
+                Set currency and number display preferences
+              </p>
+            </div>
+            <button
+              onClick={() => handleSaveSection('currency')}
+              disabled={savingSection === 'currency'}
+              className={`px-4 py-2 text-sm font-medium ${tw.rounded} text-white flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-[#252829]`}
+            >
+              {savingSection === 'currency' ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <Save className="w-4 h-4" />
+              )}
+              {t.settings.saveChanges}
+            </button>
           </div>
 
           <div className="space-y-6">
@@ -954,13 +1038,27 @@ export default function SettingsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
         >
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              Character Sets
-            </h2>
-            <p className="text-sm text-gray-500">
-              Select SMS text encoding for message delivery
-            </p>
+          <div className="mb-6 flex justify-between items-start">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                Character Sets
+              </h2>
+              <p className="text-sm text-gray-500">
+                Select SMS text encoding for message delivery
+              </p>
+            </div>
+            <button
+              onClick={() => handleSaveSection('characterSet')}
+              disabled={savingSection === 'characterSet'}
+              className={`px-4 py-2 text-sm font-medium ${tw.rounded} text-white flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-[#252829]`}
+            >
+              {savingSection === 'characterSet' ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <Save className="w-4 h-4" />
+              )}
+              {t.settings.saveChanges}
+            </button>
           </div>
 
           <div>
@@ -983,13 +1081,27 @@ export default function SettingsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
         >
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              Default Sender ID
-            </h2>
-            <p className="text-sm text-gray-500">
-              Set the default SMS sender ID for campaigns
-            </p>
+          <div className="mb-6 flex justify-between items-start">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                Default Sender ID
+              </h2>
+              <p className="text-sm text-gray-500">
+                Set the default SMS sender ID for campaigns
+              </p>
+            </div>
+            <button
+              onClick={() => handleSaveSection('senderId')}
+              disabled={savingSection === 'senderId'}
+              className={`px-4 py-2 text-sm font-medium ${tw.rounded} text-white flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-[#252829]`}
+            >
+              {savingSection === 'senderId' ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <Save className="w-4 h-4" />
+              )}
+              {t.settings.saveChanges}
+            </button>
           </div>
 
           <div>
@@ -1012,13 +1124,27 @@ export default function SettingsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8 lg:col-span-2`}
         >
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              Default Communication Channel & Route
-            </h2>
-            <p className="text-sm text-gray-500">
-              Set the default channel and its corresponding route
-            </p>
+          <div className="mb-6 flex justify-between items-start">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                Default Communication Channel & Route
+              </h2>
+              <p className="text-sm text-gray-500">
+                Set the default channel and its corresponding route
+              </p>
+            </div>
+            <button
+              onClick={() => handleSaveSection('communication')}
+              disabled={savingSection === 'communication'}
+              className={`px-4 py-2 text-sm font-medium ${tw.rounded} text-white flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-[#252829]`}
+            >
+              {savingSection === 'communication' ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <Save className="w-4 h-4" />
+              )}
+              {t.settings.saveChanges}
+            </button>
           </div>
 
           {(() => {
@@ -1121,13 +1247,27 @@ export default function SettingsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8 lg:col-span-2`}
         >
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              Do Not Disturb (DND) Settings
-            </h2>
-            <p className="text-sm text-gray-500">
-              Configure default quiet hours for message delivery
-            </p>
+          <div className="mb-6 flex justify-between items-start">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                Do Not Disturb (DND) Settings
+              </h2>
+              <p className="text-sm text-gray-500">
+                Configure default quiet hours for message delivery
+              </p>
+            </div>
+            <button
+              onClick={() => handleSaveSection('dnd')}
+              disabled={savingSection === 'dnd'}
+              className={`px-4 py-2 text-sm font-medium ${tw.rounded} text-white flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-[#252829]`}
+            >
+              {savingSection === 'dnd' ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <Save className="w-4 h-4" />
+              )}
+              {t.settings.saveChanges}
+            </button>
           </div>
 
           <div className="space-y-6">
@@ -1390,13 +1530,27 @@ export default function SettingsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8 lg:col-span-2`}
         >
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              Display Theme
-            </h2>
-            <p className="text-sm text-gray-500">
-              Choose your preferred color scheme
-            </p>
+          <div className="mb-6 flex justify-between items-start">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                Display Theme
+              </h2>
+              <p className="text-sm text-gray-500">
+                Choose your preferred color scheme
+              </p>
+            </div>
+            <button
+              onClick={() => handleSaveSection('theme')}
+              disabled={savingSection === 'theme'}
+              className={`px-4 py-2 text-sm font-medium ${tw.rounded} text-white flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-[#252829]`}
+            >
+              {savingSection === 'theme' ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <Save className="w-4 h-4" />
+              )}
+              {t.settings.saveChanges}
+            </button>
           </div>
 
           <div>

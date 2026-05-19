@@ -1169,7 +1169,6 @@ export default function CreateCustomerModal({
                         }))}
                       placeholder={timezonesLoading ? "Loading timezones..." : "Select timezone"}
                       disabled={timezonesLoading}
-                      }
                       zIndex={zIndex.popover}
                     />
                   </div>

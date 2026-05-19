@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, Trash2, X } from "lucide-react";
+import { Bell, Trash2, X, Settings } from "lucide-react";
 import { useNotifications } from "../../../contexts/NotificationContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { InboxNotification } from "../types/notification";
 import { color, tw } from "../../../shared/utils/utils";
+import { buttons } from "../../../shared/utils/tokens";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -260,6 +261,17 @@ export default function NotificationsPage() {
                 ) : (
                   t.notifications.deleteAll
                 )}
+              </button>
+              <button
+                onClick={() => navigate("/dashboard/notification-settings")}
+                style={{
+                  background: buttons.secondaryAction.background,
+                  color: buttons.secondaryAction.color,
+                }}
+                className={`text-sm font-medium transition-colors px-4 py-2 ${tw.rounded} cursor-pointer flex items-center justify-center gap-2 hover:bg-gray-100`}
+              >
+                <Settings className="w-4 h-4" />
+                Notification Settings
               </button>
             </div>
           )}

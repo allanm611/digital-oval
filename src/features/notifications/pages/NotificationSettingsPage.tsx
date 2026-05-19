@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { Volume2, VolumeX } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useNotificationSettings } from "../../../contexts/NotificationSettingsContext";
 import { useToast } from "../../../contexts/ToastContext";
@@ -8,6 +9,7 @@ import { color, tw } from "../../../shared/utils/utils";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Input from "../../../shared/components/ui/Input";
+import BackButton from "../../../shared/components/ui/BackButton";
 
 interface NotificationSubscription {
   rule_id: number;
@@ -34,6 +36,7 @@ const EMAIL_DIGEST_OPTIONS = [
 ];
 
 export default function NotificationSettingsPage() {
+  const navigate = useNavigate();
   const { t } = useLanguage();
   const { settings, updateSettings } = useNotificationSettings();
   const { success, error: showError } = useToast();
@@ -132,40 +135,36 @@ export default function NotificationSettingsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="mb-8 flex items-start justify-between">
-        <div>
-          <h1 className={`text-2xl font-bold ${tw.textPrimary} mb-2`}>
-            {t.notifications.settings.title}
-          </h1>
-          <p className={`${tw.textSecondary} text-sm`}>
-            {t.notifications.settings.subtitle}
-          </p>
+      {/* Header with Breadcrumb and Buttons */}
+      <div className="mb-8 flex items-center justify-between">
+        <BackButton
+          fallbackTo="/dashboard/notifications"
+          parentLabel="Notifications"
+          currentLabel="Notification Settings"
+          showBreadcrumb={true}
+        />
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleCancel}
+            className={`${tw.borderedButton} px-6 py-2`}
+            style={{
+              borderColor: color.primary.action,
+              color: color.primary.action,
+            }}
+          >
+            {t.notifications.cancel}
+          </button>
+          <button
+            onClick={handleSaveAll}
+            disabled={isSaving}
+            className={`${tw.button} px-6 py-2 flex items-center gap-2 disabled:opacity-50`}
+          >
+            {isSaving && (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            )}
+            {t.notifications.save}
+          </button>
         </div>
-        {hasChanges && (
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleCancel}
-              className={`${tw.borderedButton} px-6 py-2`}
-              style={{
-                borderColor: color.primary.action,
-                color: color.primary.action,
-              }}
-            >
-              {t.notifications.cancel}
-            </button>
-            <button
-              onClick={handleSaveAll}
-              disabled={isSaving}
-              className={`${tw.button} px-6 py-2 flex items-center gap-2 disabled:opacity-50`}
-            >
-              {isSaving && (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              )}
-              {t.notifications.save}
-            </button>
-          </div>
-        )}
       </div>
 
       {/* Sound Settings and Notification Channels - Side by Side */}
@@ -261,8 +260,8 @@ export default function NotificationSettingsPage() {
           </div>
 
           {/* Email Notifications */}
-          <div className="pr-4 py-4 bg-gray-50 rounded space-y-3">
-            <div className="flex items-center justify-between">
+          <div>
+            <div className="flex items-center justify-between pb-1 bg-gray-50 rounded">
               <label htmlFor="email-enabled" className="text-sm font-medium text-gray-900">
                 {t.notifications.settings.emailNotifications}
               </label>
@@ -275,10 +274,7 @@ export default function NotificationSettingsPage() {
               />
             </div>
             {localSettings.email_notifications_enabled && (
-              <div className="space-y-2">
-                {/* <label className="text-xs font-medium text-gray-700">
-                  {t.notifications.settings.emailFrequency}
-                </label> */}
+              <div className="mt-3 ml-0">
                 <HeadlessSelect
                   options={EMAIL_DIGEST_OPTIONS}
                   value={localSettings.email_digest_frequency}
