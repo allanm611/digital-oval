@@ -1,3 +1,12 @@
+## [1.2.6](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.2.5...v1.2.6) (2026-05-19)
+
+
+### Bug Fixes
+
+* added thesave button on each card on the settings page and also fixed the notificaitons settings page ([08e8c42](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/08e8c42a5b629c0e1f00f59012a51c16b09a52e1))
+* added timezone converison function, added a test modal on creatives ([b3d6409](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/b3d6409b90d78b35bfb2b61566cd21a084cba6f3))
+* fixing the breadcrumb of admin feature pages ([2e8ecf4](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/2e8ecf486dfa0784fbfe05101eb0329f1bdd61d7))
+
 ## [1.0.1](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.0.0...v1.0.1) (2026-05-17)
 
 
