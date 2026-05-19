@@ -177,22 +177,15 @@ export default function EtlFileRegistryPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <BackButton
-            fallbackTo="/dashboard/administration"
+            fallbackTo="/dashboard"
             showBreadcrumb={true}
-            parentLabel="Admin Hub"
+            parentLabel="Administration"
             currentLabel="ETL"
           />
-          {/* <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
-            {t.etl.fileRegistry}
-          </h1> */}
-          <p className={`${tw.textSecondary} mt-6 text-sm`}>
-            {t.etl.fileRegistryDescription}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => setShowFetchDropdown(!showFetchDropdown)}
@@ -264,6 +257,10 @@ export default function EtlFileRegistryPage() {
             {t.etl.analytics}
           </button>
         </div>
+        </div>
+        <p className={`${tw.textSecondary} text-sm`}>
+          {t.etl.fileRegistryDescription}
+        </p>
       </div>
 
       {/* Stats Cards */}

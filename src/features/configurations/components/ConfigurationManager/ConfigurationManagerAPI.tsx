@@ -262,6 +262,7 @@ export default function ConfigurationManagerAPI({
         <BackButton
           fallbackTo={config.backPath}
           showBreadcrumb={true}
+          parentLabel={(config as any).parentLabel}
           currentLabel={config.title}
         />
       )}

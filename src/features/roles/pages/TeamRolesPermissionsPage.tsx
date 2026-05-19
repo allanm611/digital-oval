@@ -536,67 +536,64 @@ export default function TeamRolesPermissionsPage() {
   return (
     <div className="space-y-6 p-0">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-        <div className="min-w-0">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <BackButton
-            fallbackTo="/dashboard/administration"
+            fallbackTo="/dashboard"
             showBreadcrumb={true}
-            parentLabel="Admin Hub"
+            parentLabel="Administration"
             currentLabel="Access Control"
           />
-          {/* <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
-            Access Control
-          </h1> */}
-          <p className={`${tw.textSecondary} mt-6 text-sm`}>
-            Manage roles, permissions, and access control
-          </p>
-        </div>
-        {activeTab === "assign" && selectedRoleForAssign && (
-          <button
-            onClick={() => {
-              if (!isSelectionMode) {
-                setIsSelectionMode(true);
-              } else {
-                setIsSelectionMode(false);
+          {activeTab === "assign" && selectedRoleForAssign && (
+            <button
+              onClick={() => {
+                if (!isSelectionMode) {
+                  setIsSelectionMode(true);
+                } else {
+                  setIsSelectionMode(false);
+                }
+              }}
+              disabled={!selectedRoleForAssign}
+              className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap flex-shrink-0 ${
+                isSelectionMode
+                  ? "text-white"
+                  : "border text-gray-700 bg-transparent hover:border-gray-400"
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+              style={{
+                backgroundColor: isSelectionMode
+                  ? color.primary.action
+                  : "transparent",
+                borderColor: isSelectionMode
+                  ? "transparent"
+                  : color.primary.action + "40",
+                color: isSelectionMode ? "white" : color.primary.action,
+              }}
+            >
+              {isSelectionMode ? (
+                <>
+                  <CheckSquare className="w-4 h-4" />
+                  Exit Selection
+                </>
+              ) : (
+                <>
+                  <Square className="w-4 h-4" />
+                  Select Multiple
+                </>
+              )}
+            </button>
+          )}
+          {activeTab !== "assign" && (
+            <CreateButton
+              onClick={
+                activeTab === "roles" ? handleCreateRole : handleCreatePermission
               }
-            }}
-            disabled={!selectedRoleForAssign}
-            className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap flex-shrink-0 ${
-              isSelectionMode
-                ? "text-white"
-                : "border text-gray-700 bg-transparent hover:border-gray-400"
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
-            style={{
-              backgroundColor: isSelectionMode
-                ? color.primary.action
-                : "transparent",
-              borderColor: isSelectionMode
-                ? "transparent"
-                : color.primary.action + "40",
-              color: isSelectionMode ? "white" : color.primary.action,
-            }}
-          >
-            {isSelectionMode ? (
-              <>
-                <CheckSquare className="w-4 h-4" />
-                Exit Selection
-              </>
-            ) : (
-              <>
-                <Square className="w-4 h-4" />
-                Select Multiple
-              </>
-            )}
-          </button>
-        )}
-        {activeTab !== "assign" && (
-          <CreateButton
-            onClick={
-              activeTab === "roles" ? handleCreateRole : handleCreatePermission
-            }
-            label={activeTab === "roles" ? "Create Role" : "Create Permission"}
-          />
-        )}
+              label={activeTab === "roles" ? "Create Role" : "Create Permission"}
+            />
+          )}
+        </div>
+        <p className={`${tw.textSecondary} text-sm`}>
+          Manage roles, permissions, and access control
+        </p>
       </div>
 
       {/* Custom Tabs */}

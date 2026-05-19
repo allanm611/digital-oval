@@ -3,6 +3,7 @@ import { Plus, Star, Users, Trash2, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -335,38 +336,41 @@ export default function VIPListManagementPage() {
   return (
     <div className="space-y-6">
       {/* Header with Title and Buttons */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
-            {t.vipListManagement.title}
-          </h1>
-          <p className={`${tw.textSecondary} mt-2 text-sm`}>
-            {t.vipListManagement.subtitle}
-          </p>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <BackButton
+            fallbackTo="/dashboard"
+            showBreadcrumb={true}
+            parentLabel="Administration"
+            currentLabel="VIP List Management"
+          />
+          {/* Tab-specific buttons */}
+          <div className="flex items-center gap-3 w-auto flex-shrink-0">
+            {activeTab === "customers" && (
+              <button
+                onClick={() => setIsAddMembersModalOpen(true)}
+                className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white`}
+                style={{ backgroundColor: color.primary.action }}
+              >
+                <Plus className="w-4 h-4" />
+                Add Members
+              </button>
+            )}
+            {activeTab === "lists" && (
+              <button
+                onClick={() => setIsCreateListModalOpen(true)}
+                className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white`}
+                style={{ backgroundColor: color.primary.action }}
+              >
+                <Plus className="w-4 h-4" />
+                Create List
+              </button>
+            )}
+          </div>
         </div>
-        {/* Tab-specific buttons */}
-        <div className="flex items-center gap-3 w-auto flex-shrink-0">
-          {activeTab === "customers" && (
-            <button
-              onClick={() => setIsAddMembersModalOpen(true)}
-              className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white`}
-              style={{ backgroundColor: color.primary.action }}
-            >
-              <Plus className="w-4 h-4" />
-              Add Members
-            </button>
-          )}
-          {activeTab === "lists" && (
-            <button
-              onClick={() => setIsCreateListModalOpen(true)}
-              className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white`}
-              style={{ backgroundColor: color.primary.action }}
-            >
-              <Plus className="w-4 h-4" />
-              Create List
-            </button>
-          )}
-        </div>
+        <p className={`${tw.textSecondary} text-sm`}>
+          {t.vipListManagement.subtitle}
+        </p>
       </div>
 
       {/* Tabs */}

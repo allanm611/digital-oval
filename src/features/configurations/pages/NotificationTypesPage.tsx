@@ -98,29 +98,26 @@ export default function NotificationTypesPage() {
 
   return (
     <div className="space-y-6">
-      <BackButton
-        fallbackTo="/dashboard/configuration"
-        showBreadcrumb={true}
-        currentLabel="Notification Types"
-      />
-
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
-            Notification Types
-          </h1>
-          <p className={`text-sm ${tw.textSecondary} mt-1`}>
-            Manage notification rules and message templates for system events
-          </p>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <BackButton
+            fallbackTo="/dashboard"
+            showBreadcrumb={true}
+            parentLabel="Administration"
+            currentLabel="Notification Types"
+          />
+          <button
+            onClick={handleOpenCreateModal}
+            className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors hover:opacity-90`}
+            style={{ backgroundColor: color.primary.action }}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Create
+          </button>
         </div>
-        <button
-          onClick={handleOpenCreateModal}
-          className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors hover:opacity-90`}
-          style={{ backgroundColor: color.primary.action }}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Create
-        </button>
+        <p className={`text-sm ${tw.textSecondary}`}>
+          Manage notification rules and message templates for system events
+        </p>
       </div>
 
       <div className="my-5">

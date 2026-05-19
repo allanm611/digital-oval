@@ -104,27 +104,28 @@ export default function USSDRoutesList() {
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
-      <BackButton
-        fallbackTo="/dashboard/configuration"
-        showBreadcrumb={true}
-        currentLabel="USSD Routes"
-      />
-
-      {/* Description and Create Button */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <BackButton
+            fallbackTo="/dashboard"
+            showBreadcrumb={true}
+            parentLabel="Administration"
+            currentLabel="USSD Routes"
+          />
+          <button
+            onClick={() => navigate("create")}
+            disabled={loading}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-md whitespace-nowrap disabled:opacity-60"
+            style={{ backgroundColor: color.primary.action }}
+          >
+            <Plus className="w-4 h-4" />
+            Create
+          </button>
+        </div>
         <p className={`text-sm ${tw.textSecondary}`}>
           Manage USSD gateway routes for message delivery. Routes determine which
           gateway provider is used to send USSD notifications.
         </p>
-        <button
-          onClick={() => navigate("create")}
-          disabled={loading}
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-md whitespace-nowrap disabled:opacity-60"
-          style={{ backgroundColor: color.primary.action }}
-        >
-          <Plus className="w-4 h-4" />
-          Create
-        </button>
       </div>
 
       {/* Search Bar */}

@@ -463,19 +463,15 @@ export default function ScheduledJobsPage() {
   return (
     <>
       <div className="space-y-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <BackButton
-              fallbackTo="/dashboard/administration"
+              fallbackTo="/dashboard"
               showBreadcrumb={true}
-              parentLabel="Admin Hub"
+              parentLabel="Administration"
               currentLabel="Scheduled Jobs"
             />
-            <p className={`${tw.textSecondary} mt-6 text-sm`}>
-              {t.jobs.scheduledJobsDescription}
-            </p>
-          </div>
-          <div className="flex gap-3">
+            <div className="flex gap-3">
             <button
               onClick={() => navigate("/dashboard/scheduled-jobs/analytics")}
               className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
@@ -521,8 +517,12 @@ export default function ScheduledJobsPage() {
             <PermissionGate permission="jobs.create">
               <CreateButton onClick={() => setIsSelectTypeModalOpen(true)} />
             </PermissionGate>
+            </div>
           </div>
         </div>
+        <p className={`${tw.textSecondary} text-sm`}>
+          {t.jobs.scheduledJobsDescription}
+        </p>
 
         {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">

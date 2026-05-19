@@ -85,25 +85,6 @@ export default function ConfigurationPage() {
         navigationPath: "/dashboard/combo-types",
       },
       {
-        id: "communication-channels",
-        name: "Communication Channels",
-        description: "Manage SMS, Email, USSD and Push delivery channels",
-        type: "campaign",
-        category: "Campaign Configuration",
-        status: "active",
-        navigationPath: "/dashboard/communication-channels",
-      },
-      {
-        id: "control-groups-campaign",
-        name: "Universal Control Groups",
-        description:
-          "Configure and manage universal control groups for campaigns",
-        type: "campaign",
-        category: "Campaign Configuration",
-        status: "active",
-        navigationPath: "/dashboard/control-groups",
-      },
-      {
         id: "creative-templates",
         name: "Creative Templates",
         description:
@@ -142,54 +123,6 @@ export default function ConfigurationPage() {
         navigationPath: "/dashboard/dnd-types",
       },
       {
-        id: "dynamic-message-variables",
-        name: "Dynamic Modal Generator",
-        description:
-          "Manage customer identity fields available for dynamic variable insertion in messages and creatives",
-        type: "offer",
-        category: "Offer Configuration",
-        status: "active",
-        navigationPath: "/dashboard/dynamic-message-variables",
-      },
-      {
-        id: "email-routes",
-        name: "Email Routes",
-        description: "Manage email SMTP routes for message delivery",
-        type: "offer",
-        category: "Offer Configuration",
-        status: "active",
-        navigationPath: "/dashboard/email-routes",
-      },
-      {
-        id: "gateway-configurations",
-        name: "Gateway Configurations",
-        description:
-          "Configure communication channel gateways (Email, SMS, WhatsApp, Push) and manage provider credentials",
-        type: "offer",
-        category: "Offer Configuration",
-        status: "active",
-        navigationPath: "/dashboard/gateway-configurations",
-      },
-      {
-        id: "job-types",
-        name: "Job Types",
-        description: "Configure and manage job types for scheduled jobs",
-        type: "campaign",
-        category: "Campaign Configuration",
-        status: "active",
-        navigationPath: "/dashboard/job-types",
-      },
-      {
-        id: "kpis",
-        name: "KPIs",
-        description:
-          "Manage Key Performance Indicators for customer profiling and segmentation including system events, usage metrics, and revenue metrics",
-        type: "user",
-        category: "User Configuration",
-        status: "active",
-        navigationPath: "/dashboard/kpis",
-      },
-      {
         id: "languages",
         name: "Languages",
         description:
@@ -207,15 +140,6 @@ export default function ConfigurationPage() {
         category: "Campaign Configuration",
         status: "active",
         navigationPath: "/dashboard/line-of-business",
-      },
-      {
-        id: "notification-types",
-        name: "Notification Types",
-        description: "Define and manage different types of notifications",
-        type: "offer",
-        category: "Offer Configuration",
-        status: "active",
-        navigationPath: "/dashboard/notification-types",
       },
       {
         id: "offer-catalogs",
@@ -292,24 +216,6 @@ export default function ConfigurationPage() {
         navigationPath: "/dashboard/programs",
       },
       {
-        id: "push-notification-routes",
-        name: "Push Notification Routes",
-        description: "Manage push notification gateway routes for message delivery",
-        type: "offer",
-        category: "Offer Configuration",
-        status: "active",
-        navigationPath: "/dashboard/push-notification-routes",
-      },
-      {
-        id: "routes-management",
-        name: "Routes Management",
-        description: "Manage all communication routes (SMS, Email, WhatsApp, USSD, Push) in one unified view",
-        type: "offer",
-        category: "Offer Configuration",
-        status: "active",
-        navigationPath: "/dashboard/routes",
-      },
-      {
         id: "resource-types",
         name: "Resource Types",
         description: "Manage resource types and their units",
@@ -326,16 +232,6 @@ export default function ConfigurationPage() {
         category: "Offer Configuration",
         status: "active",
         navigationPath: "/dashboard/reward-types",
-      },
-      {
-        id: "seed-list-management",
-        name: "Seed List Management",
-        description:
-          "Manage test recipients (staff) who receive campaign copies based on department and line of business",
-        type: "campaign",
-        category: "Campaign Configuration",
-        status: "active",
-        navigationPath: "/dashboard/seed-list-management",
       },
       {
         id: "segment-catalogs",
@@ -356,52 +252,6 @@ export default function ConfigurationPage() {
         navigationPath: "/dashboard/segment-types",
       },
       {
-        id: "sender-ids",
-        name: "Sender IDs",
-        description: "Manage SMS sender IDs for branding and compliance",
-        type: "offer",
-        category: "Offer Configuration",
-        status: "active",
-        navigationPath: "/dashboard/sender-ids",
-      },
-      {
-        id: "sms-routes",
-        name: "SMS Routes",
-        description: "Manage SMS gateway routes for message delivery",
-        type: "offer",
-        category: "Offer Configuration",
-        status: "active",
-        navigationPath: "/dashboard/sms-routes",
-      },
-      {
-        id: "roles",
-        name: "Roles",
-        description: "Define and manage team roles and role assignments",
-        type: "user",
-        category: "User Configuration",
-        status: "active",
-        navigationPath: "/dashboard/roles",
-      },
-      {
-        id: "timezones",
-        name: "Timezones",
-        description:
-          "Manage available timezones for campaign scheduling and system operations",
-        type: "campaign",
-        category: "System Configuration",
-        status: "active",
-        navigationPath: "/dashboard/timezones",
-      },
-      {
-        id: "user-management",
-        name: "User Management",
-        description: "Manage user accounts, roles, and permissions",
-        type: "user",
-        category: "User Configuration",
-        status: "active",
-        navigationPath: "/dashboard/user-management",
-      },
-      {
         id: "utilities",
         name: "Utilities",
         description: "Manage utility types like water, electricity, and food",
@@ -409,34 +259,6 @@ export default function ConfigurationPage() {
         category: "Product Configuration",
         status: "active",
         navigationPath: "/dashboard/utilities",
-      },
-      {
-        id: "vip-list-management",
-        name: "VIP Lists",
-        description:
-          "Define and manage VIP customer lists for targeted campaigns",
-        type: "campaign",
-        category: "Campaign Configuration",
-        status: "active",
-        navigationPath: "/dashboard/vip-list-management",
-      },
-      {
-        id: "whatsapp-routes",
-        name: "WhatsApp Routes",
-        description: "Manage WhatsApp gateway routes for message delivery",
-        type: "offer",
-        category: "Offer Configuration",
-        status: "active",
-        navigationPath: "/dashboard/whatsapp-routes",
-      },
-      {
-        id: "ussd-routes",
-        name: "USSD Routes",
-        description: "Manage USSD gateway routes for USSD message delivery",
-        type: "offer",
-        category: "Offer Configuration",
-        status: "active",
-        navigationPath: "/dashboard/ussd-routes",
       },
     ];
 
@@ -469,11 +291,6 @@ export default function ConfigurationPage() {
       id: "segment",
       name: t.configuration.segment,
       count: configurations.filter((c) => c.type === "segment").length,
-    },
-    {
-      id: "user",
-      name: t.configuration.user,
-      count: configurations.filter((c) => c.type === "user").length,
     },
   ];
 

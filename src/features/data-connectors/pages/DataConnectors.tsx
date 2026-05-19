@@ -242,30 +242,27 @@ export default function DataConnectors() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <BackButton
-            fallbackTo="/dashboard/administration"
+            fallbackTo="/dashboard"
             showBreadcrumb={true}
-            parentLabel="Admin Hub"
+            parentLabel="Administration"
             currentLabel="Data Connectors"
           />
-          {/* <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
-            Data Connectors
-          </h1> */}
-          <p className={`${tw.textSecondary} mt-6 text-sm`}>
-            Manage connector configurations and monitor integration health.
-          </p>
+          <PermissionGate permission="servers.create">
+            <CreateButton
+              onClick={() => {
+                setEditingConnector(null);
+                setShowCreateModal(true);
+              }}
+            />
+          </PermissionGate>
         </div>
-        <PermissionGate permission="servers.create">
-          <CreateButton
-            onClick={() => {
-              setEditingConnector(null);
-              setShowCreateModal(true);
-            }}
-          />
-        </PermissionGate>
       </div>
+      <p className={`${tw.textSecondary} text-sm`}>
+        Manage connector configurations and monitor integration health.
+      </p>
 
       {/* Stats Cards */}
       {statistics && (

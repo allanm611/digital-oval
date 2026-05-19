@@ -182,17 +182,14 @@ export default function MonitoringPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4">
         <BackButton
-          fallbackTo="/dashboard/administration"
+          fallbackTo="/dashboard"
           showBreadcrumb={true}
-          parentLabel="Admin Hub"
+          parentLabel="Administration"
           currentLabel="Execution Monitoring"
         />
-      </div>
-
-      <div>
-        <p className={`${tw.textSecondary} mt-6 text-sm`}>
+        <p className={`${tw.textSecondary} text-sm`}>
           Monitor campaigns, broadcasts, rewards, and scheduled jobs execution status
         </p>
       </div>

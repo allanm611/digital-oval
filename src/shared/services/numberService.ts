@@ -6,15 +6,26 @@ interface NumberSettings {
 
 const DEFAULT_NUMBER_FORMAT = "en-US";
 
+// Validate if a locale string is valid
+const isValidLocale = (locale: string): boolean => {
+  try {
+    new Intl.NumberFormat(locale);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 // Get number settings from localStorage or return defaults
 export const getNumberSettings = (): NumberSettings => {
   try {
     const stored = localStorage.getItem("appSettings");
     if (stored) {
       const settings = JSON.parse(stored);
-      return {
-        number_formatting: settings.number_formatting || DEFAULT_NUMBER_FORMAT,
-      };
+      const locale = settings.number_formatting;
+      if (locale && isValidLocale(locale)) {
+        return { number_formatting: locale };
+      }
     }
   } catch (error) {
     console.error("Error loading number settings:", error);

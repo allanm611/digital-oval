@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Mail, Trash2, Eye, X } from "lucide-react";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -672,16 +673,14 @@ export default function SeedListManagementPage() {
   return (
     <div className="space-y-6">
       {/* Header with Title and Buttons */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
-            {t.seedListManagement.title}
-          </h1>
-          <p className={`${tw.textSecondary} mt-2 text-sm`}>
-            {t.seedListManagement.subtitle}
-          </p>
-        </div>
-        <div className="flex items-center gap-3 w-auto">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <BackButton
+            fallbackTo="/dashboard"
+            showBreadcrumb={true}
+            parentLabel="Administration"
+            currentLabel="Seed List Management"
+          />
           <button
             onClick={() => {
               if (activeTab === "recipients") {
@@ -697,6 +696,9 @@ export default function SeedListManagementPage() {
             {activeTab === "recipients" ? "Add Recipient" : "Create Seed List"}
           </button>
         </div>
+        <p className={`${tw.textSecondary} text-sm`}>
+          {t.seedListManagement.subtitle}
+        </p>
       </div>
 
       {/* Tabs */}

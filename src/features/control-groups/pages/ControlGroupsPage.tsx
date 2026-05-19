@@ -146,20 +146,14 @@ export default function ControlGroupsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-        <div className="space-y-3">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <BackButton
-            fallbackTo="/dashboard/configuration"
+            fallbackTo="/dashboard"
             showBreadcrumb={true}
+            parentLabel="Administration"
             currentLabel="Universal Control Groups"
           />
-          <div>
-            {/* <h1 className="text-2xl font-bold text-gray-900">Universal Control Groups</h1> */}
-            <p className="text-gray-600 mt-1 text-sm">Create and manage control groups to measure campaign effectiveness and customer behavior</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 w-auto">
           <button
             onClick={() => navigate("/dashboard/control-groups/create")}
             className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors hover:opacity-90 w-auto`}
@@ -169,6 +163,7 @@ export default function ControlGroupsPage() {
             <span>Create Control Group</span>
           </button>
         </div>
+        <p className="text-gray-600 text-sm">Create and manage control groups to measure campaign effectiveness and customer behavior</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

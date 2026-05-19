@@ -285,20 +285,21 @@ export default function GatewayConfigurationsPage() {
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
-      <BackButton
-        fallbackTo="/dashboard/configuration"
-        showBreadcrumb={true}
-        currentLabel="Gateway Configurations"
-      />
-
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <BackButton
+            fallbackTo="/dashboard"
+            showBreadcrumb={true}
+            parentLabel="Administration"
+            currentLabel="Gateway Configurations"
+          />
+          <CreateButton
+            onClick={() => navigate("/dashboard/gateway-configurations/create")}
+          />
+        </div>
         <p className={`text-sm ${tw.textSecondary}`}>
           Manage communication channel gateways (Email, SMS, WhatsApp, Push, USSD) and configure provider credentials for message delivery.
         </p>
-        <CreateButton
-          onClick={() => navigate("/dashboard/gateway-configurations/create")}
-        />
       </div>
 
       {/* Search */}

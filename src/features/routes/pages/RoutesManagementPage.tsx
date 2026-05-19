@@ -243,17 +243,17 @@ export default function RoutesManagementPage() {
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
-      <BackButton
-        fallbackTo="/dashboard/administration"
-        showBreadcrumb={true}
-        parentLabel="Admin Hub"
-        currentLabel="Routes Management"
-      />
-
-      {/* Description */}
-      <p className={`text-sm ${tw.textSecondary} mt-6`}>
-        Manage all communication routes across channels
-      </p>
+      <div className="flex flex-col gap-4">
+        <BackButton
+          fallbackTo="/dashboard"
+          showBreadcrumb={true}
+          parentLabel="Administration"
+          currentLabel="Routes Management"
+        />
+        <p className={`text-sm ${tw.textSecondary}`}>
+          Manage all communication routes across channels
+        </p>
+      </div>
 
       {/* Filters */}
       <div className="flex flex-col md:flex-row gap-4">

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Folder, Edit2, Trash2, Plus, ChevronDown, X } from 'lucide-react';
+import { Folder, Edit2, Trash2, Plus, ChevronDown, X, FileText } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import {
   getCategories,

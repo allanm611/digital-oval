@@ -74,31 +74,33 @@ export default function USSDGatewayForm({
       <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
         <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Basic Information</h2>
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              USSD Provider *
-            </label>
-            <HeadlessSelect
-              value={formData.provider_type}
-              onChange={(value) =>
-                setFormData((prev) => ({ ...prev, provider_type: value }))
-              }
-              options={USSD_PROVIDERS}
-              disabled={isLoading}
-            />
-          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                USSD Provider *
+              </label>
+              <HeadlessSelect
+                value={formData.provider_type}
+                onChange={(value) =>
+                  setFormData((prev) => ({ ...prev, provider_type: value }))
+                }
+                options={USSD_PROVIDERS}
+                disabled={isLoading}
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Configuration Name *
-            </label>
-            <Input
-              placeholder="e.g., Infobip Production"
-              value={formData.name}
-              onChange={(value) => setFormData((prev) => ({ ...prev, name: value }))}
-              variant="medium"
-              disabled={isLoading}
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Configuration Name *
+              </label>
+              <Input
+                placeholder="e.g., Infobip Production"
+                value={formData.name}
+                onChange={(value) => setFormData((prev) => ({ ...prev, name: value }))}
+                variant="medium"
+                disabled={isLoading}
+              />
+            </div>
           </div>
 
           <div>

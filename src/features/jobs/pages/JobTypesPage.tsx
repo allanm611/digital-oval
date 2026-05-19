@@ -665,27 +665,22 @@ export default function JobTypesPage() {
   return (
     <>
       <div className="space-y-6">
-        <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-          <div>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <BackButton
-              fallbackTo="/dashboard/administration"
+              fallbackTo="/dashboard"
               showBreadcrumb={true}
-              parentLabel="Admin Hub"
+              parentLabel="Administration"
               currentLabel="Job Types"
             />
-            {/* <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-              {t.jobs.jobTypes}
-            </h1> */}
-            <p className={`${tw.textSecondary} mt-6 text-sm`}>
-              Manage the classification codes used when creating scheduled jobs.
-            </p>
+            <PermissionGate permission="job-types.create">
+              <CreateButton onClick={handleCreate} />
+            </PermissionGate>
           </div>
-          <div className="flex justify-end">
-          <PermissionGate permission="job-types.create">
-            <CreateButton onClick={handleCreate} />
-          </PermissionGate>
         </div>
-      </div>
+        <p className={`${tw.textSecondary} text-sm`}>
+          Manage the classification codes used when creating scheduled jobs.
+        </p>
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-3">

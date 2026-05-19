@@ -10,6 +10,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { roleService, Role } from "../../roles/services/roleService";
 import RolesModal from "../components/RolesModal";
+import BackButton from "../../../shared/components/ui/BackButton";
 
 export default function TeamRolesPage() {
   const { success: showSuccess, error: showError } = useToast();
@@ -130,18 +131,26 @@ export default function TeamRolesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <BackButton
+            fallbackTo="/dashboard"
+            showBreadcrumb={true}
+            parentLabel="Administration"
+            currentLabel="Roles"
+          />
+          <button
+            onClick={handleOpenCreateModal}
+            className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors hover:opacity-90`}
+            style={{ backgroundColor: color.primary.action }}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Create
+          </button>
+        </div>
         <p className={`text-sm ${tw.textSecondary}`}>
           Define and manage team roles and role assignments
         </p>
-        <button
-          onClick={handleOpenCreateModal}
-          className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors hover:opacity-90`}
-          style={{ backgroundColor: color.primary.action }}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Create
-        </button>
       </div>
 
       <div className="my-5">

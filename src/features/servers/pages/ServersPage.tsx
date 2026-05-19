@@ -691,59 +691,56 @@ export default function ServersPage() {
 
   return (
     <div className="space-y-6 overflow-x-auto">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <BackButton
-            fallbackTo="/dashboard/administration"
+            fallbackTo="/dashboard"
             showBreadcrumb={true}
-            parentLabel="Admin Hub"
+            parentLabel="Administration"
             currentLabel="Servers"
           />
-          {/* <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
-            {t.servers.title}
-          </h1> */}
-          <p className={`${tw.textSecondary} mt-6 text-sm`}>
-            {t.servers.description}
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <PermissionGate permission="servers.select">
-            <button
-              onClick={() => {
-                if (!isSelectionMode) {
-                  // Entering selection mode - select all visible servers
-                  setIsSelectionMode(true);
-                  setSelectedServerIds(new Set(visibleIds));
-                } else {
-                  // Exiting selection mode - clear selection
-                  setIsSelectionMode(false);
-                  setSelectedServerIds(new Set());
-                }
-              }}
-              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
-              style={{
-                backgroundColor: isSelectionMode
-                  ? color.primary.action
-                  : "transparent",
-                color: isSelectionMode ? "white" : color.primary.action,
-                border: `1px solid ${color.primary.action}`,
-              }}
-            >
-              {isSelectionMode ? (
-                <CheckSquare size={16} />
-              ) : (
-                <Square size={16} />
-              )}
-              {isSelectionMode
-                ? t.servers.exitSelection
-                : t.servers.selectServers}
-            </button>
-          </PermissionGate>
-          <PermissionGate permission="servers.create">
-            <CreateButton route="/dashboard/servers/new" />
-          </PermissionGate>
+          <div className="flex items-center gap-3">
+            <PermissionGate permission="servers.select">
+              <button
+                onClick={() => {
+                  if (!isSelectionMode) {
+                    // Entering selection mode - select all visible servers
+                    setIsSelectionMode(true);
+                    setSelectedServerIds(new Set(visibleIds));
+                  } else {
+                    // Exiting selection mode - clear selection
+                    setIsSelectionMode(false);
+                    setSelectedServerIds(new Set());
+                  }
+                }}
+                className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
+                style={{
+                  backgroundColor: isSelectionMode
+                    ? color.primary.action
+                    : "transparent",
+                  color: isSelectionMode ? "white" : color.primary.action,
+                  border: `1px solid ${color.primary.action}`,
+                }}
+              >
+                {isSelectionMode ? (
+                  <CheckSquare size={16} />
+                ) : (
+                  <Square size={16} />
+                )}
+                {isSelectionMode
+                  ? t.servers.exitSelection
+                  : t.servers.selectServers}
+              </button>
+            </PermissionGate>
+            <PermissionGate permission="servers.create">
+              <CreateButton route="/dashboard/servers/new" />
+            </PermissionGate>
+          </div>
         </div>
       </div>
+      <p className={`${tw.textSecondary} text-sm`}>
+        {t.servers.description}
+      </p>
 
       <ServerStatsCards
         healthStats={healthStats}

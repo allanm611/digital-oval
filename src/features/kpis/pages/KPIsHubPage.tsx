@@ -45,17 +45,14 @@ export default function KPIsHubPage() {
     <>
       <div className="space-y-6">
         {/* Header */}
-        <div>
+        <div className="flex flex-col gap-4">
           <BackButton
-            fallbackTo="/dashboard/administration"
+            fallbackTo="/dashboard"
             showBreadcrumb={true}
-            parentLabel="Admin Hub"
+            parentLabel="Administration"
             currentLabel="KPIs"
           />
-          {/* <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
-            KPIs
-          </h1> */}
-          <p className={`${tw.textSecondary} mt-6 text-sm`}>
+          <p className={`${tw.textSecondary} text-sm`}>
             Manage and monitor key performance indicators
           </p>
         </div>

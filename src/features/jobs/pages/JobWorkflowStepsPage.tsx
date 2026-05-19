@@ -922,23 +922,16 @@ export default function JobWorkflowStepsPage() {
   return (
     <>
       <div className="space-y-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <BackButton
-              fallbackTo="/dashboard/administration"
+              fallbackTo="/dashboard"
               showBreadcrumb={true}
-              parentLabel="Admin Hub"
+              parentLabel="Administration"
               currentLabel="Job Workflow Steps"
             />
-            {/* <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-              Job Workflow Steps
-            </h1> */}
-            <p className={`${tw.textSecondary} mt-6 text-sm`}>
-              Manage and monitor workflow steps for scheduled jobs
-            </p>
-          </div>
-          <div className="flex gap-3">
-          {jobIdFilter && (
+            <div className="flex gap-3">
+            {jobIdFilter && (
             <>
               <button
                 onClick={handleOpenReorderModal}
@@ -1034,8 +1027,12 @@ export default function JobWorkflowStepsPage() {
               Batch Create
             </button>
           )}
+            </div>
+          </div>
         </div>
-      </div>
+        <p className={`${tw.textSecondary} text-sm`}>
+          Manage and monitor workflow steps for scheduled jobs
+        </p>
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">

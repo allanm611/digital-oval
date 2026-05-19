@@ -1743,24 +1743,16 @@ export default function JobDependenciesPage() {
   return (
     <>
       <div className="space-y-6">
-        <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-          <div>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <BackButton
-              fallbackTo="/dashboard/administration"
+              fallbackTo="/dashboard"
               showBreadcrumb={true}
-              parentLabel="Admin Hub"
+              parentLabel="Administration"
               currentLabel="Job Dependencies"
             />
-            {/* <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
-              Job Dependencies
-            </h1> */}
-            <p className={`${tw.textSecondary} mt-6 text-sm`}>
-              Manage relationships between scheduled jobs to control execution
-              order.
-            </p>
-          </div>
-          <div className="flex flex-wrap justify-end gap-2">
-          <PermissionGate permission="job-dependencies.select">
+            <div className="flex flex-wrap justify-end gap-2">
+            <PermissionGate permission="job-dependencies.select">
             <button
               onClick={() => {
                 if (!isSelectionMode) {
@@ -1810,8 +1802,12 @@ export default function JobDependenciesPage() {
           <PermissionGate permission="job-dependencies.create">
             <CreateButton onClick={handleCreate} />
           </PermissionGate>
+            </div>
+          </div>
         </div>
-      </div>
+        <p className={`${tw.textSecondary} text-sm`}>
+          Manage relationships between scheduled jobs to control execution order.
+        </p>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">

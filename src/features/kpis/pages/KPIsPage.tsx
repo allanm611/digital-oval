@@ -72,7 +72,9 @@ export default function KPIsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <BackButton fallbackTo="/dashboard" showBreadcrumb={true} currentLabel="KPIs" />
+      <div className="flex flex-col gap-4">
+        <BackButton fallbackTo="/dashboard" showBreadcrumb={true} parentLabel="Administration" currentLabel="KPIs" />
+      </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

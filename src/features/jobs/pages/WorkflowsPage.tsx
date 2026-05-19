@@ -349,21 +349,16 @@ export default function WorkflowsPage() {
     <>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <BackButton
-              fallbackTo="/dashboard/administration"
+              fallbackTo="/dashboard"
               showBreadcrumb={true}
-              parentLabel="Admin Hub"
+              parentLabel="Administration"
               currentLabel="Job Workflows"
             />
-            {/* <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>Workflows</h1> */}
-            <p className={`${tw.textSecondary} mt-6 text-sm`}>
-              Manage and monitor workflows
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-          <button
+            <div className="flex items-center gap-3">
+            <button
             onClick={() => navigate("/dashboard/workflows/analytics")}
             className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
             style={{
@@ -412,8 +407,12 @@ export default function WorkflowsPage() {
               {t.workflows.createWorkflow}
             </button>
           </PermissionGate>
+            </div>
+          </div>
         </div>
-      </div>
+        <p className={`${tw.textSecondary} text-sm`}>
+          Manage and monitor workflows
+        </p>
 
       {/* Stats Cards (inline loader like scheduled jobs) */}
       <div className="grid gap-4 md:grid-cols-4">

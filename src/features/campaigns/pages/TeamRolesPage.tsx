@@ -10,9 +10,9 @@ export default function TeamRolesPage() {
     <>
       <div className="space-y-6">
         <BackButton
-          fallbackTo="/dashboard/administration"
+          fallbackTo="/dashboard"
           showBreadcrumb={true}
-          parentLabel="Admin Hub"
+          parentLabel="Administration"
           currentLabel="Access Control"
         />
         <div className="mt-6">

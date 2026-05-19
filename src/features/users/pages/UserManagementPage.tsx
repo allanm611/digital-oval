@@ -1465,22 +1465,15 @@ export default function UserManagementPage() {
     <>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="min-w-0">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <BackButton
-              fallbackTo="/dashboard/administration"
+              fallbackTo="/dashboard"
               showBreadcrumb={true}
-              parentLabel="Admin Hub"
+              parentLabel="Administration"
               currentLabel="Users"
             />
-            {/* <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
-              {t.userManagement.title}
-            </h1> */}
-            <p className={`${tw.textSecondary} mt-6 text-sm`}>
-            {t.userManagement.description}
-          </p>
-        </div>
-        <div className="flex items-center gap-3 flex-shrink-0">
+            <div className="flex items-center gap-3 flex-shrink-0">
           {activeTab === "users" && (
             <button
               onClick={() => {
@@ -1530,6 +1523,11 @@ export default function UserManagementPage() {
               {t.userManagement.addUser}
             </button>
           </PermissionGate>
+            </div>
+          </div>
+          <p className={`${tw.textSecondary} text-sm`}>
+            {t.userManagement.description}
+          </p>
         </div>
       </div>
 

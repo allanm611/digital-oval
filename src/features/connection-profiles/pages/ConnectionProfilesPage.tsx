@@ -657,23 +657,15 @@ export default function ConnectionProfilesPage() {
   return (
     <>
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-          <div>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <BackButton
-              fallbackTo="/dashboard/administration"
+              fallbackTo="/dashboard"
               showBreadcrumb={true}
-              parentLabel="Admin Hub"
+              parentLabel="Administration"
               currentLabel="Connection Profiles"
             />
-            {/* <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
-              Connection Profiles
-            </h1> */}
-            <p className={`${tw.textSecondary} mt-6 text-sm`}>
-              Manage secure connections, performance tuning, and governance
-              controls for every integration endpoint
-            </p>
-          </div>
-          <div className="flex gap-3 flex-wrap">
+            <div className="flex gap-3 flex-wrap">
             <PermissionGate permission="connection-profiles.select">
               <button
                 onClick={() => {
@@ -724,7 +716,11 @@ export default function ConnectionProfilesPage() {
               <CreateButton route="/dashboard/connection-profiles/new" />
             </PermissionGate>
           </div>
+          </div>
         </div>
+        <p className={`${tw.textSecondary} text-sm`}>
+          Manage secure connections, performance tuning, and governance controls for every integration endpoint
+        </p>
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

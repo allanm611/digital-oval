@@ -89,19 +89,20 @@ function EmailRoutesListView() {
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
-      <BackButton
-        fallbackTo="/dashboard/configurations"
-        showBreadcrumb={true}
-        currentLabel="Email Routes"
-      />
-
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <BackButton
+            fallbackTo="/dashboard"
+            showBreadcrumb={true}
+            parentLabel="Administration"
+            currentLabel="Email Routes"
+          />
+          <CreateButton onClick={handleCreateRoute} />
+        </div>
         <p className={`text-sm ${tw.textSecondary}`}>
           Manage email SMTP routes for message delivery. Routes determine which SMTP
           provider and configuration is used to send email messages.
         </p>
-        <CreateButton onClick={handleCreateRoute} />
       </div>
 
       {/* Search */}

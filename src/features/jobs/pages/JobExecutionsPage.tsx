@@ -524,28 +524,16 @@ export default function JobExecutionsPage() {
   return (
     <>
       <div className="space-y-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <BackButton
-              fallbackTo="/dashboard/administration"
+              fallbackTo="/dashboard"
               showBreadcrumb={true}
-              parentLabel="Admin Hub"
+              parentLabel="Administration"
               currentLabel="Job Executions"
             />
-            {/* <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-              {((
-                (t as unknown as Record<string, unknown>)?.jobs as Record<
-                  string,
-                  unknown
-                >
-              )?.jobExecutions as string) || "Job Executions"}
-            </h1> */}
-            <p className={`${tw.textSecondary} mt-6 text-sm`}>
-              Monitor and track all job execution records
-            </p>
-          </div>
-          <div className="flex gap-3">
-          <button
+            <div className="flex gap-3">
+            <button
             onClick={() => navigate("/dashboard/job-executions/analytics")}
             className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
             style={{
@@ -587,8 +575,12 @@ export default function JobExecutionsPage() {
               {isSelectionMode ? "Exit Selection" : "Select Executions"}
             </button>
           </PermissionGate>
+            </div>
+          </div>
         </div>
-      </div>
+        <p className={`${tw.textSecondary} text-sm`}>
+          Monitor and track all job execution records
+        </p>
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
