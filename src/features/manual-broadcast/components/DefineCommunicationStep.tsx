@@ -19,6 +19,8 @@ import PreviewPanel from "../../communications/components/PreviewPanel";
 import RichTextEditor from "../../communications/components/RichTextEditor";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { getSettingsCommunicationChannel } from "../../../shared/utils/settingsHelper";
+import { formatDateWithTimezone } from "../../../shared/services/dateService";
+import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
 import CascadingVariableSelector from "./CascadingVariableSelector";
 import type { TemplateVariable } from "../types";
 import {
@@ -688,7 +690,7 @@ export default function DefineCommunicationStep({
             sampleData[key] = "12345";
             break;
           case "date":
-            sampleData[key] = new Date().toLocaleDateString();
+            sampleData[key] = formatDateWithTimezone(new Date(), getSettingsTimezoneOffset());
             break;
           case "boolean":
             sampleData[key] = "Yes";

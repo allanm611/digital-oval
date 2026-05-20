@@ -17,6 +17,7 @@ import { CampaignSegmentDetail } from "../types/campaign";
 import { Offer } from "../../offers/types/offer";
 import { SegmentType } from "../../segments/types/segment";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import DateFormatter from "../../../shared/components/DateFormatter";
 
 export default function CampaignFlowDetailsPage() {
   const { flowId } = useParams<{
@@ -491,15 +492,17 @@ export default function CampaignFlowDetailsPage() {
                     Created At
                   </td>
                   <td className={`px-6 py-4 text-sm ${tw.textSecondary}`}>
-                    {new Date(flow.created_at).toLocaleString()}
+                    <DateFormatter date={flow.created_at} useUserTimezone includeTime />
                   </td>
                   <td className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap w-1/4">
                     Updated At
                   </td>
                   <td className={`px-6 py-4 text-sm ${tw.textSecondary}`}>
-                    {flow.updated_at
-                      ? new Date(flow.updated_at).toLocaleString()
-                      : "—"}
+                    {flow.updated_at ? (
+                      <DateFormatter date={flow.updated_at} useUserTimezone includeTime />
+                    ) : (
+                      "—"
+                    )}
                   </td>
                 </tr>
               )}

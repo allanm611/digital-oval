@@ -7,6 +7,8 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import { formatDateWithTimezone } from "../../../shared/services/dateService";
+import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
 import {
   useFormDataPersistence,
   clearPersistedFormData,
@@ -376,7 +378,7 @@ export default function CreateManualBroadcastPage() {
           {
             name:
               broadcastData.audienceName ||
-              `Broadcast ${new Date().toLocaleDateString()}`,
+              `Broadcast ${formatDateWithTimezone(new Date(), getSettingsTimezoneOffset())}`,
             description: `Manual broadcast update`,
             source_type: broadcastData.quicklistId ? "quicklist" : "manual",
             ...(broadcastData.quicklistId
@@ -460,7 +462,7 @@ export default function CreateManualBroadcastPage() {
           await communicationService.createCommunication({
             name:
               broadcastData.audienceName ||
-              `Broadcast ${new Date().toLocaleDateString()}`,
+              `Broadcast ${formatDateWithTimezone(new Date(), getSettingsTimezoneOffset())}`,
             description: `Manual broadcast to quicklist: ${broadcastData.audienceName || "Untitled"}`,
             source_type: "quicklist",
             source_id: broadcastData.quicklistId,
@@ -527,7 +529,7 @@ export default function CreateManualBroadcastPage() {
           await communicationService.createCommunication({
             name:
               broadcastData.audienceName ||
-              `Manual Broadcast ${new Date().toLocaleDateString()}`,
+              `Manual Broadcast ${formatDateWithTimezone(new Date(), getSettingsTimezoneOffset())}`,
             description: `Manual broadcast with ${recipientList.length} recipients`,
             source_type: "manual",
             channels: broadcastData.channel ? [broadcastData.channel] : [],

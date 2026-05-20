@@ -211,7 +211,11 @@ export const controlGroupService = {
       }
       throw new Error(errorMessage);
     }
-    return response.json();
+    const contentType = response.headers.get("content-type");
+    if (contentType?.includes("application/json")) {
+      return response.json();
+    }
+    return { message: "Member removed successfully" };
   },
 
   // Add multiple members in bulk

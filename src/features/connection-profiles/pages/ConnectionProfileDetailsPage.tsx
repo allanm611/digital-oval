@@ -445,9 +445,11 @@ export default function ConnectionProfileDetailsPage() {
               <div>
                 <label className="text-sm text-gray-600">Last Used</label>
                 <p className="font-medium text-gray-900 mt-1">
-                  {profile.last_used_at
-                    ? new Date(profile.last_used_at).toLocaleString()
-                    : "Never"}
+                  {profile.last_used_at ? (
+                    <DateFormatter date={profile.last_used_at} useUserTimezone includeTime />
+                  ) : (
+                    "Never"
+                  )}
                 </p>
               </div>
             </div>
@@ -590,7 +592,7 @@ export default function ConnectionProfileDetailsPage() {
                   <div>
                     <label className="text-sm text-gray-600">Last Check</label>
                     <p className="text-sm text-gray-900 mt-1">
-                      {new Date(profile.last_health_check_at).toLocaleString()}
+                      <DateFormatter date={profile.last_health_check_at} useUserTimezone includeTime />
                     </p>
                   </div>
                 )}

@@ -3,6 +3,7 @@ import { color, tw } from "../../../shared/utils/utils";
 import { getSettingsCurrency } from "../../../shared/utils/settingsHelper";
 import { campaignObjectiveService } from "../../configurations/services/campaignObjectiveService";
 import { CampaignDisplay } from "../types/campaign";
+import DateFormatter from "../../../shared/components/DateFormatter";
 
 interface CampaignDetailsExpandedRowProps {
   campaign: CampaignDisplay;
@@ -140,7 +141,7 @@ export default function CampaignDetailsExpandedRow({
                 Start Date
               </label>
               <div className={`text-sm ${tw.textPrimary}`}>
-                {new Date(campaign.start_date).toLocaleDateString()}
+                <DateFormatter date={new Date(campaign.start_date)} useUserTimezone />
               </div>
             </div>
           )}
@@ -151,7 +152,7 @@ export default function CampaignDetailsExpandedRow({
                 End Date
               </label>
               <div className={`text-sm ${tw.textPrimary}`}>
-                {new Date(campaign.end_date).toLocaleDateString()}
+                <DateFormatter date={new Date(campaign.end_date)} useUserTimezone />
               </div>
             </div>
           )}

@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw } from "../../../shared/utils/utils";
+import DateFormatter from "../../../shared/components/DateFormatter";
 
 interface CampaignBroadcast {
   id: number;
@@ -235,8 +236,7 @@ export default function CampaignBroadcastDetailsPage() {
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Created At</span>
             <span className="text-sm font-medium text-black">
-              {new Date(broadcast.sent_at).toLocaleDateString()} at{" "}
-              {new Date(broadcast.sent_at).toLocaleTimeString()}
+              <DateFormatter date={broadcast.sent_at} useUserTimezone includeTime />
             </span>
           </div>
         </div>

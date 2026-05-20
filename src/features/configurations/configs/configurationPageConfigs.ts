@@ -2923,7 +2923,7 @@ export const languagesConfig: TypeConfigurationPageConfig = {
 };
 
 // Character Sets Configuration
-export const characterSetsConfig: TypeConfigurationPageConfig = {
+export const characterSetsConfig: TypeConfigurationPageConfig & { createEditPath?: string; detailsPath?: string } = {
   title: "Character Sets",
   subtitle:
     "Manage character encoding sets for language support. Character sets determine how text is encoded and displayed for different languages.",
@@ -2935,6 +2935,8 @@ export const characterSetsConfig: TypeConfigurationPageConfig = {
   searchPlaceholder: "Search character sets...",
   initialData: [],
   createButtonText: "Create",
+  createEditPath: "/dashboard/character-sets",
+  detailsPath: "/dashboard/character-sets",
   modalTitle: {
     create: "Create Character Set",
     edit: "Edit Character Set",

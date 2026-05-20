@@ -32,6 +32,7 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
 import { XCircle, Activity, Clock } from "lucide-react";
+import DateFormatter from "../../../shared/components/DateFormatter";
 
 const COLORS = ["#3b8169", "#ef4444", "#f59e0b", "#3b82f6", "#8b5cf6"];
 
@@ -876,9 +877,11 @@ export default function JobExecutionsAnalyticsPage() {
                         : "—"}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {exec.started_at
-                        ? new Date(exec.started_at).toLocaleDateString()
-                        : "—"}
+                      {exec.started_at ? (
+                        <DateFormatter date={exec.started_at} useUserTimezone />
+                      ) : (
+                        "—"
+                      )}
                     </p>
                   </div>
                 </div>

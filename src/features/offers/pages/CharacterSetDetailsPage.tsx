@@ -8,6 +8,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import { tw, color, button } from "../../../shared/utils/utils";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import type { CharacterSet } from "../../configurations/types/characterSetType";
+import DateFormatter from "../../../shared/components/DateFormatter";
 
 export default function CharacterSetDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -255,7 +256,7 @@ export default function CharacterSetDetailsPage() {
                   </p>
                   <p className={`text-sm ${tw.textPrimary}`}>
                     {characterSet.created_at
-                      ? new Date(characterSet.created_at).toLocaleDateString()
+                      ? <DateFormatter date={characterSet.created_at} useUserTimezone />
                       : "N/A"}
                   </p>
                 </div>
@@ -272,7 +273,7 @@ export default function CharacterSetDetailsPage() {
                   </p>
                   <p className={`text-sm ${tw.textPrimary}`}>
                     {characterSet.updated_at
-                      ? new Date(characterSet.updated_at).toLocaleDateString()
+                      ? <DateFormatter date={characterSet.updated_at} useUserTimezone />
                       : "N/A"}
                   </p>
                 </div>

@@ -13,6 +13,8 @@ import { color, tw } from "../utils/utils";
 import { useToast } from "../../contexts/ToastContext";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 import HeadlessSelect from "../components/ui/HeadlessSelect";
+import { formatDateWithTimezone } from "../services/dateService";
+import { getSettingsTimezoneOffset } from "../utils/settingsHelper";
 import { offerService } from "../../features/offers/services/offerService";
 import { productService } from "../../features/products/services/productService";
 import { segmentService } from "../../features/segments/services/segmentService";
@@ -793,7 +795,7 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
       (item as Product).created_at ||
       (item as Segment).created_at ||
       (item as BackendCampaignType).created_at;
-    return createdAt ? new Date(createdAt).toLocaleDateString() : "N/A";
+    return createdAt ? formatDateWithTimezone(new Date(createdAt), getSettingsTimezoneOffset()) : "N/A";
   };
 
   // Get status badge

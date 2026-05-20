@@ -7,6 +7,7 @@ import { getButtonStyles, button } from "../../../../shared/utils/utils";
 import { offerService } from "../../../../features/offers/services/offerService";
 import { offerCreativeService } from "../../../../features/offers/services/offerCreativeService";
 import { productService } from "../../../../features/products/services/productService";
+import DateFormatter from "../../../../shared/components/DateFormatter";
 
 interface OfferPreviewModalProps {
   isOpen: boolean;
@@ -187,7 +188,7 @@ export default function OfferPreviewModal({
                       Valid From
                     </p>
                     <p className="text-sm text-gray-900 mt-1">
-                      {new Date(offerDetails.valid_from).toLocaleDateString()}
+                      <DateFormatter date={new Date(offerDetails.valid_from)} useUserTimezone />
                     </p>
                   </div>
                 )}
@@ -197,7 +198,7 @@ export default function OfferPreviewModal({
                       Valid To
                     </p>
                     <p className="text-sm text-gray-900 mt-1">
-                      {new Date(offerDetails.valid_to).toLocaleDateString()}
+                      <DateFormatter date={new Date(offerDetails.valid_to)} useUserTimezone />
                     </p>
                   </div>
                 )}

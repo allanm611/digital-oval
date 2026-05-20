@@ -20,6 +20,8 @@ import { colors } from "../../../shared/utils/tokens";
 import { CustomerRow } from "./CustomerProfileReportsPage";
 
 import { tw } from '../../../shared/utils/utils';
+import { formatDateWithTimezone } from '../../../shared/services/dateService';
+import { getSettingsTimezoneOffset } from '../../../shared/utils/settingsHelper';
 // Types for customer search data
 type CustomerSegment = {
   id: string;
@@ -537,7 +539,7 @@ export default function CustomerSearchResultsPage() {
                           {event.description}
                         </p>
                         <p className="text-xs text-gray-400 mt-1">
-                          {new Date(event.date).toLocaleString()}
+                          {formatDateWithTimezone(new Date(event.date), getSettingsTimezoneOffset(), "default", true)}
                         </p>
                       </div>
                       <span className="flex-shrink-0 text-xs font-medium text-gray-500">
@@ -649,12 +651,10 @@ export default function CustomerSearchResultsPage() {
                   </p>
                 ) : (
                   filteredEvents.map((event, index) => {
-                    const currentDate = new Date(event.date).toDateString();
+                    const currentDate = formatDateWithTimezone(new Date(event.date), getSettingsTimezoneOffset());
                     const prevDate =
                       index > 0
-                        ? new Date(
-                            filteredEvents[index - 1].date
-                          ).toDateString()
+                        ? formatDateWithTimezone(new Date(filteredEvents[index - 1].date), getSettingsTimezoneOffset())
                         : null;
                     const showDateHeader = currentDate !== prevDate;
 
@@ -663,15 +663,7 @@ export default function CustomerSearchResultsPage() {
                         {showDateHeader && (
                           <div className="flex items-center gap-3 mt-6 mb-3">
                             <h4 className="text-sm font-semibold text-gray-900">
-                              {new Date(event.date).toLocaleDateString(
-                                "en-US",
-                                {
-                                  weekday: "long",
-                                  year: "numeric",
-                                  month: "long",
-                                  day: "numeric",
-                                }
-                              )}
+                              {formatDateWithTimezone(new Date(event.date), getSettingsTimezoneOffset())}
                             </h4>
                             <div className="flex-1 h-px bg-gray-200" />
                           </div>
@@ -699,13 +691,7 @@ export default function CustomerSearchResultsPage() {
                                 </p>
                               </div>
                               <span className="flex-shrink-0 ml-4 text-xs text-gray-500">
-                                {new Date(event.date).toLocaleTimeString(
-                                  "en-US",
-                                  {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  }
-                                )}
+                                {formatDateWithTimezone(new Date(event.date), getSettingsTimezoneOffset(), "default", true).split(' ').slice(-2).join(' ')}
                               </span>
                             </div>
                             <span className="inline-block mt-2 px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded">

@@ -1,30 +1,27 @@
 import { User, Users, List, Zap, DollarSign, Activity } from "lucide-react";
+import { format } from "sql-formatter";
 import { SegmentCondition, SegmentConditionGroup, SEGMENT_FIELDS } from "../types/segment";
 import { getOperatorsForField } from "../../../shared/utils/operatorMapper";
 
 export const formatSQL = (sql: string): string => {
   if (!sql) return "";
 
-  const formatted = sql
-    .replace(/\bSELECT\b/gi, "\nSELECT\n  ")
-    .replace(/\bFROM\b/gi, "\n\nFROM\n  ")
-    .replace(/\bWHERE\b/gi, "\n\nWHERE\n  ")
-    .replace(/\bORDER BY\b/gi, "\n\nORDER BY\n  ")
-    .replace(/\bGROUP BY\b/gi, "\n\nGROUP BY\n  ")
-    .replace(/\bHAVING\b/gi, "\n\nHAVING\n  ")
-    .replace(/\bLIMIT\b/gi, "\n\nLIMIT ")
-    .replace(/\bOFFSET\b/gi, "\nOFFSET ")
-    .replace(/\bJOIN\b/gi, "\nJOIN\n  ")
-    .replace(/\bLEFT JOIN\b/gi, "\nLEFT JOIN\n  ")
-    .replace(/\bINNER JOIN\b/gi, "\nINNER JOIN\n  ")
-    .replace(/\bON\b/gi, "\n  ON ")
-    .replace(/\bAND\b/gi, "\n  AND ")
-    .replace(/\bOR\b/gi, "\n  OR ")
-    .replace(/\n\s*\n\s*\n/g, "\n\n")
-    .replace(/,\s*/g, ",\n  ")
-    .trim();
-
-  return formatted;
+  try {
+    return format(sql, {
+      language: "postgresql",
+      keywordCase: "upper",
+      indentStyle: "standard",
+      tabWidth: 2,
+      useTabs: false,
+      expressionWidth: 50,
+      linesBetweenQueries: 2,
+      logicalOperatorNewline: "before",
+      denseOperators: false,
+    });
+  } catch (err) {
+    console.error("SQL formatting error:", err);
+    return sql;
+  }
 };
 
 export const getConditionTypeIcon = (type: string) => {

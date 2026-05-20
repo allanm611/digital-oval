@@ -66,6 +66,7 @@ interface SegmentConditionsBuilderProps {
   onValidationError?: (error: string) => void;
   showPreview?: boolean;
   onPreviewClick?: (previewCount: number) => void;
+  onValidationChange?: (isValid: boolean) => void;
 }
 
 export default function SegmentConditionsBuilder({
@@ -75,6 +76,7 @@ export default function SegmentConditionsBuilder({
   onValidationError,
   showPreview = true,
   onPreviewClick,
+  onValidationChange,
 }: SegmentConditionsBuilderProps) {
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -222,6 +224,10 @@ export default function SegmentConditionsBuilder({
       setIsPreviewLoading(false);
     }
   };
+
+  useEffect(() => {
+    onValidationChange?.(areAllConditionsValid());
+  }, [conditions, onValidationChange]);
 
   useEffect(() => {
     const loadSegments = async () => {

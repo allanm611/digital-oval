@@ -9,6 +9,7 @@ import { whatsappRouteService } from "../services/whatsappRouteService";
 import { useToast } from "../../../contexts/ToastContext";
 import { useConfirm } from "../../../contexts/ConfirmContext";
 import { color, tw } from "../../../shared/utils/utils";
+import DateFormatter from "../../../shared/components/DateFormatter";
 
 export default function WhatsAppRouteDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -176,13 +177,13 @@ export default function WhatsAppRouteDetailsPage() {
           <div>
             <p className="text-sm text-gray-600 mb-1">Created At</p>
             <p className="text-sm text-gray-900">
-              {new Date(route.created_at).toLocaleString()}
+              <DateFormatter date={route.created_at} useUserTimezone includeTime />
             </p>
           </div>
           <div>
             <p className="text-sm text-gray-600 mb-1">Updated At</p>
             <p className="text-sm text-gray-900">
-              {new Date(route.updated_at).toLocaleString()}
+              <DateFormatter date={route.updated_at} useUserTimezone includeTime />
             </p>
           </div>
         </div>

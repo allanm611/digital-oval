@@ -9,6 +9,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { supportsHtmlBody } from "../utils/channelUtils";
+import DateFormatter from "../../../shared/components/DateFormatter";
 
 const DetailItem = ({ label, value }: { label: string; value: ReactNode }) => (
   <div className="space-y-1">
@@ -245,7 +246,7 @@ export default function OfferCreativeDetailsPage() {
               label="Created"
               value={
                 creative.created_at ? (
-                  new Date(creative.created_at).toLocaleString()
+                  <DateFormatter date={creative.created_at} useUserTimezone includeTime />
                 ) : (
                   <span className={`text-sm ${tw.textMuted}`}>—</span>
                 )
@@ -255,7 +256,7 @@ export default function OfferCreativeDetailsPage() {
               label="Updated"
               value={
                 creative.updated_at ? (
-                  new Date(creative.updated_at).toLocaleString()
+                  <DateFormatter date={creative.updated_at} useUserTimezone includeTime />
                 ) : (
                   <span className={`text-sm ${tw.textMuted}`}>—</span>
                 )

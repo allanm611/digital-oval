@@ -20,6 +20,8 @@ import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
 import { colors } from "../../../shared/utils/tokens";
+import { formatDateWithTimezone } from "../../../shared/services/dateService";
+import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
 
 type ChartTooltipProps = {
   active?: boolean;
@@ -130,7 +132,7 @@ export default function SegmentAnalyticsPage(): JSX.Element {
           : [trendRes.data];
         setCreationTrend(
           trend.map((item: any) => ({
-            name: item.date ? new Date(item.date).toLocaleDateString() : "Unknown",
+            name: item.date ? formatDateWithTimezone(item.date, getSettingsTimezoneOffset()) : "Unknown",
             count: Number(item.segments_created) || 0,
             static_count: Number(item.static_count) || 0,
             dynamic_count: Number(item.dynamic_count) || 0,

@@ -24,6 +24,8 @@ import { offerCategoryService } from "../../features/offers/services/offerCatego
 import { productCategoryService } from "../../features/products/services/productCategoryService";
 import { campaignService } from "../../features/campaigns/services/campaignService";
 import { buildCatalogTag } from "../utils/catalogTags";
+import { formatDateWithTimezone } from "../services/dateService";
+import { getSettingsTimezoneOffset } from "../utils/settingsHelper";
 import {
   Offer,
   OfferStatusEnum,
@@ -769,7 +771,7 @@ function AssignItemsModal({
       (item as Product).created_at ||
       (item as Segment).created_at ||
       (item as BackendCampaignType).created_at;
-    return createdAt ? new Date(createdAt).toLocaleDateString() : "N/A";
+    return createdAt ? formatDateWithTimezone(new Date(createdAt), getSettingsTimezoneOffset()) : "N/A";
   };
 
   // Get status badge

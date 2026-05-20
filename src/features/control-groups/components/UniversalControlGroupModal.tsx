@@ -10,6 +10,8 @@ import type { SegmentConditionGroup } from "../../segments/types/segment";
 import SchedulingComponent from "../../../shared/components/SchedulingComponent";
 import type { SchedulingData } from "../../../shared/types/scheduling";
 import Radio from "../../../shared/components/ui/Radio";
+import { formatDateWithTimezone } from "../../../shared/services/dateService";
+import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
 
 interface UniversalControlGroupModalProps {
   isOpen: boolean;
@@ -122,8 +124,8 @@ function CreateControlGroupModal({
       status: formData.status || "active",
       percentage: formData.percentage || 10,
       generationTime: scheduling.start_date
-        ? new Date(scheduling.start_date).toLocaleString()
-        : new Date().toLocaleString(),
+        ? formatDateWithTimezone(new Date(scheduling.start_date), getSettingsTimezoneOffset(), "default", true)
+        : formatDateWithTimezone(new Date(), getSettingsTimezoneOffset(), "default", true),
       memberCount: Math.floor(Math.random() * 100000) + 50000,
       customerBase: formData.customerBase || "active_subscribers",
       sizeMethod: formData.sizeMethod || "percentage",

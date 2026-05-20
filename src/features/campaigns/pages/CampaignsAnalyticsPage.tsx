@@ -23,7 +23,9 @@ import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
-import { getCurrencySymbol } from "../../../shared/services/currencyService";
+import { getCurrencySymbol, formatCurrency } from "../../../shared/services/currencyService";
+import { formatDateWithTimezone } from "../../../shared/services/dateService";
+import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
 import { color, tw } from "../../../shared/utils/utils";
 import {
   CampaignStatsSummary,
@@ -394,7 +396,7 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
       // Process growth trends
       if (trendsRes.success && Array.isArray(trendsRes.data)) {
         const trends = trendsRes.data.map((item: any) => ({
-          date: item.date || item.name || new Date().toLocaleDateString(),
+          date: item.date || item.name || formatDateWithTimezone(new Date().toISOString(), getSettingsTimezoneOffset()),
           count: parseInt(item.count) || parseInt(item.flow_count) || 0,
         }));
         setFlowGrowthTrends(trends);

@@ -20,6 +20,8 @@ import LoadingSpinner from "./ui/LoadingSpinner";
 import PreviewPanel from "../../features/communications/components/PreviewPanel";
 import RichTextEditor from "../../features/communications/components/RichTextEditor";
 import { communicationService } from "../../features/communications/services/communicationService";
+import { formatDateWithTimezone } from "../services/dateService";
+import { getSettingsTimezoneOffset } from "../utils/settingsHelper";
 import {
   CommunicationResult,
 } from "../../features/communications/types/communication";
@@ -458,7 +460,7 @@ export default function CreateCommunicationModal({
           sampleData[key] = "12345";
           break;
         case "date":
-          sampleData[key] = new Date().toLocaleDateString();
+          sampleData[key] = formatDateWithTimezone(new Date(), getSettingsTimezoneOffset());
           break;
         case "boolean":
           sampleData[key] = "Yes";

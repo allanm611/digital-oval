@@ -18,6 +18,7 @@ import { ManualBroadcast } from "../../communications/types/communication";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { useToast } from "../../../contexts/ToastContext";
+import DateFormatter from "../../../shared/components/DateFormatter";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 export default function ManualBroadcastListsPage() {
@@ -460,7 +461,7 @@ export default function ManualBroadcastListsPage() {
                         className="px-6 py-4 text-sm text-black hidden md:table-cell"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        {new Date(broadcast.created_at).toLocaleDateString()}
+                        <DateFormatter date={broadcast.created_at} useUserTimezone />
                       </td>
                       <td
                         className="px-6 py-4 text-sm font-medium"

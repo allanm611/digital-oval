@@ -31,6 +31,8 @@ import BackButton from "../../../shared/components/ui/BackButton";
 import CreateCommunicationModal from "../../../shared/components/CreateCommunicationModal";
 import EditQuickListModal from "../components/EditQuickListModal";
 import ManageQuickListCustomersModal from "../components/ManageQuickListCustomersModal";
+import { formatDateWithTimezone } from "../../../shared/services/dateService";
+import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
 
 export default function QuickListDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -391,13 +393,7 @@ export default function QuickListDetailsPage() {
   };
 
   const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    return formatDateWithTimezone(dateString, getSettingsTimezoneOffset(), "YYYY-MM-DD HH:mm", true);
   };
 
   const formatCellValue = (value: unknown): string => {

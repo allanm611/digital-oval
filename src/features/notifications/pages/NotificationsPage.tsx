@@ -9,6 +9,7 @@ import { buttons } from "../../../shared/utils/tokens";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import DateFormatter from "../../../shared/components/DateFormatter";
 
 export default function NotificationsPage() {
   const navigate = useNavigate();
@@ -504,9 +505,11 @@ export default function NotificationsPage() {
                               </p>
                               <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-gray-500">
                                 <span className="whitespace-nowrap">
-                                  {new Date(
-                                    notification.created_at,
-                                  ).toLocaleString()}
+                                  <DateFormatter
+                                    date={notification.created_at}
+                                    useUserTimezone
+                                    includeTime
+                                  />
                                 </span>
                               </div>
                             </div>

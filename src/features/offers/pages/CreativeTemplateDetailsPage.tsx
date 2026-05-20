@@ -8,6 +8,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import { tw, color, button } from "../../../shared/utils/utils";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import type { CreativeTemplate } from "../../configurations/services/creativeTemplateService";
+import DateFormatter from "../../../shared/components/DateFormatter";
 
 export default function CreativeTemplateDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -253,7 +254,7 @@ export default function CreativeTemplateDetailsPage() {
                   </p>
                   <p className={`text-sm ${tw.textPrimary}`}>
                     {template.created_at
-                      ? new Date(template.created_at).toLocaleDateString()
+                      ? <DateFormatter date={template.created_at} useUserTimezone />
                       : "N/A"}
                   </p>
                 </div>
@@ -270,7 +271,7 @@ export default function CreativeTemplateDetailsPage() {
                   </p>
                   <p className={`text-sm ${tw.textPrimary}`}>
                     {template.updated_at
-                      ? new Date(template.updated_at).toLocaleDateString()
+                      ? <DateFormatter date={template.updated_at} useUserTimezone />
                       : "N/A"}
                   </p>
                 </div>

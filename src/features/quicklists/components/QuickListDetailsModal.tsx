@@ -15,6 +15,8 @@ import { tw, zIndex } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { QuickList, QuickListData } from "../types/quicklist";
 import { quicklistService } from "../services/quicklistService";
+import { formatDateWithTimezone } from "../../../shared/services/dateService";
+import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
 
 interface QuickListDetailsModalProps {
   isOpen: boolean;
@@ -122,13 +124,7 @@ export default function QuickListDetailsModal({
   };
 
   const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    return formatDateWithTimezone(new Date(dateString), getSettingsTimezoneOffset(), "default", true);
   };
 
   if (!isOpen) return null;

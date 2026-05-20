@@ -19,12 +19,14 @@ import {
   MousePointerClick,
   Users2,
 } from "lucide-react";
+import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
 import { colors } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
 import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { formatCurrency } from "../../../shared/services/currencyService";
+import { formatDateWithTimezone } from "../../../shared/services/dateService";
 import type {
   RangeOption,
   CampaignReportsResponse,
@@ -38,6 +40,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import type { CampaignDisplay } from "../../campaigns/types/campaign";
 import CampaignOffersModal from "../../campaigns/components/CampaignOffersModal";
 import CampaignSegmentsModal from "../../campaigns/components/CampaignSegmentsModal";
+import DateFormatter from "../../../shared/components/DateFormatter";
 
 // Extract types from API response type
 type CampaignSummary = CampaignReportsResponse["summary"];
@@ -664,7 +667,7 @@ export default function CampaignReportsPage() {
         cgConversions,
         tgConversionPercentage,
         cgConversionPercentage,
-        lastRunDate: campaign.created_at ? new Date(campaign.created_at).toLocaleDateString() : "—",
+        lastRunDate: campaign.created_at ? formatDateWithTimezone(campaign.created_at, getSettingsTimezoneOffset()) : "—",
         lastRunDateMS: campaign.created_at ? new Date(campaign.created_at).getTime() : Date.now(),
       };
     });

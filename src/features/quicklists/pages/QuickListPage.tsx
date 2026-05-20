@@ -24,6 +24,8 @@ import {
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import CreateButton from "../../../shared/components/ui/CreateButton";
+import { formatDateWithTimezone } from "../../../shared/services/dateService";
+import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
 
 export default function QuickListPage() {
   const { t } = useLanguage();
@@ -235,11 +237,7 @@ export default function QuickListPage() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+    return formatDateWithTimezone(dateString, getSettingsTimezoneOffset(), "YYYY-MM-DD");
   };
 
   const formatNumber = (num: number) => {

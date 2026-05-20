@@ -8,6 +8,8 @@ import {
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw } from "../../../shared/utils/utils";
 import { ManualBroadcastData } from "../pages/CreateManualBroadcastPage";
+import { formatDateWithTimezone } from "../../../shared/services/dateService";
+import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
 
 interface BroadcastPreviewStepProps {
   data: ManualBroadcastData;
@@ -43,7 +45,7 @@ export default function BroadcastPreviewStep({
     if (data.scheduleDate && data.scheduleTime) {
       return t.manualBroadcast.summaryScheduled.replace(
         "{dateTime}",
-        new Date(`${data.scheduleDate}T${data.scheduleTime}`).toLocaleString(),
+        formatDateWithTimezone(new Date(`${data.scheduleDate}T${data.scheduleTime}`), getSettingsTimezoneOffset(), "default", true),
       );
     }
 

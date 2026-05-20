@@ -35,6 +35,7 @@ import { PermissionGate } from "../../auth/components/PermissionGate";
 import Pagination from "../../../shared/components/ui/Pagination";
 import CreateCommunicationModal from "../../../shared/components/CreateCommunicationModal";
 import ManageQuickListCustomersModal from "../components/ManageQuickListCustomersModal";
+import DateFormatter from "../../../shared/components/DateFormatter";
 
 export default function QuickListsPage() {
   const navigate = useNavigate();
@@ -603,14 +604,14 @@ export default function QuickListsPage() {
                       className={`px-6 py-4 hidden md:table-cell text-sm ${tw.textMuted}`}
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
-                      {new Date(quicklist.created_at).toLocaleDateString(
-                        "en-US",
-                        {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        },
-                      )}
+                      <DateFormatter
+                        date={quicklist.created_at}
+                        useUserTimezone
+                        useLocale
+                        year="numeric"
+                        month="short"
+                        day="numeric"
+                      />
                     </td>
                     <td
                       className="px-6 py-4 text-sm font-medium"

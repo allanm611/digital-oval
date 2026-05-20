@@ -13,6 +13,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import BackButton from "../../../shared/components/ui/BackButton";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import DateFormatter from "../../../shared/components/DateFormatter";
 
 interface Job {
   id: number;
@@ -178,14 +179,18 @@ export default function AllJobsPage() {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {job.created_at
-                            ? new Date(job.created_at).toLocaleDateString()
-                            : "N/A"}
+                          {job.created_at ? (
+                            <DateFormatter date={job.created_at} useUserTimezone />
+                          ) : (
+                            "N/A"
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {job.updated_at
-                            ? new Date(job.updated_at).toLocaleDateString()
-                            : "N/A"}
+                          {job.updated_at ? (
+                            <DateFormatter date={job.updated_at} useUserTimezone />
+                          ) : (
+                            "N/A"
+                          )}
                         </td>
                       </tr>
                     );

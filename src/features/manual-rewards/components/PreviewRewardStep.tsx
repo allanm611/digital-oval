@@ -2,6 +2,8 @@ import { AlertCircle, Users, Gift, Calendar, FlaskConical, Mail, MessageSquare, 
 import { color, tw } from "../../../shared/utils/utils";
 import { ManualRewardData } from "../pages/CreateManualRewardPage";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { formatDateWithTimezone } from "../../../shared/services/dateService";
+import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
 
 interface PreviewRewardStepProps {
   data: ManualRewardData;
@@ -63,7 +65,7 @@ export default function PreviewRewardStep({
     if (data.applyDate && data.applyTime) {
       return t.manualRewards.summaryScheduled.replace(
         "{dateTime}",
-        new Date(`${data.applyDate}T${data.applyTime}`).toLocaleString(),
+        formatDateWithTimezone(new Date(`${data.applyDate}T${data.applyTime}`), getSettingsTimezoneOffset(), "default", true),
       );
     }
 

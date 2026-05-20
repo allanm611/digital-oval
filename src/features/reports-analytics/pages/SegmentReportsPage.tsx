@@ -20,6 +20,8 @@ import {
   Target,
   Activity,
 } from "lucide-react";
+import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
+import { formatDateWithTimezone } from "../../../shared/services/dateService";
 import { colors } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
@@ -638,7 +640,7 @@ export default function SegmentReportsPage() {
       avgValue: 50 + Math.random() * 1000, // Dummy data
       status: index % 3 === 0 ? "Inactive" : "Active", // Dummy data (deterministic for consistency)
       lastUpdated: segment.updated_at
-        ? new Date(segment.updated_at).toLocaleDateString()
+        ? formatDateWithTimezone(segment.updated_at, getSettingsTimezoneOffset())
         : "—",
       lastUpdatedDate: segment.updated_at
         ? new Date(segment.updated_at).getTime()

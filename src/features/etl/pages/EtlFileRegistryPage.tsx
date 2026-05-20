@@ -29,6 +29,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
 import FetchControlsModal from "../components/FetchControlsModal";
 import { PermissionGate } from "../../auth/components/PermissionGate";
+import DateFormatter from "../../../shared/components/DateFormatter";
 
 const PAGE_SIZE = 15;
 
@@ -527,7 +528,7 @@ export default function EtlFileRegistryPage() {
                     >
                       <div className="text-sm">
                         {file.updated_at
-                          ? new Date(file.updated_at).toLocaleDateString()
+                          ? <DateFormatter date={new Date(file.updated_at)} useUserTimezone />
                           : "—"}
                       </div>
                     </td>

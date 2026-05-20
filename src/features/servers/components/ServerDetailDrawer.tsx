@@ -1,6 +1,8 @@
 import { X, ShieldCheck, AlertTriangle, Activity } from "lucide-react";
 import { ServerType } from "../types/server";
 import { color, tw } from "../../../shared/utils/utils";
+import { formatDateWithTimezone } from "../../../shared/services/dateService";
+import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
 
 type ServerDetailDrawerProps = {
   server: ServerType | null;
@@ -120,7 +122,7 @@ export default function ServerDetailDrawer({
                 label="Last Checked At"
                 value={
                   server.last_health_check_at
-                    ? new Date(server.last_health_check_at).toLocaleString()
+                    ? formatDateWithTimezone(new Date(server.last_health_check_at), getSettingsTimezoneOffset(), "default", true)
                     : null
                 }
               />

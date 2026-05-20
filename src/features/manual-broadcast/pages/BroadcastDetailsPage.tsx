@@ -18,6 +18,7 @@ import {
   CommunicationChannel,
 } from "../../communications/types/communication";
 import { useToast } from "../../../contexts/ToastContext";
+import DateFormatter from "../../../shared/components/DateFormatter";
 
 export default function BroadcastDetailsPage() {
   const { id: executionId } = useParams<{ id: string }>();
@@ -239,7 +240,7 @@ export default function BroadcastDetailsPage() {
           <div>
             <p className="text-sm font-medium text-gray-600">Created At</p>
             <p className="mt-1 text-base text-gray-900">
-              {new Date(execution.created_at).toLocaleString()}
+              <DateFormatter date={execution.created_at} useUserTimezone includeTime />
             </p>
           </div>
         </div>
@@ -329,7 +330,7 @@ export default function BroadcastDetailsPage() {
                       className="px-6 py-4 text-sm text-black"
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
-                      {new Date(log.created_at).toLocaleString()}
+                      <DateFormatter date={log.created_at} useUserTimezone includeTime />
                     </td>
                   </tr>
                 ))}

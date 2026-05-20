@@ -3098,9 +3098,15 @@ export default function JobDependenciesPage() {
                           }}
                         >
                           <span className="text-sm text-gray-900">
-                            {item.created_at
-                              ? new Date(item.created_at).toLocaleString()
-                              : "-"}
+                            {item.created_at ? (
+                              <DateFormatter
+                                date={item.created_at}
+                                useUserTimezone
+                                includeTime
+                              />
+                            ) : (
+                              "-"
+                            )}
                           </span>
                         </td>
                       </tr>
@@ -3347,9 +3353,15 @@ export default function JobDependenciesPage() {
                           }}
                         >
                           <span className="text-sm text-gray-900">
-                            {item.created_at
-                              ? new Date(item.created_at).toLocaleString()
-                              : "-"}
+                            {item.created_at ? (
+                              <DateFormatter
+                                date={item.created_at}
+                                useUserTimezone
+                                includeTime
+                              />
+                            ) : (
+                              "-"
+                            )}
                           </span>
                         </td>
                       </tr>
@@ -3580,9 +3592,15 @@ export default function JobDependenciesPage() {
                           }}
                         >
                           <span className="text-sm text-gray-900">
-                            {item.created_at
-                              ? new Date(item.created_at).toLocaleString()
-                              : "-"}
+                            {item.created_at ? (
+                              <DateFormatter
+                                date={item.created_at}
+                                useUserTimezone
+                                includeTime
+                              />
+                            ) : (
+                              "-"
+                            )}
                           </span>
                         </td>
                       </tr>

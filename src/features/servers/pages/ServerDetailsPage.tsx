@@ -26,6 +26,7 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import { PermissionGate } from "../../auth/components/PermissionGate";
+import DateFormatter from "../../../shared/components/DateFormatter";
 
 const InfoRow = ({
   label,
@@ -708,9 +709,15 @@ export default function ServerDetailsPage() {
             <InfoRow
               label="Last checked"
               value={
-                server.last_health_check_at
-                  ? new Date(server.last_health_check_at).toLocaleString()
-                  : "Never"
+                server.last_health_check_at ? (
+                  <DateFormatter
+                    date={server.last_health_check_at}
+                    useUserTimezone
+                    includeTime
+                  />
+                ) : (
+                  "Never"
+                )
               }
             />
             <InfoRow

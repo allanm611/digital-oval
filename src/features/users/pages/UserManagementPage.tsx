@@ -35,7 +35,8 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { roleService } from "../../roles/services/roleService";
 import { Role } from "../../roles/types/role";
 import DateFormatter from "../../../shared/components/DateFormatter";
-import { formatDate } from "../../../shared/services/dateService";
+import { formatDate, formatDateWithTimezone } from "../../../shared/services/dateService";
+import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import { PermissionGate } from "../../auth/components/PermissionGate";
@@ -1685,7 +1686,7 @@ export default function UserManagementPage() {
                 getUserRoleName(u),
                 normalizeStatus(u),
                 u.created_at
-                  ? new Date(u.created_at).toLocaleDateString()
+                  ? formatDateWithTimezone(u.created_at, getSettingsTimezoneOffset())
                   : "N/A",
               ])}
               filename={`users-${new Date().toISOString().split("T")[0]}.csv`}

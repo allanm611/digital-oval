@@ -26,6 +26,9 @@ import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
+import DateFormatter from "../../../shared/components/DateFormatter";
+import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
+import { formatDateWithTimezone } from "../../../shared/services/dateService";
 import {
   ConnectionProfileType,
   ConnectionProfileTypeStatsItem,
@@ -675,9 +678,15 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
                           {profile.environment}
                         </td>
                         <td className="px-6 py-4 text-sm text-black">
-                          {profile.last_used_at
-                            ? new Date(profile.last_used_at).toLocaleString()
-                            : "Never"}
+                          {profile.last_used_at ? (
+                            <DateFormatter
+                              date={profile.last_used_at}
+                              useUserTimezone
+                              includeTime
+                            />
+                          ) : (
+                            "Never"
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -770,9 +779,11 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
                           {profile.environment}
                         </td>
                         <td className="px-6 py-4 text-sm text-black">
-                          {profile.valid_to
-                            ? new Date(profile.valid_to).toLocaleDateString()
-                            : "Unknown"}
+                          {profile.valid_to ? (
+                            <DateFormatter date={profile.valid_to} useUserTimezone />
+                          ) : (
+                            "Unknown"
+                          )}
                         </td>
                       </tr>
                     ))}

@@ -37,3 +37,4 @@ When a change or refactor is requested, follow this step-by-step reply format:
 # Backend API & Service Integration
 * **URL Construction:** When building endpoints, paths, or URLs to connect with the backend, you MUST open and read `src/api.ts` first. Always use the base URLs, route constants, and configuration objects defined in `api.ts`. Never hardcode raw endpoint strings or local addresses inside components or services.
 * **Service File Extensions:** When writing a new service file for a new component feature (for example: a `campaignsService.ts` file), you must first review your existing service files to match their exact architecture, HTTP methods, and token-handling patterns. Always group related network actions into these specialized service files.
+

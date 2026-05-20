@@ -12,6 +12,7 @@ import { useNotifications } from "../../contexts/NotificationContext";
 import { InboxNotification } from "../../features/notifications/types/notification";
 import { color, tw, zIndexTokens } from "../utils/utils";
 import { useLanguage } from "../../contexts/LanguageContext";
+import DateFormatter from "./DateFormatter";
 
 interface NotificationDropdownProps {
   onClose?: () => void;
@@ -306,9 +307,11 @@ export default function NotificationDropdown({
                                   {notification.message}
                                 </p>
                                 <p className="text-xs text-gray-400 mt-1">
-                                  {new Date(
-                                    notification.created_at,
-                                  ).toLocaleString()}
+                                  <DateFormatter
+                                    date={notification.created_at}
+                                    useUserTimezone
+                                    includeTime
+                                  />
                                 </p>
                               </div>
                               {!notification.is_read && (

@@ -592,9 +592,11 @@ export default function DataConnectorDetailsPage() {
                       </td>
                       <td className="px-6 py-4">
                         <p className={`text-sm ${tw.textPrimary}`}>
-                          {(profile as any).last_used_at
-                            ? new Date((profile as any).last_used_at).toLocaleDateString()
-                            : "—"}
+                          {(profile as any).last_used_at ? (
+                            <DateFormatter date={(profile as any).last_used_at} useUserTimezone />
+                          ) : (
+                            "—"
+                          )}
                         </p>
                       </td>
                       <td className="px-6 py-4">

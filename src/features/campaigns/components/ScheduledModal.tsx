@@ -3,6 +3,8 @@ import Input from "../../../shared/components/ui/Input";
 import { X, Calendar, Clock } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import type { CreativeChannel } from "../../offers/types/offerCreative";
+import { formatDateWithTimezone } from "../../../shared/services/dateService";
+import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
 
 interface ChannelStat {
   channel: CreativeChannel;
@@ -21,14 +23,7 @@ interface ScheduledModalProps {
 const formatDate = (dateString: string | null) => {
   if (!dateString) return null;
   try {
-    return new Date(dateString).toLocaleString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
+    return formatDateWithTimezone(new Date(dateString), getSettingsTimezoneOffset(), "default", true);
   } catch {
     return dateString;
   }

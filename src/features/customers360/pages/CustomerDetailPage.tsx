@@ -834,14 +834,7 @@ export default function CustomerDetailPage() {
             {
               label: "Date of Birth",
               value: selectedSubscription.birth_date
-                ? new Date(selectedSubscription.birth_date).toLocaleDateString(
-                    "en-US",
-                    {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    },
-                  )
+                ? <DateFormatter date={selectedSubscription.birth_date} useUserTimezone useLocale year="numeric" month="short" day="numeric" />
                 : "—",
             },
           ],

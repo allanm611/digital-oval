@@ -22,6 +22,7 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import { workflowService } from "../services/workflowService";
 import type { Workflow } from "../types/workflow";
+import DateFormatter from "../../../shared/components/DateFormatter";
 import { useAuth } from "../../../contexts/AuthContext";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import WorkflowModal from "../components/WorkflowModal";
@@ -725,7 +726,7 @@ export default function WorkflowsPage() {
                     style={{ backgroundColor: color.surface.tablebodybg }}
                   >
                     <span className="text-sm text-gray-600">
-                      {new Date(workflow.created_at).toLocaleDateString()}
+                      <DateFormatter date={workflow.created_at} useUserTimezone />
                     </span>
                   </td>
                   <td

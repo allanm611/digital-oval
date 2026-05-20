@@ -8,6 +8,7 @@ import { smsRouteService } from "../services/smsRouteService";
 import { smsGatewayConfigService } from "../../configurations/services/smsGatewayConfigService";
 import { useToast } from "../../../contexts/ToastContext";
 import { color, tw, button } from "../../../shared/utils/utils";
+import DateFormatter from "../../../shared/components/DateFormatter";
 
 export default function SMSRouteDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -263,15 +264,21 @@ export default function SMSRouteDetailsPage() {
                   Created
                 </label>
                 <p className={`text-base ${tw.textPrimary}`}>
-                  {route.created_at
-                    ? new Date(route.created_at).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })
-                    : "—"}
+                  {route.created_at ? (
+                    <DateFormatter
+                      date={route.created_at}
+                      useUserTimezone
+                      includeTime
+                      useLocale
+                      year="numeric"
+                      month="short"
+                      day="numeric"
+                      hour="2-digit"
+                      minute="2-digit"
+                    />
+                  ) : (
+                    "—"
+                  )}
                 </p>
               </div>
               <div className="space-y-1">
@@ -279,15 +286,21 @@ export default function SMSRouteDetailsPage() {
                   Last Updated
                 </label>
                 <p className={`text-base ${tw.textPrimary}`}>
-                  {route.updated_at
-                    ? new Date(route.updated_at).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })
-                    : "—"}
+                  {route.updated_at ? (
+                    <DateFormatter
+                      date={route.updated_at}
+                      useUserTimezone
+                      includeTime
+                      useLocale
+                      year="numeric"
+                      month="short"
+                      day="numeric"
+                      hour="2-digit"
+                      minute="2-digit"
+                    />
+                  ) : (
+                    "—"
+                  )}
                 </p>
               </div>
             </div>

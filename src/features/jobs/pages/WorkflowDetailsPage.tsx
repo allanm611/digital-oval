@@ -10,6 +10,7 @@ import { PermissionGate } from "../../auth/components/PermissionGate";
 import { tw, button } from "../../../shared/utils/utils";
 import type { Workflow } from "../types/workflow";
 import { useAuth } from "../../../contexts/AuthContext";
+import DateFormatter from "../../../shared/components/DateFormatter";
 
 export default function WorkflowDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -341,7 +342,7 @@ export default function WorkflowDetailsPage() {
               Created At
             </label>
             <p className="text-sm text-gray-900">
-              {new Date(workflow.created_at).toLocaleString()}
+              <DateFormatter date={workflow.created_at} useUserTimezone includeTime />
             </p>
           </div>
           <div>
@@ -349,7 +350,7 @@ export default function WorkflowDetailsPage() {
               Updated At
             </label>
             <p className="text-sm text-gray-900">
-              {new Date(workflow.updated_at).toLocaleString()}
+              <DateFormatter date={workflow.updated_at} useUserTimezone includeTime />
             </p>
           </div>
         </div>

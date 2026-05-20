@@ -33,6 +33,8 @@ import DateFormatter from "../../../shared/components/DateFormatter";
 import { color, tw } from "../../../shared/utils/utils";
 import { userService } from "../../users/services/userService";
 import { segmentService } from "../../segments/services/segmentService";
+import { formatDateWithTimezone } from "../../../shared/services/dateService";
+import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
 
 const formatMetadataKey = (key: string) =>
   key.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
@@ -507,7 +509,7 @@ export default function ScheduledJobDetailsPage() {
         versionId,
         {
           created_by: user?.user_id ?? null,
-          reason: t("scheduledJob.rollbackReason", `Rollback to version ${versionId} at ${new Date().toLocaleString()}`),
+          reason: t("scheduledJob.rollbackReason", `Rollback to version ${versionId} at ${formatDateWithTimezone(new Date(), getSettingsTimezoneOffset(), "default", true)}`),
         }
       );
       setJob(updatedJob);

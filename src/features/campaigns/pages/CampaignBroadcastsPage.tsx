@@ -8,6 +8,7 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import { useToast } from "../../../contexts/ToastContext";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { broadcastService } from "../services/broadcastService";
+import DateFormatter from "../../../shared/components/DateFormatter";
 
 interface CampaignBroadcast {
   id: number;
@@ -379,7 +380,7 @@ export default function CampaignBroadcastsPage() {
                       className="px-6 py-4 text-sm text-black"
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
-                      {new Date(broadcast.sent_at).toLocaleDateString()}
+                      <DateFormatter date={broadcast.sent_at} useUserTimezone />
                     </td>
                     <td
                       className="px-6 py-4 text-sm text-black"

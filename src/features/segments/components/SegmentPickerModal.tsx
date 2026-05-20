@@ -7,6 +7,7 @@ import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { segmentService } from "../services/segmentService";
 import { segmentTypeService } from "../services/segmentTypeService";
 import { SegmentType } from "../types/segment";
+import DateFormatter from "../../../shared/components/DateFormatter";
 
 interface SegmentPickerModalProps {
   isOpen: boolean;
@@ -313,7 +314,7 @@ export default function SegmentPickerModal({
                         <td className="px-4 py-4 whitespace-nowrap">
                           <span className={`text-sm ${tw.textSecondary}`}>
                             {segment.created_at
-                              ? new Date(segment.created_at).toLocaleDateString()
+                              ? <DateFormatter date={new Date(segment.created_at)} useUserTimezone />
                               : "-"}
                           </span>
                         </td>

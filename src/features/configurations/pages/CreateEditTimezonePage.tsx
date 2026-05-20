@@ -7,10 +7,12 @@ import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import HeadlessMultiSelect from "../../../shared/components/ui/HeadlessMultiSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { timezoneService } from "../services/timezoneService";
 import { TimeZone, CreateTimeZoneRequest, UpdateTimeZoneRequest } from "../types/timezone";
+import countriesData from "world-countries";
 
 const regions = [
   { value: "Africa", label: "Africa" },
@@ -19,6 +21,13 @@ const regions = [
   { value: "Europe", label: "Europe" },
   { value: "Oceania", label: "Oceania" },
 ];
+
+const countries = countriesData
+  .map((country) => ({
+    value: country.name.common,
+    label: country.name.common,
+  }))
+  .sort((a, b) => a.label.localeCompare(b.label));
 
 export default function CreateEditTimezonePage() {
   const { id } = useParams<{ id: string }>();
@@ -36,7 +45,7 @@ export default function CreateEditTimezonePage() {
     abbreviation: "",
     region: "",
     representative_city: "",
-    countries: "",
+    countries: [],
     uses_dst: false,
     dst_offset: "",
     dst_start_date: "",
@@ -64,7 +73,7 @@ export default function CreateEditTimezonePage() {
           abbreviation: tz.abbreviation || "",
           region: tz.region || "",
           representative_city: tz.representative_city || "",
-          countries: Array.isArray(tz.countries) ? tz.countries.join(", ") : "",
+          countries: Array.isArray(tz.countries) ? tz.countries : [],
           uses_dst: tz.uses_dst || false,
           dst_offset: tz.dst_offset || "",
           dst_start_date: tz.dst_start_date || "",
@@ -114,11 +123,12 @@ export default function CreateEditTimezonePage() {
         value: formData.value.trim(),
         label: formData.label.trim(),
         utc_offset: formData.utc_offset.trim(),
+        description: formData.description?.trim() || undefined,
         abbreviation: formData.abbreviation?.trim() || undefined,
         region: formData.region || undefined,
         representative_city: formData.representative_city?.trim() || undefined,
-        countries: formData.countries
-          ? formData.countries.split(",").map((c: string) => c.trim())
+        countries: formData.countries && formData.countries.length > 0
+          ? formData.countries
           : undefined,
         uses_dst: formData.uses_dst || false,
         dst_offset: formData.dst_offset?.trim() || undefined,
@@ -126,7 +136,6 @@ export default function CreateEditTimezonePage() {
         dst_end_date: formData.dst_end_date?.trim() || undefined,
         windows_tz_id: formData.windows_tz_id?.trim() || undefined,
         sort_order: formData.sort_order ? Number(formData.sort_order) : undefined,
-        description: formData.description?.trim() || undefined,
       };
 
       if (isEditMode && id) {
@@ -165,58 +174,101 @@ export default function CreateEditTimezonePage() {
         {/* Basic Details Section */}
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Basic Details</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                IANA Timezone ID <span className="text-red-500">*</span>
-              </label>
-              <Input
-                type="text"
-                value={formData.value}
-                onChange={(value) => handleInputChange("value", value)}
-                placeholder="e.g., Africa/Nairobi"
-                required
-                disabled={saving}
-              />
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  IANA Timezone ID <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  type="text"
+                  value={formData.value}
+                  onChange={(value) => handleInputChange("value", value)}
+                  placeholder="e.g., Africa/Nairobi"
+                  required
+                  disabled={saving}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Timezone Label <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  type="text"
+                  value={formData.label}
+                  onChange={(value) => handleInputChange("label", value)}
+                  placeholder="e.g., East Africa Time"
+                  required
+                  disabled={saving}
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Abbreviation
-              </label>
-              <Input
-                type="text"
-                value={formData.abbreviation}
-                onChange={(value) => handleInputChange("abbreviation", value)}
-                placeholder="e.g., EAT, EST, PST"
-                disabled={saving}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  UTC Offset <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  type="text"
+                  value={formData.utc_offset}
+                  onChange={(value) => handleInputChange("utc_offset", value)}
+                  placeholder="e.g., +03:00 or -05:00"
+                  required
+                  disabled={saving}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Abbreviation
+                </label>
+                <Input
+                  type="text"
+                  value={formData.abbreviation}
+                  onChange={(value) => handleInputChange("abbreviation", value)}
+                  placeholder="e.g., EAT, EST, PST"
+                  disabled={saving}
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Timezone Label <span className="text-red-500">*</span>
-              </label>
-              <Input
-                type="text"
-                value={formData.label}
-                onChange={(value) => handleInputChange("label", value)}
-                placeholder="e.g., East Africa Time"
-                required
-                disabled={saving}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Sort Order
+                </label>
+                <Input
+                  type="number"
+                  value={formData.sort_order}
+                  onChange={(value) => handleInputChange("sort_order", value)}
+                  placeholder="Numeric order for dropdown"
+                  disabled={saving}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Windows Timezone ID
+                </label>
+                <Input
+                  type="text"
+                  value={formData.windows_tz_id}
+                  onChange={(value) => handleInputChange("windows_tz_id", value)}
+                  placeholder="e.g., Eastern Standard Time"
+                  disabled={saving}
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                UTC Offset <span className="text-red-500">*</span>
-              </label>
-              <Input
-                type="text"
-                value={formData.utc_offset}
-                onChange={(value) => handleInputChange("utc_offset", value)}
-                placeholder="e.g., +03:00 or -05:00"
-                required
-                disabled={saving}
-              />
-            </div>
+          </div>
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Description
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => handleInputChange("description", e.target.value)}
+              placeholder="Optional description"
+              rows={2}
+              className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none disabled:opacity-50 disabled:cursor-not-allowed`}
+              disabled={saving}
+            />
           </div>
         </div>
 
@@ -252,15 +304,16 @@ export default function CreateEditTimezonePage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Countries (comma-separated)
+                Countries
               </label>
-              <textarea
+              <HeadlessMultiSelect
+                options={countries}
                 value={formData.countries}
-                onChange={(e) => handleInputChange("countries", e.target.value)}
-                placeholder="e.g., Kenya, Uganda, Tanzania"
-                rows={3}
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none disabled:opacity-50 disabled:cursor-not-allowed`}
+                onChange={(value) => handleInputChange("countries", value)}
+                placeholder="Search and select countries..."
                 disabled={saving}
+                searchable={true}
+                maxDisplayed={3}
               />
             </div>
           </div>
@@ -324,52 +377,6 @@ export default function CreateEditTimezonePage() {
                 </div>
               </div>
             )}
-          </div>
-        </div>
-
-        {/* Additional Settings Section */}
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Additional Settings</h2>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Windows Timezone ID
-                </label>
-                <Input
-                  type="text"
-                  value={formData.windows_tz_id}
-                  onChange={(value) => handleInputChange("windows_tz_id", value)}
-                  placeholder="e.g., Eastern Standard Time"
-                  disabled={saving}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Sort Order
-                </label>
-                <Input
-                  type="number"
-                  value={formData.sort_order}
-                  onChange={(value) => handleInputChange("sort_order", value)}
-                  placeholder="Numeric order for dropdown"
-                  disabled={saving}
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => handleInputChange("description", e.target.value)}
-                placeholder="Optional description"
-                rows={3}
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none disabled:opacity-50 disabled:cursor-not-allowed`}
-                disabled={saving}
-              />
-            </div>
           </div>
         </div>
 

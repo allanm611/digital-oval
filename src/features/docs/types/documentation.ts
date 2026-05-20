@@ -29,6 +29,7 @@ export interface DocCategory {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  subcategories?: DocCategory[];
 }
 
 export interface DocVersion {

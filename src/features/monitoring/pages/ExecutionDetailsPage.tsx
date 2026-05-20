@@ -7,6 +7,8 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import { useToast } from "../../../contexts/ToastContext";
 import { color, tw } from "../../../shared/utils/utils";
 import { executionService, Execution } from "../services/executionService";
+import { formatDateWithTimezone } from "../../../shared/services/dateService";
+import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
 
 export default function ExecutionDetailsPage() {
   const { id } = useParams();
@@ -72,7 +74,7 @@ export default function ExecutionDetailsPage() {
     const startTime = new Date(execution.executedAt).getTime();
     const duration = (execution.duration || 0) * 1000; // convert to ms
     const stageTime = startTime + (duration * percentage / 100);
-    return new Date(stageTime).toLocaleTimeString();
+    return formatDateWithTimezone(new Date(stageTime), getSettingsTimezoneOffset(), "default", true).split(' ').slice(-2).join(' ');
   };
 
   const getSuccessRate = (success?: number, total?: number) => {

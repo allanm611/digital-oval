@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Edit, Trash2, LucideIcon } from "lucide-react";
+import { Edit, Trash2, Eye, LucideIcon } from "lucide-react";
 import SearchInput from "../../../../shared/components/ui/SearchInput";
 import Pagination from "../../../../shared/components/ui/Pagination";
 import ActivateDeactivateButton from "../../../../shared/components/ui/ActivateDeactivateButton";
@@ -45,6 +45,7 @@ export interface APIConfigurationPageConfig
   disableDelete?: boolean;
   enableActivateDeactivate?: boolean;
   createEditPath?: string;
+  detailsPath?: string;
 }
 
 interface ConfigurationManagerAPIProps {
@@ -429,6 +430,17 @@ export default function ConfigurationManagerAPI({
                                 : `Activate ${item.name}`
                             }
                           />
+                        )}
+
+                        {config.detailsPath && (
+                          <button
+                            onClick={() => navigate(`${config.detailsPath}/${item.id}`)}
+                            disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
+                            className={`p-2 ${tw.rounded} transition-colors hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed`}
+                            title={`View details for ${item.name}`}
+                          >
+                            <Eye className="w-4 h-4 text-gray-600" />
+                          </button>
                         )}
 
                         <button

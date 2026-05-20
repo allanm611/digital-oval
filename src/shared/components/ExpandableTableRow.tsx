@@ -1,5 +1,7 @@
 import { ChevronDown } from "lucide-react";
 import { color, tw } from "../utils/utils";
+import { formatDateWithTimezone } from "../services/dateService";
+import { getSettingsTimezoneOffset } from "../utils/settingsHelper";
 
 export interface FieldConfig {
   key: string;
@@ -23,7 +25,7 @@ const defaultFormatters = {
   date: (val: unknown) => {
     if (!val) return "—";
     try {
-      return new Date(val as string).toLocaleDateString();
+      return formatDateWithTimezone(new Date(val as string), getSettingsTimezoneOffset());
     } catch {
       return "—";
     }

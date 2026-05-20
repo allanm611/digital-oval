@@ -6,6 +6,7 @@ import { color, tw } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { offerService } from "../services/offerService";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import DateFormatter from "../../../shared/components/DateFormatter";
 
 interface ApprovalHistoryEntry {
   id: number;
@@ -145,7 +146,7 @@ export default function OfferApprovalHistoryPage() {
                       </span>
                     </div>
                     <span className={`text-xs ${tw.textMuted}`}>
-                      {new Date(entry.created_at).toLocaleString()}
+                      <DateFormatter date={entry.created_at} useUserTimezone includeTime />
                     </span>
                   </div>
                   {entry.comments && (

@@ -10,6 +10,7 @@ import { whatsappGatewayConfigService } from "../services/whatsappGatewayConfigS
 import { pushGatewayConfigService } from "../services/pushGatewayConfigService";
 import { ussdGatewayConfigService } from "../services/ussdGatewayConfigService";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import DateFormatter from "../../../shared/components/DateFormatter";
 
 type ChannelType = "EMAIL" | "SMS" | "WHATSAPP" | "PUSH" | "USSD";
 
@@ -270,7 +271,7 @@ export default function GatewayConfigDetailsPage({ channel }: GatewayConfigDetai
                 Created
               </label>
               <p className={`text-sm ${tw.textPrimary}`}>
-                {new Date(config.created_at).toLocaleDateString()}
+                <DateFormatter date={config.created_at} useUserTimezone />
               </p>
             </div>
             <div className="space-y-1">
@@ -280,7 +281,7 @@ export default function GatewayConfigDetailsPage({ channel }: GatewayConfigDetai
                 Last Updated
               </label>
               <p className={`text-sm ${tw.textPrimary}`}>
-                {new Date(config.updated_at).toLocaleDateString()}
+                <DateFormatter date={config.updated_at} useUserTimezone />
               </p>
             </div>
           </div>

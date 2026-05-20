@@ -22,6 +22,8 @@ import {
   Coins,
   Sparkles,
 } from "lucide-react";
+import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
+import { formatDateWithTimezone } from "../../../shared/services/dateService";
 import { colors } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
@@ -799,7 +801,7 @@ export default function OfferReportsPage() {
       sent: Math.floor(Math.random() * 95000) + 45000,
       delivered: Math.floor(Math.random() * 90000) + 40000,
       conversions: Math.floor(Math.random() * 15000) + 5000,
-      lastUpdated: offer.updated_at ? new Date(offer.updated_at).toLocaleDateString() : "—",
+      lastUpdated: offer.updated_at ? formatDateWithTimezone(offer.updated_at, getSettingsTimezoneOffset()) : "—",
       lastUpdatedDate: offer.updated_at ? new Date(offer.updated_at).getTime() : Date.now(),
     }));
   }, [offers]);

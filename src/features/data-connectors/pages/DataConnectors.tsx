@@ -36,6 +36,7 @@ import {
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import Pagination from "../../../shared/components/ui/Pagination";
+import DateFormatter from "../../../shared/components/DateFormatter";
 
 export default function DataConnectors() {
   const navigate = useNavigate();
@@ -521,7 +522,7 @@ export default function DataConnectors() {
                       >
                         <span className={tw.textPrimary}>
                           {connector.last_used
-                            ? new Date(connector.last_used).toLocaleDateString()
+                            ? <DateFormatter date={new Date(connector.last_used)} useUserTimezone />
                             : "--"}
                         </span>
                       </td>

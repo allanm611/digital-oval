@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { X, Plus } from "lucide-react";
-import { format } from "sql-formatter";
 import {
   Segment,
   CreateSegmentRequest,
@@ -25,6 +24,7 @@ import CreateSegmentTypeModal from "./CreateSegmentTypeModal";
 import { customerIdentityService } from "../../customerIdentity/services/customerIdentityService";
 import { CustomerIdentityField } from "../../customerIdentity/types/customerIdentity";
 import { convertConditionsToPayload } from "../utils/conditionPayloadBuilder";
+import { formatSQL } from "../utils/segmentConditionUtils";
 
 interface SegmentModalProps {
   isOpen: boolean;
@@ -85,6 +85,7 @@ export default function SegmentModal({
     CustomerIdentityField[]
   >([]);
   const [isLoadingIdentityFields, setIsLoadingIdentityFields] = useState(false);
+  const [isConditionsValid, setIsConditionsValid] = useState(false);
   const isUserInteractionRef = useRef(false);
 
   // Load field selector config once on component mount
@@ -528,6 +529,9 @@ export default function SegmentModal({
           start_date: layerCond.start_date,
           end_date: layerCond.end_date,
           type: matchedField?.field_type || "string",
+          time_window: layerCond.time_window,
+          time_window_id: layerCond.time_window_id,
+          date_operator_id: layerCond.date_operator_id,
           // For KPI/metric conditions, set kpi_name from field_name so MetricsConditionRow renders properly
           kpi_name: (inferredConditionType === "revenue_metric" || inferredConditionType === "usage_metric" || inferredConditionType === "kpi")
             ? (matchedField?.field_name || fieldName)
@@ -634,51 +638,6 @@ export default function SegmentModal({
   //   }
   // };
 
-  // Format SQL query for better readability
-  const formatSQL = (sql: string): string => {
-    if (!sql) return "";
-    try {
-      return format(sql, { language: "mysql" });
-    } catch (err) {
-      return sql;
-    }
-  };
-
-
-  const handlePreview = async () => {
-    if (formData.conditions.length === 0) {
-      setPreviewCount(0);
-      setPreviewQuery(null);
-      return;
-    }
-
-    setIsPreviewLoading(true);
-    setError("");
-
-    try {
-      const payload = convertConditionsToPayload(formData.conditions, true, 100, formData.unique_identifier);
-
-      // Call the query generation preview API
-      const response =
-        await segmentService.generateSegmentQueryPreview(payload);
-
-      if (response.success && response.data) {
-        setPreviewQuery(response.data.segment_query);
-        setShowPreviewModal(true);
-        setPreviewCount(null);
-        setError("");
-      } else {
-        throw new Error("Failed to generate query preview");
-      }
-    } catch (err) {
-      console.error("Preview failed:", err);
-      setError((err as Error).message || "Failed to preview segment");
-      setPreviewCount(null);
-      setPreviewQuery(null);
-    } finally {
-      setIsPreviewLoading(false);
-    }
-  };
 
   /**
    * Generate a unique code from segment name
@@ -1292,6 +1251,7 @@ export default function SegmentModal({
                         // onSegmentValidate={validateSegmentNotSelectStar}
                         onValidationError={(errorMsg) => setError(errorMsg)}
                         showPreview={true}
+                        onValidationChange={setIsConditionsValid}
                       />
                     </div>
                     {fieldErrors.conditions && (
@@ -1412,10 +1372,24 @@ export default function SegmentModal({
                         </div>
                         <button
                           type="button"
-                          onClick={() => {
-                            navigator.clipboard.writeText(
-                              formatSQL(previewQuery),
-                            );
+                          onClick={async () => {
+                            try {
+                              const formattedSQL = formatSQL(previewQuery || "");
+                              await navigator.clipboard.writeText(formattedSQL);
+                              setError(""); // Clear any errors
+                              // Optional: show success feedback
+                              const btn = event?.currentTarget as HTMLButtonElement;
+                              if (btn) {
+                                const originalText = btn.textContent;
+                                btn.textContent = "✓ Copied!";
+                                setTimeout(() => {
+                                  btn.textContent = originalText;
+                                }, 2000);
+                              }
+                            } catch (err) {
+                              console.error("Failed to copy:", err);
+                              setError("Failed to copy SQL to clipboard");
+                            }
                           }}
                           className="text-xs px-3 py-1.5 rounded transition-colors font-medium"
                           style={{
@@ -1524,7 +1498,7 @@ export default function SegmentModal({
                     <button
                       type="button"
                       onClick={handleConfirmCreate}
-                      disabled={isLoading}
+                      disabled={isLoading || !isConditionsValid}
                       className={`px-5 py-2.5 text-white ${tw.rounded} text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90`}
                       style={{
                         backgroundColor: color.primary.action,
