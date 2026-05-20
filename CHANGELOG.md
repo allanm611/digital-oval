@@ -1,3 +1,10 @@
+## [1.2.7](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.2.6...v1.2.7) (2026-05-20)
+
+
+### Bug Fixes
+
+* added save button on settings card , added a notificaiton setitngs button on the notificaitons page, added timezone display on all components displaying data ([8f9c0c0](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/8f9c0c09c21c3e126d8193eeeead8692b635a471))
+
 ## [1.2.6](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.2.5...v1.2.6) (2026-05-19)
 
 
