@@ -1,5 +1,6 @@
 import { color } from "../utils/utils";
 import packageJson from "../../../package.json";
+import CurrentSettingsDisplay from "./CurrentSettingsDisplay";
 
 interface FooterProps {
   className?: string;
@@ -19,7 +20,10 @@ export default function Footer({ className = "" }: FooterProps) {
       }}
     >
       <div className="px-5 lg:px-8">
-        <div className="flex flex-col md:flex-row justify-end items-center gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+          {/* Current Settings Display */}
+          <CurrentSettingsDisplay />
+
           <div className="text-white text-xs">
             <p>
               &copy; {currentYear} @Sentra. All rights reserved. v{version}

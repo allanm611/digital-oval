@@ -587,30 +587,6 @@ export default function SettingsPage() {
     }
   };
 
-  const handleDNDEnabledChange = (enabled: boolean) => {
-    setSettings({ ...settings, dnd_enabled: enabled });
-  };
-
-  const handleDNDStartTimeChange = (dnd_start_time: string) => {
-    setSettings({ ...settings, dnd_start_time });
-  };
-
-  const handleDNDEndTimeChange = (dnd_end_time: string) => {
-    setSettings({ ...settings, dnd_end_time });
-  };
-
-  const handleDNDDaysChange = (dnd_days: string) => {
-    setSettings({ ...settings, dnd_days });
-  };
-
-  const handleToggleDayOfWeek = (day: number) => {
-    setSettings((prev) => ({
-      ...prev,
-      custom_dnd_days: prev.custom_dnd_days.includes(day)
-        ? prev.custom_dnd_days.filter((d) => d !== day)
-        : [...prev.custom_dnd_days, day].sort(),
-    }));
-  };
 
   const handleThemeChange = (newTheme: "light" | "dark") => {
     setSettings({ ...settings, theme: newTheme });
@@ -628,6 +604,8 @@ export default function SettingsPage() {
         "preferredNotificationChannels",
         JSON.stringify(preferredNotificationChannels),
       );
+      // Dispatch custom event for settings update
+      window.dispatchEvent(new CustomEvent("appSettingsChanged", { detail: settings }));
       // Update language if it changed
       setLanguageSettings(settings.language);
       setLanguage(settings.language);
@@ -652,6 +630,8 @@ export default function SettingsPage() {
         "preferredNotificationChannels",
         JSON.stringify(preferredNotificationChannels),
       );
+      // Dispatch custom event for settings update
+      window.dispatchEvent(new CustomEvent("appSettingsChanged", { detail: settings }));
       // Update language if it changed
       if (sectionName === "localization") {
         setLanguageSettings(settings.language);
@@ -752,7 +732,7 @@ export default function SettingsPage() {
                 ) : (
                   <>
                     <Save className="w-4 h-4" />
-                    {t.settings.saveChanges}
+                    Save
                   </>
                 )}
               </button>
@@ -784,7 +764,7 @@ export default function SettingsPage() {
               {savingSection === 'location' ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               ) : null}
-              {t.settings.saveChanges}
+              Save
             </button>
           </div>
 
@@ -846,10 +826,8 @@ export default function SettingsPage() {
             >
               {savingSection === 'localization' ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              ) : (
-                <Save className="w-4 h-4" />
-              )}
-              {t.settings.saveChanges}
+              ) : null}
+              Save
             </button>
           </div>
 
@@ -907,10 +885,8 @@ export default function SettingsPage() {
             >
               {savingSection === 'dateFormat' ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              ) : (
-                <Save className="w-4 h-4" />
-              )}
-              {t.settings.saveChanges}
+              ) : null}
+              Save
             </button>
           </div>
 
@@ -958,10 +934,8 @@ export default function SettingsPage() {
             >
               {savingSection === 'currency' ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              ) : (
-                <Save className="w-4 h-4" />
-              )}
-              {t.settings.saveChanges}
+              ) : null}
+              Save
             </button>
           </div>
 
@@ -1054,10 +1028,8 @@ export default function SettingsPage() {
             >
               {savingSection === 'characterSet' ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              ) : (
-                <Save className="w-4 h-4" />
-              )}
-              {t.settings.saveChanges}
+              ) : null}
+              Save
             </button>
           </div>
 
@@ -1097,10 +1069,8 @@ export default function SettingsPage() {
             >
               {savingSection === 'senderId' ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              ) : (
-                <Save className="w-4 h-4" />
-              )}
-              {t.settings.saveChanges}
+              ) : null}
+              Save
             </button>
           </div>
 
@@ -1140,10 +1110,8 @@ export default function SettingsPage() {
             >
               {savingSection === 'communication' ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              ) : (
-                <Save className="w-4 h-4" />
-              )}
-              {t.settings.saveChanges}
+              ) : null}
+              Save
             </button>
           </div>
 
@@ -1242,151 +1210,6 @@ export default function SettingsPage() {
           })()}
         </div>
 
-
-        {/* Do Not Disturb (DND) Settings Card */}
-        <div
-          className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8 lg:col-span-2`}
-        >
-          <div className="mb-6 flex justify-between items-start">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                Do Not Disturb (DND) Settings
-              </h2>
-              <p className="text-sm text-gray-500">
-                Configure default quiet hours for message delivery
-              </p>
-            </div>
-            <button
-              onClick={() => handleSaveSection('dnd')}
-              disabled={savingSection === 'dnd'}
-              className={`px-4 py-2 text-sm font-medium ${tw.rounded} text-white flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-[#252829]`}
-            >
-              {savingSection === 'dnd' ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              ) : (
-                <Save className="w-4 h-4" />
-              )}
-              {t.settings.saveChanges}
-            </button>
-          </div>
-
-          <div className="space-y-6">
-            {/* DND Enabled */}
-            <div className="flex items-center gap-4 cursor-pointer" onClick={() => handleDNDEnabledChange(!settings.dnd_enabled)}>
-              <Checkbox
-                id="dnd-enabled" checked={settings.dnd_enabled}
-                onChange={() => handleDNDEnabledChange(!settings.dnd_enabled)}
-                className="w-5 h-5 text-emerald-600 rounded" />
-              <span className="text-sm font-semibold text-gray-700">
-                Enable Do Not Disturb
-              </span>
-            </div>
-
-            {/* DND Settings - Only show if enabled */}
-            {settings.dnd_enabled && (
-              <div className="space-y-6 p-4 bg-gray-50 rounded-lg">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* DND Days */}
-                  <div>
-                    <label
-                      htmlFor="dnd-days"
-                      className="block text-sm font-semibold text-gray-700 mb-2.5"
-                    >
-                      Apply To
-                    </label>
-                    <HeadlessSelect
-                      value={settings.dnd_days}
-                      onChange={(value) => handleDNDDaysChange(value as string)}
-                      options={dndDaysOptions}
-                      placeholder="Select days"
-                    />
-                  </div>
-
-                  {/* DND Start Time */}
-                <div>
-                  <label
-                    htmlFor="dnd-start-time"
-                    className="block text-sm font-semibold text-gray-700 mb-2.5"
-                  >
-                    Start Time (DND begins)
-                  </label>
-                  <input
-                    id="dnd-start-time"
-                    type="time"
-                    value={settings.dnd_start_time}
-                    onChange={(e) => handleDNDStartTimeChange(e.target.value)}
-                    className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                  />
-                </div>
-
-                {/* DND End Time */}
-                <div>
-                  <label
-                    htmlFor="dnd-end-time"
-                    className="block text-sm font-semibold text-gray-700 mb-2.5"
-                  >
-                    End Time (DND ends)
-                  </label>
-                  <input
-                    id="dnd-end-time"
-                    type="time"
-                    value={settings.dnd_end_time}
-                    onChange={(e) => handleDNDEndTimeChange(e.target.value)}
-                    className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                  />
-                </div>
-                </div>
-
-                {/* Custom Days Selector - Only show when custom is selected */}
-                {settings.dnd_days === "custom" && (
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">
-                      Select Days
-                    </label>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      {daysOfWeek.map((day) => (
-                        <div key={day.value} className="flex items-center">
-                          <Checkbox
-                            id={`dnd-day-${day.value}`}
-                            checked={(settings.custom_dnd_days || []).includes(day.value)}
-                            onChange={() => handleToggleDayOfWeek(day.value)}
-                          />
-                          <label
-                            htmlFor={`dnd-day-${day.value}`}
-                            className="ml-2 text-sm font-medium text-gray-700 cursor-pointer"
-                          >
-                            {day.label.slice(0, 3)}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Preview */}
-                <div className="p-3 bg-white border border-gray-200 rounded-lg">
-                  <p className="text-xs text-gray-500 mb-1">
-                    DND Window Preview:
-                  </p>
-                  <p className="text-sm font-semibold text-gray-900">
-                    {settings.dnd_days === "weekdays" && "Monday - Friday: "}
-                    {settings.dnd_days === "weekends" && "Saturday - Sunday: "}
-                    {settings.dnd_days === "daily" && "Daily: "}
-                    {settings.dnd_days === "custom" &&
-                      `${(settings.custom_dnd_days || [])
-                        .map((day) => daysOfWeek.find((d) => d.value === day)?.label.slice(0, 3))
-                        .join(", ")}: `
-                    }
-                    {settings.dnd_start_time} to {settings.dnd_end_time}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-2">
-                    Messages will not be delivered during these hours.
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
 
         {/* Notifications Settings Card - COMMENTED OUT
         <div
@@ -1546,10 +1369,8 @@ export default function SettingsPage() {
             >
               {savingSection === 'theme' ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              ) : (
-                <Save className="w-4 h-4" />
-              )}
-              {t.settings.saveChanges}
+              ) : null}
+              Save
             </button>
           </div>
 

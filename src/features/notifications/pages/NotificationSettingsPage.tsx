@@ -35,6 +35,25 @@ const EMAIL_DIGEST_OPTIONS = [
   { label: "Never", value: "never" },
 ];
 
+// DND Days
+const DND_DAYS = [
+  { value: "weekdays", label: "Weekdays (Mon-Fri)" },
+  { value: "weekends", label: "Weekends (Sat-Sun)" },
+  { value: "daily", label: "Daily" },
+  { value: "custom", label: "Custom Days" },
+];
+
+// Days of week for custom DND selection
+const DAYS_OF_WEEK = [
+  { value: 0, label: "Sunday" },
+  { value: 1, label: "Monday" },
+  { value: 2, label: "Tuesday" },
+  { value: 3, label: "Wednesday" },
+  { value: 4, label: "Thursday" },
+  { value: 5, label: "Friday" },
+  { value: 6, label: "Saturday" },
+];
+
 export default function NotificationSettingsPage() {
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -48,6 +67,15 @@ export default function NotificationSettingsPage() {
   const [hasChanges, setHasChanges] = useState(false);
 
   const [localSettings, setLocalSettings] = useState(settings);
+
+  // DND Settings State
+  const [dndSettings, setDndSettings] = useState({
+    dnd_enabled: true,
+    dnd_start_time: "21:00",
+    dnd_end_time: "08:00",
+    dnd_days: "daily",
+    custom_dnd_days: [1, 2, 3, 4, 5],
+  });
 
   useEffect(() => {
     setLocalSettings(settings);
@@ -92,10 +120,39 @@ export default function NotificationSettingsPage() {
     setHasChanges(true);
   };
 
+  // DND Handlers
+  const handleDNDEnabledChange = (enabled: boolean) => {
+    setDndSettings({ ...dndSettings, dnd_enabled: enabled });
+  };
+
+  const handleDNDStartTimeChange = (dnd_start_time: string) => {
+    setDndSettings({ ...dndSettings, dnd_start_time });
+  };
+
+  const handleDNDEndTimeChange = (dnd_end_time: string) => {
+    setDndSettings({ ...dndSettings, dnd_end_time });
+  };
+
+  const handleDNDDaysChange = (dnd_days: string) => {
+    setDndSettings({ ...dndSettings, dnd_days });
+  };
+
+  const handleToggleDayOfWeek = (day: number) => {
+    setDndSettings((prev) => ({
+      ...prev,
+      custom_dnd_days: prev.custom_dnd_days.includes(day)
+        ? prev.custom_dnd_days.filter((d) => d !== day)
+        : [...prev.custom_dnd_days, day].sort(),
+    }));
+  };
+
   const handleSaveAll = useCallback(async () => {
     setIsSaving(true);
     try {
       await updateSettings(localSettings);
+
+      // Save DND settings to localStorage
+      localStorage.setItem("dndSettings", JSON.stringify(dndSettings));
 
       const subscriptionResult = await notificationService.updateNotificationSubscriptions(
         localSubscriptions.map((sub) => ({
@@ -125,7 +182,7 @@ export default function NotificationSettingsPage() {
     } finally {
       setIsSaving(false);
     }
-  }, [localSettings, localSubscriptions, updateSettings, t, success, showError]);
+  }, [localSettings, localSubscriptions, dndSettings, updateSettings, t, success, showError]);
 
   const handleCancel = () => {
     setLocalSettings(settings);
@@ -287,6 +344,139 @@ export default function NotificationSettingsPage() {
             )}
           </div>
         </div>
+        </div>
+      </div>
+
+      {/* Message Delivery Quiet Hours Card */}
+      <div className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6`}>
+        <div className="mb-6 flex justify-between items-start">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Message Delivery Quiet Hours
+            </h2>
+            <p className="text-sm text-gray-500">
+              Set quiet hours when messages will not be delivered
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          {/* Quiet Hours Enabled */}
+          <div className="flex items-center gap-4 cursor-pointer" onClick={() => handleDNDEnabledChange(!dndSettings.dnd_enabled)}>
+            <Checkbox
+              id="dnd-enabled"
+              checked={dndSettings.dnd_enabled}
+              onChange={() => handleDNDEnabledChange(!dndSettings.dnd_enabled)}
+              className="w-5 h-5 text-emerald-600 rounded"
+            />
+            <span className="text-sm font-semibold text-gray-700">
+              Enable Quiet Hours
+            </span>
+          </div>
+
+          {/* DND Settings - Only show if enabled */}
+          {dndSettings.dnd_enabled && (
+            <div className="space-y-6 p-4 bg-gray-50 rounded-lg">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* DND Days */}
+                <div>
+                  <label
+                    htmlFor="dnd-days"
+                    className="block text-sm font-semibold text-gray-700 mb-2.5"
+                  >
+                    Apply To
+                  </label>
+                  <HeadlessSelect
+                    value={dndSettings.dnd_days}
+                    onChange={(value) => handleDNDDaysChange(value as string)}
+                    options={DND_DAYS}
+                    placeholder="Select days"
+                  />
+                </div>
+
+                {/* DND Start Time */}
+                <div>
+                  <label
+                    htmlFor="dnd-start-time"
+                    className="block text-sm font-semibold text-gray-700 mb-2.5"
+                  >
+                    Start Time (DND begins)
+                  </label>
+                  <input
+                    id="dnd-start-time"
+                    type="time"
+                    value={dndSettings.dnd_start_time}
+                    onChange={(e) => handleDNDStartTimeChange(e.target.value)}
+                    className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  />
+                </div>
+
+                {/* DND End Time */}
+                <div>
+                  <label
+                    htmlFor="dnd-end-time"
+                    className="block text-sm font-semibold text-gray-700 mb-2.5"
+                  >
+                    End Time (DND ends)
+                  </label>
+                  <input
+                    id="dnd-end-time"
+                    type="time"
+                    value={dndSettings.dnd_end_time}
+                    onChange={(e) => handleDNDEndTimeChange(e.target.value)}
+                    className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  />
+                </div>
+              </div>
+
+              {/* Custom Days Selector - Only show when custom is selected */}
+              {dndSettings.dnd_days === "custom" && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    Select Days
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {DAYS_OF_WEEK.map((day) => (
+                      <div key={day.value} className="flex items-center">
+                        <Checkbox
+                          id={`dnd-day-${day.value}`}
+                          checked={(dndSettings.custom_dnd_days || []).includes(day.value)}
+                          onChange={() => handleToggleDayOfWeek(day.value)}
+                        />
+                        <label
+                          htmlFor={`dnd-day-${day.value}`}
+                          className="ml-2 text-sm font-medium text-gray-700 cursor-pointer"
+                        >
+                          {day.label.slice(0, 3)}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Preview */}
+              <div className="p-3 bg-white border border-gray-200 rounded-lg">
+                <p className="text-xs text-gray-500 mb-1">
+                  Quiet Hours Preview:
+                </p>
+                <p className="text-sm font-semibold text-gray-900">
+                  {dndSettings.dnd_days === "weekdays" && "Monday - Friday: "}
+                  {dndSettings.dnd_days === "weekends" && "Saturday - Sunday: "}
+                  {dndSettings.dnd_days === "daily" && "Daily: "}
+                  {dndSettings.dnd_days === "custom" &&
+                    `${(dndSettings.custom_dnd_days || [])
+                      .map((day) => DAYS_OF_WEEK.find((d) => d.value === day)?.label.slice(0, 3))
+                      .join(", ")}: `
+                  }
+                  {dndSettings.dnd_start_time} to {dndSettings.dnd_end_time}
+                </p>
+                <p className="text-xs text-gray-400 mt-2">
+                  No outgoing messages will be delivered during these quiet hours.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

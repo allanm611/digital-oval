@@ -58,6 +58,14 @@ interface QuickListPickerItem {
   created_at: string;
 }
 
+const RULE_TYPE_OPTIONS = [
+  { value: "rule", label: "Rule" },
+  { value: "sql", label: "SQL" },
+  // { value: "dsl", label: "DSL" },
+  // { value: "ai_assisted", label: "AI Assisted" },
+  // { value: "hybrid", label: "Hybrid" },
+];
+
 interface SegmentConditionsBuilderProps {
   conditions: SegmentConditionGroup[];
   onChange: (conditions: SegmentConditionGroup[]) => void;
@@ -549,13 +557,7 @@ export default function SegmentConditionsBuilder({
           </label>
           <div className="w-40">
             <HeadlessSelect
-              options={[
-                { value: "rule", label: "Rule" },
-                { value: "sql", label: "SQL" },
-                { value: "dsl", label: "DSL" },
-                { value: "ai_assisted", label: "AI Assisted" },
-                { value: "hybrid", label: "Hybrid" },
-              ]}
+              options={RULE_TYPE_OPTIONS}
               value={ruleType}
               onChange={(value) => onRuleTypeChange?.(value as any)}
               placeholder="Select type"
@@ -590,7 +592,7 @@ export default function SegmentConditionsBuilder({
 
   return (
     <div className="space-y-4">
-      {/* Segment Rules Type Selector and Preview Button */}
+      {/* Segment Rules Type Selector (Always visible) */}
       {showPreview && (
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -599,13 +601,7 @@ export default function SegmentConditionsBuilder({
             </label>
             <div className="w-40">
               <HeadlessSelect
-                options={[
-                  { value: "rule", label: "Rule" },
-                  { value: "sql", label: "SQL" },
-                  { value: "dsl", label: "DSL" },
-                  { value: "ai_assisted", label: "AI Assisted" },
-                  { value: "hybrid", label: "Hybrid" },
-                ]}
+                options={RULE_TYPE_OPTIONS}
                 value={ruleType}
                 onChange={(value) => onRuleTypeChange?.(value as any)}
                 placeholder="Select type"
@@ -614,41 +610,44 @@ export default function SegmentConditionsBuilder({
               />
             </div>
           </div>
-          <div className="flex items-center space-x-3">
-            {/* {previewCount !== null && (
-              <span className={`text-sm ${tw.textSecondary}`}>
-                {previewCount.toLocaleString()} customers
-              </span>
-            )} */}
-            <div className="flex items-center space-x-2">
-              <label className={`text-sm ${tw.textSecondary}`}>Limit:</label>
-              <HeadlessSelect
-                options={PREVIEW_LIMIT_OPTIONS}
-                value={String(previewLimit)}
-                onChange={(value) => setPreviewLimit(parseInt(value))}
-                placeholder="Select limit"
-                className="text-sm"
-                zIndex={zIndex.popover}
-              />
+          {/* Preview Button and Limit (Only for rule type) */}
+          {ruleType === "rule" && (
+            <div className="flex items-center space-x-3">
+              {/* {previewCount !== null && (
+                <span className={`text-sm ${tw.textSecondary}`}>
+                  {previewCount.toLocaleString()} customers
+                </span>
+              )} */}
+              <div className="flex items-center space-x-2">
+                <label className={`text-sm ${tw.textSecondary}`}>Limit:</label>
+                <HeadlessSelect
+                  options={PREVIEW_LIMIT_OPTIONS}
+                  value={String(previewLimit)}
+                  onChange={(value) => setPreviewLimit(parseInt(value))}
+                  placeholder="Select limit"
+                  className="text-sm"
+                  zIndex={zIndex.popover}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handlePreview}
+                disabled={
+                  isPreviewLoading || conditions.length === 0 || !areAllConditionsValid()
+                }
+                className={`inline-flex items-center px-4 py-2 text-sm text-white ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                style={{
+                  backgroundColor: isPreviewLoading ? color.text.secondary : color.primary.action,
+                }}
+                title={!areAllConditionsValid() ? "Complete all conditions (operator and value required)" : ""}
+              >
+                {isPreviewLoading && (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                )}
+                {isPreviewLoading ? "Previewing..." : "Preview"}
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={handlePreview}
-              disabled={
-                isPreviewLoading || conditions.length === 0 || !areAllConditionsValid()
-              }
-              className={`inline-flex items-center px-4 py-2 text-sm text-white ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-              style={{
-                backgroundColor: isPreviewLoading ? color.text.secondary : color.primary.action,
-              }}
-              title={!areAllConditionsValid() ? "Complete all conditions (operator and value required)" : ""}
-            >
-              {isPreviewLoading && (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              )}
-              {isPreviewLoading ? "Previewing..." : "Preview"}
-            </button>
-          </div>
+          )}
         </div>
       )}
 
@@ -1155,7 +1154,7 @@ export default function SegmentConditionsBuilder({
             Add Rule Group
           </button>
         </>
-      ) : (
+      ) : ruleType === "sql" && (
         /* SQL Editor */
         <div
           className={`${tw.rounded} p-4 border`}

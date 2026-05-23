@@ -55,15 +55,11 @@ interface ColumnButtonProps {
 }
 
 function ColumnButton({ column, onCopy }: ColumnButtonProps) {
-  const [isHovered, setIsHovered] = useState(false);
-
   return (
     <button
       type="button"
       onClick={() => onCopy(column)}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      className={`w-full flex items-center justify-between gap-2 px-4 py-1.5 text-sm transition-colors`}
+      className={`w-full flex items-center justify-between gap-2 px-2  py-1.5 text-sm`}
       title={`Click to copy: ${column}`}
     >
       <span
@@ -73,8 +69,8 @@ function ColumnButton({ column, onCopy }: ColumnButtonProps) {
         {column}
       </span>
       <Copy
-        className="w-3 h-3 flex-shrink-0 transition-opacity"
-        style={{ color: color.primary.accent, opacity: isHovered ? 1 : 0.3 }}
+        className="w-3 h-3 flex-shrink-0"
+        style={{ color: tw.textSecondary, opacity: 0.3 }}
       />
     </button>
   );
@@ -106,12 +102,12 @@ export default function QueryEditorTab({
   };
 
   return (
-    <div className="flex gap-6 h-full min-h-0">
+    <div className="flex gap-6 h-full min-h-0 overflow-hidden">
       {/* Left Panel - Schema Browser (DBeaver style) */}
       <div
-        className={`w-72 flex-shrink-0 overflow-y-auto`}
+        className={`w-72 flex-shrink-0 overflow-y-auto h-full`}
         style={{
-          backgroundColor: "#ffffff",
+          backgroundColor: "#f9fafb",
           borderRight: `1px solid ${tw.borderDefault}`,
         }}
       >
@@ -119,13 +115,13 @@ export default function QueryEditorTab({
           <h3 className={`text-xs font-medium uppercase tracking-wide ${tw.textSecondary} mb-2`}>
             Tables
           </h3>
-          <div className="space-y-0">
+          <div className="">
             {SEGMENT_TABLES.map((table) => (
               <div key={table.name}>
                 <button
                   type="button"
                   onClick={() => toggleTable(table.name)}
-                  className={`w-full flex items-center gap-1.5 px-2 py-1.5 text-sm transition-colors hover:bg-gray-200`}
+                  className={`w-full flex items-center gap-1.5 py-1.5 text-sm`}
                   style={{
                     backgroundColor: "transparent",
                     color: tw.textPrimary,
@@ -133,17 +129,17 @@ export default function QueryEditorTab({
                 >
                   <span className="w-4 h-4 flex items-center justify-center flex-shrink-0">
                     {expandedTables.includes(table.name) ? (
-                      <ChevronDown className="w-3.5 h-3.5" style={{ color: color.primary.accent }} />
+                      <ChevronDown className="w-3.5 h-3.5" style={{ color: "#000000" }} />
                     ) : (
-                      <ChevronRight className="w-3.5 h-3.5" style={{ color: color.primary.accent }} />
+                      <ChevronRight className="w-3.5 h-3.5" style={{ color: "#000000" }} />
                     )}
                   </span>
-                  <span className="truncate text-sm font-mono">{table.name}</span>
+                  <span className="truncate text-sm uppercase">{table.name}</span>
                 </button>
 
                 {/* Columns */}
                 {expandedTables.includes(table.name) && (
-                  <div className="ml-0" style={{ backgroundColor: "#ffffff" }}>
+                  <div className="pl-6" style={{ backgroundColor: "#ffffff" }}>
                     {table.columns.map((column) => (
                       <ColumnButton
                         key={column}
@@ -160,7 +156,7 @@ export default function QueryEditorTab({
       </div>
 
       {/* Right Panel - SQL Editor */}
-      <div className="flex-1 flex flex-col gap-3 min-h-0">
+      <div className="flex-1 flex flex-col gap-3 min-h-0 p-4 overflow-y-auto" style={{ backgroundColor: color.surface.cards }}>
         {/* SQL Editor with CodeMirror */}
         <div className="flex-1 flex flex-col gap-2 min-h-0">
           <label className={`block text-sm font-medium ${tw.textPrimary}`}>
@@ -169,7 +165,7 @@ export default function QueryEditorTab({
           <div
             className={`flex-1 border overflow-hidden`}
             style={{
-              backgroundColor: "#ffffff",
+              backgroundColor: color.surface.cards,
               borderColor: previewError ? "#ef4444" : tw.borderDefault,
               minHeight: "320px",
             }}
@@ -231,18 +227,6 @@ export default function QueryEditorTab({
           </div>
         )}
 
-        {/* Preview Button */}
-        <button
-          type="button"
-          onClick={onPreview}
-          disabled={!sql.trim() || isPreviewLoading}
-          className={`px-6 py-2 text-white transition-colors text-sm font-medium w-fit disabled:opacity-50 disabled:cursor-not-allowed`}
-          style={{
-            backgroundColor: color.primary.action,
-          }}
-        >
-          {isPreviewLoading ? "Previewing..." : "Preview"}
-        </button>
       </div>
     </div>
   );
