@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.2.7...v1.3.0) (2026-05-23)
+
+
+### Features
+
+* set up sql editor for segment rules and fixed the sms routes, removed vip and seedlist from the admin page ([8d2eb12](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/8d2eb12a05cbe7b659e242fbbbba65380494bb1e))
+
 ## [1.2.7](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.2.6...v1.2.7) (2026-05-20)
 
 
