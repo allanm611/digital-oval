@@ -81,9 +81,7 @@ export default function EmailRouteFormPage({ mode }: EmailRouteFormPageProps) {
     if (!formData.name.trim()) {
       newErrors.name = "Route name is required";
     }
-    if (!formData.gateway_config_id) {
-      newErrors.gateway_config_id = "Gateway configuration is required";
-    }
+    // gateway_config_id is no longer required
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -100,11 +98,14 @@ export default function EmailRouteFormPage({ mode }: EmailRouteFormPageProps) {
     try {
       setSaving(true);
 
+      // Remove gateway_config_id from payload
+      const { gateway_config_id, ...payloadData } = formData;
+
       if (mode === "edit" && id) {
-        await emailRouteService.updateRoute(Number(id), formData);
+        await emailRouteService.updateRoute(Number(id), payloadData);
         success("Success", "Email route updated successfully");
       } else {
-        await emailRouteService.createRoute(formData);
+        await emailRouteService.createRoute(payloadData);
         success("Success", "Email route created successfully");
       }
 
@@ -182,7 +183,7 @@ export default function EmailRouteFormPage({ mode }: EmailRouteFormPageProps) {
 
   const gatewayConfigOptions = gatewayConfigs.map((config) => ({
     value: String(config.id),
-    label: `${config.name} (${config.provider_type})`,
+    label: config.name,
   }));
 
   return (

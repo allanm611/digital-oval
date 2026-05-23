@@ -125,9 +125,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
     if (!formData.name.trim()) {
       newErrors.name = "Route name is required";
     }
-    if (!formData.gateway_config_id) {
-      newErrors.gateway_config_id = "Gateway configuration is required";
-    }
+    // gateway_config_id is no longer required
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -144,13 +142,22 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
     try {
       setSaving(true);
 
+      // Only send name, description, and is_active to backend
+      const payloadData = {
+        name: formData.name,
+        description: formData.description,
+        is_active: formData.is_active,
+        // gateway_config_id - not accepted by backend
+        // backup_route_id - not accepted by backend
+        // use_backup_on_failure - not accepted by backend
+        // retry_attempts - not accepted by backend
+      };
+
       if (mode === "edit" && id) {
-        await smsRouteService.updateRoute(Number(id), {
-          ...formData,
-        });
+        await smsRouteService.updateRoute(Number(id), payloadData);
         success("Success", "SMS route updated successfully");
       } else {
-        await smsRouteService.createRoute(formData);
+        await smsRouteService.createRoute(payloadData);
         success("Success", "SMS route created successfully");
       }
 
@@ -230,7 +237,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
       const response = await senderIdService.createSenderId({
         name: formData.name,
         description: formData.description || undefined,
-        gateway_key: formData.gateway_key,
+        sms_gateway_id: formData.sms_gateway_id,
         is_active: true,
       });
 
@@ -292,7 +299,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
                 <HeadlessSelect
                   options={gatewayConfigs.map((config) => ({
                     value: String(config.id),
-                    label: `${config.name} (${config.provider_type})`,
+                    label: config.name,
                   }))}
                   value={String(formData.gateway_config_id || "")}
                   onChange={(value) => handleSelectChange("gateway_config_id", value)}

@@ -6,6 +6,7 @@ import {
   Loader2,
   X,
 } from "lucide-react";
+import QueryEditorTab from "./QueryEditorTab";
 import {
   SegmentCondition,
   SegmentConditionGroup,
@@ -67,6 +68,15 @@ interface SegmentConditionsBuilderProps {
   showPreview?: boolean;
   onPreviewClick?: (previewCount: number) => void;
   onValidationChange?: (isValid: boolean) => void;
+  // SQL Editor integration
+  ruleType?: "rule" | "sql" | "dsl" | "ai_assisted" | "hybrid";
+  onRuleTypeChange?: (type: "rule" | "sql" | "dsl" | "ai_assisted" | "hybrid") => void;
+  sqlQuery?: string;
+  onSqlChange?: (sql: string) => void;
+  sqlPreviewResult?: { count: number; executionTime: number } | null;
+  sqlPreviewError?: string | null;
+  isSqlPreviewLoading?: boolean;
+  onSqlPreview?: () => void;
 }
 
 export default function SegmentConditionsBuilder({
@@ -77,6 +87,14 @@ export default function SegmentConditionsBuilder({
   showPreview = true,
   onPreviewClick,
   onValidationChange,
+  ruleType = "rule",
+  onRuleTypeChange,
+  sqlQuery = "",
+  onSqlChange,
+  sqlPreviewResult,
+  sqlPreviewError,
+  isSqlPreviewLoading = false,
+  onSqlPreview,
 }: SegmentConditionsBuilderProps) {
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -521,21 +539,46 @@ export default function SegmentConditionsBuilder({
     );
   }
 
-  if (conditions.length === 0) {
+  if (ruleType === "rule" && conditions.length === 0) {
     return (
-      <div className="text-center py-8">
-        <p className="text-gray-500 mb-4">No conditions defined yet</p>
-        <button
-          type="button"
-          onClick={addConditionGroup}
-          className={`inline-flex items-center px-4 py-2 text-sm text-white ${tw.rounded} transition-colors`}
-          style={{
-            backgroundColor: color.primary.action,
-          }}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Condition Group
-        </button>
+      <div className="space-y-4">
+        {/* Type Selector Header - Always visible */}
+        <div className="flex items-center gap-3">
+          <label className={`block text-sm font-medium ${tw.textPrimary}`}>
+            Segment Rules *
+          </label>
+          <div className="w-40">
+            <HeadlessSelect
+              options={[
+                { value: "rule", label: "Rule" },
+                { value: "sql", label: "SQL" },
+                { value: "dsl", label: "DSL" },
+                { value: "ai_assisted", label: "AI Assisted" },
+                { value: "hybrid", label: "Hybrid" },
+              ]}
+              value={ruleType}
+              onChange={(value) => onRuleTypeChange?.(value as any)}
+              placeholder="Select type"
+              className="text-sm"
+              zIndex={zIndex.popover}
+            />
+          </div>
+        </div>
+        {/* Empty state message */}
+        <div className="text-center py-8">
+          <p className="text-gray-500 mb-4">No rules defined yet</p>
+          <button
+            type="button"
+            onClick={addConditionGroup}
+            className={`inline-flex items-center px-4 py-2 text-sm text-white ${tw.rounded} transition-colors`}
+            style={{
+              backgroundColor: color.primary.action,
+            }}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Rule Group
+          </button>
+        </div>
       </div>
     );
   }
@@ -544,14 +587,33 @@ export default function SegmentConditionsBuilder({
   const selectedQuickListId = getSelectedQuickListId(currentEditingCondition, conditions);
   const filteredQuickListOptions = filterQuickListOptions(quickListOptions, quickListSearchTerm, quickListFilter);
 
+
   return (
     <div className="space-y-4">
-      {/* Segment Conditions Title and Preview Button */}
+      {/* Segment Rules Type Selector and Preview Button */}
       {showPreview && (
-        <div className="flex items-center justify-between">
-          <label className={`block text-sm font-medium ${tw.textPrimary}`}>
-            Segment Conditions *
-          </label>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <label className={`block text-sm font-medium ${tw.textPrimary}`}>
+              Segment Rules *
+            </label>
+            <div className="w-40">
+              <HeadlessSelect
+                options={[
+                  { value: "rule", label: "Rule" },
+                  { value: "sql", label: "SQL" },
+                  { value: "dsl", label: "DSL" },
+                  { value: "ai_assisted", label: "AI Assisted" },
+                  { value: "hybrid", label: "Hybrid" },
+                ]}
+                value={ruleType}
+                onChange={(value) => onRuleTypeChange?.(value as any)}
+                placeholder="Select type"
+                className="text-sm"
+                zIndex={zIndex.popover}
+              />
+            </div>
+          </div>
           <div className="flex items-center space-x-3">
             {/* {previewCount !== null && (
               <span className={`text-sm ${tw.textSecondary}`}>
@@ -716,8 +778,11 @@ export default function SegmentConditionsBuilder({
           document.body
         )}
 
-      {/* Conditions Builder */}
-      {conditions.map((group, groupIndex) => (
+      {/* Rules Builder or SQL Editor based on type */}
+      {ruleType === "rule" ? (
+        <>
+          {/* Rules Builder */}
+          {conditions.map((group, groupIndex) => (
         <div key={group.id}>
           <div
             className={`border border-gray-200 ${tw.rounded} p-4 bg-gray-50`}
@@ -1034,7 +1099,7 @@ export default function SegmentConditionsBuilder({
               })}
             </div>
 
-            {/* Add Condition Button */}
+            {/* Add Rule Button */}
             <button
               type="button"
               onClick={() => addCondition(group.id)}
@@ -1044,7 +1109,7 @@ export default function SegmentConditionsBuilder({
               }}
             >
               <Plus className="w-4 h-4 mr-2" />
-              Add Condition
+              Add Rule
             </button>
           </div>
 
@@ -1079,16 +1144,37 @@ export default function SegmentConditionsBuilder({
         </div>
       ))}
 
-      {/* Add Group Button */}
-      <button
-        type="button"
-        onClick={addConditionGroup}
-        className={`inline-flex items-center px-4 py-2 text-sm text-white ${tw.rounded} transition-colors`}
-        style={{ backgroundColor: color.primary.action }}
-      >
-        <Plus className="w-4 h-4 mr-2" />
-        Add Condition Group
-      </button>
+          {/* Add Rule Group Button */}
+          <button
+            type="button"
+            onClick={addConditionGroup}
+            className={`inline-flex items-center px-4 py-2 text-sm text-white ${tw.rounded} transition-colors`}
+            style={{ backgroundColor: color.primary.action }}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Rule Group
+          </button>
+        </>
+      ) : (
+        /* SQL Editor */
+        <div
+          className={`${tw.rounded} p-4 border`}
+          style={{
+            borderColor: sqlPreviewError ? "#ef4444" : tw.borderDefault,
+            backgroundColor: "#ffffff",
+          }}
+        >
+          <QueryEditorTab
+            sql={sqlQuery || ""}
+            onSqlChange={onSqlChange || (() => {})}
+            onPreviewResult={() => {}}
+            isPreviewLoading={isSqlPreviewLoading || false}
+            previewResult={sqlPreviewResult}
+            previewError={sqlPreviewError}
+            onPreview={onSqlPreview || (() => {})}
+          />
+        </div>
+      )}
 
       {/* Segment Picker Modal (Unified UI) */}
       <UnifiedPickerModal

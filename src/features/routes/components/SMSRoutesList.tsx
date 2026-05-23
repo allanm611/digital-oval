@@ -147,6 +147,12 @@ export default function SMSRoutesList() {
               </p>
             </div>
           </div>
+        ) : filteredRoutes.length === 0 ? (
+          <div className="px-6 py-12 text-center">
+            <p className={`${tw.textSecondary} text-sm`}>
+              No routes match your search
+            </p>
+          </div>
         ) : (
           <table
             className="w-full min-w-[720px]"
@@ -193,16 +199,7 @@ export default function SMSRoutesList() {
               </tr>
             </thead>
             <tbody>
-              {filteredRoutes.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center">
-                    <p className={`${tw.textSecondary} text-sm`}>
-                      No routes match your search
-                    </p>
-                  </td>
-                </tr>
-              ) : (
-                filteredRoutes.map((route) => (
+              {filteredRoutes.map((route) => (
                   <tr
                     key={route.id}
                     style={{ backgroundColor: color.surface.tablebodybg }}
@@ -252,8 +249,7 @@ export default function SMSRoutesList() {
                       </div>
                     </td>
                   </tr>
-                ))
-              )}
+                ))}
             </tbody>
           </table>
         )}

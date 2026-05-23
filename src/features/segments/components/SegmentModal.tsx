@@ -88,6 +88,13 @@ export default function SegmentModal({
   const [isConditionsValid, setIsConditionsValid] = useState(false);
   const isUserInteractionRef = useRef(false);
 
+  // Rule Type State (rule, sql, dsl, ai_assisted, hybrid)
+  const [ruleType, setRuleType] = useState<"rule" | "sql" | "dsl" | "ai_assisted" | "hybrid">("rule");
+  const [sqlQuery, setSqlQuery] = useState<string>("");
+  const [sqlPreviewResult, setSqlPreviewResult] = useState<{ count: number; executionTime: number } | null>(null);
+  const [sqlPreviewError, setSqlPreviewError] = useState<string | null>(null);
+  const [isSqlPreviewLoading, setIsSqlPreviewLoading] = useState(false);
+
   // Load field selector config once on component mount
   useEffect(() => {
     const loadFieldSelectorConfig = async () => {
@@ -692,6 +699,41 @@ export default function SegmentModal({
     }
   };
 
+  /**
+   * Handle SQL query preview
+   */
+  const handleSqlPreview = async () => {
+    if (!sqlQuery.trim()) {
+      setSqlPreviewError("Please enter a SQL query");
+      return;
+    }
+
+    setIsSqlPreviewLoading(true);
+    setSqlPreviewError(null);
+    setSqlPreviewResult(null);
+
+    try {
+      // Call backend endpoint to preview SQL query
+      const response = await segmentService.previewSqlQuery(sqlQuery);
+
+      if (response.success && response.data) {
+        setSqlPreviewResult({
+          count: response.data.count || 0,
+          executionTime: response.data.executionTime || 0,
+        });
+      } else {
+        setSqlPreviewError(response.error || "Failed to preview query");
+      }
+    } catch (err) {
+      setSqlPreviewError(
+        (err as Error).message || "Failed to preview query"
+      );
+    } finally {
+      setIsSqlPreviewLoading(false);
+    }
+  };
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -723,35 +765,94 @@ export default function SegmentModal({
       return;
     }
 
-    if (formData.conditions.length === 0) {
+    // Validate: rule type must be selected
+    if (!ruleType) {
       setFieldErrors((prev) => ({
         ...prev,
-        conditions: "Please add at least one condition",
+        conditions: "Please select a segment definition type",
       }));
       return;
-    } else {
-      setFieldErrors((prev) => ({ ...prev, conditions: undefined }));
+    }
+
+    // Validate: either conditions OR SQL query (but not both)
+    if (ruleType === "rule") {
+      if (formData.conditions.length === 0) {
+        setFieldErrors((prev) => ({
+          ...prev,
+          conditions: "Please add at least one rule",
+        }));
+        return;
+      } else {
+        setFieldErrors((prev) => ({ ...prev, conditions: undefined }));
+      }
+    } else if (ruleType === "sql") {
+      if (!sqlQuery.trim()) {
+        setSqlPreviewError("Please enter a SQL query");
+        return;
+      }
     }
 
     setIsLoading(true);
     try {
-      // Generate SQL query from conditions
-      const queries = await generateQueryFromConditions();
+      if (ruleType === "sql") {
+        // Handle SQL mode - save directly with SQL query
+        const code = generateSegmentCode(formData.name);
 
-      if (!queries) {
-        setError("Failed to generate query from conditions");
-        setIsLoading(false);
-        return;
+        if (segment) {
+          // Update existing segment with SQL query
+          const updateResponse = await segmentService.updateSegment(segment.id!, {
+            name: formData.name,
+            description: formData.description,
+            tags: formData.tags,
+            segment_type_id: formData.segment_type_id,
+            category: formData.category,
+            sql_query: sqlQuery,
+            unique_identifier: formData.unique_identifier,
+          });
+
+          const savedSegment = Array.isArray(updateResponse.data)
+            ? updateResponse.data[0]
+            : updateResponse.data;
+          onSave(savedSegment);
+        } else {
+          // Create new segment with SQL query
+          const createResponse = await segmentService.createSegment({
+            name: formData.name,
+            description: formData.description,
+            tags: formData.tags,
+            segment_type_id: formData.segment_type_id,
+            category: Array.isArray(selectedCategoryIds)
+              ? selectedCategoryIds[0]
+              : selectedCategoryIds,
+            sql_query: sqlQuery,
+            unique_identifier: formData.unique_identifier,
+            code,
+          });
+
+          const savedSegment = Array.isArray(createResponse.data)
+            ? createResponse.data[0]
+            : createResponse.data;
+          onSave(savedSegment);
+        }
+      } else {
+        // Handle conditions mode (existing logic)
+        const queries = await generateQueryFromConditions();
+
+        if (!queries) {
+          setError("Failed to generate query from conditions");
+          setIsLoading(false);
+          return;
+        }
+
+        // Store queries and show confirmation modal
+        setPendingQueries(queries);
+        setPreviewQuery(queries.segment_query);
+        setShowConfirmModal(true);
       }
-
-      // Store queries and show confirmation modal
-      setPendingQueries(queries);
-      setPreviewQuery(queries.segment_query);
-      setShowConfirmModal(true);
-      setIsLoading(false);
     } catch (err) {
-      console.error("Failed to generate query:", err);
-      setError((err as Error).message || "Failed to generate query");
+      console.error("Failed to save segment:", err);
+      setError((err as Error).message || "Failed to save segment");
+    } finally {
       setIsLoading(false);
     }
   };
@@ -1227,6 +1328,7 @@ export default function SegmentModal({
                   </div>
 
                   {/* Segment Conditions - Builder now includes title and preview button */}
+                  {/* Segment Conditions/Rules Builder - now with type selector */}
                   <div>
                     <div
                       className={`${tw.rounded} p-4`}
@@ -1248,10 +1350,17 @@ export default function SegmentModal({
                             return { ...prev, conditions };
                           })
                         }
-                        // onSegmentValidate={validateSegmentNotSelectStar}
                         onValidationError={(errorMsg) => setError(errorMsg)}
                         showPreview={true}
                         onValidationChange={setIsConditionsValid}
+                        ruleType={ruleType}
+                        onRuleTypeChange={setRuleType}
+                        sqlQuery={sqlQuery}
+                        onSqlChange={setSqlQuery}
+                        sqlPreviewResult={sqlPreviewResult}
+                        sqlPreviewError={sqlPreviewError}
+                        isSqlPreviewLoading={isSqlPreviewLoading}
+                        onSqlPreview={handleSqlPreview}
                       />
                     </div>
                     {fieldErrors.conditions && (
@@ -1554,6 +1663,7 @@ export default function SegmentModal({
                 setShowCreateTypeModal(false);
               }}
             />
+
           </div>
         </div>,
         document.body,

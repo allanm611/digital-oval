@@ -5,7 +5,7 @@ export interface SenderId {
   id: number;
   name: string;
   description?: string;
-  gateway_key: 'INTERNAL' | 'EXTERNAL_PROVIDER_A' | 'EXTERNAL_PROVIDER_B' | 'MOCANA' | 'SMSGW_HUB';
+  sms_gateway_id: number;
   is_active: boolean;
   created_at?: string;
   updated_at?: string;
@@ -16,7 +16,7 @@ export interface SenderId {
 export interface CreateSenderIdRequest {
   name: string;
   description?: string;
-  gateway_key: 'INTERNAL' | 'EXTERNAL_PROVIDER_A' | 'EXTERNAL_PROVIDER_B' | 'MOCANA' | 'SMSGW_HUB';
+  sms_gateway_id: number;
   is_active?: boolean;
 }
 

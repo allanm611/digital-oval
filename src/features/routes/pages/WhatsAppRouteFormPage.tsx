@@ -117,9 +117,7 @@ export default function WhatsAppRouteFormPage({ mode }: WhatsAppRouteFormPagePro
     if (!formData.name.trim()) {
       newErrors.name = "Route name is required";
     }
-    if (!formData.gateway_config_id) {
-      newErrors.gateway_config_id = "Gateway configuration is required";
-    }
+    // gateway_config_id is no longer required
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -136,13 +134,14 @@ export default function WhatsAppRouteFormPage({ mode }: WhatsAppRouteFormPagePro
     try {
       setSaving(true);
 
+      // Remove gateway_config_id from payload
+      const { gateway_config_id, ...payloadData } = formData;
+
       if (mode === "edit" && id) {
-        await whatsappRouteService.updateRoute(Number(id), {
-          ...formData,
-        });
+        await whatsappRouteService.updateRoute(Number(id), payloadData);
         success("Success", "WhatsApp route updated successfully");
       } else {
-        await whatsappRouteService.createRoute(formData);
+        await whatsappRouteService.createRoute(payloadData);
         success("Success", "WhatsApp route created successfully");
       }
 
@@ -259,7 +258,7 @@ export default function WhatsAppRouteFormPage({ mode }: WhatsAppRouteFormPagePro
                 <HeadlessSelect
                   options={gatewayConfigs.map((config) => ({
                     value: String(config.id),
-                    label: `${config.name} (${config.provider_type})`,
+                    label: config.name,
                   }))}
                   value={String(formData.gateway_config_id || "")}
                   onChange={(value) =>

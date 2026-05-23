@@ -246,31 +246,11 @@ export default function AdminHubPage() {
       ],
     },
     {
-      name: "Data Management",
-      description: "Manage special lists and data collections",
-      cards: [
-        {
-          title: "Seed List Management",
-          description: "Manage test recipients (staff) who receive campaign copies based on department and line of business",
-          icon: Download,
-          href: "/dashboard/seed-list-management",
-          category: "Data Management",
-        },
-        {
-          title: "VIP Lists",
-          description: "Define and manage VIP customer lists for targeted campaigns",
-          icon: Gift,
-          href: "/dashboard/vip-list-management",
-          category: "Data Management",
-        },
-      ],
-    },
-    {
       name: "System Configuration",
       description: "System settings and administrative configurations",
       cards: [
         {
-          title: "Control Groups",
+          title: "Universal Control Groups",
           description: "Manage universal control groups for testing and validation",
           icon: Shield,
           href: "/dashboard/control-groups",

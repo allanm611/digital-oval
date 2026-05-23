@@ -2550,7 +2550,7 @@ export const senderIdsConfig: TypeConfigurationPageConfig = {
   initialData: [],
   createButtonText: "Create",
   modalTitle: {
-    create: "Create New Sender ID",
+    create: "Create",
     edit: "Edit Sender ID",
   },
   nameLabel: "Sender ID Name",
@@ -2561,12 +2561,11 @@ export const senderIdsConfig: TypeConfigurationPageConfig = {
   descriptionMaxLength: 1000,
   metadataFields: [
     {
-      key: "gateway_key",
-      label: "Gateway",
-      type: "select",
+      key: "sms_gateway_id",
+      label: "SMS Gateway ID",
+      type: "number",
       required: true,
       row: 0,
-      options: GATEWAY_KEY_OPTIONS,
     },
   ],
   statusLabel: "Status",

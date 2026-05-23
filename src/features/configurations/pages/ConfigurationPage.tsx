@@ -260,6 +260,24 @@ export default function ConfigurationPage() {
         status: "active",
         navigationPath: "/dashboard/utilities",
       },
+      {
+        id: "seed-list-management",
+        name: "Seed List Management",
+        description: "Manage test recipients (staff) who receive campaign copies based on department and line of business",
+        type: "campaign",
+        category: "Data Management",
+        status: "active",
+        navigationPath: "/dashboard/seed-list-management",
+      },
+      {
+        id: "vip-lists",
+        name: "VIP Lists",
+        description: "Define and manage VIP customer lists for targeted campaigns",
+        type: "campaign",
+        category: "Data Management",
+        status: "active",
+        navigationPath: "/dashboard/vip-list-management",
+      },
     ];
 
     setConfigurations(allConfigurations);

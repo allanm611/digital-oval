@@ -119,9 +119,7 @@ export default function PushNotificationRouteFormPage({ mode }: PushNotification
     if (!formData.name.trim()) {
       newErrors.name = "Route name is required";
     }
-    if (!formData.gateway_config_id) {
-      newErrors.gateway_config_id = "Gateway configuration is required";
-    }
+    // gateway_config_id is no longer required
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -138,13 +136,14 @@ export default function PushNotificationRouteFormPage({ mode }: PushNotification
     try {
       setSaving(true);
 
+      // Remove gateway_config_id from payload
+      const { gateway_config_id, ...payloadData } = formData;
+
       if (mode === "edit" && id) {
-        await pushNotificationRouteService.updateRoute(Number(id), {
-          ...formData,
-        });
+        await pushNotificationRouteService.updateRoute(Number(id), payloadData);
         success("Success", "Push notification route updated successfully");
       } else {
-        await pushNotificationRouteService.createRoute(formData);
+        await pushNotificationRouteService.createRoute(payloadData);
         success("Success", "Push notification route created successfully");
       }
 
@@ -273,7 +272,7 @@ export default function PushNotificationRouteFormPage({ mode }: PushNotification
                 <HeadlessSelect
                   options={gatewayConfigs.map((config) => ({
                     value: String(config.id),
-                    label: `${config.name} (${config.provider_type})`,
+                    label: config.name,
                   }))}
                   value={String(formData.gateway_config_id || "")}
                   onChange={(value) =>

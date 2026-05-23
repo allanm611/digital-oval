@@ -120,9 +120,7 @@ export default function CreateEditUSSDRoutePage() {
     if (!formData.name.trim()) {
       newErrors.name = "Route name is required";
     }
-    if (!formData.gateway_config_id) {
-      newErrors.gateway_config_id = "Gateway configuration is required";
-    }
+    // gateway_config_id is no longer required
     if (!extendedFormData.ussdCode.trim()) {
       newErrors.ussdCode = "USSD code is required";
     }
@@ -142,11 +140,14 @@ export default function CreateEditUSSDRoutePage() {
     try {
       setSaving(true);
 
+      // Remove gateway_config_id from payload
+      const { gateway_config_id, ...payloadData } = formData;
+
       if (id) {
-        await ussdRouteService.updateRoute(Number(id), formData);
+        await ussdRouteService.updateRoute(Number(id), payloadData);
         success("Success", "USSD route updated successfully");
       } else {
-        await ussdRouteService.createRoute(formData);
+        await ussdRouteService.createRoute(payloadData);
         success("Success", "USSD route created successfully");
       }
 
@@ -275,7 +276,7 @@ export default function CreateEditUSSDRoutePage() {
                 <HeadlessSelect
                   options={gatewayConfigs.map((config) => ({
                     value: String(config.id),
-                    label: `${config.name} (${config.provider_type})`,
+                    label: config.name,
                   }))}
                   value={String(formData.gateway_config_id || "")}
                   onChange={(value) =>

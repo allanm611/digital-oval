@@ -1915,6 +1915,63 @@ class SegmentService {
 
     return response.json();
   }
+
+  /**
+   * POST /segments/preview-sql - Preview a direct SQL query
+   * This endpoint takes a raw SQL query and returns the count and execution time
+   * TODO: Replace with actual backend endpoint when ready
+   */
+  async previewSqlQuery(sqlQuery: string): Promise<{
+    success: boolean;
+    data?: { count: number; executionTime: number };
+    error?: string;
+  }> {
+    // Mock response - simulate backend delay
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    // Validate SQL has SELECT statement
+    if (!sqlQuery.trim().toUpperCase().includes("SELECT")) {
+      return {
+        success: false,
+        error: "Query must contain a SELECT statement",
+      };
+    }
+
+    // Mock success response with random customer count
+    const mockCount = Math.floor(Math.random() * 50000) + 100;
+    const mockExecutionTime = Math.floor(Math.random() * 500) + 50;
+
+    return {
+      success: true,
+      data: {
+        count: mockCount,
+        executionTime: mockExecutionTime,
+      },
+    };
+
+    // Actual backend call (uncomment when endpoint is ready):
+    // const url = `${BASE_URL}/preview-sql`;
+    // const response = await fetch(url, {
+    //   method: "POST",
+    //   headers: {
+    //     ...getAuthHeaders(),
+    //     "Content-Type": "application/json",
+    //   },
+    //   body: JSON.stringify({ sql_query: sqlQuery }),
+    // });
+    // if (!response.ok) {
+    //   const errorData = await response.json().catch(() => ({}));
+    //   return {
+    //     success: false,
+    //     error: errorData.error || `HTTP error! status: ${response.status}`,
+    //   };
+    // }
+    // const data = await response.json();
+    // return {
+    //   success: true,
+    //   data: data.data || data,
+    // };
+  }
 }
 
 export const segmentService = new SegmentService();
