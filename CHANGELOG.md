@@ -1,3 +1,11 @@
+## [1.3.1](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.3.0...v1.3.1) (2026-05-23)
+
+
+### Bug Fixes
+
+* added the country,currency and timezone in the footer ([44f5272](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/44f52722d49f22a779060c0492bc6b0148b26b46))
+* fixing preview button of sql type ([3f3c60c](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/3f3c60c5b774da597ae4b7f66dabab2998050355))
+
 # [1.3.0](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.2.7...v1.3.0) (2026-05-23)
 
 
