@@ -610,8 +610,8 @@ export default function SegmentConditionsBuilder({
               />
             </div>
           </div>
-          {/* Preview Button and Limit (Only for rule type) */}
-          {ruleType === "rule" && (
+          {/* Preview Button and Limit (Rule type) OR Preview Button (SQL type) */}
+          {ruleType === "rule" ? (
             <div className="flex items-center space-x-3">
               {/* {previewCount !== null && (
                 <span className={`text-sm ${tw.textSecondary}`}>
@@ -647,6 +647,21 @@ export default function SegmentConditionsBuilder({
                 {isPreviewLoading ? "Previewing..." : "Preview"}
               </button>
             </div>
+          ) : ruleType === "sql" && (
+            <button
+              type="button"
+              onClick={onSqlPreview}
+              disabled={isSqlPreviewLoading || !sqlQuery}
+              className={`inline-flex items-center px-4 py-2 text-sm text-white ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+              style={{
+                backgroundColor: isSqlPreviewLoading ? color.text.secondary : color.primary.action,
+              }}
+            >
+              {isSqlPreviewLoading && (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              )}
+              {isSqlPreviewLoading ? "Previewing..." : "Preview"}
+            </button>
           )}
         </div>
       )}
@@ -1157,10 +1172,11 @@ export default function SegmentConditionsBuilder({
       ) : ruleType === "sql" && (
         /* SQL Editor */
         <div
-          className={`${tw.rounded} p-4 border`}
+          className={`${tw.rounded} p-4 border flex flex-col`}
           style={{
             borderColor: sqlPreviewError ? "#ef4444" : tw.borderDefault,
             backgroundColor: "#ffffff",
+            height: "calc(100vh - 350px)",
           }}
         >
           <QueryEditorTab

@@ -64,7 +64,7 @@ function ColumnButton({ column, onCopy }: ColumnButtonProps) {
     >
       <span
         className="truncate"
-        style={{ color: tw.textSecondary }}
+        style={{ color: "#4b5563" }}
       >
         {column}
       </span>
@@ -79,11 +79,11 @@ function ColumnButton({ column, onCopy }: ColumnButtonProps) {
 export default function QueryEditorTab({
   sql,
   onSqlChange,
-  onPreviewResult,
-  isPreviewLoading,
+  // onPreviewResult,
+  // isPreviewLoading,
   previewResult,
   previewError,
-  onPreview,
+  // onPreview,
 }: QueryEditorTabProps) {
   const [expandedTables, setExpandedTables] = useState<string[]>([
     "subscribers",
@@ -105,7 +105,7 @@ export default function QueryEditorTab({
     <div className="flex gap-6 h-full min-h-0 overflow-hidden">
       {/* Left Panel - Schema Browser (DBeaver style) */}
       <div
-        className={`w-72 flex-shrink-0 overflow-y-auto h-full`}
+        className={`w-72 flex-shrink-0 overflow-y-scroll h-full`}
         style={{
           backgroundColor: "#f9fafb",
           borderRight: `1px solid ${tw.borderDefault}`,
@@ -156,7 +156,7 @@ export default function QueryEditorTab({
       </div>
 
       {/* Right Panel - SQL Editor */}
-      <div className="flex-1 flex flex-col gap-3 min-h-0 p-4 overflow-y-auto" style={{ backgroundColor: color.surface.cards }}>
+      <div className="flex-1 flex flex-col gap-3 min-h-0 p-4 overflow-hidden" style={{ backgroundColor: color.surface.cards }}>
         {/* SQL Editor with CodeMirror */}
         <div className="flex-1 flex flex-col gap-2 min-h-0">
           <label className={`block text-sm font-medium ${tw.textPrimary}`}>

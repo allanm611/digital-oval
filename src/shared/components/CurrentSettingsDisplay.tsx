@@ -50,7 +50,7 @@ export default function CurrentSettingsDisplay() {
   }, []);
 
   return (
-    <div className="text-xs text-white/70 flex items-center gap-4">
+    <div className="text-xs text-white flex items-center gap-4">
       <span>Country: {settings.country}</span>
       <span>Timezone: {settings.timezone}</span>
       <span>Currency: {settings.currency}</span>
