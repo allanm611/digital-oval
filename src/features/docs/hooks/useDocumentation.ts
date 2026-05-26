@@ -1,30 +1,30 @@
 /**
  * Hook: useDocumentation
- * Load and manage documentation content from API
+ * Load and manage documentation content from bundled markdown
+ * Will switch to API when backend is ready
  */
 
 import { useEffect, useState } from 'react';
 import { docsService } from '../services/docsService';
-import { DocDocument } from '../types/documentation';
 
 export interface UseDocumentationReturn {
   content: string;
   isLoading: boolean;
   error: string | null;
   reload: () => void;
-  document?: DocDocument;
+  title?: string;
 }
 
 export function useDocumentation(slug?: string): UseDocumentationReturn {
   const [content, setContent] = useState('');
-  const [document, setDocument] = useState<DocDocument | undefined>();
+  const [title, setTitle] = useState<string>();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadDoc = async () => {
     if (!slug) {
       setContent('');
-      setDocument(undefined);
+      setTitle(undefined);
       setError(null);
       return;
     }
@@ -33,14 +33,14 @@ export function useDocumentation(slug?: string): UseDocumentationReturn {
     setError(null);
 
     try {
-      const doc = await docsService.loadDocument(slug);
-      setDocument(doc);
-      setContent(doc.markdown_content || '');
+      const doc = await docsService.loadMarkdown(slug);
+      setTitle(doc.metadata.title);
+      setContent(doc.content || '');
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load documentation');
       setContent('');
-      setDocument(undefined);
+      setTitle(undefined);
     } finally {
       setIsLoading(false);
     }
@@ -55,6 +55,6 @@ export function useDocumentation(slug?: string): UseDocumentationReturn {
     isLoading,
     error,
     reload: loadDoc,
-    document,
+    title,
   };
 }

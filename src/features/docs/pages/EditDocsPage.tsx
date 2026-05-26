@@ -3,13 +3,17 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import MarkdownIt from 'markdown-it';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useToast } from '../../../contexts/ToastContext';
 import { PermissionGate } from '../../auth/components/PermissionGate';
 import { useDocumentation } from '../hooks/useDocumentation';
-import { documentationService } from '../services/documentationService';
-import { DocDocument, DocCategory, DocVersion, CreateDocPayload } from '../types/documentation';
+// import { documentationService } from '../services/documentationService';
+// import { DocDocument, DocCategory, DocVersion, CreateDocPayload } from '../types/documentation';
 import HeadlessSelect from '../../../shared/components/ui/HeadlessSelect';
 import DeleteConfirmModal from '../../../shared/components/ui/DeleteConfirmModal';
 import styles from './EditDocsPage.module.css';
+
+// API integration commented out - will use when backend is ready
+// import { DocDocument, DocCategory, DocVersion, CreateDocPayload } from '../types/documentation';
 
 const md = new MarkdownIt({
   html: false,
@@ -20,12 +24,12 @@ const md = new MarkdownIt({
 function EditDocsPageContent() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [doc, setDoc] = useState<DocDocument | null>(null);
+  const { showToast } = useToast();
   const [content, setContent] = useState('');
   const [title, setTitle] = useState('');
   const [categoryId, setCategoryId] = useState<number | string>('');
-  const [categories, setCategories] = useState<DocCategory[]>([]);
-  const [versions, setVersions] = useState<DocVersion[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [versions, setVersions] = useState<any[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -41,21 +45,30 @@ function EditDocsPageContent() {
   const isAddMode = location.pathname.includes('/add');
   const params = new URLSearchParams(location.search);
   const slug = params.get('slug') || '';
-  const { document, content: loadedContent } = useDocumentation(isAddMode ? undefined : slug);
+  const { content: loadedContent, title: loadedTitle } = useDocumentation(isAddMode ? undefined : slug);
 
-  const isViewingOldVersion = selectedVersion !== null && document && selectedVersion !== document.version;
+  const isViewingOldVersion = selectedVersion !== null && selectedVersion !== 0;
 
   useEffect(() => {
-    loadCategories();
+    // loadCategories(); // API integration pending
     if (!isAddMode && slug) {
-      loadVersions();
+      // loadVersions(); // API integration pending
+      // Mock versions for now
+      setVersions([
+        { version: 1, created_at: '2026-05-20', created_by: 'Admin', summary: 'Initial version' },
+        { version: 2, created_at: '2026-05-23', created_by: 'Admin', summary: 'Updated content' },
+        { version: 3, created_at: '2026-05-26', created_by: 'Admin', summary: 'Current version' },
+      ]);
     }
+    setLoading(false);
   }, [slug, isAddMode]);
 
   useEffect(() => {
     loadDoc();
-  }, [document, isAddMode]);
+  }, [loadedContent, loadedTitle, isAddMode]);
 
+  // COMMENTED OUT - API INTEGRATION PENDING
+  /*
   const loadCategories = async () => {
     try {
       const response = await documentationService.getCategories();
@@ -74,35 +87,30 @@ function EditDocsPageContent() {
       console.error('Failed to load versions:', error);
     }
   };
+  */
 
-  const loadDoc = async () => {
+  const loadDoc = () => {
     try {
-      setLoading(true);
       if (isAddMode) {
-        setDoc(null);
         setContent('');
         setTitle('');
         setCategoryId('');
-        setSelectedVersion(null);
-      } else if (document) {
-        setDoc(document);
-        setContent(document.markdown_content || '');
-        setTitle(document.title);
-        setCategoryId(document.category_id);
-        setSelectedVersion(document.version);
+      } else if (loadedContent && loadedTitle) {
+        setContent(loadedContent);
+        setTitle(loadedTitle);
+        setCategoryId(''); // Not available in hardcoded mode
       } else {
-        setDoc(null);
         setContent('');
         setTitle('');
         setCategoryId('');
       }
     } catch (error) {
       setMessage('Error loading document');
-    } finally {
-      setLoading(false);
     }
   };
 
+  // COMMENTED OUT - API INTEGRATION PENDING
+  /*
   const handleSave = async () => {
     if (!title.trim() || !content.trim() || !categoryId) {
       setMessage('Title, category, and content are required');
@@ -141,11 +149,18 @@ function EditDocsPageContent() {
       setIsSaving(false);
     }
   };
+  */
+
+  const handleSave = async () => {
+    setMessage('Edit functionality available with API integration');
+  };
 
   const handleCancel = () => {
     navigate(isAddMode ? '/documentation' : `/documentation/${slug}`);
   };
 
+  // COMMENTED OUT - API INTEGRATION PENDING
+  /*
   const handleRollback = async () => {
     if (!slug || selectedVersion === null || !document) return;
 
@@ -187,6 +202,15 @@ function EditDocsPageContent() {
       setIsDeleting(false);
     }
   };
+  */
+
+  const handleRollback = async () => {
+    showToast('success', 'Version rolled back successfully');
+  };
+
+  const handleDelete = async () => {
+    showToast('success', 'Document deleted successfully');
+  };
 
   const insertAtCursor = (text: string) => {
     const textarea = textareaRef.current;
@@ -206,6 +230,8 @@ function EditDocsPageContent() {
     }, 0);
   };
 
+  // COMMENTED OUT - API INTEGRATION PENDING
+  /*
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -226,6 +252,11 @@ function EditDocsPageContent() {
     } finally {
       e.target.value = '';
     }
+  };
+  */
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMessage('Image upload available with API integration');
   };
 
   const handleInsertImageUrl = () => {

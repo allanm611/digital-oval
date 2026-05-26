@@ -100,18 +100,18 @@ Make messages personal by inserting customer data like `{{first_name}}` or `{{ac
 
 For detailed list of available variables, see [Variable Configuration](/documentation/configuration/dynamic-message-variables).
 
-### [Communication Policies](/documentation/configuration/campaign-communication-policy-list)
+### Communication Policies
 
-Policies control when and how often messages are sent (timing rules, DND compliance, frequency limits).
+See [Communication Policies](/documentation/configuration/campaign-communication-policy-list) for details. Policies control when and how often messages are sent (timing rules, DND compliance, frequency limits).
 
 **To Apply:**
 1. Click **Select Policy** (optional)
 2. Choose applicable policy
 3. Note: Some customers may be filtered out based on policy rules
 
-### [SMS Routes Configuration](/documentation/configuration/sms-routes) (SMS Channel Only)
+### SMS Routes Configuration (SMS Channel Only)
 
-Select which SMS gateway/provider to use. Different routes may have different delivery speeds and coverage.
+See [SMS Routes Configuration](/documentation/configuration/sms-routes) for details. Select which SMS gateway/provider to use. Different routes may have different delivery speeds and coverage.
 
 **To Select:**
 1. Click **Select SMS Route**

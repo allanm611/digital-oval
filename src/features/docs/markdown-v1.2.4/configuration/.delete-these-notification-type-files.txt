@@ -1,0 +1,3 @@
+delete notification-types-overview.md
+create-notification-type.md
+view-notification-type.md

@@ -31,6 +31,7 @@ import { Segment, SegmentFilters, SortDirection } from "../types/segment";
 import { segmentService } from "../services/segmentService";
 import { segmentTypeService } from "../services/segmentTypeService";
 import { useToast } from "../../../contexts/ToastContext";
+import { useConfirm } from "../../../contexts/ConfirmContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -39,7 +40,6 @@ import SegmentModal from "../components/SegmentModal";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw, button, zIndex } from "../../../shared/utils/utils";
-import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { PermissionGate } from "../../auth/components/PermissionGate";
@@ -51,6 +51,7 @@ import CreateCommunicationModal from "../../../shared/components/CreateCommunica
 export default function SegmentManagementPage() {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { confirm } = useConfirm();
   const [segments, setSegments] = useState<Segment[]>([]);
   const [computingSegmentId, setComputingSegmentId] = useState<number | null>(
     null,
@@ -844,15 +845,6 @@ export default function SegmentManagementPage() {
       return;
     }
 
-      title: "Bulk Refresh Segments",
-      message: `Do you want to refresh ${segmentIdsArray.length} segment(s)? This will update the member lists for all selected segments.`,
-      type: "info",
-      confirmText: "Refresh All",
-      cancelText: "Cancel",
-    });
-
-    if (!confirmed) return;
-
     try {
       await segmentService.batchRefreshSegments({
         segmentIds: segmentIdsArray,
@@ -888,16 +880,6 @@ export default function SegmentManagementPage() {
     if (selectedSegmentIds.size < 2) return;
 
     const segmentIdsArray = Array.from(selectedSegmentIds);
-
-      title: "Batch Compute Segments",
-      message: `Do you want to compute size for ${segmentIdsArray.length} segment(s)? This will recalculate member counts for all selected segments.`,
-      type: "info",
-      confirmText: "Compute All",
-      cancelText: "Cancel",
-    });
-
-    if (!confirmed) return;
-
     setIsBatchComputing(true);
     try {
       await segmentService.batchCompute({

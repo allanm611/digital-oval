@@ -2502,7 +2502,7 @@ export default function DashboardHome() {
                         {index + 1}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="font-semibold text-base text-black truncate mb-2">
+                        <p className="font-semibold text-sm text-black truncate mb-2">
                           {campaign.name}
                         </p>
                         <div className="flex flex-wrap items-center gap-2 text-sm text-black">
@@ -2579,7 +2579,7 @@ export default function DashboardHome() {
                       {index + 1}
                     </div>
                     <div className="min-w-0">
-                      <p className="font-semibold text-base text-black truncate">
+                      <p className="font-semibold text-sm text-black truncate">
                         {offer.name}
                       </p>
                       <p className="text-sm text-black">
@@ -2710,7 +2710,7 @@ export default function DashboardHome() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2 min-w-0">
                           <h3
-                            className="font-semibold text-base text-gray-900 truncate max-w-[60vw] sm:max-w-xs"
+                            className="font-semibold text-sm text-gray-900 truncate max-w-[60vw] sm:max-w-xs"
                             title={item.name}
                           >
                             {item.name}

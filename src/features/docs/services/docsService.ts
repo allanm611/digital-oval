@@ -1,10 +1,11 @@
 /**
  * Docs Service
- * Handles loading and managing documentation via API
+ * Handles loading documentation from bundled markdown files
+ * API integration commented out - will use when backend is ready
  */
 
 import { DocDocument } from '../types/documentation';
-import documentationService from './documentationService';
+// import documentationService from './documentationService';
 
 export interface DocMetadata {
   slug: string;
@@ -13,11 +14,90 @@ export interface DocMetadata {
   path: string;
 }
 
+// Vite glob imports for each version - must be evaluated at build time
+const v1_0_modules = import.meta.glob('../markdown-v1.0/**/*.md', { query: '?raw', import: 'default' }) as Record<string, () => Promise<string>>;
+const v1_1_modules = import.meta.glob('../markdown-v1.1/**/*.md', { query: '?raw', import: 'default' }) as Record<string, () => Promise<string>>;
+const v1_2_4_modules = import.meta.glob('../markdown-v1.2.4/**/*.md', { query: '?raw', import: 'default' }) as Record<string, () => Promise<string>>;
+
 class DocsService {
+  private markdownCache: Record<string, { content: string; metadata: DocMetadata }> = {};
+
   /**
-   * Load document by slug from API
+   * Load all markdown documents using Vite's glob import
+   * Maps version to correct markdown folder
+   */
+  private loadAllMarkdown(version: string = '1.2.4') {
+    switch(version) {
+      case '1.2.2':
+        return v1_0_modules;
+      case '1.2.3':
+        return v1_1_modules;
+      case '1.2.4':
+      default:
+        return v1_2_4_modules;
+    }
+  }
+
+  /**
+   * Load document by slug
    * Slug format: "intro", "authentication/login", "campaigns/create-campaign", etc.
    */
+  async loadMarkdown(slug: string, version: string = '1.2.4'): Promise<{ content: string; metadata: DocMetadata }> {
+    const cacheKey = `${version}:${slug}`;
+    if (this.markdownCache[cacheKey]) {
+      return this.markdownCache[cacheKey];
+    }
+
+    try {
+      const modules = this.loadAllMarkdown(version);
+      let filePath = `../markdown-v1.0/${slug}.md`;
+
+      switch(version) {
+        case '1.2.2':
+          filePath = `../markdown-v1.0/${slug}.md`;
+          break;
+        case '1.2.3':
+          filePath = `../markdown-v1.1/${slug}.md`;
+          break;
+        case '1.2.4':
+        default:
+          filePath = `../markdown-v1.2.4/${slug}.md`;
+          break;
+      }
+
+      // Try exact match
+      let moduleKey = Object.keys(modules).find(key => key.includes(`/${slug}.md`));
+
+      if (!moduleKey) {
+        throw new Error(`Documentation for "${slug}" not found`);
+      }
+
+      const module = modules[moduleKey];
+      const content = await module();
+
+      const { metadata, body } = this.parseFrontmatter(content);
+      const docMetadata: DocMetadata = {
+        slug,
+        title: metadata.title || this.formatLabel(slug.split('/').pop() || slug),
+        category: slug.split('/')[0] || 'general',
+        path: `/documentation/${slug}`,
+      };
+
+      const result = { content: body, metadata: docMetadata };
+      this.markdownCache[slug] = result;
+      return result;
+    } catch (error) {
+      console.error(`Failed to load document for slug: ${slug}`, error);
+      throw new Error(`Documentation for "${slug}" not found`);
+    }
+  }
+
+  /**
+   * COMMENTED OUT - API INTEGRATION PENDING
+   * Load document by slug from API
+   * Uncomment when backend API is ready
+   */
+  /*
   async loadDocument(slug: string): Promise<DocDocument> {
     try {
       return await documentationService.getDocumentBySlug(slug);
@@ -26,6 +106,7 @@ class DocsService {
       throw new Error(`Documentation for "${slug}" not found`);
     }
   }
+  */
 
   /**
    * Remove HTML comments from markdown content
@@ -65,6 +146,16 @@ class DocsService {
     } catch (error) {
       return { metadata: {}, body: this.removeHtmlComments(content) };
     }
+  }
+
+  /**
+   * Format a slug into a readable label
+   */
+  private formatLabel(slug: string): string {
+    return slug
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
   }
 
   /**

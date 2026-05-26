@@ -1,0 +1,158 @@
+# Campaign List
+
+## Overview
+
+View, search, and manage all your campaigns in one place. The Campaign List page displays all campaigns with their current status, key information, and quick actions.
+
+## Stat Cards
+
+At the top of the page, you'll see quick stats showing:
+
+- **Total Campaigns** - All campaigns in the system
+- **Active Campaigns** - Currently running campaigns
+- **Draft** - Campaigns in progress
+- **Pending Approval** - Campaigns waiting for approval
+
+![Campaign List Overview](/img/v1.1/campaign-images/campaign-list.png)
+
+## Campaign Table
+
+The main table displays all campaigns with their key information:
+
+### Default Visible Columns
+
+- **Campaign Name** - Name of the campaign (with expansion chevron)
+- **Category** - Campaign category or audience segment
+- **Status** - Current status (Active, Draft, Paused, Approved, etc.)
+- **Offers** - Number of offers included in the campaign
+- **Segments** - Number of customer segments targeted
+- **Performance** - Key metrics (Conversion rate, Revenue, etc.)
+- **Actions** - Quick action buttons (View, Edit, Delete, etc.)
+
+### Additional Available Columns
+
+The following columns can be shown/hidden using the **Columns** button:
+
+- **Created By** - User who created the campaign
+- **Created On** - Date and time the campaign was created
+- **Last Updated By** - User who last modified the campaign
+- **Last Updated On** - Date and time of the last modification
+
+### Inline Campaign Details Expansion
+
+Click the **ChevronDown** icon next to the campaign name to expand and view additional campaign details:
+
+- **Rejection Reason** - Why the campaign was rejected (if applicable)
+- **Description** - Campaign description
+- **Objective** - Campaign objective or goal
+- **Policy** - Communication policy applied to this campaign
+- **Control Group** - Control group configuration
+- **Budget Allocated** - Total budget allocated to the campaign
+- **Budget Spent** - Amount of budget spent so far
+- **Start Date** - When the campaign starts
+- **End Date** - When the campaign ends
+
+The chevron rotates 180 degrees when expanded and can be clicked again to collapse the details.
+
+## Search & Filter
+
+### Search by Name
+
+Use the search bar to find campaigns by name.
+
+### Filter Campaigns
+
+Click the **Filters** button to filter by:
+
+- **Status** - All Campaigns, Active, Paused, Completed, Draft, Archived
+- **Catalog** - Filter by catalog
+- **Approval Status** - Pending, Approved, etc.
+- **Date Range** - Filter by start/end date
+
+![Filter Modal](/img/v1.1/campaign-images/campaign-filterbyall.png)
+
+![Filter by Status](/img/v1.1/campaign-images/campaign-filterbystatus.png)
+
+### Customize Table Columns
+
+Click the **Columns** button (with Settings icon) to customize which columns are displayed in the campaign table:
+
+- **Show/Hide Columns** - Toggle any column's visibility
+- **Default View** - By default, Campaign Name, Category, Status, Offers, Segments, Performance, and Actions are visible
+- **Optional Columns** - Show additional metadata columns like Created By, Created On, Last Updated By, and Last Updated On
+- **Column Selection Persists** - Your column preferences are saved for your next visit
+
+The column picker allows you to focus on the information most relevant to your workflow.
+
+## Page-Level Actions
+
+At the top of the Campaign List page, you'll find:
+
+- **Create Campaign** button - [Create a new campaign](/documentation/campaigns/create-campaign) (requires "create" permission)
+- **Analytics** button - [View campaign analytics](/documentation/reports/campaign-reports)
+
+## Quick Actions
+
+Click the **More** button (three dots) on each campaign row to access actions. You can also click the **Eye icon** to [view campaign details](/documentation/campaigns/view-campaign-details). The available actions depend on your campaign's current status and approval status.
+
+![Action Buttons](/img/v1.1/campaign-images/duplicatecampaignonlistpage.png)
+
+### Action Button Visibility
+
+The actions available for each campaign vary based on its **Status** and **Approval Status**:
+
+#### For Draft Campaigns (Status: Draft)
+
+- **Request Approval** - Submit the campaign for approval review
+
+#### For Pending Approval Campaigns (Status: Pending Approval)
+
+- **Approve Campaign** - Approve the campaign to make it executable (requires "Approve" permission)
+- **Reject Campaign** - Reject the campaign and return it to draft status (requires "Reject" permission)
+
+#### For Approved & Active Campaigns (Status: Any, Approval Status: Approved, Is Active: Yes)
+
+- **Execute Campaign** - Start running the campaign immediately (requires "Execute" permission)
+- **Pause Campaign** - Pause a running campaign (shows only if status is not already paused)
+- **Resume Campaign** - Resume a paused campaign (shows only if status is paused)
+
+#### For Approved & Inactive Campaigns (Status: Any, Approval Status: Approved, Is Active: No)
+
+- **Activate Campaign** - Activate a campaign to make it executable
+- **Execute Campaign** - Start running the campaign (shows only if is_active is true)
+
+#### For All Campaigns (Any Status)
+
+These actions are always available regardless of campaign status:
+
+- **[Edit Campaign](/documentation/campaigns/view-campaign-details)** - Modify campaign details at any point in the campaign lifecycle
+- **Duplicate Campaign** - Create a copy of the campaign with a new name (requires "create" permission)
+- **Archive Campaign** - Archive the campaign when you no longer need it
+- **Unarchive Campaign** - Restore an archived campaign back to active use (only visible for archived campaigns)
+- **Delete Campaign** - Permanently delete the campaign (requires "Delete" permission)
+- **Duplicate Campaign** - quickly create a new campaign based on an existing one. This will open the campaign creation form pre-filled with the selected campaign's details. Make any changes needed and save to create the new campaign.
+
+### Campaign Status Reference
+
+\***\*Draft\*\*** - Campaign is being created/edited - Request Approval, Edit, Archive, Delete
+
+\***\*Pending Approval\*\*** - Campaign is waiting for approval - Approve, Reject, Edit, Archive, Delete
+
+\***\*Approved\*\*** - Campaign has been approved - Execute, Pause/Resume, Edit, Archive, Delete
+
+\***\*Paused\*\*** - Approved campaign is temporarily paused - Resume, Edit, Archive, Delete
+
+\***\*Active\*\*** - Campaign is currently running - Pause, Edit, Archive, Delete
+
+### Approval Status States
+
+\***\*Pending\*\*** - Campaign is awaiting reviewer approval
+
+\***\*Approved\*\*** - Campaign has been approved and can be rund
+
+\***\*Rejected\*\*** - Campaign was rejected and returned to draft for edits
+
+### Key Notes
+
+- **Permission Requirements**: Some actions require specific user permissions (e.g., only users with "Approve" permission can approve campaigns)
+- **Status Flow**: Campaigns flow from Draft → Pending Approval → Approved → can be paused/resumed → completed

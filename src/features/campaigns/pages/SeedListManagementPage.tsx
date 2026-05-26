@@ -1548,10 +1548,10 @@ export default function SeedListManagementPage() {
                                 <div className="flex items-center justify-center gap-2">
                                   <button
                                     onClick={() => {
-                                      navigate(`/dashboard/customers/details/${member.customer_id}`);
+                                      navigate(`/dashboard/user-management/${member.customer_id}`);
                                     }}
                                     className="p-2 text-gray-600 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
-                                    title="View customer details"
+                                    title="View user details"
                                   >
                                     <Eye className="w-4 h-4" />
                                   </button>

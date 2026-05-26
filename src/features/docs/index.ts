@@ -9,7 +9,7 @@ export { useDocumentation } from './hooks/useDocumentation';
 export { docsService } from './services/docsService';
 export { documentationService } from './services/documentationService';
 export { searchService } from './services/searchService';
-export {
+export type {
   DocDocument,
   DocCategory,
   DocVersion,

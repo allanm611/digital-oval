@@ -303,7 +303,9 @@ export default function OfferCreativesPage() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate(`/dashboard/offer-creatives/${creative.id}`);
+                            navigate(`/dashboard/offer-creatives/${creative.id}`, {
+                              state: { returnTo: { pathname: "/dashboard/offer-creatives" } }
+                            });
                           }}
                           className={`${tw.textAction} hover:opacity-75 transition-opacity`}
                           title="View details"

@@ -20,8 +20,9 @@ export function DocsHeader() {
   const versionDropdownRef = useRef<HTMLDivElement>(null);
 
   const versions = [
-    { version: 'v1.1', isLatest: true },
-    { version: 'v1.0' },
+    { version: '1.2.4', isLatest: true },
+    { version: '1.2.3' },
+    { version: '1.2.2' },
   ];
 
   // Close dropdown when clicking outside

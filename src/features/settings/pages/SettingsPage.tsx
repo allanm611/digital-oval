@@ -1392,6 +1392,7 @@ export default function SettingsPage() {
             </p>
           </div>
         </div>
+
       </div>
     </div>
   );

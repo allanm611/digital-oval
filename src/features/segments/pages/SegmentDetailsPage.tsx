@@ -746,7 +746,7 @@ export default function SegmentDetailsPage() {
         success("Size computed", `Segment size: ${computedSize} customers`);
       }
     } catch (err) {
-      showError("Error computing size", extractBackendError(error, "Error computing size. Please try again.")).message || "Failed to compute segment size",        true, // bypassSilentMode      );
+      showError("Error computing size", extractBackendError(err, "Error computing size. Please try again."));
     } finally {
       setIsComputingSize(false);
     }
@@ -768,7 +768,7 @@ export default function SegmentDetailsPage() {
       }
     } catch (err) {
       console.error("Failed to validate query:", err);
-      showError("Error validating query", extractBackendError(error, "Error validating query. Please try again.")).message || "Please try again later.",        true,      );
+      showError("Error validating query", extractBackendError(err, "Error validating query. Please try again."));
     } finally {
       setIsValidatingQuery(false);
     }
@@ -799,7 +799,7 @@ export default function SegmentDetailsPage() {
       setShowAddTagInput(false);
     } catch (err) {
       console.error("Failed to add tag:", err);
-      showError("Error adding tag", extractBackendError(error, "Error adding tag. Please try again.")).message || "Please try again later.",        true,      );
+      showError("Error adding tag", extractBackendError(err, "Error adding tag. Please try again."));
     } finally {
       setIsAddingTag(false);
     }
@@ -825,7 +825,7 @@ export default function SegmentDetailsPage() {
       success("Tag removed", `Tag "${tag}" has been removed`);
     } catch (err) {
       console.error("Failed to remove tag:", err);
-      showError("Error removing tag", extractBackendError(error, "Error removing tag. Please try again.")).message || "Please try again later.",        true,      );
+      showError("Error removing tag", extractBackendError(err, "Error removing tag. Please try again."));
     } finally {
       setIsAddingTag(false);
     }
@@ -853,7 +853,7 @@ export default function SegmentDetailsPage() {
       success("Preview loaded", "Member preview has been generated");
     } catch (err) {
       console.error("Failed to load preview:", err);
-      showError("Error loading preview", extractBackendError(error, "Error loading preview. Please try again.")).message || "Please try again later.",        true,      );
+      showError("Error loading preview", extractBackendError(err, "Error loading preview. Please try again."));
     } finally {
       setIsLoadingPreview(false);
     }
@@ -917,7 +917,7 @@ export default function SegmentDetailsPage() {
       }
     } catch (err) {
       console.error("Failed to start export:", err);
-      showError("Error starting export", extractBackendError(error, "Error starting export. Please try again.")).message || "Please try again later.",        true,      );
+      showError("Error starting export", extractBackendError(err, "Error starting export. Please try again."));
       setIsExporting(false);
     }
   };
@@ -966,7 +966,7 @@ export default function SegmentDetailsPage() {
       setEditQuery("");
     } catch (err) {
       console.error("Failed to update query:", err);
-      showError("Error updating query", extractBackendError(error, "Error updating query. Please try again.")).message || "Please try again later.",        true,      );
+      showError("Error updating query", extractBackendError(err, "Error updating query. Please try again."));
     } finally {
       setIsUpdatingQuery(false);
     }
@@ -989,7 +989,7 @@ export default function SegmentDetailsPage() {
       await loadHierarchy();
     } catch (err) {
       console.error("Failed to update parent:", err);
-      showError("Error updating parent", extractBackendError(error, "Error updating parent. Please try again.")).message || "Please try again later.",        true,      );
+      showError("Error updating parent", extractBackendError(err, "Error updating parent. Please try again."));
     } finally {
       setIsUpdatingParent(false);
     }

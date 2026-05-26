@@ -11,6 +11,7 @@ import { Link as LinkIcon } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { PermissionGate } from '../../auth/components/PermissionGate';
 import { useDocumentation } from '../hooks/useDocumentation';
+import { useDocsVersion } from '../contexts/DocsVersionContext';
 import { DocsLayout } from '../components/DocsLayout';
 import { DocsSidebar } from '../components/DocsSidebar';
 import { DocsTOC } from '../components/DocsTOC';
@@ -25,40 +26,36 @@ export function DocsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { activeVersion } = useDocsVersion();
   const [sidebarItems, setSidebarItems] = useState<SidebarItem[]>([]);
   const [sidebarLoading, setSidebarLoading] = useState(true);
   const [sidebarError, setSidebarError] = useState<string | null>(null);
 
-  // Extract document slug from URL path (last segment)
-  // e.g., /documentation/authentication/login → login
-  const pathSegments = location.pathname.replace(/^\/documentation\/?/, '').split('/').filter(Boolean);
-  const slug = pathSegments[pathSegments.length - 1] || 'intro';
+  // Extract document slug from URL path (full path after /documentation)
+  // e.g., /documentation/getting-started/overview → getting-started/overview
+  const slug = location.pathname.replace(/^\/documentation\/?/, '').replace(/\/$/, '') || 'intro';
 
   // Scroll to top when navigation slug changes
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [slug]);
 
-  // Load sidebar from API
+  // Load sidebar (hardcoded from sidebars config)
   useEffect(() => {
-    const loadSidebar = async () => {
-      try {
-        setSidebarLoading(true);
-        setSidebarError(null);
-        const items = await getSidebar();
-        setSidebarItems(items);
-      } catch (error) {
-        setSidebarError(
-          error instanceof Error ? error.message : 'Failed to load sidebar'
-        );
-        setSidebarItems([]);
-      } finally {
-        setSidebarLoading(false);
-      }
-    };
-
-    loadSidebar();
-  }, []);
+    try {
+      setSidebarLoading(true);
+      setSidebarError(null);
+      const items = getSidebar(activeVersion);
+      setSidebarItems(items);
+    } catch (error) {
+      setSidebarError(
+        error instanceof Error ? error.message : 'Failed to load sidebar'
+      );
+      setSidebarItems([]);
+    } finally {
+      setSidebarLoading(false);
+    }
+  }, [activeVersion]);
 
   const { content, isLoading, error } = useDocumentation(slug);
 
@@ -157,12 +154,13 @@ export function DocsPage() {
               >
                 Edit
               </button>
-              <button
+              {/* Manage Sidebar hidden for now - API integration pending */}
+              {/* <button
                 onClick={() => navigate(`/documentation/manage-sidebar`)}
                 className={styles.editLink}
               >
                 Manage Sidebar
-              </button>
+              </button> */}
             </PermissionGate>
           </div>
         </div>
@@ -201,7 +199,11 @@ export function DocsPage() {
                   return <Link to={href}>{children}</Link>;
                 }
                 // Use regular <a> for external links
-                return <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>;
+                return (
+                  <a href={href} target="_blank" rel="noopener noreferrer">
+                    {children}
+                  </a>
+                );
               }
             }}
           >
