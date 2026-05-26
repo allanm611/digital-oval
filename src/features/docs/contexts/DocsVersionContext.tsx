@@ -13,7 +13,7 @@ interface DocsVersionContextType {
 const DocsVersionContext = createContext<DocsVersionContextType | undefined>(undefined);
 
 export function DocsVersionProvider({ children }: { children: ReactNode }) {
-  const [activeVersion, setActiveVersion] = useState('1.2.4');
+  const [activeVersion, setActiveVersion] = useState('1.3.2');
 
   return (
     <DocsVersionContext.Provider value={{ activeVersion, setActiveVersion }}>

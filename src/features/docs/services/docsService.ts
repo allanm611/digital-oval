@@ -26,13 +26,13 @@ class DocsService {
    * Load all markdown documents using Vite's glob import
    * Maps version to correct markdown folder
    */
-  private loadAllMarkdown(version: string = '1.2.4') {
+  private loadAllMarkdown(version: string = '1.3.2') {
     switch(version) {
-      case '1.2.2':
+      case '1.3.0':
         return v1_0_modules;
-      case '1.2.3':
+      case '1.3.1':
         return v1_1_modules;
-      case '1.2.4':
+      case '1.3.2':
       default:
         return v1_2_4_modules;
     }
@@ -42,7 +42,7 @@ class DocsService {
    * Load document by slug
    * Slug format: "intro", "authentication/login", "campaigns/create-campaign", etc.
    */
-  async loadMarkdown(slug: string, version: string = '1.2.4'): Promise<{ content: string; metadata: DocMetadata }> {
+  async loadMarkdown(slug: string, version: string = '1.3.2'): Promise<{ content: string; metadata: DocMetadata }> {
     const cacheKey = `${version}:${slug}`;
     if (this.markdownCache[cacheKey]) {
       return this.markdownCache[cacheKey];
@@ -53,13 +53,13 @@ class DocsService {
       let filePath = `../markdown-v1.0/${slug}.md`;
 
       switch(version) {
-        case '1.2.2':
+        case '1.3.0':
           filePath = `../markdown-v1.0/${slug}.md`;
           break;
-        case '1.2.3':
+        case '1.3.1':
           filePath = `../markdown-v1.1/${slug}.md`;
           break;
-        case '1.2.4':
+        case '1.3.2':
         default:
           filePath = `../markdown-v1.2.4/${slug}.md`;
           break;

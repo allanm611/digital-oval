@@ -57,7 +57,7 @@ export function DocsPage() {
     }
   }, [activeVersion]);
 
-  const { content, isLoading, error } = useDocumentation(slug);
+  const { content, isLoading, error } = useDocumentation(slug, activeVersion);
 
   // Redirect to login if not authenticated
   if (!user) {

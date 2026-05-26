@@ -16,25 +16,22 @@ export interface SidebarItem {
 
 /**
  * Get sidebar from hardcoded sidebars config by version
- * Supports: 1.2.2, 1.2.3, 1.2.4 (latest), default (current)
+ * Supports: 1.3.0, 1.3.1, 1.3.2 (latest)
  * API version commented out below - will use when backend is ready
  */
-export const getSidebar = (version: string = 'default'): SidebarItem[] => {
+export const getSidebar = (version: string = '1.3.2'): SidebarItem[] => {
   let sidebarConfig;
 
   switch (version) {
-    case '1.2.2':
+    case '1.3.0':
       sidebarConfig = sidebarsV1_0.tutorialSidebar || [];
       break;
-    case '1.2.3':
+    case '1.3.1':
       sidebarConfig = sidebarsV1_1.tutorialSidebar || [];
       break;
-    case '1.2.4':
-      sidebarConfig = sidebarsV1_2_4.tutorialSidebar || [];
-      break;
-    case 'default':
+    case '1.3.2':
     default:
-      sidebarConfig = sidebars.tutorialSidebar || [];
+      sidebarConfig = sidebarsV1_2_4.tutorialSidebar || [];
       break;
   }
 

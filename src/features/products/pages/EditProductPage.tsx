@@ -171,7 +171,16 @@ export default function EditProductPage() {
       if (unit) finalUpdateData.unit_of_measure = unit;
       if (unit_value && unit_value > 0) finalUpdateData.value = unit_value;
       if (formData.validity_hours && formData.validity_hours > 0) finalUpdateData.validity_hours = formData.validity_hours;
-      if (combo_data?.resources?.length) finalUpdateData.resources = combo_data.resources;
+      if (combo_data?.resources?.length) {
+        finalUpdateData.resources = combo_data.resources.map((resource: any) => ({
+          resource_type: resource.resource_type,
+          resource_unit: resource.unit?.toLowerCase(),
+          resource_value: resource.unit_value,
+          ...(resource.validity_hours !== undefined && { validity_hours: resource.validity_hours }),
+          ...(resource.price !== undefined && { price: resource.price }),
+          ...(resource.daid_account && { daid_account: resource.daid_account }),
+        }));
+      }
 
       // CRITICAL: Ensure tags is ALWAYS an array, NEVER a string
       // This is the most important fix - tags MUST be an array for the backend

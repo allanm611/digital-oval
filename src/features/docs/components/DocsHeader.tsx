@@ -20,9 +20,9 @@ export function DocsHeader() {
   const versionDropdownRef = useRef<HTMLDivElement>(null);
 
   const versions = [
-    { version: '1.2.4', isLatest: true },
-    { version: '1.2.3' },
-    { version: '1.2.2' },
+    { version: '1.3.2', isLatest: true },
+    { version: '1.3.1' },
+    { version: '1.3.0' },
   ];
 
   // Close dropdown when clicking outside
@@ -54,9 +54,9 @@ export function DocsHeader() {
             <span className={styles.docLabel}>Documentation</span>
           </div>
 
-          {/* Center: Release Notes + Version Dropdown */}
+          {/* Center: Version Dropdown */}
           <div className={styles.centerSection}>
-            <span className={styles.releaseLabel}>Release Notes</span>
+            <span className={styles.releaseLabel}>Version</span>
             <div ref={versionDropdownRef} className={styles.versionDropdownContainer}>
               <button
                 onClick={() => setIsVersionOpen(!isVersionOpen)}

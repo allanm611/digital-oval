@@ -15,7 +15,7 @@ export interface UseDocumentationReturn {
   title?: string;
 }
 
-export function useDocumentation(slug?: string): UseDocumentationReturn {
+export function useDocumentation(slug?: string, version: string = '1.3.2'): UseDocumentationReturn {
   const [content, setContent] = useState('');
   const [title, setTitle] = useState<string>();
   const [isLoading, setIsLoading] = useState(false);
@@ -33,7 +33,7 @@ export function useDocumentation(slug?: string): UseDocumentationReturn {
     setError(null);
 
     try {
-      const doc = await docsService.loadMarkdown(slug);
+      const doc = await docsService.loadMarkdown(slug, version);
       setTitle(doc.metadata.title);
       setContent(doc.content || '');
       setError(null);
@@ -48,7 +48,7 @@ export function useDocumentation(slug?: string): UseDocumentationReturn {
 
   useEffect(() => {
     loadDoc();
-  }, [slug]);
+  }, [slug, version]);
 
   return {
     content,
