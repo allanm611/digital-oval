@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { color, tw } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { communicationService } from "../services/communicationService";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
@@ -280,7 +281,7 @@ export default function CommunicationAnalyticsPage() {
             {/* Executions Table */}
             {executions && executions.length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                <h3 className="text-sm font-semibold text-gray-900 mb-4">
                   Executions
                 </h3>
                 <div className="overflow-x-auto">
@@ -354,8 +355,24 @@ export default function CommunicationAnalyticsPage() {
                                 <td className="px-6 py-4 text-sm font-medium text-black">
                                   {execution.execution_id}
                                 </td>
-                                <td className="px-6 py-4 text-sm text-black">
-                                  {execution.source_type} #{execution.source_id}
+                                <td className="px-6 py-4 text-sm">
+                                  {execution.source_type === "quicklist" ? (
+                                    <button
+                                      onClick={() =>
+                                        navigate(
+                                          `/dashboard/quick-lists/${execution.source_id}`
+                                        )
+                                      }
+                                      className="hover:underline transition-colors"
+                                      style={{ color: color.primary.accent }}
+                                    >
+                                      {execution.source_type} #{execution.source_id}
+                                    </button>
+                                  ) : (
+                                    <span className="text-black">
+                                      {execution.source_type} #{execution.source_id}
+                                    </span>
+                                  )}
                                 </td>
                                 <td className="px-6 py-4 text-sm text-black">
                                   <span
@@ -459,7 +476,7 @@ export default function CommunicationAnalyticsPage() {
             {/* Communication Logs Table */}
             {logs && logs.length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                <h3 className="text-sm font-semibold text-gray-900 mb-4">
                   Communication Logs
                 </h3>
                 <div className="overflow-x-auto">

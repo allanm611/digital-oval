@@ -121,7 +121,7 @@ export default function EditCustomerModal({
 
   // Initialize form data when customer changes - fetch full details from API
   useEffect(() => {
-    const customerId = customer?.customerId || customer?.customer_id;
+    const customerId = customer?.id || customer?.customerId || customer?.customer_id;
     if (customer && customerId) {
       const fetchCustomerDetails = async () => {
         setIsLoading(true);
@@ -137,7 +137,7 @@ export default function EditCustomerModal({
               alternatemsisdns: Array.isArray(customerData.alternate_msisdns)
                 ? customerData.alternate_msisdns.join(", ")
                 : "",
-              email: customerData.email || customer.email || "",
+              email: customerData.email_address || customerData.email || customer.email || "",
               alternateEmail: customerData.alternate_email || "",
               gender: customerData.gender || "",
               dateOfBirth: customerData.date_of_birth

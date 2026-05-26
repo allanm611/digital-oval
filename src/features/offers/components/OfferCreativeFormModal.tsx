@@ -16,6 +16,7 @@ import {
 import { color, tw } from "../../../shared/utils/utils";
 import { zIndex } from "../../../shared/utils/tokens";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import { senderIdService, SenderId } from "../../configurations/services/senderIdService";
@@ -423,7 +424,7 @@ export default function OfferCreativeFormModal({
       success("Success", `Creative ${mode === "create" ? "created" : "updated"} successfully`);
       onClose();
     } catch (err) {
-      showError("Error", err instanceof Error ? err.message : "Failed to save creative");
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setIsSaving(false);
     }

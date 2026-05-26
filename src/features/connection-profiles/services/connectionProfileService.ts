@@ -1,4 +1,5 @@
 import { buildApiUrl, getAuthHeaders } from "../../../shared/services/api";
+import { fetchWithAuthInterceptor } from "../../../shared/services/fetchInterceptor";
 import {
   AutoDeactivateExpiredRequest,
   AutoDeactivateExpiredResponse,
@@ -27,7 +28,7 @@ class ConnectionProfileService {
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${BASE_URL}${endpoint}`;
-    const response = await fetch(url, {
+    const response = await fetchWithAuthInterceptor(url, {
       headers: {
         ...getAuthHeaders(),
         ...options.headers,
@@ -479,8 +480,17 @@ class ConnectionProfileService {
 
   async testConnectionProfile(id: number): Promise<any> {
     try {
+      const token = localStorage.getItem("auth_token") || localStorage.getItem("authToken");
+      console.log("Test connection - Token present:", !!token);
+      console.log("Test connection - Token value:", token ? token.substring(0, 20) + "..." : "NOT FOUND");
+
       const response = await this.request<any>(`/${id}/test-connection`, {
         method: "POST",
+        body: JSON.stringify({
+          auth_config: {},
+          connection_config: {},
+          timeout_seconds: 15,
+        }),
       });
       return response;
     } catch (error) {

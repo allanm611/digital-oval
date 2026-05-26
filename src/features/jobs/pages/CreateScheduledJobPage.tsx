@@ -22,6 +22,7 @@ import type {
 } from "../../campaigns/types/campaign";
 import type { GetCampaignFlowsResponse } from "../../campaigns/types/campaignFlow";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -244,10 +245,7 @@ export default function CreateScheduledJobPage() {
             }
           }
         } catch (err) {
-          showError(
-            "Failed to load job",
-            err instanceof Error ? err.message : "Unknown error",
-          );
+          showError("Failed to load job", extractBackendError(error, "Failed to load job. Please try again."));
           navigate("/dashboard/scheduled-jobs");
         } finally {
           setIsLoading(false);

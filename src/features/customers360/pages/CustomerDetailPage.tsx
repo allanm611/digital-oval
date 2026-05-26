@@ -24,10 +24,12 @@ import SearchInput from "../../../shared/components/ui/SearchInput";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
 import Radio from "../../../shared/components/ui/Radio";
+import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useToast } from "../../../contexts/ToastContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import CreateCommunicationModal from "../../../shared/components/CreateCommunicationModal";
@@ -370,107 +372,107 @@ type TabType =
   | "device";
 
 export default function CustomerDetailPage() {
-  const location = useLocation();
   const navigate = useNavigate();
   const { customerId: customerIdFromParams } = useParams<{
     customerId: string;
   }>();
 
-  const stateSource = location.state?.source as OriginSource | undefined;
-  const [origin, setOrigin] = useState<OriginSource | undefined>(
-    stateSource ?? "customers",
-  );
-
-  useEffect(() => {
-    if (stateSource && stateSource !== origin) {
-      setOrigin(stateSource);
-    }
-  }, [stateSource, origin]);
-
-  // Get customer from state (initial navigation) or from URL params (on refresh)
-  const customerFromState = location.state?.customer as CustomerRow | undefined;
-  const subscriptionFromState = location.state?.subscription as
-    | CustomerSubscriptionRecord
-    | undefined;
-  const customerIdFromUrl = customerIdFromParams;
-
-  const derivedCustomerFromSubscription = useMemo(() => {
-    if (!subscriptionFromState) return undefined;
-    return convertSubscriptionToCustomerRow(subscriptionFromState);
-  }, [subscriptionFromState]);
+  const [origin, setOrigin] = useState<OriginSource>("customers");
+  const [isLoading, setIsLoading] = useState(true);
 
   const [selectedCustomer, setSelectedCustomer] = useState<
     CustomerRow | undefined
-  >(customerFromState || derivedCustomerFromSubscription);
+  >();
   const [selectedSubscription, setSelectedSubscription] = useState<
     Record<string, any> | undefined
-  >(subscriptionFromState);
-
-  useEffect(() => {
-    if (customerFromState) {
-      setSelectedCustomer(customerFromState);
-      if (stateSource) {
-        setOrigin(stateSource);
-      }
-    }
-  }, [customerFromState, stateSource]);
-
-  useEffect(() => {
-    if (subscriptionFromState) {
-      setSelectedSubscription(subscriptionFromState);
-    }
-  }, [subscriptionFromState]);
-
-  useEffect(() => {
-    if (!selectedCustomer && derivedCustomerFromSubscription) {
-      setSelectedCustomer(derivedCustomerFromSubscription);
-    }
-  }, [selectedCustomer, derivedCustomerFromSubscription]);
-
-  useEffect(() => {
-    if (!selectedSubscription && selectedCustomer) {
-      // API will fetch subscription details when customer ID is available
-      // No need to lookup in local array anymore
-    }
-  }, [selectedCustomer, selectedSubscription]);
+  >();
 
   // Fetch full customer details from API when customerId is available
   useEffect(() => {
     const fetchCustomerDetails = async () => {
-      if (!customerIdFromUrl || customerFromState) return;
+      if (!customerIdFromParams) return;
 
+      setIsLoading(true);
       try {
-        const customerId = parseInt(customerIdFromUrl, 10);
+        const customerId = parseInt(customerIdFromParams, 10);
         if (!isNaN(customerId)) {
           const response = await customerService.getCustomerById(customerId);
           if (response.success && response.data) {
             // Convert API response to CustomerSubscriptionRecord format
             const apiData = response.data;
             const convertedSubscription: CustomerSubscriptionRecord = {
-              customerId:
-                typeof apiData.subscriber_id === "string"
-                  ? parseInt(apiData.subscriber_id, 10)
-                  : apiData.subscriber_id || customerId,
-              subscriptionId: customerId,
-              firstName:
-                apiData.attributes?.first_name ||
-                apiData.first_name ||
-                "Unknown",
-              lastName:
-                apiData.attributes?.last_name ||
-                apiData.last_name ||
-                "Customer",
+              customerId: apiData.customer_id || customerId,
+              subscriptionId: apiData.subscription_id || customerId,
+              amdocsSubsId: apiData.amdocs_subs_id,
+              firstName: apiData.first_name || "Unknown",
+              last_name: apiData.last_name || "Customer",
+              first_name: apiData.first_name || "Unknown",
+              lastName: apiData.last_name || "Customer",
               msisdn: apiData.msisdn,
-              email: apiData.attributes?.email || apiData.email,
-              city: apiData.attributes?.city,
-              customerType: apiData.attributes?.customer_tier || "prepaid",
-              tariff: apiData.attributes?.preferred_channel || "NORMAL_SMS",
-              status:
-                (apiData.attributes as any)?.subscriber_status || "active",
-              simType: (apiData.attributes as any)?.kyc_verified
-                ? "KYC Verified"
-                : "Not Verified",
-              activationDate: apiData.created_at,
+              email: apiData.email_address || apiData.email,
+              email_address: apiData.email_address,
+              iccid: apiData.iccid,
+              imsi: apiData.imsi,
+              alternatemsisdns: apiData.alternate_msisdns,
+              alternate_msisdns: apiData.alternate_msisdns,
+              activationDate: apiData.activation_date || apiData.created_at,
+              activation_date: apiData.activation_date || apiData.created_at,
+              bankingServices: apiData.banking_services,
+              banking_services: apiData.banking_services,
+              simType: apiData.sim_type,
+              sim_type: apiData.sim_type,
+              status: apiData.status,
+              sms: apiData.sms,
+              dataServices: apiData.data_services,
+              data_services: apiData.data_services,
+              limitOutOfBundleData: apiData.limit_out_of_bundle_data,
+              limit_out_of_bundle_data: apiData.limit_out_of_bundle_data,
+              limitOutOfBundleVoice: apiData.limit_out_of_bundle_voice,
+              limit_out_of_bundle_voice: apiData.limit_out_of_bundle_voice,
+              limitOutOfBundleSms: apiData.limit_out_of_bundle_sms,
+              limit_out_of_bundle_sms: apiData.limit_out_of_bundle_sms,
+              birthDate: apiData.birth_date,
+              birth_date: apiData.birth_date,
+              gender: apiData.gender,
+              alternateEmail: apiData.alternate_email,
+              alternate_email: apiData.alternate_email,
+              birthPlaceOther: apiData.birth_place_other,
+              birth_place_other: apiData.birth_place_other,
+              preferredLanguage: apiData.preferred_language,
+              preferred_language: apiData.preferred_language,
+              languagePreference: apiData.preferred_language,
+              city: apiData.city,
+              region: apiData.region,
+              postalCode: apiData.postal_code,
+              postal_code: apiData.postal_code,
+              countryCode: apiData.country_code,
+              country_code: apiData.country_code,
+              physicalAddress: apiData.physical_address,
+              physical_address: apiData.physical_address,
+              customerType: apiData.customer_type,
+              customer_type: apiData.customer_type,
+              customerTier: apiData.customer_tier,
+              customer_tier: apiData.customer_tier,
+              preferredChannel: apiData.preferred_channel,
+              preferred_channel: apiData.preferred_channel,
+              timezone: apiData.timezone,
+              branchCode: apiData.branch_code,
+              branch_code: apiData.branch_code,
+              customerCountyId: apiData.customer_county_id,
+              customer_county_id: apiData.customer_county_id,
+              building: apiData.building,
+              road: apiData.road,
+              estate: apiData.estate,
+              ward: apiData.ward,
+              tariff: apiData.tariff,
+              segments: apiData.segments,
+              offers: apiData.offers,
+              quicklists: apiData.quicklists,
+              campaigns: apiData.campaigns,
+              communication_channels: apiData.communication_channels,
+              notifications: apiData.notifications,
+              id: apiData.id,
+              updated_at: apiData.updated_at,
             };
 
             setSelectedSubscription(convertedSubscription);
@@ -484,13 +486,15 @@ export default function CustomerDetailPage() {
         }
       } catch (error) {
         console.error("Failed to fetch customer details:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchCustomerDetails();
-  }, [customerIdFromUrl, customerFromState]);
+  }, [customerIdFromParams]);
 
-  const customer = selectedCustomer || derivedCustomerFromSubscription;
+  const customer = selectedCustomer;
 
   const [activeTab, setActiveTab] = useState<TabType>("overview");
   const [eventSearchTerm, setEventSearchTerm] = useState<string>("");
@@ -798,14 +802,10 @@ export default function CustomerDetailPage() {
     }));
   }, [events]);
 
-  const enrichedCustomer = customer as CustomerWithContact | undefined;
-  const fallbackEmail = customer
-    ? `${customer.name.toLowerCase().replace(/\s+/g, ".")}@example.com`
-    : "customer@example.com";
   const email =
-    selectedSubscription?.email ?? enrichedCustomer?.email ?? fallbackEmail;
+    selectedSubscription?.email_address || selectedSubscription?.email || customer?.email;
   const phone = formatMsisdn(
-    selectedSubscription?.msisdn ?? enrichedCustomer?.phone ?? null,
+    selectedSubscription?.msisdn ?? customer?.phone ?? null,
   );
 
   const overviewSections = useMemo(() => {
@@ -852,7 +852,7 @@ export default function CustomerDetailPage() {
                 ? selectedSubscription.alternate_msisdns.join(", ")
                 : (selectedSubscription.alternate_msisdns ?? "—"),
             },
-            { label: "Email", value: selectedSubscription.email ?? email },
+            { label: "Email", value: selectedSubscription.email_address ?? selectedSubscription.email ?? email ?? "—" },
             {
               label: "Alternate Email",
               value: selectedSubscription.alternate_email ?? "—",
@@ -908,21 +908,17 @@ export default function CustomerDetailPage() {
       ];
     }
 
-    return [
-      {
-        title: "Customer Information",
-        items: [
-          { label: "Customer ID", value: customer.id },
-          { label: "Name", value: customer.name },
-          { label: "Email", value: email },
-          { label: "Phone", value: phone },
-          { label: "Location", value: customer.location },
-          { label: "Segment", value: customer.segment },
-          { label: "Preferred Channel", value: customer.preferredChannel },
-        ],
-      },
-    ];
+    return [];
   }, [selectedSubscription, customer, email, phone]);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16">
+        <LoadingSpinner variant="modern" size="xl" color="primary" />
+        <p className="mt-4 text-sm text-black">Loading customer profile...</p>
+      </div>
+    );
+  }
 
   if (!customer) {
     return (

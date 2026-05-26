@@ -14,6 +14,7 @@ import {
 } from "../types/jobWorkflowStep";
 import { ScheduledJob } from "../types/scheduledJob";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -41,15 +42,19 @@ const getFailureActions = (t: any): { value: FailureAction; label: string }[] =>
 ];
 
 export default function CreateJobWorkflowStepPage() {
-  const { id } = useParams<{ id: string }>();
+  const { id: paramId } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const jobIdParam = searchParams.get("job_id");
   const batchMode = searchParams.get("batch") === "true";
+  const operationType = searchParams.get("operation") as "create" | "edit" | "duplicate" | null;
+  const queryParamId = searchParams.get("id");
+  const id = paramId || queryParamId;
   const navigate = useNavigate();
   const { error: showError, success: showToast } = useToast();
   const { user } = useAuth();
   const { t } = useLanguage();
-  const isEditMode = !!id;
+  const isEditMode = operationType === "edit" && !!id;
+  const isDuplicateMode = operationType === "duplicate" && !!id;
 
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -103,19 +108,16 @@ export default function CreateJobWorkflowStepPage() {
         });
         setJobs(jobsResponse.data || []);
       } catch (err) {
-        showError(
-          "Error",
-          err instanceof Error ? err.message : "Failed to load jobs"
-        );
+        showError("Error", extractBackendError(err, "Error. Please try again."));
       }
     };
 
     loadJobs();
   }, [showError]);
 
-  // Load step data when editing
+  // Load step data when editing or duplicating
   useEffect(() => {
-    if (!isEditMode || !id) return;
+    if (!id || (!isEditMode && !isDuplicateMode)) return;
 
     const loadStep = async () => {
       setIsLoading(true);
@@ -124,11 +126,35 @@ export default function CreateJobWorkflowStepPage() {
           Number(id),
           true
         );
-        setOriginalStepOrder(step.step_order);
+        setOriginalStepOrder(isDuplicateMode ? null : step.step_order);
+
+        // In duplicate mode, calculate the next available step order
+        let nextStepOrder = isDuplicateMode ? 1 : step.step_order;
+        if (isDuplicateMode) {
+          try {
+            const stepsResponse = await jobWorkflowStepService.getStepsByJobId(
+              step.job_id,
+              true
+            );
+            const existingOrders = (stepsResponse.data || [])
+              .map((s) => s.step_order)
+              .filter((o) => typeof o === "number");
+            const usedOrders = new Set(existingOrders);
+            let candidate = 1;
+            while (usedOrders.has(candidate)) {
+              candidate += 1;
+            }
+            nextStepOrder = candidate;
+          } catch {
+            // If we can't fetch existing orders, use next after current
+            nextStepOrder = step.step_order + 1;
+          }
+        }
+
         setFormData({
           job_id: step.job_id,
-          step_order: step.step_order,
-          step_name: step.step_name,
+          step_order: nextStepOrder,
+          step_name: isDuplicateMode ? `Copy of ${step.step_name}` : step.step_name,
           step_code: step.step_code,
           step_description: step.step_description ?? "",
           step_type: step.step_type,
@@ -152,17 +178,14 @@ export default function CreateJobWorkflowStepPage() {
           userId: user?.user_id ?? null,
         });
       } catch (err) {
-        showError(
-          "Error",
-          err instanceof Error ? err.message : "Failed to load step"
-        );
+        showError("Error", extractBackendError(err, "Error. Please try again."));
       } finally {
         setIsLoading(false);
       }
     };
 
     loadStep();
-  }, [id, isEditMode, user?.user_id, showError]);
+  }, [id, isEditMode, isDuplicateMode, operationType, user?.user_id, showError]);
 
   // Reload step codes and existing orders when job changes
   useEffect(() => {
@@ -298,8 +321,15 @@ export default function CreateJobWorkflowStepPage() {
 
     setIsSaving(true);
     try {
-      if (isEditMode && id) {
-        // Backend does not allow changing job_id on update; omit it from payload
+      if (isDuplicateMode && id) {
+        // Call duplicate endpoint - send empty object to duplicate to same job
+        await jobWorkflowStepService.duplicateStep(Number(id), {});
+        showToast(
+          "Step duplicated",
+          `"${formData.step_name}" has been duplicated successfully.`
+        );
+      } else if (isEditMode && id) {
+        // Call edit endpoint
         const { ...rest } = formData;
         const updatePayload: UpdateJobWorkflowStepPayload = {
           ...rest,
@@ -353,10 +383,7 @@ export default function CreateJobWorkflowStepPage() {
       // Navigate back to list page without filtering - let user decide if they want to filter
       navigate("/dashboard/job-workflow-steps");
     } catch (err) {
-      showError(
-        "Error",
-        err instanceof Error ? err.message : "Failed to save workflow step"
-      );
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsSaving(false);
     }
@@ -427,14 +454,14 @@ export default function CreateJobWorkflowStepPage() {
   return (
     <div className="space-y-6">
       <BackButton
-        fallbackTo={`/dashboard/job-workflow-steps${
-          formData.job_id ? `?job_id=${formData.job_id}` : ""
-        }`}
+        fallbackTo="/dashboard/job-workflow-steps"
         showBreadcrumb={true}
         currentLabel={
-          isEditMode
-            ? t.jobs.jobWorkflow.editWorkflowStep
-            : t.jobs.jobWorkflow.createWorkflowStep
+          isDuplicateMode
+            ? "Duplicate Step"
+            : isEditMode
+            ? "Edit Step"
+            : "Create Step"
         }
       />
 
@@ -1216,12 +1243,14 @@ export default function CreateJobWorkflowStepPage() {
             {isSaving ? (
               <>
                 <LoadingSpinner />
-                {batchMode ? t.jobs.jobWorkflow.creating : t.jobs.jobWorkflow.saving}
+                {isDuplicateMode ? "Duplicating..." : batchMode ? t.jobs.jobWorkflow.creating : t.jobs.jobWorkflow.saving}
               </>
             ) : (
               <>
                 <Save className="h-4 w-4" />
-                {isEditMode
+                {isDuplicateMode
+                  ? "Duplicate Step"
+                  : isEditMode
                   ? t.jobs.jobWorkflow.updateStep
                   : batchMode
                   ? `${t.jobs.jobWorkflow.createStep} ${batchSteps.length}`

@@ -23,6 +23,7 @@ import {
 } from "recharts";
 import { connectionProfileService } from "../services/connectionProfileService";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";

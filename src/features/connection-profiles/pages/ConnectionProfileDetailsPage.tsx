@@ -22,6 +22,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw } from "../../../shared/utils/utils";
@@ -130,6 +131,11 @@ export default function ConnectionProfileDetailsPage() {
   const handleToggleActive = async () => {
     if (!profile) return;
     setTogglingStatus(true);
+    const previousProfile = profile;
+    const newStatus = !profile.is_active;
+    setProfile((prev) =>
+      prev ? { ...prev, is_active: newStatus } : null,
+    );
     try {
       if (profile.is_active) {
         await connectionProfileService.deactivateProfile(
@@ -144,8 +150,8 @@ export default function ConnectionProfileDetailsPage() {
         );
         success("Connection profile activated");
       }
-      await loadProfile();
     } catch (err) {
+      setProfile(previousProfile);
       showError(
         t.analytics?.["failed_to_update"] || "Failed to update status",
         err instanceof Error
@@ -160,11 +166,15 @@ export default function ConnectionProfileDetailsPage() {
   const handleMarkUsed = async () => {
     if (!profile) return;
     setMarkUsedLoading(true);
+    const previousProfile = profile;
+    setProfile((prev) =>
+      prev ? { ...prev, last_used_at: new Date().toISOString() } : null,
+    );
     try {
       await connectionProfileService.markProfileUsed(profile.id);
       success("Usage timestamp updated");
-      await loadProfile();
     } catch (err) {
+      setProfile(previousProfile);
       showError(
         t.analytics?.["failed_to_update"] || "Failed to mark profile as used",
         err instanceof Error
@@ -179,14 +189,18 @@ export default function ConnectionProfileDetailsPage() {
   const handleHealthUpdate = async () => {
     if (!profile) return;
     setHealthSaving(true);
+    const previousProfile = profile;
+    setProfile((prev) =>
+      prev ? { ...prev, last_health_check_status: healthStatus } : null,
+    );
     try {
       await connectionProfileService.updateHealthStatus(profile.id, {
         status: healthStatus,
       });
       success("Health status updated");
       setHealthModalOpen(false);
-      await loadProfile();
     } catch (err) {
+      setProfile(previousProfile);
       showError(
         t.analytics?.["failed_to_update"] || "Failed to update health status",
         err instanceof Error
@@ -228,6 +242,19 @@ export default function ConnectionProfileDetailsPage() {
     }
 
     setValiditySaving(true);
+    const previousProfile = profile;
+    setProfile((prev) =>
+      prev
+        ? {
+            ...prev,
+            valid_from: new Date(validityForm.valid_from).toISOString(),
+            valid_to: validityForm.valid_to
+              ? new Date(validityForm.valid_to).toISOString()
+              : null,
+          }
+        : null,
+    );
+
     try {
       await connectionProfileService.updateValidityPeriod(profile.id, {
         valid_from: new Date(validityForm.valid_from).toISOString(),
@@ -237,9 +264,9 @@ export default function ConnectionProfileDetailsPage() {
       });
       success("Validity window updated");
       setValidityModalOpen(false);
-      await loadProfile();
       await fetchValidityStatus(profile.id);
     } catch (err) {
+      setProfile(previousProfile);
       showError(
         t.analytics?.["failed_to_update"] || "Failed to update validity",
         err instanceof Error
@@ -390,7 +417,7 @@ export default function ConnectionProfileDetailsPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm text-gray-600">Profile Code</label>
-                <p className="font-medium text-gray-900 mt-1">
+                <p className="text-sm font-medium text-gray-900 mt-1">
                   {profile.profile_code}
                 </p>
               </div>
@@ -410,26 +437,26 @@ export default function ConnectionProfileDetailsPage() {
               </div>
               <div>
                 <label className="text-sm text-gray-600">Connection Type</label>
-                <p className="font-medium text-gray-900 mt-1">
+                <p className="text-sm font-medium text-gray-900 mt-1">
                   {profile.connection_type}
                 </p>
               </div>
               <div>
                 <label className="text-sm text-gray-600">Environment</label>
-                <p className="font-medium text-gray-900 mt-1">
+                <p className="text-sm font-medium text-gray-900 mt-1">
                   {profile.environment}
                 </p>
               </div>
               <div>
                 <label className="text-sm text-gray-600">Load Strategy</label>
-                <p className="font-medium text-gray-900 mt-1">
+                <p className="text-sm font-medium text-gray-900 mt-1">
                   {profile.load_strategy}
                 </p>
               </div>
               {profile.server_id && (
                 <div>
                   <label className="text-sm text-gray-600">Server ID</label>
-                  <p className="font-medium text-gray-900 mt-1">
+                  <p className="text-sm font-medium text-gray-900 mt-1">
                     {profile.server_id}
                   </p>
                 </div>
@@ -437,14 +464,14 @@ export default function ConnectionProfileDetailsPage() {
               {profile.database_name && (
                 <div>
                   <label className="text-sm text-gray-600">Database Name</label>
-                  <p className="font-medium text-gray-900 mt-1">
+                  <p className="text-sm font-medium text-gray-900 mt-1">
                     {profile.database_name}
                   </p>
                 </div>
               )}
               <div>
                 <label className="text-sm text-gray-600">Last Used</label>
-                <p className="font-medium text-gray-900 mt-1">
+                <p className="text-sm font-medium text-gray-900 mt-1">
                   {profile.last_used_at ? (
                     <DateFormatter date={profile.last_used_at} useUserTimezone includeTime />
                   ) : (
@@ -466,7 +493,7 @@ export default function ConnectionProfileDetailsPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm text-gray-600">Batch Size</label>
-                <p className="font-medium text-gray-900 mt-1">
+                <p className="text-sm font-medium text-gray-900 mt-1">
                   {profile.batch_size}
                 </p>
               </div>
@@ -474,19 +501,19 @@ export default function ConnectionProfileDetailsPage() {
                 <label className="text-sm text-gray-600">
                   Parallel Threads
                 </label>
-                <p className="font-medium text-gray-900 mt-1">
+                <p className="text-sm font-medium text-gray-900 mt-1">
                   {profile.parallel_threads}
                 </p>
               </div>
               <div>
                 <label className="text-sm text-gray-600">Min Pool Size</label>
-                <p className="font-medium text-gray-900 mt-1">
+                <p className="text-sm font-medium text-gray-900 mt-1">
                   {profile.min_pool_size}
                 </p>
               </div>
               <div>
                 <label className="text-sm text-gray-600">Max Pool Size</label>
-                <p className="font-medium text-gray-900 mt-1">
+                <p className="text-sm font-medium text-gray-900 mt-1">
                   {profile.max_pool_size}
                 </p>
               </div>
@@ -494,7 +521,7 @@ export default function ConnectionProfileDetailsPage() {
                 <label className="text-sm text-gray-600">
                   Connection Timeout (s)
                 </label>
-                <p className="font-medium text-gray-900 mt-1">
+                <p className="text-sm font-medium text-gray-900 mt-1">
                   {profile.connection_timeout_seconds}
                 </p>
               </div>
@@ -502,7 +529,7 @@ export default function ConnectionProfileDetailsPage() {
                 <label className="text-sm text-gray-600">
                   Idle Timeout (s)
                 </label>
-                <p className="font-medium text-gray-900 mt-1">
+                <p className="text-sm font-medium text-gray-900 mt-1">
                   {profile.idle_timeout_seconds}
                 </p>
               </div>
@@ -525,7 +552,7 @@ export default function ConnectionProfileDetailsPage() {
                 <label className="text-sm text-gray-600">
                   Data Classification
                 </label>
-                <p className="font-medium text-gray-900 mt-1">
+                <p className="text-sm font-medium text-gray-900 mt-1">
                   {profile.data_classification}
                 </p>
               </div>

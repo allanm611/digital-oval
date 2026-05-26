@@ -100,19 +100,31 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
   }, [mode, id, navigate, error, t]);
 
   const handleChange = (
-    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string; value: string | number } },
   ) => {
-    const { name, value, type } = event.target;
-    const checked = (event.target as HTMLInputElement).checked;
+    const { name, value } = event.target;
     setForm((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: value,
     }));
-    // Clear error for this field when user starts typing
     if (errors[name]) {
       setErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors[name];
+        return newErrors;
+      });
+    }
+  };
+
+  const handleCheckboxChange = (field: keyof typeof form) => {
+    setForm((prev) => ({
+      ...prev,
+      [field]: !prev[field],
+    }));
+    if (errors[field as string]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field as string];
         return newErrors;
       });
     }
@@ -358,11 +370,12 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
                 The network port used to connect (e.g. 80 for HTTP, 443 for
                 HTTPS).
               </p>
-              <Input type="number"
-                name="port"
+              <Input
+                type="number"
+                placeholder="Port"
                 value={form.port}
-                onChange={handleChange}
-                className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
+                onChange={(val) => setForm((prev) => ({...prev, port: String(val)}))}
+                variant="medium"
               />
             </div>
 
@@ -410,11 +423,12 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
               <label className="text-sm font-medium text-gray-700">
                 Timeout (seconds)
               </label>
-              <Input type="number"
-                name="timeout_seconds"
+              <Input
+                type="number"
+                placeholder="Timeout"
                 value={form.timeout_seconds}
-                onChange={handleChange}
-                className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
+                onChange={(val) => setForm((prev) => ({...prev, timeout_seconds: Number(val) || 30}))}
+                variant="medium"
               />
             </div>
 
@@ -422,11 +436,12 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
               <label className="text-sm font-medium text-gray-700">
                 Max Retries
               </label>
-              <Input type="number"
-                name="max_retries"
+              <Input
+                type="number"
+                placeholder="Max Retries"
                 value={form.max_retries}
-                onChange={handleChange}
-                className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
+                onChange={(val) => setForm((prev) => ({...prev, max_retries: Number(val) || 3}))}
+                variant="medium"
               />
             </div>
           </div>
@@ -444,12 +459,11 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
                 Automatically monitor availability and latency.
               </p>
             </div>
-            <div className="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer" onClick={() => handleChange({ target: { name: 'health_check_enabled', checked: !form.health_check_enabled, value: !form.health_check_enabled } })}>
+            <div className="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer" onClick={() => handleCheckboxChange('health_check_enabled')}>
               <Checkbox
                 id="health-check-enabled"
-                name="health_check_enabled"
                 checked={form.health_check_enabled}
-                onChange={handleChange}
+                onChange={() => handleCheckboxChange('health_check_enabled')}
                 className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black" />
               <span>Enabled</span>
             </div>
@@ -473,11 +487,12 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
                 <label className="text-sm font-medium text-gray-700">
                   Interval (seconds)
                 </label>
-                <Input type="number"
-                  name="health_check_interval_seconds"
+                <Input
+                  type="number"
+                  placeholder="Interval"
                   value={form.health_check_interval_seconds}
-                  onChange={handleChange}
-                  className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
+                  onChange={(val) => setForm((prev) => ({...prev, health_check_interval_seconds: Number(val) || 300}))}
+                  variant="medium"
                 />
               </div>
             </div>
@@ -496,12 +511,11 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
                 Pause calls after repeated failures.
               </p>
             </div>
-            <div className="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer" onClick={() => handleChange({ target: { name: 'circuit_breaker_enabled', checked: !form.circuit_breaker_enabled, value: !form.circuit_breaker_enabled } })}>
+            <div className="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer" onClick={() => handleCheckboxChange('circuit_breaker_enabled')}>
               <Checkbox
                 id="circuit-breaker-enabled"
-                name="circuit_breaker_enabled"
                 checked={form.circuit_breaker_enabled}
-                onChange={handleChange}
+                onChange={() => handleCheckboxChange('circuit_breaker_enabled')}
                 className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black" />
               <span>Enabled</span>
             </div>
@@ -512,11 +526,12 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
               <label className="text-sm font-medium text-gray-700">
                 Failure Threshold
               </label>
-              <Input type="number"
-                name="circuit_breaker_threshold"
+              <Input
+                type="number"
+                placeholder="Threshold"
                 value={form.circuit_breaker_threshold}
-                onChange={handleChange}
-                className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
+                onChange={(val) => setForm((prev) => ({...prev, circuit_breaker_threshold: Number(val) || 5}))}
+                variant="medium"
               />
             </div>
           )}
@@ -525,10 +540,36 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
         <div
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Advanced Settings
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Advanced Settings & Security
+            </h2>
+            <div className="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer" onClick={() => handleCheckboxChange('tls_enabled')}>
+              <Checkbox
+                id="tls-enabled"
+                checked={form.tls_enabled}
+                onChange={() => handleCheckboxChange('tls_enabled')}
+                className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black" />
+              <span>Enable TLS/HTTPS</span>
+            </div>
+          </div>
           <div className="space-y-4">
+            {form.tls_enabled && (
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  Authentication Type
+                </label>
+                <p className="text-xs text-gray-500 mb-1">
+                  Specify the authentication method for secure connections (e.g. mTLS, OAuth, API Key).
+                </p>
+                <Input
+                  placeholder="Authentication type"
+                  value={form.authentication_type}
+                  onChange={(val) => setForm((prev) => ({...prev, authentication_type: val}))}
+                  variant="medium"
+                />
+              </div>
+            )}
             <div>
               <label className="text-sm font-medium text-gray-700">
                 Metadata
@@ -538,48 +579,13 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
                 &quot;value&quot;&#x7D;).
               </p>
               <textarea
-                name="metadata"
                 value={form.metadata}
-                onChange={handleChange}
+                onChange={(e) => setForm((prev) => ({...prev, metadata: e.target.value}))}
                 className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none font-mono`}
                 rows={3}
                 placeholder='{"key": "value"}'
               />
             </div>
-          </div>
-        </div>
-
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900">TLS</h2>
-              <p className="text-xs text-gray-500 mt-1">
-                Require secure transport for requests.
-              </p>
-            </div>
-            <div className="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer" onClick={() => handleChange({ target: { name: 'tls_enabled', checked: !form.tls_enabled, value: !form.tls_enabled } })}>
-              <Checkbox
-                id="tls-enabled"
-                name="tls_enabled"
-                checked={form.tls_enabled}
-                onChange={handleChange}
-                className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black" />
-              <span>Enabled</span>
-            </div>
-          </div>
-
-          <div className="mt-4">
-            <label className="text-sm font-medium text-gray-700">
-              Authentication Type
-            </label>
-            <Input
-              placeholder="Authentication type"
-              value={form.authentication_type}
-              onChange={(val) => setForm((prev) => ({...prev, authentication_type: val}))}
-              variant="medium"
-            />
           </div>
         </div>
 

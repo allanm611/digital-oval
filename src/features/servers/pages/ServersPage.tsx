@@ -34,7 +34,9 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Pagination from "../../../shared/components/ui/Pagination";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
-import { useConfirm } from "../../../contexts/ConfirmContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
+import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+
 import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -48,7 +50,6 @@ type ScopeFilter = "all" | "health-enabled" | "health-failing" | "health-due";
 
 export default function ServersPage() {
   const { error: showError, success } = useToast();
-  const { confirm } = useConfirm();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -144,10 +145,7 @@ export default function ServersPage() {
       setProtocolCounts(Array.isArray(protocol) ? protocol : []);
       setRegionCounts(Array.isArray(regions) ? regions : []);
     } catch (err) {
-      showError(
-        "Failed to load server analytics",
-        (err as Error).message || "Please try again later.",
-      );
+      showError("Failed to load server analytics", extractBackendError(error, "Failed to load server analytics. Please try again.")).message || "Please try again later.",      );
     } finally {
       setIsLoadingStats(false);
     }
@@ -210,10 +208,7 @@ export default function ServersPage() {
       setSourceServers(Array.isArray(dataset) ? dataset : []);
     } catch (err) {
       setSourceServers([]);
-      showError(
-        "Failed to load servers",
-        (err as Error).message || "Unable to load server registry.",
-      );
+      showError("Failed to load servers", extractBackendError(error, "Failed to load servers. Please try again.")).message || "Unable to load server registry.",      );
     } finally {
       setIsLoadingServers(false);
     }
@@ -492,24 +487,18 @@ export default function ServersPage() {
     const ids = Array.from(selectedServerIds);
     if (ids.length === 0) return;
 
-    const confirmed = await confirm({
-      title: `${action === "activate" ? "Activate" : "Deactivate"} Servers`,
-      message: `Apply the ${
-        action === "activate" ? "activation" : "deactivation"
-      } status to ${ids.length} selected server${ids.length === 1 ? "" : "s"}?`,
-      type: action === "activate" ? "success" : "warning",
-      confirmText: action === "activate" ? "Activate" : "Deactivate",
-      cancelText: "Cancel",
-    });
-
-    if (!confirmed) return;
-
     if (!userId) {
       showError("Error", "User ID is required");
       return;
     }
 
     setIsBulkActionLoading(true);
+    setSourceServers((prev) =>
+      prev.map((s) =>
+        ids.includes(s.id) ? { ...s, is_active: action === "activate" } : s,
+      ),
+    );
+
     try {
       const payload = {
         serverIds: ids,
@@ -530,15 +519,10 @@ export default function ServersPage() {
         } ${updatedCount} server${updatedCount === 1 ? "" : "s"}.`,
       );
       setSelectedServerIds(new Set());
-      await loadServers();
       await loadStats();
     } catch (err) {
-      showError(
-        `Failed to ${
-          action === "activate" ? "activate" : "deactivate"
-        } servers`,
-        err instanceof Error ? err.message : "Please try again.",
-      );
+      await loadServers();
+      showError(        `Failed to ${          action === "activate" ? "activate" : "deactivate"        } servers`,        err instanceof Error ? err.message : "Please try again.",      );
     } finally {
       setIsBulkActionLoading(false);
     }
@@ -550,16 +534,14 @@ export default function ServersPage() {
   ) => {
     event?.stopPropagation();
     const action = server.is_active ? "deactivate" : "activate";
-    const confirmed = await confirm({
-      title: `${action === "activate" ? "Activate" : "Deactivate"} Server`,
-      message: `Are you sure you want to ${action} "${server.name}"?`,
-      type: action === "activate" ? "success" : "warning",
-      confirmText: action === "activate" ? "Activate" : "Deactivate",
-      cancelText: "Cancel",
-    });
-    if (!confirmed) return;
 
     setActionState({ id: server.id, action });
+    setSourceServers((prev) =>
+      prev.map((s) =>
+        s.id === server.id ? { ...s, is_active: action === "activate" } : s,
+      ),
+    );
+
     try {
       const updatedServer =
         action === "activate"
@@ -578,10 +560,8 @@ export default function ServersPage() {
         }.`,
       );
     } catch (err) {
-      showError(
-        `Failed to ${action} server`,
-        err instanceof Error ? err.message : "Please try again.",
-      );
+      await loadServers();
+      showError(        `Failed to ${action} server`,        err instanceof Error ? err.message : "Please try again.",      );
     } finally {
       setActionState(null);
     }
@@ -593,7 +573,6 @@ export default function ServersPage() {
   ) => {
     event?.stopPropagation();
     const nextAction = server.is_deprecated ? "undeprecate" : "deprecate";
-    const confirmed = await confirm({
       title: `${nextAction === "deprecate" ? "Deprecate" : "Restore"} Server`,
       message: `Are you sure you want to ${nextAction} "${server.name}"?`,
       type: nextAction === "deprecate" ? "warning" : "info",
@@ -623,10 +602,7 @@ export default function ServersPage() {
         }.`,
       );
     } catch (err) {
-      showError(
-        `Failed to ${nextAction} server`,
-        err instanceof Error ? err.message : "Please try again.",
-      );
+      showError(        `Failed to ${nextAction} server`,        err instanceof Error ? err.message : "Please try again.",      );
     } finally {
       setActionState(null);
     }
@@ -638,7 +614,6 @@ export default function ServersPage() {
   ) => {
     event?.stopPropagation();
     const action = server.health_check_enabled ? "disable" : "enable";
-    const confirmed = await confirm({
       title: `${action === "enable" ? "Enable" : "Disable"} Health Checks`,
       message: `Are you sure you want to ${action} health monitoring for "${server.name}"?`,
       type: action === "enable" ? "success" : "warning",
@@ -675,10 +650,7 @@ export default function ServersPage() {
       // Refetch health stats to update the stat card
       await loadStats();
     } catch (err) {
-      showError(
-        `Failed to ${action} health checks`,
-        err instanceof Error ? err.message : "Please try again.",
-      );
+      showError(        `Failed to ${action} health checks`,        err instanceof Error ? err.message : "Please try again.",      );
     } finally {
       setActionState(null);
     }
@@ -738,7 +710,7 @@ export default function ServersPage() {
           </div>
         </div>
       </div>
-      <p className={`${tw.textSecondary} text-sm`}>
+      <p className={`${tw.textSecondary} text-sm -mt-4`}>
         {t.servers.description}
       </p>
 

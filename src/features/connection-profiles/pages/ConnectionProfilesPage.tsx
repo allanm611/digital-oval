@@ -24,7 +24,7 @@ import {
   X,
 } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
-import { useConfirm } from "../../../contexts/ConfirmContext";
+import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -42,6 +42,7 @@ import {
 } from "../types/connectionProfile";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 
 type StatusFilter = "all" | "active" | "inactive" | "expired";
 type PiiFilter = "all" | "with" | "without";
@@ -72,7 +73,6 @@ const DEFAULT_FILTERS = {
 export default function ConnectionProfilesPage() {
   const navigate = useNavigate();
   const { error: showError, success: showSuccess } = useToast();
-  const { confirm } = useConfirm();
   const { user } = useAuth();
   const { t } = useLanguage();
 
@@ -112,6 +112,9 @@ export default function ConnectionProfilesPage() {
 
   const [filters, setFilters] = useState({ ...DEFAULT_FILTERS });
   const [currentPage, setCurrentPage] = useState(1);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [profileToDelete, setProfileToDelete] = useState<ConnectionProfileType | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [pageSize, setPageSize] = useState(20);
   const [totalProfiles, setTotalProfiles] = useState(0);
   const [hasMore, setHasMore] = useState(false);
@@ -277,12 +280,7 @@ export default function ConnectionProfilesPage() {
       setSelectedProfileIds(new Set());
     } catch (err) {
       console.error("Failed to load connection profiles", err);
-      showError(
-        t.analytics?.["failed_to_load"] || "Failed to load connection profiles",
-        err instanceof Error
-          ? err.message
-          : t.common?.["try_again_later"] || "Please try again later.",
-      );
+      showError("Unable to Load Profiles", extractBackendError(error, "Unable to Load Profiles. Please try again.")),      );
       setProfiles([]);
     } finally {
       setLoadingProfiles(false);
@@ -358,12 +356,7 @@ export default function ConnectionProfilesPage() {
       }));
     } catch (err) {
       console.error("Failed to load connection profile stats", err);
-      showError(
-        t.analytics?.["failed_to_load"] || "Failed to load stats",
-        err instanceof Error
-          ? err.message
-          : t.common?.["try_again_later"] || "Please try again later.",
-      );
+      showError("Unable to Load Statistics", extractBackendError(error, "Unable to Load Statistics. Please try again.")),      );
     } finally {
       setLoadingStats(false);
     }
@@ -463,16 +456,14 @@ export default function ConnectionProfilesPage() {
   ) => {
     event?.stopPropagation();
     const action = profile.is_active ? "deactivate" : "activate";
-    const confirmed = await confirm({
-      title: `${action === "activate" ? "Activate" : "Deactivate"} Profile`,
-      message: `Are you sure you want to ${action} "${profile.profile_name}"?`,
-      type: action === "activate" ? "success" : "warning",
-      confirmText: action === "activate" ? "Activate" : "Deactivate",
-      cancelText: "Cancel",
-    });
-    if (!confirmed) return;
 
     try {
+      setProfiles((prev) =>
+        prev.map((p) =>
+          p.id === profile.id ? { ...p, is_active: action === "activate" } : p,
+        ),
+      );
+
       if (action === "activate") {
         await connectionProfileService.activateProfile(
           profile.id,
@@ -492,13 +483,12 @@ export default function ConnectionProfilesPage() {
           `${profile.profile_name} is now inactive.`,
         );
       }
-      await reloadProfiles();
+
       await loadStats();
     } catch (err) {
-      showError(
-        `Failed to ${action} profile`,
-        err instanceof Error ? err.message : "Please try again.",
-      );
+      await reloadProfiles();
+      const actionLabel = action === "activate" ? "activate" : "deactivate";
+      showError(        `Unable to ${actionLabel.charAt(0).toUpperCase() + actionLabel.slice(1)} Profile`,        extractBackendError(err, `Failed to ${action} profile. Please try again later.`),      );
     }
   };
 
@@ -522,18 +512,28 @@ export default function ConnectionProfilesPage() {
     }
     setBulkActionType("activate");
     setBulkActionLoading(true);
+
+    const profileIds = Array.from(selectedProfileIds).slice(0, 50);
+
     try {
+      setProfiles((prev) =>
+        prev.map((p) =>
+          profileIds.includes(p.id) ? { ...p, is_active: true } : p,
+        ),
+      );
+
       await connectionProfileService.bulkActivateProfiles({
-        profile_ids: Array.from(selectedProfileIds).slice(0, 50),
+        profile_ids: profileIds,
       });
+
       showSuccess("Selected profiles activated");
-      await reloadProfiles();
+      setSelectedProfileIds(new Set());
+      setIsSelectionMode(false);
+
       await loadStats();
     } catch (err) {
-      showError(
-        "Failed to activate selected profiles",
-        err instanceof Error ? err.message : "Please try again later.",
-      );
+      await reloadProfiles();
+      showError("Unable to Activate Profiles", extractBackendError(error, "Unable to Activate Profiles. Please try again.")),      );
     } finally {
       setBulkActionType(null);
       setBulkActionLoading(false);
@@ -544,15 +544,23 @@ export default function ConnectionProfilesPage() {
     setBulkActionType("auto");
     setBulkActionLoading(true);
     try {
+      const now = new Date();
+
+      setProfiles((prev) =>
+        prev.map((p) => {
+          const validTo = p.valid_to ? new Date(p.valid_to) : null;
+          const isExpired = validTo ? validTo < now : false;
+          return isExpired && p.is_active ? { ...p, is_active: false } : p;
+        }),
+      );
+
       await connectionProfileService.autoDeactivateExpired();
       showSuccess("Expired profiles queued for deactivation");
-      await reloadProfiles();
+
       await loadStats();
     } catch (err) {
-      showError(
-        "Failed to auto-deactivate expired profiles",
-        err instanceof Error ? err.message : "Please try again later.",
-      );
+      await reloadProfiles();
+      showError("Unable to Deactivate Profiles", extractBackendError(error, "Unable to Deactivate Profiles. Please try again.")),      );
     } finally {
       setBulkActionType(null);
       setBulkActionLoading(false);
@@ -718,8 +726,8 @@ export default function ConnectionProfilesPage() {
           </div>
           </div>
         </div>
-        <p className={`${tw.textSecondary} text-sm`}>
-          Manage secure connections, performance tuning, and governance controls for every integration endpoint
+        <p className={`${tw.textSecondary} text-sm -mt-4`}>
+          Manage secure connections and governance for integration endpoints
         </p>
 
         {/* Stats */}

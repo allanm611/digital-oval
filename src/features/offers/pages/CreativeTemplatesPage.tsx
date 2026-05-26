@@ -6,8 +6,9 @@ import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw, button } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Pagination from "../../../shared/components/ui/Pagination";
+import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { useToast } from "../../../contexts/ToastContext";
-import { useConfirm } from "../../../contexts/ConfirmContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { creativeTemplateService } from "../../configurations/services/creativeTemplateService";
 import { useLanguage } from "../../../contexts/LanguageContext";
 
@@ -25,7 +26,6 @@ interface CreativeTemplate {
 export default function CreativeTemplatesPage() {
   const navigate = useNavigate();
   const { success: showSuccess, error: showError } = useToast();
-  const { confirm } = useConfirm();
   const { t } = useLanguage();
 
   const [templates, setTemplates] = useState<CreativeTemplate[]>([]);
@@ -33,6 +33,8 @@ export default function CreativeTemplatesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [templateToDelete, setTemplateToDelete] = useState<CreativeTemplate | null>(null);
   const [deleting, setDeleting] = useState<number | null>(null);
 
   const loadTemplates = useCallback(async () => {
@@ -41,7 +43,7 @@ export default function CreativeTemplatesPage() {
       const response = await creativeTemplateService.getCreativeTemplates();
       setTemplates(response.data || []);
     } catch (error) {
-      showError("Failed to load creative templates");
+      showError(extractBackendError(error, "Failed to load creative templates. Please try again."));
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -52,26 +54,25 @@ export default function CreativeTemplatesPage() {
     loadTemplates();
   }, [loadTemplates]);
 
-  const handleDelete = async (template: CreativeTemplate) => {
-    const confirmed = await confirm({
-      title: "Delete Creative Template",
-      message: `Are you sure you want to delete "${template.name}"? This does not remove existing creatives.`,
-      type: "danger",
-      confirmText: t.genericConfig.delete,
-      cancelText: t.genericConfig.cancel,
-    });
+  const handleDeleteClick = (template: CreativeTemplate) => {
+    setTemplateToDelete(template);
+    setShowDeleteModal(true);
+  };
 
-    if (!confirmed) return;
+  const confirmDeleteTemplate = async () => {
+    if (!templateToDelete) return;
 
-    setDeleting(template.id);
+    setDeleting(templateToDelete.id);
     try {
-      await creativeTemplateService.deleteCreativeTemplate(template.id);
-      setTemplates((prev) => prev.filter((t) => t.id !== template.id));
+      await creativeTemplateService.deleteCreativeTemplate(templateToDelete.id);
+      setTemplates((prev) => prev.filter((t) => t.id !== templateToDelete.id));
       showSuccess("Creative Template deleted successfully");
+      setShowDeleteModal(false);
+      setTemplateToDelete(null);
     } catch (error) {
-      showError("Failed to delete creative template", error instanceof Error ? error.message : "");
+      showError("Failed to delete creative template", extractBackendError(error, "Failed to delete creative template. Please try again."));;
     } finally {
-      setDeleting(null);
+      setDeleting(false);
     }
   };
 
@@ -291,7 +292,7 @@ export default function CreativeTemplatesPage() {
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDelete(template)}
+                          onClick={() => handleDeleteClick(template)}
                           disabled={deleting === template.id}
                           className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                           title="Delete"
@@ -320,6 +321,19 @@ export default function CreativeTemplatesPage() {
           onPageChange={setCurrentPage}
         />
       )}
+
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setTemplateToDelete(null);
+        }}
+        onConfirm={confirmDeleteTemplate}
+        title="Delete Creative Template"
+        description="This does not remove existing creatives."
+        itemName={templateToDelete?.name || ""}
+        isLoading={deleting === templateToDelete?.id}
+      />
     </div>
   );
 }

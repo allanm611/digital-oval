@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { X } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useAuth } from "../../../contexts/AuthContext";
 import { Role, CreateRoleRequest, UpdateRoleRequest, DataAccessLevel } from "../types/role";
 import { roleService } from "../services/roleService";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import ModalFooter from "../../../shared/components/ui/ModalFooter";
 import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
@@ -469,24 +469,32 @@ export default function RoleFormModal({
 
         {/* Footer */}
         <div className="sticky bottom-0 px-6 py-4 border-t border-gray-200 bg-white">
-          <ModalFooter
-            onCancel={onClose}
-            onConfirm={handleSubmit}
-            cancelText="Cancel"
-            confirmText={
-              isLoading ? (
-                <span className="flex items-center gap-2">
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isLoading}
+              className="transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80"
+              style={getButtonStyles(button.bordered)}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`px-4 py-2 text-sm font-medium text-white ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
+              style={{ backgroundColor: color.primary.action }}
+            >
+              {isLoading ? (
+                <>
                   <LoadingSpinner />
                   {role ? "Updating..." : "Creating..."}
-                </span>
+                </>
               ) : (
                 role ? "Update" : "Create"
-              )
-            }
-            isLoading={isLoading}
-            confirmClassName={`px-4 py-2 text-sm font-medium text-white ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
-            confirmStyle={{ backgroundColor: color.primary.action }}
-          />
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>

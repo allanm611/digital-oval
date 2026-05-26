@@ -126,7 +126,7 @@ export default function HeadlessSelect({
         <>
           {createPortal(
             <div
-              className={`${tw.rounded} bg-white py-1 text-base shadow-lg border border-gray-300 focus:outline-none sm:text-sm max-h-80 overflow-auto pointer-events-auto`}
+              className={`${tw.rounded} bg-white py-1 text-sm shadow-lg border border-gray-300 focus:outline-none max-h-80 overflow-auto pointer-events-auto`}
               style={{
                 position: "fixed",
                 top: `${dropdownPosition.top}px`,
@@ -152,7 +152,7 @@ export default function HeadlessSelect({
               )}
 
               {filteredOptions.length === 0 ? (
-                <div className="relative cursor-default select-none py-2.5 pl-10 pr-6 text-gray-500 whitespace-nowrap">
+                <div className="relative cursor-default select-none py-2.5 pl-10 pr-6 text-sm text-gray-500 whitespace-nowrap">
                   No options found.
                 </div>
               ) : (
@@ -175,7 +175,7 @@ export default function HeadlessSelect({
                     }`}
                   >
                     <span
-                      className={`block ${
+                      className={`block text-sm ${
                         value === option.value ? "font-medium" : "font-normal"
                       }`}
                     >

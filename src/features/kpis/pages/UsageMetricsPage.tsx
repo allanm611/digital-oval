@@ -10,6 +10,7 @@ import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeac
 import { UsageMetric } from "../types/usageMetrics";
 import { usageMetricService } from "../services/usageMetricService";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw } from "../../../shared/utils/utils";
 
 export default function UsageMetricsPage() {
@@ -67,7 +68,7 @@ export default function UsageMetricsPage() {
       }
       setActiveMetrics(newActiveSet);
     } catch (err) {
-      showError("Error", "Failed to toggle metric status");
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setToggling(null);
     }
@@ -87,7 +88,7 @@ export default function UsageMetricsPage() {
       setDeleteConfirmId(null);
       setDeleteConfirmName("");
     } catch (err) {
-      showError("Error", "Failed to delete usage metric");
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setDeleting(null);
     }

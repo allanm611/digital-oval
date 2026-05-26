@@ -5,6 +5,7 @@ import ModalFooter from "./ui/ModalFooter";
 import Input from "./ui/Input";
 import { color, tw } from "../utils/utils";
 import { useToast } from "../../contexts/ToastContext";
+import { extractBackendError } from "../utils/errorHandler";;;
 
 interface SendTestModalProps {
   isOpen: boolean;
@@ -73,7 +74,7 @@ export default function SendTestModal({
       setRecipient("");
       onClose();
     } catch (err) {
-      showError("Error", err instanceof Error ? err.message : "Failed to send test");
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setIsSending(false);
     }

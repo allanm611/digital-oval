@@ -20,7 +20,9 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { useToast } from "../../../contexts/ToastContext";
-import { useConfirm } from "../../../contexts/ConfirmContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
+import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+
 import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw, button } from "../../../shared/utils/utils";
@@ -49,7 +51,6 @@ export default function ServerDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { error: showError, success } = useToast();
-  const { confirm } = useConfirm();
   const { user } = useAuth();
   const { t } = useLanguage();
 
@@ -71,6 +72,7 @@ export default function ServerDetailsPage() {
   >("healthy");
   const [healthResultDetails, setHealthResultDetails] = useState("");
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
 
   const loadServer = useCallback(async () => {
@@ -157,10 +159,7 @@ export default function ServerDetailsPage() {
         }.`,
       );
     } catch (err) {
-      showError(
-        `Failed to ${action} server`,
-        err instanceof Error ? err.message : "Please try again.",
-      );
+      showError(        `Failed to ${action} server`,        err instanceof Error ? err.message : "Please try again.",      );
     } finally {
       setActionState(null);
     }
@@ -197,10 +196,7 @@ export default function ServerDetailsPage() {
           : `${server.name} is available again.`,
       );
     } catch (err) {
-      showError(
-        `Failed to ${nextAction} server`,
-        err instanceof Error ? err.message : "Please try again.",
-      );
+      showError(        `Failed to ${nextAction} server`,        err instanceof Error ? err.message : "Please try again.",      );
     } finally {
       setActionState(null);
     }
@@ -242,10 +238,7 @@ export default function ServerDetailsPage() {
           : `${server.name} will no longer be monitored.`,
       );
     } catch (err) {
-      showError(
-        `Failed to ${action} health checks`,
-        err instanceof Error ? err.message : "Please try again.",
-      );
+      showError(        `Failed to ${action} health checks`,        err instanceof Error ? err.message : "Please try again.",      );
     } finally {
       setActionState(null);
     }
@@ -282,10 +275,7 @@ export default function ServerDetailsPage() {
         }.`,
       );
     } catch (err) {
-      showError(
-        `Failed to ${action} circuit breaker`,
-        err instanceof Error ? err.message : "Please try again.",
-      );
+      showError(        `Failed to ${action} circuit breaker`,        err instanceof Error ? err.message : "Please try again.",      );
     } finally {
       setActionState(null);
     }
@@ -316,10 +306,7 @@ export default function ServerDetailsPage() {
         `Health check state for ${server.name} has been reset.`,
       );
     } catch (err) {
-      showError(
-        "Failed to reset health check",
-        err instanceof Error ? err.message : "Please try again.",
-      );
+      showError("Failed to reset health check", extractBackendError(error, "Failed to reset health check. Please try again."));
     } finally {
       setActionState(null);
     }
@@ -358,10 +345,7 @@ export default function ServerDetailsPage() {
       setShowPushHealthModal(false);
       setHealthResultDetails("");
     } catch (err) {
-      showError(
-        "Failed to push health check result",
-        err instanceof Error ? err.message : "Please try again.",
-      );
+      showError("Failed to push health check result", extractBackendError(error, "Failed to push health check result. Please try again."));
     } finally {
       setActionState(null);
     }

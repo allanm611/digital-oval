@@ -1,12 +1,11 @@
 export type ConnectionTypeEnum =
-  | "database"
-  | "api"
-  | "sftp"
-  | "ftp"
-  | "s3"
-  | "azure_blob"
+  | "tcp"
+  | "websocket"
   | "kafka"
-  | "webhook"
+  | "jdbc"
+  | "sms_inbox"
+  | "api"
+  | "files"
   | string;
 
 export type DatabaseTypeEnum =

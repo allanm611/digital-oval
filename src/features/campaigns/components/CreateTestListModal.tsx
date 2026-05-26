@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import Input from "../../../shared/components/ui/Input";
 import Checkbox from "../../../shared/components/ui/Checkbox";
-import { tw, color } from "../../../shared/utils/utils";
+import { tw, color, button, getButtonStyles } from "../../../shared/utils/utils";
 
 interface CreateTestListModalProps {
   isOpen: boolean;
@@ -173,8 +173,8 @@ export default function CreateTestListModal({
             )}
           </div>
 
-          {/* Active Status Checkbox */}
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() =>
+          {/* Active Status Checkbox - Commented out: status always defaults to active */}
+          {/* <div className="flex items-center gap-2 cursor-pointer" onClick={() =>
             setFormData((prev) => ({ ...prev, isActive: !prev.isActive }))
           }>
             <Checkbox
@@ -187,7 +187,7 @@ export default function CreateTestListModal({
             <span className="text-sm font-medium text-gray-700">
               Active
             </span>
-          </div>
+          </div> */}
 
         </div>
 
@@ -196,7 +196,8 @@ export default function CreateTestListModal({
           <button
             onClick={handleClose}
             disabled={isLoading}
-            className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 font-medium text-sm rounded transition-colors disabled:opacity-50"
+            className="transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80"
+            style={getButtonStyles(button.bordered)}
           >
             Cancel
           </button>

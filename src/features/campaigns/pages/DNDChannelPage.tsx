@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -86,7 +87,7 @@ export default function DNDChannelPage() {
       setDndTypes(types);
       setDndSubscriptions(subscriptions);
     } catch (err) {
-      showError("Error", "Failed to load DND data");
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setLoadingDNDData(false);
     }
@@ -135,7 +136,7 @@ export default function DNDChannelPage() {
       setShowAddModal(false);
       await loadDNDData();
     } catch (err) {
-      showError("Error", "Failed to add customers to DND list");
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setIsAddingCustomers(false);
     }
@@ -169,7 +170,7 @@ export default function DNDChannelPage() {
       setDeleteConfirmName("");
     } catch (err) {
       setDndSubscriptions(oldSubscriptions);
-      showError("Error", "Failed to remove customer from DND list");
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setIsRemoving(false);
     }

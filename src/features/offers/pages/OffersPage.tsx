@@ -40,6 +40,7 @@ import DateFormatter from "../../../shared/components/DateFormatter";
 import Pagination from "../../../shared/components/ui/Pagination";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import Radio from "../../../shared/components/ui/Radio";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 
 export default function OffersPage() {
   const navigate = useNavigate();
@@ -281,19 +282,15 @@ export default function OffersPage() {
       // If we reach here, the API call succeeded but response.success is false
       // Show a single error message
       showError(
-        "Failed to load offers",
+        "Unable to Load Offers",
         filters.categoryId
-          ? "Unable to retrieve offers for this category."
-          : "Unable to retrieve offers. Please try again.",
+          ? "Unable to retrieve offers for this category. Please try again."
+          : "Unable to retrieve offers. Please try again later.",
       );
     } catch (err) {
       // Only show error if it's an actual exception (network error, etc.)
       // Don't show duplicate error if response.success was false (handled above)
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : "An error occurred while loading offers";
-      showError("Failed to load offers", errorMessage);
+      showError("Unable to Load Offers", extractBackendError(error, "Unable to Load Offers. Please try again.")),      );
     } finally {
       setLoading(false);
     }
@@ -645,8 +642,8 @@ export default function OffersPage() {
       fetchOfferStats(); // Refresh stats cards
       setShowDeleteModal(false);
       setOfferToDelete(null);
-    } catch {
-      showError("Error", "Failed to delete offer");
+    } catch (err) {
+      showError("Unable to Delete Offer", extractBackendError(err, "Failed to delete offer. Please try again later."));
     } finally {
       setIsDeleting(false);
     }
@@ -704,8 +701,9 @@ export default function OffersPage() {
       success(successMessage.split(":")[0], successMessage);
       setShowActionMenu(null);
       fetchOfferStats(); // Refresh stats cards
-    } catch {
-      showError("Error", `Failed to ${action} offer`);
+    } catch (err) {
+      const actionLabel = action.charAt(0).toUpperCase() + action.slice(1);
+      showError(`Unable to ${actionLabel} Offer`, extractBackendError(err, `Failed to ${action} offer. Please try again later.`));
     } finally {
       setLoadingAction(null);
     }

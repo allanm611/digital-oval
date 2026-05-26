@@ -19,6 +19,7 @@ import {
 } from "../types/communicationPolicyConfig";
 import CommunicationPolicyModal from "../components/CommunicationPolicyModal";
 import { communicationPolicyService } from "../services/communicationPolicyService";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 
 export default function CommunicationPolicyPage() {
   const navigate = useNavigate();
@@ -76,8 +77,8 @@ export default function CommunicationPolicyPage() {
     try {
       await communicationPolicyService.updatePolicy(policy.id, { is_active: newActive } as any);
       showToast(newActive ? "Activated" : "Deactivated", `${policy.name} has been ${newActive ? "activated" : "deactivated"}`);
-    } catch {
-      showError("Error", "Failed to update policy status");
+    } catch (err) {
+      showError("Unable to Update Policy", extractBackendError(err, "Failed to update policy status. Please try again later."));
       setPolicies((prev) =>
         prev.map((p) => (p.id === policy.id ? { ...p, is_active: !newActive } : p))
       );
@@ -112,7 +113,7 @@ export default function CommunicationPolicyPage() {
       setPolicyToDelete(null);
     } catch (err) {
       console.error("Failed to delete policy:", err);
-      showError(t.communicationPolicy.deleteFailed);
+      showError("Unable to Delete Policy", extractBackendError(err, "Failed to delete policy. Please try again later."));
     } finally {
       setIsDeleting(false);
     }
@@ -142,7 +143,8 @@ export default function CommunicationPolicyPage() {
       setEditingPolicy(undefined);
     } catch (err) {
       console.error("Failed to save policy:", err);
-      showError(t.communicationPolicy.saveFailed);
+      const action = editingPolicy ? "Update" : "Create";
+      showError(`Unable to ${action} Policy`, extractBackendError(err, `Failed to ${action.toLowerCase()} policy. Please try again later.`));
     } finally {
       setIsSaving(false);
     }

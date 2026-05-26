@@ -5,15 +5,15 @@ import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Pagination from "../../../shared/components/ui/Pagination";
+import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { useToast } from "../../../contexts/ToastContext";
-import { useConfirm } from "../../../contexts/ConfirmContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { languageService, Language } from "../../configurations/services/languageService";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LanguageModal from "../../configurations/components/LanguageModal";
 
 export default function LanguagesPage() {
   const { success: showSuccess, error: showError } = useToast();
-  const { confirm } = useConfirm();
   const { t } = useLanguage();
 
   const [languages, setLanguages] = useState<Language[]>([]);
@@ -25,6 +25,8 @@ export default function LanguagesPage() {
   const [toggling, setToggling] = useState<number | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [editingLanguage, setEditingLanguage] = useState<Language | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [languageToDelete, setLanguageToDelete] = useState<Language | null>(null);
 
   const loadLanguages = useCallback(async () => {
     setIsLoading(true);
@@ -32,7 +34,7 @@ export default function LanguagesPage() {
       const data = await languageService.getLanguages();
       setLanguages(data || []);
     } catch (error) {
-      showError("Failed to load languages");
+      showError(extractBackendError(error, "Failed to load languages. Please try again."));
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -58,33 +60,29 @@ export default function LanguagesPage() {
         `Language ${!language.is_active ? "activated" : "deactivated"} successfully`
       );
     } catch (error) {
-      showError(
-        "Failed to update language",
-        error instanceof Error ? error.message : ""
-      );
+      showError("Failed to update language", extractBackendError(error, "Failed to update language. Please try again."));
     } finally {
       setToggling(null);
     }
   };
 
-  const handleDelete = async (language: Language) => {
-    const confirmed = await confirm({
-      title: "Delete Language",
-      message: `Are you sure you want to delete "${language.name}"? This may affect existing creatives using this language.`,
-      type: "danger",
-      confirmText: t.genericConfig.delete,
-      cancelText: t.genericConfig.cancel,
-    });
+  const handleDeleteClick = (language: Language) => {
+    setLanguageToDelete(language);
+    setShowDeleteModal(true);
+  };
 
-    if (!confirmed) return;
+  const confirmDeleteLanguage = async () => {
+    if (!languageToDelete) return;
 
-    setDeleting(language.id);
+    setDeleting(languageToDelete.id);
     try {
-      await languageService.deleteLanguage(language.id);
-      setLanguages((prev) => prev.filter((l) => l.id !== language.id));
+      await languageService.deleteLanguage(languageToDelete.id);
+      setLanguages((prev) => prev.filter((l) => l.id !== languageToDelete.id));
       showSuccess("Language deleted successfully");
+      setShowDeleteModal(false);
+      setLanguageToDelete(null);
     } catch (error) {
-      showError("Failed to delete language", error instanceof Error ? error.message : "");
+      showError("Failed to delete language", extractBackendError(error, "Failed to delete language. Please try again."));;
     } finally {
       setDeleting(null);
     }
@@ -350,7 +348,7 @@ export default function LanguagesPage() {
                           )}
                         </button>
                         <button
-                          onClick={() => handleDelete(language)}
+                          onClick={() => handleDeleteClick(language)}
                           disabled={deleting === language.id}
                           className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                           title="Delete"
@@ -379,6 +377,19 @@ export default function LanguagesPage() {
           onPageChange={setCurrentPage}
         />
       )}
+
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setLanguageToDelete(null);
+        }}
+        onConfirm={confirmDeleteLanguage}
+        title="Delete Language"
+        description="This may affect existing creatives using this language."
+        itemName={languageToDelete?.name || ""}
+        isLoading={deleting === languageToDelete?.id}
+      />
 
       <LanguageModal
         isOpen={showModal}

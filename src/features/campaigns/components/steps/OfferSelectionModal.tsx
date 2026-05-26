@@ -13,6 +13,7 @@ import { offerService } from "../../../offers/services/offerService";
 import { offerCategoryService } from "../../../offers/services/offerCategoryService";
 import { Offer, OfferStatusEnum } from "../../../offers/types/offer";
 import { useAuth } from "../../../../contexts/AuthContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useToast } from "../../../../contexts/ToastContext";
 import Checkbox from "../../../../shared/components/ui/Checkbox";
 
@@ -398,7 +399,7 @@ export default function OfferSelectionModal({
       await loadOffers();
     } catch (err) {
       console.error("Failed to submit offer for approval:", err);
-      showError("Failed to submit offer for approval");
+      showError(extractBackendError(error, "Failed to submit offer for approval. Please try again."));
     } finally {
       setUpdatingOfferId(null);
     }
@@ -426,7 +427,7 @@ export default function OfferSelectionModal({
       await loadOffers();
     } catch (err) {
       console.error("Failed to activate offer:", err);
-      showError("Failed to activate offer");
+      showError(extractBackendError(error, "Failed to activate offer. Please try again."));
     } finally {
       setUpdatingOfferId(null);
     }

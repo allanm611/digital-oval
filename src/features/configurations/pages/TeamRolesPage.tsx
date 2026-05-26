@@ -4,8 +4,9 @@ import SearchInput from "../../../shared/components/ui/SearchInput";
 import { color, tw } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Pagination from "../../../shared/components/ui/Pagination";
+import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { useToast } from "../../../contexts/ToastContext";
-import { useConfirm } from "../../../contexts/ConfirmContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { roleService, Role } from "../../roles/services/roleService";
@@ -14,7 +15,6 @@ import BackButton from "../../../shared/components/ui/BackButton";
 
 export default function TeamRolesPage() {
   const { success: showSuccess, error: showError } = useToast();
-  const { confirm } = useConfirm();
   const { t } = useLanguage();
   const { user } = useAuth();
 
@@ -23,6 +23,8 @@ export default function TeamRolesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [roleToDelete, setRoleToDelete] = useState<Role | null>(null);
   const [deleting, setDeleting] = useState<number | null>(null);
   const [toggling, setToggling] = useState<number | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -37,7 +39,7 @@ export default function TeamRolesPage() {
       });
       setRoles(data || []);
     } catch (error) {
-      showError("Failed to load roles");
+      showError(extractBackendError(error, "Failed to load roles. Please try again."));
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -66,36 +68,32 @@ export default function TeamRolesPage() {
         `Role ${nextStatus ? "activated" : "deactivated"} successfully`
       );
     } catch (error) {
-      showError(
-        "Failed to update role",
-        error instanceof Error ? error.message : ""
-      );
+      showError("Failed to update role", extractBackendError(error, "Failed to update role. Please try again."));
     } finally {
       setToggling(null);
     }
   };
 
-  const handleDelete = async (role: Role) => {
-    const confirmed = await confirm({
-      title: "Delete Role",
-      message: `Are you sure you want to delete "${role.name}"? This action cannot be undone.`,
-      type: "danger",
-      confirmText: "Delete",
-      cancelText: "Cancel",
-    });
+  const handleDeleteClick = (role: Role) => {
+    setRoleToDelete(role);
+    setShowDeleteModal(true);
+  };
 
-    if (!confirmed) return;
+  const confirmDeleteRole = async () => {
+    if (!roleToDelete) return;
 
-    setDeleting(role.id);
+    setDeleting(roleToDelete.id);
     try {
       const userId = user?.user_id || 0;
-      await roleService.deleteRole(role.id, { userId });
-      setRoles((prev) => prev.filter((r) => r.id !== role.id));
+      await roleService.deleteRole(roleToDelete.id, { userId });
+      setRoles((prev) => prev.filter((r) => r.id !== roleToDelete.id));
       showSuccess("Role deleted successfully");
+      setShowDeleteModal(false);
+      setRoleToDelete(null);
     } catch (error) {
-      showError("Failed to delete role", error instanceof Error ? error.message : "");
+      showError("Failed to delete role", extractBackendError(error, "Failed to delete role. Please try again."));;
     } finally {
-      setDeleting(null);
+      setDeleting(false);
     }
   };
 
@@ -339,7 +337,7 @@ export default function TeamRolesPage() {
                           )}
                         </button>
                         <button
-                          onClick={() => handleDelete(role)}
+                          onClick={() => handleDeleteClick(role)}
                           disabled={deleting === role.id}
                           className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                           title="Delete"
@@ -368,6 +366,19 @@ export default function TeamRolesPage() {
           onPageChange={setCurrentPage}
         />
       )}
+
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setRoleToDelete(null);
+        }}
+        onConfirm={confirmDeleteRole}
+        title="Delete Role"
+        description="This action cannot be undone."
+        itemName={roleToDelete?.name || ""}
+        isLoading={deleting}
+      />
 
       <RolesModal
         isOpen={showModal}

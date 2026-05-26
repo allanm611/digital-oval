@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
-import { color, tw, zIndex } from "../../../../shared/utils/utils";
+import { color, tw, zIndex, button, getButtonStyles } from "../../../../shared/utils/utils";
 import { useLanguage } from "../../../../contexts/LanguageContext";
 import CustomFieldsRenderer from "./CustomFieldsRenderer";
 import { DEFAULT_MODAL_WIDTH } from "../../configs/configurationPageConfigs";
@@ -282,7 +282,8 @@ export default function ConfigurationModal({
             <button
               type="button"
               onClick={onClose}
-              className={`px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 ${tw.rounded} transition-colors`}
+              className="transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80"
+              style={getButtonStyles(button.bordered)}
             >
               {t.genericConfig.cancel}
             </button>

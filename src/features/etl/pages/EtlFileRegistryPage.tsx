@@ -17,6 +17,7 @@ import {
 import { etlService } from "../services/etlService";
 import { EtlFileRegistryRowType, FileStatsResponse } from "../types/etl";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import {
   color,
@@ -259,7 +260,7 @@ export default function EtlFileRegistryPage() {
           </button>
         </div>
         </div>
-        <p className={`${tw.textSecondary} text-sm`}>
+        <p className={`${tw.textSecondary} text-sm -mt-4`}>
           {t.etl.fileRegistryDescription}
         </p>
       </div>

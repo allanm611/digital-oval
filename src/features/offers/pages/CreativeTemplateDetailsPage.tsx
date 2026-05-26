@@ -5,6 +5,7 @@ import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { creativeTemplateService } from "../../configurations/services/creativeTemplateService";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { tw, color, button } from "../../../shared/utils/utils";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import type { CreativeTemplate } from "../../configurations/services/creativeTemplateService";
@@ -32,10 +33,7 @@ export default function CreativeTemplateDetailsPage() {
       setTemplate(data);
     } catch (err) {
       console.error("Failed to load creative template:", err);
-      showError(
-        "Failed to load creative template",
-        err instanceof Error ? err.message : "Please try again later.",
-      );
+      showError("Failed to load creative template", extractBackendError(error, "Failed to load creative template. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -56,7 +54,7 @@ export default function CreativeTemplateDetailsPage() {
       success("Deleted", "Creative template removed");
       navigate("/dashboard/creative-templates");
     } catch (err: any) {
-      showError("Delete failed", err.message || "Could not delete template");
+      showError("Delete failed", extractBackendError(error, "Delete failed. Please try again."));
     } finally {
       setIsDeleting(false);
     }

@@ -12,6 +12,7 @@ import {
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import { color, tw, components } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -67,7 +68,7 @@ export default function ManualRewardsPage() {
       setRewardToDelete(null);
     } catch (err) {
       console.error("Failed to delete reward:", err);
-      showError("Failed to delete reward", "Please try again later.");
+      showError("Failed to delete reward", extractBackendError(error, "Failed to delete reward. Please try again."));
     } finally {
       setIsDeleting(false);
     }

@@ -11,6 +11,7 @@ import { whatsappRouteService } from "../services/whatsappRouteService";
 import { whatsappGatewayConfigService } from "../../configurations/services/whatsappGatewayConfigService";
 import { MESSAGE_TEMPLATE_OPTIONS } from "../constants/whatsappRouteEnums";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw } from "../../../shared/utils/utils";
 
 const STATUS_OPTIONS = [
@@ -104,7 +105,7 @@ export default function WhatsAppRouteFormPage({ mode }: WhatsAppRouteFormPagePro
         });
       }
     } catch (err) {
-      showError("Error", "Failed to load WhatsApp route");
+      showError("Error", extractBackendError(error, "Error. Please try again."));
       navigate("/dashboard/whatsapp-routes");
     } finally {
       setLoading(false);
@@ -148,7 +149,7 @@ export default function WhatsAppRouteFormPage({ mode }: WhatsAppRouteFormPagePro
       navigate("/dashboard/whatsapp-routes");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to save route";
-      showError("Error", errorMessage);
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setSaving(false);
     }

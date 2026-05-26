@@ -14,6 +14,7 @@ import {
   Cell,
 } from "recharts";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import {
   Users2,
   TrendingUp,

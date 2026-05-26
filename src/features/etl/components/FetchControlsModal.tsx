@@ -8,6 +8,7 @@ import {
 } from "../types/etl";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw, zIndex, button, getButtonStyles } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { scheduledJobService } from "../../jobs/services/scheduledJobService";
@@ -111,7 +112,7 @@ export default function FetchControlsModal({
         errorMessage = err.message;
       }
 
-      showError("Fetch failed", errorMessage);
+      showError("Fetch failed", extractBackendError(error, "Fetch failed. Please try again."));
     } finally {
       setIsLoading(false);
     }
@@ -152,7 +153,7 @@ export default function FetchControlsModal({
         errorMessage = err.message;
       }
 
-      showError("Fetch failed", errorMessage);
+      showError("Fetch failed", extractBackendError(error, "Fetch failed. Please try again."));
     } finally {
       setIsLoading(false);
     }
@@ -208,7 +209,7 @@ export default function FetchControlsModal({
         errorMessage = err.message;
       }
 
-      showError("Fetch failed", errorMessage);
+      showError("Fetch failed", extractBackendError(error, "Fetch failed. Please try again."));
     } finally {
       setIsLoading(false);
     }
@@ -253,10 +254,7 @@ export default function FetchControlsModal({
           const response = await scheduledJobService.getActiveJobs(true);
           setScheduledJobs(response.data || []);
         } catch (err) {
-          showError(
-            "Failed to load scheduled jobs",
-            (err as Error).message || "Please try again.",
-          );
+          showError("Failed to load scheduled jobs", extractBackendError(error, "Failed to load scheduled jobs. Please try again.")).message || "Please try again.",          );
         } finally {
           setIsLoadingJobs(false);
         }

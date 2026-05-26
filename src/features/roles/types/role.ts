@@ -1,8 +1,8 @@
 export type DataAccessLevel =
-  | "PUBLIC"
-  | "INTERNAL"
-  | "CONFIDENTIAL"
-  | "RESTRICTED"
+  | "public"
+  | "internal"
+  | "confidential"
+  | "restricted"
   | string;
 
 export type Role = {

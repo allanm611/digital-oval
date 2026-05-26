@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { X } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { Permission, CreatePermissionRequest, UpdatePermissionRequest } from "../types/role";
 import { permissionService } from "../services/permissionService";
 import { color } from "../../../shared/utils/utils";

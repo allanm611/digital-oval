@@ -5,6 +5,7 @@ import { UserType, UpdateUserRequest } from "../types/user";
 // import { sessionService } from "../../auth/services/sessionService"; // TODO: Uncomment when backend confirms /user-sessions endpoints
 // import { UserSession } from "../../auth/types/auth"; // TODO: Uncomment when backend confirms /user-sessions endpoints
 import { useAuth } from "../../../contexts/AuthContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DateFormatter from "../../../shared/components/DateFormatter";

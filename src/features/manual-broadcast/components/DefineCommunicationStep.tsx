@@ -18,6 +18,7 @@ import { ManualBroadcastData } from "../pages/CreateManualBroadcastPage";
 import PreviewPanel from "../../communications/components/PreviewPanel";
 import RichTextEditor from "../../communications/components/RichTextEditor";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { getSettingsCommunicationChannel } from "../../../shared/utils/settingsHelper";
 import { formatDateWithTimezone } from "../../../shared/services/dateService";
 import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
@@ -37,7 +38,6 @@ import Input from "../../../shared/components/ui/Input";
 import { CommunicationPolicyConfiguration } from "../../campaigns/types/communicationPolicyConfig";
 import { communicationPolicyService } from "../../campaigns/services/communicationPolicyService";
 import CommunicationPolicyModal from "../../campaigns/components/CommunicationPolicyModal";
-import PolicyNameModal from "../../campaigns/components/PolicyNameModal";
 import { useClickOutside } from "../../../shared/hooks/useClickOutside";
 import { useToast } from "../../../contexts/ToastContext";
 import {
@@ -125,11 +125,6 @@ export default function DefineCommunicationStep({
     useState(false);
   const [policyToCustomize, setPolicyToCustomize] =
     useState<CommunicationPolicyConfiguration | null>(null);
-  const [isNameModalOpen, setIsNameModalOpen] = useState(false);
-  const [pendingPolicyData, setPendingPolicyData] = useState<Record<
-    string,
-    unknown
-  > | null>(null);
 
   const policyDropdownRef = useRef<HTMLDivElement>(null);
   const { success: showToast, error: showError } = useToast();
@@ -335,12 +330,25 @@ export default function DefineCommunicationStep({
   // Load Communication Policies from service
   useEffect(() => {
     // Load initial policies
-    setCommunicationPolicies(communicationPolicyService.getAllPolicies());
+    const policiesResponse = communicationPolicyService.getAllPolicies();
+    if (policiesResponse && typeof policiesResponse === "object") {
+      if ("data" in policiesResponse && Array.isArray(policiesResponse.data)) {
+        setCommunicationPolicies(policiesResponse.data);
+      } else if (Array.isArray(policiesResponse)) {
+        setCommunicationPolicies(policiesResponse);
+      }
+    }
 
     // Subscribe to policy changes
     const unsubscribe = communicationPolicyService.subscribe(
       (updatedPolicies) => {
-        setCommunicationPolicies(updatedPolicies);
+        if (updatedPolicies && typeof updatedPolicies === "object") {
+          if ("data" in updatedPolicies && Array.isArray(updatedPolicies.data)) {
+            setCommunicationPolicies(updatedPolicies.data);
+          } else if (Array.isArray(updatedPolicies)) {
+            setCommunicationPolicies(updatedPolicies);
+          }
+        }
       },
     );
 
@@ -516,116 +524,69 @@ export default function DefineCommunicationStep({
 
   // Handle opening customization modal
   const handleCustomizePolicy = (policy: CommunicationPolicyConfiguration) => {
-    // Validate policy data
     if (!policy) {
       showError("No policy selected for customization");
       return;
     }
-
-    if (!policy.id || !policy.name) {
-      showError("Policy data is incomplete");
-      return;
-    }
-
-    // Create a copy of the policy with a temporary name for the modal
-    const policyWithTempName = {
-      ...policy,
-      name: `${policy.name || "Unknown"} - Customizing...`,
-    };
-    setPolicyToCustomize(policyWithTempName);
+    setPolicyToCustomize(policy);
     setIsCustomizationModalOpen(true);
   };
 
-  // Handle saving customized policy
+  // Handle saving customized policy (with optimistic updates)
   const handleSaveCustomizedPolicy = async (
     policyData: Record<string, unknown>,
   ) => {
-    // Validate policyData
-    if (!policyData || typeof policyData !== "object") {
-      showError("Invalid policy data");
-      return;
+    if (!policyToCustomize) return;
+
+    // Build updated policy object
+    const updatedPolicyWithNewData: CommunicationPolicyConfiguration = {
+      ...policyToCustomize,
+      name: (policyData.name as string) || policyToCustomize.name,
+      description: (policyData.description as string) || policyToCustomize.description,
+      channels: (policyData.channels as string[]) || policyToCustomize.channels,
+      type_code: (policyData.type_code as string) || policyToCustomize.type_code,
+      config: policyData.config || policyToCustomize.config,
+      is_active: (policyData.is_active as boolean) ?? policyToCustomize.is_active,
+    };
+
+    // Save previous state for rollback
+    const previousPolicy = selectedPolicy;
+
+    try {
+      // Optimistic update - update UI immediately
+      setSelectedPolicy(updatedPolicyWithNewData);
+      setIsCustomizationModalOpen(false);
+      setPolicyToCustomize(null);
+      showToast("Updating policy...");
+
+      // Send update to backend
+      await communicationPolicyService.updatePolicy(
+        policyToCustomize.id,
+        {
+          name: updatedPolicyWithNewData.name,
+          description: updatedPolicyWithNewData.description,
+          channels: updatedPolicyWithNewData.channels,
+          type_code: updatedPolicyWithNewData.type_code,
+          config: updatedPolicyWithNewData.config,
+          is_active: updatedPolicyWithNewData.is_active,
+        }
+      );
+
+      // Success - confirm the update
+      showToast("Policy updated successfully!");
+    } catch (error) {
+      console.error("Failed to update policy:", error);
+
+      // Rollback on error
+      setSelectedPolicy(previousPolicy);
+      setIsCustomizationModalOpen(false);
+      setPolicyToCustomize(null);
+
+      showError(extractBackendError(error, "Failed to update policy. Changes reverted.. Please try again."));
     }
-
-    // Store the policy data and open name modal
-    // First close the customization modal
-    setIsCustomizationModalOpen(false);
-
-    // Then store data and open name modal
-    setPendingPolicyData(policyData);
-    setIsNameModalOpen(true);
   };
 
   // Handle confirming policy name
-  const handleConfirmPolicyName = async (policyName: string) => {
-    // Validate inputs
-    if (!pendingPolicyData || typeof pendingPolicyData !== "object") {
-      showError("Policy data is not available");
-      return;
-    }
-
-    if (!policyToCustomize) {
-      showError("No policy selected for customization");
-      return;
-    }
-
-    if (!policyName || typeof policyName !== "string" || !policyName.trim()) {
-      showError("Please provide a valid policy name");
-      return;
-    }
-
-    try {
-      // Get the original policy name (remove the temporary suffix)
-      const originalPolicyName =
-        policyToCustomize.name?.replace(" - Customizing...", "") || "Unknown";
-
-      // Validate required policy configuration
-      const channels = pendingPolicyData.channels as any[];
-      const config = pendingPolicyData.config;
-
-      if (!channels || !Array.isArray(channels) || channels.length === 0) {
-        showError("Please select at least one channel for the policy");
-        return;
-      }
-
-      // Create new policy with customized configuration
-      const newPolicy = communicationPolicyService.createPolicy({
-        name: policyName.trim(),
-        description:
-          (pendingPolicyData.description as string) ||
-          `Custom policy based on ${originalPolicyName}`,
-        channels: channels,
-        type: pendingPolicyData.type as string,
-        config: config,
-        isActive: pendingPolicyData.isActive ?? true,
-      });
-
-      if (!newPolicy) {
-        showError("Failed to create policy");
-        return;
-      }
-
-      // Apply the new policy to the broadcast
-      setSelectedPolicy(newPolicy);
-
-      // Update parent component data
-      onUpdate({
-        selectedCommunicationPolicy: newPolicy,
-        selectedCommunicationPolicyId: newPolicy.id,
-      });
-
-      // Close modals and cleanup
-      setIsCustomizationModalOpen(false);
-      setIsNameModalOpen(false);
-      setPolicyToCustomize(null);
-      setPendingPolicyData(null);
-
-      showToast("Custom policy created and applied to broadcast!");
-    } catch (error) {
-      console.error("Failed to save custom policy:", error);
-      showError("Failed to save custom policy. Please try again.");
-    }
-  };
-
   const getCharacterInfo = () => {
     // Validate messageBody availability
     if (typeof messageBody !== "string") {
@@ -900,20 +861,11 @@ export default function DefineCommunicationStep({
                 selectedPolicy ? "" : "text-gray-500"
               }`}
             >
-              <div className="flex items-center gap-2">
-                {selectedPolicy && (
-                  <div
-                    className={`w-2 h-2 rounded-full ${
-                      selectedPolicy.isActive ? "bg-green-500" : "bg-gray-400"
-                    }`}
-                  ></div>
-                )}
-                <span className="text-sm">
-                  {selectedPolicy
-                    ? selectedPolicy.name
-                    : "Choose a communication policy (optional)"}
-                </span>
-              </div>
+              <span className="text-sm">
+                {selectedPolicy
+                  ? selectedPolicy.name
+                  : "Choose a communication policy (optional)"}
+              </span>
               <ChevronDown
                 className={`w-4 h-4 transition-transform ${
                   isPolicyDropdownOpen ? "rotate-180" : ""
@@ -948,41 +900,46 @@ export default function DefineCommunicationStep({
                 </button>
 
                 <div className="max-h-48 overflow-y-auto">
-                  {communicationPolicies.map((policy) => (
-                    <button
-                      key={policy.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedPolicy(policy);
-                        setIsPolicyDropdownOpen(false);
-                        onUpdate({
-                          selectedCommunicationPolicy: policy,
-                          selectedCommunicationPolicyId: policy.id,
-                        });
-                      }}
-                      className={`w-full text-left px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none ${
-                        selectedPolicy?.id === policy.id ? "bg-blue-50" : ""
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 mb-1">
-                        <div
-                          className={`w-2 h-2 rounded-full ${
-                            policy.isActive ? "bg-green-500" : "bg-gray-400"
+                  {communicationPolicies && Array.isArray(communicationPolicies) ? (
+                    (() => {
+                      const activePolicies = communicationPolicies.filter(
+                        (policy) => policy && policy.is_active !== false
+                      );
+                      if (!activePolicies || activePolicies.length === 0) {
+                        return null;
+                      }
+                      return activePolicies.map((policy) => (
+                        <button
+                          key={policy.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedPolicy(policy);
+                            setIsPolicyDropdownOpen(false);
+                            onUpdate({
+                              selectedCommunicationPolicy: policy,
+                              selectedCommunicationPolicyId: policy.id,
+                            });
+                          }}
+                          className={`w-full text-left px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none ${
+                            selectedPolicy?.id === policy.id ? "bg-blue-50" : ""
                           }`}
-                        ></div>
-                        <div
-                          className={`text-sm font-medium ${tw.textPrimary}`}
                         >
-                          {policy.name}
-                        </div>
-                      </div>
-                      {policy.description && (
-                        <div className={`text-xs ${tw.textSecondary} ml-4`}>
-                          {policy.description}
-                        </div>
-                      )}
-                    </button>
-                  ))}
+                          <div className="flex items-center gap-2 mb-1">
+                            <div
+                              className={`text-sm font-medium ${tw.textPrimary}`}
+                            >
+                              {policy.name}
+                            </div>
+                          </div>
+                          {policy.description && (
+                            <div className={`text-xs ${tw.textSecondary} ml-4`}>
+                              {policy.description}
+                            </div>
+                          )}
+                        </button>
+                      ));
+                    })()
+                  ) : null}
                 </div>
               </div>
             )}
@@ -1459,21 +1416,9 @@ export default function DefineCommunicationStep({
           setIsCustomizationModalOpen(false);
           setPolicyToCustomize(null);
         }}
+        policy={policyToCustomize || undefined}
         onSave={handleSaveCustomizedPolicy}
-        initialData={policyToCustomize || undefined}
-        mode="create"
-      />
-
-      <PolicyNameModal
-        isOpen={isNameModalOpen}
-        onClose={() => {
-          setIsNameModalOpen(false);
-          setPendingPolicyData(null);
-        }}
-        onConfirm={handleConfirmPolicyName}
-        defaultName={
-          policyToCustomize?.name.replace(" - Customizing...", "") || ""
-        }
+        isSaving={false}
       />
 
       {/* Seed List Recipients Modal */}

@@ -13,6 +13,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { useAuth } from "../../../contexts/AuthContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { stepExecutionService } from "../services/stepExecutionService";
 import { StepExecution } from "../types/stepExecution";

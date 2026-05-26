@@ -9,12 +9,13 @@ import { useClickOutside } from "../../../../shared/hooks/useClickOutside";
 import { lineOfBusinessConfig } from "../../../configurations/configs/configurationPageConfigs";
 import { configurationDataService } from "../../../../shared/services/configurationDataService";
 import { CommunicationPolicyConfiguration } from "../../types/communicationPolicyConfig";
+import { PRIORITY_OPTIONS, RANK_OPTIONS } from "../../types/priority";
 import { tw, components, color } from "../../../../shared/utils/utils";
 import { communicationPolicyService } from "../../services/communicationPolicyService";
 import CommunicationPolicyModal from "../CommunicationPolicyModal";
-import PolicyNameModal from "../PolicyNameModal";
 import CreateCampaignTypeModal from "../CreateCampaignTypeModal";
 import { useToast } from "../../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useTranslation, useLanguage } from "../../../../contexts/LanguageContext";
 import { getCurrencySymbol } from "../../../../shared/services/currencyService";
 import { useBackendCampaignTypeData } from "../../../../shared/hooks/useBackendCampaignTypeData";
@@ -102,11 +103,6 @@ export default function CampaignDefinitionStep({
     useState(false);
   const [policyToCustomize, setPolicyToCustomize] =
     useState<CommunicationPolicyConfiguration | null>(null);
-  const [isNameModalOpen, setIsNameModalOpen] = useState(false);
-  const [pendingPolicyData, setPendingPolicyData] = useState<Record<
-    string,
-    unknown
-  > | null>(null);
   const [tagInput, setTagInput] = useState("");
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
 
@@ -197,15 +193,28 @@ export default function CampaignDefinitionStep({
     return unsubscribe;
   }, []);
 
-  // Charger les Communication Policies depuis le service
+  // Load Communication Policies from service
   useEffect(() => {
     // Load initial policies
-    setCommunicationPolicies(communicationPolicyService.getAllPolicies());
+    const policiesResponse = communicationPolicyService.getAllPolicies();
+    if (policiesResponse && typeof policiesResponse === "object") {
+      if ("data" in policiesResponse && Array.isArray(policiesResponse.data)) {
+        setCommunicationPolicies(policiesResponse.data);
+      } else if (Array.isArray(policiesResponse)) {
+        setCommunicationPolicies(policiesResponse);
+      }
+    }
 
     // Subscribe to policy changes
     const unsubscribe = communicationPolicyService.subscribe(
       (updatedPolicies) => {
-        setCommunicationPolicies(updatedPolicies);
+        if (updatedPolicies && typeof updatedPolicies === "object") {
+          if ("data" in updatedPolicies && Array.isArray(updatedPolicies.data)) {
+            setCommunicationPolicies(updatedPolicies.data);
+          } else if (Array.isArray(updatedPolicies)) {
+            setCommunicationPolicies(updatedPolicies);
+          }
+        }
       }
     );
 
@@ -214,63 +223,67 @@ export default function CampaignDefinitionStep({
 
   // Handle opening customization modal
   const handleCustomizePolicy = (policy: CommunicationPolicyConfiguration) => {
-    // Create a copy of the policy with a temporary name for the modal
-    const policyWithTempName = {
-      ...policy,
-      name: `${policy.name} - Customizing...`,
-    };
-    setPolicyToCustomize(policyWithTempName);
+    setPolicyToCustomize(policy);
     setIsCustomizationModalOpen(true);
   };
 
-  // Handle saving customized policy
+  // Handle saving customized policy (with optimistic updates)
   const handleSaveCustomizedPolicy = async (
     policyData: Record<string, unknown>
   ) => {
-    // Store the policy data and open name modal
-    // First close the customization modal
-    setIsCustomizationModalOpen(false);
+    if (!policyToCustomize) return;
 
-    // Then store data and open name modal
-    setPendingPolicyData(policyData);
-    setIsNameModalOpen(true);
-  };
+    // Build updated policy object
+    const updatedPolicyWithNewData: CommunicationPolicyConfiguration = {
+      ...policyToCustomize,
+      name: (policyData.name as string) || policyToCustomize.name,
+      description: (policyData.description as string) || policyToCustomize.description,
+      channels: (policyData.channels as string[]) || policyToCustomize.channels,
+      type_code: (policyData.type_code as string) || policyToCustomize.type_code,
+      config: policyData.config || policyToCustomize.config,
+      is_active: (policyData.is_active as boolean) ?? policyToCustomize.is_active,
+    };
 
-  // Handle confirming policy name
-  const handleConfirmPolicyName = async (policyName: string) => {
-    if (!pendingPolicyData || !policyToCustomize) return;
+    // Save previous state for rollback
+    const previousPolicy = selectedPolicy;
+    const previousFormData = formData;
 
     try {
-      // Get the original policy name (remove the temporary suffix)
-      const originalPolicyName = policyToCustomize.name.replace(
-        " - Customizing...",
-        ""
-      );
-
-      // Create new policy with customized configuration
-      const newPolicy = communicationPolicyService.createPolicy({
-        name: policyName,
-        description:
-          pendingPolicyData.description ||
-          `Custom policy based on ${originalPolicyName}`,
-        channels: pendingPolicyData.channels || ["EMAIL"],
-        type: pendingPolicyData.type,
-        config: pendingPolicyData.config,
-        isActive: pendingPolicyData.isActive ?? true,
-      });
-
-      // Apply the new policy to the campaign
-      setSelectedPolicy(newPolicy);
-
-      // Close modals and cleanup
+      // Optimistic update - update UI immediately
+      setSelectedPolicy(updatedPolicyWithNewData);
+      setFormData({
+        ...formData,
+        communication_policy: updatedPolicyWithNewData.name,
+      } as any);
       setIsCustomizationModalOpen(false);
       setPolicyToCustomize(null);
-      setPendingPolicyData(null);
+      showToast("Updating policy...");
 
-      showToast("Custom policy created and applied to campaign!");
+      // Send update to backend
+      await communicationPolicyService.updatePolicy(
+        policyToCustomize.id,
+        {
+          name: updatedPolicyWithNewData.name,
+          description: updatedPolicyWithNewData.description,
+          channels: updatedPolicyWithNewData.channels,
+          type_code: updatedPolicyWithNewData.type_code,
+          config: updatedPolicyWithNewData.config,
+          is_active: updatedPolicyWithNewData.is_active,
+        }
+      );
+
+      // Success - confirm the update
+      showToast("Policy updated successfully!");
     } catch (error) {
-      console.error("Failed to save custom policy:", error);
-      showError("Failed to save custom policy. Please try again.");
+      console.error("Failed to update policy:", error);
+
+      // Rollback on error
+      setSelectedPolicy(previousPolicy);
+      setFormData(previousFormData);
+      setIsCustomizationModalOpen(false);
+      setPolicyToCustomize(null);
+
+      showError(extractBackendError(error, "Failed to update policy. Changes reverted.. Please try again."));
     }
   };
 
@@ -322,7 +335,7 @@ export default function CampaignDefinitionStep({
       showToast("Program created and selected!");
     } catch (error) {
       console.error("Failed to create program:", error);
-      showError("Failed to create program. Please try again.");
+      showError(extractBackendError(error, "Failed to create program. Please try again.. Please try again."));
     } finally {
       setIsCreatingProgram(false);
     }
@@ -405,7 +418,7 @@ export default function CampaignDefinitionStep({
       showToast("Communication policy created successfully");
     } catch (error) {
       console.error("Failed to create policy:", error);
-      showError("Failed to create communication policy");
+      showError(extractBackendError(error, "Failed to create communication policy. Please try again."));
     } finally {
       setIsCreatingPolicy(false);
     }
@@ -482,6 +495,7 @@ export default function CampaignDefinitionStep({
                 entityType="campaign"
                 className="w-full"
                 allowCreate={true}
+                onCreateCategory={() => setShowCreateCatalogModal(true)}
                 onCategoryCreated={(categoryId) => {
                   setSelectedCategoryIds([categoryId]);
                   setCategoryRefreshTriggerState((prev) => prev + 1);
@@ -1099,32 +1113,7 @@ export default function CampaignDefinitionStep({
               Campaign Priority
             </label>
             <div className="flex items-center gap-2">
-              {[
-                {
-                  value: "low",
-                  label: "Low",
-                  bars: 1,
-                  color: "text-blue-600",
-                },
-                {
-                  value: "medium",
-                  label: "Medium",
-                  bars: 2,
-                  color: "text-yellow-600",
-                },
-                {
-                  value: "high",
-                  label: "High",
-                  bars: 3,
-                  color: "text-orange-600",
-                },
-                {
-                  value: "critical",
-                  label: "Critical",
-                  bars: 4,
-                  color: "text-red-600",
-                },
-              ].map((priority) => {
+              {PRIORITY_OPTIONS.map((priority) => {
                 const isSelected = formData.priority === priority.value;
                 return (
                   <button
@@ -1190,22 +1179,22 @@ export default function CampaignDefinitionStep({
                   Rank within {formData.priority} Priority
                 </label>
                 <div className="flex items-center gap-2">
-                  {[1, 2, 3, 4, 5].map((rank) => (
+                  {RANK_OPTIONS.map((rankOption) => (
                     <button
-                      key={rank}
+                      key={rankOption.value}
                       type="button"
                       onClick={() =>
-                        setFormData({ ...formData, priority_rank: rank })
+                        setFormData({ ...formData, priority_rank: rankOption.value })
                       }
                       className={`w-8 h-8 ${
                         tw.rounded
                       } text-xs font-medium transition-all duration-200 flex items-center justify-center border ${
-                        formData.priority_rank === rank
+                        formData.priority_rank === rankOption.value
                           ? "bg-black text-white border-black shadow-sm"
                           : "bg-white text-gray-700 border-gray-300 hover:border-gray-400 hover:bg-gray-50"
                       }`}
                     >
-                      {rank}
+                      {rankOption.value}
                     </button>
                   ))}
                 </div>
@@ -1242,20 +1231,11 @@ export default function CampaignDefinitionStep({
                     borderBottomRightRadius: "0",
                   }}
                 >
-              <div className="flex items-center gap-2">
-                {selectedPolicy && (
-                  <div
-                    className={`w-2 h-2 rounded-full ${
-                      selectedPolicy.isActive ? "bg-green-500" : "bg-gray-400"
-                    }`}
-                  ></div>
-                )}
-                <span className="text-sm">
-                  {selectedPolicy
-                    ? selectedPolicy.name
-                    : "Choose a communication policy"}
-                </span>
-              </div>
+              <span className="text-sm">
+                {selectedPolicy
+                  ? selectedPolicy.name
+                  : "Choose a communication policy"}
+              </span>
                 <ChevronDown
                   className={`w-4 h-4 transition-transform ${
                     isPolicyDropdownOpen ? "rotate-180" : ""
@@ -1295,12 +1275,12 @@ export default function CampaignDefinitionStep({
                     No Policy
                   </div>
                   <div className="text-xs text-gray-500">
-                    Campaign will use default communication settings
+                    Campaign will use system default settings
                   </div>
                 </button>
 
                 <div className="max-h-48 overflow-y-auto">
-                  {communicationPolicies.map((policy) => (
+                  {communicationPolicies && Array.isArray(communicationPolicies) && communicationPolicies.filter((policy) => policy.is_active !== false).map((policy) => (
                     <button
                       key={policy.id}
                       type="button"
@@ -1316,15 +1296,8 @@ export default function CampaignDefinitionStep({
                         selectedPolicy?.id === policy.id ? "bg-blue-50" : ""
                       }`}
                     >
-                      <div className="flex items-center gap-2 mb-1">
-                        <div
-                          className={`w-2 h-2 rounded-full ${
-                            policy.isActive ? "bg-green-500" : "bg-gray-400"
-                          }`}
-                        ></div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {policy.name}
-                        </div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {policy.name}
                       </div>
                     </button>
                   ))}
@@ -1517,30 +1490,10 @@ export default function CampaignDefinitionStep({
         onClose={() => {
           setIsCustomizationModalOpen(false);
           setPolicyToCustomize(null);
-          setPendingPolicyData(null);
         }}
         policy={policyToCustomize || undefined}
         onSave={handleSaveCustomizedPolicy}
         isSaving={false}
-      />
-
-      {/* Policy Name Modal */}
-      <PolicyNameModal
-        isOpen={isNameModalOpen}
-        onClose={() => {
-          setIsNameModalOpen(false);
-          setPendingPolicyData(null);
-        }}
-        onConfirm={handleConfirmPolicyName}
-        defaultName={
-          policyToCustomize
-            ? `${policyToCustomize.name.replace(
-                " - Customizing...",
-                ""
-              )} - Custom`
-            : ""
-        }
-        title="Save Custom Policy"
       />
 
       {/* Create Catalog Modal */}

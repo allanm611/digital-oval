@@ -19,6 +19,7 @@ import {
 import { color, tw, components, zIndex } from "../../../shared/utils/utils";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -141,7 +142,7 @@ export default function QuickListsPage() {
       setAllQuicklists(allData);
     } catch (err) {
       console.error("Failed to load initial data:", err);
-      showError("Failed to load QuickLists");
+      showError(extractBackendError(error, "Failed to load QuickLists. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -187,18 +188,8 @@ export default function QuickListsPage() {
         response.data &&
         (response.data.has_errors || response.data.rows_failed > 0)
       ) {
-        const errorCount =
-          response.data.errors?.length || response.data.rows_failed;
-        const errorDetails =
-          response.data.errors
-            ?.slice(0, 5)
-            .map((e) => `Row ${e.row_number}: ${e.error}`)
-            .join("\n") || "";
-
-        showError(
-          `QuickList created with ${errorCount} validation errors ${
-            errorDetails ? `\n\n${errorDetails}` : ""
-          }`,
+        showToast(
+          "QuickList created successfully, but import had errors. Check the import logs for details.",
         );
       } else {
         showToast("QuickList created successfully!");

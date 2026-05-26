@@ -10,6 +10,7 @@ import { SMSRoute, CreateSMSRouteRequest } from "../types/smsRoute";
 import { ussdRouteService } from "../services/ussdRouteService";
 import { ussdGatewayConfigService } from "../../configurations/services/ussdGatewayConfigService";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw } from "../../../shared/utils/utils";
 
 const ENCODING_OPTIONS = [
@@ -107,7 +108,7 @@ export default function CreateEditUSSDRoutePage() {
         });
       }
     } catch (err) {
-      showError("Error", "Failed to load USSD route");
+      showError("Error", extractBackendError(error, "Error. Please try again."));
       navigate("/dashboard/ussd-routes");
     } finally {
       setLoading(false);
@@ -154,7 +155,7 @@ export default function CreateEditUSSDRoutePage() {
       navigate("/dashboard/ussd-routes");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to save route";
-      showError("Error", errorMessage);
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setSaving(false);
     }

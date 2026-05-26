@@ -22,6 +22,7 @@ import {
   UploadTypeSchema,
 } from "../types/quicklist";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -143,10 +144,7 @@ export default function QuickListDetailsPage() {
         setQuicklist(response.data);
       }
     } catch (err) {
-      showError(
-        "Error loading quicklist",
-        err instanceof Error ? err.message : "Failed to load quicklist details",
-      );
+      showError("Error loading quicklist", extractBackendError(error, "Error loading quicklist. Please try again."));
     } finally {
       setIsLoading(false);
     }
@@ -189,10 +187,7 @@ export default function QuickListDetailsPage() {
         }
       }
     } catch (err) {
-      showError(
-        "Error loading data",
-        err instanceof Error ? err.message : "Failed to load quicklist data",
-      );
+      showError("Error loading data", extractBackendError(error, "Error loading data. Please try again."));
     } finally {
       setLoadingData(false);
     }
@@ -214,10 +209,7 @@ export default function QuickListDetailsPage() {
         setLogsPagination(response.pagination || null);
       }
     } catch (err) {
-      showError(
-        "Error loading import logs",
-        err instanceof Error ? err.message : "Failed to load import logs",
-      );
+      showError("Error loading import logs", extractBackendError(error, "Error loading import logs. Please try again."));
     } finally {
       setLoadingLogs(false);
     }
@@ -238,10 +230,7 @@ export default function QuickListDetailsPage() {
       window.URL.revokeObjectURL(url);
       showToast(`QuickList exported as ${format.toUpperCase()}`);
     } catch (err) {
-      showError(
-        "Error exporting quicklist",
-        err instanceof Error ? err.message : "Failed to export quicklist",
-      );
+      showError("Error exporting quicklist", extractBackendError(error, "Error exporting quicklist. Please try again."));
     }
   };
 
@@ -286,10 +275,7 @@ export default function QuickListDetailsPage() {
         setIsEditModalOpen(false);
       }
     } catch (err) {
-      showError(
-        "Error updating quicklist",
-        err instanceof Error ? err.message : "Failed to update QuickList",
-      );
+      showError("Error updating quicklist", extractBackendError(error, "Error updating quicklist. Please try again."));
       throw err;
     }
   };
@@ -309,10 +295,7 @@ export default function QuickListDetailsPage() {
       setShowDeleteModal(false);
       navigate("/dashboard/quick-lists");
     } catch (err) {
-      showError(
-        "Error deleting quicklist",
-        err instanceof Error ? err.message : "Failed to delete QuickList",
-      );
+      showError("Error deleting quicklist", extractBackendError(error, "Error deleting quicklist. Please try again."));
     } finally {
       setIsDeleting(false);
     }

@@ -6,15 +6,15 @@ import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw, button } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Pagination from "../../../shared/components/ui/Pagination";
+import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { useToast } from "../../../contexts/ToastContext";
-import { useConfirm } from "../../../contexts/ConfirmContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { comboTypeService, ComboType } from "../services/comboTypeService";
 import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function ComboTypesPage() {
   const navigate = useNavigate();
   const { success: showSuccess, error: showError } = useToast();
-  const { confirm } = useConfirm();
   const { t } = useLanguage();
 
   const [comboTypes, setComboTypes] = useState<ComboType[]>([]);
@@ -22,6 +22,8 @@ export default function ComboTypesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [comboToDelete, setComboToDelete] = useState<ComboType | null>(null);
   const [deleting, setDeleting] = useState<number | null>(null);
 
   const loadComboTypes = useCallback(async () => {
@@ -30,7 +32,7 @@ export default function ComboTypesPage() {
       const response = await comboTypeService.getAllComboTypes();
       setComboTypes(response.data || []);
     } catch (error) {
-      showError("Failed to load combo types");
+      showError(extractBackendError(error, "Failed to load combo types. Please try again."));
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -41,24 +43,23 @@ export default function ComboTypesPage() {
     loadComboTypes();
   }, [loadComboTypes]);
 
-  const handleDelete = async (combo: ComboType) => {
-    const confirmed = await confirm({
-      title: "Delete Combo Type",
-      message: `Are you sure you want to delete "${combo.name}"? This action cannot be undone.`,
-      type: "danger",
-      confirmText: t.genericConfig.delete,
-      cancelText: t.genericConfig.cancel,
-    });
+  const handleDeleteClick = (combo: ComboType) => {
+    setComboToDelete(combo);
+    setShowDeleteModal(true);
+  };
 
-    if (!confirmed) return;
+  const confirmDeleteCombo = async () => {
+    if (!comboToDelete) return;
 
-    setDeleting(combo.id);
+    setDeleting(comboToDelete.id);
     try {
-      await comboTypeService.deleteComboType(combo.id);
-      setComboTypes((prev) => prev.filter((c) => c.id !== combo.id));
+      await comboTypeService.deleteComboType(comboToDelete.id);
+      setComboTypes((prev) => prev.filter((c) => c.id !== comboToDelete.id));
       showSuccess("Combo type deleted successfully");
+      setShowDeleteModal(false);
+      setComboToDelete(null);
     } catch (error) {
-      showError("Failed to delete combo type", error instanceof Error ? error.message : "");
+      showError("Failed to delete combo type", extractBackendError(error, "Failed to delete combo type. Please try again."));;
     } finally {
       setDeleting(null);
     }
@@ -279,7 +280,7 @@ export default function ComboTypesPage() {
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDelete(combo)}
+                          onClick={() => handleDeleteClick(combo)}
                           disabled={deleting === combo.id}
                           className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                           title="Delete"
@@ -308,6 +309,19 @@ export default function ComboTypesPage() {
           onPageChange={setCurrentPage}
         />
       )}
+
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setComboToDelete(null);
+        }}
+        onConfirm={confirmDeleteCombo}
+        title="Delete Combo Type"
+        description="This action cannot be undone."
+        itemName={comboToDelete?.name || ""}
+        isLoading={deleting === comboToDelete?.id}
+      />
     </div>
   );
 }

@@ -7,6 +7,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import type { CreativeTemplate } from "../../configurations/services/creativeTemplateService";
 import { languageService, Language } from "../../configurations/services/languageService";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 
 interface CreativeTemplateFormModalProps {
   isOpen: boolean;
@@ -200,7 +201,7 @@ export default function CreativeTemplateFormModal({
       await onSave(dataToSubmit);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to save template";
-      showError("Error", errorMessage);
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setIsSaving(false);
     }

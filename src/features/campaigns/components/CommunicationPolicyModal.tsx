@@ -125,7 +125,8 @@ export default function CommunicationPolicyModal({
       if (policy) {
         setName(policy.name);
         setDescription(policy.description || "");
-        setIsActive(policy.isActive);
+        setIsActive(policy.isActive ?? true);
+        setExpandedSection(policy.type_code || "timeWindow");
 
         // Convert channel codes back to IDs for the modal
         if (policy.channels && policy.channels.length > 0) {
@@ -143,11 +144,37 @@ export default function CommunicationPolicyModal({
         } else {
           setSelectedChannelIds([]);
         }
+
+        // Load existing policy config
+        if (policy.config) {
+          setConfigs((prev) => ({
+            ...prev,
+            timeWindow: {
+              startTime: (policy.config as TimeWindowConfig)?.startTime || "09:00",
+              endTime: (policy.config as TimeWindowConfig)?.endTime || "18:00",
+              timezone: (policy.config as TimeWindowConfig)?.timezone || "UTC",
+              days: Array.isArray((policy.config as TimeWindowConfig)?.days) ? (policy.config as TimeWindowConfig).days : [],
+            },
+            maximumCommunication: {
+              type: (policy.config as MaximumCommunicationConfig)?.type || "daily",
+              maxCount: (policy.config as MaximumCommunicationConfig)?.maxCount || 3,
+            },
+            dnd: {
+              categories: Array.isArray((policy.config as DNDConfig)?.categories) ? (policy.config as DNDConfig).categories : [],
+            },
+            vipList: {
+              action: (policy.config as VIPListConfig)?.action || "include",
+              vipLists: Array.isArray((policy.config as VIPListConfig)?.vipLists) ? (policy.config as VIPListConfig).vipLists : [],
+              priority: (policy.config as VIPListConfig)?.priority || 1,
+            },
+          }));
+        }
       } else {
         setName("");
         setDescription("");
         setSelectedChannelIds([]);
         setIsActive(true);
+        setExpandedSection("timeWindow");
         setConfigs({
           timeWindow: {
             startTime: "09:00",
@@ -833,11 +860,11 @@ export default function CommunicationPolicyModal({
   return createPortal(
     <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 backdrop-blur-sm"
-      style={{ zIndex: zIndex.overlay }}
+      style={{ zIndex: zIndex.popover }}
     >
       <div
         className={`${components.card.surface} w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col ${tw.rounded}`}
-        style={{ zIndex: zIndex.modal, position: "relative" }}
+        style={{ zIndex: zIndex.popover, position: "relative" }}
       >
         {/* Header */}
         <div style={{ backgroundColor: color.surface.background }}>

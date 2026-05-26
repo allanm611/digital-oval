@@ -23,6 +23,7 @@ import {
   clearPersistedFormData,
 } from "../../../shared/hooks/useFormDataPersistence";
 import { useFormCleanupOnExit } from "../../../shared/hooks/useFormCleanupOnExit";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 
 export default function CreateCommunicationPage() {
   const { quicklistId } = useParams<{ quicklistId: string }>();
@@ -125,9 +126,8 @@ export default function CreateCommunicationPage() {
       if (response.success) {
         setResult(response.data);
       }
-    } catch (_error) {
-      // Backend not fixed yet - show error
-      showError("Error", "Failed to create communication", true); // bypassSilentMode
+    } catch (err) {
+      showError("Unable to Send Communication", extractBackendError(err, "Failed to send communication. Please check your data and try again."), true);
     } finally {
       setSending(false);
     }

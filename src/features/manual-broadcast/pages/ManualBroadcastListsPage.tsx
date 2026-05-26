@@ -18,6 +18,7 @@ import { ManualBroadcast } from "../../communications/types/communication";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import SearchInput from "../../../shared/components/ui/SearchInput";
@@ -98,7 +99,7 @@ export default function ManualBroadcastListsPage() {
       }
     } catch (err) {
       console.error("Failed to load manual broadcasts:", err);
-      showError("Failed to load manual broadcasts");
+      showError(extractBackendError(error, "Failed to load manual broadcasts. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -182,10 +183,7 @@ export default function ManualBroadcastListsPage() {
     } catch (err) {
       console.error("Failed to load broadcasts:", err);
       if (!loading) {
-        showError(
-          "Failed to load broadcasts",
-          "Please check your connection and try again",
-        );
+        showError("Failed to load broadcasts", extractBackendError(error, "Failed to load broadcasts. Please try again."));
       }
     } finally {
       setLoading(false);
@@ -222,7 +220,7 @@ export default function ManualBroadcastListsPage() {
       await loadBroadcasts(pagination.page);
     } catch (err) {
       console.error("Failed to delete broadcast:", err);
-      showError("Failed to delete broadcast", "Please try again later.");
+      showError("Failed to delete broadcast", extractBackendError(error, "Failed to delete broadcast. Please try again."));
     } finally {
       setIsDeleting(false);
     }

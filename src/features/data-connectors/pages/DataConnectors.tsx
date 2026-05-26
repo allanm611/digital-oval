@@ -25,6 +25,7 @@ import {
 } from "../utils/connectorIcons";
 import { tw, color, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import DataConnectorForm from "../components/DataConnectorForm";
 import {
@@ -164,7 +165,7 @@ export default function DataConnectors() {
       success("Deleted", `${connectorToDelete.name} was deleted successfully.`);
       setConnectorToDelete(null);
     } catch (err: any) {
-      showError("Delete failed", err.message || "Could not delete connector");
+      showError("Delete failed", extractBackendError(error, "Delete failed. Please try again."));
     } finally {
       setIsDeleting(false);
     }
@@ -227,7 +228,7 @@ export default function DataConnectors() {
       setEditingConnector(null);
     } catch (err: any) {
       console.error(err);
-      showError("Save failed", err.message || "Could not save connector");
+      showError("Save failed", extractBackendError(error, "Save failed. Please try again."));
     }
   };
 

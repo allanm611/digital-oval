@@ -62,6 +62,7 @@ import TypeSelector from "../../../shared/components/TypeSelector";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw, components } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { getSettingsCommunicationChannel } from "../../../shared/utils/settingsHelper";
@@ -86,6 +87,9 @@ type LocalOfferCreative = Omit<OfferCreative, "id" | "offer_id"> & {
   id: string;
   offer_id?: number;
 };
+
+// Default product link quantity when linking products to offers
+const DEFAULT_PRODUCT_LINK_QUANTITY = 1;
 
 interface ApiErrorDetail {
   field?: string;
@@ -439,7 +443,7 @@ function BasicInfoStep({
               }
             }}
             placeholder={offerTypesLoading ? "Loading..." : "Select offer type"}
-            allowCreate={false}
+            allowCreate={true}
             onCreate={() => setShowCreateTypeModal(true)}
           />
           {validationErrors?.offer_type && (
@@ -464,7 +468,7 @@ function BasicInfoStep({
             disabled={categoriesLoading}
             refreshTrigger={categoryRefreshTriggerState}
             className="w-full"
-            allowCreate={false}
+            allowCreate={true}
             onCreateCategory={() => setShowCreateCatalogModal(true)}
             onCategoryCreated={(categoryId) => {
               userInitiatedUpdateRef.current = true;
@@ -2024,14 +2028,14 @@ export default function CreateOfferPage({
     loadOfferCategories();
   }, []);
 
-  // Load SMS routes from API endpoint and Email routes from configuration (dummy data)
+  // Load SMS routes from API endpoint and Email routes from configuration
   const [smsRoutes, setSmsRoutes] = useState<SMSRoute[]>([]);
   const [smsRoutesLoading, setSmsRoutesLoading] = useState(false);
   const emailRoutesConfig = useConfigurationData("emailRoutes");
   const emailRoutes = emailRoutesConfig?.data?.filter((r: any) => r.isActive || r.is_active) || [];
   const emailRoutesLoading = !emailRoutesConfig;
 
-  // Load WhatsApp, USSD, and Push Notification routes (with dummy data)
+  // Load WhatsApp, USSD, and Push Notification routes
   const [whatsappRoutes, setWhatsappRoutes] = useState<WhatsAppRoute[]>([]);
   const [whatsappRoutesLoading, setWhatsappRoutesLoading] = useState(false);
   const [ussdRoutes, setUssdRoutes] = useState<SMSRoute[]>([]);
@@ -2173,7 +2177,10 @@ export default function CreateOfferPage({
     }
 
     // If SMS channel is selected, SMS route is required
-    if (formData.communication_channel_id === 2 && !formData.sms_route_id) {
+    const selectedChannel = communicationChannels?.find(
+      (ch) => String(ch.id) === String(formData.communication_channel_id)
+    );
+    if (selectedChannel?.name?.toUpperCase() === "SMS" && !formData.sms_route_id) {
       errors.sms_route = "SMS route is required when SMS channel is selected";
     }
 
@@ -2467,7 +2474,7 @@ export default function CreateOfferPage({
                   offer_id: Number(offerId),
                   product_id: productId,
                   is_primary: primaryProductId === productId,
-                  quantity: 1,
+                  quantity: DEFAULT_PRODUCT_LINK_QUANTITY,
                 };
               });
 
@@ -2505,7 +2512,7 @@ export default function CreateOfferPage({
                 offer_id: Number(offerId),
                 product_id: productId,
                 is_primary: primaryProductId === productId,
-                quantity: 1,
+                quantity: DEFAULT_PRODUCT_LINK_QUANTITY,
               };
             });
 
@@ -2796,7 +2803,7 @@ export default function CreateOfferPage({
       } else if (hasMessageString(error)) {
         errorMessage = error.message;
       }
-      showError("Error", errorMessage, true);
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setIsSavingDraft(false);
     }

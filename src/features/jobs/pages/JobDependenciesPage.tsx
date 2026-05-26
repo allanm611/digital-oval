@@ -30,6 +30,7 @@ import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useClickOutside } from "../../../shared/hooks/useClickOutside";
 import { jobDependencyService } from "../services/jobDependencyService";
 import { scheduledJobService } from "../services/scheduledJobService";
@@ -860,10 +861,7 @@ export default function JobDependenciesPage() {
         setDependencies(response.data || []);
       }
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to load job dependencies";
-      setLoadError(message);
-      showError("Unable to load job dependencies", message);
+      showError("Unable to Load Dependencies", extractBackendError(err, "Failed to load job dependencies. Please try again later."));
     } finally {
       setIsLoading(false);
     }
@@ -947,7 +945,7 @@ export default function JobDependenciesPage() {
             ? err.message
             : "Failed to search job dependencies";
         setLoadError(message);
-        showError("Unable to search job dependencies", message);
+        showError("Unable to Search Dependencies", extractBackendError(err, "Failed to search dependencies. Please try again later."));
       } finally {
         setIsSearching(false);
       }
@@ -1190,7 +1188,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to delete job dependency";
-      showError("Unable to delete job dependency", message);
+      showError("Unable to Delete Dependency", extractBackendError(err, "Failed to delete job dependency. Please try again later."));
     } finally {
       setIsDeleting(false);
     }
@@ -1217,11 +1215,13 @@ export default function JobDependenciesPage() {
           `Dependency ${editingDependency.id} has been updated successfully`,
         );
       } else {
-        await jobDependencyService.createJobDependency(values);
+        const createdDependency = await jobDependencyService.createJobDependency(values);
         showToast(
           "Job dependency created",
           "Job dependency has been created successfully",
         );
+        // Optimistically add new dependency to list
+        setDependencies((prev) => [createdDependency, ...prev]);
       }
       setIsModalOpen(false);
       setEditingDependency(null);
@@ -1231,14 +1231,11 @@ export default function JobDependenciesPage() {
         setDependencies((prev) =>
           prev.map((d) => (d.id === editingDependency.id ? { ...d, ...values } : d)),
         );
-      } else {
-        // For new dependency, we don't have the ID yet, so skip optimistic update
-        // fetchDependencies would be called instead
       }
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to save job dependency";
-      showError("Unable to save job dependency", message);
+      showError("Unable to Save Dependency", extractBackendError(err, "Failed to save job dependency. Please try again later."));
       throw err;
     } finally {
       setIsSaving(false);
@@ -1271,7 +1268,7 @@ export default function JobDependenciesPage() {
         err instanceof Error
           ? err.message
           : "Failed to toggle dependency status";
-      showError("Unable to toggle dependency", message);
+      showError("Unable to Update Dependency", extractBackendError(err, "Failed to update dependency status. Please try again later."));
     }
   };
 
@@ -1290,7 +1287,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load dependencies";
-      showError("Unable to load dependencies", message);
+      showError("Unable to Load Dependencies", extractBackendError(err, "Failed to load job dependencies. Please try again later."));
       setShowDependenciesForJobModal(false);
     } finally {
       setIsLoadingDependenciesForJob(false);
@@ -1315,7 +1312,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load dependencies";
-      showError("Unable to load dependencies", message);
+      showError("Unable to Load Dependencies", extractBackendError(err, "Failed to load job dependencies. Please try again later."));
       setShowJobsDependingOnModal(false);
     } finally {
       setIsLoadingJobsDependingOn(false);
@@ -1338,7 +1335,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load dependency";
-      showError("Unable to load dependency", message);
+      showError("Unable to load dependency", extractBackendError(error, "Unable to load dependency. Please try again."));
     }
   };
 
@@ -1361,7 +1358,7 @@ export default function JobDependenciesPage() {
         err instanceof Error
           ? err.message
           : "Failed to load blocking dependencies";
-      showError("Unable to load blocking dependencies", message);
+      showError("Unable to load blocking dependencies", extractBackendError(error, "Unable to load blocking dependencies. Please try again."));
       setShowBlockingDependenciesModal(false);
     } finally {
       setIsLoadingBlockingDependencies(false);
@@ -1389,7 +1386,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load dependency chain";
-      showError("Unable to load dependency chain", message);
+      showError("Unable to load dependency chain", extractBackendError(error, "Unable to load dependency chain. Please try again."));
       setShowChainModal(false);
     } finally {
       setIsLoadingChain(false);
@@ -1414,7 +1411,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load critical path";
-      showError("Unable to load critical path", message);
+      showError("Unable to load critical path", extractBackendError(error, "Unable to load critical path. Please try again."));
       setShowChainModal(false);
     } finally {
       setIsLoadingChain(false);
@@ -1440,7 +1437,7 @@ export default function JobDependenciesPage() {
         err instanceof Error
           ? err.message
           : "Failed to load immediate dependencies";
-      showError("Unable to load immediate dependencies", message);
+      showError("Unable to load immediate dependencies", extractBackendError(error, "Unable to load immediate dependencies. Please try again."));
       setShowImmediateDependenciesModal(false);
     } finally {
       setIsLoadingImmediateDependencies(false);
@@ -1458,7 +1455,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load dependents";
-      showError("Unable to load dependents", message);
+      showError("Unable to load dependents", extractBackendError(error, "Unable to load dependents. Please try again."));
       setShowAllDependentsModal(false);
     } finally {
       setIsLoadingAllDependents(false);
@@ -1488,7 +1485,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to check dependencies";
-      showError("Unable to check dependencies", message);
+      showError("Unable to check dependencies", extractBackendError(error, "Unable to check dependencies. Please try again."));
     }
   };
 
@@ -1510,7 +1507,7 @@ export default function JobDependenciesPage() {
         err instanceof Error
           ? err.message
           : "Failed to load unsatisfied dependencies";
-      showError("Unable to load unsatisfied dependencies", message);
+      showError("Unable to load unsatisfied dependencies", extractBackendError(error, "Unable to load unsatisfied dependencies. Please try again."));
       setShowUnsatisfiedDependenciesModal(false);
     } finally {
       setIsLoadingUnsatisfiedDependencies(false);
@@ -1541,7 +1538,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load dependency status";
-      showError("Unable to load dependency status", message);
+      showError("Unable to load dependency status", extractBackendError(error, "Unable to load dependency status. Please try again."));
       setShowStatusModal(false);
     } finally {
       setIsLoadingStatus(false);
@@ -1591,7 +1588,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to activate dependencies";
-      showError("Unable to activate dependencies", message);
+      showError("Unable to activate dependencies", extractBackendError(error, "Unable to activate dependencies. Please try again."));
     }
   };
 
@@ -1619,7 +1616,7 @@ export default function JobDependenciesPage() {
         err instanceof Error
           ? err.message
           : "Failed to deactivate dependencies";
-      showError("Unable to deactivate dependencies", message);
+      showError("Unable to deactivate dependencies", extractBackendError(error, "Unable to deactivate dependencies. Please try again."));
     }
   };
 
@@ -1635,7 +1632,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load dependency graph";
-      showError("Unable to load dependency graph", message);
+      showError("Unable to load dependency graph", extractBackendError(error, "Unable to load dependency graph. Please try again."));
       setShowGraphModal(false);
     } finally {
       setIsLoadingGraph(false);
@@ -1656,7 +1653,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load orphaned jobs";
-      showError("Unable to load orphaned jobs", message);
+      showError("Unable to load orphaned jobs", extractBackendError(error, "Unable to load orphaned jobs. Please try again."));
     }
   };
 
@@ -1679,7 +1676,7 @@ export default function JobDependenciesPage() {
         err instanceof Error
           ? err.message
           : "Failed to load most depended jobs";
-      showError("Unable to load most depended jobs", message);
+      showError("Unable to load most depended jobs", extractBackendError(error, "Unable to load most depended jobs. Please try again."));
     }
   };
 
@@ -1695,7 +1692,7 @@ export default function JobDependenciesPage() {
         err instanceof Error
           ? err.message
           : "Failed to load complex dependencies";
-      showError("Unable to load complex dependencies", message);
+      showError("Unable to load complex dependencies", extractBackendError(error, "Unable to load complex dependencies. Please try again."));
       setShowComplexDependenciesModal(false);
     } finally {
       setIsLoadingComplexDependencies(false);
@@ -1732,7 +1729,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to delete dependencies";
-      showError("Unable to delete dependencies", message);
+      showError("Unable to delete dependencies", extractBackendError(error, "Unable to delete dependencies. Please try again."));
     } finally {
       setIsDeletingAll(false);
     }

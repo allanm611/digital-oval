@@ -8,6 +8,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { UsageMetric, UsageMetricOperator } from "../types/usageMetrics";
 import { usageMetricService } from "../services/usageMetricService";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw } from "../../../shared/utils/utils";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 
@@ -100,7 +101,7 @@ export default function UsageMetricFormPage({ mode }: UsageMetricFormPageProps) 
         });
       }
     } catch (err) {
-      showError("Error", "Failed to load usage metric");
+      showError("Error", extractBackendError(error, "Error. Please try again."));
       navigate("/dashboard/kpis/usage-metrics");
     } finally {
       setLoading(false);
@@ -174,7 +175,7 @@ export default function UsageMetricFormPage({ mode }: UsageMetricFormPageProps) 
       navigate("/dashboard/kpis/usage-metrics");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to save metric";
-      showError("Error", errorMessage);
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setSaving(false);
     }

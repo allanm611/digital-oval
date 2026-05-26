@@ -9,6 +9,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { SMSRoute, CreateSMSRouteRequest } from "../types/smsRoute";
 import { smsRouteService } from "../services/smsRouteService";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw } from "../../../shared/utils/utils";
 import { senderIdService } from "../../configurations/services/senderIdService";
 import ConfigurationModal from "../../configurations/components/ConfigurationManager/ConfigurationModal";
@@ -112,7 +113,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
         });
       }
     } catch (err) {
-      showError("Error", "Failed to load SMS route");
+      showError("Error", extractBackendError(error, "Error. Please try again."));
       navigate("/dashboard/sms-routes");
     } finally {
       setLoading(false);
@@ -164,7 +165,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
       navigate("/dashboard/sms-routes");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to save route";
-      showError("Error", errorMessage);
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setSaving(false);
     }

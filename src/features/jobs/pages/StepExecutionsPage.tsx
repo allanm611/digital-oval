@@ -23,6 +23,7 @@ import BackButton from "../../../shared/components/ui/BackButton";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useAuth } from "../../../contexts/AuthContext";
 import { ENABLE_JOB_EXECUTION_WRITES_FOR_ALL } from "../../../shared/utils/featureFlags";
 import { useClickOutside } from "../../../shared/hooks/useClickOutside";
@@ -228,7 +229,7 @@ export default function StepExecutionsPage() {
       const message =
         err instanceof Error ? err.message : "Failed to load step executions";
       setErrorMessage(message);
-      showError("Step Executions", message);
+      showError("Step Executions", extractBackendError(error, "Step Executions. Please try again."));
     } finally {
       setIsLoading(false);
     }
@@ -350,10 +351,7 @@ export default function StepExecutionsPage() {
       fetchExecutions();
       fetchStats();
     } catch (err) {
-      showError(
-        "Action Failed",
-        err instanceof Error ? err.message : "Unknown error"
-      );
+      showError("Action Failed", extractBackendError(err, "Action Failed. Please try again."));
     }
   };
 

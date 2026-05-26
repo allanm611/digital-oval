@@ -5,6 +5,7 @@ import { color, tw } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { smsTestService } from "../../routes/services/smsTestService";
 import { smsRouteService } from "../../routes/services/smsRouteService";
 import { senderIdService, SenderId } from "../../configurations/services/senderIdService";
@@ -94,7 +95,7 @@ export default function SMSTestPage() {
         }
       } catch (err) {
         console.error("Failed to load communication channels:", err);
-        showError("Error", "Failed to load communication channels");
+        showError("Error", extractBackendError(error, "Error. Please try again."));
       } finally {
         setIsLoadingChannels(false);
       }
@@ -334,7 +335,7 @@ export default function SMSTestPage() {
         success: false,
         error: (err as Error).message,
       });
-      showError("Error", (err as Error).message || `Failed to send test ${(channel || "").toLowerCase()}`);
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setIsLoading(false);
     }

@@ -9,6 +9,7 @@ import { EmailRoute, CreateEmailRouteRequest } from "../types/emailRoute";
 import { emailRouteService } from "../services/emailRouteService";
 import { emailGatewayConfigService } from "../../configurations/services/emailGatewayConfigService";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw } from "../../../shared/utils/utils";
 
 interface EmailRouteFormPageProps {
@@ -68,7 +69,7 @@ export default function EmailRouteFormPage({ mode }: EmailRouteFormPageProps) {
         });
       }
     } catch (err) {
-      showError("Error", "Failed to load email route");
+      showError("Error", extractBackendError(error, "Error. Please try again."));
       navigate("/dashboard/email-routes");
     } finally {
       setLoading(false);
@@ -112,7 +113,7 @@ export default function EmailRouteFormPage({ mode }: EmailRouteFormPageProps) {
       navigate("/dashboard/email-routes");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to save route";
-      showError("Error", errorMessage);
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setSaving(false);
     }

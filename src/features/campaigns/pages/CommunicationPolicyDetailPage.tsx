@@ -18,6 +18,7 @@ import {
 } from "../types/communicationPolicyConfig";
 import CommunicationPolicyModal from "../components/CommunicationPolicyModal";
 import { communicationPolicyService } from "../services/communicationPolicyService";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 
 export default function CommunicationPolicyDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -39,8 +40,8 @@ export default function CommunicationPolicyDetailPage() {
       const data = await communicationPolicyService.getAllPolicies();
       const found = data.find((p) => p.id === Number(id));
       setPolicy(found || null);
-    } catch {
-      showError("Error", "Failed to load policy");
+    } catch (err) {
+      showError("Unable to Load Policy", extractBackendError(err, "Failed to load policy. Please try again later."));
     } finally {
       setLoading(false);
     }
@@ -58,8 +59,8 @@ export default function CommunicationPolicyDetailPage() {
     try {
       await communicationPolicyService.updatePolicy(policy.id, { is_active: newActive } as any);
       showToast(newActive ? "Activated" : "Deactivated", `${policy.name} has been ${newActive ? "activated" : "deactivated"}`);
-    } catch {
-      showError("Error", "Failed to update policy status");
+    } catch (err) {
+      showError("Unable to Update Policy", extractBackendError(err, "Failed to update policy status. Please try again later."));
       setPolicy((prev) => prev ? { ...prev, is_active: !newActive } : prev);
     } finally {
       setIsToggling(false);
@@ -73,8 +74,8 @@ export default function CommunicationPolicyDetailPage() {
       await communicationPolicyService.deletePolicy(policy.id);
       showToast(t.communicationPolicy.deleteSuccess);
       navigate("/dashboard/campaign-communication-policy");
-    } catch {
-      showError("Error", t.communicationPolicy.deleteFailed);
+    } catch (err) {
+      showError("Unable to Delete Policy", extractBackendError(err, "Failed to delete policy. Please try again later."));
     } finally {
       setIsDeleting(false);
     }
@@ -88,8 +89,8 @@ export default function CommunicationPolicyDetailPage() {
       showToast(t.communicationPolicy.updateSuccess);
       await loadPolicy();
       setIsModalOpen(false);
-    } catch {
-      showError("Error", t.communicationPolicy.saveFailed);
+    } catch (err) {
+      showError("Unable to Update Policy", extractBackendError(err, "Failed to update policy. Please try again later."));
     } finally {
       setIsSaving(false);
     }

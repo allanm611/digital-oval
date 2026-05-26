@@ -8,6 +8,7 @@ import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeac
 import { PushNotificationRoute } from "../types/pushNotificationRoute";
 import { pushNotificationRouteService } from "../services/pushNotificationRouteService";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw } from "../../../shared/utils/utils";
 
 export default function PushNotificationRoutesList() {
@@ -62,7 +63,7 @@ export default function PushNotificationRoutesList() {
       ];
       setRoutes(data && data.length > 0 ? data : dummyRoutes);
     } catch (err) {
-      showError("Error", "Failed to load push notification routes");
+      showError("Error", extractBackendError(error, "Error. Please try again."));
       // Set dummy data on error too
       const dummyRoutes: PushNotificationRoute[] = [
         {
@@ -118,7 +119,7 @@ export default function PushNotificationRoutesList() {
       setDeleteConfirmId(null);
       setDeleteConfirmName("");
     } catch (err) {
-      showError("Error", "Failed to delete push notification route");
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setDeleting(null);
     }
@@ -149,7 +150,7 @@ export default function PushNotificationRoutesList() {
           r.id === route.id ? { ...r, is_active: route.is_active } : r,
         ),
       );
-      showError("Error", "Failed to update route status");
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setTogglingStatus(null);
     }

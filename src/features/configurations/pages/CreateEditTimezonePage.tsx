@@ -4,6 +4,7 @@ import { Save } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { tw, color } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -85,7 +86,7 @@ export default function CreateEditTimezonePage() {
       }
     } catch (err) {
       console.error("Failed to load timezone:", err);
-      showError("Failed to load timezone", "Please try again later.");
+      showError("Failed to load timezone", extractBackendError(error, "Failed to load timezone. Please try again."));
       navigate("/dashboard/timezones");
     } finally {
       setLoading(false);
@@ -149,7 +150,7 @@ export default function CreateEditTimezonePage() {
       navigate("/dashboard/timezones");
     } catch (err) {
       console.error("Failed to save timezone:", err);
-      showError("Error", "Failed to save timezone. Please try again later.");
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setSaving(false);
     }

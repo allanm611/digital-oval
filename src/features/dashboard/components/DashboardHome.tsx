@@ -154,19 +154,24 @@ export default function DashboardHome() {
   const [recentItemsLoading, setRecentItemsLoading] = useState(true);
 
   // State for "Requires Attention" section with actual data
-  const [requiresAttentionData, setRequiresAttentionData] = useState<
-    Array<{
-      id: string;
-      title: string;
-      description: string;
-      type: "campaign" | "offer" | "segment";
-      action: string;
-      priority: "high" | "medium";
-      count: number;
-      itemId: number | string;
-      itemName: string;
-    }>
-  >([]);
+  type AttentionItem = {
+    id: number | string;
+    name: string;
+    status: string;
+    type: "campaign" | "offer" | "segment";
+    created_at?: string;
+  };
+
+  const [requiresAttentionFilter, setRequiresAttentionFilter] = useState<
+    "all" | "pending_approval" | "rejected"
+  >("all");
+  const [requiresAttentionData, setRequiresAttentionData] = useState<{
+    pending_approval: AttentionItem[];
+    rejected: AttentionItem[];
+  }>({
+    pending_approval: [],
+    rejected: [],
+  });
   const [requiresAttentionLoading, setRequiresAttentionLoading] = useState(true);
 
   // State for stats
@@ -1558,90 +1563,89 @@ export default function DashboardHome() {
     const fetchRequiresAttentionData = async () => {
       setRequiresAttentionLoading(true);
       try {
-        const results: typeof requiresAttentionData = [];
+        const pendingApprovalItems: AttentionItem[] = [];
+        const rejectedItems: AttentionItem[] = [];
 
-        // Fetch ONE campaign pending approval
+        // Fetch pending approval campaigns
         try {
           const pendingCampaigns =
             await campaignService.getPendingApprovalCampaigns({ skipCache: true });
-          if ("success" in pendingCampaigns && !pendingCampaigns.success) {
-            console.error("Error response:", pendingCampaigns);
-          } else if ("data" in pendingCampaigns && pendingCampaigns.data) {
-            const pendingCampaign = pendingCampaigns.data[0];
-            const totalCount = pendingCampaigns.pagination?.total || 0;
-            if (pendingCampaign) {
-              results.push({
-                id: "campaigns-pending",
-                title: t.dashboard.pendingApproval,
-                description: `${pendingCampaign.name}`,
+          if ("data" in pendingCampaigns && pendingCampaigns.data) {
+            pendingCampaigns.data.forEach((campaign: any) => {
+              pendingApprovalItems.push({
+                id: campaign.id,
+                name: campaign.name,
+                status: campaign.status || "pending_approval",
                 type: "campaign",
-                action: t.dashboard.approve,
-                priority: "medium",
-                count: totalCount,
-                itemId: pendingCampaign.id,
-                itemName: pendingCampaign.name,
+                created_at: campaign.created_at,
               });
-            }
+            });
           }
         } catch (err) {
           console.error("Failed to fetch pending approval campaigns:", err);
         }
 
-        // Fetch ONE offer - upcoming offers
+        // Fetch pending approval offers
         try {
-          const upcomingOffers =
-            await offerService.getUpcomingOffers({ skipCache: true });
-          if ("success" in upcomingOffers && !upcomingOffers.success) {
-            console.error("Error response:", upcomingOffers);
-          } else if ("data" in upcomingOffers && upcomingOffers.data) {
-            const upcomingOffer = upcomingOffers.data[0];
-            const totalCount = upcomingOffers.pagination?.total || 0;
-            if (upcomingOffer) {
-              results.push({
-                id: "offers-upcoming",
-                title: "Upcoming Offers",
-                description: `${upcomingOffer.name}`,
+          const pendingOffers =
+            await offerService.getPendingApprovalOffers({ skipCache: true });
+          if ("data" in pendingOffers && pendingOffers.data) {
+            pendingOffers.data.forEach((offer: any) => {
+              pendingApprovalItems.push({
+                id: offer.id,
+                name: offer.name,
+                status: offer.status || "pending_approval",
                 type: "offer",
-                action: t.dashboard.review,
-                priority: "medium",
-                count: totalCount,
-                itemId: upcomingOffer.id,
-                itemName: upcomingOffer.name,
+                created_at: offer.created_at,
               });
-            }
+            });
           }
         } catch (err) {
-          console.error("Failed to fetch upcoming offers:", err);
+          console.error("Failed to fetch pending approval offers:", err);
         }
 
-        // Fetch ONE offer - expired offers
+        // Fetch rejected campaigns
         try {
-          const expiredOffers =
-            await offerService.getExpiredOffers({ skipCache: true });
-          if ("success" in expiredOffers && !expiredOffers.success) {
-            console.error("Error response:", expiredOffers);
-          } else if ("data" in expiredOffers && expiredOffers.data) {
-            const expiredOffer = expiredOffers.data[0];
-            const totalCount = expiredOffers.pagination?.total || 0;
-            if (expiredOffer) {
-              results.push({
-                id: "offers-expired",
-                title: "Expired Offers",
-                description: `${expiredOffer.name}`,
-                type: "offer",
-                action: t.dashboard.review,
-                priority: "medium",
-                count: totalCount,
-                itemId: expiredOffer.id,
-                itemName: expiredOffer.name,
+          const rejectedCampaigns =
+            await campaignService.getCampaignsByStatus("rejected", { skipCache: true });
+          if ("data" in rejectedCampaigns && rejectedCampaigns.data) {
+            rejectedCampaigns.data.forEach((campaign: any) => {
+              rejectedItems.push({
+                id: campaign.id,
+                name: campaign.name,
+                status: campaign.status || "rejected",
+                type: "campaign",
+                created_at: campaign.created_at,
               });
-            }
+            });
           }
         } catch (err) {
-          console.error("Failed to fetch expired offers:", err);
+          console.error("Failed to fetch rejected campaigns:", err);
         }
 
-        setRequiresAttentionData(results);
+        // Fetch rejected offers
+        try {
+          const rejectedOffers =
+            await offerService.getRejectedOffers({ skipCache: true });
+          if ("data" in rejectedOffers && rejectedOffers.data) {
+            rejectedOffers.data.forEach((offer: any) => {
+              rejectedItems.push({
+                id: offer.id,
+                name: offer.name,
+                status: offer.status || "rejected",
+                type: "offer",
+                created_at: offer.created_at,
+              });
+            });
+          }
+        } catch (err) {
+          console.error("Failed to fetch rejected offers:", err);
+        }
+
+        setRequiresAttentionData({
+          pending_approval: pendingApprovalItems,
+          rejected: rejectedItems,
+        });
       } finally {
         setRequiresAttentionLoading(false);
       }
@@ -1650,55 +1654,21 @@ export default function DashboardHome() {
     fetchRequiresAttentionData();
   }, []);
 
-  // CVM-relevant: Items requiring attention (fallback to dummy data if no real data)
-  const requiresAttention = requiresAttentionData.length > 0 
-    ? requiresAttentionData
-    : [
-    {
-      id: "1",
-      title: t.dashboard.pendingApproval,
-      description: "Q4 Customer Retention Campaign",
-      type: "campaign" as const,
-      action: t.dashboard.approve,
-      priority: "medium" as const,
-      count: 0,
-      itemId: 0,
-      itemName: "Q4 Customer Retention Campaign",
-    },
-    {
-      id: "2",
-      title: "Upcoming Offers",
-      description: "Black Friday 20% Discount",
-      type: "offer" as const,
-      action: t.dashboard.review,
-      priority: "medium" as const,
-      count: 0,
-      itemId: 0,
-      itemName: "Black Friday 20% Discount",
-    },
-    {
-      id: "3",
-      title: "Expired Offers",
-      description: "Summer Flash Sale",
-      type: "offer" as const,
-      action: t.dashboard.review,
-      priority: "medium" as const,
-      count: 0,
-      itemId: 0,
-      itemName: "Summer Flash Sale",
-    },
-    {
-      id: "4",
-      title: "Segments Pending",
-      description: "High-Value Customers Segment",
-      type: "segment" as const,
-      action: t.dashboard.review,
-      priority: "medium" as const,
-      count: 0,
-      itemId: 0,
-      itemName: "High-Value Customers Segment",
-    },
-  ];
+  // Get filtered data for requires attention section
+  const getRequiresAttentionItems = (): AttentionItem[] => {
+    if (requiresAttentionFilter === "all") {
+      return [
+        ...requiresAttentionData.pending_approval,
+        ...requiresAttentionData.rejected,
+      ].slice(0, 5);
+    } else if (requiresAttentionFilter === "pending_approval") {
+      return requiresAttentionData.pending_approval.slice(0, 5);
+    } else {
+      return requiresAttentionData.rejected.slice(0, 5);
+    }
+  };
+
+  const requiresAttentionItems = getRequiresAttentionItems();
 
   const quickActions = [
     {
@@ -2645,80 +2615,116 @@ export default function DashboardHome() {
         </div>
         {/* Requires Attention */}
         <div className={`bg-white ${tw.rounded} border border-gray-200 overflow-hidden self-start`}>
-          <div className="px-6 py-4 border-b border-gray-100">
-            <h2 className={tw.cardHeading}>{t.dashboard.requiresAttention}</h2>
-            <p className={`${tw.cardSubHeading} text-black mt-1`}>
-              {t.dashboard.actionItemsNeedReview}
-            </p>
-          </div>
-          <div className="p-6 space-y-4">
-            {requiresAttentionLoading ? (
-              <div className="text-center py-8">
-                <div className="inline-block">
-                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-400"></div>
-                </div>
-              </div>
-            ) : requiresAttention.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <p>{t.dashboard.allCaughtUp || "All caught up! No items requiring attention."}</p>
-              </div>
-            ) : (
-              requiresAttention.map((item) => (
-                <div
-                  key={item.id}
-                  className={`${tw.rounded} p-5 border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer`}
+          <div className="px-6 py-4 border-b border-gray-100 space-y-3">
+            <div>
+              <h2 className={tw.cardHeading}>
+                {t.dashboard.requiresAttention}
+              </h2>
+              <p className={`${tw.cardSubHeading} text-black mt-1`}>
+                {t.dashboard.actionItemsNeedReview}
+              </p>
+            </div>
+
+            {/* Filter Tabs - Below Description */}
+            <div className="flex gap-2">
+              {[
+                { key: "all", label: "All" },
+                { key: "pending_approval", label: "Pending Approval" },
+                { key: "rejected", label: "Rejected" },
+              ].map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() =>
+                    setRequiresAttentionFilter(
+                      tab.key as "all" | "pending_approval" | "rejected"
+                    )
+                  }
+                  className={`px-4 py-2 ${tw.rounded} text-sm font-medium transition-all ${
+                    requiresAttentionFilter === tab.key
+                      ? "bg-gray-900 text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <p className="font-semibold text-base text-black">
-                          {item.title}
-                        </p>
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium border ${
-                            item.priority === "high"
-                              ? "bg-red-100 text-red-700 border-red-200"
-                              : "bg-yellow-100 text-yellow-700 border-yellow-200"
-                          }`}
-                        >
-                          {item.count > 0 ? `${item.count} item${item.count !== 1 ? 's' : ''}` : 'No items'}
-                        </span>
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium border text-white`}
-                          style={{
-                            backgroundColor: color.primary.accent,
-                            borderColor: color.primary.accent,
-                          }}
-                        >
-                          {item.priority === "high"
-                            ? t.dashboard.priorityHigh
-                            : t.dashboard.priorityMedium}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-700 mb-2 font-medium">
-                        {item.itemName}
-                      </p>
-                      <button
-                        className="text-sm font-medium hover:opacity-80 transition-opacity"
-                        style={{ color: "#2563eb" }}
-                        onClick={() => {
-                          // Navigate based on type
-                          if (item.type === "campaign") {
-                            navigate(`/dashboard/campaigns/${item.itemId}`);
-                          } else if (item.type === "offer") {
-                            navigate(`/dashboard/offers/${item.itemId}`);
-                          } else if (item.type === "segment") {
-                            navigate(`/dashboard/segments/${item.itemId}`);
-                          }
-                        }}
-                      >
-                        {item.action} →
-                      </button>
-                    </div>
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="p-6">
+            <div className="space-y-4">
+              {/* Loading State */}
+              {requiresAttentionLoading && (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-600"></div>
+                  <span className="ml-3 text-sm text-gray-500">
+                    {t.dashboard.loading}...
+                  </span>
+                </div>
+              )}
+
+              {/* Empty State */}
+              {!requiresAttentionLoading && requiresAttentionItems.length === 0 && (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <p className="text-sm text-gray-500">
+                      {t.dashboard.allCaughtUp || "All caught up! No items requiring attention."}
+                    </p>
                   </div>
                 </div>
-              ))
-            )}
+              )}
+
+              {/* Items List */}
+              {!requiresAttentionLoading &&
+                requiresAttentionItems.map((item) => {
+                  const Icon =
+                    item.type === "campaign"
+                      ? Target
+                      : item.type === "offer"
+                      ? Package
+                      : Users;
+
+                  return (
+                    <div
+                      key={`${item.type}-${item.id}`}
+                      className={`flex items-start gap-4 flex-wrap p-5 ${tw.rounded} border border-gray-200 cursor-pointer hover:bg-gray-100 transition-all group`}
+                      style={{ backgroundColor: color.surface.background }}
+                      onClick={() => {
+                        if (item.type === "campaign") {
+                          navigate(`/dashboard/campaigns/${item.id}`);
+                        } else if (item.type === "offer") {
+                          navigate(`/dashboard/offers/${item.id}`);
+                        } else if (item.type === "segment") {
+                          navigate(`/dashboard/segments/${item.id}`);
+                        }
+                      }}
+                    >
+                      <div
+                        className="p-2 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{
+                          backgroundColor: color.primary.accent,
+                        }}
+                      >
+                        <Icon className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2 min-w-0">
+                          <h3
+                            className="font-semibold text-base text-gray-900 truncate max-w-[60vw] sm:max-w-xs"
+                            title={item.name}
+                          >
+                            {item.name}
+                          </h3>
+                          <span className="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200 flex-shrink-0">
+                            {item.status}
+                          </span>
+                        </div>
+                      </div>
+                      <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-gray-600 flex-shrink-0 self-start" />
+                    </div>
+                  );
+                })}
+            </div>
           </div>
         </div>
       </div>

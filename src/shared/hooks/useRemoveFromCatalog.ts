@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useConfirm } from "../../contexts/ConfirmContext";
+import { extractBackendError } from "../utils/errorHandler";;;
 import { useToast } from "../../contexts/ToastContext";
 import { buildCatalogTag } from "../utils/catalogTags";
 

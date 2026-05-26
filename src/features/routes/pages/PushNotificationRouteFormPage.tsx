@@ -11,6 +11,7 @@ import { pushNotificationRouteService } from "../services/pushNotificationRouteS
 import { pushGatewayConfigService } from "../../configurations/services/pushGatewayConfigService";
 import { PUSH_PLATFORM_OPTIONS, PRIORITY_LEVEL_OPTIONS } from "../constants/pushNotificationRouteEnums";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw } from "../../../shared/utils/utils";
 
 const STATUS_OPTIONS = [
@@ -106,7 +107,7 @@ export default function PushNotificationRouteFormPage({ mode }: PushNotification
         });
       }
     } catch (err) {
-      showError("Error", "Failed to load push notification route");
+      showError("Error", extractBackendError(error, "Error. Please try again."));
       navigate("/dashboard/push-notification-routes");
     } finally {
       setLoading(false);
@@ -150,7 +151,7 @@ export default function PushNotificationRouteFormPage({ mode }: PushNotification
       navigate("/dashboard/push-notification-routes");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to save route";
-      showError("Error", errorMessage);
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setSaving(false);
     }

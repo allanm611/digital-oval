@@ -22,6 +22,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import Pagination from "../../../shared/components/ui/Pagination";
@@ -226,7 +227,7 @@ export default function ProductsPage() {
       }
     } catch (err) {
       console.error("Failed to update product status:", err);
-      showError("Failed to update product status", "Please try again later.");
+      showError("Failed to update product status", extractBackendError(error, "Failed to update product status. Please try again."));
       // Revert optimistic update on error
       setProducts(
         products.map((p) =>
@@ -270,7 +271,7 @@ export default function ProductsPage() {
           : null) ||
         "Failed to delete product. Please try again.";
       // Bypass silent mode for delete operations to always show error
-      showError("Cannot Delete Product", errorMessage, true);
+      showError("Cannot Delete Product", extractBackendError(error, "Cannot Delete Product. Please try again."));
     } finally {
       setIsDeleting(false);
     }

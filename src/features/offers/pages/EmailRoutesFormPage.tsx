@@ -5,8 +5,9 @@ import Input from "../../../shared/components/ui/Input";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { hardcodedEmailRoutes } from "../../configurations/configs/configurationPageConfigs";
 import { emailGatewayConfigService } from "../../configurations/services/emailGatewayConfigService";
@@ -286,7 +287,8 @@ export default function EmailRoutesFormPage() {
           <button
             type="button"
             onClick={() => navigate("/dashboard/email-routes")}
-            className={`px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 ${tw.rounded} transition-colors`}
+            className="transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80"
+            style={getButtonStyles(button.bordered)}
           >
             Cancel
           </button>

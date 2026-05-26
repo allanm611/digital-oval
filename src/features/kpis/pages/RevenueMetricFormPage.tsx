@@ -8,6 +8,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { RevenueMetric, RevenueMetricOperator } from "../types/revenueMetrics";
 import { revenueMetricService } from "../services/revenueMetricService";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw } from "../../../shared/utils/utils";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 
@@ -100,7 +101,7 @@ export default function RevenueMetricFormPage({ mode }: RevenueMetricFormPagePro
         });
       }
     } catch (err) {
-      showError("Error", "Failed to load revenue metric");
+      showError("Error", extractBackendError(error, "Error. Please try again."));
       navigate("/dashboard/kpis/revenue-metrics");
     } finally {
       setLoading(false);
@@ -174,7 +175,7 @@ export default function RevenueMetricFormPage({ mode }: RevenueMetricFormPagePro
       navigate("/dashboard/kpis/revenue-metrics");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to save metric";
-      showError("Error", errorMessage);
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setSaving(false);
     }

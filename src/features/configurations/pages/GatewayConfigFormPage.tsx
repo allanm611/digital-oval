@@ -4,6 +4,7 @@ import { Save } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw } from "../../../shared/utils/utils";
 import { buildApiUrl, getAuthHeaders } from "../../../shared/services/api";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -74,7 +75,7 @@ export default function GatewayConfigFormPage({ mode }: GatewayConfigFormPagePro
       }));
       setChannelOptions(options);
     } catch (err) {
-      showError("Failed to load communication channels");
+      showError(extractBackendError(error, "Failed to load communication channels. Please try again."));
     }
   };
 
@@ -124,7 +125,7 @@ export default function GatewayConfigFormPage({ mode }: GatewayConfigFormPagePro
       showError("Configuration not found");
       navigate("/dashboard/gateway-configurations");
     } catch (err) {
-      showError("Failed to load configuration");
+      showError(extractBackendError(error, "Failed to load configuration. Please try again."));
       navigate("/dashboard/gateway-configurations");
     } finally {
       setIsLoading(false);
@@ -180,10 +181,7 @@ export default function GatewayConfigFormPage({ mode }: GatewayConfigFormPagePro
       );
       navigate("/dashboard/gateway-configurations");
     } catch (err) {
-      showError(
-        "Error",
-        `Failed to ${mode === "edit" ? "update" : "create"} gateway configuration`
-      );
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setIsSaving(false);
     }

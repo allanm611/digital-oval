@@ -18,6 +18,7 @@ import CreateButton from "../../../shared/components/ui/CreateButton";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -157,7 +158,7 @@ export default function ProgramsPage() {
       setPrograms(response.data || []);
     } catch (err) {
       console.error("Failed to load programs:", err);
-      showError("Failed to load programs");
+      showError(extractBackendError(error, "Failed to load programs. Please try again."));
       setPrograms([]);
     } finally {
       setLoading(false);
@@ -212,7 +213,7 @@ export default function ProgramsPage() {
       await loadStats();
     } catch (err) {
       console.error("Failed to delete program:", err);
-      showError("Failed to delete program", "Please try again later.");
+      showError("Failed to delete program", extractBackendError(error, "Failed to delete program. Please try again."));
     } finally {
       setIsDeleting(false);
     }
@@ -292,7 +293,7 @@ export default function ProgramsPage() {
     } catch (err) {
       console.error("Failed to save program:", err);
       const errorMessage = err instanceof Error ? err.message : "Please try again later.";
-      showError("Failed to save program", errorMessage);
+      showError("Failed to save program", extractBackendError(error, "Failed to save program. Please try again."));
     } finally {
       setIsSaving(false);
     }

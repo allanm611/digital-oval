@@ -7,7 +7,7 @@ import { productService } from "../services/productService";
 import ProductForm from "../components/ProductForm";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
-import { extractBackendError } from "../../../shared/utils/errorHandler";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -101,24 +101,16 @@ export default function EditProductPage() {
       const productData = response.data;
       setProduct(productData);
 
-      // Populate form with existing data based on API response structure
-      // Map unit_of_measure back to unit if backend returns it
-      const unitFromBackend =
-        (productData as unknown as { unit_of_measure?: string })
-          .unit_of_measure ||
-        productData.unit ||
-        "data_mb";
+      const unitFromBackend = (productData as any).unit_of_measure || (productData as any).unit || "";
+      const valueFromBackend = (productData as any).value ?? (productData.metadata?.value as any) ?? 0;
 
-      // Extract combo_data from metadata if it exists
       const comboDataFromMetadata = productData.metadata?.combo_data as
         | { resources: unknown[]; shared_validity?: boolean; shared_validity_hours?: number }
         | undefined;
 
-      // Handle tags - they might come as a string (JSON array) or as an array
       let tagsArray: string[] = [];
       if (productData.tags) {
         if (typeof productData.tags === "string") {
-          // If tags is a stringified JSON array, parse it
           try {
             tagsArray = JSON.parse(productData.tags);
             if (!Array.isArray(tagsArray)) {
@@ -128,7 +120,6 @@ export default function EditProductPage() {
             tagsArray = [];
           }
         } else if (Array.isArray(productData.tags)) {
-          // If tags is already an array, map it to ensure all are strings
           tagsArray = productData.tags.map((tag: any) =>
             typeof tag === "string" ? tag : (tag?.name || String(tag))
           );
@@ -146,7 +137,7 @@ export default function EditProductPage() {
         currency: productData.currency || "KES",
         scope: productData.scope || "segment",
         unit: unitFromBackend as ProductUnit,
-        unit_value: productData.unit_value ?? 0,
+        unit_value: valueFromBackend,
         validity_hours: productData.validity_hours || (productData.validity_days ? productData.validity_days * 24 : undefined),
         combo_data: comboDataFromMetadata,
         tags: tagsArray,
@@ -173,42 +164,14 @@ export default function EditProductPage() {
     try {
       setIsLoading(true);
 
-      // Map unit to unit_of_measure and exclude backend-unsupported fields
-      // Backend doesn't accept: unit, unit_value, combo_data, validity_hours
-      // Note: product_type_id is sent to backend as-is
-      const {
-        unit,
-        unit_value,
-        combo_data,
-        validity_hours,
-        ...updateData
-      } = formData;
+      const { unit, unit_value, combo_data, ...baseData } = formData;
 
-      // Prepare update data with unit_of_measure and validity_hours for backend
-      const finalUpdateData: typeof updateData & {
-        unit_of_measure?: string;
-        resources?: any[];
-        validity_hours?: number;
-      } = {
-        ...updateData,
-      };
+      const finalUpdateData: any = { ...baseData };
 
-
-      // Pass validity_hours for update endpoint
-      if (validity_hours && validity_hours > 0) {
-        finalUpdateData.validity_hours = validity_hours;
-      }
-
-      // Map unit to unit_of_measure if unit is provided
-      if (unit) {
-        finalUpdateData.unit_of_measure = unit;
-      }
-
-
-      // For combo products, send resources from combo_data
-      if (combo_data && combo_data.resources.length > 0) {
-        finalUpdateData.resources = combo_data.resources;
-      }
+      if (unit) finalUpdateData.unit_of_measure = unit;
+      if (unit_value && unit_value > 0) finalUpdateData.value = unit_value;
+      if (formData.validity_hours && formData.validity_hours > 0) finalUpdateData.validity_hours = formData.validity_hours;
+      if (combo_data?.resources?.length) finalUpdateData.resources = combo_data.resources;
 
       // CRITICAL: Ensure tags is ALWAYS an array, NEVER a string
       // This is the most important fix - tags MUST be an array for the backend

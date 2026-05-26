@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { segmentTypeService } from "../services/segmentTypeService";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useAuth } from "../../../contexts/AuthContext";
 import ModalFooter from "../../../shared/components/ui/ModalFooter";
 
@@ -56,10 +57,7 @@ export default function CreateSegmentTypeModal({
       }
     } catch (err) {
       console.error("Failed to create segment type:", err);
-      showError(
-        "Error",
-        err instanceof Error ? err.message : "Failed to create segment type"
-      );
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsCreating(false);
     }

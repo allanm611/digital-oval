@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Plus, Star, Users, Trash2, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -95,7 +96,7 @@ export default function VIPListManagementPage() {
       setLoading(false);
     } catch (error) {
       console.error("Failed to fetch VIP lists:", error);
-      showError("Failed to fetch VIP lists");
+      showError(extractBackendError(error, "Failed to fetch VIP lists. Please try again."));
       setVipLists([]);
       setLoading(false);
     }
@@ -119,7 +120,7 @@ export default function VIPListManagementPage() {
       setVipCustomers(allMembers);
     } catch (error) {
       console.error("Failed to fetch VIP members:", error);
-      showError("Failed to fetch VIP members");
+      showError(extractBackendError(error, "Failed to fetch VIP members. Please try again."));
       setVipCustomers([]);
     } finally {
       setLoading(false);
@@ -277,7 +278,7 @@ export default function VIPListManagementPage() {
       );
       await loadAllMembers();
     } catch (error) {
-      showError("Failed to add members");
+      showError(extractBackendError(error, "Failed to add members. Please try again."));
       throw error;
     } finally {
       setIsAddingMembers(false);
@@ -292,7 +293,7 @@ export default function VIPListManagementPage() {
       setListMembers(Array.isArray(members) ? members : []);
       setIsListMembersModalOpen(true);
     } catch (error) {
-      showError("Failed to fetch list members");
+      showError(extractBackendError(error, "Failed to fetch list members. Please try again."));
       console.error("Error fetching members:", error);
     } finally {
       setIsLoadingListMembers(false);

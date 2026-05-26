@@ -18,6 +18,7 @@ import { color, tw, button } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Pagination from "../../../shared/components/ui/Pagination";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { controlGroupService } from "../services/controlGroupService";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import type { ControlGroupApiModel, ControlGroupStatistics } from "../types/controlGroup";
@@ -66,7 +67,7 @@ export default function ControlGroupsPage() {
       setTotalCount(groupsResponse.total_count || 0);
       setStatistics(statsResponse);
     } catch (error) {
-      showError("Failed to load control groups");
+      showError(extractBackendError(error, "Failed to load control groups. Please try again."));
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -94,7 +95,7 @@ export default function ControlGroupsPage() {
       setShowDeleteModal(false);
       setGroupToDelete(null);
     } catch (error) {
-      showError("Failed to delete control group");
+      showError(extractBackendError(error, "Failed to delete control group. Please try again."));
       console.error(error);
     } finally {
       setIsDeleting(null);

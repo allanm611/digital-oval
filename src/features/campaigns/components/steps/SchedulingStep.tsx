@@ -24,6 +24,7 @@ export default function SchedulingStep({
     setFormData({
       ...formData,
       scheduling: scheduling as any, // Keep campaign's scheduling type
+      timezone: scheduling.time_zone || formData.timezone, // Sync root-level timezone with scheduling timezone
     });
   };
 

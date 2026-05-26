@@ -25,25 +25,27 @@ export default function ScheduleStep({
     start_date: data.scheduleDate
       ? `${data.scheduleDate}T${data.scheduleTime || "00:00"}`
       : undefined,
-    time_zone: getSettingsTimezone(),
+    time_zone: (data as any).scheduleTimezone || getSettingsTimezone(),
   };
 
   const handleSchedulingChange = (scheduling: SchedulingData) => {
     // Convert back from generic format to manual broadcast format
+    const updates: Partial<ManualBroadcastData> = {
+      scheduleTimezone: scheduling.time_zone,
+    };
+
     if (scheduling.start_date) {
       const [date, time] = scheduling.start_date.split("T");
-      onUpdate({
-        scheduleType: scheduling.type === "immediate" ? "now" : "later",
-        scheduleDate: date,
-        scheduleTime: time || "00:00",
-      });
+      updates.scheduleType = scheduling.type === "immediate" ? "now" : "later";
+      updates.scheduleDate = date;
+      updates.scheduleTime = time || "00:00";
     } else {
-      onUpdate({
-        scheduleType: "now",
-        scheduleDate: undefined,
-        scheduleTime: undefined,
-      });
+      updates.scheduleType = "now";
+      updates.scheduleDate = undefined;
+      updates.scheduleTime = undefined;
     }
+
+    onUpdate(updates);
   };
 
   return (

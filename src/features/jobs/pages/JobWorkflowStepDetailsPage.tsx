@@ -18,6 +18,7 @@ import {
 } from "../types/jobWorkflowStep";
 import { ScheduledJob } from "../types/scheduledJob";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useAuth } from "../../../contexts/AuthContext";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -119,7 +120,7 @@ export default function JobWorkflowStepDetailsPage() {
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to load workflow step";
-        showError("Error", message);
+        showError("Error", extractBackendError(error, "Error. Please try again."));
       } finally {
         setIsLoading(false);
       }
@@ -145,7 +146,7 @@ export default function JobWorkflowStepDetailsPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to delete step";
-      showError("Error", message);
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setIsDeleting(false);
       setShowDeleteModal(false);
@@ -169,7 +170,7 @@ export default function JobWorkflowStepDetailsPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to duplicate step";
-      showError("Error", message);
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setIsDuplicating(false);
     }
@@ -190,7 +191,7 @@ export default function JobWorkflowStepDetailsPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to activate step";
-      showError("Error", message);
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setIsToggling(false);
     }
@@ -214,7 +215,7 @@ export default function JobWorkflowStepDetailsPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to deactivate step";
-      showError("Error", message);
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setIsToggling(false);
     }

@@ -3579,6 +3579,17 @@ export function getPolicyTypesApiConfig(
     deleteErrorMessage: "Failed to delete policy type",
     saveErrorMessage: "Please try again later.",
     enableActivateDeactivate: true,
+    metadataFields: [
+      {
+        label: "Code",
+        key: "code",
+        type: "text",
+        required: true,
+        placeholder: "Enter policy type code",
+        row: 0,
+        column: 1,
+      },
+    ],
   } as APIConfigurationPageConfig;
 }
 

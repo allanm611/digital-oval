@@ -18,6 +18,7 @@ import {
   CommunicationChannel,
 } from "../../communications/types/communication";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import DateFormatter from "../../../shared/components/DateFormatter";
 
 export default function BroadcastDetailsPage() {
@@ -51,7 +52,7 @@ export default function BroadcastDetailsPage() {
         }
       } catch (err) {
         console.error("Failed to load broadcast details:", err);
-        showError("Failed to load broadcast details");
+        showError(extractBackendError(error, "Failed to load broadcast details. Please try again."));
       } finally {
         setLoading(false);
       }
@@ -209,37 +210,49 @@ export default function BroadcastDetailsPage() {
       <div
         className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
       >
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+        <h2 className="text-sm font-semibold text-gray-900 mb-4">
           Execution Information
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <div>
             <p className="text-sm font-medium text-gray-600">Source Type</p>
-            <p className="mt-1 text-base text-gray-900 capitalize">
+            <p className="mt-1 text-sm text-gray-900 capitalize">
               {execution.source_type}
             </p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-600">Source Name</p>
-            <p className="mt-1 text-base text-gray-900">
+            <p className="mt-1 text-sm text-gray-900">
               {execution.source_name || "-"}
             </p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-600">Source ID</p>
-            <p className="mt-1 text-base text-gray-900">
-              {execution.source_id || "-"}
-            </p>
+            {execution.source_type === "quicklist" && execution.source_id ? (
+              <button
+                onClick={() =>
+                  navigate(`/dashboard/quick-lists/${execution.source_id}`)
+                }
+                className="mt-1 text-sm hover:underline transition-colors"
+                style={{ color: color.primary.accent }}
+              >
+                {execution.source_id}
+              </button>
+            ) : (
+              <p className="mt-1 text-sm text-gray-900">
+                {execution.source_id || "-"}
+              </p>
+            )}
           </div>
           <div>
             <p className="text-sm font-medium text-gray-600">Execution Time</p>
-            <p className="mt-1 text-base text-gray-900">
+            <p className="mt-1 text-sm text-gray-900">
               {execution.execution_time_ms}ms
             </p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-600">Created At</p>
-            <p className="mt-1 text-base text-gray-900">
+            <p className="mt-1 text-sm text-gray-900">
               <DateFormatter date={execution.created_at} useUserTimezone includeTime />
             </p>
           </div>
@@ -250,7 +263,7 @@ export default function BroadcastDetailsPage() {
       <div
         className={`${tw.rounded} py-6`}
       >
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+        <h2 className="text-sm font-semibold text-gray-900 mb-4">
           Recent Logs ({logs.length})
         </h2>
 

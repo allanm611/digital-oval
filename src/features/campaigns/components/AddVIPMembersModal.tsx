@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { X, Loader } from "lucide-react";
 import { ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import { Popover } from "@headlessui/react";
 import { customerService } from "../../customers360/services/customerServices";
@@ -123,7 +123,7 @@ export default function AddVIPMembersModal({
   const handleToggleCustomer = (customer: Customer) => {
     if (!selectedVIPListId) return;
 
-    const customerId = getCustomerId(customer);
+    const customerId = Number(getCustomerId(customer));
     const isSelected = selectedMembers.some(
       (m) =>
         m.customer_id === customerId &&
@@ -195,11 +195,15 @@ export default function AddVIPMembersModal({
     }
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (onAdd && selectedMembersForCurrentList.length > 0) {
-      onAdd(selectedMembersForCurrentList);
+      try {
+        await onAdd(selectedMembersForCurrentList);
+        handleClose();
+      } catch (error) {
+        console.error("Failed to add members:", error);
+      }
     }
-    handleClose();
   };
 
   const handleClose = () => {
@@ -519,7 +523,7 @@ export default function AddVIPMembersModal({
                 selectedMembersForCurrentList.length === 0 ||
                 isLoading
               }
-              className={`px-5 py-2 ${tw.rounded} text-sm font-medium transition-opacity ${
+              className={`px-5 py-2 ${tw.rounded} text-sm font-medium transition-opacity flex items-center gap-2 ${
                 !hasSelectedVIPList ||
                 selectedMembersForCurrentList.length === 0 ||
                 isLoading
@@ -536,6 +540,7 @@ export default function AddVIPMembersModal({
                 color: "white",
               }}
             >
+              {isLoading && <Loader className="h-4 w-4 animate-spin" />}
               {hasSelectedVIPList
                 ? `Add ${selectedMembersForCurrentList.length > 0 ? `(${selectedMembersForCurrentList.length}) ` : ""}Members to ${selectedVIPList?.name || "VIP List"}`
                 : "Select VIP List First"}

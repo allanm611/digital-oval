@@ -316,7 +316,15 @@ export default function MultiCategorySelector({
         {allowCreate && (
           <button
             type="button"
-            onClick={onCreateCategory ? onCreateCategory : handleCreateNew}
+            onClick={() => {
+              if (onCreateCategory) {
+                onCreateCategory();
+              } else {
+                handleCreateNew();
+              }
+              setIsOpen(false);
+              setSearchTerm("");
+            }}
             className="px-3 py-2 text-white rounded-r-md flex items-center justify-center text-sm border-l-0"
             style={{
               backgroundColor: color.primary.action,
@@ -401,10 +409,16 @@ export default function MultiCategorySelector({
                   <div className="border-t border-gray-200">
                     <button
                       type="button"
-                      onClick={
-                        onCreateCategory ? onCreateCategory : handleCreateNew
-                      }
-                      className="w-full px-4 py-2 text-left text-sm text-blue-600 hover:bg-blue-50 flex items-center"
+                      onClick={() => {
+                        if (onCreateCategory) {
+                          onCreateCategory();
+                        } else {
+                          handleCreateNew();
+                        }
+                        setIsOpen(false);
+                        setSearchTerm("");
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-gray-900 hover:bg-gray-50 flex items-center"
                     >
                       <Plus className="w-4 h-4 mr-2" />
                       Create new catalog

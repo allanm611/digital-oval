@@ -12,6 +12,7 @@ import {
   YAxis,
 } from "recharts";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import {
   Activity,
   ArrowUpRight,

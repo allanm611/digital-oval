@@ -12,6 +12,7 @@ import { convertConditionsToPayload } from "../../segments/utils/conditionPayloa
 import SchedulingComponent from "../../../shared/components/SchedulingComponent";
 import type { SchedulingData } from "../../../shared/types/scheduling";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import Radio from "../../../shared/components/ui/Radio";
 import { controlGroupService } from "../services/controlGroupService";
 import type { CreateControlGroupRequest, TargetRenderTime } from "../types/controlGroup";
@@ -87,7 +88,7 @@ export default function CreateControlGroupPage() {
       }
     } catch (error) {
       console.error("Failed to load control group:", error);
-      showError("Failed to load control group data");
+      showError(extractBackendError(error, "Failed to load control group data. Please try again."));
       navigate("/dashboard/control-groups");
     } finally {
       setIsLoading(false);

@@ -3,6 +3,7 @@ import Input from '../../../shared/components/ui/Input';
 import { useNavigate, useParams } from "react-router-dom";
 import { Save } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import {
   creativeTemplateService,
   type ChannelEnum,
@@ -104,10 +105,7 @@ export default function CreativeTemplateFormPage() {
           template?.variables ? JSON.stringify(template.variables, null, 2) : "",
         );
       } catch (err) {
-        showError(
-          "Error",
-          err instanceof Error ? err.message : "Failed to load template",
-        );
+        showError("Error", extractBackendError(error, "Error. Please try again."));
         navigate("/dashboard/creative-templates");
       } finally {
         setLoading(false);
@@ -175,10 +173,7 @@ export default function CreativeTemplateFormPage() {
 
       navigate("/dashboard/creative-templates");
     } catch (err) {
-      showError(
-        "Error",
-        err instanceof Error ? err.message : "Failed to save template",
-      );
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setSaving(false);
     }

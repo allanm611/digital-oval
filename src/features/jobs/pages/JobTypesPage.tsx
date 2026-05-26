@@ -16,6 +16,7 @@ import CreateButton from "../../../shared/components/ui/CreateButton";
 import Pagination from "../../../shared/components/ui/Pagination";
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import { jobTypeService } from "../services/jobTypeService";
@@ -445,7 +446,7 @@ export default function JobTypesPage() {
       const message =
         err instanceof Error ? err.message : "Failed to load job types";
       setLoadError(message);
-      showError("Unable to load job types", message);
+      showError("Unable to load job types", extractBackendError(error, "Unable to load job types. Please try again."));
     } finally {
       setIsLoading(false);
     }
@@ -473,7 +474,7 @@ export default function JobTypesPage() {
         const message =
           err instanceof Error ? err.message : "Failed to search job types";
         setLoadError(message);
-        showError("Unable to search job types", message);
+        showError("Unable to search job types", extractBackendError(error, "Unable to search job types. Please try again."));
       } finally {
         setIsSearching(false);
       }
@@ -613,17 +614,22 @@ export default function JobTypesPage() {
 
     try {
       setIsDeleting(true);
-      await jobTypeService.deleteJobType(deletingJobType.id);
       const deletedName =
         deletingJobType.name?.trim() || `Job Type #${deletingJobType.id}`;
+
+      setJobTypes((prev) =>
+        prev.filter((jt) => jt.id !== deletingJobType.id),
+      );
+
+      await jobTypeService.deleteJobType(deletingJobType.id);
       showToast("Job type deleted", `${deletedName} has been deleted`);
       setShowDeleteModal(false);
       setDeletingJobType(null);
-      await fetchJobTypes();
     } catch (err) {
+      await fetchJobTypes();
       const message =
         err instanceof Error ? err.message : "Failed to delete job type";
-      showError("Unable to delete job type", message);
+      showError("Unable to delete job type", extractBackendError(error, "Unable to delete job type. Please try again."));
     } finally {
       setIsDeleting(false);
     }
@@ -653,7 +659,7 @@ export default function JobTypesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to save job type";
-      showError("Unable to save job type", message);
+      showError("Unable to save job type", extractBackendError(error, "Unable to save job type. Please try again."));
       throw err;
     } finally {
       setIsSaving(false);

@@ -18,7 +18,7 @@ import SearchInput from "../../../shared/components/ui/SearchInput";
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { color, tw, button } from "../../../shared/utils/utils";
-import { extractBackendError } from "../../../shared/utils/errorHandler";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { zIndex } from "../../../shared/utils/tokens";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -312,7 +312,7 @@ function OffersModal({
     } catch (err) {
       console.error("Failed to load offers:", err);
       const errorMsg1 = extractBackendError(err, "Failed to load offers");
-      showError("Error", errorMsg1, true);
+      showError("Error", extractBackendError(error, "Error. Please try again."));
       setModalError("Failed to load offers. Please try again later.");
     } finally {
       setLoading(false);
@@ -831,7 +831,7 @@ function OfferCategoriesPage() {
     } catch (err) {
       console.error("Failed to load categories:", err);
       const errorMsg2 = extractBackendError(err, "Failed to load categories");
-      showError("Error", errorMsg2, true);
+      showError("Error", extractBackendError(error, "Error. Please try again."));
       setPageError("Failed to load offer catalogs. Please try again later.");
       setOfferCategories([]);
     } finally {
@@ -973,7 +973,7 @@ function OfferCategoriesPage() {
     } catch (err) {
       console.error("Failed to save category:", err);
       const errorMsg3 = extractBackendError(err, t.offerCatalogs.saveFailed);
-      showError("Error", errorMsg3, true);
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     }
   };
 

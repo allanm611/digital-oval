@@ -25,6 +25,8 @@ import { customerIdentityService } from "../../customerIdentity/services/custome
 import { CustomerIdentityField } from "../../customerIdentity/types/customerIdentity";
 import { convertConditionsToPayload } from "../utils/conditionPayloadBuilder";
 import { formatSQL } from "../utils/segmentConditionUtils";
+import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 
 interface SegmentModalProps {
   isOpen: boolean;
@@ -39,6 +41,7 @@ export default function SegmentModal({
   onSave,
   segment,
 }: SegmentModalProps) {
+  const { error: showError } = useToast();
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -274,6 +277,11 @@ export default function SegmentModal({
           // Clear existing queries for new segment
           setExistingQuery(null);
           setExistingCountQuery(null);
+          // Reset rule type and SQL query for new segment
+          setRuleType("rule");
+          setSqlQuery("");
+          setSqlPreviewResult(null);
+          setSqlPreviewError(null);
         }
         setFieldErrors({});
         // Reset modal states
@@ -300,6 +308,10 @@ export default function SegmentModal({
         });
         setFieldErrors({});
         setError("");
+        setRuleType("rule");
+        setSqlQuery("");
+        setSqlPreviewResult(null);
+        setSqlPreviewError(null);
       }
     };
 
@@ -794,64 +806,80 @@ export default function SegmentModal({
 
     setIsLoading(true);
     try {
-      if (ruleType === "sql") {
-        // Handle SQL mode - save directly with SQL query
-        const code = generateSegmentCode(formData.name);
+      // if (ruleType === "sql") {
+      //   // Handle SQL mode - save directly with SQL query
+      //   const code = generateSegmentCode(formData.name);
 
-        if (segment) {
-          // Update existing segment with SQL query
-          const updateResponse = await segmentService.updateSegment(segment.id!, {
-            name: formData.name,
-            description: formData.description,
-            tags: formData.tags,
-            segment_type_id: formData.segment_type_id,
-            category: formData.category,
-            sql_query: sqlQuery,
-            unique_identifier: formData.unique_identifier,
-          });
+      //   if (segment) {
+      //     // Update existing segment with SQL query
+      //     const updateResponse = await segmentService.updateSegment(segment.id!, {
+      //       name: formData.name,
+      //       description: formData.description,
+      //       tags: formData.tags,
+      //       segment_type_id: formData.segment_type_id,
+      //       category: formData.category,
+      //       sql_query: sqlQuery,
+      //       unique_identifier: formData.unique_identifier,
+      //     });
 
-          const savedSegment = Array.isArray(updateResponse.data)
-            ? updateResponse.data[0]
-            : updateResponse.data;
-          onSave(savedSegment);
-        } else {
-          // Create new segment with SQL query
-          const createResponse = await segmentService.createSegment({
-            name: formData.name,
-            description: formData.description,
-            tags: formData.tags,
-            segment_type_id: formData.segment_type_id,
-            category: Array.isArray(selectedCategoryIds)
-              ? selectedCategoryIds[0]
-              : selectedCategoryIds,
-            sql_query: sqlQuery,
-            unique_identifier: formData.unique_identifier,
-            code,
-          });
+      //     const savedSegment = Array.isArray(updateResponse.data)
+      //       ? updateResponse.data[0]
+      //       : updateResponse.data;
+      //     onSave(savedSegment);
+      //   } else {
+      //     // Create new segment with SQL query
+      //     const createResponse = await segmentService.createSegment({
+      //       name: formData.name,
+      //       description: formData.description,
+      //       tags: formData.tags,
+      //       segment_type_id: formData.segment_type_id,
+      //       category: Array.isArray(selectedCategoryIds)
+      //         ? selectedCategoryIds[0]
+      //         : selectedCategoryIds,
+      //       sql_query: sqlQuery,
+      //       unique_identifier: formData.unique_identifier,
+      //       code,
+      //     });
 
-          const savedSegment = Array.isArray(createResponse.data)
-            ? createResponse.data[0]
-            : createResponse.data;
-          onSave(savedSegment);
-        }
-      } else {
-        // Handle conditions mode (existing logic)
-        const queries = await generateQueryFromConditions();
+      //     const savedSegment = Array.isArray(createResponse.data)
+      //       ? createResponse.data[0]
+      //       : createResponse.data;
+      //     onSave(savedSegment);
+      //   }
+      // } else {
+      //   // Handle conditions mode (existing logic)
+      //   const queries = await generateQueryFromConditions();
 
-        if (!queries) {
-          setError("Failed to generate query from conditions");
-          setIsLoading(false);
-          return;
-        }
+      //   if (!queries) {
+      //     setError("Failed to generate query from conditions");
+      //     setIsLoading(false);
+      //     return;
+      //   }
 
-        // Store queries and show confirmation modal
-        setPendingQueries(queries);
-        setPreviewQuery(queries.segment_query);
-        setShowConfirmModal(true);
+      //   // Store queries and show confirmation modal
+      //   setPendingQueries(queries);
+      //   setPreviewQuery(queries.segment_query);
+      //   setShowConfirmModal(true);
+      // }
+
+      // Handle conditions mode (existing logic)
+      const queries = await generateQueryFromConditions();
+
+      if (!queries) {
+        setError("Failed to generate query from conditions");
+        setIsLoading(false);
+        return;
       }
+
+      // Store queries and show confirmation modal
+      setPendingQueries(queries);
+      setPreviewQuery(queries.segment_query);
+      setShowConfirmModal(true);
     } catch (err) {
       console.error("Failed to save segment:", err);
-      setError((err as Error).message || "Failed to save segment");
+      const errorMessage = extractBackendError(err, "Failed to save segment");
+      setError(errorMessage);
+      showError(errorMessage, "", true);
     } finally {
       setIsLoading(false);
     }
@@ -977,12 +1005,14 @@ export default function SegmentModal({
       onClose();
     } catch (err: unknown) {
       console.error("Failed to save segment:", err);
-      const message = (err as Error).message || "Failed to save segment";
+      const message = extractBackendError(err, "Failed to save segment");
       if (message.toLowerCase().includes("description")) {
         setFieldErrors({ description: message });
       } else {
         setError(message);
       }
+      // Show error toast to user
+      showError(message, "", true);
       setShowConfirmModal(false);
       setPendingQueries(null);
     } finally {
@@ -1075,7 +1105,8 @@ export default function SegmentModal({
                         entityType="segment"
                         refreshTrigger={categoryRefreshTrigger}
                         className="w-full"
-                        allowCreate={false}
+                        allowCreate={true}
+                        onCreateCategory={() => setShowCreateCatalogModal(true)}
                         onCategoryCreated={(categoryId) => {
                           isUserInteractionRef.current = true;
                           setSelectedCategoryIds([categoryId]);
@@ -1386,10 +1417,10 @@ export default function SegmentModal({
                 <button
                   type="submit"
                   form="segment-form"
-                  disabled={isLoading}
+                  disabled={isLoading || ruleType === "sql"}
                   className={`inline-flex items-center px-6 py-2 text-white ${tw.rounded} transition-colors text-sm`}
                   style={{
-                    backgroundColor: isLoading
+                    backgroundColor: isLoading || ruleType === "sql"
                       ? color.text.muted
                       : color.primary.action,
                   }}

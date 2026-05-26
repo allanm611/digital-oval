@@ -8,6 +8,7 @@ import {
   AlertTriangle,
   CheckCircle,
   Database,
+  Plus,
 } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -21,11 +22,13 @@ import { dataConnectorService } from "../services/dataConnectorService";
 import { connectionProfileService } from "../../connection-profiles/services/connectionProfileService";
 import { ConnectionProfileType } from "../../connection-profiles/types/connectionProfile";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { tw, color, button } from "../../../shared/utils/utils";
 import DataConnectorForm from "../components/DataConnectorForm";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { getConnectorDisplayName } from "../utils/connectorIcons";
+import SelectConnectionProfileModal from "../components/SelectConnectionProfileModal";
 
 export default function DataConnectorDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -51,6 +54,7 @@ export default function DataConnectorDetailsPage() {
   const [testResults, setTestResults] = useState<
     Record<number, ConnectionTestResult>
   >({});
+  const [showSelectProfileModal, setShowSelectProfileModal] = useState(false);
 
   const loadConnector = useCallback(async () => {
     if (!id) return;
@@ -86,10 +90,7 @@ export default function DataConnectorDetailsPage() {
       }
     } catch (err) {
       console.error("Failed to load data connector:", err);
-      showError(
-        "Failed to load data connector",
-        err instanceof Error ? err.message : "Please try again later.",
-      );
+      showError("Failed to load data connector", extractBackendError(error, "Failed to load data connector. Please try again."));
     } finally {
       setLoading(false);
       setLoadingProfiles(false);
@@ -146,7 +147,7 @@ export default function DataConnectorDetailsPage() {
         error_details: err.message || "Connection test error",
       };
       setTestResults((prev) => ({ ...prev, [profileId]: errorResult }));
-      showError("Test failed", err.message || "Connection test error");
+      showError("Test failed", extractBackendError(error, "Test failed. Please try again."));
     } finally {
       setTestingProfileId(null);
     }
@@ -161,7 +162,7 @@ export default function DataConnectorDetailsPage() {
       success("Deleted", "Connector removed");
       navigate("/dashboard/data-connectors");
     } catch (err: any) {
-      showError("Delete failed", err.message || "Could not delete connector");
+      showError("Delete failed", extractBackendError(error, "Delete failed. Please try again."));
     } finally {
       setIsDeleting(false);
     }
@@ -198,7 +199,44 @@ export default function DataConnectorDetailsPage() {
         setShowEditModal(false);
       }
     } catch (err: any) {
-      showError("Save failed", err.message || "Could not update connector");
+      showError("Save failed", extractBackendError(error, "Save failed. Please try again."));
+    }
+  };
+
+  const handleSelectConnectionProfile = async (
+    profile: ConnectionProfileType
+  ) => {
+    if (!connector) return;
+
+    try {
+      const payload: UpdateDataConnectorRequest = {
+        name: connector.name,
+        description: connector.description,
+        is_active: connector.is_active,
+        connection_profile_id: profile.id,
+      };
+
+      const updated = await dataConnectorService.updateDataConnector(
+        connector.id,
+        payload,
+      );
+
+      if (updated) {
+        setConnector(updated);
+        // Reload the attached connection profile
+        const updatedProfile = await connectionProfileService.getProfile(
+          profile.id,
+          true
+        );
+        setConnectionProfiles([updatedProfile]);
+        success("Success", `Connected profile "${profile.profile_name}"`);
+        setShowSelectProfileModal(false);
+      }
+    } catch (err: any) {
+      showError(
+        "Failed to connect profile",
+        err.message || "Could not link connection profile"
+      );
     }
   };
 
@@ -504,9 +542,19 @@ export default function DataConnectorDetailsPage() {
 
       {/* Connection Profiles - Full Width */}
       <div>
-        <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>
-          Connection Profiles
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className={`text-sm font-semibold ${tw.textPrimary}`}>
+            Connection Profiles
+          </h3>
+          <button
+            onClick={() => setShowSelectProfileModal(true)}
+            className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors hover:opacity-90`}
+            style={{ backgroundColor: color.primary.action }}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Connection Profile
+          </button>
+        </div>
         {loadingProfiles ? (
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
@@ -656,6 +704,15 @@ export default function DataConnectorDetailsPage() {
         isOpen={showEditModal}
         onClose={handleFormClose}
         onSave={handleFormSave}
+      />
+
+      {/* Select Connection Profile Modal */}
+      <SelectConnectionProfileModal
+        isOpen={showSelectProfileModal}
+        onClose={() => setShowSelectProfileModal(false)}
+        onSelect={handleSelectConnectionProfile}
+        dataConnectorType={connector.type}
+        currentProfileId={connectionProfiles[0]?.id}
       />
     </div>
   );

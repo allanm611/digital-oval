@@ -537,7 +537,7 @@ export const buttons = {
     background: "transparent",
     color: colors.primary.action,
     border: `1px solid ${colors.primary.action}`,
-    paddingY: "0.625rem", // py-2.5
+    paddingY: "0.5rem", // py-2
     paddingX: "1rem", // px-4
     borderRadius: "0.375rem", // rounded-md
     fontSize: "0.875rem", // text-sm (14px)

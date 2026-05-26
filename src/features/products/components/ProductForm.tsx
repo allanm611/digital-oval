@@ -457,8 +457,23 @@ export default function ProductForm({
     );
   };
 
+  const unitEnumOptions: { label: string; value: ProductUnit }[] = [
+    { label: "Data (MB)", value: "data_mb" },
+    { label: "SMS Count", value: "sms_count" },
+    { label: "Airtime", value: "airtime" },
+    { label: "Onnet Minutes", value: "onnet_minutes" },
+    { label: "Offnet Minutes", value: "offnet_minutes" },
+    { label: "Allnet Minutes", value: "allnet_minutes" },
+    { label: "Roaming Data (MB)", value: "roaming_data_mb" },
+    { label: "Roaming Minutes", value: "roaming_minutes" },
+    { label: "Roaming SMS Count", value: "roaming_sms_count" },
+    { label: "Utility", value: "utility" },
+    { label: "Points", value: "points" },
+    { label: "Other", value: "other" },
+  ];
+
   const currentUnitLabel =
-    resourceTypeOptions.find((option) => option.value === formData.unit)?.label ||
+    unitEnumOptions.find((option) => option.value === formData.unit)?.label ||
     "Value";
 
   const scopeOptions: { label: string; value: ProductScope }[] = [
@@ -1825,7 +1840,7 @@ export default function ProductForm({
               </div>
             )}
 
-            {/* Scope & Unit (Not sent to backend - for future use) */}
+            {/* Scope & Unit */}
             <div className="grid gap-5 md:grid-cols-2">
               <div>
                 <label
@@ -1851,24 +1866,17 @@ export default function ProductForm({
               {!isComboType && (
                 <div>
                   <label
-                    className={`block text-sm font-medium ${tw.textPrimary} mb-2 flex items-center gap-2 group`}
+                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
                   >
                     Unit
-                    <HelpCircle
-                      className="w-4 h-4 text-gray-400 cursor-help opacity-0 group-hover:opacity-100 transition-opacity"
-                      aria-label="Unit defines the measurement type for this product (e.g., Data in MB, SMS count, Airtime, Minutes, etc.)"
-                    />
                   </label>
                   <HeadlessSelect
-                    options={resourceTypeOptions.map((opt) => ({
-                      value: opt.value,
-                      label: opt.label,
-                    }))}
-                    value={formData.unit || resourceTypeOptions[0]?.value || ""}
+                    options={unitEnumOptions}
+                    value={formData.unit || ""}
                     onChange={(value) =>
                       onInputChange("unit", value as ProductUnit)
                     }
-                    placeholder="Select resource type"
+                    placeholder="Select unit"
                     className="w-full"
                     zIndex={zIndex.popover}
                   />
@@ -1876,7 +1884,7 @@ export default function ProductForm({
               )}
             </div>
 
-            {/* Value & Validity (Not sent to backend - for future use) */}
+            {/* Value & Validity */}
             {!isComboType && (
               <div className="grid gap-5 md:grid-cols-2">
                 <div>
@@ -1906,13 +1914,9 @@ export default function ProductForm({
 
                 <div>
                   <label
-                    className={`block text-sm font-medium ${tw.textPrimary} mb-2 flex items-center gap-2 group`}
+                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
                   >
                     Validity (Hours)
-                    <HelpCircle
-                      className="w-4 h-4 text-gray-400 cursor-help opacity-0 group-hover:opacity-100 transition-opacity"
-                      aria-label="Validity period specifies how long the product remains active after purchase (e.g., 24 hours = product expires 24 hours after activation). This should be set together with the Value field."
-                    />
                   </label>
                   <Input type="number"
                     min="1"

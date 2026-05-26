@@ -2,8 +2,9 @@ import { useState } from "react";
 import Input from "./ui/Input";
 import { X } from "lucide-react";
 import { productCategoryService } from "../../features/products/services/productCategoryService";
-import { color, tw, zIndex } from "../utils/utils";
+import { color, tw, zIndex, button, getButtonStyles } from "../utils/utils";
 import { useToast } from "../../contexts/ToastContext";
+import { extractBackendError } from "../utils/errorHandler";;;
 import { useAuth } from "../../contexts/AuthContext";
 
 interface CreateCategoryModalProps {
@@ -103,10 +104,7 @@ export default function CreateCategoryModal({
       }
     } catch (err) {
       console.error("Failed to create category:", err);
-      showError(
-        "Error",
-        err instanceof Error ? err.message : "Failed to create category"
-      );
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsCreating(false);
     }
@@ -172,7 +170,8 @@ export default function CreateCategoryModal({
             <button
               type="button"
               onClick={handleClose}
-              className={`px-4 py-2 text-gray-700 bg-gray-100 ${tw.rounded} hover:bg-gray-200 transition-colors text-sm`}
+              className="transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80"
+              style={getButtonStyles(button.bordered)}
             >
               Cancel
             </button>

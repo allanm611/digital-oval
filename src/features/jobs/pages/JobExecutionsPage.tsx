@@ -28,6 +28,7 @@ import Input from "../../../shared/components/ui/Input";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { jobExecutionService } from "../services/jobExecutionService";
 import { ENABLE_JOB_EXECUTION_WRITES_FOR_ALL } from "../../../shared/utils/featureFlags";
@@ -100,6 +101,7 @@ export default function JobExecutionsPage() {
     "abort" | "archive" | "retry" | null
   >(null);
   const [isProcessingAction, setIsProcessingAction] = useState(false);
+  const [daysBackInput, setDaysBackInput] = useState<number>(7);
   // Batch selection and batch operations
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedExecutions, setSelectedExecutions] = useState<Set<string>>(
@@ -260,7 +262,7 @@ export default function JobExecutionsPage() {
         const message =
           err instanceof Error ? err.message : "Failed to load job executions";
         setErrorMessage(message);
-        showError("Job Executions", message);
+        showError("Job Executions", extractBackendError(error, "Job Executions. Please try again."));
       } finally {
         setIsLoading(false);
       }
@@ -319,10 +321,7 @@ export default function JobExecutionsPage() {
       }
     } catch (err) {
       console.error("Failed to load stats:", err);
-      showError(
-        "Failed to load execution statistics",
-        err instanceof Error ? err.message : "Unknown error",
-      );
+      showError("Failed to load execution statistics", extractBackendError(error, "Failed to load execution statistics. Please try again."));
     } finally {
       setIsLoadingStats(false);
     }
@@ -416,14 +415,24 @@ export default function JobExecutionsPage() {
           break;
         case "archive":
           if (!user?.user_id) return;
-          await jobExecutionService.bulkArchiveJobExecutions({
-            executionIds,
-            userId: user.user_id,
-          });
-          showToast(
-            "Executions Archived",
-            `${executionIds.length} execution(s) archived successfully`,
+          setExecutions((prev) =>
+            prev.map((exec) =>
+              selectedExecutions.has(exec.id) ? { ...exec, is_archived: true } : exec,
+            ),
           );
+          try {
+            await jobExecutionService.bulkArchiveJobExecutions({
+              executionIds,
+              userId: user.user_id,
+            });
+            showToast(
+              "Executions Archived",
+              `${executionIds.length} execution(s) archived successfully`,
+            );
+          } catch (err) {
+            await fetchExecutions();
+            throw err;
+          }
           break;
         case "retry": {
           if (!user?.user_id) return;
@@ -435,19 +444,31 @@ export default function JobExecutionsPage() {
                 .map((exec) => exec.job_id),
             ),
           );
-          await Promise.all(
-            jobIds.map((jobId) =>
-              jobExecutionService.retryFailedJobExecutions({
-                jobId,
-                daysBack: 7,
-                userId: user.user_id,
-              }),
+          setExecutions((prev) =>
+            prev.map((exec) =>
+              selectedExecutions.has(exec.id)
+                ? { ...exec, status: "pending" }
+                : exec,
             ),
           );
-          showToast(
-            "Retry Initiated",
-            `Retrying failed executions for ${jobIds.length} job(s)`,
-          );
+          try {
+            await Promise.all(
+              jobIds.map((jobId) =>
+                jobExecutionService.retryFailedJobExecutions({
+                  jobId,
+                  daysBack: daysBackInput,
+                  userId: user.user_id,
+                }),
+              ),
+            );
+            showToast(
+              "Retry Initiated",
+              `Retrying failed executions for ${jobIds.length} job(s) from the last ${daysBackInput} day(s)`,
+            );
+          } catch (err) {
+            await fetchExecutions();
+            throw err;
+          }
           break;
         }
       }
@@ -455,10 +476,7 @@ export default function JobExecutionsPage() {
       setIsSelectionMode(false);
       fetchExecutions();
     } catch (err) {
-      showError(
-        `Batch ${action} failed`,
-        err instanceof Error ? err.message : "Unknown error",
-      );
+      showError(        `Batch ${action} failed`,        err instanceof Error ? err.message : "Unknown error",      );
     } finally {
       setIsBatchProcessing(false);
     }
@@ -501,7 +519,7 @@ export default function JobExecutionsPage() {
         case "retry":
           await jobExecutionService.retryFailedJobExecutions({
             jobId: selectedExecution.job_id,
-            daysBack: 7,
+            daysBack: daysBackInput,
             userId: user.user_id,
           });
           showToast("Retry Initiated", "Failed executions are being retried");
@@ -510,12 +528,10 @@ export default function JobExecutionsPage() {
       setShowActionModal(false);
       setSelectedExecution(null);
       setActionType(null);
+      setDaysBackInput(7);
       fetchExecutions();
     } catch (err) {
-      showError(
-        "Action Failed",
-        err instanceof Error ? err.message : "Unknown error",
-      );
+      showError("Action Failed", extractBackendError(error, "Action Failed. Please try again."));
     } finally {
       setIsProcessingAction(false);
     }
@@ -1280,6 +1296,7 @@ export default function JobExecutionsPage() {
                   setShowActionModal(false);
                   setSelectedExecution(null);
                   setActionType(null);
+                  setDaysBackInput(7);
                 }}
                 className="text-gray-400 hover:text-gray-600"
               >
@@ -1294,12 +1311,32 @@ export default function JobExecutionsPage() {
               {actionType === "retry" &&
                 "This will retry all failed executions for this job. Continue?"}
             </p>
+            {actionType === "retry" && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Days Back
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="365"
+                  value={daysBackInput}
+                  onChange={(e) => setDaysBackInput(Number(e.target.value))}
+                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  placeholder="Enter days back"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Retry failed executions from the last {daysBackInput} day(s)
+                </p>
+              </div>
+            )}
             <div className="flex gap-3">
               <button
                 onClick={() => {
                   setShowActionModal(false);
                   setSelectedExecution(null);
                   setActionType(null);
+                  setDaysBackInput(7);
                 }}
                 className={`flex-1 ${tw.rounded} border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50`}
                 disabled={isProcessingAction}

@@ -3,6 +3,7 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Users, MessageSquare, Calendar, Eye } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import BackButton from "../../../shared/components/ui/BackButton";
@@ -63,6 +64,7 @@ export interface ManualBroadcastData {
   scheduleType?: "now" | "later";
   scheduleDate?: string;
   scheduleTime?: string;
+  scheduleTimezone?: string;
 }
 
 export default function CreateManualBroadcastPage() {
@@ -123,6 +125,7 @@ export default function CreateManualBroadcastPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [broadcastData, setBroadcastData] = useState<ManualBroadcastData>({});
   const [isLoading, setIsLoading] = useState(isEditMode);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Load broadcast template data in edit mode
   useEffect(() => {
@@ -217,7 +220,7 @@ export default function CreateManualBroadcastPage() {
           setBroadcastData(prefillData);
         } catch (err) {
           console.error("Failed to load broadcast details:", err);
-          showError("Failed to load broadcast details", "", true); // bypassSilentMode
+          showError("Failed to load broadcast details", extractBackendError(error, "Failed to load broadcast details. Please try again."));
           navigate("/dashboard/manual-communications");
         } finally {
           setIsLoading(false);
@@ -366,9 +369,8 @@ export default function CreateManualBroadcastPage() {
   };
 
   const handleSubmit = async () => {
+    setIsSubmitting(true);
     try {
-      // Don't set isLoading - let ScheduleStep button handle the loading state
-      // This keeps the page visible while the API is processing
 
       // In edit mode, update the communication definition and resend
       if (isEditMode && executionId && broadcastData.communicationId) {
@@ -596,18 +598,12 @@ export default function CreateManualBroadcastPage() {
         errorMessage.toLowerCase().includes("timeout");
 
       if (isGatewayTimeout) {
-        showError(
-          "Failed to create manual communication",
-          "The request timed out. Please try again.",
-          true, // bypassSilentMode
-        );
+        showError("Failed to create manual communication", extractBackendError(error, "Failed to create manual communication. Please try again."));
       } else {
-        showError(
-          t.manualBroadcast.createFailed,
-          errorMessage,
-          true, // bypassSilentMode
-        );
+        showError(          t.manualBroadcast.createFailed,          errorMessage,          true, // bypassSilentMode        );
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -709,10 +705,13 @@ export default function CreateManualBroadcastPage() {
                 onClick={
                   currentStep === STEPS.length ? handleSubmit : handleNext
                 }
-                disabled={!isStepValid(currentStep)}
-                className={`inline-flex items-center px-5 py-2 text-sm font-medium ${tw.rounded} text-white disabled:opacity-50 disabled:cursor-not-allowed`}
+                disabled={!isStepValid(currentStep) || isSubmitting}
+                className={`inline-flex items-center gap-2 px-5 py-2 text-sm font-medium ${tw.rounded} text-white disabled:opacity-50 disabled:cursor-not-allowed`}
                 style={{ backgroundColor: color.primary.action }}
               >
+                {isSubmitting && (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                )}
                 {currentStep === STEPS.length
                   ? isEditMode
                     ? "Update Broadcast"

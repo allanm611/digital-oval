@@ -11,8 +11,9 @@ import {
 } from "lucide-react";
 import SearchInput from "./ui/SearchInput";
 import Checkbox from "./ui/Checkbox";
-import { color, tw, zIndex } from "../utils/utils";
+import { color, tw, zIndex, button, getButtonStyles } from "../utils/utils";
 import { useToast } from "../../contexts/ToastContext";
+import { extractBackendError } from "../utils/errorHandler";;;
 import { useConfirm } from "../../contexts/ConfirmContext";
 import { useRemoveFromCatalog } from "../hooks/useRemoveFromCatalog";
 import LoadingSpinner from "./ui/LoadingSpinner";
@@ -72,6 +73,7 @@ function AssignItemsModal({
   );
   const [loading, setLoading] = useState(true);
   const [assigning, setAssigning] = useState(false);
+  const [assigningItemIds, setAssigningItemIds] = useState<Set<number | string>>(new Set());
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredItems, setFilteredItems] = useState<
     (Offer | Product | Segment | BackendCampaignType)[]
@@ -496,6 +498,7 @@ function AssignItemsModal({
       setSearchTerm("");
       setSelectedItemIds(new Set());
       setFilters({});
+      setAssigningItemIds(new Set());
     }
   }, [isOpen]);
 
@@ -529,21 +532,110 @@ function AssignItemsModal({
     });
   };
 
-  // Handle assignment
-  const handleAssignSelected = async () => {
-    if (selectedItemIds.size === 0) {
-      showError(`Please select at least one ${typeInfo.singular} to assign`);
-      return;
-    }
-
+  // Handle adding a single item
+  const handleAddSingleItem = async (itemId: number | string) => {
     if (!catalogId) {
       showError("Catalog ID not found");
       return;
     }
 
     try {
+      setAssigningItemIds((prev) => new Set([...prev, itemId]));
+      const ids = [Number(itemId)];
+      const catalogIdNumber = Number(catalogId);
+      const catalogTag = buildCatalogTag(catalogIdNumber);
+
+      // Step 1: Batch assign category_id
+      switch (itemType) {
+        case "segments":
+          await segmentService.batchAssignCategory(ids, catalogIdNumber);
+          break;
+        case "products":
+          await productService.batchAssignCategory(ids, catalogIdNumber);
+          break;
+        case "offers":
+          await offerService.batchAssignCategory(ids, catalogIdNumber);
+          break;
+        case "campaigns":
+          await campaignService.batchAssignCategory(ids, catalogIdNumber);
+          break;
+      }
+
+      // Step 2: Add catalog tags to items (will be removed when backend supports batch tags)
+      let tagSuccess = 0;
+      let tagFailed = 0;
+      for (const itemId of ids) {
+        try {
+          const item = items.find((i) => i.id === itemId);
+          if (!item) continue;
+
+          const existingTags = Array.isArray(item.tags) ? item.tags : [];
+          if (existingTags.includes(catalogTag)) continue;
+
+          const updatedTags = [...existingTags, catalogTag];
+
+          switch (itemType) {
+            case "offers": {
+              const offer = item as Offer;
+              await offerService.updateOffer(Number(itemId), { tags: updatedTags });
+              break;
+            }
+            case "products": {
+              await productService.addProductTag(Number(itemId), catalogTag);
+              break;
+            }
+            case "segments": {
+              const segment = item as Segment;
+              await segmentService.updateSegment(Number(itemId), { tags: updatedTags });
+              break;
+            }
+            case "campaigns": {
+              const campaign = item as BackendCampaignType;
+              await campaignService.updateCampaign(Number(itemId), { tags: updatedTags });
+              break;
+            }
+          }
+          tagSuccess++;
+        } catch {
+          tagFailed++;
+        }
+      }
+
+      if (tagSuccess > 0 || tagFailed === 0) {
+        showSuccess(`${typeInfo.singular} assigned successfully`);
+        setAssignedItemIds((prev) =>
+          Array.from(new Set([...prev, itemId]))
+        );
+        onAssignComplete?.();
+      } else {
+        showError(
+          `Failed to assign ${typeInfo.singular}. Please try again.`
+        );
+      }
+    } catch (err) {
+      showError(
+        `Failed to assign ${typeInfo.singular}`,
+        err instanceof Error ? err.message : "Unknown error"
+      );
+    } finally {
+      setAssigningItemIds((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(itemId);
+        return newSet;
+      });
+    }
+  };
+
+  // Handle assignment for bulk selections
+  const handleAssignSelected = async () => {
+    if (!catalogId || selectedItemIds.size === 0) {
+      showError("Please select items to assign");
+      return;
+    }
+
+    try {
       setAssigning(true);
-      const ids = Array.from(selectedItemIds).map(Number);
+      const ids = Array.from(selectedItemIds).map((id) => Number(id));
       const catalogIdNumber = Number(catalogId);
       const catalogTag = buildCatalogTag(catalogIdNumber);
 
@@ -606,7 +698,7 @@ function AssignItemsModal({
       if (tagSuccess > 0 || tagFailed === 0) {
         showSuccess(`${ids.length} ${typeInfo.plural} assigned successfully`);
         setAssignedItemIds((prev) =>
-          Array.from(new Set([...prev, ...Array.from(selectedItemIds)]))
+          Array.from(new Set([...prev, ...ids]))
         );
         setSelectedItemIds(new Set());
         onAssignComplete?.();
@@ -777,43 +869,11 @@ function AssignItemsModal({
   // Get status badge
   const getStatusBadge = (status: string) => {
     const statusLower = status.toLowerCase();
-    if (statusLower === "active") {
-      return (
-        <span
-          className="px-2.5 py-1 rounded-full text-xs font-medium"
-          style={{
-            backgroundColor: color.primary.accent,
-            color: "#FFFFFF",
-          }}
-        >
-          Active
-        </span>
-      );
-    } else if (statusLower === "inactive") {
-      return (
-        <span
-          className="px-2.5 py-1 rounded-full text-xs font-medium"
-          style={{
-            backgroundColor: color.primary.accent + "40",
-            color: color.text.secondary,
-          }}
-        >
-          Inactive
-        </span>
-      );
-    } else {
-      return (
-        <span
-          className="px-2.5 py-1 rounded-full text-xs font-medium capitalize"
-          style={{
-            backgroundColor: color.primary.accent + "20",
-            color: color.text.secondary,
-          }}
-        >
-          {status}
-        </span>
-      );
-    }
+    return (
+      <span className="text-sm font-medium capitalize text-gray-700">
+        {status}
+      </span>
+    );
   };
 
   const availableItems = filteredItems.filter(
@@ -1043,7 +1103,7 @@ function AssignItemsModal({
                   >
                     <tr>
                       <th
-                        className="px-3 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                        className="px-3 sm:px-6 py-3 text-left text-sm font-medium uppercase tracking-wider"
                         style={{ color: color.surface.tableHeaderText }}
                       >
                         <div className="flex items-center gap-2 cursor-pointer" onClick={(e) => {
@@ -1061,13 +1121,13 @@ function AssignItemsModal({
                             onChange={handleSelectAll}
                             disabled={availableItems.length === 0}
                           />
-                          <span className="hidden sm:inline text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
+                          <span className="hidden sm:inline text-sm font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
                             Select All
                           </span>
                         </div>
                       </th>
                       <th
-                        className="px-3 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                        className="px-3 sm:px-6 py-3 text-left text-sm font-medium uppercase tracking-wider"
                         style={{ color: color.surface.tableHeaderText }}
                       >
                         Name
@@ -1079,7 +1139,7 @@ function AssignItemsModal({
                         Description
                       </th>
                       <th
-                        className="px-3 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                        className="px-3 sm:px-6 py-3 text-left text-sm font-medium uppercase tracking-wider"
                         style={{ color: color.surface.tableHeaderText }}
                       >
                         Status
@@ -1107,7 +1167,7 @@ function AssignItemsModal({
                         Created At
                       </th>
                       <th
-                        className="px-3 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                        className="px-3 sm:px-6 py-3 text-left text-sm font-medium uppercase tracking-wider"
                         style={{ color: color.surface.tableHeaderText }}
                       >
                         Actions
@@ -1123,9 +1183,7 @@ function AssignItemsModal({
                       return (
                         <tr
                           key={item.id}
-                          className={`hover:bg-gray-50 transition-colors ${
-                            isAssigned ? "opacity-60" : ""
-                          }`}
+                          className="hover:bg-gray-50 transition-colors"
                         >
                           <td className="px-3 sm:px-6 py-4">
                             <label className="flex items-center cursor-pointer">
@@ -1148,16 +1206,15 @@ function AssignItemsModal({
                             }}
                           >
                             <div>
-                              <div className="font-semibold text-gray-900 truncate max-w-[200px] sm:max-w-none">
+                              <div className="font-semibold text-sm text-gray-900 truncate max-w-[200px] sm:max-w-none">
                                 {item.name}
                               </div>
                               {isAssigned && (
                                 <span
                                   className="text-xs px-2 py-0.5 rounded-full font-medium mt-1 inline-block"
                                   style={{
-                                    backgroundColor:
-                                      color.primary.accent + "20",
-                                    color: color.primary.accent,
+                                    backgroundColor: color.primary.accent,
+                                    color: "#FFFFFF",
                                   }}
                                 >
                                   Already in catalog
@@ -1176,7 +1233,7 @@ function AssignItemsModal({
                           {itemType !== "products" &&
                             itemType !== "campaigns" && (
                               <td className="px-3 sm:px-6 py-4 hidden lg:table-cell">
-                                <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 capitalize">
+                                <span className="px-2.5 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700 capitalize">
                                   {getTypeDisplay(item)}
                                 </span>
                               </td>
@@ -1192,16 +1249,27 @@ function AssignItemsModal({
                             {getCreatedAtDisplay(item)}
                           </td>
                           <td className="px-3 sm:px-6 py-4">
-                            {isAssigned && (
+                            {isAssigned ? (
                               <button
                                 onClick={() => handleRemoveItem(item.id)}
                                 disabled={removingId === item.id}
-                                className={`px-3 py-1 text-red-600 hover:bg-red-50 ${tw.rounded} transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed`}
+                                style={getButtonStyles(button.bordered)}
+                                className="min-w-24 transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80"
                                 title={`Remove ${typeInfo.singular} from catalog`}
                               >
                                 {removingId === item.id
                                   ? "Removing..."
                                   : "Remove"}
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleAddSingleItem(item.id)}
+                                disabled={assigningItemIds.has(item.id)}
+                                style={getButtonStyles(button.action)}
+                                className="min-w-24 transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90"
+                                title={`Add ${typeInfo.singular} to catalog`}
+                              >
+                                {assigningItemIds.has(item.id) ? "Adding..." : "Add"}
                               </button>
                             )}
                           </td>

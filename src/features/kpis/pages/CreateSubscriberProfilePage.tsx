@@ -5,6 +5,7 @@ import BackButton from "../../../shared/components/ui/BackButton";
 import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw } from "../../../shared/utils/utils";
 
 // Dummy data - same as list page
@@ -115,7 +116,7 @@ export default function CreateSubscriberProfilePage() {
       navigate("/dashboard/kpis/subscriber-profiles");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : `Failed to ${mode} profile field`;
-      showError("Error", errorMessage);
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setSaving(false);
     }

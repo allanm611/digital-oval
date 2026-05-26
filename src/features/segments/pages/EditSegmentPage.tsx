@@ -10,6 +10,7 @@ import {
 } from "../types/segment";
 import { segmentService } from "../services/segmentService";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Input from "../../../shared/components/ui/Input";
@@ -68,7 +69,7 @@ export default function EditSegmentPage() {
       setBusinessPurpose(data.business_purpose || "");
     } catch (err) {
       console.error("Failed to load segment details:", err);
-      showError("Error loading segment", "Please try again later.");
+      showError("Error loading segment", extractBackendError(error, "Error loading segment. Please try again."));
     } finally {
       setIsLoading(false);
     }

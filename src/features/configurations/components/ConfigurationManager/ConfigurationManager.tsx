@@ -3,7 +3,7 @@ import { Edit, Trash2, X, LucideIcon } from "lucide-react";
 import SearchInput from "../../../../shared/components/ui/SearchInput";
 import Pagination from "../../../../shared/components/ui/Pagination";
 import { color, tw } from "../../../../shared/utils/utils";
-import { useConfirm } from "../../../../contexts/ConfirmContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useToast } from "../../../../contexts/ToastContext";
 import { useLanguage } from "../../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../../shared/components/ui/LoadingSpinner";
@@ -11,6 +11,7 @@ import BackButton from "../../../../shared/components/ui/BackButton";
 import CreateButton from "../../../../shared/components/ui/CreateButton";
 import Checkbox from "../../../../shared/components/ui/Checkbox";
 import ActivateDeactivateButton from "../../../../shared/components/ui/ActivateDeactivateButton";
+import DeleteConfirmModal from "../../../../shared/components/ui/DeleteConfirmModal";
 import ConfigurationModal from "./ConfigurationModal";
 
 export interface ConfigurationItem {
@@ -72,7 +73,6 @@ interface ConfigurationManagerProps {
 export default function ConfigurationManager({
   config,
 }: ConfigurationManagerProps) {
-  const { confirm } = useConfirm();
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
 
@@ -85,6 +85,9 @@ export default function ConfigurationManager({
   const [editingItem, setEditingItem] = useState<ConfigurationItem | undefined>();
   const [isSaving, setIsSaving] = useState(false);
   const [togglingItemId, setTogglingItemId] = useState<number | string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<ConfigurationItem | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const handleCreateItem = () => {
     setEditingItem(undefined);
@@ -96,29 +99,31 @@ export default function ConfigurationManager({
     setIsModalOpen(true);
   };
 
-  const handleDeleteItem = async (item: ConfigurationItem) => {
-    const confirmed = await confirm({
-      title: config.deleteConfirmTitle,
-      message: config.deleteConfirmMessage(item.name),
-      type: "danger",
-      confirmText: t.genericConfig.delete,
-      cancelText: t.genericConfig.cancel,
-    });
+  const handleDeleteClick = (item: ConfigurationItem) => {
+    setItemToDelete(item);
+    setShowDeleteModal(true);
+  };
 
-    if (!confirmed) return;
+  const confirmDeleteItem = async () => {
+    if (!itemToDelete) return;
 
     try {
-      setItems((prev) => prev.filter((i) => i.id !== item.id));
+      setDeleting(true);
+      setItems((prev) => prev.filter((i) => i.id !== itemToDelete.id));
       showToast(
         config.deleteConfirmTitle,
-        config.deleteSuccessMessage(item.name)
+        config.deleteSuccessMessage(itemToDelete.name)
       );
+      setShowDeleteModal(false);
+      setItemToDelete(null);
     } catch (err) {
       console.error(`Error deleting ${config.entityName}:`, err);
       showError(
         t.genericConfig.error,
         err instanceof Error ? err.message : config.deleteErrorMessage
       );
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -405,7 +410,7 @@ export default function ConfigurationManager({
                         </button>
 
                         <button
-                          onClick={() => handleDeleteItem(item)}
+                          onClick={() => handleDeleteClick(item)}
                           className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
                         >
                           <Trash2 className="w-4 h-4 text-red-600" />
@@ -440,6 +445,19 @@ export default function ConfigurationManager({
         onSave={handleItemSaved}
         isSaving={isSaving}
         config={config}
+      />
+
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setItemToDelete(null);
+        }}
+        onConfirm={confirmDeleteItem}
+        title={config.deleteConfirmTitle}
+        description={itemToDelete ? config.deleteConfirmMessage(itemToDelete.name) : ""}
+        itemName={itemToDelete?.name || ""}
+        isLoading={deleting}
       />
     </div>
   );

@@ -3,6 +3,7 @@ import Input from '../../../shared/components/ui/Input';
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Save } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { characterSetService, CharacterSet } from "../../configurations/services/characterSetService";
 import { MESSAGE_TYPE_OPTIONS, MessageTypeEnum } from "../../configurations/configs/ts/messageTypeEnum";
@@ -50,7 +51,7 @@ export default function CharacterSetFormPage() {
           setTripleChars(data.triple_chars || "");
           setQuadChars(data.quad_chars || "");
         } catch (err) {
-          showError("Error", "Failed to load character set");
+          showError("Error", extractBackendError(error, "Error. Please try again."));
           navigate("/dashboard/character-sets");
         } finally {
           setLoading(false);
@@ -97,7 +98,7 @@ export default function CharacterSetFormPage() {
       }
       navigate("/dashboard/character-sets");
     } catch (err) {
-      showError("Error", err instanceof Error ? err.message : "Failed to save");
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setSaving(false);
     }

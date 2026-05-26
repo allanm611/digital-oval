@@ -7,8 +7,10 @@ import BackButton from "../../../shared/components/ui/BackButton";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { color, tw } from "../../../shared/utils/utils";
-import { useConfirm } from "../../../contexts/ConfirmContext";
+import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { hardcodedEmailRoutes } from "../../configurations/configs/configurationPageConfigs";
@@ -25,7 +27,6 @@ interface EmailRoute {
 
 function EmailRoutesListView() {
   const navigate = useNavigate();
-  const { confirm } = useConfirm();
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
 
@@ -34,6 +35,9 @@ function EmailRoutesListView() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(20);
   const [togglingItemId, setTogglingItemId] = useState<number | string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [routeToDelete, setRouteToDelete] = useState<EmailRoute | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const filteredRoutes = routes.filter(
     (route) =>
@@ -52,22 +56,24 @@ function EmailRoutesListView() {
     navigate(`${route.id}/edit`);
   };
 
-  const handleDeleteRoute = async (route: EmailRoute) => {
-    const confirmed = await confirm({
-      title: "Delete Email Route",
-      message: `Are you sure you want to delete "${route.name}"? This may affect email delivery.`,
-      type: "danger",
-      confirmText: t.genericConfig.delete,
-      cancelText: t.genericConfig.cancel,
-    });
+  const handleDeleteClick = (route: EmailRoute) => {
+    setRouteToDelete(route);
+    setShowDeleteModal(true);
+  };
 
-    if (!confirmed) return;
+  const confirmDeleteRoute = async () => {
+    if (!routeToDelete) return;
 
+    setDeleting(true);
     try {
-      setRoutes((prev) => prev.filter((r) => r.id !== route.id));
-      showToast("Delete Email Route", `"${route.name}" has been deleted successfully.`);
+      setRoutes((prev) => prev.filter((r) => r.id !== routeToDelete.id));
+      showToast("Delete Email Route", `"${routeToDelete.name}" has been deleted successfully.`);
+      setShowDeleteModal(false);
+      setRouteToDelete(null);
     } catch (err) {
       showError(t.genericConfig.error, "Failed to delete email route");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -276,7 +282,7 @@ function EmailRoutesListView() {
                         </button>
 
                         <button
-                          onClick={() => handleDeleteRoute(route)}
+                          onClick={() => handleDeleteClick(route)}
                           className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
                           title={`Delete ${route.name}`}
                         >
@@ -301,6 +307,19 @@ function EmailRoutesListView() {
           onPageChange={setCurrentPage}
         />
       )}
+
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setRouteToDelete(null);
+        }}
+        onConfirm={confirmDeleteRoute}
+        title="Delete Email Route"
+        description="This may affect email delivery."
+        itemName={routeToDelete?.name || ""}
+        isLoading={deleting}
+      />
     </div>
   );
 }

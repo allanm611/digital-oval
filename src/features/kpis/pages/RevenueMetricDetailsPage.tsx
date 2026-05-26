@@ -6,6 +6,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { RevenueMetric } from "../types/revenueMetrics";
 import { revenueMetricService } from "../services/revenueMetricService";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw, button } from "../../../shared/utils/utils";
 import { getOperatorsForFieldType } from "../../../shared/utils/operatorMapper";
 

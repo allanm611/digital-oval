@@ -15,6 +15,11 @@ import {
   Settings,
   Loader,
 } from "lucide-react";
+import {
+  validateNoEditInsideVariables,
+  isCursorInsideVariable,
+  validateMessageSyntax,
+} from "../utils/variableInsertion";
 import { color, tw, components, zIndex } from "../utils/utils";
 import LoadingSpinner from "./ui/LoadingSpinner";
 import PreviewPanel from "../../features/communications/components/PreviewPanel";
@@ -31,6 +36,7 @@ import HeadlessSelect from "./ui/HeadlessSelect";
 import Input from "./ui/Input";
 import { useConfigurationData } from "../services/configurationDataService";
 import { useToast } from "../../contexts/ToastContext";
+import { extractBackendError } from "../utils/errorHandler";;;
 import { useAuth } from "../../contexts/AuthContext";
 import { useClickOutside } from "../hooks/useClickOutside";
 import {
@@ -92,6 +98,7 @@ export default function CreateCommunicationModal({
   const [smsRoute, setSmsRoute] = useState("");
   const [emailRoute, setEmailRoute] = useState("");
   const [error, setError] = useState("");
+  const [variableError, setVariableError] = useState("");
   const [showVariableSelector, setShowVariableSelector] = useState(false);
   const [activeField, setActiveField] = useState<"title" | "body">("body");
   const [cursorPosition, setCursorPosition] = useState<number>(0);
@@ -419,7 +426,7 @@ export default function CreateCommunicationModal({
       setPendingPolicyData(null);
     } catch (err) {
       console.error("Failed to save custom policy:", err);
-      showError("Failed to save custom policy. Please try again.");
+      showError(extractBackendError(error, "Failed to save custom policy. Please try again.. Please try again."));
     }
   };
 
@@ -845,22 +852,27 @@ export default function CreateCommunicationModal({
                         selectedPolicy ? "" : "text-gray-500"
                       }`}
                     >
-                      <div className="flex items-center gap-2">
-                        {selectedPolicy && (
-                          <div
-                            className={`w-2 h-2 rounded-full ${
-                              selectedPolicy.isActive
-                                ? "bg-green-500"
-                                : "bg-gray-400"
-                            }`}
-                          ></div>
-                        )}
-                        <span className="text-sm">
-                          {selectedPolicy
-                            ? selectedPolicy.name
-                            : "Choose a communication policy (optional)"}
-                        </span>
-                      </div>
+                      <span className="text-sm">
+                        {selectedPolicy && selectedPolicy.name ? selectedPolicy.name : null}
+                        {!selectedPolicy && communicationPolicies && Array.isArray(communicationPolicies) && communicationPolicies.length > 0 ? (
+                          (() => {
+                            const activePolicy = communicationPolicies.find((p) => {
+                              if (!p) {
+                                return false;
+                              }
+                              if (p.isActive === true || p.is_active === true) {
+                                return true;
+                              }
+                              return false;
+                            });
+                            if (activePolicy && activePolicy.name) {
+                              return activePolicy.name;
+                            }
+                            return "Choose a communication policy (optional)";
+                          })()
+                        ) : null}
+                        {!selectedPolicy && (!communicationPolicies || !Array.isArray(communicationPolicies) || communicationPolicies.length === 0) ? "Choose a communication policy (optional)" : null}
+                      </span>
                       <ChevronDown
                         className={`w-4 h-4 transition-transform ${
                           isPolicyDropdownOpen ? "rotate-180" : ""
@@ -891,7 +903,15 @@ export default function CreateCommunicationModal({
                         </button>
 
                         <div className="max-h-48 overflow-y-auto">
-                          {communicationPolicies.map((policy) => (
+                          {communicationPolicies && Array.isArray(communicationPolicies) && communicationPolicies.filter((policy) => {
+                            if (!policy) {
+                              return false;
+                            }
+                            if (policy.is_active === false) {
+                              return false;
+                            }
+                            return true;
+                          }).map((policy) => (
                             <button
                               key={policy.id}
                               type="button"
@@ -905,20 +925,11 @@ export default function CreateCommunicationModal({
                                   : ""
                               }`}
                             >
-                              <div className="flex items-center gap-2 mb-1">
-                                <div
-                                  className={`w-2 h-2 rounded-full ${
-                                    policy.isActive
-                                      ? "bg-green-500"
-                                      : "bg-gray-400"
-                                  }`}
-                                ></div>
-                                <div className="text-sm font-medium text-gray-900">
-                                  {policy.name}
-                                </div>
+                              <div className="text-sm font-medium text-gray-900">
+                                {policy.name}
                               </div>
                               {policy.description && (
-                                <div className="text-xs text-gray-500 ml-4">
+                                <div className="text-xs text-gray-500 mt-1">
                                   {policy.description}
                                 </div>
                               )}
@@ -1067,8 +1078,47 @@ export default function CreateCommunicationModal({
                           ref={bodyTextareaRef}
                           value={messageBody}
                           onChange={(e) => {
-                            setMessageBody(e.target.value);
-                            setCursorPosition(e.target.selectionStart || 0);
+                            if (!e || !e.target) {
+                              return;
+                            }
+                            const newValue = e.target.value;
+                            if (newValue === null || newValue === undefined) {
+                              return;
+                            }
+                            const editError = validateNoEditInsideVariables(messageBody, newValue);
+                            if (editError) {
+                              setVariableError(editError);
+                              return;
+                            }
+                            setMessageBody(newValue);
+                            const selectionStart = e.target.selectionStart;
+                            if (selectionStart !== null && selectionStart !== undefined) {
+                              setCursorPosition(selectionStart);
+                            }
+                            const syntaxError = validateMessageSyntax(newValue);
+                            if (syntaxError) {
+                              setVariableError(syntaxError);
+                            } else {
+                              setVariableError("");
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (!e || !e.currentTarget) {
+                              return;
+                            }
+                            const cursorPos = e.currentTarget.selectionStart;
+                            if (cursorPos === null || cursorPos === undefined) {
+                              return;
+                            }
+                            if (messageBody) {
+                              const isInsideVar = isCursorInsideVariable(messageBody, cursorPos);
+                              if (isInsideVar) {
+                                e.preventDefault();
+                                setVariableError("You can't edit inside a variable");
+                              } else {
+                                setVariableError("");
+                              }
+                            }
                           }}
                           onClick={(e) => {
                             setActiveField("body");
@@ -1270,7 +1320,7 @@ export default function CreateCommunicationModal({
                 </div>
 
                 {/* Error Message */}
-                {error && (
+                {error || variableError ? (
                   <div
                     className="p-3 rounded-md flex items-start gap-2"
                     style={{
@@ -1286,10 +1336,11 @@ export default function CreateCommunicationModal({
                       className="text-sm"
                       style={{ color: color.status.danger }}
                     >
-                      {error}
+                      {variableError && variableError.length > 0 ? variableError : null}
+                      {!variableError || variableError.length === 0 ? (error && error.length > 0 ? error : null) : null}
                     </p>
                   </div>
-                )}
+                ) : null}
               </div>
             </div>
           </>
@@ -1344,9 +1395,9 @@ export default function CreateCommunicationModal({
             setIsCustomizationModalOpen(false);
             setPolicyToCustomize(null);
           }}
+          policy={policyToCustomize || undefined}
           onSave={handleSaveCustomizedPolicy}
-          initialData={policyToCustomize || undefined}
-          mode="create"
+          isSaving={false}
         />
 
         <PolicyNameModal

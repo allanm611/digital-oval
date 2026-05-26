@@ -13,7 +13,7 @@ import { Edit, Trash2, MessageSquare, Grid, List } from "lucide-react";
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { color, tw, button, zIndex } from "../../../shared/utils/utils";
-import { extractBackendError } from "../../../shared/utils/errorHandler";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -435,7 +435,7 @@ export default function CampaignCategoriesPage() {
       } catch (err) {
         console.error("Failed to load Campaigns catalogs:", err);
         const errorMessage = extractBackendError(err, "Failed to load catalogs");
-        showError("Error", errorMessage, true);
+        showError("Error", extractBackendError(error, "Error. Please try again."));
         setCampaignCategories([]);
       } finally {
         setLoading(false);
@@ -518,7 +518,7 @@ export default function CampaignCategoriesPage() {
     } catch (err) {
       console.error("Failed to delete category:", err);
       const errorMessage = extractBackendError(err, "Failed to delete category");
-      showError("Error", errorMessage, true);
+      showError("Error", extractBackendError(error, "Error. Please try again."));
       // Revert optimistic update on error
       setCampaignCategories(previousCategories);
     } finally {
@@ -561,7 +561,7 @@ export default function CampaignCategoriesPage() {
         // Display backend error message and bypass silent mode for important errors
         const errorMessage =
           err instanceof Error ? err.message : "Failed to update category";
-        showError("Toggle Failed", errorMessage, true);
+        showError("Toggle Failed", extractBackendError(error, "Toggle Failed. Please try again."));
       } finally {
         setTogglingCategoryId(null);
       }
@@ -614,7 +614,7 @@ export default function CampaignCategoriesPage() {
         setEditingCategory(undefined);
       } catch (err) {
         const errorMessage = extractBackendError(err, "Failed to save category");
-        showError("Error", errorMessage, true);
+        showError("Error", extractBackendError(error, "Error. Please try again."));
       } finally {
         setIsSaving(false);
       }
@@ -627,7 +627,7 @@ export default function CampaignCategoriesPage() {
       try {
         const categoryId = Number(category.id);
         if (isNaN(categoryId)) {
-          showError("Invalid category", "Category ID must be a number", true);
+          showError("Invalid category", extractBackendError(error, "Invalid category. Please try again."));
           return;
         }
 
@@ -675,7 +675,7 @@ export default function CampaignCategoriesPage() {
         setCampaigns(formattedCampaigns);
       } catch (err) {
         const errorMessage = extractBackendError(err, "Failed to load campaigns");
-        showError("Error", errorMessage, true);
+        showError("Error", extractBackendError(error, "Error. Please try again."));
         setCampaigns([]);
       } finally {
         setCampaignsLoading(false);

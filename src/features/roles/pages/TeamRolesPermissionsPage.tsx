@@ -1,4 +1,5 @@
 import Input from '../../../shared/components/ui/Input';
+import SearchInput from '../../../shared/components/ui/SearchInput';
 import BackButton from '../../../shared/components/ui/BackButton';
 import React, { useState, useCallback, useEffect, useMemo } from "react";
 import {
@@ -11,13 +12,13 @@ import {
   Shield,
   Key,
   Lock,
-  Search,
   Square,
   CheckSquare,
 } from "lucide-react";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
@@ -289,11 +290,17 @@ export default function TeamRolesPermissionsPage() {
       // Refresh to show the newly cloned role
       fetchRoles();
     } catch (err) {
-      showError(
-        t.common.error,
-        err instanceof Error ? err.message : t.common.failedToPerformAction,
-        true,
-      );
+      let errorMessage = t.common.failedToPerformAction;
+
+      if (err instanceof Error) {
+        if (err.message.includes("duplicate key") || err.message.includes("roles_code_key")) {
+          errorMessage = "Role code already exists. Please use a different code.";
+        } else {
+          errorMessage = err.message;
+        }
+      }
+
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setCloningRoleId(null);
     }
@@ -629,16 +636,11 @@ export default function TeamRolesPermissionsPage() {
         <div className="space-y-4">
           {/* Search and Filters */}
           <div className="flex flex-col sm:flex-row gap-3">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                type="text"
-                placeholder="Search roles..."
-                value={rolesSearch}
-                onChange={(value) => setRolesSearch(String(value))}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+            <SearchInput
+              placeholder="Search roles..."
+              value={rolesSearch}
+              onChange={setRolesSearch}
+            />
 
             <div className="w-48">
               <HeadlessSelect
@@ -886,16 +888,11 @@ export default function TeamRolesPermissionsPage() {
         <div className="space-y-4">
           {/* Search and Filters */}
           <div className="flex flex-col sm:flex-row gap-3">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                type="text"
-                placeholder="Search permissions..."
-                value={permissionsSearch}
-                onChange={(value) => setPermissionsSearch(String(value))}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+            <SearchInput
+              placeholder="Search permissions..."
+              value={permissionsSearch}
+              onChange={setPermissionsSearch}
+            />
 
             <div className="w-48">
               <HeadlessSelect
@@ -1143,7 +1140,8 @@ export default function TeamRolesPermissionsPage() {
             <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
               <button
                 onClick={() => setDeleteConfirmOpen(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-lg transition-colors"
+                className="transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80"
+                style={getButtonStyles(button.bordered)}
               >
                 Cancel
               </button>
@@ -1217,7 +1215,8 @@ export default function TeamRolesPermissionsPage() {
                   setCascadeToChildren(false);
                 }}
                 disabled={deactivatingRoleId !== null}
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-lg transition-colors disabled:opacity-50"
+                className="transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80"
+                style={getButtonStyles(button.bordered)}
               >
                 Cancel
               </button>
@@ -1303,7 +1302,8 @@ export default function TeamRolesPermissionsPage() {
                   setCloneModalOpen(false);
                   setRoleToClone(null);
                 }}
-                className="px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded hover:bg-gray-50 transition-colors"
+                className="transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80"
+                style={getButtonStyles(button.bordered)}
               >
                 Cancel
               </button>

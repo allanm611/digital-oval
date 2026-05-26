@@ -29,7 +29,9 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import { getUserDisplayName } from "../../../shared/utils/userNameCache";
+import { getSettingsTimezone } from "../../../shared/utils/settingsHelper";
 import { getWorkflowStatusColor, getApprovalStatusColor, getStatusStyle, getStatusBadgeConfig } from "../../../shared/utils/statusColors";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { campaignService } from "../services/campaignService";
@@ -125,6 +127,7 @@ export default function CampaignDetailsPage() {
   const [approvedByName, setApprovedByName] = useState<string>("");
   const [showFlowEditModal, setShowFlowEditModal] = useState(false);
   const [showFlowDeleteModal, setShowFlowDeleteModal] = useState(false);
+  const wasEditingRef = useRef(false);
   const [selectedFlow, setSelectedFlow] =
     useState<CampaignFlowResponseData | null>(null);
   const [editedFlow, setEditedFlow] = useState<Partial<CampaignFlowConfig>>({});
@@ -309,7 +312,8 @@ export default function CampaignDetailsPage() {
         }
       } catch (error) {
         console.error("Failed to fetch campaign details:", error);
-        showToast("error", "Failed to load campaign details");
+        const errorMessage = extractBackendError(error, "Failed to load campaign details");
+        showToast("error", errorMessage);
       } finally {
         setIsLoading(false);
       }
@@ -320,6 +324,19 @@ export default function CampaignDetailsPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  // Track edit page visits and refresh on return
+  useEffect(() => {
+    const isEditPage = location.pathname.includes('/edit');
+    if (isEditPage) {
+      wasEditingRef.current = true;
+    } else if (wasEditingRef.current && id) {
+      // Just returned from edit page - refresh campaign data
+      refreshCampaignStatus();
+      wasEditingRef.current = false;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
   const fetchCampaignSegments = async (campaignId: number) => {
     try {
@@ -546,7 +563,8 @@ export default function CampaignDetailsPage() {
       }
     } catch (error) {
       console.error("Failed to submit campaign for approval:", error);
-      showToast("error", "Failed to submit campaign for approval");
+      const errorMessage = extractBackendError(error, "Failed to submit campaign for approval");
+      showToast("error", errorMessage);
     } finally {
       setIsApproveLoading(false);
     }
@@ -617,7 +635,8 @@ export default function CampaignDetailsPage() {
       }
     } catch (error) {
       console.error("Failed to reject campaign:", error);
-      showToast("error", "Failed to reject campaign");
+      const errorMessage = extractBackendError(error, "Failed to reject campaign");
+      showToast("error", errorMessage);
     } finally {
       setIsActionLoading(false);
     }
@@ -636,7 +655,8 @@ export default function CampaignDetailsPage() {
       }
     } catch (error) {
       console.error("Failed to activate campaign:", error);
-      showToast("error", "Failed to activate campaign");
+      const errorMessage = extractBackendError(error, "Failed to activate campaign");
+      showToast("error", errorMessage);
     } finally {
       setIsActionLoading(false);
     }
@@ -830,7 +850,8 @@ export default function CampaignDetailsPage() {
       await fetchCampaignFlows(campaignId);
     } catch (error) {
       console.error("Error updating flow:", error);
-      showToast("error", "Failed to update flow");
+      const errorMessage = extractBackendError(error, "Failed to update flow");
+      showToast("error", errorMessage);
     } finally {
       setIsFlowActionLoading(false);
     }
@@ -871,7 +892,8 @@ export default function CampaignDetailsPage() {
       await fetchCampaignFlows(campaignId);
     } catch (error) {
       console.error("Error deleting flow:", error);
-      showToast("error", "Failed to delete flow");
+      const errorMessage = extractBackendError(error, "Failed to delete flow");
+      showToast("error", errorMessage);
     } finally {
       setIsFlowActionLoading(false);
     }
@@ -1146,7 +1168,8 @@ export default function CampaignDetailsPage() {
                         setShowMoreMenu(false);
                       } catch (error) {
                         console.error("Failed to unarchive campaign:", error);
-                        showToast("error", "Failed to unarchive campaign");
+                        const errorMessage = extractBackendError(error, "Failed to unarchive campaign");
+                        showToast("error", errorMessage);
                       } finally {
                         setIsActionLoading(false);
                       }
@@ -1168,7 +1191,8 @@ export default function CampaignDetailsPage() {
                         setShowMoreMenu(false);
                       } catch (error) {
                         console.error("Failed to archive campaign:", error);
-                        showToast("error", "Failed to archive campaign");
+                        const errorMessage = extractBackendError(error, "Failed to archive campaign");
+                        showToast("error", errorMessage);
                       } finally {
                         setIsActionLoading(false);
                       }
@@ -1521,7 +1545,7 @@ export default function CampaignDetailsPage() {
               >
                 Timezone
               </label>
-              <p className={`text-sm ${tw.textPrimary}`}>{campaign.timezone}</p>
+              <p className={`text-sm ${tw.textPrimary}`}>{getSettingsTimezone()}</p>
             </div>
           </div>
         </div>

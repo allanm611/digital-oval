@@ -19,7 +19,7 @@ import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import NumberFormatter from "../../../shared/components/NumberFormatter";
 import { color, tw, button } from "../../../shared/utils/utils";
-import { extractBackendError } from "../../../shared/utils/errorHandler";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useRemoveFromCatalog } from "../../../shared/hooks/useRemoveFromCatalog";
@@ -148,7 +148,7 @@ function CategoryModal({
       console.error("Failed to save category:", err);
       // Extract actual backend error message and bypass silent mode
       const errorMessage = err instanceof Error ? err.message : "Please try again later.";
-      showError("Failed to save category", errorMessage, true);
+      showError("Failed to save category", extractBackendError(error, "Failed to save category. Please try again."));
       setError(""); // Clear error state
     } finally {
       setIsLoading(false);
@@ -472,7 +472,7 @@ export default function SegmentCategoriesPage() {
         await loadSegmentCounts(validCategoriesData);
       } catch (err) {
         const errorMsg = extractBackendError(err, "Failed to load segment catalogs");
-        showError("Error", errorMsg, true);
+        showError("Error", extractBackendError(error, "Error. Please try again."));
         setCategories([]);
       } finally {
         setIsLoading(false);
@@ -629,7 +629,7 @@ export default function SegmentCategoriesPage() {
       // Display backend error message and bypass silent mode for important errors
       const errorMessage =
         err instanceof Error ? err.message : "Failed to update category";
-      showError("Toggle Failed", errorMessage, true);
+      showError("Toggle Failed", extractBackendError(error, "Toggle Failed. Please try again."));
     } finally {
       setTogglingCategoryId(null);
     }
@@ -655,7 +655,7 @@ export default function SegmentCategoriesPage() {
       setCategoryToDelete(null);
     } catch (err) {
       const errorMsg2 = extractBackendError(err, "Failed to delete segment catalog");
-      showError("Error", errorMsg2, true);
+      showError("Error", extractBackendError(error, "Error. Please try again."));
       // Revert optimistic update on error
       setCategories(previousCategories);
     } finally {

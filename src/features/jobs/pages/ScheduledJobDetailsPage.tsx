@@ -24,6 +24,7 @@ import {
 import { scheduledJobService } from "../services/scheduledJobService";
 import { ScheduledJob } from "../types/scheduledJob";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";

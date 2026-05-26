@@ -5,6 +5,7 @@ import { color, tw, zIndex } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
 import { Program } from "../types/program";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 
 interface ProgramModalProps {
   isOpen: boolean;

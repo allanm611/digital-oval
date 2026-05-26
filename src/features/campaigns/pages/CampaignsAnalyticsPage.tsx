@@ -32,6 +32,7 @@ import {
   TopPerformers,
   TopPerformerCampaign,
 } from "../types/campaign";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 
 type ChartTooltipEntry = {
   color?: string;
@@ -371,7 +372,7 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
       }
     } catch (err) {
       console.error("Failed to load analytics:", err);
-      showError(t.analytics.failedToLoadAnalytics, t.analytics.errorLoadingData);
+      showError("Unable to Load Analytics", extractBackendError(err, "Failed to load campaign analytics. Please try again later."));
     } finally {
       setIsLoading(false);
     }

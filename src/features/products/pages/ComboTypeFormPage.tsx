@@ -9,6 +9,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Input from "../../../shared/components/ui/Input";
 import { tw, color, getButtonStyles, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useConfigurationData } from "../../../shared/services/configurationDataService";
 import CreateUtilityModal from "../../configurations/components/CreateUtilityModal";
 
@@ -145,7 +146,7 @@ export default function ComboTypeFormPage() {
           }
         } catch (err) {
           console.error("Failed to load combo type:", err);
-          showError("Error", "Failed to load combo type");
+          showError("Error", extractBackendError(error, "Error. Please try again."));
           setError("Failed to load combo type");
         } finally {
           setIsLoading(false);
@@ -270,10 +271,7 @@ export default function ComboTypeFormPage() {
       }
     } catch (err) {
       console.error("Error submitting form:", err);
-      showError(
-        "Error",
-        err instanceof Error ? err.message : "Failed to save combo type"
-      );
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsSaving(false);
     }

@@ -36,6 +36,7 @@ import CreateCustomerModal from "../components/CreateCustomerModal";
 import EditCustomerModal from "../components/EditCustomerModal";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useToast } from "../../../contexts/ToastContext";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import CreateCommunicationModal from "../../../shared/components/CreateCommunicationModal";
@@ -203,7 +204,7 @@ export default function CustomersPage() {
       setIsLoading(false);
     } catch (error) {
       console.error("Failed to load customers:", error);
-      showError("Error", "Failed to load customers");
+      showError("Error", extractBackendError(error, "Error. Please try again."));
       setIsLoading(false);
     }
   }, [filters, showError]);
@@ -504,13 +505,7 @@ export default function CustomersPage() {
   ) => {
     const derivedCustomer = convertSubscriptionToCustomerRow(customerToSelect);
 
-    navigate(`/dashboard/customers/details/${derivedCustomer.id}`, {
-      state: {
-        customer: derivedCustomer,
-        subscription: customerToSelect,
-        source: "customers" as const,
-      },
-    });
+    navigate(`/dashboard/customers/details/${derivedCustomer.id}`);
   };
 
   const handleCustomersAdded = (newCustomers: CustomerSubscriptionRecord[]) => {
@@ -607,7 +602,7 @@ export default function CustomersPage() {
       setDeleteModalOpen(false);
       setCustomerToDelete(null);
     } catch (err) {
-      showError("Error", "Failed to delete customer");
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setIsDeleting(false);
     }

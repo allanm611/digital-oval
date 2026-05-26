@@ -11,6 +11,7 @@ import { offerCreativeService } from "../services/offerCreativeService";
 import { OfferCreative } from "../types/offerCreative";
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
 
@@ -41,7 +42,7 @@ export default function OfferCreativesPage() {
       const response = await offerCreativeService.superSearch({ limit: 100, skipCache: true });
       setCreatives(response?.data || []);
     } catch (err) {
-      showError("Error", err instanceof Error ? err.message : "Failed to load offer creatives");
+      showError("Error", extractBackendError(err, "Error. Please try again."));
       setCreatives([]);
     } finally {
       setLoading(false);
@@ -99,7 +100,7 @@ export default function OfferCreativesPage() {
       success("Success", creative.is_active ? "Creative deactivated" : "Creative activated");
     } catch (err) {
       setCreatives(originalCreatives);
-      showError("Error", err instanceof Error ? err.message : "Failed to update status");
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setIsTogglingActive(null);
     }
@@ -127,7 +128,7 @@ export default function OfferCreativesPage() {
       setCreativeToDelete(null);
     } catch (err) {
       setCreatives(originalCreatives);
-      showError("Error", err instanceof Error ? err.message : "Failed to delete creative");
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setIsDeleting(false);
     }
@@ -349,20 +350,20 @@ export default function OfferCreativesPage() {
       </div>
 
       {/* Delete Modal */}
-      {creativeToDelete && (
-        <DeleteConfirmModal
-          isOpen={isDeleteModalOpen}
-          title="Delete Offer Creative"
-          message={`Are you sure you want to delete "${creativeToDelete.title}"? This creative may be referenced by offers.`}
-          onConfirm={confirmDelete}
-          onClose={() => {
-            setIsDeleteModalOpen(false);
-            setCreativeToDelete(null);
-          }}
-          isLoading={isDeleting}
-          isDangerous={true}
-        />
-      )}
+      <DeleteConfirmModal
+        isOpen={isDeleteModalOpen}
+        title="Delete Offer Creative"
+        description="This creative may be referenced by offers."
+        itemName={creativeToDelete?.title || ""}
+        onConfirm={confirmDelete}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setCreativeToDelete(null);
+        }}
+        isLoading={isDeleting}
+        confirmText="Delete"
+        cancelText="Cancel"
+      />
 
       {/* Form Modal */}
       <OfferCreativeFormModal

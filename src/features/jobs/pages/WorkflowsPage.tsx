@@ -8,6 +8,7 @@ import {
   Copy,
   Play,
   Pause,
+  X,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import BackButton from "../../../shared/components/ui/BackButton";
@@ -18,6 +19,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import { workflowService } from "../services/workflowService";
@@ -82,6 +84,10 @@ export default function WorkflowsPage() {
   const [pageSize] = useState(20);
   const [totalCount, setTotalCount] = useState(0);
   const [showWorkflowModal, setShowWorkflowModal] = useState(false);
+  const [editingWorkflow, setEditingWorkflow] = useState<Workflow | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewingWorkflow, setViewingWorkflow] = useState<Workflow | null>(null);
+  const [isLoadingView, setIsLoadingView] = useState(false);
 
   const fetchWorkflows = useCallback(async () => {
     setIsLoading(true);
@@ -232,6 +238,11 @@ export default function WorkflowsPage() {
     if (!deletingWorkflow) return;
 
     setIsDeleting(true);
+    // Optimistic update: remove immediately
+    const workflowToDelete = deletingWorkflow;
+    setWorkflows((prev) => prev.filter((w) => w.id !== workflowToDelete.id));
+    setTotalCount((prev) => prev - 1);
+
     try {
       await workflowService.deleteWorkflow(deletingWorkflow.id);
       showToast(
@@ -241,9 +252,11 @@ export default function WorkflowsPage() {
       setShowDeleteModal(false);
       setDeletingWorkflow(null);
       setRowLoading(null);
-      fetchWorkflows();
       fetchStats();
     } catch (err) {
+      // Rollback on error
+      setWorkflows((prev) => [...prev, workflowToDelete]);
+      setTotalCount((prev) => prev + 1);
       showError(
         t.workflows.deleteFailed || "Delete failed",
         err instanceof Error ? err.message : t.common.error || "Unknown error",
@@ -323,10 +336,30 @@ export default function WorkflowsPage() {
     }
   };
 
+  const handleView = async (workflow: Workflow) => {
+    setViewingWorkflow(workflow);
+    setIsViewModalOpen(true);
+    setIsLoadingView(true);
+    try {
+      const fresh = await workflowService.getWorkflowById(workflow.id, true);
+      setViewingWorkflow(fresh);
+    } catch (err) {
+      // Show with cached data if fetch fails
+      console.error("Failed to fetch workflow details:", err);
+    } finally {
+      setIsLoadingView(false);
+    }
+  };
+
+  const handleEdit = (workflow: Workflow) => {
+    setEditingWorkflow(workflow);
+    setShowWorkflowModal(true);
+  };
+
   const handleClone = async (workflow: Workflow) => {
     setRowLoading({ id: workflow.id, action: "clone" });
     try {
-      await workflowService.cloneWorkflow(workflow.id, {
+      const cloned = await workflowService.cloneWorkflow(workflow.id, {
         newName: `${workflow.name} (Copy)`,
         created_by: user?.user_id ?? null,
       });
@@ -334,7 +367,9 @@ export default function WorkflowsPage() {
         t.workflows.cloneSuccess || "Workflow cloned",
         "Workflow has been cloned successfully.",
       );
-      fetchWorkflows();
+      // Optimistic update: prepend cloned workflow to list
+      setWorkflows((prev) => [cloned, ...prev]);
+      setTotalCount((prev) => prev + 1);
       fetchStats();
     } catch (err) {
       showError(
@@ -400,7 +435,10 @@ export default function WorkflowsPage() {
           </PermissionGate>
           <PermissionGate permission="job-workflows.create">
             <button
-              onClick={() => setShowWorkflowModal(true)}
+              onClick={() => {
+                setEditingWorkflow(null);
+                setShowWorkflowModal(true);
+              }}
               className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-semibold text-white`}
               style={{ backgroundColor: color.primary.action }}
             >
@@ -411,7 +449,7 @@ export default function WorkflowsPage() {
             </div>
           </div>
         </div>
-        <p className={`${tw.textSecondary} text-sm`}>
+        <p className={`${tw.textSecondary} text-sm -mt-2`}>
           Manage and monitor workflows
         </p>
 
@@ -739,9 +777,7 @@ export default function WorkflowsPage() {
                   >
                     <div className="flex items-center justify-end space-x-2">
                       <button
-                        onClick={() =>
-                          navigate(`/dashboard/workflows/${workflow.id}`, { state: { parentLabel: "Workflows" } })
-                        }
+                        onClick={() => handleView(workflow)}
                         className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
                         aria-label="View workflow"
                         title="View"
@@ -749,9 +785,7 @@ export default function WorkflowsPage() {
                         <Eye className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() =>
-                          navigate(`/dashboard/workflows/${workflow.id}/edit`)
-                        }
+                        onClick={() => handleEdit(workflow)}
                         className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
                         aria-label="Edit workflow"
                         title="Edit"
@@ -828,16 +862,132 @@ export default function WorkflowsPage() {
         isLoading={isDeleting}
       />
 
+      <WorkflowViewModal
+        isOpen={isViewModalOpen}
+        onClose={() => {
+          setIsViewModalOpen(false);
+          setViewingWorkflow(null);
+        }}
+        workflow={viewingWorkflow}
+        isLoading={isLoadingView}
+      />
+
       <WorkflowModal
         isOpen={showWorkflowModal}
-        onClose={() => setShowWorkflowModal(false)}
+        onClose={() => {
+          setShowWorkflowModal(false);
+          setEditingWorkflow(null);
+        }}
         onSuccess={() => {
           setShowWorkflowModal(false);
+          setEditingWorkflow(null);
           setPage(1);
           fetchWorkflows();
+          fetchStats();
         }}
+        workflow={editingWorkflow}
       />
     </div>
     </>
+  );
+}
+
+interface WorkflowViewModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  workflow: Workflow | null;
+  isLoading: boolean;
+}
+
+function WorkflowViewModal({
+  isOpen,
+  onClose,
+  workflow,
+  isLoading,
+}: WorkflowViewModalProps) {
+  if (!isOpen) return null;
+
+  const { t } = useLanguage();
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div className="flex min-h-screen items-center justify-center bg-black/50 p-4">
+        <div className="relative w-full max-w-md rounded-lg bg-white shadow-xl">
+          {/* Header */}
+          <div className="border-b border-gray-200 p-6">
+            <div className="flex items-start justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">
+                {workflow?.name || "Workflow Details"}
+              </h2>
+              <button
+                onClick={onClose}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="p-6">
+            {isLoading ? (
+              <div className="flex justify-center py-8">
+                <LoadingSpinner />
+              </div>
+            ) : workflow ? (
+              <div className="space-y-4 text-sm">
+                <div>
+                  <p className="font-medium text-gray-600">Status</p>
+                  <p className="mt-1 text-gray-900">
+                    {workflow.is_active ? "Active" : "Inactive"}
+                  </p>
+                </div>
+
+                {workflow.workflow_type && (
+                  <div>
+                    <p className="font-medium text-gray-600">Type</p>
+                    <p className="mt-1 text-gray-900">{workflow.workflow_type}</p>
+                  </div>
+                )}
+
+                {workflow.description && (
+                  <div>
+                    <p className="font-medium text-gray-600">Description</p>
+                    <p className="mt-1 text-gray-900">{workflow.description}</p>
+                  </div>
+                )}
+
+                <div>
+                  <p className="font-medium text-gray-600">Created</p>
+                  <p className="mt-1 text-gray-900">
+                    <DateFormatter
+                      date={workflow.created_at}
+                      useUserTimezone
+                      includeTime
+                    />
+                  </p>
+                </div>
+
+                {workflow.updated_at && (
+                  <div>
+                    <p className="font-medium text-gray-600">Updated</p>
+                    <p className="mt-1 text-gray-900">
+                      <DateFormatter
+                        date={workflow.updated_at}
+                        useUserTimezone
+                        includeTime
+                      />
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-center text-gray-500">No workflow selected</p>
+            )}
+          </div>
+
+        </div>
+      </div>
+    </div>
   );
 }

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Edit, Trash2, Copy, Play, Pause, MoreVertical } from "lucide-react";
 import { workflowService } from "../services/workflowService";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import BackButton from "../../../shared/components/ui/BackButton";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -44,10 +45,7 @@ export default function WorkflowDetailsPage() {
         );
         setIsActive(activeCheck.is_active);
       } catch (err) {
-        showError(
-          "Error",
-          err instanceof Error ? err.message : "Failed to load workflow",
-        );
+        showError("Error", extractBackendError(error, "Error. Please try again."));
       } finally {
         setIsLoading(false);
       }
@@ -91,10 +89,7 @@ export default function WorkflowDetailsPage() {
         setWorkflow({ ...workflow, is_active: !isActive });
       }
     } catch (err) {
-      showError(
-        "Toggle Failed",
-        err instanceof Error ? err.message : "Unknown error",
-      );
+      showError("Toggle Failed", extractBackendError(error, "Toggle Failed. Please try again."));
     } finally {
       setIsToggling(false);
     }
@@ -112,10 +107,7 @@ export default function WorkflowDetailsPage() {
       showToast("Success", "Workflow has been cloned successfully");
       navigate("/dashboard/workflows");
     } catch (err) {
-      showError(
-        "Clone Failed",
-        err instanceof Error ? err.message : "Unknown error",
-      );
+      showError("Clone Failed", extractBackendError(error, "Clone Failed. Please try again."));
     } finally {
       setIsCloning(false);
     }
@@ -130,10 +122,7 @@ export default function WorkflowDetailsPage() {
       showToast("Workflow deleted", "Workflow has been deleted successfully.");
       navigate("/dashboard/workflows");
     } catch (err) {
-      showError(
-        "Delete failed",
-        err instanceof Error ? err.message : "Unknown error",
-      );
+      showError("Delete failed", extractBackendError(error, "Delete failed. Please try again."));
     } finally {
       setIsDeleting(false);
     }

@@ -5,6 +5,7 @@ import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { characterSetService } from "../../configurations/services/characterSetService";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { tw, color, button } from "../../../shared/utils/utils";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import type { CharacterSet } from "../../configurations/types/characterSetType";
@@ -36,10 +37,7 @@ export default function CharacterSetDetailsPage() {
       setCharacterSet(data);
     } catch (err) {
       console.error("Failed to load character set:", err);
-      showError(
-        "Failed to load character set",
-        err instanceof Error ? err.message : "Please try again later.",
-      );
+      showError("Failed to load character set", extractBackendError(error, "Failed to load character set. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -60,7 +58,7 @@ export default function CharacterSetDetailsPage() {
       success("Deleted", "Character set removed");
       navigate("/dashboard/character-sets");
     } catch (err: any) {
-      showError("Delete failed", err.message || "Could not delete character set");
+      showError("Delete failed", extractBackendError(error, "Delete failed. Please try again."));
     } finally {
       setIsDeleting(false);
     }

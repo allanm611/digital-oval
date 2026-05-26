@@ -17,6 +17,7 @@ import CreateTestListModal from "../components/CreateTestListModal";
 import { validateMSISDN } from "../../../shared/utils/validation";
 import { buttons } from "../../../shared/utils/tokens";
 import { getButtonStyles } from "../../../shared/utils/utils";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 
 // Types
 export interface SeedListRecipient {
@@ -207,7 +208,7 @@ export default function SeedListManagementPage() {
       setRecipients(allMembers);
     } catch (error) {
       console.error("Failed to load members:", error);
-      showError("Failed to load members");
+      showError("Unable to Load Members", extractBackendError(error, "Failed to load seed list members. Please try again later."));
     } finally {
       setLoading(false);
     }
@@ -263,7 +264,7 @@ export default function SeedListManagementPage() {
       );
     } catch (error) {
       console.error("Failed to load seed lists:", error);
-      showError("Failed to load seed lists");
+      showError("Unable to Load Seed Lists", extractBackendError(error, "Failed to load seed lists. Please try again later."));
       setSeedLists([]);
     }
   };
@@ -342,7 +343,7 @@ export default function SeedListManagementPage() {
       showToast("Recipient removed successfully");
     } catch (error) {
       console.error("Failed to remove recipient:", error);
-      showError("Failed to remove recipient");
+      showError(extractBackendError(error, "Failed to remove recipient. Please try again."));
     } finally {
       setIsRemovingRecipient(false);
       setRecipientToRemove(null);
@@ -377,7 +378,7 @@ export default function SeedListManagementPage() {
       }
     } catch (error) {
       console.error("Failed to load list members:", error);
-      showError("Failed to load list members");
+      showError(extractBackendError(error, "Failed to load list members. Please try again."));
       setListMembers([]);
     } finally {
       setIsLoadingListMembers(false);
@@ -428,7 +429,7 @@ export default function SeedListManagementPage() {
       showToast("Member removed successfully");
     } catch (error) {
       console.error("Failed to remove member:", error);
-      showError("Failed to remove member");
+      showError(extractBackendError(error, "Failed to remove member. Please try again."));
     } finally {
       setIsRemovingMember(false);
       setMemberToRemoveFromList(null);
@@ -454,7 +455,7 @@ export default function SeedListManagementPage() {
       setIsCreateListModalOpen(false);
     } catch (error) {
       console.error("Failed to create seed list:", error);
-      showError("Failed to create seed list");
+      showError(extractBackendError(error, "Failed to create seed list. Please try again."));
     } finally {
       setIsCreatingList(false);
     }
@@ -493,7 +494,7 @@ export default function SeedListManagementPage() {
       showToast("Seed list deleted successfully");
     } catch (error) {
       console.error("Failed to delete seed list:", error);
-      showError("Failed to delete seed list");
+      showError(extractBackendError(error, "Failed to delete seed list. Please try again."));
     } finally {
       setIsDeletingList(false);
       setListToDelete(null);
@@ -664,7 +665,7 @@ export default function SeedListManagementPage() {
       handleCloseModal();
     } catch (error) {
       console.error("Failed to add recipient:", error);
-      showError("Failed to add recipient");
+      showError(extractBackendError(error, "Failed to add recipient. Please try again."));
     } finally {
       setIsAddingRecipient(false);
     }
@@ -1384,30 +1385,26 @@ export default function SeedListManagementPage() {
                   <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
                     Line of Business
                   </label>
-                  <div className={errors.line_of_business_id ? "border border-red-500 rounded" : ""}>
-                    <HeadlessSelect
-                      value={formData.line_of_business_id}
-                      onChange={(value) => {
-                        setFormData({ ...formData, line_of_business_id: value.toString() });
-                        if (errors.line_of_business_id) {
-                          setErrors({ ...errors, line_of_business_id: undefined });
-                        }
-                      }}
-                      options={[
-                        { value: "", label: "Select Line of Business" },
-                        ...linesOfBusiness.map((lob) => ({
-                          value: lob.id.toString(),
-                          label: lob.name,
-                        })),
-                      ]}
-                      placeholder="Select Line of Business"
-                      disabled={linesOfBusinessLoading}
-                      zIndex={zIndex.popover}
-                    />
-                  </div>
-                  {errors.line_of_business_id && (
-                    <p className="text-xs text-red-500 mt-1">{errors.line_of_business_id}</p>
-                  )}
+                  <HeadlessSelect
+                    value={formData.line_of_business_id}
+                    onChange={(value) => {
+                      setFormData({ ...formData, line_of_business_id: value.toString() });
+                      // Validation commented out - optional field
+                      // if (errors.line_of_business_id) {
+                      //   setErrors({ ...errors, line_of_business_id: undefined });
+                      // }
+                    }}
+                    options={[
+                      { value: "", label: "Select Line of Business" },
+                      ...linesOfBusiness.map((lob) => ({
+                        value: lob.id.toString(),
+                        label: lob.name,
+                      })),
+                    ]}
+                    placeholder="Select Line of Business"
+                    disabled={linesOfBusinessLoading}
+                    zIndex={zIndex.popover}
+                  />
                 </div>
               </div>
 

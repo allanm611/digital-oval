@@ -553,7 +553,7 @@ export default function SegmentConditionsBuilder({
         {/* Type Selector Header - Always visible */}
         <div className="flex items-center gap-3">
           <label className={`block text-sm font-medium ${tw.textPrimary}`}>
-            Segment Rules *
+            Query Type *
           </label>
           <div className="w-40">
             <HeadlessSelect
@@ -597,7 +597,7 @@ export default function SegmentConditionsBuilder({
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <label className={`block text-sm font-medium ${tw.textPrimary}`}>
-              Segment Rules *
+              Query Type *
             </label>
             <div className="w-40">
               <HeadlessSelect
@@ -660,7 +660,7 @@ export default function SegmentConditionsBuilder({
               {isSqlPreviewLoading && (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               )}
-              {isSqlPreviewLoading ? "Previewing..." : "Preview"}
+              {isSqlPreviewLoading ? "Validating..." : "Validate Query"}
             </button>
           )}
         </div>

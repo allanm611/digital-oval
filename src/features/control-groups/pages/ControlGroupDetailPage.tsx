@@ -5,6 +5,7 @@ import { color, tw, button } from "../../../shared/utils/utils";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { controlGroupService } from "../services/controlGroupService";
 import type { ControlGroupApiModel, ControlGroupMember } from "../types/controlGroup";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -39,7 +40,7 @@ export default function ControlGroupDetailPage() {
         const data = await controlGroupService.getControlGroupById(Number(id));
         setGroup(data);
       } catch (error) {
-        showError("Failed to load control group");
+        showError(extractBackendError(error, "Failed to load control group. Please try again."));
         console.error(error);
       } finally {
         setIsLoading(false);
@@ -69,7 +70,7 @@ export default function ControlGroupDetailPage() {
         });
         setExistingMemberIds(allMembersResponse.members.map((m) => m.subscriber_id));
       } catch (error) {
-        showError("Failed to load members");
+        showError(extractBackendError(error, "Failed to load members. Please try again."));
         console.error(error);
       } finally {
         setMembersLoading(false);
@@ -126,7 +127,7 @@ export default function ControlGroupDetailPage() {
       showSuccess("Control group deleted successfully");
       navigate("/dashboard/control-groups");
     } catch (error) {
-      showError("Failed to delete control group");
+      showError(extractBackendError(error, "Failed to delete control group. Please try again."));
       console.error(error);
     } finally {
       setIsDeleting(false);
@@ -201,7 +202,7 @@ export default function ControlGroupDetailPage() {
       setShowRemoveModal(false);
       setMemberToRemove(null);
     } catch (error) {
-      showError("Failed to remove member");
+      showError(extractBackendError(error, "Failed to remove member. Please try again."));
       console.error(error);
     } finally {
       setRemovingMemberId(null);

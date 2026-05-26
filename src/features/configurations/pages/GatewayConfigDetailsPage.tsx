@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Edit, Trash2, Mail, MessageSquare, MessageCircle, Bell } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
 import { emailGatewayConfigService } from "../services/emailGatewayConfigService";
 import { smsGatewayConfigService } from "../services/smsGatewayConfigService";
@@ -84,7 +85,7 @@ export default function GatewayConfigDetailsPage({ channel }: GatewayConfigDetai
 
       setConfig(foundConfig);
     } catch (err) {
-      showError("Failed to load configuration");
+      showError(extractBackendError(error, "Failed to load configuration. Please try again."));
       navigate("/dashboard/gateway-configurations");
     } finally {
       setLoading(false);
@@ -125,7 +126,7 @@ export default function GatewayConfigDetailsPage({ channel }: GatewayConfigDetai
       showSuccess(`"${config.name}" has been deleted successfully.`);
       navigate("/dashboard/gateway-configurations");
     } catch (err) {
-      showError("Failed to delete gateway configuration");
+      showError(extractBackendError(error, "Failed to delete gateway configuration. Please try again."));
     } finally {
       setDeleting(false);
       setShowDeleteModal(false);

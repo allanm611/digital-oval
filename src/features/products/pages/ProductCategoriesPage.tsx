@@ -28,7 +28,7 @@ import { Product, CategoryPerformance } from "../types/product";
 import { productCategoryService } from "../services/productCategoryService";
 import { productService } from "../services/productService";
 import { color, tw, button, zIndex } from "../../../shared/utils/utils";
-import { extractBackendError } from "../../../shared/utils/errorHandler";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import NumberFormatter from "../../../shared/components/NumberFormatter";
 import {
@@ -258,7 +258,7 @@ function ProductsModal({
     } catch (err) {
       console.error("Failed to load products:", err);
       const errorMsg1 = extractBackendError(err, "Failed to load products");
-      showError("Error", errorMsg1, true);
+      showError("Error", extractBackendError(error, "Error. Please try again."));
       setError(""); // Clear error state
       return undefined;
     } finally {
@@ -660,7 +660,7 @@ export default function ProductCatalogsPage() {
     } catch (err) {
       console.error("Failed to update category:", err);
       const errorMsg3 = extractBackendError(err, t.productCatalogs.saveFailed);
-      showError("Error", errorMsg3, true);
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setIsUpdating(false);
     }
@@ -704,7 +704,7 @@ export default function ProductCatalogsPage() {
       // Display backend error message and bypass silent mode for important errors
       const errorMessage =
         err instanceof Error ? err.message : "Failed to update category";
-      showError("Toggle Failed", errorMessage, true);
+      showError("Toggle Failed", extractBackendError(error, "Toggle Failed. Please try again."));
     } finally {
       setTogglingCategoryId(null);
     }

@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import { offerTypeService } from "../services/offerTypeService";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useAuth } from "../../../contexts/AuthContext";
 import Input from "../../../shared/components/ui/Input";
 import ModalFooter from "../../../shared/components/ui/ModalFooter";
@@ -57,10 +58,7 @@ export default function CreateOfferTypeModal({
       }
     } catch (err) {
       console.error("Failed to create offer type:", err);
-      showError(
-        "Error",
-        err instanceof Error ? err.message : "Failed to create offer type"
-      );
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsCreating(false);
     }

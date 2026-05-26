@@ -20,6 +20,7 @@ import {
   Zap,
   Copy,
   Workflow,
+  MoreHorizontal,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import BackButton from "../../../shared/components/ui/BackButton";
@@ -31,6 +32,7 @@ import Pagination from "../../../shared/components/ui/Pagination";
 import Input from "../../../shared/components/ui/Input";
 import { color, tw, zIndex, noteStyles } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import { PermissionGate } from "../../auth/components/PermissionGate";
@@ -47,8 +49,8 @@ import { useAuth } from "../../../contexts/AuthContext";
 import type { ScheduledJob } from "../types/scheduledJob";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 
-const STEP_TYPE_OPTIONS: Array<{ label: string; value: StepType }> = [
-  { label: "All Types", value: "sql" },
+const STEP_TYPE_OPTIONS: Array<{ label: string; value: StepType | "" }> = [
+  { label: "All Types", value: "" },
   { label: "SQL", value: "sql" },
   { label: "Stored Procedure", value: "stored_proc" },
   { label: "API Call", value: "api_call" },
@@ -61,8 +63,8 @@ const STEP_TYPE_OPTIONS: Array<{ label: string; value: StepType }> = [
   { label: "Wait", value: "wait" },
 ];
 
-const FAILURE_ACTION_OPTIONS: Array<{ label: string; value: FailureAction }> = [
-  { label: "All Actions", value: "abort" },
+const FAILURE_ACTION_OPTIONS: Array<{ label: string; value: FailureAction | "" }> = [
+  { label: "All Actions", value: "" },
   { label: "Abort", value: "abort" },
   { label: "Continue", value: "continue" },
   { label: "Retry", value: "retry" },
@@ -95,13 +97,17 @@ export default function JobWorkflowStepsPage() {
     null,
   );
   const [isDeleting, setIsDeleting] = useState(false);
-  const [rowLoading, setRowLoading] = useState<{
-    id: number;
-    action: "clone";
-  } | null>(null);
   const [validateLoadingId, setValidateLoadingId] = useState<number | null>(
     null,
   );
+  const [showActionMenu, setShowActionMenu] = useState<number | null>(null);
+  const [actionMenuPosition, setActionMenuPosition] = useState<{
+    top: number;
+    left: number;
+    width?: number;
+    maxHeight?: number;
+  } | null>(null);
+  const actionMenuRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const [jobMap, setJobMap] = useState<Record<number, ScheduledJob>>({});
   // Bulk selection and batch operations
   const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -470,30 +476,30 @@ export default function JobWorkflowStepsPage() {
 
       setStats({
         totalSteps:
-          typeof statsData.total_steps === "number"
-            ? statsData.total_steps
+          statsData.total_steps !== undefined && statsData.total_steps !== null
+            ? Number(statsData.total_steps)
             : steps.length,
         activeSteps:
-          typeof healthData.active_steps === "number"
-            ? healthData.active_steps
+          healthData.active_steps !== undefined && healthData.active_steps !== null
+            ? Number(healthData.active_steps)
             : steps.filter((s) => s.is_active).length,
         criticalSteps:
-          typeof healthData.critical_steps === "number"
-            ? healthData.critical_steps
+          healthData.critical_steps !== undefined && healthData.critical_steps !== null
+            ? Number(healthData.critical_steps)
             : steps.filter((s) => s.is_critical).length,
         stepsWithRetry:
-          typeof healthData.steps_with_retry === "number"
-            ? healthData.steps_with_retry
+          healthData.steps_with_retry !== undefined && healthData.steps_with_retry !== null
+            ? Number(healthData.steps_with_retry)
             : steps.filter((s) => s.retry_count > 0).length,
         stepsWithValidation:
-          typeof healthData.steps_with_validation === "number"
-            ? healthData.steps_with_validation
+          healthData.steps_with_validation !== undefined && healthData.steps_with_validation !== null
+            ? Number(healthData.steps_with_validation)
             : steps.filter(
                 (s) => s.pre_validation_query || s.post_validation_query,
               ).length,
         parallelGroups:
-          typeof healthData.parallel_groups === "number"
-            ? healthData.parallel_groups
+          healthData.parallel_groups !== undefined && healthData.parallel_groups !== null
+            ? Number(healthData.parallel_groups)
             : new Set(
                 steps
                   .filter((s) => s.parallel_group_id)
@@ -643,10 +649,7 @@ export default function JobWorkflowStepsPage() {
       // Optimistically update: filter out disabled steps, add enabled ones
       // Note: fetchSteps was called here to refresh the list after batch action
     } catch (err) {
-      showError(
-        t("jobWorkflowSteps.batchFailed", `Batch ${action} failed`),
-        err instanceof Error ? err.message : t.common.error || "Unknown error",
-      );
+      showError(        t("jobWorkflowSteps.batchFailed", `Batch ${action} failed`),        err instanceof Error ? err.message : t.common.error || "Unknown error",      );
     } finally {
       setIsBatchProcessing(false);
     }
@@ -766,10 +769,7 @@ export default function JobWorkflowStepsPage() {
         });
       });
     } catch (err) {
-      showError(
-        t("jobWorkflowSteps.reorderFailed", "Reorder failed"),
-        err instanceof Error ? err.message : t.common.error || "Unknown error",
-      );
+      showError(        t("jobWorkflowSteps.reorderFailed", "Reorder failed"),        err instanceof Error ? err.message : t.common.error || "Unknown error",      );
     } finally {
       setIsReordering(false);
     }
@@ -794,10 +794,7 @@ export default function JobWorkflowStepsPage() {
       // Optimistically remove all steps for this job
       setSteps((prev) => prev.filter((step) => step.job_id !== deleteAllJobId));
     } catch (err) {
-      showError(
-        t("jobWorkflowSteps.deleteFailed", "Delete failed"),
-        err instanceof Error ? err.message : t.common.error || "Unknown error",
-      );
+      showError(        t("jobWorkflowSteps.deleteFailed", "Delete failed"),        err instanceof Error ? err.message : t.common.error || "Unknown error",      );
     } finally {
       setIsDeletingAll(false);
     }
@@ -841,34 +838,9 @@ export default function JobWorkflowStepsPage() {
         ),
       );
     } catch (err) {
-      showError(
-        t("jobWorkflowSteps.updateFailed", "Batch update failed"),
-        err instanceof Error ? err.message : t.common.error || "Unknown error",
-      );
+      showError(        t("jobWorkflowSteps.updateFailed", "Batch update failed"),        err instanceof Error ? err.message : t.common.error || "Unknown error",      );
     } finally {
       setIsBatchUpdating(false);
-    }
-  };
-
-  const handleDuplicateStep = async (step: JobWorkflowStep) => {
-    try {
-      const result = await jobWorkflowStepService.duplicateStep(step.id, {});
-      showToast(
-        t("jobWorkflowSteps.duplicated", "Step duplicated"),
-        t(
-          "jobWorkflowSteps.duplicateSuccess",
-          `"${step.step_name}" has been duplicated successfully.`,
-        ),
-      );
-      // Optimistically add duplicated step if returned
-      if (result && typeof result === "object" && "id" in result) {
-        setSteps((prev) => [...prev, result as JobWorkflowStep]);
-      }
-    } catch (err) {
-      showError(
-        t("jobWorkflowSteps.duplicateFailed", "Failed to duplicate step"),
-        err instanceof Error ? err.message : t.common.error || "Unknown error",
-      );
     }
   };
 
@@ -907,10 +879,22 @@ export default function JobWorkflowStepsPage() {
         );
       }
     } catch (err) {
-      showError(
-        "Validation failed",
-        err instanceof Error ? err.message : "Unknown error",
-      );
+      showError("Validation failed", extractBackendError(error, "Validation failed. Please try again."));
+    }
+  };
+
+  const handleActionMenuToggle = (stepId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const el = actionMenuRefs.current[stepId];
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      setActionMenuPosition({
+        top: rect.bottom + 8,
+        left: rect.left,
+        width: 200,
+        maxHeight: 300,
+      });
+      setShowActionMenu(showActionMenu === stepId ? null : stepId);
     }
   };
 
@@ -1139,7 +1123,7 @@ export default function JobWorkflowStepsPage() {
         <div className="flex gap-2">
           <button
             onClick={() => setShowAdvancedFilters(true)}
-            className={`inline-flex items-center justify-center gap-2 ${tw.rounded} bg-white border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50`}
+            className={`inline-flex items-center justify-center gap-2 ${tw.rounded} bg-white border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50`}
           >
             <Filter className="h-4 w-4" />
             <span>Filters</span>
@@ -1446,49 +1430,43 @@ export default function JobWorkflowStepsPage() {
                               }`,
                             )
                           }
-                          className={`p-2 ${tw.rounded} text-gray-600 transition-colors`}
+                          className={`p-2 ${tw.rounded} text-gray-600 transition-colors hover:bg-gray-100`}
                           aria-label="View details"
                           title="View details"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button
-                          onClick={() =>
-                            navigate(
-                              `/dashboard/job-workflow-steps/${step.id}/edit${
-                                jobIdFilter ? `?job_id=${jobIdFilter}` : ""
-                              }`,
-                            )
-                          }
-                          className={`p-2 ${tw.rounded} text-gray-600 transition-colors`}
-                          aria-label="Edit step"
-                          title="Edit step"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={async () => {
-                            setRowLoading({ id: step.id, action: "clone" });
-                            await handleDuplicateStep(step);
-                            setRowLoading((prev) =>
-                              prev?.id === step.id ? null : prev,
-                            );
+                        <PermissionGate permission="job-workflow-steps.update">
+                          <button
+                            onClick={() =>
+                              navigate(
+                                `/dashboard/job-workflow-steps/create?operation=edit&id=${step.id}${
+                                  jobIdFilter ? `&job_id=${jobIdFilter}` : ""
+                                }`,
+                              )
+                            }
+                            className={`p-2 ${tw.rounded} text-gray-600 transition-colors hover:bg-gray-100`}
+                            aria-label="Edit step"
+                            title="Edit step"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                        </PermissionGate>
+                        <div
+                          className="relative"
+                          ref={(el) => {
+                            if (el) actionMenuRefs.current[step.id] = el;
                           }}
-                          disabled={
-                            rowLoading?.id === step.id &&
-                            rowLoading?.action === "clone"
-                          }
-                          className={`p-2 ${tw.rounded} text-gray-600 transition-colors disabled:opacity-50`}
-                          aria-label="Duplicate step"
-                          title="Duplicate step"
                         >
-                          {rowLoading?.id === step.id &&
-                          rowLoading?.action === "clone" ? (
-                            <LoadingSpinner />
-                          ) : (
-                            <Copy className="w-4 h-4" />
-                          )}
-                        </button>
+                          <button
+                            onClick={(e) => handleActionMenuToggle(step.id, e)}
+                            className={`p-2 ${tw.rounded} text-gray-600 transition-colors hover:bg-gray-100`}
+                            aria-label="More actions"
+                            title="More actions"
+                          >
+                            <MoreHorizontal className="w-4 h-4" />
+                          </button>
+                        </div>
                         {jobIdFilter && (
                           <button
                             onClick={async () => {
@@ -1501,7 +1479,7 @@ export default function JobWorkflowStepsPage() {
                               );
                             }}
                             disabled={validateLoadingId === Number(jobIdFilter)}
-                            className={`p-2 ${tw.rounded} text-gray-600 transition-colors disabled:opacity-50`}
+                            className={`p-2 ${tw.rounded} text-gray-600 transition-colors disabled:opacity-50 hover:bg-gray-100`}
                             aria-label="Validate workflow integrity"
                             title="Validate workflow integrity"
                           >
@@ -1512,19 +1490,6 @@ export default function JobWorkflowStepsPage() {
                             )}
                           </button>
                         )}
-                        <PermissionGate permission="job-workflow-steps.delete">
-                          <button
-                            onClick={() => {
-                              setDeletingStep(step);
-                              setShowDeleteModal(true);
-                            }}
-                            className={`p-2 text-red-600 ${tw.rounded} transition-colors`}
-                            aria-label="Delete step"
-                            title="Delete step"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </PermissionGate>
                       </div>
                     </td>
                   </tr>
@@ -1545,6 +1510,59 @@ export default function JobWorkflowStepsPage() {
         )}
       </div>
 
+      {/* Action Menu Dropdown */}
+      {steps.map((step) => {
+        if (showActionMenu === step.id && actionMenuPosition) {
+          return createPortal(
+            <div
+              key={`menu-${step.id}`}
+              className={`fixed bg-white border border-gray-200 ${tw.rounded} shadow-xl py-1`}
+              style={{
+                zIndex: zIndex.popover,
+                top: `${actionMenuPosition.top}px`,
+                left: `${actionMenuPosition.left}px`,
+                width: `${actionMenuPosition.width || 180}px`,
+                maxHeight: `${actionMenuPosition.maxHeight}px`,
+                overflowY: "auto",
+              }}
+            >
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(
+                    `/dashboard/job-workflow-steps/create?operation=duplicate&id=${step.id}${
+                      jobIdFilter ? `&job_id=${jobIdFilter}` : ""
+                    }`,
+                  );
+                  setShowActionMenu(null);
+                }}
+                className="w-full flex items-center px-4 py-3 text-sm text-black hover:bg-gray-50 transition-colors"
+              >
+                <Copy className="w-4 h-4 mr-3" style={{ color: color.primary.action }} />
+                Duplicate Step
+              </button>
+
+              <PermissionGate permission="job-workflow-steps.delete">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeletingStep(step);
+                    setShowDeleteModal(true);
+                    setShowActionMenu(null);
+                  }}
+                  className="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                >
+                  <Trash2 className="w-4 h-4 mr-3" />
+                  Delete Step
+                </button>
+              </PermissionGate>
+            </div>,
+            document.body,
+          );
+        }
+        return null;
+      })}
+
       {deletingStep && (
         <DeleteConfirmModal
           isOpen={showDeleteModal}
@@ -1560,11 +1578,8 @@ export default function JobWorkflowStepsPage() {
                 deletingStep.id,
               );
               showToast(
-                t("jobWorkflowSteps.stepDeleted", "Workflow step deleted"),
-                t(
-                  "jobWorkflowSteps.stepDeleteSuccess",
-                  `"${deletingStep.step_name}" has been deleted successfully.`,
-                ),
+                "Workflow step deleted",
+                `"${deletingStep.step_name}" has been deleted successfully.`,
               );
               setShowDeleteModal(false);
               setDeletingStep(null);
@@ -1572,19 +1587,8 @@ export default function JobWorkflowStepsPage() {
               setSteps((prev) => prev.filter((s) => s.id !== deletingStep.id));
             } catch (err) {
               const message =
-                err instanceof Error
-                  ? err.message
-                  : t(
-                      "jobWorkflowSteps.stepDeleteFailed",
-                      "Failed to delete workflow step",
-                    );
-              showError(
-                t(
-                  "jobWorkflowSteps.unableToDelete",
-                  "Unable to delete workflow step",
-                ),
-                message,
-              );
+                err instanceof Error ? err.message : "Failed to delete workflow step";
+              showError("Unable to delete workflow step", extractBackendError(error, "Unable to delete workflow step. Please try again."));
             } finally {
               setIsDeleting(false);
             }

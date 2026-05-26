@@ -29,6 +29,7 @@ import Input from "../../../shared/components/ui/Input";
 import SelectJobTypeModal from "../components/SelectJobTypeModal";
 import { color, tw, zIndexTokens } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { scheduledJobService } from "../services/scheduledJobService";
 import { jobTypeService } from "../services/jobTypeService";
@@ -193,7 +194,7 @@ export default function ScheduledJobsPage() {
         const message =
           err instanceof Error ? err.message : "Failed to load scheduled jobs";
         setErrorMessage(message);
-        showError("Scheduled Jobs", message);
+        showError("Scheduled Jobs", extractBackendError(error, "Scheduled Jobs. Please try again."));
       } finally {
         setIsLoading(false);
       }
@@ -980,7 +981,7 @@ export default function ScheduledJobsPage() {
                 err instanceof Error
                   ? err.message
                   : "Failed to delete scheduled job";
-              showError("Unable to delete scheduled job", message, true);
+              showError("Unable to delete scheduled job", extractBackendError(error, "Unable to delete scheduled job. Please try again."));
             } finally {
               setIsDeleting(false);
             }

@@ -8,6 +8,7 @@ import {
   FetchByRangeRequest,
 } from "../types/etl";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw } from "../../../shared/utils/utils";
@@ -201,7 +202,7 @@ export default function EtlFetchControlsPage() {
         <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
           {t.etl.fetchControls}
         </h1>
-        <p className={`${tw.textSecondary} mt-2 text-sm`}>
+        <p className={`${tw.textSecondary} -mt-4 text-sm`}>
           {t.etl.fetchControlsDescription}
         </p>
       </div>

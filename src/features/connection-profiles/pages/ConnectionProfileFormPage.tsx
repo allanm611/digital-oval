@@ -24,7 +24,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
 import {
   DATABASE_TYPE_OPTIONS,
 } from "../constants/connectionTypes";
@@ -39,6 +39,7 @@ import {
   SMSInboxConfig,
   ConfigComponentProps,
 } from "../../../shared/components/ConnectorConfigComponents";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 
 interface ConnectionProfileFormPageProps {
   mode: "create" | "edit";
@@ -166,12 +167,7 @@ export default function ConnectionProfileFormPage({
       });
     } catch (err) {
       console.error("Failed to load connection profile:", err);
-      showError(
-        t.analytics?.["failed_to_load"] || "Failed to load connection profile",
-        err instanceof Error
-          ? err.message
-          : t.common?.["try_again_later"] || "Please try again later.",
-      );
+      showError("Unable to Load Profile", extractBackendError(error, "Unable to Load Profile. Please try again.")),      );
     } finally {
       setLoading(false);
     }
@@ -298,21 +294,10 @@ export default function ConnectionProfileFormPage({
         navigate("/dashboard/connection-profiles");
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : typeof err === "object" && err !== null && "message" in err
-            ? String(err.message)
-            : "Please try again later.";
       console.error("Connection profile error:", err);
       const action = mode === "create" ? "create" : "update";
-      const translationKey =
-        mode === "create" ? "failed_to_create" : "failed_to_update";
-      showError(
-        t.analytics?.[translationKey] ||
-          `Failed to ${action} connection profile`,
-        errorMessage,
-      );
+      const actionLabel = action === "create" ? "Create" : "Update";
+      showError(        `Unable to ${actionLabel} Profile`,        extractBackendError(err, `Failed to ${action} connection profile. Please try again later.`),      );
     } finally {
       setSaving(false);
     }
@@ -1075,7 +1060,8 @@ export default function ConnectionProfileFormPage({
                 );
               }
             }}
-            className={`px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 ${tw.rounded} transition-colors`}
+            className="transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80"
+            style={getButtonStyles(button.bordered)}
           >
             Cancel
           </button>

@@ -17,6 +17,7 @@ import {
 } from "recharts";
 import { segmentService } from "../services/segmentService";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
 import { colors } from "../../../shared/utils/tokens";
@@ -215,10 +216,7 @@ export default function SegmentAnalyticsPage(): JSX.Element {
       }
     } catch (err) {
       console.error("Failed to load analytics:", err);
-      showError(
-        "Analytics Error",
-        "Failed to load segment analytics data",
-      );
+      showError("Analytics Error", extractBackendError(error, "Analytics Error. Please try again."));
     } finally {
       setIsLoading(false);
     }

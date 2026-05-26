@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Volume2, VolumeX } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useNotificationSettings } from "../../../contexts/NotificationSettingsContext";
 import { useToast } from "../../../contexts/ToastContext";
 import { notificationService } from "../services/notificationService";

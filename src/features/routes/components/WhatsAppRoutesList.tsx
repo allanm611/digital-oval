@@ -7,6 +7,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { WhatsAppRoute } from "../types/whatsappRoute";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw } from "../../../shared/utils/utils";
 
 const DUMMY_WHATSAPP_ROUTES: WhatsAppRoute[] = [

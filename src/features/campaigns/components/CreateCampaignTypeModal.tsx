@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { campaignTypeService } from "../services/campaignTypeService";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useAuth } from "../../../contexts/AuthContext";
 import ModalFooter from "../../../shared/components/ui/ModalFooter";
 
@@ -56,10 +57,7 @@ export default function CreateCampaignTypeModal({
       }
     } catch (err) {
       console.error("Failed to create campaign type:", err);
-      showError(
-        "Error",
-        "Failed to create campaign type. Please try again."
-      );
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setIsCreating(false);
     }

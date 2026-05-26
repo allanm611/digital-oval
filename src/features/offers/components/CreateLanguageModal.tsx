@@ -7,6 +7,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { languageService, Language } from "../../configurations/services/languageService";
 import { characterSetService, CharacterSet } from "../../configurations/services/characterSetService";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { zIndex } from "../../../shared/utils/tokens";
 
 interface CreateLanguageModalProps {
@@ -160,10 +161,7 @@ export default function CreateLanguageModal({
       onLanguageCreated(createdLanguage);
       onClose();
     } catch (err) {
-      showError(
-        "Error",
-        err instanceof Error ? err.message : "Failed to create language"
-      );
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsSaving(false);
     }

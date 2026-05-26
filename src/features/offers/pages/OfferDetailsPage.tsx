@@ -9,6 +9,7 @@ import {
 } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useClickOutside } from "../../../shared/hooks/useClickOutside";
+import { useConfirm } from "../../../contexts/ConfirmContext";
 import {
   ArrowLeft,
   Edit,
@@ -29,6 +30,7 @@ import {
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 
 const CreateProductModalWrapper = lazy(
   () => import("../../products/components/CreateProductModalWrapper"),
@@ -59,10 +61,10 @@ import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
-import { useConfirm } from "../../../contexts/ConfirmContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
+
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import RegularModal from "../../../shared/components/ui/RegularModal";
-import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import { Product } from "../../products/types/product";
 import { Search, Check, FileText, Eye, Copy } from "lucide-react";
@@ -664,7 +666,7 @@ export default function OfferDetailsPage() {
         }
       } catch (err) {
         console.error("Failed to load offer:", err);
-        showError("Failed to load offer", "Please try again later.");
+        showError("Failed to load offer", extractBackendError(error, "Failed to load offer. Please try again."));
         setError(""); // Clear error state
       } finally {
         setLoading(false);
@@ -905,7 +907,7 @@ export default function OfferDetailsPage() {
       );
     } catch (err) {
       console.error("Failed to delete creative:", err);
-      showError("Failed to delete creative", "Please try again later.");
+      showError("Failed to delete creative", extractBackendError(error, "Failed to delete creative. Please try again."));
     } finally {
       setIsDeletingCreative(false);
     }
@@ -1007,7 +1009,7 @@ export default function OfferDetailsPage() {
       loadCreatives(true);
     } catch (err) {
       console.error("Failed to create creative:", err);
-      showError("Failed to create creative", "Please try again later.");
+      showError("Failed to create creative", extractBackendError(error, "Failed to create creative. Please try again."));
     } finally {
       setIsCreatingCreative(false);
     }
@@ -1168,7 +1170,7 @@ export default function OfferDetailsPage() {
       loadProducts(true);
     } catch (err) {
       console.error("Failed to link products:", err);
-      showError("Failed to link products", "Please try again later.");
+      showError("Failed to link products", extractBackendError(error, "Failed to link products. Please try again."));
     } finally {
       setIsLinkingProducts(false);
     }
@@ -1472,7 +1474,7 @@ export default function OfferDetailsPage() {
           : null) ||
         "Failed to delete product. Please try again.";
       // Bypass silent mode for delete operations to always show error
-      showError("Cannot Delete Product", errorMessage, true);
+      showError("Cannot Delete Product", extractBackendError(error, "Cannot Delete Product. Please try again."));
     } finally {
       setIsDeletingProduct(false);
     }
@@ -1568,11 +1570,7 @@ export default function OfferDetailsPage() {
       );
     } catch (err) {
       // Failed to set primary product - show generic message only
-      showError(
-        "Failed to set primary",
-        "Unable to set this product as primary. Please try again.",
-        true,
-      );
+      showError("Failed to set primary", extractBackendError(error, "Failed to set primary. Please try again."));
     } finally {
       setSettingPrimaryId(null);
     }
@@ -3583,6 +3581,7 @@ export default function OfferDetailsPage() {
       />
 
       {/* Delete Creative Confirmation Modal */}
+      {showDeleteCreativeModal && console.log("creativeToDelete:", creativeToDelete)}
       <DeleteConfirmModal
         isOpen={showDeleteCreativeModal}
         onClose={handleCancelDeleteCreative}
@@ -3592,7 +3591,7 @@ export default function OfferDetailsPage() {
           creativeToDelete?.channel || ""
         } creative? This action cannot be undone.`}
         itemName={
-          creativeToDelete ? `${creativeToDelete.channel} creative` : ""
+          creativeToDelete ? `${creativeToDelete.channel}${creativeToDelete.locale ? ` (${creativeToDelete.locale})` : ""}` : ""
         }
         isLoading={isDeletingCreative}
         confirmText="Delete Creative"

@@ -22,6 +22,7 @@ export interface CustomerSubscriptionRecord {
   birthDate?: string | null;
   gender?: string | number | null;
   email?: string | null;
+  email_address?: string | null;
   alternateEmail?: string | null;
   birthPlaceOther?: string | null;
   preferredLanguage?: string | null;
@@ -40,4 +41,40 @@ export interface CustomerSubscriptionRecord {
   road?: string | null;
   estate?: string | null;
   ward?: string | null;
+  segments?: Array<{id: string; name: string; code: string; type: string; category: string}> | null;
+  offers?: Array<any> | null;
+  quicklists?: Array<{id: number; upload_type: string; name: string; description: string}> | null;
+  campaigns?: Array<any> | null;
+  communication_channels?: Array<any> | null;
+  notifications?: Array<any> | null;
+  updated_at?: string | null;
+  id?: string | null;
+  // Snake_case variants for API response compatibility
+  first_name?: string | null;
+  last_name?: string | null;
+  amdocs_subs_id?: number | null;
+  alternate_msisdns?: string | null;
+  activation_date?: string | null;
+  banking_services?: string | null;
+  sim_type?: string | null;
+  data_services?: string | null;
+  limit_out_of_bundle_data?: string | null;
+  limit_out_of_bundle_voice?: string | null;
+  limit_out_of_bundle_sms?: string | null;
+  birth_date?: string | null;
+  alternate_email?: string | null;
+  birth_place_other?: string | null;
+  preferred_language?: string | null;
+  language_preference?: string | null;
+  postal_code?: string | null;
+  country_code?: string | null;
+  physical_address?: string | null;
+  customer_tier?: string | null;
+  preferred_channel?: string | null;
+  branch_code?: string | number | null;
+  customer_county_id?: number | null;
+  created_at?: string | null;
+  customer_id?: number | null;
+  subscription_id?: number | null;
+  customer_type?: string | null;
 }

@@ -11,6 +11,7 @@ import {
 import { communicationChannelService, CommunicationChannel } from "../../../shared/services/communicationChannelService";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -84,7 +85,7 @@ export default function CommunicationChannelDetailsPage() {
       );
     } catch (err) {
       console.error("Failed to toggle channel status:", err);
-      showError("Failed to update channel status", "Please try again later.");
+      showError("Failed to update channel status", extractBackendError(error, "Failed to update channel status. Please try again."));
       setChannel((prev) =>
         prev ? { ...prev, is_active: !prev.is_active } : null
       );
@@ -144,7 +145,7 @@ export default function CommunicationChannelDetailsPage() {
       console.error("Failed to delete channel:", err);
       const errorMessage =
         err instanceof Error ? err.message : "Failed to delete channel. Please try again.";
-      showError("Cannot Delete Channel", errorMessage, true);
+      showError("Cannot Delete Channel", extractBackendError(error, "Cannot Delete Channel. Please try again."));
     } finally {
       setIsDeleting(false);
     }

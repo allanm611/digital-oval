@@ -40,6 +40,7 @@ import {
 } from "../types/campaignFlow";
 
 import { useBackendConfigurationData } from "../../../shared/hooks/useBackendConfigurationData";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import CampaignDefinitionStep from "../components/steps/CampaignDefinitionStep";
 import AudienceConfigurationStep from "../components/steps/AudienceConfigurationStep";
 import CampaignFlowsStep from "../components/steps/CampaignFlowsStep";
@@ -287,6 +288,13 @@ export default function CreateCampaignPage() {
             program_id: campaign?.program_id || undefined,
             start_date: campaign?.start_date || undefined,
             end_date: campaign?.end_date || undefined,
+            timezone: campaign?.timezone || undefined,
+            scheduling: {
+              type: "scheduled",
+              time_zone: campaign?.timezone || undefined,
+              start_date: campaign?.start_date || undefined,
+              end_date: campaign?.end_date || undefined,
+            },
             campaign_type: campaign?.campaign_type || "multiple_target_group",
 
             tags: (campaign?.tags || []).map((tag: any) =>
@@ -410,9 +418,10 @@ export default function CreateCampaignPage() {
         } catch (flowError) {
           console.error("Failed to load campaign flows:", flowError);
         }
-      } catch {
+      } catch (err) {
         if (!silent) {
-          showToast("error", t.campaigns.failedToLoadCampaign);
+          const errorMessage = extractBackendError(err, "Failed to load campaign");
+          showToast("error", errorMessage);
           navigate("/dashboard/campaigns");
         }
       } finally {
@@ -885,7 +894,8 @@ export default function CreateCampaignPage() {
             showToast("success", "Campaign resubmitted for approval!");
           } catch (error) {
             console.error("Failed to resubmit campaign:", error);
-            showToast("error", "Failed to resubmit campaign for approval");
+            const errorMessage = extractBackendError(error, "Failed to resubmit campaign for approval");
+            showToast("error", errorMessage);
           }
         }
       } else if (createdCampaignId) {

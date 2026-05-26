@@ -32,6 +32,7 @@ import Pagination from "../../../shared/components/ui/Pagination";
 import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import { color, tw } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { formatCurrency } from "../../../shared/services/currencyService";
 import type {
   RangeOption,
@@ -603,10 +604,7 @@ export default function CustomerProfileReportsPage() {
 
         setApiCustomers(allCustomers);
       } catch (error) {
-        showError(
-          "Failed to Load Customers",
-          "Unable to retrieve customers. Please try again.",
-        );
+        showError("Failed to Load Customers", extractBackendError(error, "Failed to Load Customers. Please try again."));
       } finally {
         setIsLoadingCustomers(false);
       }
@@ -657,10 +655,7 @@ export default function CustomerProfileReportsPage() {
           }
         } catch (error) {
           console.error("Failed to fetch customer by ID:", error);
-          showError(
-            "Customer Not Found",
-            "Unable to retrieve customer details. Please try again.",
-          );
+          showError("Customer Not Found", extractBackendError(error, "Customer Not Found. Please try again."));
         }
       };
 

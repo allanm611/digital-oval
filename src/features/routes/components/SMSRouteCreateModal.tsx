@@ -4,6 +4,7 @@ import { CreateSMSRouteRequest, SMSRoute } from "../types/smsRoute";
 import { NOTIFICATION_CHANNEL_OPTIONS, SMS_GATEWAY_OPTIONS } from "../constants/smsRouteEnums";
 import { smsRouteService } from "../services/smsRouteService";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw } from "../../../shared/utils/utils";
@@ -107,7 +108,7 @@ export default function SMSRouteCreateModal({
         err instanceof Error
           ? err.message
           : `Failed to ${isEditMode ? "update" : "create"} route`;
-      showError("Error", errorMessage);
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setLoading(false);
     }

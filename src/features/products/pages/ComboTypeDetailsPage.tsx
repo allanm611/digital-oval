@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Edit, Trash2, Briefcase } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { comboTypeService, ComboType } from "../services/comboTypeService";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -55,10 +56,7 @@ export default function ComboTypeDetailsPage() {
       navigate("/dashboard/combo-types");
     } catch (err) {
       console.error("Failed to delete:", err);
-      showError(
-        "Cannot Delete Combo Type",
-        err instanceof Error ? err.message : "Failed to delete combo type"
-      );
+      showError("Cannot Delete Combo Type", extractBackendError(err, "Cannot Delete Combo Type. Please try again."));
     } finally {
       setIsDeleting(false);
       setShowDeleteModal(false);

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { X, Loader2 } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { notificationTypeService, NotificationRule, CreateNotificationRuleRequest } from "../../../shared/services/notificationTypeService";
 
@@ -65,7 +66,7 @@ export default function NotificationTypeModal({
       setTableOptions(options);
     } catch (error) {
       console.error("Failed to load tables:", error);
-      showError("Failed to load tables");
+      showError(extractBackendError(error, "Failed to load tables. Please try again."));
     } finally {
       setIsLoadingTables(false);
     }

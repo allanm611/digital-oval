@@ -10,6 +10,7 @@ import {
   Search,
 } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useAuth } from "../../../contexts/AuthContext";
 import { Role, Permission, PermissionListResult, RolePermissionListResult } from "../types/role";
 import SearchInput from "../../../shared/components/ui/SearchInput";
@@ -110,10 +111,7 @@ export default function AssignPermissionsModal({
           : [];
         setAllPermissions(permsToSet);
       } catch (err) {
-        showError(
-          "Error",
-          err instanceof Error ? err.message : "Failed to load permissions",
-        );
+        showError("Error", extractBackendError(error, "Error. Please try again."));
       } finally {
         setIsLoading(false);
       }
@@ -174,12 +172,7 @@ export default function AssignPermissionsModal({
 
       setAssignedPermissions(assigned);
     } catch (err) {
-      showError(
-        "Error",
-        err instanceof Error
-          ? err.message
-          : "Failed to load assigned permissions",
-      );
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setIsLoading(false);
     }
@@ -251,10 +244,7 @@ export default function AssignPermissionsModal({
 
     } catch (err) {
       console.error("Error toggling permission:", err);
-      showError(
-        "Error",
-        err instanceof Error ? err.message : "Failed to toggle permission",
-      );
+      showError("Error", extractBackendError(error, "Error. Please try again."));
       // Revert optimistic update on error
       if (isAssigned) {
         setAssignedPermissions([...assignedPermissions, permission]);
@@ -467,10 +457,7 @@ export default function AssignPermissionsModal({
       setSelectedPermissionIds(new Set());
       handleSetSelectionMode(false);
     } catch (err) {
-      showError(
-        "Assignment Failed",
-        err instanceof Error ? err.message : "Failed to assign permissions",
-      );
+      showError("Assignment Failed", extractBackendError(error, "Assignment Failed. Please try again."));
       // Revert optimistic update on error
       setAssignedPermissions(
         assignedPermissions.filter(
@@ -518,10 +505,7 @@ export default function AssignPermissionsModal({
       setSelectedPermissionIds(new Set());
       handleSetSelectionMode(false);
     } catch (err) {
-      showError(
-        "Removal Failed",
-        err instanceof Error ? err.message : "Failed to remove permissions",
-      );
+      showError("Removal Failed", extractBackendError(error, "Removal Failed. Please try again."));
       // Revert optimistic update on error
       const removedIds = new Set(assignedToRemove);
       setAssignedPermissions((prev) => [

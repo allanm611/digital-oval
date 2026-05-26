@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { Edit, Trash2, Eye } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
-import { useConfirm } from "../../../contexts/ConfirmContext";
+import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import BackButton from "../../../shared/components/ui/BackButton";
 import CreateButton from "../../../shared/components/ui/CreateButton";
@@ -126,11 +127,13 @@ const buildInitialConfigs = (): UnifiedGatewayConfig[] => {
 export default function GatewayConfigurationsPage() {
   const navigate = useNavigate();
   const { success: showSuccess, error: showError } = useToast();
-  const { confirm } = useConfirm();
   const { t } = useLanguage();
   const [configs, setConfigs] = useState<UnifiedGatewayConfig[]>(buildInitialConfigs);
   const [searchTerm, setSearchTerm] = useState("");
   const [togglingId, setTogglingId] = useState<number | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [configToDelete, setConfigToDelete] = useState<UnifiedGatewayConfig | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     loadAllConfigs();
@@ -220,23 +223,21 @@ export default function GatewayConfigurationsPage() {
 
       setConfigs(unifiedConfigs);
     } catch (err) {
-      showError("Failed to load gateway configurations");
+      showError(extractBackendError(error, "Failed to load gateway configurations. Please try again."));
     }
   };
 
-  const handleDelete = async (config: UnifiedGatewayConfig) => {
-    const confirmed = await confirm({
-      title: "Delete Gateway Configuration",
-      message: `Are you sure you want to delete "${config.name}"? This may affect message delivery.`,
-      type: "danger",
-      confirmText: "Delete",
-      cancelText: "Cancel",
-    });
+  const handleDeleteClick = (config: UnifiedGatewayConfig) => {
+    setConfigToDelete(config);
+    setShowDeleteModal(true);
+  };
 
-    if (!confirmed) return;
+  const confirmDeleteConfig = async () => {
+    if (!configToDelete) return;
 
+    setDeleting(true);
     try {
-      const { channel_type, id } = config;
+      const { channel_type, id } = configToDelete;
 
       if (channel_type === "EMAIL") {
         await emailGatewayConfigService.deleteConfig(id);
@@ -251,9 +252,13 @@ export default function GatewayConfigurationsPage() {
       }
 
       setConfigs((prev) => prev.filter((c) => !(c.id === id && c.channel_type === channel_type)));
-      showSuccess(`"${config.name}" has been deleted successfully.`);
+      showSuccess(`"${configToDelete.name}" has been deleted successfully.`);
+      setShowDeleteModal(false);
+      setConfigToDelete(null);
     } catch (err) {
-      showError("Failed to delete gateway configuration");
+      showError(extractBackendError(error, "Failed to delete gateway configuration. Please try again."));
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -452,7 +457,7 @@ export default function GatewayConfigurationsPage() {
                             <Edit size={18} />
                           </button>
                           <button
-                            onClick={() => handleDelete(config)}
+                            onClick={() => handleDeleteClick(config)}
                             className="p-2 rounded hover:bg-red-50 transition text-red-600"
                             title="Delete configuration"
                           >
@@ -466,6 +471,19 @@ export default function GatewayConfigurationsPage() {
               </table>
             </div>
           )}
+
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setConfigToDelete(null);
+        }}
+        onConfirm={confirmDeleteConfig}
+        title="Delete Gateway Configuration"
+        description="This may affect message delivery."
+        itemName={configToDelete?.name || ""}
+        isLoading={deleting}
+      />
       </div>
     </div>
   );

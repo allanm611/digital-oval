@@ -1,5 +1,5 @@
 import React, { CSSProperties, ReactNode } from "react";
-import { tw } from "../../utils/utils";
+import { tw, button, getButtonStyles } from "../../utils/utils";
 
 interface ModalFooterProps {
   onCancel: () => void;
@@ -38,9 +38,9 @@ export default function ModalFooter({
           disabled={isLoading || disabled}
           className={
             cancelClassName ||
-            `px-4 py-2 text-gray-700 bg-gray-100 ${tw.rounded} hover:bg-gray-200 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed`
+            "transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80"
           }
-          style={cancelStyle}
+          style={cancelStyle || getButtonStyles(button.bordered)}
         >
           {cancelText}
         </button>

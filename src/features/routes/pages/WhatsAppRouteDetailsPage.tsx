@@ -7,7 +7,9 @@ import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeac
 import { WhatsAppRoute } from "../types/whatsappRoute";
 import { whatsappRouteService } from "../services/whatsappRouteService";
 import { useToast } from "../../../contexts/ToastContext";
-import { useConfirm } from "../../../contexts/ConfirmContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
+import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+
 import { color, tw } from "../../../shared/utils/utils";
 import DateFormatter from "../../../shared/components/DateFormatter";
 
@@ -15,12 +17,12 @@ export default function WhatsAppRouteDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
-  const { confirm } = useConfirm();
 
   const [route, setRoute] = useState<WhatsAppRoute | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [togglingStatus, setTogglingStatus] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     loadRoute();
@@ -42,23 +44,18 @@ export default function WhatsAppRouteDetailsPage() {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDeleteClick = () => {
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteRoute = async () => {
     if (!route) return;
-
-    const confirmed = await confirm({
-      title: "Delete WhatsApp Route",
-      message: `Are you sure you want to delete "${route.name}"? This action cannot be undone.`,
-      type: "danger",
-      confirmText: "Delete",
-      cancelText: "Cancel",
-    });
-
-    if (!confirmed) return;
 
     try {
       setDeleting(true);
       await whatsappRouteService.deleteRoute(route.id);
       success("Success", `"${route.name}" has been deleted successfully`);
+      setShowDeleteModal(false);
       navigate("/dashboard/whatsapp-routes");
     } catch (err) {
       showError("Error", "Failed to delete WhatsApp route");
@@ -136,7 +133,7 @@ export default function WhatsAppRouteDetailsPage() {
             <Edit className="w-5 h-5" />
           </button>
           <button
-            onClick={handleDelete}
+            onClick={handleDeleteClick}
             disabled={deleting}
             className={`p-2 text-red-600 hover:bg-red-50 ${tw.rounded} disabled:opacity-60`}
             title="Delete route"
@@ -188,6 +185,16 @@ export default function WhatsAppRouteDetailsPage() {
           </div>
         </div>
       </div>
+
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={confirmDeleteRoute}
+        title="Delete WhatsApp Route"
+        description="This action cannot be undone."
+        itemName={route?.name || ""}
+        isLoading={deleting}
+      />
     </div>
   );
 }

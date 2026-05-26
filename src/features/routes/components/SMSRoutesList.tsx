@@ -8,6 +8,7 @@ import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeac
 import { SMSRoute } from "../types/smsRoute";
 import { smsRouteService } from "../services/smsRouteService";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw } from "../../../shared/utils/utils";
 
 export default function SMSRoutesList() {
@@ -57,7 +58,7 @@ export default function SMSRoutesList() {
       setDeleteConfirmId(null);
       setDeleteConfirmName("");
     } catch (err) {
-      showError("Error", "Failed to delete SMS route");
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setDeleting(null);
     }
@@ -89,7 +90,7 @@ export default function SMSRoutesList() {
           r.id === route.id ? { ...r, is_active: route.is_active } : r,
         ),
       );
-      showError("Error", "Failed to update route status");
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setTogglingStatus(null);
     }

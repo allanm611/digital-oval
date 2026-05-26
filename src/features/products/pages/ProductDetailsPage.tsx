@@ -19,6 +19,7 @@ import { productCategoryService } from "../services/productCategoryService";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -123,7 +124,7 @@ export default function ProductDetailsPage() {
       }
     } catch (err) {
       console.error("Failed to toggle product status:", err);
-      showError("Failed to update product status", "Please try again later.");
+      showError("Failed to update product status", extractBackendError(error, "Failed to update product status. Please try again."));
       // Revert optimistic update on error
       setProduct((prev) =>
         prev ? { ...prev, is_active: !prev.is_active } : null
@@ -160,7 +161,7 @@ export default function ProductDetailsPage() {
           : null) ||
         "Failed to delete product. Please try again.";
       // Bypass silent mode for delete operations to always show error
-      showError("Cannot Delete Product", errorMessage, true);
+      showError("Cannot Delete Product", extractBackendError(error, "Cannot Delete Product. Please try again."));
     } finally {
       setIsDeleting(false);
     }

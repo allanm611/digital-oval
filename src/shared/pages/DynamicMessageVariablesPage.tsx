@@ -4,6 +4,7 @@ import { color, tw } from '../utils/utils';
 import { useMessageVariableFields } from '../../features/manual-broadcast/hooks/useMessageVariableFields';
 import { dynamicMessageVariableService } from '../../features/manual-broadcast/services/dynamicMessageVariableService';
 import { useToast } from '../../contexts/ToastContext';
+import { extractBackendError } from "../utils/errorHandler";;;
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import BackButton from '../components/ui/BackButton';
 import ActivateDeactivateButton from '../components/ui/ActivateDeactivateButton';

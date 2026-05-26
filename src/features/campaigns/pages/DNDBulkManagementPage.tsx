@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Plus, Trash2, UserX, Search, X } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -64,7 +65,7 @@ export default function DNDBulkManagementPage() {
       setSelectedRows(new Set());
       setSelectAll(false);
     } catch (err) {
-      showError("Error", "Failed to load DND data");
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -122,7 +123,7 @@ export default function DNDBulkManagementPage() {
       setShowBatchDeleteModal(false);
       await loadData();
     } catch (err) {
-      showError("Error", "Failed to remove some customers from DND");
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setIsBatchProcessing(false);
     }
@@ -161,7 +162,7 @@ export default function DNDBulkManagementPage() {
       setShowAddModal(false);
       await loadData();
     } catch (err) {
-      showError("Error", "Failed to add customers to DND");
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     }
   };
 
@@ -193,7 +194,7 @@ export default function DNDBulkManagementPage() {
       setDeleteConfirmName("");
     } catch (err) {
       setDndSubscriptions(oldSubscriptions);
-      showError("Error", "Failed to remove customer from DND list");
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setIsRemoving(false);
     }

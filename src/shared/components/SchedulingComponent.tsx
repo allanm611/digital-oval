@@ -12,6 +12,7 @@ import Checkbox from "./ui/Checkbox";
 import Radio from "./ui/Radio";
 import { getSettingsTimezone } from "../utils/settingsHelper";
 import { timezoneService } from "../../features/configurations/services/timezoneService";
+import { formatDateWithTimezone } from "../services/dateService";
 import type { TimeZone } from "../../features/configurations/types/timezone";
 
 const daysOfWeek = [
@@ -71,7 +72,8 @@ export default function SchedulingComponent({
         setTimezonesLoading(true);
         const data = await timezoneService.getTimezones();
         if (Array.isArray(data)) {
-          setTimezoneList(data.filter((tz) => tz && tz.is_active === true));
+          const activeTimezones = data.filter((tz) => tz && tz.is_active === true);
+          setTimezoneList(activeTimezones);
         } else {
           setTimezoneList([]);
         }
@@ -412,7 +414,36 @@ export default function SchedulingComponent({
                   value={scheduling?.time_zone || getSettingsTimezone()}
                   onChange={(value) => {
                     if (value) {
-                      updateScheduling({ time_zone: value as string });
+                      const selectedTz = timezoneList.find(
+                        (tz) => tz.value === value
+                      );
+                      const updatedData: Partial<SchedulingData> = {
+                        time_zone: value as string,
+                      };
+
+                      if (
+                        selectedTz?.utc_offset &&
+                        scheduling?.start_date
+                      ) {
+                        updatedData.start_date = formatDateWithTimezone(
+                          scheduling.start_date,
+                          selectedTz.utc_offset,
+                          { includeTime: true }
+                        );
+                      }
+
+                      if (
+                        selectedTz?.utc_offset &&
+                        scheduling?.end_date
+                      ) {
+                        updatedData.end_date = formatDateWithTimezone(
+                          scheduling.end_date,
+                          selectedTz.utc_offset,
+                          { includeTime: true }
+                        );
+                      }
+
+                      updateScheduling(updatedData);
                     }
                   }}
                   options={

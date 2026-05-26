@@ -31,8 +31,10 @@ import { Segment, SegmentFilters, SortDirection } from "../types/segment";
 import { segmentService } from "../services/segmentService";
 import { segmentTypeService } from "../services/segmentTypeService";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import CreateButton from "../../../shared/components/ui/CreateButton";
-import { useConfirm } from "../../../contexts/ConfirmContext";
+import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+
 import SegmentModal from "../components/SegmentModal";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -48,7 +50,6 @@ import CreateCommunicationModal from "../../../shared/components/CreateCommunica
 
 export default function SegmentManagementPage() {
   const navigate = useNavigate();
-  const { confirm } = useConfirm();
   const { t } = useLanguage();
   const [segments, setSegments] = useState<Segment[]>([]);
   const [computingSegmentId, setComputingSegmentId] = useState<number | null>(
@@ -677,46 +678,6 @@ export default function SegmentManagementPage() {
       "Cannot access this functionality right now.",
     );
     return;
-
-    setShowActionMenu(null);
-    const confirmed = await confirm({
-      title: "Duplicate Segment",
-      message: `Create a copy of "${segment.name}"?`,
-      type: "info",
-      confirmText: "Duplicate",
-      cancelText: "Cancel",
-    });
-
-    if (!confirmed) return;
-
-    const segmentId = segment.id;
-    const newName = `${segment.name} (Copy)`;
-
-    try {
-      setDuplicatingSegment(segmentId);
-
-      const response = await segmentService.duplicateSegment(segmentId, {
-        new_name: newName,
-      });
-
-      // Add new segment to list (optimistic UI)
-      if (response && response.data) {
-        setSegments((prev) => [...prev, response.data]);
-      }
-
-      // Success: show toast and close modal
-      success(
-        "Segment duplicated",
-        `Segment "${newName}" has been created successfully`,
-      );
-    } catch (err: unknown) {
-      showError(
-        "Error duplicating segment",
-        (err as Error).message || "Failed to duplicate segment",
-      );
-    } finally {
-      setDuplicatingSegment(null);
-    }
   };
 
   const handleSaveSegment = async (segment: Segment) => {
@@ -830,7 +791,7 @@ export default function SegmentManagementPage() {
       );
     } catch (err: unknown) {
       const message = (err as Error).message || "Failed to compute segment";
-      showError("Compute failed", message);
+      showError("Compute failed", extractBackendError(error, "Compute failed. Please try again."));
     } finally {
       setComputingSegmentId(null);
       setComputeLocation(null);
@@ -883,7 +844,6 @@ export default function SegmentManagementPage() {
       return;
     }
 
-    const confirmed = await confirm({
       title: "Bulk Refresh Segments",
       message: `Do you want to refresh ${segmentIdsArray.length} segment(s)? This will update the member lists for all selected segments.`,
       type: "info",
@@ -929,7 +889,6 @@ export default function SegmentManagementPage() {
 
     const segmentIdsArray = Array.from(selectedSegmentIds);
 
-    const confirmed = await confirm({
       title: "Batch Compute Segments",
       message: `Do you want to compute size for ${segmentIdsArray.length} segment(s)? This will recalculate member counts for all selected segments.`,
       type: "info",

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Trash2, Edit } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -164,7 +165,7 @@ export default function RoutesManagementPage() {
 
       setRoutes(unifiedRoutes);
     } catch (err) {
-      showError("Error", "Failed to load routes");
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -211,7 +212,7 @@ export default function RoutesManagementPage() {
       setDeleteConfirmName("");
     } catch (err) {
       setRoutes(oldRoutes);
-      showError("Error", "Failed to delete route");
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setIsRemoving(false);
     }

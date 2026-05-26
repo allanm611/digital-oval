@@ -27,6 +27,7 @@ import {
   Line,
 } from "recharts";
 import { useAuth } from "../../../contexts/AuthContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { jobExecutionService } from "../services/jobExecutionService";
 import {
   JobExecution,
@@ -43,6 +44,7 @@ import {
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DateFormatter from "../../../shared/components/DateFormatter";
+import Pagination from "../../../shared/components/ui/Pagination";
 import { color, tw } from "../../../shared/utils/utils";
 import { ENABLE_JOB_EXECUTION_WRITES_FOR_ALL } from "../../../shared/utils/featureFlags";
 
@@ -89,7 +91,7 @@ const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
             />
             {entry.name || "Count"}
           </span>
-          <span className="font-semibold text-gray-900">
+          <span className="text-sm font-semibold text-gray-900">
             {typeof entry.value === "number"
               ? entry.value.toLocaleString()
               : entry.value}
@@ -164,6 +166,7 @@ export default function JobExecutionDetailsPage() {
     "abort" | "archive" | "retry" | null
   >(null);
   const [isProcessingAction, setIsProcessingAction] = useState(false);
+  const [daysBackInput, setDaysBackInput] = useState<number>(7);
 
   useEffect(() => {
     if (!id) return;
@@ -197,10 +200,7 @@ export default function JobExecutionDetailsPage() {
           }
         }
       } catch (err) {
-        showError(
-          "Job Execution",
-          err instanceof Error ? err.message : "Failed to load execution"
-        );
+        showError("Job Execution", extractBackendError(err, "Job Execution. Please try again."));
       } finally {
         setIsLoading(false);
       }
@@ -302,7 +302,7 @@ export default function JobExecutionDetailsPage() {
           if (!user?.user_id) return;
           await jobExecutionService.retryFailedJobExecutions({
             jobId: execution.job_id,
-            daysBack: 7,
+            daysBack: daysBackInput,
             userId: user.user_id,
           });
           showToast(
@@ -321,12 +321,10 @@ export default function JobExecutionDetailsPage() {
       }
       setShowActionModal(false);
       setActionType(null);
+      setDaysBackInput(7);
       navigate("/dashboard/job-executions");
     } catch (err) {
-      showError(
-        "Action Failed",
-        err instanceof Error ? err.message : "Unknown error"
-      );
+      showError("Action Failed", extractBackendError(err, "Action Failed. Please try again."));
     } finally {
       setIsProcessingAction(false);
     }
@@ -423,7 +421,7 @@ export default function JobExecutionDetailsPage() {
             </div>
             <div>
               <dt className="text-sm font-medium text-gray-500">Status</dt>
-              <dd className="mt-1 flex items-center gap-3">
+              <dd className="text-sm mt-1 flex items-center gap-3">
                 <span
                   className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(
                     execution.execution_status
@@ -858,10 +856,10 @@ export default function JobExecutionDetailsPage() {
                       .slice(0, 3)
                       .map((forecast: CompletionForecast, idx: number) => (
                         <div key={idx} className="text-sm">
-                          <span className="font-medium text-gray-900">
+                          <span className="text-sm font-medium text-gray-900">
                             {forecast.execution_id?.substring(0, 8)}...
                           </span>
-                          <span className="text-gray-600 ml-2">
+                          <span className="text-sm text-gray-600 ml-2">
                             Est: <DateFormatter date={forecast.estimated_completion} useUserTimezone includeTime />
                             ({forecast.confidence?.toFixed(0) || 0}% confidence)
                           </span>
@@ -1180,32 +1178,12 @@ export default function JobExecutionDetailsPage() {
 
             {/* Pagination */}
             {executionHeatmap.data && executionHeatmap.data.length > HEATMAP_PAGE_SIZE && (
-              <div className="flex items-center justify-between gap-3 mt-4 text-sm text-gray-600">
-                <p>
-                  Showing {heatmapPage * HEATMAP_PAGE_SIZE + 1}-
-                  {Math.min((heatmapPage + 1) * HEATMAP_PAGE_SIZE, executionHeatmap.data.length)} of{" "}
-                  {executionHeatmap.data.length} execution hours
-                </p>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setHeatmapPage(Math.max(0, heatmapPage - 1))}
-                    disabled={heatmapPage === 0}
-                    className="px-3 py-1 border border-gray-200 rounded text-sm font-medium disabled:opacity-50"
-                  >
-                    Previous
-                  </button>
-                  <span className="text-xs text-gray-500">
-                    Page {heatmapPage + 1} of {Math.ceil(executionHeatmap.data.length / HEATMAP_PAGE_SIZE)}
-                  </span>
-                  <button
-                    onClick={() => setHeatmapPage(heatmapPage + 1)}
-                    disabled={(heatmapPage + 1) * HEATMAP_PAGE_SIZE >= executionHeatmap.data.length}
-                    className="px-3 py-1 border border-gray-200 rounded text-sm font-medium disabled:opacity-50"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
+              <Pagination
+                currentPage={heatmapPage + 1}
+                pageSize={HEATMAP_PAGE_SIZE}
+                totalItems={executionHeatmap.data.length}
+                onPageChange={(page) => setHeatmapPage(page - 1)}
+              />
             )}
           </div>
         )}
@@ -1227,6 +1205,7 @@ export default function JobExecutionDetailsPage() {
                 onClick={() => {
                   setShowActionModal(false);
                   setActionType(null);
+                  setDaysBackInput(7);
                 }}
                 className="text-gray-400 hover:text-gray-600"
               >
@@ -1241,11 +1220,31 @@ export default function JobExecutionDetailsPage() {
               {actionType === "retry" &&
                 "This will retry all failed executions for this job. Continue?"}
             </p>
+            {actionType === "retry" && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Days Back
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="365"
+                  value={daysBackInput}
+                  onChange={(e) => setDaysBackInput(Number(e.target.value))}
+                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  placeholder="Enter days back"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Retry failed executions from the last {daysBackInput} day(s)
+                </p>
+              </div>
+            )}
             <div className="flex gap-3">
               <button
                 onClick={() => {
                   setShowActionModal(false);
                   setActionType(null);
+                  setDaysBackInput(7);
                 }}
                 className={`flex-1 ${tw.rounded} border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50`}
                 disabled={isProcessingAction}

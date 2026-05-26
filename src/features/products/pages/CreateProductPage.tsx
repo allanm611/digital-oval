@@ -5,7 +5,7 @@ import { CreateProductRequest } from "../types/product";
 import { productService } from "../services/productService";
 import ProductForm from "../components/ProductForm";
 import { tw, color } from "../../../shared/utils/utils";
-import { extractBackendError } from "../../../shared/utils/errorHandler";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { X } from "lucide-react";
@@ -103,41 +103,14 @@ export default function CreateProductPage({
     try {
       setIsLoading(true);
 
-      // Map unit to unit_of_measure and exclude frontend-only fields
-      // Backend doesn't accept: unit, unit_value, combo_data, validity_hours
-      // Note: product_type_id is sent to backend as-is
+      const { unit, unit_value, combo_data, ...baseData } = formData;
 
-      const {
-        unit,
-        unit_value,
-        combo_data,
-        validity_hours,
-        ...submitData
-      } = formData;
+      const finalSubmitData: any = { ...baseData };
 
-      // Prepare submission data with unit_of_measure and validity_days conversion
-      const finalSubmitData: typeof submitData & {
-        unit_of_measure?: string;
-        validity_days?: number;
-        resources?: any[];
-      } = {
-        ...submitData,
-      };
-
-      // Convert validity_hours to validity_days for backend
-      if (validity_hours && validity_hours > 0) {
-        finalSubmitData.validity_days = Math.ceil(validity_hours / 24);
-      }
-
-      // Map unit to unit_of_measure if unit is provided
-      if (unit) {
-        finalSubmitData.unit_of_measure = unit;
-      }
-
-      // For combo products, send resources from combo_data
-      if (combo_data && combo_data.resources) {
-        finalSubmitData.resources = combo_data.resources;
-      }
+      if (unit) finalSubmitData.unit_of_measure = unit;
+      if (unit_value && unit_value > 0) finalSubmitData.value = unit_value;
+      if (formData.validity_hours && formData.validity_hours > 0) finalSubmitData.validity_hours = formData.validity_hours;
+      if (combo_data?.resources?.length) finalSubmitData.resources = combo_data.resources;
 
       // CRITICAL: Ensure tags is ALWAYS an array, NEVER a string
       // This is the most important fix - tags MUST be an array for the backend

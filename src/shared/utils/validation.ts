@@ -100,7 +100,7 @@ export function validateMSISDN(msisdn: string): {
 
   // Check for local format
   if (/^0/.test(digits)) {
-    return { valid: false, error: "MSISDN must include country code, not local format (e.g., 254712345678 not 0712345678)" };
+    return { valid: false, error: "MSISDN must include country code" };
   }
 
   // Extract country code (1-3 digits)

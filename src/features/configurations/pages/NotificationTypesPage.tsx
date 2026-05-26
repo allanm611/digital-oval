@@ -5,15 +5,15 @@ import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Pagination from "../../../shared/components/ui/Pagination";
+import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { useToast } from "../../../contexts/ToastContext";
-import { useConfirm } from "../../../contexts/ConfirmContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { notificationTypeService, NotificationRule } from "../../../shared/services/notificationTypeService";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import NotificationTypeModal from "../components/NotificationTypeModal";
 
 export default function NotificationTypesPage() {
   const { success: showSuccess, error: showError } = useToast();
-  const { confirm } = useConfirm();
   const { t } = useLanguage();
 
   const [notificationRules, setNotificationRules] = useState<NotificationRule[]>([]);
@@ -23,6 +23,8 @@ export default function NotificationTypesPage() {
   const [pageSize] = useState(10);
   const [deleting, setDeleting] = useState<number | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [ruleToDelete, setRuleToDelete] = useState<NotificationRule | null>(null);
   const [editingRule, setEditingRule] = useState<NotificationRule | null>(null);
 
   const loadNotificationRules = useCallback(async () => {
@@ -31,7 +33,7 @@ export default function NotificationTypesPage() {
       const data = await notificationTypeService.getAll();
       setNotificationRules(data || []);
     } catch (error) {
-      showError("Failed to load notification types");
+      showError(extractBackendError(error, "Failed to load notification types. Please try again."));
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -42,24 +44,23 @@ export default function NotificationTypesPage() {
     loadNotificationRules();
   }, [loadNotificationRules]);
 
-  const handleDelete = async (rule: NotificationRule) => {
-    const confirmed = await confirm({
-      title: "Delete Notification Type",
-      message: `Are you sure you want to delete "${rule.name}"? This may affect active notifications.`,
-      type: "danger",
-      confirmText: t.genericConfig.delete,
-      cancelText: t.genericConfig.cancel,
-    });
+  const handleDeleteClick = (rule: NotificationRule) => {
+    setRuleToDelete(rule);
+    setShowDeleteModal(true);
+  };
 
-    if (!confirmed) return;
+  const confirmDeleteRule = async () => {
+    if (!ruleToDelete) return;
 
-    setDeleting(rule.id);
+    setDeleting(ruleToDelete.id);
     try {
-      await notificationTypeService.delete(rule.id);
-      setNotificationRules((prev) => prev.filter((r) => r.id !== rule.id));
+      await notificationTypeService.delete(ruleToDelete.id);
+      setNotificationRules((prev) => prev.filter((r) => r.id !== ruleToDelete.id));
       showSuccess("Notification type deleted successfully");
+      setShowDeleteModal(false);
+      setRuleToDelete(null);
     } catch (error) {
-      showError("Failed to delete notification type", error instanceof Error ? error.message : "");
+      showError("Failed to delete notification type", extractBackendError(error, "Failed to delete notification type. Please try again."));;
     } finally {
       setDeleting(null);
     }
@@ -282,7 +283,7 @@ export default function NotificationTypesPage() {
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDelete(rule)}
+                          onClick={() => handleDeleteClick(rule)}
                           disabled={deleting === rule.id}
                           className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                           title="Delete"
@@ -311,6 +312,19 @@ export default function NotificationTypesPage() {
           onPageChange={setCurrentPage}
         />
       )}
+
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setRuleToDelete(null);
+        }}
+        onConfirm={confirmDeleteRule}
+        title="Delete Notification Type"
+        description="This may affect active notifications."
+        itemName={ruleToDelete?.name || ""}
+        isLoading={deleting === ruleToDelete?.id}
+      />
 
       <NotificationTypeModal
         isOpen={showModal}

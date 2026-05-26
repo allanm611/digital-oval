@@ -7,6 +7,7 @@ import { EmailRoute } from "../types/emailRoute";
 import { emailRouteService } from "../services/emailRouteService";
 import { emailGatewayConfigService } from "../../configurations/services/emailGatewayConfigService";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw, button } from "../../../shared/utils/utils";
 import DateFormatter from "../../../shared/components/DateFormatter";
 

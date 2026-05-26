@@ -5,6 +5,7 @@ import BackButton from "../../../shared/components/ui/BackButton";
 import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useToast } from "../../../contexts/ToastContext";
+import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw } from "../../../shared/utils/utils";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 
@@ -111,7 +112,7 @@ export default function CreateKPIPage() {
       navigate("/dashboard/kpis");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to create KPI";
-      showError("Error", errorMessage);
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setSaving(false);
     }
