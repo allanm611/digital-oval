@@ -13,9 +13,11 @@ At the top of the page, you'll see quick stats showing:
 - **Draft** - Campaigns in progress
 - **Pending Approval** - Campaigns waiting for approval
 
-![Campaign List Overview](/img/v1.1/campaign-images/campaign-list.png)
+<!-- ![Campaign List Overview](/img/v1.1/campaign-images/campaign-list.png) -->
 
 ## Campaign Table
+
+![Campaign List](/img/v1.2.4/campaignslistpage.png)
 
 The main table displays all campaigns with their key information:
 
@@ -39,6 +41,8 @@ The following columns can be shown/hidden using the **Columns** button:
 - **Last Updated On** - Date and time of the last modification
 
 ### Inline Campaign Details Expansion
+
+![Campaign Details Expanded](/img/v1.2.4/campaignslistdropdown.png)
 
 Click the **ChevronDown** icon next to the campaign name to expand and view additional campaign details:
 
@@ -74,6 +78,8 @@ Click the **Filters** button to filter by:
 ![Filter by Status](/img/v1.1/campaign-images/campaign-filterbystatus.png)
 
 ### Customize Table Columns
+
+![Column Selection](/img/v1.2.4/campaigncolumnselection.png)
 
 Click the **Columns** button (with Settings icon) to customize which columns are displayed in the campaign table:
 

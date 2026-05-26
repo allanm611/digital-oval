@@ -32,6 +32,8 @@ These statistics update based on the current filters applied.
 
 ## Execution List
 
+![Execution Monitoring List](/img/v1.2.4/executionmonitoringlist.png)
+
 The main table displays all executions with their key information:
 
 ### Columns
@@ -104,6 +106,8 @@ Click the **View** (Eye icon) button on any execution row to open the Execution 
 
 ### Execution Details Page
 
+![Execution Details - Metrics](/img/v1.2.4/executionmonitoringdetailsimage1.png)
+
 #### Performance Metrics
 
 View key performance metrics for the execution:
@@ -131,6 +135,8 @@ Detailed breakdown of delivery results:
 - **Failed** - Number of failed deliveries
 
 #### Audit Trail
+
+![Execution Details - Breakdown and Audit](/img/v1.2.4/executionmonitoringdetailsimage2.png)
 
 Track execution timing and who triggered it:
 

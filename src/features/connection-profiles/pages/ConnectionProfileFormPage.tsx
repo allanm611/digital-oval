@@ -239,13 +239,15 @@ export default function ConnectionProfileFormPage({
           cleanedPayload.valid_to = new Date(formData.valid_to).toISOString();
         }
 
-        // Parse metadata if it's a string
+        // Parse metadata if it's a string and map to configuration
         if (formData.metadata && typeof formData.metadata === "string") {
           try {
-            cleanedPayload.metadata = JSON.parse(formData.metadata);
+            cleanedPayload.configuration = JSON.parse(formData.metadata);
           } catch {
-            cleanedPayload.metadata = undefined;
+            cleanedPayload.configuration = undefined;
           }
+        } else if (formData.metadata) {
+          cleanedPayload.configuration = formData.metadata;
         }
 
         // Add created_by if user is available
@@ -273,13 +275,15 @@ export default function ConnectionProfileFormPage({
             : null,
         };
 
-        // Parse metadata if it's a string
+        // Parse metadata if it's a string and map to configuration
         if (payload.metadata && typeof payload.metadata === "string") {
           try {
-            payload.metadata = JSON.parse(payload.metadata);
+            payload.configuration = JSON.parse(payload.metadata);
           } catch {
-            payload.metadata = undefined;
+            payload.configuration = undefined;
           }
+        } else if (payload.metadata) {
+          payload.configuration = payload.metadata;
         }
 
         await connectionProfileService.updateProfile(Number(id), payload);

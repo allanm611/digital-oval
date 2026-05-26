@@ -12,6 +12,8 @@ Navigate to **Administration → Gateway Configurations** to manage all gateway 
 
 ## Gateway Configurations List
 
+![Gateway Configurations List](/img/v1.2.4/gatewayconfigslistpage.png)
+
 The list displays all gateway configurations with:
 
 - **Name** - Configuration name identifier
@@ -58,6 +60,8 @@ Click the **Create** button to open the channel and provider selection form.
 - **Gateway Provider** (required) - Select the specific provider for that channel (options vary by channel)
 
 ### Step 2: Enter Configuration Details
+
+![Create Gateway Configuration](/img/v1.2.4/creategatewayconfigwithemailchannel.png)
 
 Based on the selected channel, you'll see provider-specific forms with different credential fields.
 

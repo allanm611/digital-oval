@@ -101,8 +101,8 @@ export default function ProductForm({
 
   // Temporary resource data being configured
   const [tempResourceData, setTempResourceData] = useState({
-    unit_value: 0,
-    unit: "" as string,
+    resource_value: 0,
+    resource_unit: "" as string,
     validity_hours: undefined as number | undefined,
     price: undefined as number | undefined,
     daid_account: undefined as string | undefined,
@@ -159,12 +159,12 @@ export default function ProductForm({
       for (let i = 0; i < comboData.resources.length; i++) {
         const resource = comboData.resources[i];
 
-        if (!resource.unit_value || resource.unit_value === 0) {
-          return `Resource ${i + 1}: Unit value is required`;
+        if (!resource.resource_value || resource.resource_value === 0) {
+          return `Resource ${i + 1}: Resource value is required`;
         }
 
-        if (!resource.unit) {
-          return `Resource ${i + 1}: Unit is required`;
+        if (!resource.resource_unit) {
+          return `Resource ${i + 1}: Resource unit is required`;
         }
 
         // Validate non-shared fields for each resource
@@ -341,13 +341,13 @@ export default function ProductForm({
         Array.isArray(selectedComboType.combo_resources)
       ) {
         selectedComboType.combo_resources.forEach((apiResource: any) => {
-          // Map API resource_type to form unit (keeping it as-is since it's already in correct format)
-          const resourceType: ProductUnit = apiResource.unit as ProductUnit;
+          // Map API resource_type to form resource_unit (keeping it as-is since it's already in correct format)
+          const resourceType: ProductUnit = apiResource.resource_unit as ProductUnit;
 
           resources.push({
             resource_type: resourceType,
-            unit: apiResource.unit,
-            unit_value: apiResource.unit_value,
+            resource_unit: apiResource.resource_unit,
+            resource_value: apiResource.resource_value,
           });
         });
       }
@@ -484,16 +484,16 @@ export default function ProductForm({
   // Combo resource handlers
   const addComboResource = (
     resourceType: ProductUnit,
-    unit_value: number = 0,
-    unit: string = "MB",
+    resource_value: number = 0,
+    resource_unit: string = "MB",
     validity_hours: number | undefined = undefined,
     price: number | undefined = undefined,
     daid_account: string | undefined = undefined,
   ) => {
     const newResource: ComboResource = {
       resource_type: resourceType,
-      unit: unit as ProductUnit,
-      unit_value,
+      resource_unit: resource_unit as ProductUnit,
+      resource_value,
       validity_hours,
       price,
       daid_account,
@@ -504,8 +504,8 @@ export default function ProductForm({
     });
     setSelectedResourceType(""); // Reset dropdown
     setTempResourceData({
-      unit_value: 0,
-      unit: "",
+      resource_value: 0,
+      resource_unit: "",
       validity_hours: undefined,
       price: undefined,
       daid_account: undefined,
@@ -1275,11 +1275,11 @@ export default function ProductForm({
                               onChange={(value) => {
                                 const newType = value as ProductUnit;
                                 setSelectedResourceType(newType);
-                                // Auto-populate unit with first valid unit for this resource
+                                // Auto-populate resource_unit with first valid unit for this resource
                                 const validUnits = getValidUnitsForResource(newType);
                                 setTempResourceData({
-                                  unit_value: 0,
-                                  unit: validUnits.length > 0 ? validUnits[0] : "",
+                                  resource_value: 0,
+                                  resource_unit: validUnits.length > 0 ? validUnits[0] : "",
                                   validity_hours: undefined,
                                   price: undefined,
                                   daid_account: undefined,
@@ -1308,11 +1308,11 @@ export default function ProductForm({
                               Unit
                             </label>
                             <HeadlessSelect
-                              value={tempResourceData.unit}
+                              value={tempResourceData.resource_unit}
                               onChange={(value) => {
                                 setTempResourceData({
                                   ...tempResourceData,
-                                  unit: value as string,
+                                  resource_unit: value as string,
                                 });
                               }}
                               options={comboUnitOptions}
@@ -1347,22 +1347,22 @@ export default function ProductForm({
                             </div>
                           )}
 
-                          {/* Unit Value */}
+                          {/* Resource Value */}
                           <div>
                             <label
                               className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
                             >
                               Value{" "}
-                              {tempResourceData.unit &&
-                                `(${tempResourceData.unit})`}
+                              {tempResourceData.resource_unit &&
+                                `(${tempResourceData.resource_unit})`}
                             </label>
                             <Input type="number"
                               min="0"
                               step="1"
                               value={
-                                tempResourceData.unit_value === 0
+                                tempResourceData.resource_value === 0
                                   ? ""
-                                  : tempResourceData.unit_value
+                                  : tempResourceData.resource_value
                               }
                               onChange={(value) => {
                                 const val =
@@ -1371,7 +1371,7 @@ export default function ProductForm({
                                     : parseFloat(String(value));
                                 setTempResourceData({
                                   ...tempResourceData,
-                                  unit_value: isNaN(val) ? 0 : val,
+                                  resource_value: isNaN(val) ? 0 : val,
                                 });
                               }}
                               className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm transition-all`}
@@ -1468,7 +1468,7 @@ export default function ProductForm({
                             }
 
                             // Validate required fields based on combo settings
-                            if (!tempResourceData.unit) {
+                            if (!tempResourceData.resource_unit) {
                               alert("Unit is required");
                               return;
                             }
@@ -1491,8 +1491,8 @@ export default function ProductForm({
                             // Add resource with all temp data at once
                             addComboResource(
                               selectedResourceType,
-                              tempResourceData.unit_value,
-                              tempResourceData.unit,
+                              tempResourceData.resource_value,
+                              tempResourceData.resource_unit,
                               tempResourceData.validity_hours,
                               tempResourceData.price,
                               tempResourceData.daid_account,
@@ -1504,9 +1504,9 @@ export default function ProductForm({
                           }}
                           disabled={
                             !selectedResourceType ||
-                            tempResourceData.unit_value === 0 ||
-                            tempResourceData.unit_value === undefined ||
-                            !tempResourceData.unit ||
+                            tempResourceData.resource_value === 0 ||
+                            tempResourceData.resource_value === undefined ||
+                            !tempResourceData.resource_unit ||
                             (!comboSettings.shared_validity && !tempResourceData.validity_hours) ||
                             (!comboSettings.shared_price && (tempResourceData.price === undefined || tempResourceData.price === null)) ||
                             (!comboSettings.shared_daid && !tempResourceData.daid_account)
@@ -1517,18 +1517,18 @@ export default function ProductForm({
                             fontWeight: 500,
                             cursor: (
                               selectedResourceType &&
-                              tempResourceData.unit_value &&
-                              tempResourceData.unit_value > 0 &&
-                              tempResourceData.unit &&
+                              tempResourceData.resource_value &&
+                              tempResourceData.resource_value > 0 &&
+                              tempResourceData.resource_unit &&
                               (comboSettings.shared_validity || tempResourceData.validity_hours) &&
                               (comboSettings.shared_price || (tempResourceData.price !== undefined && tempResourceData.price !== null)) &&
                               (comboSettings.shared_daid || tempResourceData.daid_account)
                             ) ? "pointer" : "not-allowed",
                             opacity: (
                               selectedResourceType &&
-                              tempResourceData.unit_value &&
-                              tempResourceData.unit_value > 0 &&
-                              tempResourceData.unit &&
+                              tempResourceData.resource_value &&
+                              tempResourceData.resource_value > 0 &&
+                              tempResourceData.resource_unit &&
                               (comboSettings.shared_validity || tempResourceData.validity_hours) &&
                               (comboSettings.shared_price || (tempResourceData.price !== undefined && tempResourceData.price !== null)) &&
                               (comboSettings.shared_daid || tempResourceData.daid_account)
@@ -1576,8 +1576,8 @@ export default function ProductForm({
                                           i === index
                                             ? {
                                                 ...r,
-                                                unit_value: editingCardData.unit_value,
-                                                unit: editingCardData.unit,
+                                                resource_value: editingCardData.resource_value,
+                                                resource_unit: editingCardData.resource_unit,
                                                 validity_hours: editingCardData.validity_hours,
                                                 price: editingCardData.price,
                                                 daid_account: editingCardData.daid_account,
@@ -1622,8 +1622,8 @@ export default function ProductForm({
                                     onClick={() => {
                                       setEditingCardResourceIndex(index);
                                       setEditingCardData({
-                                        unit_value: resource.unit_value,
-                                        unit: resource.unit,
+                                        resource_value: resource.resource_value,
+                                        resource_unit: resource.resource_unit,
                                         validity_hours: resource.validity_hours,
                                         price: resource.price,
                                         daid_account: resource.daid_account,
@@ -1671,12 +1671,12 @@ export default function ProductForm({
                               Unit
                             </label>
                             <Input type="text"
-                              value={editingCardResourceIndex === index ? editingCardData.unit : getResourceTypeLabel(resource.unit)}
+                              value={editingCardResourceIndex === index ? editingCardData.resource_unit : getResourceTypeLabel(resource.resource_unit)}
                               disabled={editingCardResourceIndex !== index}
                               onChange={(value) =>
                                 setEditingCardData({
                                   ...editingCardData,
-                                  unit: String(value),
+                                  resource_unit: String(value),
                                 })
                               }
                               className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm ${
@@ -1693,19 +1693,19 @@ export default function ProductForm({
                             <label
                               className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
                             >
-                              Value {isDataType(resource.unit) && "(MB)"}
+                              Value {isDataType(resource.resource_unit) && "(MB)"}
                             </label>
                             <Input type="number"
                               min="0"
                               step="1"
                               value={
                                 editingCardResourceIndex === index
-                                  ? editingCardData.unit_value === 0
+                                  ? editingCardData.resource_value === 0
                                     ? ""
-                                    : editingCardData.unit_value ?? ""
-                                  : resource.unit_value === 0
+                                    : editingCardData.resource_value ?? ""
+                                  : resource.resource_value === 0
                                   ? ""
-                                  : (resource.unit_value ?? "")
+                                  : (resource.resource_value ?? "")
                               }
                               disabled={editingCardResourceIndex !== index}
                               onChange={(value) => {
@@ -1715,7 +1715,7 @@ export default function ProductForm({
                                     : parseFloat(String(value));
                                 setEditingCardData({
                                   ...editingCardData,
-                                  unit_value: isNaN(val) ? 0 : val,
+                                  resource_value: isNaN(val) ? 0 : val,
                                 });
                               }}
                               className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm ${

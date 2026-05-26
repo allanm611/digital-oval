@@ -4,7 +4,7 @@ Create Connection Profile is used to register a new source-connection configurat
 
 The system uses the same form for both **Create** and **Edit**. So this page is the single field guide for both.
 
-![Create Connection Profile - Basic Information](/img/v1.1/infrastructure/createconnectionprofilebasicinfo.png)
+![Create Connection Profile](/img/v1.2.4/createconnectionprofile.png)
 
 ## Required Fields
 
@@ -39,8 +39,6 @@ The system uses the same form for both **Create** and **Edit**. So this page is 
 - **Contains PII**: marks that personal data is present and stricter handling is required.
 - **GDPR Applicable**: flags records that must follow GDPR processes such as retention and access handling.
 
-![Create Connection Profile - Classification and Metadata](/img/v1.1/infrastructure/createconnecitonprofiledatagovernnace.png)
-
 ### Sync Settings
 
 This section appears only when **Data Load Method** is set to Incremental, Delta, or CDC. Configure incremental sync settings for detecting changes:
@@ -65,11 +63,6 @@ This section appears only when **Data Load Method** is set to Incremental, Delta
 - **Max Retries**: number of retry attempts before hard failure.
 - **Retry Backoff Multiplier**: exponential backoff multiplier for retry delays (reduces pressure during repeated failures).
 - **Circuit Breaker Threshold**: number of failures before the circuit breaker opens and stops attempts.
-
-![Create Connection Profile - Performance and Reliability](/img/v1.1/infrastructure/createconnectionprofileperfomancesettings.png)
-
-
-![Create Connection Profile - Health Checks and Advanced](/img/v1.1/infrastructure/createconnecitonprofilehealthchecksandadvanced.png)
 
 ### Connection Type Configuration
 

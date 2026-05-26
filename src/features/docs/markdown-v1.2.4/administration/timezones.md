@@ -12,6 +12,8 @@ Navigate to **Administration → Timezones** to view and manage all configured t
 
 ## Timezones List
 
+![Timezones List](/img/v1.2.4/timezoneslistpage.png)
+
 The list displays all available timezones with:
 
 - **Timezone Label** - Display name for the timezone (e.g., "East Africa Time")
@@ -39,6 +41,8 @@ The list displays all available timezones with:
 Click the **Create** button to add a new timezone configuration.
 
 ### Basic Details Section
+
+![Create Timezone Basic and Regional](/img/v1.2.4/createtimezonebasicandregionalcards.png)
 
 **Required Fields:**
 
@@ -82,6 +86,8 @@ Information about the geographic region(s) and countries:
   - Select multiple countries that share this timezone
 
 ### Daylight Saving Time (DST) Section
+
+![Regional and Daylight Saving Time Settings](/img/v1.2.4/createtimezoneregional&daylightsaving.png)
 
 Configure Daylight Saving Time settings if applicable:
 

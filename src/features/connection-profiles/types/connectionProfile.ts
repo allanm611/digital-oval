@@ -108,6 +108,7 @@ export interface CreateConnectionProfilePayload {
   valid_to?: string | null;
   encryption_key_version?: number;
   metadata?: Record<string, unknown>;
+  configuration?: Record<string, unknown>;
 }
 
 export type UpdateConnectionProfilePayload =

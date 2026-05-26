@@ -10,9 +10,9 @@ The Create Offer workflow guides you through a 6-step process to set up a new pr
 
 Configure the essential details of your offer.
 
-![Step 1 - Basic Info](/img/v1.1/offer-images/step1createoffer.png)
+![Step 1 - Basic Info](/img/v1.2.4/offercreationcommunicationchannelselection.png)
 
-![Step 1 - Extended](/img/v1.1/offer-images/step1createoffer(2).png)
+![Step 1 - Route Selection](/img/v1.2.4/offercreationcommunicationchannelrouteselection.png)
 
 ### Fields
 

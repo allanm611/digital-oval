@@ -17,6 +17,8 @@ Navigate to **Configuration → DND Management** and click on any channel card:
 
 ## Viewing DND List for a Channel
 
+![DND List for Single Channel](/img/v1.2.4/listpageforasinglechanneldnd.png)
+
 The DND list displays all customers opted out for that channel:
 
 **Columns:**

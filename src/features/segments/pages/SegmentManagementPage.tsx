@@ -2306,7 +2306,6 @@ export default function SegmentManagementPage() {
               "Success",
               `Communication sent successfully! ${result.total_messages_sent} messages sent.`,
             );
-            setIsCommunicateModalOpen(false);
             setSegmentToCommunicate(null);
           }}
         />

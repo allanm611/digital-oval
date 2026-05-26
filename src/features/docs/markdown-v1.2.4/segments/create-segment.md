@@ -45,8 +45,6 @@ This choice determines which interface you'll use to define your segment members
 
 The **Segment Builder** is where you define the rules or queries that determine which customers belong to your segment. This is the core logic that powers segment membership. Your approach depends on the Query Type you selected.
 
-![Segment Conditions Builder](/img/v1.1/segments-img/createsegment-segmentcondiitonsimage1.png)
-
 ### Rule Builder (Query Type: Rule)
 
 Use the visual rule builder to create segment membership criteria through an interactive interface.
@@ -62,6 +60,8 @@ When you create a segment with Rule type, you start with one empty rule group. T
 
 **How to Select the Condition Type**
 
+![Segment Empty Conditions](/img/v1.2.4/segmentemptyconditionschoosing.png)
+
 When you click the condition type dropdown, you'll see different options to choose from:
 
 - **Customer 360** — Base customer information (this is what you'll use most often for profile-based rules)
@@ -73,7 +73,7 @@ Select the one that matches the rule you want to create. Once you select a type,
 
 #### Rule Condition Types
 
-The rule builder supports 4 different condition types. Each type has its own configuration:
+The rule builder supports 6 different condition types. Each type has its own configuration:
 
 #### 1. **Profile Conditions** (Customer Attributes from Customer 360)
 
@@ -216,6 +216,100 @@ Build rules based on system events that have occurred. Track customer activity l
 - Form Submitted
 - And many more...
 
+#### 5. **Revenue Metric Conditions** (Revenue-Based Rules)
+
+Build rules based on customer revenue metrics and spending patterns. Track how much customers have spent over specific time periods.
+
+**How It Works:**
+
+- Click **Select Field** to choose a revenue metric (e.g., "Total Revenue", "Monthly Revenue", "Annual Spending")
+- Select an **Operator** — numeric comparisons like "greater than", "less than", "equals", "between"
+- Enter a **Value** — the revenue threshold to compare against
+- Select a **Time Window** — the period for which to measure revenue:
+  - **Preset Options**: Last 7 Days, Last 30 Days, Last 90 Days, Last 6 Months, Last 12 Months
+  - **Custom Date Range**: Choose specific start and end dates using date operators (On, Since, Until, Between)
+
+**Example:**
+
+- Field: Total Revenue
+- Operator: Greater Than
+- Value: 50000
+- Time Window: Last 12 Months
+- **Result:** "Customers who have spent more than KES 50,000 in the last 12 months"
+
+**Operators Available:**
+
+- **Equals** - Spend exactly this amount
+- **Not Equals** - Spend anything except this amount
+- **Greater Than** - Spend more than this amount
+- **Less Than** - Spend less than this amount
+- **Greater Than or Equal** - Spend at least this amount
+- **Less Than or Equal** - Spend up to this amount
+- **Between** - Spend within a range (requires two values)
+
+**Time Window Options:**
+
+When you select "Custom" as the time window, you can choose:
+- **On Date** - Include revenue from only one specific date
+- **Since Date** - Include revenue from a start date until today
+- **Until Date** - Include revenue from the beginning until an end date
+- **Between Dates** - Include revenue within a specific date range
+
+**Example with Custom Time Window:**
+
+- Field: Total Revenue
+- Operator: Greater Than
+- Value: 10000
+- Time Window: Custom
+- Date Operator: Since January 1, 2024
+- **Result:** "Customers who spent more than KES 10,000 starting from January 1, 2024 until today"
+
+#### 6. **Usage Metric Conditions** (Usage-Based Rules)
+
+Build rules based on customer usage metrics like usage frequency, activity level, or engagement count. Track how customers interact with your services over time.
+
+**How It Works:**
+
+- Click **Select Field** to choose a usage metric (e.g., "Total SMS Sent", "Email Clicks", "API Calls")
+- Select an **Operator** — numeric comparisons like "greater than", "less than", "equals", "between"
+- Enter a **Value** — the usage threshold to compare against
+- Select a **Time Window** — the period for which to measure usage:
+  - **Preset Options**: Last 7 Days, Last 30 Days, Last 90 Days, Last 6 Months, Last 12 Months
+  - **Custom Date Range**: Choose specific start and end dates using date operators (On, Since, Until, Between)
+
+**Example:**
+
+- Field: Email Clicks
+- Operator: Greater Than
+- Value: 5
+- Time Window: Last 30 Days
+- **Result:** "Customers who clicked email links more than 5 times in the last 30 days"
+
+**Operators Available:**
+
+- **Equals** - Usage equals this count
+- **Not Equals** - Usage is anything except this count
+- **Greater Than** - Usage more than this count
+- **Less Than** - Usage less than this count
+- **Greater Than or Equal** - Usage at least this count
+- **Less Than or Equal** - Usage up to this count
+- **Between** - Usage within a range (requires two values)
+
+**Time Window Options:**
+
+Same as Revenue Metrics:
+- **Preset Options**: Last 7 Days, Last 30 Days, Last 90 Days, Last 6 Months, Last 12 Months
+- **Custom Date Range**: On Date, Since Date, Until Date, Between Dates
+
+**Example with Custom Time Window:**
+
+- Field: SMS Delivered Count
+- Operator: Less Than
+- Value: 2
+- Time Window: Custom
+- Date Operator: Since January 1, 2024
+- **Result:** "Customers who received fewer than 2 SMS messages starting from January 1, 2024 until today"
+
 ---
 
 #### Rule Groups and Logic
@@ -301,6 +395,8 @@ Result: Customers who are either (inactive OR haven't purchased recently) AND ha
 **Change Group Logic (between groups):** Click the AND/OR toggle **between two groups** to switch between AND and OR logic for combining those groups together.
 
 ### SQL Editor (Query Type: SQL)
+
+![SQL Query Editor](/img/v1.2.4/segemntsqueryeditor.png)
 
 For advanced users who prefer writing direct SQL queries, use the SQL Editor to define segment membership using custom SQL code.
 

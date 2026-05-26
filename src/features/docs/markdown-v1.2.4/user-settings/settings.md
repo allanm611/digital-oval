@@ -25,6 +25,8 @@ The country code is displayed as read-only and automatically updates when you ch
 
 ## Localization Settings
 
+![Location and Language Cards](/img/v1.2.4/settingspagelocationandlanguagecards.png)
+
 Configure language and timezone preferences:
 
 ### Language Preference
@@ -51,6 +53,8 @@ Select the language for the user interface:
 4. Click **Save** to apply changes
 
 ## Date & Number Format Settings
+
+![Date Format and Currency Card](/img/v1.2.4/settingspagedateformat&currencycard.png)
 
 Configure how dates and numbers display:
 
@@ -121,6 +125,8 @@ Set the default communication method and its corresponding route:
 5. Click **Save** to apply changes
 
 Only active routes for your selected channel are available. If a channel has no routes, the route selection is hidden.
+
+![Additional Settings Cards](/img/v1.2.4/setitngspagetheotherremainingcards.png)
 
 ## Display Theme Settings
 

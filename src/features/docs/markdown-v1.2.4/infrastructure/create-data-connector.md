@@ -39,7 +39,7 @@ There are two ways to open the create form:
 - If not selected during creation, it can be assigned later
 
 ### Create/Edit Modal
-![Create Data Connector Modal](/img/v1.1/infrastructure/createdataconnector.png)
+![Create Data Connector Modal](/img/v1.2.4/createdataconnectormodal.png)
 
 ## Connection Configuration
 

@@ -117,10 +117,10 @@ export default function ComboTypeFormPage() {
                   id: Date.now() + idx,
                   type: r.resource_type,
                   value:
-                    r.unit_value !== undefined && r.unit_value !== null
-                      ? String(r.unit_value)
+                    (r.resource_value !== undefined && r.resource_value !== null) || (r.unit_value !== undefined && r.unit_value !== null)
+                      ? String(r.resource_value ?? r.unit_value)
                       : "",
-                  unit: r.unit,
+                  unit: r.resource_unit ?? r.unit,
                   price: r.price ? String(r.price) : "",
                   validityHours:
                     r.shared_validity_hours !== undefined &&
@@ -235,11 +235,11 @@ export default function ComboTypeFormPage() {
         is_active: formData.isActive,
         combo_resources: formData.comboResources.map((resource) => ({
           resource_type: resource.type,
-          unit_value:
+          resource_value:
             resource.value !== "" && resource.value !== null
               ? parseFloat(String(resource.value))
               : undefined,
-          unit: resource.unit,
+          resource_unit: resource.unit,
           price: !comboSettings.sharedPrice && resource.price
             ? parseFloat(String(resource.price))
             : undefined,

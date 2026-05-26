@@ -2820,7 +2820,6 @@ export default function CustomerDetailPage() {
                 "Success",
                 `Communication sent successfully! ${result.total_messages_sent} messages sent.`,
               );
-              setIsCommunicateModalOpen(false);
             }}
           />
         )}

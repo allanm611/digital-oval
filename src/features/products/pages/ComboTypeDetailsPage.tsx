@@ -256,7 +256,7 @@ export default function ComboTypeDetailsPage() {
                           style={{ backgroundColor: color.surface.tablebodybg }}
                         >
                           <span className={tw.textSecondary}>
-                            {resource.unit_value || "N/A"}
+                            {resource.resource_value || "N/A"}
                           </span>
                         </td>
                         <td
@@ -264,7 +264,7 @@ export default function ComboTypeDetailsPage() {
                           style={{ backgroundColor: color.surface.tablebodybg }}
                         >
                           <span className={tw.textSecondary}>
-                            {resource.unit || "N/A"}
+                            {resource.resource_unit || "N/A"}
                           </span>
                         </td>
                         <td
@@ -302,13 +302,13 @@ export default function ComboTypeDetailsPage() {
                     <div>
                       <p className="text-xs font-medium text-gray-600 uppercase">Value</p>
                       <p className={`text-sm ${tw.textSecondary}`}>
-                        {resource.unit_value || "N/A"}
+                        {resource.resource_value || "N/A"}
                       </p>
                     </div>
                     <div>
                       <p className="text-xs font-medium text-gray-600 uppercase">Unit</p>
                       <p className={`text-sm ${tw.textSecondary}`}>
-                        {resource.unit || "N/A"}
+                        {resource.resource_unit || "N/A"}
                       </p>
                     </div>
                     <div>

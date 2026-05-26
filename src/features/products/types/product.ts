@@ -30,8 +30,8 @@ export type ComboResourceType = ProductUnit;
 // Combo resource structure
 export interface ComboResource {
   resource_type: ComboResourceType;
-  unit: ProductUnit;
-  unit_value: number;
+  resource_unit: ProductUnit;
+  resource_value: number;
   validity_hours?: number; // Individual validity in hours (if not using shared)
   price?: number; // Individual price (if not using shared_price)
   daid_account?: string; // Individual DAID account (if not using shared_daid)

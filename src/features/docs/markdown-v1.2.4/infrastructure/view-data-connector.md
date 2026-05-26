@@ -3,7 +3,7 @@
 
 ## Overview
 
-![Data Connector Details Page](/img/v1.1/infrastructure/viewdetailsdataconnector.png)
+![Data Connector Details Page](/img/v1.2.4/dataconnectordetailspage.png)
 
 The Data Connector Details page shows comprehensive information about a specific connector, including its configuration, connection status, and usage history.
 

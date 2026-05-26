@@ -14,6 +14,8 @@ DND Management provides two main workflows:
 
 ## What is DND Management?
 
+![DND Management Main Page](/img/v1.2.4/dndmanagementmainpage.png)
+
 DND Management allows you to:
 
 - **Manage Opt-Outs** - Add customers to Do Not Disturb lists

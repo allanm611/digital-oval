@@ -531,6 +531,7 @@ const sidebarsV1_1: SidebarsConfig = {
             },
             "configuration/dnd-management-by-channel",
             "configuration/dnd-management-bulk",
+            "configuration/dnd-types",
           ],
         },
         "configuration/utility-configuration",

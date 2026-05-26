@@ -777,8 +777,6 @@ export default function QuickListsPage() {
               "Success",
               `Communication sent successfully! ${result.total_messages_sent} messages sent.`,
             );
-            setIsCommunicateModalOpen(false);
-            setQuicklistToCommunicate(null);
           }}
         />
       )}

@@ -35,6 +35,8 @@ Filters can be combined to narrow results. For example, filter for "Promotional"
 
 ### Viewing DND Subscriptions
 
+![DND Bulk Management List](/img/v1.2.4/dndbulkmanagementlistpage.png)
+
 The table displays all DND subscriptions matching your filters:
 
 **Columns:**
@@ -75,6 +77,9 @@ Click the **Add Customers** button to add multiple customers to DND across one o
    - **Custom date** - Select a specific expiry date
 
 **How to Add in Bulk:**
+
+![Add Members DND Bulk Management](/img/v1.2.4/addmembersdndbulkmanagement.png)
+
 1. Click **Add Customers** button
 2. Select the DND type
 3. Select the channels to apply DND to

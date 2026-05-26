@@ -15,6 +15,8 @@ The Seed List Recipients tab displays all recipients across all seed lists. You 
 
 The Seed List Recipients tab displays a list of all recipients with the following information:
 
+![Seed List Recipients Tab](/img/v1.2.4/seedlist-recipinetstablist.png)
+
 **Name** - Recipient's name
 
 **Email** - Email address or phone number
@@ -52,6 +54,8 @@ Click the **Add Members** button to add recipients to a seed list.
 
 ### Option 1: Add Existing System Users
 
+![Add Existing User Tab](/img/v1.2.4/addexistingusertabforseedlistrecipient.png)
+
 1. Select **Existing User** mode
 2. Select the **Seed List** to add them to
 3. Search for users by name or email
@@ -61,6 +65,8 @@ Click the **Add Members** button to add recipients to a seed list.
 7. Click **Add** to add them to the seed list
 
 ### Option 2: Add External Recipients
+
+![Add External User Tab](/img/v1.2.4/addexternalusertabforseedlistrecipient.png)
 
 1. Select **External Recipient** mode
 2. Select the **Seed List** to add them to

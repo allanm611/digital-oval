@@ -15,6 +15,8 @@ The Seed Lists tab allows you to create, view, and manage seed list definitions.
 
 The Seed Lists tab displays all seed lists in your system with the following information:
 
+![Seed Lists Tab](/img/v1.2.4/seedlists-liststablist.png.png)
+
 **List Name** - Name of the seed list
 
 **Description** - Optional description of the seed list's purpose
@@ -36,6 +38,8 @@ The Seed Lists tab displays all seed lists in your system with the following inf
 Use the search box to find seed lists by name or description. The search is performed as you type.
 
 ## Creating a Seed List
+
+![Create Seed List Modal](/img/v1.2.4/createseedlistmodal.png)
 
 Click the **Create List** button in the top right:
 

@@ -14,6 +14,7 @@ import {
   ChevronDown,
   Settings,
   Loader,
+  TrendingUp,
 } from "lucide-react";
 import {
   validateNoEditInsideVariables,
@@ -505,6 +506,23 @@ export default function CreateCommunicationModal({
       return;
     }
 
+    // Check if recipient list is empty
+    const recipientCount = customerRecord ? 1 : quicklist?.rows_imported || segment?.size_estimate || 0;
+    if (recipientCount === 0) {
+      let errorMsg = "Cannot send communication: ";
+      if (customerRecord) {
+        errorMsg += "Please select a customer with valid contact information.";
+      } else if (quicklist) {
+        errorMsg += "the quicklist has no members. Please select a quicklist with data.";
+      } else if (segment) {
+        errorMsg += "the segment has no members. Please select a segment with members.";
+      } else {
+        errorMsg += "the target audience has no recipients.";
+      }
+      setError(errorMsg);
+      return;
+    }
+
     const cleanBody =
       selectedChannel !== "EMAIL" && isRichText
         ? messageBody.replace(/<[^>]*>/g, "")
@@ -597,111 +615,131 @@ export default function CreateCommunicationModal({
         style={{ zIndex: zIndex.modal }}
       >
         <div
-          className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col`}
+          className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col border border-gray-200`}
         >
           {/* Header */}
-          <div className="p-4 sm:p-6 border-b border-gray-200">
-            <div className="flex items-start sm:items-center justify-between gap-2 sm:gap-4 mb-4">
-              <div className="flex items-center space-x-2 sm:space-x-4 flex-1 min-w-0">
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start space-x-3 flex-1">
                 {isSuccess ? (
-                  <CheckCircle className="w-8 h-8 sm:w-12 sm:h-12 text-green-600 flex-shrink-0" />
+                  <CheckCircle className="w-6 h-6 flex-shrink-0 mt-1" style={{ color: color.primary.accent }} />
                 ) : (
-                  <XCircle className="w-8 h-8 sm:w-12 sm:h-12 text-red-600 flex-shrink-0" />
+                  <XCircle className="w-6 h-6 flex-shrink-0 mt-1" style={{ color: color.primary.accent }} />
                 )}
-                <div className="min-w-0">
-                  <h2 className="text-lg sm:text-xl font-bold text-gray-900">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">
                     {isSuccess
-                      ? "Communication Sent Successfully!"
-                      : "Communication Completed with Errors"}
+                      ? 'Communication Sent Successfully'
+                      : 'Communication Completed with Errors'}
                   </h2>
-                  <p className="text-xs sm:text-sm text-gray-500 mt-1 break-all">
+                  <p className="text-xs text-gray-500 mt-1">
                     Execution ID: {result.execution_id}
                   </p>
                 </div>
               </div>
               <button
                 onClick={handleClose}
-                className={`p-2 hover:bg-white ${tw.rounded} transition-colors flex-shrink-0`}
+                className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors flex-shrink-0`}
               >
                 <X className="w-5 h-5 text-gray-600" />
               </button>
             </div>
           </div>
 
-          {/* Stats */}
-          <div className="flex-1 overflow-auto p-4 sm:p-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <div className={`bg-gray-50 ${tw.rounded} p-4`}>
-                <p className="text-xs text-gray-500 font-medium mb-1">
-                  Total Recipients
-                </p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {result.total_recipients}
-                </p>
-              </div>
-              <div className={`bg-green-50 ${tw.rounded} p-4`}>
-                <p className="text-xs text-green-600 font-medium mb-1">
-                  Messages Sent
-                </p>
-                <p className="text-2xl font-bold text-green-700">
-                  {result.total_messages_sent}
-                </p>
-              </div>
-              <div className={`bg-red-50 ${tw.rounded} p-4`}>
-                <p className="text-xs text-red-600 font-medium mb-1">
-                  Messages Failed
-                </p>
-                <p className="text-2xl font-bold text-red-700">
-                  {result.total_messages_failed}
-                </p>
-              </div>
-              <div className={`bg-blue-50 ${tw.rounded} p-4`}>
-                <p className="text-xs text-blue-600 font-medium mb-1">
-                  Success Rate
-                </p>
-                <p className="text-2xl font-bold text-blue-700">
-                  {successRate}%
-                </p>
-              </div>
-            </div>
+          {/* Content */}
+          <div className="flex-1 overflow-auto p-6">
+            <div className="space-y-6">
+              {/* Stats Cards - matching campaign analytics style */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Total Recipients */}
+                <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Bell className="h-5 w-5" style={{ color: color.primary.accent }} />
+                    <p className="text-sm font-medium text-gray-600">Total Recipients</p>
+                  </div>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {result.total_recipients.toLocaleString()}
+                  </p>
+                </div>
 
-            {/* Channel Breakdown */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-gray-700">
-                Channel Breakdown
-              </h3>
-              {result.channel_summaries.map((summary) => (
-                <div
-                  key={summary.channel}
-                  className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 p-3 bg-gray-50 ${tw.rounded}`}
-                >
-                  <span className="text-sm font-medium text-gray-700">
-                    {summary.channel}
-                  </span>
-                  <div className="flex items-center space-x-4 text-sm">
-                    <span className="text-green-600">
-                      ✓ {summary.messages_sent} sent
-                    </span>
-                    <span className="text-red-600">
-                      ✗ {summary.messages_failed} failed
-                    </span>
+                {/* Messages Sent */}
+                <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <CheckCircle className="h-5 w-5" style={{ color: color.primary.accent }} />
+                    <p className="text-sm font-medium text-gray-600">Messages Sent</p>
+                  </div>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {result.total_messages_sent.toLocaleString()}
+                  </p>
+                </div>
+
+                {/* Messages Failed */}
+                <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <XCircle className="h-5 w-5" style={{ color: color.primary.accent }} />
+                    <p className="text-sm font-medium text-gray-600">Messages Failed</p>
+                  </div>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {result.total_messages_failed.toLocaleString()}
+                  </p>
+                </div>
+
+                {/* Success Rate */}
+                <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <TrendingUp className="h-5 w-5" style={{ color: color.primary.accent }} />
+                    <p className="text-sm font-medium text-gray-600">Success Rate</p>
+                  </div>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {successRate}%
+                  </p>
+                </div>
+              </div>
+
+              {/* Channel Breakdown */}
+              {result.channel_summaries.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-4">
+                    Channel Breakdown
+                  </h3>
+                  <div className="space-y-3">
+                    {result.channel_summaries.map((summary) => (
+                      <div
+                        key={summary.channel}
+                        className={`${tw.rounded} border border-gray-200 bg-white p-4 shadow-sm`}
+                      >
+                        <div className="flex items-center justify-between gap-4">
+                          <span className="text-sm font-medium text-gray-700">
+                            {summary.channel}
+                          </span>
+                          <div className="flex items-center space-x-6 text-sm">
+                            <span className="text-green-600">
+                              ✓ {summary.messages_sent} sent
+                            </span>
+                            <span className="text-red-600">
+                              ✗ {summary.messages_failed} failed
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
           {/* Actions */}
-          <div className="p-4 sm:p-6 border-t border-gray-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3">
+          <div className="p-6 border-t border-gray-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3">
             <button
               onClick={handleClose}
-              className={`w-full sm:w-auto px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors`}
+              className={`w-full sm:w-auto px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors`}
             >
               Close
             </button>
             <button
               onClick={() => setResult(null)}
-              className={`w-full sm:w-auto px-6 py-2 text-sm font-medium text-white ${tw.rounded} transition-colors`}
+              className={`w-full sm:w-auto px-6 py-2.5 text-sm font-medium text-white ${tw.rounded} transition-colors`}
               style={{ backgroundColor: color.primary.action }}
             >
               Send Another
@@ -760,6 +798,11 @@ export default function CreateCommunicationModal({
           <>
             <div className="flex-1 overflow-auto p-4 sm:p-6">
               <div className="space-y-6">
+                {/* Error for empty recipients */}
+                {error?.includes("Cannot send communication") && (
+                  <p className="text-sm text-red-600">{error}</p>
+                )}
+
                 {/* Channel and Route Selection on same line */}
                 <div className="flex gap-4">
                   <div className="flex-1">
@@ -806,6 +849,9 @@ export default function CreateCommunicationModal({
                         placeholder="Select Email Route"
                         zIndex={zIndex.popover}
                       />
+                      {!emailRoute && error?.includes("email route") && (
+                        <p className="text-xs text-red-600 mt-1">Please select an email route</p>
+                      )}
                     </div>
                   )}
 
@@ -831,6 +877,9 @@ export default function CreateCommunicationModal({
                         placeholder={smsRoutesLoading ? "Loading..." : "Select SMS Route"}
                         zIndex={zIndex.popover}
                       />
+                      {!smsRoute && error?.includes("SMS route") && (
+                        <p className="text-xs text-red-600 mt-1">Please select an SMS route</p>
+                      )}
                     </div>
                   )}
                 </div>
@@ -1055,6 +1104,9 @@ export default function CreateCommunicationModal({
                           }}
                           variant="medium"
                         />
+                        {!messageTitle.trim() && error?.includes("Subject") && (
+                          <p className="text-xs text-red-600 mt-1">Subject line is required for email</p>
+                        )}
                       </div>
                     )}
 
@@ -1165,6 +1217,12 @@ export default function CreateCommunicationModal({
                           </span>
                         )}
                       </div>
+                      {!messageBody.trim() && error?.includes("body") && (
+                        <p className="text-xs text-red-600 mt-2">Message body is required</p>
+                      )}
+                      {variableError && (
+                        <p className="text-xs text-red-600 mt-2">{variableError}</p>
+                      )}
                     </div>
                   </div>
 
@@ -1319,28 +1377,6 @@ export default function CreateCommunicationModal({
                   </div>
                 </div>
 
-                {/* Error Message */}
-                {error || variableError ? (
-                  <div
-                    className="p-3 rounded-md flex items-start gap-2"
-                    style={{
-                      backgroundColor: `${color.status.danger}10`,
-                      border: `1px solid ${color.status.danger}30`,
-                    }}
-                  >
-                    <AlertCircle
-                      className="w-5 h-5 flex-shrink-0"
-                      style={{ color: color.status.danger }}
-                    />
-                    <p
-                      className="text-sm"
-                      style={{ color: color.status.danger }}
-                    >
-                      {variableError && variableError.length > 0 ? variableError : null}
-                      {!variableError || variableError.length === 0 ? (error && error.length > 0 ? error : null) : null}
-                    </p>
-                  </div>
-                ) : null}
               </div>
             </div>
           </>

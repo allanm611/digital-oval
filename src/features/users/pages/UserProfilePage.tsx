@@ -13,6 +13,8 @@ import { color, tw, button } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Input from "../../../shared/components/ui/Input";
 import { useLanguage } from "../../../contexts/LanguageContext";
+// import { timezoneService } from "../../configurations/services/timezoneService";
+// import { TimeZone } from "../../configurations/types/timezone";
 
 export default function UserProfilePage() {
   const { user: authUser } = useAuth();
@@ -23,6 +25,8 @@ export default function UserProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  // const [timezones, setTimezones] = useState<TimeZone[]>([]);
+  // const [isLoadingTimezones, setIsLoadingTimezones] = useState(false);
   // const [sessions, setSessions] = useState<UserSession[]>([]);
   // const [isLoadingSessions, setIsLoadingSessions] = useState(false);
   // const [isEndingSession, setIsEndingSession] = useState<number | null>(null);
@@ -48,6 +52,23 @@ export default function UserProfilePage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authUser]);
+
+  // Timezone selection moved to Settings page
+  // useEffect(() => {
+  //   loadTimezones();
+  // }, []);
+
+  // const loadTimezones = async () => {
+  //   try {
+  //     setIsLoadingTimezones(true);
+  //     const data = await timezoneService.getTimezones();
+  //     setTimezones(data);
+  //   } catch (err) {
+  //     console.error("Failed to load timezones:", err);
+  //   } finally {
+  //     setIsLoadingTimezones(false);
+  //   }
+  // };
 
   const loadUserProfile = async () => {
     if (!authUser?.user_id) return;
@@ -655,26 +676,30 @@ export default function UserProfilePage() {
               )}
             </div>
 
-            <div>
+            {/* Timezone selection moved to Settings page */}
+            {/* <div>
               <label
                 className={`block text-sm font-medium ${tw.textSecondary} mb-1`}
               >
                 {t.profile.timezone}
               </label>
               {isEditing ? (
-                <Input
-                  placeholder={t.profile.timezonePlaceholder}
-                  name="timezone"
-                  value={formData.timezone}
+                <HeadlessSelect
+                  options={timezones.map((tz) => ({
+                    value: tz.value,
+                    label: `${tz.label} (${tz.utc_offset})`,
+                  }))}
+                  value={formData.timezone || ""}
                   onChange={(val) => setFormData({ ...formData, timezone: val })}
-                  variant="medium"
+                  placeholder={t.profile.timezonePlaceholder}
+                  isLoading={isLoadingTimezones}
                 />
               ) : (
                 <p className={`text-sm ${tw.textPrimary}`}>
                   {user.timezone || "N/A"}
                 </p>
               )}
-            </div>
+            </div> */}
             </div>
           </div>
         </div>

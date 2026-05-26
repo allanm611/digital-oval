@@ -8,6 +8,8 @@ Getting Started guides help you learn the fundamentals of the Sentra CVM platfor
 
 ### Sidebar Structure
 
+![Sidebar](/img/v1.2.4/sidebar.png)
+
 The sidebar menu on the left is organized into major sections:
 
 - **Authentication** - Login, registration, password reset
@@ -21,6 +23,8 @@ The sidebar menu on the left is organized into major sections:
 - **Reports** - Analytics and performance data
 
 ### Footer Information
+
+![Footer](/img/v1.2.4/footer.png)
 
 The footer displays three important settings:
 - **Selected Country** - Active country setting

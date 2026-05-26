@@ -16,11 +16,13 @@ You can access Notification Settings in two ways:
    - Go to [Notifications](/documentation/user-settings/notifications)
    - Click the **Notification Settings** button (top right)
 
-2. **From User Settings**
+<!-- 2. **From User Settings**
    - Go to [Settings](/documentation/user-settings/settings)
-   - Click **Go to Notification Settings** button in the Notification Settings card
+   - Click **Go to Notification Settings** button in the Notification Settings card -->
 
 ## Notification Subscriptions
+
+![Notification Subscriptions](/img/v1.2.4/notificationsetingssubscriptionscard.png)
 
 ### What Are Notification Subscriptions?
 
@@ -44,6 +46,8 @@ Notification subscriptions determine which system events trigger notifications f
 - System notifications (platform updates)
 
 ## Communication Channels
+
+![Notification Channels and Sound](/img/v1.2.4/notificationsetitngssound&channelcards.png)
 
 ### Preferred Notification Channels
 
@@ -80,6 +84,8 @@ Configure the notification sound for in-app alerts:
 3. Your selection is applied when you click the **Save** button
 
 ## Do Not Disturb (DND) Settings
+
+![Message Delivery Settings](/img/v1.2.4/notificationsettingsmessagedeliverycard.png)
 
 ### What Is DND?
 

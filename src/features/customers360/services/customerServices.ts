@@ -37,14 +37,17 @@ class CustomerService {
       });
 
       // Try to parse JSON error message for better error display
+      let errorMessage = `HTTP error! status: ${response.status}`;
       try {
         const errorJson = JSON.parse(errorBody);
-        throw new Error(errorJson.error || `HTTP error! status: ${response.status}`);
+        if (errorJson.error) {
+          errorMessage = errorJson.error;
+        }
       } catch {
-        throw new Error(
-          `HTTP error! status: ${response.status}, details: ${errorBody}`,
-        );
+        // If JSON parsing fails, add the raw body to the message
+        errorMessage = `${errorMessage}, details: ${errorBody}`;
       }
+      throw new Error(errorMessage);
     }
 
     return response.json();

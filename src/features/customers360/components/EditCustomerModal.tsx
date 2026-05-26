@@ -7,6 +7,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { isValidCountryCodePhone } from "../../../shared/utils/validation";
+import { extractBackendError } from "../../../shared/utils/errorHandler";
 import { customerService } from "../services/customerServices";
 import { timezoneService } from "../../../features/configurations/services/timezoneService";
 import type { CustomerSubscriptionRecord } from "../types/customerSubscription";
@@ -189,7 +190,7 @@ export default function EditCustomerModal({
 
       fetchCustomerDetails();
     }
-  }, [customer, error]);
+  }, [customer]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -260,7 +261,7 @@ export default function EditCustomerModal({
         onClose();
       }
     } catch (err) {
-      error("Error", err instanceof Error ? err.message : "Failed to update customer");
+      error("Error", extractBackendError(err, "Failed to update customer"));
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -457,10 +458,9 @@ export default function EditCustomerModal({
                   Date of Birth
                 </label>
                 <Input
-                  type="text"
+                  type="date"
                   value={formData.dateOfBirth}
                   onChange={(value) => setFormData({ ...formData, dateOfBirth: String(value) })}
-                  placeholder="YYYY-MM-DD"
                   disabled={isLoading}
                   variant="medium"
                 />
