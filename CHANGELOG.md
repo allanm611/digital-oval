@@ -1,3 +1,11 @@
+## [1.3.2](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.3.1...v1.3.2) (2026-05-26)
+
+
+### Bug Fixes
+
+* fixed and tested different features ([56330a9](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/56330a9da1bfd5649cd85843a3d1a5881c52fbe7))
+* setting up another verison of the documentation and fixing import error ([91099cc](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/91099ccc4aa044b8751c3afc9f79d4f1603eb35d))
+
 ## [1.3.1](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.3.0...v1.3.1) (2026-05-23)
 
 
