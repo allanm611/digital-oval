@@ -404,7 +404,6 @@ export default function OfferCreativeFormModal({
     try {
       setIsSaving(true);
       const creativeData: any = {
-        name: formData.title,
         channel: formData.channel,
         locale: formData.locale,
         text_body: formData.text_body,
@@ -412,8 +411,11 @@ export default function OfferCreativeFormModal({
       };
 
       if (mode === "create") {
+        creativeData.name = formData.title;
         if (formData.offer_id) creativeData.offer_id = formData.offer_id;
         if (user?.user_id) creativeData.created_by = user.user_id;
+      } else {
+        creativeData.title = formData.title;
       }
 
       if (formData.channel !== "SMS" && formData.channel !== "SMS Flash") {
@@ -775,13 +777,15 @@ export default function OfferCreativeFormModal({
                 confirmStyle={{ backgroundColor: color.primary.action }}
                 leftContent={
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={handlePreview}
-                      className={`inline-flex items-center px-4 py-2 text-sm font-medium ${tw.rounded} transition-colors border border-gray-300 text-gray-700 hover:bg-gray-50`}
-                    >
-                      <Eye className="w-4 h-4 mr-2" />
-                      Preview
-                    </button>
+                    {(formData.channel === "SMS" || formData.channel === "SMS Flash" || formData.channel === "Email") && (
+                      <button
+                        onClick={handlePreview}
+                        className={`inline-flex items-center px-4 py-2 text-sm font-medium ${tw.rounded} transition-colors border border-gray-300 text-gray-700 hover:bg-gray-50`}
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        Preview
+                      </button>
+                    )}
                     <button
                       onClick={() => setIsTestModalOpen(true)}
                       disabled={!formData.channel}

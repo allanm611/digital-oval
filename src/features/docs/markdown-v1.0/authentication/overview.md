@@ -1,3 +1,7 @@
+---
+title: Authentication Overview
+---
+
 # Authentication
 
 ## Overview
@@ -7,21 +11,21 @@ Authentication is how you securely access the Sentra CVM platform. Whether you'r
 
 ## Getting Started
 
-### [Login](/documentation/authentication/login)
+### Login
 
-Access the platform with your credentials. Learn how to enter your username/email and password, and understand two-factor authentication if enabled.
+Access the platform with your credentials. Learn how to enter your username/email and password, and understand two-factor authentication if enabled. See [Login](/documentation/authentication/login) for details.
 
-### [Registration](/documentation/authentication/registration)
+### Registration
 
-Create a new account to access Sentra CVM. Fill in your personal information, set up your credentials, and complete the registration process.
+Create a new account to access Sentra CVM. Fill in your personal information, set up your credentials, and complete the registration process. See [Registration](/documentation/authentication/registration) for details.
 
-### [Password Reset](/documentation/authentication/password-reset)
+### Password Reset
 
-Forgot your password? Follow the guided process to reset it and regain access to your account.
+Forgot your password? Follow the guided process to reset it and regain access to your account. See [Password Reset](/documentation/authentication/password-reset) for details.
 
-### [Landing Page](/documentation/authentication/landing)
+### Landing Page
 
-Once authenticated, explore the main dashboard and learn how to access all core platform modules from the landing page.
+Once authenticated, explore the main dashboard and learn how to access all core platform modules from the landing page. See [Landing Page](/documentation/authentication/landing) for details.
 
 
 ## Quick Start

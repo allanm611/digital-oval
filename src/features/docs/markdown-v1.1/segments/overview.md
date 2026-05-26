@@ -6,25 +6,25 @@ Segments are dynamic or static groups of customers that share common characteris
 
 ## What You Can Do
 
-### [Segment List](/documentation/segments/segments-list)
+### Segment List
 
-Browse all your segments in one place. View segment types, size estimates, status, and refresh information. Filter segments by type, visibility, and status. Perform bulk operations like refresh, compute, and comparison.
+Browse all your segments in one place. View segment types, size estimates, status, and refresh information. Filter segments by type, visibility, and status. Perform bulk operations like refresh, compute, and comparison. See [Segment List](/documentation/segments/segments-list) for details.
 
-### [Create Segment](/documentation/segments/create-segment)
+### Create Segment
 
-Build new customer segments using profile attributes, behavioral data, and transactional history. Create static segments (manually defined) or dynamic segments (automatically updated) based on your targeting criteria.
+Build new customer segments using profile attributes, behavioral data, and transactional history. Create static segments (manually defined) or dynamic segments (automatically updated) based on your targeting criteria. See [Create Segment](/documentation/segments/create-segment) for details.
 
-### [View Segment Details](/documentation/segments/view-segment-details)
+### View Segment Details
 
-Access detailed segment information including definition, member count, type, status, and refresh history. Review segment criteria and monitor segment performance.
+Access detailed segment information including definition, member count, type, status, and refresh history. Review segment criteria and monitor segment performance. See [View Segment Details](/documentation/segments/view-segment-details) for details.
 
-### [Edit Segment](/documentation/segments/segment-edit)
+### Edit Segment
 
-Modify segment criteria and configuration. Update targeting rules and conditions to refine your audience.
+Modify segment criteria and configuration. Update targeting rules and conditions to refine your audience. See [Edit Segment](/documentation/segments/segment-edit) for details.
 
-### [Segment Catalog](/documentation/segments/segment-catalog)
+### Segment Catalog
 
-Understand how segments are organized and categorized. Manage segment groupings for better organization and reusability.
+Understand how segments are organized and categorized. Manage segment groupings for better organization and reusability. See [Segment Catalog](/documentation/segments/segment-catalog) for details.
 
 <!-- ### [Segment Reports](/documentation/segments/segment-reports)
 

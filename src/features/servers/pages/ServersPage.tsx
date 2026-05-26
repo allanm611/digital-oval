@@ -145,7 +145,7 @@ export default function ServersPage() {
       setProtocolCounts(Array.isArray(protocol) ? protocol : []);
       setRegionCounts(Array.isArray(regions) ? regions : []);
     } catch (err) {
-      showError("Failed to load server analytics", extractBackendError(error, "Failed to load server analytics. Please try again.")).message || "Please try again later.",      );
+      showError("Failed to load server analytics", extractBackendError(err, "Failed to load server analytics. Please try again."));
     } finally {
       setIsLoadingStats(false);
     }
@@ -208,7 +208,7 @@ export default function ServersPage() {
       setSourceServers(Array.isArray(dataset) ? dataset : []);
     } catch (err) {
       setSourceServers([]);
-      showError("Failed to load servers", extractBackendError(error, "Failed to load servers. Please try again.")).message || "Unable to load server registry.",      );
+      showError("Failed to load servers", extractBackendError(err, "Failed to load servers. Please try again."));
     } finally {
       setIsLoadingServers(false);
     }
@@ -573,13 +573,6 @@ export default function ServersPage() {
   ) => {
     event?.stopPropagation();
     const nextAction = server.is_deprecated ? "undeprecate" : "deprecate";
-      title: `${nextAction === "deprecate" ? "Deprecate" : "Restore"} Server`,
-      message: `Are you sure you want to ${nextAction} "${server.name}"?`,
-      type: nextAction === "deprecate" ? "warning" : "info",
-      confirmText: nextAction === "deprecate" ? "Deprecate" : "Restore",
-      cancelText: "Cancel",
-    });
-    if (!confirmed) return;
 
     setActionState({ id: server.id, action: "deprecate" });
     try {
@@ -602,7 +595,7 @@ export default function ServersPage() {
         }.`,
       );
     } catch (err) {
-      showError(        `Failed to ${nextAction} server`,        err instanceof Error ? err.message : "Please try again.",      );
+      showError(`Failed to ${nextAction} server`, err instanceof Error ? err.message : "Please try again.");
     } finally {
       setActionState(null);
     }
@@ -614,13 +607,6 @@ export default function ServersPage() {
   ) => {
     event?.stopPropagation();
     const action = server.health_check_enabled ? "disable" : "enable";
-      title: `${action === "enable" ? "Enable" : "Disable"} Health Checks`,
-      message: `Are you sure you want to ${action} health monitoring for "${server.name}"?`,
-      type: action === "enable" ? "success" : "warning",
-      confirmText: action === "enable" ? "Enable" : "Disable",
-      cancelText: "Cancel",
-    });
-    if (!confirmed) return;
 
     setActionState({ id: server.id, action: "health" });
     try {
@@ -650,7 +636,7 @@ export default function ServersPage() {
       // Refetch health stats to update the stat card
       await loadStats();
     } catch (err) {
-      showError(        `Failed to ${action} health checks`,        err instanceof Error ? err.message : "Please try again.",      );
+      showError(`Failed to ${action} health checks`, err instanceof Error ? err.message : "Please try again.");
     } finally {
       setActionState(null);
     }

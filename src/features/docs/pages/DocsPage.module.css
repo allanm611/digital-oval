@@ -94,8 +94,13 @@
 .markdown a {
   color: #25c2a0;
   text-decoration: none;
-  border-bottom: 1px solid transparent;
-  transition: border-color 0.2s;
+  border-bottom: 1px solid #25c2a0;
+  transition: opacity 0.2s;
+  cursor: pointer;
+}
+
+.markdown a:hover {
+  opacity: 0.8;
 }
 
 .markdown a:hover:not(.headingLink) {

@@ -13,7 +13,7 @@ import { offerService } from "../../../offers/services/offerService";
 import { offerCategoryService } from "../../../offers/services/offerCategoryService";
 import { Offer, OfferStatusEnum } from "../../../offers/types/offer";
 import { useAuth } from "../../../../contexts/AuthContext";
-import { extractBackendError } from "../../../shared/utils/errorHandler";;;
+import { extractBackendError } from "../../../../shared/utils/errorHandler";
 import { useToast } from "../../../../contexts/ToastContext";
 import Checkbox from "../../../../shared/components/ui/Checkbox";
 

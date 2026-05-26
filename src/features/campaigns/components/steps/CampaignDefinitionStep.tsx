@@ -15,7 +15,7 @@ import { communicationPolicyService } from "../../services/communicationPolicySe
 import CommunicationPolicyModal from "../CommunicationPolicyModal";
 import CreateCampaignTypeModal from "../CreateCampaignTypeModal";
 import { useToast } from "../../../../contexts/ToastContext";
-import { extractBackendError } from "../../../shared/utils/errorHandler";;;
+import { extractBackendError } from "../../../../shared/utils/errorHandler";
 import { useTranslation, useLanguage } from "../../../../contexts/LanguageContext";
 import { getCurrencySymbol } from "../../../../shared/services/currencyService";
 import { useBackendCampaignTypeData } from "../../../../shared/hooks/useBackendCampaignTypeData";

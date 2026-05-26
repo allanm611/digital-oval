@@ -254,7 +254,7 @@ export default function FetchControlsModal({
           const response = await scheduledJobService.getActiveJobs(true);
           setScheduledJobs(response.data || []);
         } catch (err) {
-          showError("Failed to load scheduled jobs", extractBackendError(error, "Failed to load scheduled jobs. Please try again.")).message || "Please try again.",          );
+          showError("Failed to load scheduled jobs", extractBackendError(err, "Failed to load scheduled jobs. Please try again."));
         } finally {
           setIsLoadingJobs(false);
         }

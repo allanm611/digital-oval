@@ -1,10 +1,11 @@
 /**
  * Docs Service
- * Handles loading and managing documentation via API
+ * Handles loading documentation from bundled markdown files
+ * API integration commented out - will use when backend is ready
  */
 
 import { DocDocument } from '../types/documentation';
-import documentationService from './documentationService';
+// import documentationService from './documentationService';
 
 export interface DocMetadata {
   slug: string;
@@ -14,10 +15,62 @@ export interface DocMetadata {
 }
 
 class DocsService {
+  private markdownCache: Record<string, { content: string; metadata: DocMetadata }> = {};
+
   /**
-   * Load document by slug from API
+   * Load all markdown documents using Vite's glob import
+   */
+  private loadAllMarkdown() {
+    const modules = import.meta.glob('../markdown-v1.0/**/*.md', { query: '?raw', import: 'default' }) as Record<string, () => Promise<string>>;
+    return modules;
+  }
+
+  /**
+   * Load document by slug
    * Slug format: "intro", "authentication/login", "campaigns/create-campaign", etc.
    */
+  async loadMarkdown(slug: string): Promise<{ content: string; metadata: DocMetadata }> {
+    if (this.markdownCache[slug]) {
+      return this.markdownCache[slug];
+    }
+
+    try {
+      const modules = this.loadAllMarkdown();
+      const filePath = `../markdown-v1.0/${slug}.md`;
+
+      // Try exact match
+      let moduleKey = Object.keys(modules).find(key => key.includes(`/${slug}.md`));
+
+      if (!moduleKey) {
+        throw new Error(`Documentation for "${slug}" not found`);
+      }
+
+      const module = modules[moduleKey];
+      const content = await module();
+
+      const { metadata, body } = this.parseFrontmatter(content);
+      const docMetadata: DocMetadata = {
+        slug,
+        title: metadata.title || this.formatLabel(slug.split('/').pop() || slug),
+        category: slug.split('/')[0] || 'general',
+        path: `/documentation/${slug}`,
+      };
+
+      const result = { content: body, metadata: docMetadata };
+      this.markdownCache[slug] = result;
+      return result;
+    } catch (error) {
+      console.error(`Failed to load document for slug: ${slug}`, error);
+      throw new Error(`Documentation for "${slug}" not found`);
+    }
+  }
+
+  /**
+   * COMMENTED OUT - API INTEGRATION PENDING
+   * Load document by slug from API
+   * Uncomment when backend API is ready
+   */
+  /*
   async loadDocument(slug: string): Promise<DocDocument> {
     try {
       return await documentationService.getDocumentBySlug(slug);
@@ -26,6 +79,7 @@ class DocsService {
       throw new Error(`Documentation for "${slug}" not found`);
     }
   }
+  */
 
   /**
    * Remove HTML comments from markdown content
@@ -65,6 +119,16 @@ class DocsService {
     } catch (error) {
       return { metadata: {}, body: this.removeHtmlComments(content) };
     }
+  }
+
+  /**
+   * Format a slug into a readable label
+   */
+  private formatLabel(slug: string): string {
+    return slug
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
   }
 
   /**

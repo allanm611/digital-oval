@@ -97,9 +97,9 @@ Choose which type of reward to apply:
 - Additional details about the reward
 - Notes for reference
 
-### [Communication Policies](/documentation/configuration/campaign-communication-policy-list)
+### Communication Policies
 
-Apply policies that control when and how customers are notified:
+See [Communication Policies](/documentation/configuration/campaign-communication-policy-list) for details. Apply policies that control when and how customers are notified:
 - Timing rules (don't send between 9 PM and 8 AM)
 - Frequency limits
 - DND (Do Not Disturb) compliance

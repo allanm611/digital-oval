@@ -1,0 +1,151 @@
+# Create Product
+
+## Overview
+
+The Create Product form guides you through setting up a new product that can be used in the system. The same form is used for both creating new products and editing existing ones when editing, all fields are pre-filled with current values based on your edit permissions.
+
+![Create Product Form](/img/v1.1/product-images/createproductimage1.png)
+
+## Product Type Selection
+
+**Product Type\*** - Select the type of product:
+
+- **Standard** - Single product with basic properties
+- **Combo** - Bundle product combining multiple resources/components
+
+When you select **Combo** type, additional sections appear to manage the bundled resources that make up the combo.
+
+## Form Fields
+
+### Required Fields (marked with \*)
+
+**Product Code\***
+
+- Unique identifier for the product in the system
+
+**Name\***
+
+- The name of the product
+
+**Price\***
+
+- The cost or price of the product
+
+**DA ID\***
+
+- Dedicated Account ID for the product
+
+### Optional Fields
+
+**Description**
+
+- Detailed description of what the product provides
+
+**Category\***
+
+- Select which product category to organize this product under
+
+**Currency**
+
+- Select the currency for pricing (default: KES)
+
+**Scope**
+
+- Define the scope of the product
+
+**Unit**
+
+- Unit of measurement for the product
+
+**Unit Value**
+
+- Quantity for the unit
+
+**Validity Hours**
+
+- How long the product is valid for (in hours)
+
+**Product Type\***
+
+- Choose between Standard or Combo
+- Determines which additional sections appear in the form
+
+---
+
+### Product Type Dropdown
+
+![Product Type Selection](/img/v1.1/product-images/createproduct-productypedropdown.png)
+
+## Combo Product Type
+
+When you select **Combo** as the product type, you can configure a bundle of resources (Data, Voice, SMS, Utility, etc.) as a single product. The Combo section includes:
+
+- **Combo Type Selection:** Choose a predefined combo template or start from scratch.
+- **Add Resources:** Add multiple resources/components to the combo. Each resource can have its own unit, value, validity, price, and DA ID.
+- **Shared Fields:**
+  - **Shared DA ID:** Option to use a single DA ID for all resources, or specify DA IDs per resource.
+  - **Shared Price:** Option to set a single price for the combo or per resource.
+  - **Shared Validity:** Option to set a single validity period for all resources, or per resource.
+- **Resource Management:**
+  - Add, edit, or remove resources from the combo.
+  - Mark resources as shared or component-specific using checkboxes.
+
+#### Combo Product UI Examples
+
+![Combo Resources Card 1](/img/v1.1/product-images/comboresourcescardimage1.png)
+![Combo Resources Card 2](/img/v1.1/product-images/comboresourcescardimage2.png)
+![Select Combo Type from Existing](/img/v1.1/product-images/selectcombotypefromexisting.png)
+
+**Utility Resource Type:**
+
+If you add a resource with type **Utility** to your combo, an additional dropdown appears to select the specific utility (e.g., Food, Insurance, Music Streaming, etc.).
+
+You can also create a custom utility directly from the form if the one you need is not listed.
+
+![Utility Resource Type Dropdown](/img/v1.1/product-images/utilityreosurcetype.png)
+
+**How to Configure a Combo Product:**
+
+1. Select **Combo** as the product type.
+2. Choose a combo template or start from scratch.
+3. Add resources/components to the bundle.
+4. Set shared fields (DA ID, price, validity) as needed.
+5. Mark resources as shared or component-specific.
+6. Fill in other required and optional fields.
+7. Click **Create Product** to save.
+
+### Product Category Selection
+
+![Product Category Dropdown](/img/v1.1/product-images/createproductimage2-productcategorydrodpodown.png)
+
+## Creating a Product
+
+1. Fill in all required fields marked with \*
+2. Select product type (Standard or Combo)
+3. For Combo products:
+   - Add resources/components to the bundle
+   - Configure shared vs. component-specific properties
+   - Set shared checkboxes as needed
+4. Add optional information as needed
+5. Click **Create Product** to save
+
+---
+
+## Editing a Product
+
+The product creation form is also used for editing existing products. When you edit a product:
+
+![Edit Product Form](/img/v1.1/product-images/editproduct.png)
+
+- All fields are pre-filled with the product's current values
+- You can modify any field based on your edit permissions
+- The same wizard steps and validations apply
+- Click **Save** to apply your changes
+
+## Next Steps
+
+After creating or editing a product, you can:
+
+- View the product details on the [Product List](/documentation/products/products-list)
+- View detailed information on the [Product Details](/documentation/products/view-product-details) page
+- Add the product to a catalog using [Product Catalog](/documentation/products/product-catalog)

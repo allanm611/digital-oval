@@ -598,9 +598,9 @@ export default function CreateManualBroadcastPage() {
         errorMessage.toLowerCase().includes("timeout");
 
       if (isGatewayTimeout) {
-        showError("Failed to create manual communication", extractBackendError(error, "Failed to create manual communication. Please try again."));
+        showError("Failed to create manual communication", extractBackendError(err, "Failed to create manual communication. Please try again."));
       } else {
-        showError(          t.manualBroadcast.createFailed,          errorMessage,          true, // bypassSilentMode        );
+        showError(t.manualBroadcast.createFailed, errorMessage, true); // bypassSilentMode
       }
     } finally {
       setIsSubmitting(false);

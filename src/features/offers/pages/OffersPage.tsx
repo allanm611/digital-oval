@@ -290,7 +290,7 @@ export default function OffersPage() {
     } catch (err) {
       // Only show error if it's an actual exception (network error, etc.)
       // Don't show duplicate error if response.success was false (handled above)
-      showError("Unable to Load Offers", extractBackendError(error, "Unable to Load Offers. Please try again.")),      );
+      showError("Unable to Load Offers", extractBackendError(err, "Unable to Load Offers. Please try again."));
     } finally {
       setLoading(false);
     }

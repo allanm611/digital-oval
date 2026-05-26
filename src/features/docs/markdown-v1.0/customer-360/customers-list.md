@@ -48,9 +48,9 @@ The customer list table shows:
 
 ## Action Buttons
 
-### [View Customer Details](/documentation/customer-360/view-customer-details)
+### View Customer Details
 
-Click the **View** (eye icon) to open the customer's complete profile.
+Click the **View** (eye icon) to open the customer's complete profile. See [View Customer Details](/documentation/customer-360/view-customer-details) for details.
 
 **Includes:**
 
