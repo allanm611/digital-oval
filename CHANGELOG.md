@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.3.3...v1.4.0) (2026-05-29)
+
+
+### Features
+
+* integrated endpoints for kpi categories, kpis and notificaiton categories ([dfa8f37](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/dfa8f377aafe412c4bdc7eac745474926c14fc99))
+
 ## [1.3.3](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.3.2...v1.3.3) (2026-05-26)
 
 
