@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ListChecks, DollarSign, Activity, Zap, Users } from "lucide-react";
+import { ListChecks, DollarSign, Activity, Zap, Users, Tag } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import BackButton from "../../../shared/components/ui/BackButton";
@@ -14,6 +14,12 @@ export default function KPIsHubPage() {
       description: "View all KPIs across all categories",
       icon: ListChecks,
       onClick: () => navigate("/dashboard/kpis/all"),
+    },
+    {
+      title: "KPI Categories",
+      description: "Manage KPI categories and organize profile fields",
+      icon: Tag,
+      onClick: () => navigate("/dashboard/kpis/kpi-categories"),
     },
     {
       title: "Revenue Metrics",

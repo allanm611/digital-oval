@@ -33,10 +33,10 @@ export type DataClassificationEnum =
   | string;
 
 export type EnvironmentEnum =
-  | "development"
+  | "dev"
   | "staging"
   | "production"
-  | "uat"
+  | "dr"
   | string;
 
 export interface ConnectionProfileType {

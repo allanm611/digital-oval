@@ -642,49 +642,95 @@ export default function ProductForm({
               </div>
             </div>
 
-            {/* DA ID - Full Width */}
-            {!isComboType && (
-              <div>
-                <label
-                  className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                >
-                  DA ID <span style={{ color: color.status.danger }}>*</span>
-                </label>
-                {/* Note: DA ID does not have a translation key in the requirements */}
-                <Input
-                  placeholder="Enter DA ID"
-                  value={formData.da_id || ""}
-                  onChange={(value) => onInputChange("da_id", value)}
-                  hasError={!!errors.da_id}
-                  onFocus={() => setFocusedField("da_id")}
-                  onBlur={() => setFocusedField(null)}
-                  required
-                />
-                {errors.da_id && (
-                  <p
-                    className="text-xs mt-1 font-semibold cursor-pointer"
-                    style={{
-                      color: color.status.danger,
-                      fontWeight: 600,
-                    }}
-                    onClick={() => {
-                      const element = document.querySelector(
-                        'input[name="da_id"]',
-                      );
-                      if (element) {
-                        (element as HTMLInputElement).focus();
-                        (element as HTMLInputElement).scrollIntoView({
-                          behavior: "smooth",
-                          block: "center",
-                        });
-                      }
-                    }}
+            {/* Price & DAID */}
+            <div className="grid gap-5 md:grid-cols-2">
+              {!isComboType && (
+                <div>
+                  <label
+                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
                   >
-                    {errors.da_id}
-                  </p>
-                )}
-              </div>
-            )}
+                    {t.products.form.pricing}{" "}
+                    <span style={{ color: color.status.danger }}>*</span>
+                  </label>
+                  <Input
+                    placeholder="0.00"
+                    value={String(formData.price || 0)}
+                    onChange={(value) =>
+                      onInputChange("price", parseFloat(value) || 0)
+                    }
+                    hasError={!!errors.price}
+                    onFocus={() => setFocusedField("price")}
+                    onBlur={() => setFocusedField(null)}
+                    required
+                  />
+                  {errors.price && (
+                    <p
+                      className="text-xs mt-1 font-semibold cursor-pointer"
+                      style={{
+                        color: color.status.danger,
+                        fontWeight: 600,
+                      }}
+                      onClick={() => {
+                        const element = document.querySelector(
+                          'input[name="price"]',
+                        );
+                        if (element) {
+                          (element as HTMLInputElement).focus();
+                          (element as HTMLInputElement).scrollIntoView({
+                            behavior: "smooth",
+                            block: "center",
+                          });
+                        }
+                      }}
+                    >
+                      {errors.price}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {!isComboType && (
+                <div>
+                  <label
+                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                  >
+                    DA ID <span style={{ color: color.status.danger }}>*</span>
+                  </label>
+                  <Input
+                    placeholder="Enter DA ID"
+                    value={formData.da_id || ""}
+                    onChange={(value) => onInputChange("da_id", value)}
+                    hasError={!!errors.da_id}
+                    onFocus={() => setFocusedField("da_id")}
+                    onBlur={() => setFocusedField(null)}
+                    required
+                  />
+                  {errors.da_id && (
+                    <p
+                      className="text-xs mt-1 font-semibold cursor-pointer"
+                      style={{
+                        color: color.status.danger,
+                        fontWeight: 600,
+                      }}
+                      onClick={() => {
+                        const element = document.querySelector(
+                          'input[name="da_id"]',
+                        );
+                        if (element) {
+                          (element as HTMLInputElement).focus();
+                          (element as HTMLInputElement).scrollIntoView({
+                            behavior: "smooth",
+                            block: "center",
+                          });
+                        }
+                      }}
+                    >
+                      {errors.da_id}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* Description */}
             <div>
@@ -746,57 +792,13 @@ export default function ProductForm({
               )}
             </div>
 
-            {/* Price & Tags */}
-            <div className="grid gap-5 md:grid-cols-2">
-              <div>
-                <label
-                  className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                >
-                  {t.products.form.pricing}{" "}
-                  <span style={{ color: color.status.danger }}>*</span>
-                </label>
-                <Input
-                  placeholder="0.00"
-                  value={String(formData.price || 0)}
-                  onChange={(value) =>
-                    onInputChange("price", parseFloat(value) || 0)
-                  }
-                  hasError={!!errors.price}
-                  onFocus={() => setFocusedField("price")}
-                  onBlur={() => setFocusedField(null)}
-                  required
-                />
-                {errors.price && (
-                  <p
-                    className="text-xs mt-1 font-semibold cursor-pointer"
-                    style={{
-                      color: color.status.danger,
-                      fontWeight: 600,
-                    }}
-                    onClick={() => {
-                      const element = document.querySelector(
-                        'input[name="price"]',
-                      );
-                      if (element) {
-                        (element as HTMLInputElement).focus();
-                        (element as HTMLInputElement).scrollIntoView({
-                          behavior: "smooth",
-                          block: "center",
-                        });
-                      }
-                    }}
-                  >
-                    {errors.price}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label
-                  className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                >
-                  Tags
-                </label>
+            {/* Tags - Full Width */}
+            <div>
+              <label
+                className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+              >
+                Tags
+              </label>
                 <div className="space-y-2">
                   <div className="flex">
                     <div className="flex-1">
@@ -881,7 +883,6 @@ export default function ProductForm({
                     </div>
                   )}
                 </div>
-              </div>
             </div>
 
             {/* Category */}

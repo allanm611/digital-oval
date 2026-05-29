@@ -300,7 +300,11 @@ export default function CreateCampaignPage() {
             tags: (campaign?.tags || []).map((tag: any) =>
               typeof tag === "string" ? tag : tag?.name || String(tag),
             ),
-            department_id: campaign?.owner_team ? undefined : undefined,
+            department_id: campaign?.department_id || undefined,
+            department: campaign?.department || undefined,
+            line_of_business_id: campaign?.line_of_business_id || undefined,
+            line_of_business: campaign?.line_of_business || undefined,
+            communication_policy: campaign?.communication_policy || undefined,
             budget_allocated: campaign?.budget_allocated
               ? parseFloat(campaign.budget_allocated)
               : undefined,

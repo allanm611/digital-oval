@@ -3704,3 +3704,79 @@ export function getLineOfBusinessApiConfig(
     enableActivateDeactivate: true,
   } as APIConfigurationPageConfig;
 }
+
+export function getKpiCategoriesApiConfig(
+  _t: (key: string) => string,
+): APIConfigurationPageConfig {
+  return {
+    title: "KPI Categories",
+    subtitle: "Manage categories used to organize KPIs and profile fields",
+    entityName: "KPI Category",
+    entityNamePlural: "KPI Categories",
+    configType: "kpiCategories",
+    icon: Tag,
+    backPath: "/dashboard/kpis",
+    parentLabel: "KPIs",
+    searchPlaceholder: "Search KPI categories...",
+    createButtonText: "Create",
+    modalTitle: {
+      create: "Create KPI Category",
+      edit: "Edit KPI Category",
+    },
+    nameLabel: "Category Name",
+    nameRequired: true,
+    descriptionLabel: "Description",
+    descriptionRequired: false,
+    nameMaxLength: 50,
+    descriptionMaxLength: 255,
+    statusLabel: "Status",
+    deleteConfirmTitle: "Delete KPI Category",
+    deleteConfirmMessage: (name: string) =>
+      `Are you sure you want to delete "${name}"? This will fail if KPIs are using it.`,
+    deleteSuccessMessage: (name: string) =>
+      `"${name}" has been deleted successfully.`,
+    createSuccessMessage: "KPI category created successfully",
+    updateSuccessMessage: "KPI category updated successfully",
+    deleteErrorMessage: "Failed to delete — category may have KPIs attached",
+    saveErrorMessage: "Failed to save KPI category. Please try again.",
+    enableActivateDeactivate: true,
+  } as APIConfigurationPageConfig;
+}
+
+export function getNotificationCategoriesApiConfig(
+  _t: (key: string) => string,
+): APIConfigurationPageConfig {
+  return {
+    title: "Notification Categories",
+    subtitle: "Manage categories for organizing notification rules",
+    entityName: "Notification Category",
+    entityNamePlural: "Notification Categories",
+    configType: "notificationCategories",
+    icon: MessageSquare,
+    backPath: "/dashboard/administration",
+    parentLabel: "Administration",
+    searchPlaceholder: "Search notification categories...",
+    createButtonText: "Create",
+    modalTitle: {
+      create: "Create Notification Category",
+      edit: "Edit Notification Category",
+    },
+    nameLabel: "Category Name",
+    nameRequired: true,
+    descriptionLabel: "Description",
+    descriptionRequired: false,
+    nameMaxLength: 100,
+    descriptionMaxLength: 500,
+    statusLabel: "Status",
+    deleteConfirmTitle: "Delete Notification Category",
+    deleteConfirmMessage: (name: string) =>
+      `Are you sure you want to delete "${name}"? Rules in this category will be uncategorized.`,
+    deleteSuccessMessage: (name: string) =>
+      `"${name}" has been deleted successfully.`,
+    createSuccessMessage: "Notification category created successfully",
+    updateSuccessMessage: "Notification category updated successfully",
+    deleteErrorMessage: "Failed to delete notification category",
+    saveErrorMessage: "Failed to save notification category. Please try again.",
+    enableActivateDeactivate: true,
+  } as APIConfigurationPageConfig;
+}

@@ -37,6 +37,8 @@ import {
   TCPConfig,
   FilesConfig,
   SMSInboxConfig,
+  SFTPConfig,
+  FTPConfig,
   ConfigComponentProps,
 } from "../../../shared/components/ConnectorConfigComponents";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -82,18 +84,20 @@ export default function ConnectionProfileFormPage({
   const [connectorTypes, setConnectorTypes] = useState<DataConnectorType[]>([]);
   const [loadingConnectorTypes, setLoadingConnectorTypes] = useState(true);
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [formData, setFormData] = useState<
     CreateConnectionProfilePayload & {
-      metadata?: string | Record<string, unknown>;
+      configuration?: Record<string, unknown>;
+      metadataString?: string;
     }
   >({
     profile_name: "",
     profile_code: "",
     connection_type: (defaultConnectionType ||
-      "database") as ConnectionTypeEnum,
+      "") as ConnectionTypeEnum,
     load_strategy: "full",
-    environment: "development",
+    environment: "dev",
     batch_size: 1000,
     parallel_threads: 4,
     min_pool_size: 2,
@@ -115,12 +119,149 @@ export default function ConnectionProfileFormPage({
     health_check_enabled: false,
     health_check_query: "",
     encryption_key_version: undefined,
-    metadata: "",
+    configuration: {},
+    metadataString: "",
   });
 
   const togglePasswordVisibility = useCallback((field: string) => {
     setShowPasswords((prev) => ({ ...prev, [field]: !prev[field] }));
   }, []);
+
+  const handleProfileCodeChange = useCallback((val: string) => {
+    const alphanumericOnly = val.replace(/[^a-zA-Z0-9]/g, "");
+    setFormData({ ...formData, profile_code: alphanumericOnly });
+  }, [formData]);
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.profile_name?.trim()) {
+      newErrors.profile_name = "Profile name is required";
+    }
+    if (!formData.profile_code?.trim()) {
+      newErrors.profile_code = "Profile code is required";
+    }
+    if (!formData.connection_type) {
+      newErrors.connection_type = "Connection type is required";
+    }
+    if (!formData.environment) {
+      newErrors.environment = "Environment is required";
+    }
+    if (!formData.load_strategy) {
+      newErrors.load_strategy = "Data load method is required";
+    }
+    if (!formData.valid_from) {
+      newErrors.valid_from = "Valid from date is required";
+    }
+    if (!formData.data_classification) {
+      newErrors.data_classification = "Data classification is required";
+    }
+    if (!formData.batch_size || formData.batch_size < 1) {
+      newErrors.batch_size = "Records per batch must be at least 1";
+    }
+    if (!formData.parallel_threads || formData.parallel_threads < 1) {
+      newErrors.parallel_threads = "Parallel tasks must be at least 1";
+    }
+    if (!formData.min_pool_size || formData.min_pool_size < 1) {
+      newErrors.min_pool_size = "Minimum connections must be at least 1";
+    }
+    if (!formData.max_pool_size || formData.max_pool_size < formData.min_pool_size) {
+      newErrors.max_pool_size = "Maximum connections must be greater than minimum";
+    }
+    if (!formData.connection_timeout_seconds || formData.connection_timeout_seconds < 1) {
+      newErrors.connection_timeout_seconds = "Connection wait time must be at least 1 second";
+    }
+    if (!formData.idle_timeout_seconds || formData.idle_timeout_seconds < 1) {
+      newErrors.idle_timeout_seconds = "Idle disconnect time must be at least 1 second";
+    }
+    if (formData.max_retries === undefined || formData.max_retries < 0) {
+      newErrors.max_retries = "Max retries cannot be negative";
+    }
+    if (!formData.retry_backoff_multiplier || formData.retry_backoff_multiplier < 1) {
+      newErrors.retry_backoff_multiplier = "Retry backoff multiplier must be at least 1";
+    }
+    if (!formData.circuit_breaker_threshold || formData.circuit_breaker_threshold < 1) {
+      newErrors.circuit_breaker_threshold = "Circuit breaker threshold must be at least 1";
+    }
+
+    // Connection type specific validation
+    const config = formData.configuration || {};
+
+    if (formData.connection_type === "jdbc" || formData.connection_type === "database") {
+      if (!config.database_type) {
+        newErrors.database_type = "Database type is required";
+      }
+
+      // Check if using connection string (Option A) or individual fields (Option B)
+      const hasConnectionString = config.connection_string && config.connection_string.trim().length > 0;
+      const hasHost = config.host && config.host.trim().length > 0;
+      const hasPort = config.port && config.port > 0;
+      const hasDatabase = config.database && config.database.trim().length > 0;
+      const hasUsername = config.username && config.username.trim().length > 0;
+      const hasAllHostDetails = hasHost && hasPort && hasDatabase && hasUsername;
+
+      if (!hasConnectionString && !hasAllHostDetails) {
+        const missing = [];
+        if (!hasHost) missing.push("Host");
+        if (!hasPort) missing.push("Port");
+        if (!hasDatabase) missing.push("Database Name");
+        if (!hasUsername) missing.push("Username");
+        newErrors.jdbc_connection = missing.length > 0
+          ? `Missing required fields: ${missing.join(", ")}`
+          : "Either provide a connection string OR all of (host, port, database, username)";
+      }
+    } else if (formData.connection_type === "api" || formData.connection_type === "webhook") {
+      if (!config.base_url?.trim()) {
+        newErrors.base_url = "Base URL is required";
+      }
+    } else if (formData.connection_type === "kafka") {
+      if (!config.brokers || (Array.isArray(config.brokers) && config.brokers.length === 0)) {
+        newErrors.brokers = "At least one broker is required";
+      }
+      if (!config.topic_name?.trim()) {
+        newErrors.topic_name = "Topic name is required";
+      }
+    } else if (formData.connection_type === "sftp") {
+      if (!config.host?.trim()) {
+        newErrors.sftp_host = "Host is required";
+      }
+      if (!config.username?.trim()) {
+        newErrors.sftp_username = "Username is required";
+      }
+      const hasPassword = config.password?.trim();
+      const hasPrivateKey = config.private_key?.trim();
+      if (!hasPassword && !hasPrivateKey) {
+        newErrors.sftp_auth = "Either password or private key is required";
+      }
+    } else if (formData.connection_type === "ftp") {
+      if (!config.host?.trim()) {
+        newErrors.ftp_host = "Host is required";
+      }
+      if (!config.username?.trim()) {
+        newErrors.ftp_username = "Username is required";
+      }
+      if (!config.password?.trim()) {
+        newErrors.ftp_password = "Password is required";
+      }
+    } else if (formData.connection_type === "s3") {
+      if (!config.bucket_name?.trim()) {
+        newErrors.bucket_name = "Bucket name is required";
+      }
+      if (!config.region?.trim()) {
+        newErrors.region = "Region is required";
+      }
+    } else if (formData.connection_type === "azure_blob") {
+      if (!config.account_name?.trim()) {
+        newErrors.account_name = "Account name is required";
+      }
+      if (!config.container_name?.trim()) {
+        newErrors.container_name = "Container name is required";
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const ensureUniqueIdentifiers = async () => {
     // Note: Backend doesn't have /name/{name} or /code/{code} endpoints
@@ -163,7 +304,8 @@ export default function ConnectionProfileFormPage({
         health_check_enabled: data.health_check_enabled,
         health_check_query: data.health_check_query || undefined,
         encryption_key_version: data.encryption_key_version,
-        metadata: data.metadata ? JSON.stringify(data.metadata) : "",
+        configuration: data.configuration || {},
+        metadataString: data.metadata ? JSON.stringify(data.metadata) : "",
       });
     } catch (err) {
       console.error("Failed to load connection profile:", err);
@@ -224,30 +366,79 @@ export default function ConnectionProfileFormPage({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      setSaving(false);
+      return;
+    }
+
     setSaving(true);
 
     try {
       await ensureUniqueIdentifiers();
       if (mode === "create") {
-        // Clean payload - remove undefined values (but keep null)
+        // Build configuration object with all connection-specific fields
+        const configuration = { ...formData.configuration };
+
+        if (formData.sync_column_name) {
+          configuration.sync_column_name = formData.sync_column_name;
+        }
+        if (formData.sync_column_type) {
+          configuration.sync_column_type = formData.sync_column_type;
+        }
+        if (formData.health_check_query) {
+          configuration.health_check_query = formData.health_check_query;
+        }
+        if (formData.encryption_key_version) {
+          configuration.encryption_key_version = formData.encryption_key_version;
+        }
+
         const cleanedPayload: Record<string, unknown> = {
-          ...formData,
+          profile_name: formData.profile_name,
+          profile_code: formData.profile_code,
+          connection_type: formData.connection_type,
+          load_strategy: formData.load_strategy,
+          environment: formData.environment,
+          batch_size: formData.batch_size,
+          parallel_threads: formData.parallel_threads,
+          min_pool_size: formData.min_pool_size,
+          max_pool_size: formData.max_pool_size,
+          connection_timeout_seconds: formData.connection_timeout_seconds,
+          idle_timeout_seconds: formData.idle_timeout_seconds,
+          max_retries: formData.max_retries,
+          retry_backoff_multiplier: formData.retry_backoff_multiplier,
+          circuit_breaker_threshold: formData.circuit_breaker_threshold,
+          data_classification: formData.data_classification,
+          contains_pii: formData.contains_pii,
+          gdpr_applicable: formData.gdpr_applicable,
           valid_from: new Date(formData.valid_from).toISOString(),
+          configuration: configuration,
         };
+
+        if (formData.server_id) {
+          cleanedPayload.server_id = formData.server_id;
+        }
 
         if (formData.valid_to) {
           cleanedPayload.valid_to = new Date(formData.valid_to).toISOString();
         }
 
-        // Parse metadata if it's a string and map to configuration
-        if (formData.metadata && typeof formData.metadata === "string") {
+        // Ensure configuration is an object, not a string
+        if (typeof cleanedPayload.configuration === "string") {
           try {
-            cleanedPayload.configuration = JSON.parse(formData.metadata);
+            cleanedPayload.configuration = JSON.parse(cleanedPayload.configuration);
           } catch {
-            cleanedPayload.configuration = undefined;
+            cleanedPayload.configuration = {};
           }
-        } else if (formData.metadata) {
-          cleanedPayload.configuration = formData.metadata;
+        }
+
+        // Parse metadata string if provided
+        if (formData.metadataString) {
+          try {
+            cleanedPayload.metadata = JSON.parse(formData.metadataString);
+          } catch {
+            // If invalid JSON, skip metadata
+          }
         }
 
         // Add created_by if user is available
@@ -255,37 +446,79 @@ export default function ConnectionProfileFormPage({
           cleanedPayload.created_by = user.user_id;
         }
 
-        // Remove only undefined values (null is valid and should be sent)
-        Object.keys(cleanedPayload).forEach((key) => {
-          if (cleanedPayload[key] === undefined || cleanedPayload[key] === "") {
-            delete cleanedPayload[key];
-          }
-        });
-
+        console.log("CREATE PROFILE PAYLOAD:", cleanedPayload);
         const payload =
           cleanedPayload as unknown as CreateConnectionProfilePayload;
         await connectionProfileService.createProfile(payload);
         success("Connection profile created successfully");
       } else if (id) {
-        const payload: UpdateConnectionProfilePayload = {
-          ...formData,
-          valid_from: new Date(formData.valid_from).toISOString(),
-          valid_to: formData.valid_to
-            ? new Date(formData.valid_to).toISOString()
-            : null,
-        };
+        // Build configuration object with all connection-specific fields
+        const configuration = { ...formData.configuration };
 
-        // Parse metadata if it's a string and map to configuration
-        if (payload.metadata && typeof payload.metadata === "string") {
-          try {
-            payload.configuration = JSON.parse(payload.metadata);
-          } catch {
-            payload.configuration = undefined;
-          }
-        } else if (payload.metadata) {
-          payload.configuration = payload.metadata;
+        if (formData.sync_column_name) {
+          configuration.sync_column_name = formData.sync_column_name;
+        }
+        if (formData.sync_column_type) {
+          configuration.sync_column_type = formData.sync_column_type;
+        }
+        if (formData.health_check_query) {
+          configuration.health_check_query = formData.health_check_query;
+        }
+        if (formData.encryption_key_version) {
+          configuration.encryption_key_version = formData.encryption_key_version;
         }
 
+        const payload: any = {
+          profile_name: formData.profile_name,
+          profile_code: formData.profile_code,
+          connection_type: formData.connection_type,
+          load_strategy: formData.load_strategy,
+          environment: formData.environment,
+          batch_size: formData.batch_size,
+          parallel_threads: formData.parallel_threads,
+          min_pool_size: formData.min_pool_size,
+          max_pool_size: formData.max_pool_size,
+          connection_timeout_seconds: formData.connection_timeout_seconds,
+          idle_timeout_seconds: formData.idle_timeout_seconds,
+          max_retries: formData.max_retries,
+          retry_backoff_multiplier: formData.retry_backoff_multiplier,
+          circuit_breaker_threshold: formData.circuit_breaker_threshold,
+          data_classification: formData.data_classification,
+          contains_pii: formData.contains_pii,
+          gdpr_applicable: formData.gdpr_applicable,
+          valid_from: new Date(formData.valid_from).toISOString(),
+          configuration: configuration,
+        };
+
+        if (formData.server_id) {
+          payload.server_id = formData.server_id;
+        }
+
+        if (formData.valid_to) {
+          payload.valid_to = new Date(formData.valid_to).toISOString();
+        } else {
+          payload.valid_to = null;
+        }
+
+        // Ensure configuration is an object, not a string
+        if (typeof payload.configuration === "string") {
+          try {
+            payload.configuration = JSON.parse(payload.configuration);
+          } catch {
+            payload.configuration = {};
+          }
+        }
+
+        // Parse metadata string if provided
+        if (formData.metadataString) {
+          try {
+            payload.metadata = JSON.parse(formData.metadataString);
+          } catch {
+            // If invalid JSON, skip metadata
+          }
+        }
+
+        console.log("UPDATE PROFILE PAYLOAD:", payload);
         await connectionProfileService.updateProfile(Number(id), payload);
         success("Connection profile updated successfully");
       }
@@ -347,24 +580,34 @@ export default function ConnectionProfileFormPage({
               <Input
                 placeholder="Profile name"
                 value={formData.profile_name}
-                onChange={(val) =>
-                  setFormData({ ...formData, profile_name: val })
-                }
+                onChange={(val) => {
+                  setFormData({ ...formData, profile_name: val });
+                  if (errors.profile_name) setErrors({ ...errors, profile_name: "" });
+                }}
                 variant="medium"
+                className={errors.profile_name ? "border-red-500" : ""}
               />
+              {errors.profile_name && (
+                <p className="text-sm text-red-500 mt-1">{errors.profile_name}</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Profile Code *
               </label>
               <Input
-                placeholder="Profile code"
+                placeholder="Profile code (letters and numbers only)"
                 value={formData.profile_code}
-                onChange={(val) =>
-                  setFormData({ ...formData, profile_code: val })
-                }
+                onChange={(val) => {
+                  handleProfileCodeChange(val);
+                  if (errors.profile_code) setErrors({ ...errors, profile_code: "" });
+                }}
                 variant="medium"
+                className={errors.profile_code ? "border-red-500" : ""}
               />
+              {errors.profile_code && (
+                <p className="text-sm text-red-500 mt-1">{errors.profile_code}</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -375,20 +618,50 @@ export default function ConnectionProfileFormPage({
                   Loading connection types...
                 </div>
               ) : (
-                <HeadlessSelect
-                  options={connectorTypes.map((type) => ({
-                    value: type,
-                    label: type.charAt(0).toUpperCase() + type.slice(1).replace(/_/g, " "),
-                  }))}
-                  value={formData.connection_type}
-                  onChange={(value) =>
-                    setFormData({
-                      ...formData,
-                      connection_type: (value ||
-                        "database") as ConnectionTypeEnum,
-                    })
-                  }
-                />
+                <>
+                  <HeadlessSelect
+                    options={connectorTypes.map((type) => ({
+                      value: type,
+                      label: type.charAt(0).toUpperCase() + type.slice(1).replace(/_/g, " "),
+                    }))}
+                    value={formData.connection_type || ""}
+                    onChange={(value) => {
+                      const newConfig: Record<string, any> = formData.configuration || {};
+
+                      // Set defaults for the selected connection type
+                      if (value === "jdbc" || value === "database") {
+                        newConfig.database_type = newConfig.database_type || "mysql";
+                        newConfig.port = newConfig.port || 3306;
+                      } else if (value === "api" || value === "webhook") {
+                        newConfig.content_type = newConfig.content_type || "JSON";
+                        newConfig.method = newConfig.method || "POST";
+                      } else if (value === "websocket") {
+                        newConfig.http_path = newConfig.http_path || "/ws";
+                      } else if (value === "sftp") {
+                        newConfig.port = newConfig.port || 22;
+                      } else if (value === "ftp") {
+                        newConfig.port = newConfig.port || 21;
+                      } else if (value === "files") {
+                        newConfig.protocol = newConfig.protocol || "local";
+                      } else if (value === "sms_inbox") {
+                        newConfig.provider = newConfig.provider || "MTN";
+                        newConfig.keyword_delimiter = newConfig.keyword_delimiter || ",";
+                        newConfig.keyword_condition = newConfig.keyword_condition || "contains";
+                      }
+
+                      setFormData({
+                        ...formData,
+                        connection_type: value as ConnectionTypeEnum,
+                        configuration: newConfig,
+                      });
+                      if (errors.connection_type) setErrors({ ...errors, connection_type: "" });
+                    }}
+                    placeholder="Select a connection type..."
+                  />
+                  {errors.connection_type && (
+                    <p className="text-sm text-red-500 mt-1">{errors.connection_type}</p>
+                  )}
+                </>
               )}
             </div>
             <div>
@@ -397,18 +670,23 @@ export default function ConnectionProfileFormPage({
               </label>
               <HeadlessSelect
                 options={[
-                  { value: "development", label: "Development" },
+                  { value: "dev", label: "Development" },
                   { value: "staging", label: "Staging" },
                   { value: "production", label: "Production" },
+                  { value: "dr", label: "Disaster Recovery" },
                 ]}
                 value={formData.environment}
-                onChange={(value) =>
+                onChange={(value) => {
                   setFormData({
                     ...formData,
-                    environment: (value || "development") as EnvironmentEnum,
-                  })
-                }
+                    environment: (value || "dev") as EnvironmentEnum,
+                  });
+                  if (errors.environment) setErrors({ ...errors, environment: "" });
+                }}
               />
+              {errors.environment && (
+                <p className="text-sm text-red-500 mt-1">{errors.environment}</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -428,13 +706,17 @@ export default function ConnectionProfileFormPage({
                   { value: "upsert", label: "Upsert" },
                 ]}
                 value={formData.load_strategy}
-                onChange={(value) =>
+                onChange={(value) => {
                   setFormData({
                     ...formData,
                     load_strategy: (value || "full") as LoadStrategyEnum,
-                  })
-                }
+                  });
+                  if (errors.load_strategy) setErrors({ ...errors, load_strategy: "" });
+                }}
               />
+              {errors.load_strategy && (
+                <p className="text-sm text-red-500 mt-1">{errors.load_strategy}</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">
@@ -487,22 +769,45 @@ export default function ConnectionProfileFormPage({
 
         {/* Connection Type Specific Configuration */}
         {(formData.connection_type === "api" ||
+          formData.connection_type === "webhook" ||
           formData.connection_type === "kafka" ||
           formData.connection_type === "websocket" ||
           formData.connection_type === "tcp" ||
           formData.connection_type === "jdbc" ||
+          formData.connection_type === "sftp" ||
+          formData.connection_type === "ftp" ||
           formData.connection_type === "sms_inbox" ||
           formData.connection_type === "files") && (
           <div
             className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
           >
+            {/* Configuration Validation Errors */}
+            {(errors.database_type || errors.jdbc_connection || errors.base_url || errors.brokers || errors.topic_name || errors.sftp_host || errors.sftp_username || errors.sftp_auth || errors.ftp_host || errors.ftp_username || errors.ftp_password) && (
+              <div className="mb-4 space-y-1">
+                {errors.database_type && <p className="text-sm text-red-500">{errors.database_type}</p>}
+                {errors.jdbc_connection && <p className="text-sm text-red-500">{errors.jdbc_connection}</p>}
+                {errors.base_url && <p className="text-sm text-red-500">{errors.base_url}</p>}
+                {errors.brokers && <p className="text-sm text-red-500">{errors.brokers}</p>}
+                {errors.topic_name && <p className="text-sm text-red-500">{errors.topic_name}</p>}
+                {errors.sftp_host && <p className="text-sm text-red-500">{errors.sftp_host}</p>}
+                {errors.sftp_username && <p className="text-sm text-red-500">{errors.sftp_username}</p>}
+                {errors.sftp_auth && <p className="text-sm text-red-500">{errors.sftp_auth}</p>}
+                {errors.ftp_host && <p className="text-sm text-red-500">{errors.ftp_host}</p>}
+                {errors.ftp_username && <p className="text-sm text-red-500">{errors.ftp_username}</p>}
+                {errors.ftp_password && <p className="text-sm text-red-500">{errors.ftp_password}</p>}
+              </div>
+            )}
             {formData.connection_type === "api" && (
               <APIConfig
-                config={formData.metadata || {}}
+                config={{
+                  content_type: "JSON",
+                  method: "POST",
+                  ...(formData.configuration || {}),
+                }}
                 updateConfiguration={(key, value) =>
                   setFormData({
                     ...formData,
-                    metadata: { ...(formData.metadata || {}), [key]: value },
+                    configuration: { ...(formData.configuration || {}), [key]: value },
                   })
                 }
                 showPasswords={showPasswords}
@@ -511,11 +816,11 @@ export default function ConnectionProfileFormPage({
             )}
             {formData.connection_type === "kafka" && (
               <KafkaConfig
-                config={formData.metadata || {}}
+                config={formData.configuration || {}}
                 updateConfiguration={(key, value) =>
                   setFormData({
                     ...formData,
-                    metadata: { ...(formData.metadata || {}), [key]: value },
+                    configuration: { ...(formData.configuration || {}), [key]: value },
                   })
                 }
                 showPasswords={showPasswords}
@@ -524,11 +829,14 @@ export default function ConnectionProfileFormPage({
             )}
             {formData.connection_type === "websocket" && (
               <WebSocketConfig
-                config={formData.metadata || {}}
+                config={{
+                  http_path: "/ws",
+                  ...(formData.configuration || {}),
+                }}
                 updateConfiguration={(key, value) =>
                   setFormData({
                     ...formData,
-                    metadata: { ...(formData.metadata || {}), [key]: value },
+                    configuration: { ...(formData.configuration || {}), [key]: value },
                   })
                 }
                 showPasswords={showPasswords}
@@ -537,11 +845,11 @@ export default function ConnectionProfileFormPage({
             )}
             {formData.connection_type === "tcp" && (
               <TCPConfig
-                config={formData.metadata || {}}
+                config={formData.configuration || {}}
                 updateConfiguration={(key, value) =>
                   setFormData({
                     ...formData,
-                    metadata: { ...(formData.metadata || {}), [key]: value },
+                    configuration: { ...(formData.configuration || {}), [key]: value },
                   })
                 }
                 showPasswords={showPasswords}
@@ -550,11 +858,14 @@ export default function ConnectionProfileFormPage({
             )}
             {formData.connection_type === "jdbc" && (
               <JDBCConfig
-                config={formData.metadata || {}}
+                config={{
+                  database_type: "mysql",
+                  ...(formData.configuration || {}),
+                }}
                 updateConfiguration={(key, value) =>
                   setFormData({
                     ...formData,
-                    metadata: { ...(formData.metadata || {}), [key]: value },
+                    configuration: { ...(formData.configuration || {}), [key]: value },
                   })
                 }
                 showPasswords={showPasswords}
@@ -563,11 +874,59 @@ export default function ConnectionProfileFormPage({
             )}
             {formData.connection_type === "sms_inbox" && (
               <SMSInboxConfig
-                config={formData.metadata || {}}
+                config={{
+                  provider: "MTN",
+                  keyword_delimiter: ",",
+                  keyword_condition: "contains",
+                  ...(formData.configuration || {}),
+                }}
                 updateConfiguration={(key, value) =>
                   setFormData({
                     ...formData,
-                    metadata: { ...(formData.metadata || {}), [key]: value },
+                    configuration: { ...(formData.configuration || {}), [key]: value },
+                  })
+                }
+                showPasswords={showPasswords}
+                togglePasswordVisibility={togglePasswordVisibility}
+              />
+            )}
+            {formData.connection_type === "webhook" && (
+              <APIConfig
+                config={{
+                  content_type: "JSON",
+                  method: "POST",
+                  ...(formData.configuration || {}),
+                }}
+                updateConfiguration={(key, value) =>
+                  setFormData({
+                    ...formData,
+                    configuration: { ...(formData.configuration || {}), [key]: value },
+                  })
+                }
+                showPasswords={showPasswords}
+                togglePasswordVisibility={togglePasswordVisibility}
+              />
+            )}
+            {formData.connection_type === "sftp" && (
+              <SFTPConfig
+                config={formData.configuration || {}}
+                updateConfiguration={(key, value) =>
+                  setFormData({
+                    ...formData,
+                    configuration: { ...(formData.configuration || {}), [key]: value },
+                  })
+                }
+                showPasswords={showPasswords}
+                togglePasswordVisibility={togglePasswordVisibility}
+              />
+            )}
+            {formData.connection_type === "ftp" && (
+              <FTPConfig
+                config={formData.configuration || {}}
+                updateConfiguration={(key, value) =>
+                  setFormData({
+                    ...formData,
+                    configuration: { ...(formData.configuration || {}), [key]: value },
                   })
                 }
                 showPasswords={showPasswords}
@@ -576,11 +935,14 @@ export default function ConnectionProfileFormPage({
             )}
             {formData.connection_type === "files" && (
               <FilesConfig
-                config={formData.metadata || {}}
+                config={{
+                  protocol: "local",
+                  ...(formData.configuration || {}),
+                }}
                 updateConfiguration={(key, value) =>
                   setFormData({
                     ...formData,
-                    metadata: { ...(formData.metadata || {}), [key]: value },
+                    configuration: { ...(formData.configuration || {}), [key]: value },
                   })
                 }
                 showPasswords={showPasswords}
@@ -606,16 +968,20 @@ export default function ConnectionProfileFormPage({
               </p>
               <Input type="number"
                 value={formData.batch_size}
-                onChange={(value) =>
+                onChange={(value) => {
                   setFormData({
                     ...formData,
                     batch_size: Number(String(value)),
-                  })
-                }
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
+                  });
+                  if (errors.batch_size) setErrors({ ...errors, batch_size: "" });
+                }}
+                className={`w-full px-3 py-2 text-sm border ${errors.batch_size ? "border-red-500" : "border-gray-300"} ${tw.rounded} focus:outline-none`}
                 required
                 min={1}
               />
+              {errors.batch_size && (
+                <p className="text-sm text-red-500 mt-1">{errors.batch_size}</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">
@@ -626,17 +992,21 @@ export default function ConnectionProfileFormPage({
               </p>
               <Input type="number"
                 value={formData.parallel_threads}
-                onChange={(value) =>
+                onChange={(value) => {
                   setFormData({
                     ...formData,
                     parallel_threads: Number(String(value)),
-                  })
-                }
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
+                  });
+                  if (errors.parallel_threads) setErrors({ ...errors, parallel_threads: "" });
+                }}
+                className={`w-full px-3 py-2 text-sm border ${errors.parallel_threads ? "border-red-500" : "border-gray-300"} ${tw.rounded} focus:outline-none`}
                 required
                 min={1}
                 max={32}
               />
+              {errors.parallel_threads && (
+                <p className="text-sm text-red-500 mt-1">{errors.parallel_threads}</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -801,14 +1171,18 @@ export default function ConnectionProfileFormPage({
                   { value: "restricted", label: "Restricted" },
                 ]}
                 value={formData.data_classification}
-                onChange={(value) =>
+                onChange={(value) => {
                   setFormData({
                     ...formData,
                     data_classification: (value ||
                       "internal") as DataClassificationEnum,
-                  })
-                }
+                  });
+                  if (errors.data_classification) setErrors({ ...errors, data_classification: "" });
+                }}
               />
+              {errors.data_classification && (
+                <p className="text-sm text-red-500 mt-1">{errors.data_classification}</p>
+              )}
             </div>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2 cursor-pointer" onClick={() =>
@@ -860,13 +1234,17 @@ export default function ConnectionProfileFormPage({
               </label>
               <Input type="date"
                 value={formData.valid_from}
-                onChange={(value) =>
-                  setFormData({ ...formData, valid_from: String(value) })
-                }
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-gray-400 cursor-pointer`}
+                onChange={(value) => {
+                  setFormData({ ...formData, valid_from: String(value) });
+                  if (errors.valid_from) setErrors({ ...errors, valid_from: "" });
+                }}
+                className={`w-full px-3 py-2 text-sm border ${errors.valid_from ? "border-red-500" : "border-gray-300"} ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-gray-400 cursor-pointer`}
                 required
                 onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
               />
+              {errors.valid_from && (
+                <p className="text-sm text-red-500 mt-1">{errors.valid_from}</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1037,11 +1415,11 @@ export default function ConnectionProfileFormPage({
               &quot;value&quot;&#x7D;).
             </p>
             <textarea
-              value={formData.metadata || ""}
+              value={formData.metadataString || ""}
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  metadata: e.target.value || "",
+                  metadataString: e.target.value || "",
                 })
               }
               className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none font-mono`}

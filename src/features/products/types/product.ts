@@ -58,10 +58,12 @@ export interface Product {
   description?: string;
   category_id?: number;
   product_type_id?: number; // Reference to product type
+  product_type_label?: string; // Label for product type (Combo, etc.)
   price: number;
   currency: string;
   scope?: ProductScope;
   unit?: ProductUnit;
+  unit_of_measure?: string;
   unit_value?: number;
   cost?: number;
   validity_days?: number;
@@ -78,6 +80,25 @@ export interface Product {
   updated_by?: number;
   metadata?: Record<string, unknown>;
   tags?: string[];
+  resources?: Array<{
+    id?: number;
+    product_id?: number;
+    resource_type: string;
+    resource_value: string;
+    resource_unit: string;
+    unit_of_measure?: string;
+    scope?: string;
+    validity_days?: number;
+    validity_hours?: number;
+    network_restriction?: string;
+    metadata?: Record<string, unknown>;
+    tags?: string[];
+    value?: number;
+    created_at?: string;
+    updated_at?: string;
+    created_by?: number;
+    updated_by?: number;
+  }>;
 }
 
 export interface CreateProductRequest {

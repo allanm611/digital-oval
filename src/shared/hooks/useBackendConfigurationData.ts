@@ -98,6 +98,8 @@ import {
 import { campaignObjectiveService } from "../../features/configurations/services/campaignObjectiveService";
 import { departmentService } from "../../features/campaigns/services/departmentService";
 import { lineOfBusinessService } from "../../features/campaigns/services/lineOfBusinessService";
+import { kpiCategoryService } from "../../features/kpis/services/kpiCategoryService";
+import { notificationCategoryService } from "../../features/notifications/services/notificationCategoryService";
 import { policyTypeService } from "../../features/campaigns/services/policyTypeService";
 import { communicationPolicyService } from "../../features/campaigns/services/communicationPolicyService";
 import { roleService } from "../services/roleService";
@@ -311,6 +313,20 @@ function normalizeApiResponse(type: string, data: any[]): any[] {
         break;
 
       case "roles":
+        // Convert is_active to isActive
+        if (normalized.is_active !== undefined) {
+          normalized.isActive = normalized.is_active;
+        }
+        break;
+
+      case "kpiCategories":
+        // Convert is_active to isActive
+        if (normalized.is_active !== undefined) {
+          normalized.isActive = normalized.is_active;
+        }
+        break;
+
+      case "notificationCategories":
         // Convert is_active to isActive
         if (normalized.is_active !== undefined) {
           normalized.isActive = normalized.is_active;
@@ -587,6 +603,22 @@ function transformPayload(type: string, payload: any): any {
         delete transformed.isActive;
       }
       break;
+
+    case "kpiCategories":
+      // Map isActive to is_active
+      if (transformed.isActive !== undefined) {
+        transformed.is_active = transformed.isActive;
+        delete transformed.isActive;
+      }
+      break;
+
+    case "notificationCategories":
+      // Map isActive to is_active
+      if (transformed.isActive !== undefined) {
+        transformed.is_active = transformed.isActive;
+        delete transformed.isActive;
+      }
+      break;
   }
 
   return transformed;
@@ -644,6 +676,8 @@ export function useBackendConfigurationData(
     | "timezones"
     | "resourceTypes"
     | "utilities"
+    | "kpiCategories"
+    | "notificationCategories"
     | undefined,
 ): UseBackendConfigDataResult<any, any, any> | null {
   const [data, setData] = useState<CampaignType[]>([]);
@@ -982,6 +1016,24 @@ export function useBackendConfigurationData(
           }
           break;
 
+        case "kpiCategories":
+          response = await kpiCategoryService.getKpiCategories();
+          if (Array.isArray(response)) {
+            setData(normalizeApiResponse(type, response));
+          } else {
+            setData([]);
+          }
+          break;
+
+        case "notificationCategories":
+          response = await notificationCategoryService.getNotificationCategories();
+          if (Array.isArray(response)) {
+            setData(normalizeApiResponse(type, response));
+          } else {
+            setData([]);
+          }
+          break;
+
         default:
           throw new Error(`Unknown configuration type: ${type}`);
       }
@@ -1097,6 +1149,12 @@ export function useBackendConfigurationData(
             return response;
           case "utilities":
             response = await utilitiesService.createUtility(payload);
+            return response;
+          case "kpiCategories":
+            response = await kpiCategoryService.createKpiCategory(payload);
+            return response;
+          case "notificationCategories":
+            response = await notificationCategoryService.createNotificationCategory(payload);
             return response;
           default:
             throw new Error(`Unknown configuration type: ${type}`);
@@ -1220,6 +1278,12 @@ export function useBackendConfigurationData(
           case "utilities":
             response = await utilitiesService.updateUtility(id, payload);
             return response;
+          case "kpiCategories":
+            response = await kpiCategoryService.updateKpiCategory(id, payload);
+            return response;
+          case "notificationCategories":
+            response = await notificationCategoryService.updateNotificationCategory(id as string, payload);
+            return response;
           default:
             throw new Error(`Unknown configuration type: ${type}`);
         }
@@ -1322,6 +1386,12 @@ export function useBackendConfigurationData(
             break;
           case "utilities":
             await utilitiesService.deleteUtility(id);
+            break;
+          case "kpiCategories":
+            await kpiCategoryService.deleteKpiCategory(id);
+            break;
+          case "notificationCategories":
+            await notificationCategoryService.deleteNotificationCategory(id as string);
             break;
           default:
             throw new Error(`Unknown configuration type: ${type}`);

@@ -386,7 +386,67 @@ export default function ProductDetailsPage() {
                   {product.requires_inventory ? "Yes" : "No"}
                 </p>
               </div>
+              {product.product_type_label && (
+                <div className="space-y-1">
+                  <label
+                    className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
+                  >
+                    Product Type
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    {product.product_type_label}
+                  </p>
+                </div>
+              )}
+              {product.product_uuid && (
+                <div className="space-y-1">
+                  <label
+                    className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
+                  >
+                    Product UUID
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary} text-xs font-mono break-all`}>
+                    {product.product_uuid}
+                  </p>
+                </div>
+              )}
+              {product.scope && (
+                <div className="space-y-1">
+                  <label
+                    className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
+                  >
+                    Scope
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary} capitalize`}>
+                    {product.scope}
+                  </p>
+                </div>
+              )}
             </div>
+
+            {/* Tags - Inline in Basic Information Card */}
+            {product.tags && product.tags.length > 0 && (
+              <div className="pt-6">
+                <label
+                  className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide block mb-3`}
+                >
+                  Tags
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {product.tags.map((tag, index) => (
+                    <span
+                      key={index}
+                      className="px-3 py-1 text-sm font-medium rounded-full text-white"
+                      style={{
+                        backgroundColor: color.primary.accent,
+                      }}
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Pricing & Validity Information */}
@@ -397,16 +457,18 @@ export default function ProductDetailsPage() {
               Pricing & Validity
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-1">
-                <label
-                  className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
-                >
-                  Price
-                </label>
-                <p className={`text-sm ${tw.textPrimary} font-semibold`}>
-                  <CurrencyFormatter amount={product.price} />
-                </p>
-              </div>
+              {product.product_type_label !== "Combo" && (
+                <div className="space-y-1">
+                  <label
+                    className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
+                  >
+                    Price
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary} font-semibold`}>
+                    <CurrencyFormatter amount={product.price} />
+                  </p>
+                </div>
+              )}
               {product.cost && (
                 <div className="space-y-1">
                   <label
@@ -416,6 +478,30 @@ export default function ProductDetailsPage() {
                   </label>
                   <p className={`text-sm ${tw.textPrimary} font-semibold`}>
                     <CurrencyFormatter amount={product.cost} />
+                  </p>
+                </div>
+              )}
+              {product.currency && (
+                <div className="space-y-1">
+                  <label
+                    className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
+                  >
+                    Currency
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    {product.currency}
+                  </p>
+                </div>
+              )}
+              {product.available_quantity && (
+                <div className="space-y-1">
+                  <label
+                    className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
+                  >
+                    Available Quantity
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    {product.available_quantity}
                   </p>
                 </div>
               )}
@@ -442,6 +528,18 @@ export default function ProductDetailsPage() {
                   <p className={`text-sm ${tw.textPrimary}`}>
                     {product.validity_hours}{" "}
                     {product.validity_hours === 1 ? "hour" : "hours"}
+                  </p>
+                </div>
+              )}
+              {product.unit_of_measure && (
+                <div className="space-y-1">
+                  <label
+                    className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
+                  >
+                    Unit of Measure
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    {product.unit_of_measure}
                   </p>
                 </div>
               )}
@@ -483,6 +581,67 @@ export default function ProductDetailsPage() {
               )}
             </div>
           </div>
+
+          {/* Resources for Combo Products */}
+          {product.resources && product.resources.length > 0 && (
+            <div
+              className={`bg-white ${tw.rounded} border border-[${tw.borderDefault}] p-6`}
+            >
+              <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
+                Resources
+              </h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className={`text-left py-3 px-4 font-semibold ${tw.textMuted} uppercase text-xs`}>
+                        Resource Type
+                      </th>
+                      <th className={`text-left py-3 px-4 font-semibold ${tw.textMuted} uppercase text-xs`}>
+                        Value
+                      </th>
+                      <th className={`text-left py-3 px-4 font-semibold ${tw.textMuted} uppercase text-xs`}>
+                        Unit
+                      </th>
+                      <th className={`text-left py-3 px-4 font-semibold ${tw.textMuted} uppercase text-xs`}>
+                        Validity (Days)
+                      </th>
+                      <th className={`text-left py-3 px-4 font-semibold ${tw.textMuted} uppercase text-xs`}>
+                        Validity (Hours)
+                      </th>
+                      <th className={`text-left py-3 px-4 font-semibold ${tw.textMuted} uppercase text-xs`}>
+                        UOM
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {product.resources.map((resource: any, index: number) => (
+                      <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className={`py-3 px-4 ${tw.textPrimary}`}>
+                          {resource.resource_type || "-"}
+                        </td>
+                        <td className={`py-3 px-4 ${tw.textPrimary} font-semibold`}>
+                          {resource.resource_value || "-"}
+                        </td>
+                        <td className={`py-3 px-4 ${tw.textPrimary}`}>
+                          {resource.resource_unit || "-"}
+                        </td>
+                        <td className={`py-3 px-4 ${tw.textPrimary}`}>
+                          {resource.validity_days || "-"}
+                        </td>
+                        <td className={`py-3 px-4 ${tw.textPrimary}`}>
+                          {resource.validity_hours || "-"}
+                        </td>
+                        <td className={`py-3 px-4 ${tw.textPrimary}`}>
+                          {resource.unit_of_measure || "-"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
         </div>
 

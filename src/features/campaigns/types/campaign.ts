@@ -56,9 +56,11 @@ export interface BackendCampaignType {
   suppression_list_ids: number[] | null;
   priority?: string | null;
   priority_rank?: number | null;
+  line_of_business_id?: number | null;
   line_of_business?: string | null;
-  communication_policy?: string | null;
+  department_id?: number | null;
   department?: string | null;
+  communication_policy?: string | null;
   offer_count?: number;
   segment_count?: number;
   offers?: Array<{

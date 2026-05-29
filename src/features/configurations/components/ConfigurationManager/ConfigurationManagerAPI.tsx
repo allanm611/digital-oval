@@ -37,7 +37,9 @@ type BackendConfigType =
   | "dndTypes"
   | "timezones"
   | "resourceTypes"
-  | "utilities";
+  | "utilities"
+  | "kpiCategories"
+  | "notificationCategories";
 
 export interface APIConfigurationPageConfig
   extends Omit<ConfigurationPageConfig, "initialData"> {

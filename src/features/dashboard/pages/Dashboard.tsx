@@ -326,6 +326,12 @@ const ProductPages = {
         /* webpackPrefetch: true */ "../../configurations/pages/NotificationTypesPage"
       ),
   ),
+  NotificationCategoriesPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../notifications/pages/NotificationCategoriesPage"
+      ),
+  ),
   VIPListsPage: lazy(
     () =>
       import(
@@ -1038,6 +1044,10 @@ export default function Dashboard() {
           <Route
             path="/notification-types"
             element={<ProductPages.NotificationTypesPage />}
+          />
+          <Route
+            path="/notification-categories"
+            element={<ProductPages.NotificationCategoriesPage />}
           />
           <Route path="/offer-types" element={<OfferPages.OfferTypesPage />} />
           <Route

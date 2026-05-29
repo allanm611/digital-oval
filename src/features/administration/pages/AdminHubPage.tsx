@@ -26,6 +26,7 @@ import {
   MessageSquare,
   Smartphone,
   Gift,
+  Tag,
 } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -261,6 +262,20 @@ export default function AdminHubPage() {
           description: "Manage Key Performance Indicators and system events",
           icon: TrendingUp,
           href: "/dashboard/kpis",
+          category: "System Configuration",
+        },
+        {
+          title: "KPI Categories",
+          description: "Manage categories used to organize KPIs and profile fields",
+          icon: Tag,
+          href: "/dashboard/kpis/kpi-categories",
+          category: "System Configuration",
+        },
+        {
+          title: "Notification Categories",
+          description: "Manage categories for organizing notification rules",
+          icon: MessageSquare,
+          href: "/dashboard/notification-categories",
           category: "System Configuration",
         },
         {

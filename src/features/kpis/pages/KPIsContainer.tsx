@@ -8,6 +8,7 @@ import CreateKPIPage from "./CreateKPIPage";
 import SubscriberProfileListPage from "./SubscriberProfileListPage";
 import CreateSubscriberProfilePage from "./CreateSubscriberProfilePage";
 import SubscriberProfileDetailPage from "./SubscriberProfileDetailPage";
+import KpiCategoriesPage from "./KpiCategoriesPage";
 
 export default function KPIsContainer() {
   return (
@@ -22,6 +23,7 @@ export default function KPIsContainer() {
       <Route path="/system-events/*" element={<SystemEventsContainer />} />
       <Route path="/revenue-metrics/*" element={<RevenueMetricsContainer />} />
       <Route path="/usage-metrics/*" element={<UsageMetricsContainer />} />
+      <Route path="/kpi-categories" element={<KpiCategoriesPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

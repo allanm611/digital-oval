@@ -20,6 +20,8 @@ import {
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import DateFormatter from "../../../shared/components/DateFormatter";
+import { userService } from "../../users/services/userService";
+import { UserType } from "../../users/types/user";
 
 export default function BroadcastDetailsPage() {
   const { id: executionId } = useParams<{ id: string }>();
@@ -29,6 +31,7 @@ export default function BroadcastDetailsPage() {
   const [execution, setExecution] =
     useState<CommunicationExecutionDetail | null>(null);
   const [logs, setLogs] = useState<CommunicationLog[]>([]);
+  const [createdByUser, setCreatedByUser] = useState<UserType | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -47,12 +50,25 @@ export default function BroadcastDetailsPage() {
         if (response.success && response.data) {
           setExecution(response.data.execution);
           setLogs(response.data.recent_logs || []);
+
+          if (response.data.execution.created_by) {
+            try {
+              const userResponse = await userService.getUserById(
+                response.data.execution.created_by
+              );
+              if (userResponse.success && userResponse.data) {
+                setCreatedByUser(userResponse.data);
+              }
+            } catch (userErr) {
+              console.error("Failed to load user details:", userErr);
+            }
+          }
         } else {
           showError("Failed to load broadcast details");
         }
       } catch (err) {
         console.error("Failed to load broadcast details:", err);
-        showError(extractBackendError(error, "Failed to load broadcast details. Please try again."));
+        showError(extractBackendError(err, "Failed to load broadcast details. Please try again."));
       } finally {
         setLoading(false);
       }
@@ -137,74 +153,6 @@ export default function BroadcastDetailsPage() {
         currentLabel="Broadcast Details"
       />
 
-      {/* Overview Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Recipients Card */}
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-        >
-          <div className="flex items-center gap-2">
-            <AlertCircle
-              className="h-5 w-5"
-              style={{ color: color.primary.accent }}
-            />
-            <p className="text-sm font-medium text-black">
-              Total Recipients
-            </p>
-          </div>
-          <p className="mt-2 text-3xl font-bold text-black">
-            {execution.total_recipients.toLocaleString()}
-          </p>
-        </div>
-
-        {/* Sent Card */}
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-        >
-          <div className="flex items-center gap-2">
-            <CheckCircle
-              className="h-5 w-5"
-              style={{ color: color.primary.accent }}
-            />
-            <p className="text-sm font-medium text-black">Messages Sent</p>
-          </div>
-          <p className="mt-2 text-3xl font-bold text-black">
-            {execution.messages_sent.toLocaleString()}
-          </p>
-        </div>
-
-        {/* Failed Card */}
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-        >
-          <div className="flex items-center gap-2">
-            <AlertCircle
-              className="h-5 w-5"
-              style={{ color: color.primary.accent }}
-            />
-            <p className="text-sm font-medium text-black">Messages Failed</p>
-          </div>
-          <p className="mt-2 text-3xl font-bold text-black">
-            {execution.messages_failed.toLocaleString()}
-          </p>
-        </div>
-
-        {/* Success Rate Card */}
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-        >
-          <div className="flex items-center gap-2">
-            <Clock
-              className="h-5 w-5"
-              style={{ color: color.primary.accent }}
-            />
-            <p className="text-sm font-medium text-black">Success Rate</p>
-          </div>
-          <p className="mt-2 text-3xl font-bold text-black">
-            {successRate}%
-          </p>
-        </div>
-      </div>
 
       {/* Execution Info */}
       <div
@@ -214,6 +162,21 @@ export default function BroadcastDetailsPage() {
           Execution Information
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {execution.channels && execution.channels.length > 0 && (
+            <div>
+              <p className="text-sm font-medium text-gray-600">Channels</p>
+              <div className="mt-1 flex flex-wrap gap-2">
+                {execution.channels.map((channel) => (
+                  <span
+                    key={channel}
+                    className="text-sm font-medium text-gray-900"
+                  >
+                    {channel}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
           <div>
             <p className="text-sm font-medium text-gray-600">Source Type</p>
             <p className="mt-1 text-sm text-gray-900 capitalize">
@@ -250,14 +213,78 @@ export default function BroadcastDetailsPage() {
               {execution.execution_time_ms}ms
             </p>
           </div>
+          {execution.status && (
+            <div>
+              <p className="text-sm font-medium text-gray-600">Status</p>
+              <p className="mt-1 text-sm text-gray-900 capitalize">
+                {execution.status}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Audit Trail */}
+      <div
+        className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+      >
+        <h2 className="text-sm font-semibold text-gray-900 mb-4">
+          Audit Trail
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <div>
             <p className="text-sm font-medium text-gray-600">Created At</p>
             <p className="mt-1 text-sm text-gray-900">
               <DateFormatter date={execution.created_at} useUserTimezone includeTime />
             </p>
           </div>
+          {execution.completed_at && (
+            <div>
+              <p className="text-sm font-medium text-gray-600">Completed At</p>
+              <p className="mt-1 text-sm text-gray-900">
+                <DateFormatter date={execution.completed_at} useUserTimezone includeTime />
+              </p>
+            </div>
+          )}
+          {execution.created_by && (
+            <div>
+              <p className="text-sm font-medium text-gray-600">Created By</p>
+              <p className="mt-1 text-sm text-gray-900">
+                {createdByUser?.full_name ||
+                  createdByUser?.username ||
+                  `User ID: ${execution.created_by}`}
+              </p>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Message Template */}
+      {execution.message_template && (
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
+          <h2 className="text-sm font-semibold text-gray-900 mb-4">
+            Message Template
+          </h2>
+          <div className="space-y-4">
+            {execution.message_template.title && (
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-2">Title</p>
+                <p className="text-sm text-gray-900 bg-gray-50 p-3 rounded border border-gray-200">
+                  {execution.message_template.title}
+                </p>
+              </div>
+            )}
+            <div>
+              <p className="text-sm font-medium text-gray-600 mb-2">Body</p>
+              <p className="text-sm text-gray-900 bg-gray-50 p-3 rounded border border-gray-200 whitespace-pre-wrap break-words">
+                {execution.message_template.body}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Recent Logs */}
       <div

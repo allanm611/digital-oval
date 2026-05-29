@@ -144,6 +144,7 @@ export interface GetStatsRequest {
 // Response types
 export interface CommunicationExecutionDetail {
   id: number;
+  communication_id?: number;
   execution_id: string;
   source_type: string;
   source_id?: number;
@@ -151,8 +152,15 @@ export interface CommunicationExecutionDetail {
   total_recipients: number;
   messages_sent: number;
   messages_failed: number;
+  messages_attempted?: number;
   execution_time_ms: number;
   created_at: string;
+  completed_at?: string;
+  created_by?: number;
+  status?: string;
+  message_template?: MessageTemplate;
+  channel_summaries?: ChannelSummary[];
+  channels?: CommunicationChannel[];
 }
 
 export interface CommunicationExecutionSummary extends CommunicationExecutionDetail {

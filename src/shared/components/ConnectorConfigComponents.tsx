@@ -50,15 +50,15 @@ export const APIConfig: React.FC<ConfigComponentProps> = ({
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            URL <span className="text-red-500">*</span>
+            Base URL <span className="text-red-500">*</span>
           </label>
           <Input
             type="url"
             required
-            value={config.url || ""}
-            onChange={(value) => updateConfiguration("url", String(value))}
+            value={config.base_url || ""}
+            onChange={(value) => updateConfiguration("base_url", String(value))}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700 text-sm"
-            placeholder="https://api.example.com/endpoint"
+            placeholder="https://api.example.com/v1"
           />
         </div>
         <div>
@@ -433,7 +433,7 @@ export const JDBCConfig: React.FC<ConfigComponentProps> = ({
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Database Type
+          Database Type <span className="text-red-500">*</span>
         </label>
         <Listbox
           value={config.database_type || "mysql"}
@@ -442,7 +442,7 @@ export const JDBCConfig: React.FC<ConfigComponentProps> = ({
           }
         >
           <div className="relative">
-            <Listbox.Button className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700 bg-white text-left">
+            <Listbox.Button className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700 bg-white text-left text-sm">
               {config.database_type === "mysql" ? "MySQL" : config.database_type === "postgres" ? "PostgreSQL" : config.database_type === "mssql" ? "Microsoft SQL Server" : "Oracle"}
             </Listbox.Button>
             <Listbox.Options className="absolute top-full left-0 right-0 mt-1 border border-gray-300 rounded-md bg-white shadow-lg z-50">
@@ -457,35 +457,35 @@ export const JDBCConfig: React.FC<ConfigComponentProps> = ({
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Host</label>
-          <Input type="text" value={config.host || ""} onChange={(value) => updateConfiguration("host", String(value))} placeholder="localhost" className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-700 text-sm" />
+          <label className="block text-sm font-medium text-gray-700 mb-1">Host <span className="text-red-500">*</span></label>
+          <Input type="text" required value={config.host || ""} onChange={(value) => updateConfiguration("host", String(value))} placeholder="localhost" className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-700 text-sm" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Port</label>
-          <Input type="number" value={config.port || 3306} onChange={(value) => updateConfiguration("port", parseInt(String(value)) || 3306)} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-700" />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Database Name</label>
-          <Input placeholder="database_name" value={config.database || ""} onChange={(value) => updateConfiguration("database", value)} variant="medium" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Query Timeout (ms)</label>
-          <Input type="number" value={config.queries_timemill || 17000000} onChange={(value) => updateConfiguration("queries_timemill", parseInt(String(value)) || 17000000)} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-700" />
+          <label className="block text-sm font-medium text-gray-700 mb-1">Port <span className="text-red-500">*</span></label>
+          <Input type="number" required value={config.port || 3306} onChange={(value) => updateConfiguration("port", parseInt(String(value)) || 3306)} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-700 text-sm" />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
-          <Input placeholder="Optional" value={config.username || ""} onChange={(value) => updateConfiguration("username", value)} variant="medium" />
+          <label className="block text-sm font-medium text-gray-700 mb-1">Database Name <span className="text-red-500">*</span></label>
+          <Input placeholder="database_name" required value={config.database || ""} onChange={(value) => updateConfiguration("database", value)} variant="medium" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Timeout (seconds)</label>
+          <Input type="number" placeholder="Optional (1-300)" value={config.timeout_seconds || ""} onChange={(value) => updateConfiguration("timeout_seconds", value ? parseInt(String(value)) : undefined)} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-700 text-sm" min="1" max="300" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Username <span className="text-red-500">*</span></label>
+          <Input placeholder="Database username" required value={config.username || ""} onChange={(value) => updateConfiguration("username", value)} variant="medium" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Password <span className="text-red-500">*</span></label>
           <div className="relative">
-            <Input type={showPasswords.jdbc_password ? "text" : "password"} value={config.password || ""} onChange={(value) => updateConfiguration("password", String(value))} className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md text-gray-700" placeholder="••••••••" />
+            <Input type={showPasswords.jdbc_password ? "text" : "password"} required value={config.password || ""} onChange={(value) => updateConfiguration("password", String(value))} className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md text-gray-700 text-sm" placeholder="••••••••" />
             <button type="button" onClick={() => togglePasswordVisibility("jdbc_password")} className="absolute inset-y-0 right-0 pr-2 flex items-center text-gray-400">
               {showPasswords.jdbc_password ? <EyeOff size={14} /> : <Eye size={14} />}
             </button>
@@ -566,8 +566,8 @@ export const KafkaConfig: React.FC<ConfigComponentProps> = ({config, updateConfi
         <Input placeholder="My Kafka Connection" value={config.connection_name || ""} onChange={(value) => updateConfiguration("connection_name", value)} variant="medium" />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Topic Name</label>
-        <Input placeholder="my-topic" value={config.topic_name || ""} onChange={(value) => updateConfiguration("topic_name", value)} variant="medium" />
+        <label className="block text-sm font-medium text-gray-700 mb-1">Topic Name <span className="text-red-500">*</span></label>
+        <Input placeholder="my-topic" required value={config.topic_name || ""} onChange={(value) => updateConfiguration("topic_name", value)} variant="medium" />
       </div>
       <div className="mb-2">
         <button type="button" onClick={() => setIsAdvancedOpen(!isAdvancedOpen)} className="w-full flex items-center justify-between hover:bg-gray-50 py-2">
@@ -577,8 +577,8 @@ export const KafkaConfig: React.FC<ConfigComponentProps> = ({config, updateConfi
         {isAdvancedOpen && (
           <div className="space-y-4 pt-2">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Brokers</label>
-              <Input placeholder="localhost:9092, localhost:9093" value={Array.isArray(config.brokers) ? config.brokers.join(", ") : config.brokers || ""} onChange={(value) => handleBrokersChange(value)} variant="medium" />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Brokers <span className="text-red-500">*</span></label>
+              <Input placeholder="localhost:9092, localhost:9093" required value={Array.isArray(config.brokers) ? config.brokers.join(", ") : config.brokers || ""} onChange={(value) => handleBrokersChange(value)} variant="medium" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Group Identifier</label>
@@ -596,12 +596,12 @@ export const TCPConfig: React.FC<ConfigComponentProps> = ({config, updateConfigu
     <h4 className="text-sm font-semibold text-gray-700">TCP Configuration</h4>
     <div className="grid grid-cols-2 gap-3">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Buffer Size</label>
-        <Input type="number" value={config.buffer_size || 8192} onChange={(value) => updateConfiguration("buffer_size", parseInt(String(value)) || 8192)} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-700" min="1024" max="1048576" />
+        <label className="block text-sm font-medium text-gray-700 mb-1">Buffer Size (optional)</label>
+        <Input type="number" value={config.buffer_size ?? ""} onChange={(value) => updateConfiguration("buffer_size", value ? parseInt(String(value)) : null)} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-700" min="1024" max="1048576" />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Socket Timeout (ms)</label>
-        <Input type="number" value={config.socket_timeout || 120000} onChange={(value) => updateConfiguration("socket_timeout", parseInt(String(value)) || 120000)} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-700" min="1000" max="300000" />
+        <label className="block text-sm font-medium text-gray-700 mb-1">Socket Timeout (ms) (optional)</label>
+        <Input type="number" value={config.socket_timeout ?? ""} onChange={(value) => updateConfiguration("socket_timeout", value ? parseInt(String(value)) : null)} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-700" min="1000" max="300000" />
       </div>
     </div>
     <div>
@@ -737,3 +737,84 @@ export const SMSInboxConfig: React.FC<ConfigComponentProps> = ({config, updateCo
     </div>
   );
 };
+
+export const SFTPConfig: React.FC<ConfigComponentProps> = ({config, updateConfiguration, showPasswords, togglePasswordVisibility}) => (
+  <div className="space-y-4">
+    <h4 className="text-sm font-semibold text-gray-700">SFTP Configuration</h4>
+    <div className="grid grid-cols-2 gap-3">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Host <span className="text-red-500">*</span></label>
+        <Input type="text" required value={config.host || ""} onChange={(value) => updateConfiguration("host", String(value))} placeholder="sftp.example.com" className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-700 text-sm" />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Port</label>
+        <Input type="number" value={config.port || 22} onChange={(value) => updateConfiguration("port", parseInt(String(value)) || 22)} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-700 text-sm" />
+      </div>
+    </div>
+    <div className="grid grid-cols-2 gap-3">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Username <span className="text-red-500">*</span></label>
+        <Input required value={config.username || ""} onChange={(value) => updateConfiguration("username", value)} placeholder="sftp user" variant="medium" />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Password (or use Private Key)</label>
+        <div className="relative">
+          <Input type={showPasswords.sftp_password ? "text" : "password"} value={config.password || ""} onChange={(value) => updateConfiguration("password", String(value))} className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md text-gray-700 text-sm" placeholder="••••••••" />
+          <button type="button" onClick={() => togglePasswordVisibility("sftp_password")} className="absolute inset-y-0 right-0 pr-2 flex items-center text-gray-400">
+            {showPasswords.sftp_password ? <EyeOff size={14} /> : <Eye size={14} />}
+          </button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">Private Key (PEM format)</label>
+      <textarea value={config.private_key || ""} onChange={(e) => updateConfiguration("private_key", e.target.value)} rows={4} className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm" placeholder="-----BEGIN OPENSSH PRIVATE KEY-----" />
+    </div>
+    <div className="grid grid-cols-2 gap-3">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Remote Path</label>
+        <Input placeholder="/data/incoming" value={config.remote_path || ""} onChange={(value) => updateConfiguration("remote_path", value)} variant="medium" />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Local Path</label>
+        <Input placeholder="/local/staging" value={config.local_path || ""} onChange={(value) => updateConfiguration("local_path", value)} variant="medium" />
+      </div>
+    </div>
+  </div>
+);
+
+export const FTPConfig: React.FC<ConfigComponentProps> = ({config, updateConfiguration, showPasswords, togglePasswordVisibility}) => (
+  <div className="space-y-4">
+    <h4 className="text-sm font-semibold text-gray-700">FTP Configuration</h4>
+    <div className="grid grid-cols-2 gap-3">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Host <span className="text-red-500">*</span></label>
+        <Input type="text" required value={config.host || ""} onChange={(value) => updateConfiguration("host", String(value))} placeholder="ftp.example.com" className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-700 text-sm" />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Port</label>
+        <Input type="number" value={config.port || 21} onChange={(value) => updateConfiguration("port", parseInt(String(value)) || 21)} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-700 text-sm" />
+      </div>
+    </div>
+    <div className="grid grid-cols-2 gap-3">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Username <span className="text-red-500">*</span></label>
+        <Input required value={config.username || ""} onChange={(value) => updateConfiguration("username", value)} placeholder="ftp user" variant="medium" />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Password <span className="text-red-500">*</span></label>
+        <div className="relative">
+          <Input type={showPasswords.ftp_password ? "text" : "password"} required value={config.password || ""} onChange={(value) => updateConfiguration("password", String(value))} className="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md text-gray-700 text-sm" placeholder="••••••••" />
+          <button type="button" onClick={() => togglePasswordVisibility("ftp_password")} className="absolute inset-y-0 right-0 pr-2 flex items-center text-gray-400">
+            {showPasswords.ftp_password ? <EyeOff size={14} /> : <Eye size={14} />}
+          </button>
+        </div>
+      </div>
+    </div>
+    <div className="flex items-center cursor-pointer" onClick={() => updateConfiguration("passive_mode", !(config.passive_mode || false))}>
+      <Checkbox id="passive_mode" checked={config.passive_mode || false} onChange={() => updateConfiguration("passive_mode", !(config.passive_mode || false))} className="mr-2 h-4 w-4" />
+      <span className="text-sm text-gray-700">Passive Mode</span>
+    </div>
+  </div>
+);
+

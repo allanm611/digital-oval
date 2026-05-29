@@ -221,6 +221,50 @@ export default function CampaignDefinitionStep({
     return unsubscribe;
   }, []);
 
+  // Sync selectedPolicy with formData.communication_policy (for edit mode)
+  useEffect(() => {
+    if (formData.communication_policy && communicationPolicies.length > 0) {
+      const policy = communicationPolicies.find(
+        (p) => p.name === formData.communication_policy
+      );
+      if (policy && !selectedPolicy) {
+        setSelectedPolicy(policy);
+      }
+    }
+  }, [formData.communication_policy, communicationPolicies, selectedPolicy]);
+
+  // Sync line_of_business_id when loading from API response
+  useEffect(() => {
+    const formDataAny = formData as any;
+    if (formDataAny?.line_of_business_id && !formDataAny.line_of_business && linesOfBusiness.length > 0) {
+      const found = linesOfBusiness.find(
+        (lob) => Number(lob.id) === Number(formDataAny.line_of_business_id)
+      );
+      if (found) {
+        setFormData({
+          ...formData,
+          line_of_business: found.name,
+        } as any);
+      }
+    }
+  }, [formData.line_of_business_id, linesOfBusiness]);
+
+  // Sync department_id when loading from API response
+  useEffect(() => {
+    const formDataAny = formData as any;
+    if (formDataAny?.department_id && !formDataAny.department && departmentsData.length > 0) {
+      const found = departmentsData.find(
+        (dept) => Number(dept.id) === Number(formDataAny.department_id)
+      );
+      if (found) {
+        setFormData({
+          ...formData,
+          department: found.name,
+        } as any);
+      }
+    }
+  }, [formData.department_id, departmentsData]);
+
   // Handle opening customization modal
   const handleCustomizePolicy = (policy: CommunicationPolicyConfiguration) => {
     setPolicyToCustomize(policy);

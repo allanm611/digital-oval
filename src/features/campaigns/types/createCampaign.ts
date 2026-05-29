@@ -83,6 +83,10 @@ export interface CreateCampaignRequest {
   step_order?: number;
   tag?: string;
   department_id?: number;
+  department?: string;
+  line_of_business_id?: number;
+  line_of_business?: string;
+  communication_policy?: string;
 }
 
 export interface CreateCampaignResponse {

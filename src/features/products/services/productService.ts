@@ -111,10 +111,12 @@ class ProductService {
       description: data.description || "Not specified",
       category_id: data.category_id || undefined,
       product_type_id: data.product_type_id || undefined,
+      product_type_label: data.product_type_label || undefined,
       price: data.price ?? 0,
       currency: data.currency || "USD",
       scope: data.scope || undefined,
       unit: data.unit || data.unit_of_measure || undefined,
+      unit_of_measure: data.unit_of_measure || undefined,
       unit_value: data.unit_value ?? data.value ?? undefined,
       cost: data.cost ?? undefined,
       validity_days: data.validity_days ?? undefined,
@@ -131,6 +133,7 @@ class ProductService {
       updated_by: data.updated_by || undefined,
       metadata: data.metadata || undefined,
       tags: Array.isArray(data.tags) ? data.tags : [],
+      resources: Array.isArray(data.resources) ? data.resources : undefined,
     };
   }
 
