@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Trash2, Edit } from "lucide-react";
+import { Trash2, Edit, Plus } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -244,16 +244,26 @@ export default function RoutesManagementPage() {
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
-      <div className="flex flex-col gap-4">
-        <BackButton
-          fallbackTo="/dashboard"
-          showBreadcrumb={true}
-          parentLabel="Administration"
-          currentLabel="Routes Management"
-        />
-        <p className={`text-sm ${tw.textSecondary}`}>
-          Manage all communication routes across channels
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex flex-col gap-4 flex-1">
+          <BackButton
+            fallbackTo="/dashboard"
+            showBreadcrumb={true}
+            parentLabel="Administration"
+            currentLabel="Routes Management"
+          />
+          <p className={`text-sm ${tw.textSecondary}`}>
+            Manage all communication routes across channels
+          </p>
+        </div>
+        <button
+          onClick={() => navigate("/dashboard/routes/create")}
+          className="inline-flex items-center gap-2 px-4 py-2 text-white font-semibold text-sm rounded transition-colors hover:opacity-90"
+          style={{ backgroundColor: color.primary.action }}
+        >
+          <Plus className="w-4 h-4" />
+          Create Route
+        </button>
       </div>
 
       {/* Filters */}

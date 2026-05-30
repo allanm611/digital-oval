@@ -9,11 +9,10 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import CreateButton from "../../../shared/components/ui/CreateButton";
-import { usageMetricService } from "../services/usageMetricService";
-import { revenueMetricService } from "../services/revenueMetricService";
+import { kpiService } from "../services/kpiService";
 import { systemEventService } from "../services/systemEventService";
-import { segmentService } from "../../segments/services/segmentService";
 import { type KPI } from "../types/kpi";
+import { type SystemEvent } from "../types/systemEvent";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -36,78 +35,42 @@ export default function AllKPIsPage() {
   const loadAllKPIs = async () => {
     setIsLoading(true);
     try {
-      const [usageMetrics, revenueMetrics, systemEvents, segmentationResponse] = await Promise.all([
-        usageMetricService.getAllMetrics(),
-        revenueMetricService.getAllMetrics(),
+      const [kpiData, systemEventsData] = await Promise.all([
+        kpiService.getAllKPIs(),
         systemEventService.getAllEvents(),
-        segmentService.getSegmentationFields(true),
       ]);
 
-      const kpis: KPI[] = [];
+      const kpis: KPI[] = kpiData.map((kpi, idx) => {
+        // Map tag to category
+        const categoryMap: Record<string, string> = {
+          revenue_metric: "Revenue Metric",
+          usage_metric: "Usage Metric",
+          kpi: "Subscriber Profile",
+        };
 
-      // Add subscriber profiles from Customer 360 sub-categories
-      if (segmentationResponse && segmentationResponse.success && segmentationResponse.data && segmentationResponse.data.length > 0) {
-        const config = segmentationResponse.data[0]?.field_selector_config || [];
-        const customer360Category = config.find(
-          (cat: any) => cat.value === "customer_360" || cat.value === "customer_identity"
-        );
-
-        if (customer360Category && customer360Category.sub_categories) {
-          customer360Category.sub_categories.forEach((subCat: any) => {
-            if (subCat.fields && Array.isArray(subCat.fields)) {
-              subCat.fields.forEach((field: any, idx: number) => {
-                kpis.push({
-                  id: `sp-${field.id || idx + 1}`,
-                  name: field.field_name || field.name || "",
-                  category: "Subscriber Profile",
-                  subcategory: subCat.display_name || subCat.name || "",
-                  description: field.field_description || field.description || "",
-                  source: "Subscriber Profiles",
-                  field_type: field.field_type || "",
-                });
-              });
-            }
-          });
-        }
-      }
-
-      systemEvents.forEach((event, idx) => {
-        kpis.push({
-          id: `se-${event.id || idx + 1}`,
-          name: event.name || event.event_name || "",
-          category: "System Event",
-          subcategory: event.category || "",
-          description: event.description || event.event_description || "",
-          source: "System Events",
-          field_type: "",
-        });
+        return {
+          id: kpi.id?.toString() || `kpi-${idx + 1}`,
+          name: kpi.field_name || "",
+          category: categoryMap[kpi.tag || "kpi"] || "KPI",
+          subcategory: kpi.tag || "",
+          description: kpi.description || "",
+          source: `${kpi.field_source_table || "Unknown"}`,
+          field_type: kpi.field_type || "",
+        };
       });
 
-      revenueMetrics.forEach((metric, idx) => {
-        kpis.push({
-          id: `rm-${metric.id || idx + 1}`,
-          name: metric.name || "",
-          category: "Revenue Metric",
-          subcategory: metric.category || "",
-          description: metric.description || "",
-          source: "Revenue Metrics",
-          field_type: metric.field_type || "",
-        });
-      });
+      // Add system events
+      const systemEventKPIs: KPI[] = systemEventsData.map((event: SystemEvent) => ({
+        id: `event-${event.id}`,
+        name: event.event_name,
+        category: "System Event",
+        subcategory: event.category,
+        description: event.event_description || "",
+        source: event.category,
+        field_type: "event",
+      }));
 
-      usageMetrics.forEach((metric, idx) => {
-        kpis.push({
-          id: `um-${metric.id || idx + 1}`,
-          name: metric.name || "",
-          category: "Usage Metric",
-          subcategory: metric.category || "",
-          description: metric.description || "",
-          source: "Usage Metrics",
-          field_type: metric.field_type || "",
-        });
-      });
-
-      setAllKPIs(kpis);
+      setAllKPIs([...kpis, ...systemEventKPIs]);
     } catch (err) {
       console.error("Failed to load KPIs:", err);
       showToast("error", "Failed to load KPIs");
@@ -187,15 +150,7 @@ export default function AllKPIsPage() {
   };
 
   const handleViewDetails = (kpi: typeof allKPIs[0]) => {
-    const numericId = extractNumericId(kpi.id);
-
-    if (kpi.category === "System Event") {
-      navigate(`/dashboard/kpis/system-events/${numericId}`, { state: { parentLabel: "All KPIs" } });
-    } else if (kpi.category === "Usage Metric") {
-      navigate(`/dashboard/kpis/usage-metrics/${numericId}`, { state: { parentLabel: "All KPIs" } });
-    } else if (kpi.category === "Revenue Metric") {
-      navigate(`/dashboard/kpis/revenue-metrics/${numericId}`, { state: { parentLabel: "All KPIs" } });
-    }
+    navigate(`/dashboard/kpis/${kpi.id}`, { state: { parentLabel: "All KPIs" } });
   };
 
   const handleEdit = (kpi: typeof allKPIs[0]) => {
@@ -220,9 +175,9 @@ export default function AllKPIsPage() {
 
     setIsDeleting(true);
     try {
-      // TODO: Call the appropriate delete service based on category
-      // For now, just show a message
-      showToast("info", `Delete functionality for "${kpiToDelete.name}" will be implemented soon`);
+      await kpiService.deleteKPI(Number(kpiToDelete.id));
+      showToast("success", `"${kpiToDelete.name}" has been deleted successfully`);
+      setAllKPIs((prev) => prev.filter((k) => k.id !== kpiToDelete.id));
       setShowDeleteModal(false);
       setKpiToDelete(null);
     } catch (error) {
@@ -400,7 +355,7 @@ export default function AllKPIsPage() {
                             <Eye className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleEdit(kpi)}
+                            onClick={() => navigate(`/dashboard/kpis/${extractNumericId(kpi.id)}/edit`, { state: { parentLabel: "All KPIs" } })}
                             className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
                             title="Edit"
                           >
@@ -460,7 +415,7 @@ export default function AllKPIsPage() {
                         <Eye className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleEdit(kpi)}
+                        onClick={() => navigate(`/dashboard/kpis/${extractNumericId(kpi.id)}/edit`, { state: { parentLabel: "All KPIs" } })}
                         className={`p-2 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-colors`}
                         title="Edit"
                       >

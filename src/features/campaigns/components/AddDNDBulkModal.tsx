@@ -1,16 +1,16 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { createPortal } from "react-dom";
-import { X, Check } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X } from "lucide-react";
 import { customerService } from "../../customers360/services/customerServices";
-import Pagination from "../../../shared/components/ui/Pagination";
-import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import SearchInput from "../../../shared/components/ui/SearchInput";
-import { tw, zIndex, color } from "../../../shared/utils/utils";
-import { DNDType, dndService, DNDSubscription } from "../services/dndService";
-import { CommunicationChannel } from "../../../shared/services/communicationChannelService";
+import { tw, color } from "../../../shared/utils/utils";
+import { validateMSISDN } from "../../../shared/utils/validation";
+import { getButtonStyles } from "../../../shared/utils/utils";
+import { buttons } from "../../../shared/utils/tokens";
+import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import MultiCategorySelector from "../../../shared/components/MultiCategorySelector";
-import Checkbox from "../../../shared/components/ui/Checkbox";
+import { DNDType } from "../services/dndService";
+import { CommunicationChannel } from "../../../shared/services/communicationChannelService";
 
 interface Customer {
   id: string | number;
@@ -18,8 +18,8 @@ interface Customer {
   first_name?: string;
   last_name?: string;
   msisdn?: string;
+  email_address?: string;
   email?: string;
-  subscriber_status?: string;
 }
 
 interface SelectedMember {
@@ -35,11 +35,33 @@ interface AddDNDBulkModalProps {
   dndTypes: DNDType[];
   channels: CommunicationChannel[];
   onAdd?: (
-    memberIds: number[],
+    members: SelectedMember[],
     dndTypeId: number,
-    selectedChannels: string[]
+    selectedChannelCodes: string[]
   ) => void;
   isLoading?: boolean;
+}
+
+interface FormData {
+  mode: "existing_customer" | "external_recipient";
+  customer_id: string;
+  msisdn: string;
+  external_name: string;
+  external_email: string;
+  external_msisdn: string;
+  dnd_type_id: string;
+  selected_channels: number[];
+  duration: string;
+  custom_duration_date: string;
+}
+
+interface FormErrors {
+  customer_id?: string;
+  msisdn?: string;
+  external_name?: string;
+  external_msisdn?: string;
+  dnd_type_id?: string;
+  selected_channels?: string;
 }
 
 export default function AddDNDBulkModal({
@@ -50,220 +72,413 @@ export default function AddDNDBulkModal({
   onAdd,
   isLoading = false,
 }: AddDNDBulkModalProps) {
+  const [formData, setFormData] = useState<FormData>({
+    mode: "existing_customer",
+    customer_id: "",
+    msisdn: "",
+    external_name: "",
+    external_email: "",
+    external_msisdn: "",
+    dnd_type_id: dndTypes.length > 0 ? String(dndTypes[0].id) : "",
+    selected_channels: [],
+    duration: "0",
+    custom_duration_date: "",
+  });
+  const [errors, setErrors] = useState<FormErrors>({});
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [selectedMembers, setSelectedMembers] = useState<SelectedMember[]>([]);
-  const [customerLoading, setCustomerLoading] = useState(false);
-  const [customerSearchTerm, setCustomerSearchTerm] = useState("");
-  const [selectedDNDTypeId, setSelectedDNDTypeId] = useState<string>("");
-  const [selectedChannelIds, setSelectedChannelIds] = useState<number[]>([]);
-  const [selectedDuration, setSelectedDuration] = useState<string>("0");
-  const [customDurationDate, setCustomDurationDate] = useState<string>("");
-  const [page, setPage] = useState(1);
-  const [pageSize] = useState(20);
-  const [totalCustomers, setTotalCustomers] = useState(0);
-  const [existingSubscriptions, setExistingSubscriptions] = useState<
-    DNDSubscription[]
-  >([]);
-  const [loadingSubscriptions, setLoadingSubscriptions] = useState(false);
-
-  const loadExistingSubscriptions = useCallback(async () => {
-    try {
-      setLoadingSubscriptions(true);
-      const subscriptions = await dndService.getDNDSubscriptions({
-        status: "active",
-      });
-      setExistingSubscriptions(subscriptions);
-    } catch (error) {
-      setExistingSubscriptions([]);
-    } finally {
-      setLoadingSubscriptions(false);
-    }
-  }, []);
+  const [loadingCustomers, setLoadingCustomers] = useState(false);
+  const [isAddingMember, setIsAddingMember] = useState(false);
 
   useEffect(() => {
-    if (isOpen && dndTypes.length > 0) {
-      setPage(1);
-      setSelectedDNDTypeId(String(dndTypes[0].id));
-      setSelectedChannelIds([]);
-      setSelectedDuration("0");
+    if (isOpen) {
       loadCustomers();
-      loadExistingSubscriptions();
+      if (dndTypes.length > 0) {
+        setFormData((prev) => ({
+          ...prev,
+          dnd_type_id: String(dndTypes[0].id),
+        }));
+      }
     }
-  }, [isOpen, dndTypes, loadExistingSubscriptions]);
+  }, [isOpen, dndTypes]);
 
-  const loadCustomers = useCallback(async () => {
-    setCustomerLoading(true);
+  const loadCustomers = async () => {
+    setLoadingCustomers(true);
     try {
       const response = await customerService.getAllCustomers({
-        limit: pageSize,
-        offset: (page - 1) * pageSize,
+        limit: 100,
+        offset: 0,
         skipCache: true,
       });
       const data = response?.data || [];
-      setCustomers(data);
-      const total = (response as any).pagination?.total || data.length || 0;
-      setTotalCustomers(total);
+      setCustomers(Array.isArray(data) ? data : []);
     } catch (error) {
+      console.error("Failed to load customers:", error);
       setCustomers([]);
-      setTotalCustomers(0);
     } finally {
-      setCustomerLoading(false);
+      setLoadingCustomers(false);
     }
-  }, [page, pageSize]);
+  };
 
-  useEffect(() => {
-    loadCustomers();
-  }, [loadCustomers]);
-
-  const filteredCustomers = useMemo(() => {
-    return customers.filter((customer) => {
-      const fullName = `${customer.first_name || ""} ${customer.last_name || ""}`.trim();
-      const searchTerm = customerSearchTerm.toLowerCase();
-      return (
-        fullName.toLowerCase().includes(searchTerm) ||
-        customer.msisdn?.toLowerCase().includes(searchTerm) ||
-        customer.email?.toLowerCase().includes(searchTerm)
-      );
+  const handleCloseModal = () => {
+    setFormData({
+      mode: "existing_customer",
+      customer_id: "",
+      msisdn: "",
+      external_name: "",
+      external_email: "",
+      external_msisdn: "",
+      dnd_type_id: dndTypes.length > 0 ? String(dndTypes[0].id) : "",
+      selected_channels: [],
+      duration: "0",
+      custom_duration_date: "",
     });
-  }, [customers, customerSearchTerm]);
-
-  const isCustomerInDNDForChannels = (
-    customerId: number,
-    channelCodes: string[]
-  ): string[] => {
-    return channelCodes.filter((channelCode) =>
-      existingSubscriptions.some(
-        (sub) =>
-          sub.customer_id === customerId && sub.channel === channelCode
-      )
-    );
+    setErrors({});
+    onClose();
   };
 
-  const handleCustomerSelect = (customer: Customer) => {
-    const customerId =
-      typeof customer.customerId === "string"
-        ? parseInt(customer.customerId, 10)
-        : customer.customerId ||
-          (typeof customer.id === "string"
-            ? parseInt(customer.id, 10)
-            : customer.id);
+  const handleAddMember = async () => {
+    const newErrors: FormErrors = {};
 
-    const fullName = `${customer.first_name || ""} ${customer.last_name || ""}`.trim();
-
-    const isMemberSelected = selectedMembers.some(
-      (m) => m.customer_id === customerId
-    );
-
-    if (isMemberSelected) {
-      setSelectedMembers(selectedMembers.filter((m) => m.customer_id !== customerId));
-    } else {
-      setSelectedMembers([
-        ...selectedMembers,
-        {
-          customer_id: customerId,
-          customer_name: fullName || customer.msisdn,
-          customer_email: customer.email,
-          customer_phone: customer.msisdn,
-        },
-      ]);
+    if (!formData.dnd_type_id) {
+      newErrors.dnd_type_id = "DND Type is required";
     }
-  };
 
+    if (formData.selected_channels.length === 0) {
+      newErrors.selected_channels = "At least one channel is required";
+    }
 
-  const handleAddMembers = () => {
-    const selectedChannelCodes = channels
-      .filter((ch) => selectedChannelIds.includes(ch.id))
-      .map((ch) => ch.code.toUpperCase());
+    if (formData.mode === "existing_customer") {
+      if (!formData.customer_id) {
+        newErrors.customer_id = "Customer is required";
+      }
+      if (!formData.msisdn) {
+        newErrors.msisdn = "MSISDN is required";
+      } else {
+        const validation = validateMSISDN(formData.msisdn);
+        if (!validation.valid) {
+          newErrors.msisdn = validation.error;
+        }
+      }
+    } else {
+      if (!formData.external_name) {
+        newErrors.external_name = "Name is required";
+      }
+      if (formData.external_msisdn) {
+        const validation = validateMSISDN(formData.external_msisdn);
+        if (!validation.valid) {
+          newErrors.external_msisdn = validation.error;
+        }
+      }
+    }
 
-    if (
-      selectedMembers.length > 0 &&
-      selectedDNDTypeId &&
-      selectedChannelCodes.length > 0
-    ) {
-      const channelsToAdd = selectedChannelCodes.filter((channelCode) => {
-        const alreadyInAny = selectedMembers.some((member) =>
-          isCustomerInDNDForChannels(member.customer_id, [channelCode])
-            .length > 0
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    try {
+      setIsAddingMember(true);
+
+      let memberData: SelectedMember;
+
+      if (formData.mode === "existing_customer") {
+        const selectedCustomer = customers.find(
+          (c) => String(c.customerId || c.id) === formData.customer_id
         );
-        return !alreadyInAny;
-      });
+        if (!selectedCustomer) {
+          setErrors({ customer_id: "Invalid customer selected" });
+          return;
+        }
 
-      if (channelsToAdd.length === 0) {
-        alert(
-          "All selected customers are already in DND for the selected channels."
-        );
-        return;
+        const firstName = selectedCustomer.first_name || "";
+        const lastName = selectedCustomer.last_name || "";
+
+        memberData = {
+          customer_id: Number(selectedCustomer.customerId || selectedCustomer.id),
+          customer_name: `${firstName} ${lastName}`.trim(),
+          customer_email: selectedCustomer.email_address || selectedCustomer.email,
+          customer_phone: formData.msisdn,
+        };
+      } else {
+        memberData = {
+          customer_id: 0,
+          customer_name: formData.external_name,
+          ...(formData.external_email ? { customer_email: formData.external_email } : {}),
+          ...(formData.external_msisdn ? { customer_phone: formData.external_msisdn } : {}),
+        };
       }
 
-      onAdd?.(
-        selectedMembers.map((m) => m.customer_id),
-        Number(selectedDNDTypeId),
-        channelsToAdd
-      );
-    }
-  };
+      const selectedChannelCodes = formData.selected_channels.map((id) => {
+        const channel = channels.find((c) => c.id === id);
+        return channel?.code || "";
+      }).filter(Boolean);
 
-  const handleClose = () => {
-    setSelectedMembers([]);
-    setCustomerSearchTerm("");
-    setSelectedDNDTypeId(dndTypes.length > 0 ? String(dndTypes[0].id) : "");
-    setSelectedChannelIds([]);
-    setSelectedDuration("0");
-    setCustomDurationDate("");
-    onClose();
+      if (onAdd) {
+        await onAdd([memberData], Number(formData.dnd_type_id), selectedChannelCodes);
+      }
+
+      handleCloseModal();
+    } catch (error) {
+      console.error("Failed to add member:", error);
+    } finally {
+      setIsAddingMember(false);
+    }
   };
 
   if (!isOpen) return null;
 
-  return createPortal(
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
-      style={{ zIndex: zIndex.modal }}
-    >
-      <div
-        className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto`}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-lg font-bold text-gray-900">
-            Add Members to DND Lists
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className={`${tw.rounded} bg-white shadow-xl max-w-md w-full mx-4`}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+          <h2 className={`text-lg font-semibold ${tw.textPrimary}`}>
+            Add to DND (Bulk)
           </h2>
           <button
-            onClick={handleClose}
-            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
-            aria-label="Close modal"
+            onClick={handleCloseModal}
+            className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5" />
           </button>
         </div>
+        <div className="px-6 pt-4 pb-6">
+          {/* Mode Toggle */}
+          <div className="flex gap-1 mb-6">
+            <button
+              onClick={() => {
+                setFormData({ ...formData, mode: "existing_customer" });
+                setErrors({});
+              }}
+              className={`px-4 py-2.5 text-sm font-medium transition-colors relative ${
+                formData.mode === "existing_customer"
+                  ? "text-black"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Existing Customer
+              {formData.mode === "existing_customer" && (
+                <div
+                  className="absolute bottom-0 left-0 right-0 h-0.5"
+                  style={{ backgroundColor: color.primary.accent }}
+                />
+              )}
+            </button>
+            <button
+              onClick={() => {
+                setFormData({ ...formData, mode: "external_recipient" });
+                setErrors({});
+              }}
+              className={`px-4 py-2.5 text-sm font-medium transition-colors relative ${
+                formData.mode === "external_recipient"
+                  ? "text-black"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              External Recipient
+              {formData.mode === "external_recipient" && (
+                <div
+                  className="absolute bottom-0 left-0 right-0 h-0.5"
+                  style={{ backgroundColor: color.primary.accent }}
+                />
+              )}
+            </button>
+          </div>
 
-        <div className="p-6 space-y-4">
-          {/* Top row - DND Type and Duration */}
-          <div className={`grid ${selectedDuration === "custom" ? "grid-cols-3" : "grid-cols-2"} gap-6`}>
-            {/* DND Type Selector */}
+          {/* Form Fields */}
+          <div className="space-y-4">
+            {/* Existing Customer Mode */}
+            {formData.mode === "existing_customer" && (
+              <>
+                {/* Customer Selection */}
+                <div>
+                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
+                    Select Customer *
+                  </label>
+                  <div className={errors.customer_id ? "border border-red-500 rounded" : ""}>
+                    <HeadlessSelect
+                      value={formData.customer_id}
+                      onChange={(value) => {
+                        setFormData({ ...formData, customer_id: value.toString() });
+                        if (errors.customer_id) {
+                          setErrors({ ...errors, customer_id: undefined });
+                        }
+                      }}
+                      options={[
+                        { value: "", label: "Select a customer" },
+                        ...customers.map((customer) => ({
+                          value: String(customer.customerId || customer.id),
+                          label: `${customer.first_name || ""} ${customer.last_name || ""}`.trim() || "Unknown",
+                        })),
+                      ]}
+                      placeholder="Select customer..."
+                      disabled={loadingCustomers}
+                    />
+                  </div>
+                  {errors.customer_id && (
+                    <p className="text-xs text-red-500 mt-1">{errors.customer_id}</p>
+                  )}
+                </div>
+
+                {/* MSISDN */}
+                <div>
+                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
+                    MSISDN *
+                  </label>
+                  <Input
+                    type="tel"
+                    value={formData.msisdn}
+                    onChange={(value) => {
+                      setFormData({ ...formData, msisdn: value });
+                      if (value) {
+                        const validation = validateMSISDN(value);
+                        setErrors({ ...errors, msisdn: validation.error });
+                      } else {
+                        setErrors({ ...errors, msisdn: undefined });
+                      }
+                    }}
+                    placeholder="Country code + number (e.g., 254712345678)"
+                    hasError={!!errors.msisdn}
+                    variant="medium"
+                  />
+                  {errors.msisdn && (
+                    <p className="text-xs text-red-500 mt-1">{errors.msisdn}</p>
+                  )}
+                </div>
+              </>
+            )}
+
+            {/* External Recipient Mode */}
+            {formData.mode === "external_recipient" && (
+              <>
+                {/* Name */}
+                <div>
+                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
+                    Name *
+                  </label>
+                  <Input
+                    value={formData.external_name}
+                    onChange={(value) => {
+                      setFormData({ ...formData, external_name: value });
+                      if (errors.external_name) {
+                        setErrors({ ...errors, external_name: undefined });
+                      }
+                    }}
+                    placeholder="Full name"
+                    hasError={!!errors.external_name}
+                    variant="medium"
+                  />
+                  {errors.external_name && (
+                    <p className="text-xs text-red-500 mt-1">{errors.external_name}</p>
+                  )}
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
+                    Email
+                  </label>
+                  <Input
+                    type="email"
+                    value={formData.external_email}
+                    onChange={(value) => {
+                      setFormData({ ...formData, external_email: value });
+                      if (errors.external_email) {
+                        setErrors({ ...errors, external_email: undefined });
+                      }
+                    }}
+                    placeholder="Email address"
+                    hasError={!!errors.external_email}
+                    variant="medium"
+                  />
+                </div>
+
+                {/* MSISDN */}
+                <div>
+                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
+                    MSISDN
+                  </label>
+                  <Input
+                    type="tel"
+                    value={formData.external_msisdn}
+                    onChange={(value) => {
+                      setFormData({ ...formData, external_msisdn: value });
+                      if (value) {
+                        const validation = validateMSISDN(value);
+                        setErrors({ ...errors, external_msisdn: validation.error });
+                      } else {
+                        setErrors({ ...errors, external_msisdn: undefined });
+                      }
+                    }}
+                    placeholder="Country code + number (e.g., 254712345678)"
+                    hasError={!!errors.external_msisdn}
+                    variant="medium"
+                  />
+                  {errors.external_msisdn && (
+                    <p className="text-xs text-red-500 mt-1">{errors.external_msisdn}</p>
+                  )}
+                </div>
+              </>
+            )}
+
+            {/* DND Type */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
                 DND Type *
               </label>
-              <HeadlessSelect
-                value={selectedDNDTypeId}
-                onChange={setSelectedDNDTypeId}
-                options={dndTypes.map((type) => ({
-                  value: String(type.id),
-                  label: type.name,
-                }))}
-                placeholder="Select DND type"
-              />
+              <div className={errors.dnd_type_id ? "border border-red-500 rounded" : ""}>
+                <HeadlessSelect
+                  value={formData.dnd_type_id}
+                  onChange={(value) => {
+                    setFormData({ ...formData, dnd_type_id: value.toString() });
+                    if (errors.dnd_type_id) {
+                      setErrors({ ...errors, dnd_type_id: undefined });
+                    }
+                  }}
+                  options={dndTypes.map((type) => ({
+                    value: String(type.id),
+                    label: type.name,
+                  }))}
+                  placeholder="Select DND type..."
+                  disabled={loadingCustomers}
+                />
+              </div>
+              {errors.dnd_type_id && (
+                <p className="text-xs text-red-500 mt-1">{errors.dnd_type_id}</p>
+              )}
             </div>
 
-            {/* Duration Selector */}
+            {/* Channels */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
+                Channels *
+              </label>
+              <MultiCategorySelector
+                value={formData.selected_channels}
+                onChange={(channelIds) => {
+                  setFormData({ ...formData, selected_channels: channelIds });
+                  if (errors.selected_channels) {
+                    setErrors({ ...errors, selected_channels: undefined });
+                  }
+                }}
+                placeholder="Search channels"
+                entityType="channel"
+                className="w-full"
+              />
+              {errors.selected_channels && (
+                <p className="text-xs text-red-500 mt-1">{errors.selected_channels}</p>
+              )}
+            </div>
+
+            {/* Duration */}
+            <div>
+              <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
                 Duration
               </label>
               <HeadlessSelect
-                value={selectedDuration}
-                onChange={setSelectedDuration}
+                value={formData.duration}
+                onChange={(value) => {
+                  setFormData({ ...formData, duration: value.toString() });
+                }}
                 options={[
                   { value: "0", label: "Never expires" },
                   { value: "7", label: "7 days" },
@@ -273,197 +488,68 @@ export default function AddDNDBulkModal({
                   { value: "365", label: "1 year" },
                   { value: "custom", label: "Custom date" },
                 ]}
-                placeholder="Select duration"
+                placeholder="Select duration..."
               />
             </div>
 
-            {/* Custom Date Input - only shown when custom is selected */}
-            {selectedDuration === "custom" && (
+            {/* Custom Duration Date */}
+            {formData.duration === "custom" && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Expiry Date
+                <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
+                  Expiry Date
                 </label>
                 <input
                   type="date"
-                  value={customDurationDate}
-                  onChange={(e) => setCustomDurationDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={formData.custom_duration_date}
+                  onChange={(e) => {
+                    setFormData({ ...formData, custom_duration_date: e.target.value });
+                  }}
+                  className={`w-full px-3 py-2 border ${tw.rounded} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  style={{
+                    borderColor: color.border.default,
+                  }}
                 />
               </div>
             )}
           </div>
 
-          {/* Select Channels - full width */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Select Channels *
-            </label>
-            <MultiCategorySelector
-              value={selectedChannelIds}
-              onChange={setSelectedChannelIds}
-              placeholder="Select channels..."
-              entityType="channel"
-              className="w-full"
-            />
-          </div>
-
-          {/* Customers section - Full width */}
-          <div>
-            <h3 className="font-semibold text-gray-900 mb-4">Select Customers</h3>
-
-            {/* Search Input */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Search Customers
-              </label>
-              <SearchInput
-                placeholder="Search by name, phone, or email..."
-                value={customerSearchTerm}
-                onChange={setCustomerSearchTerm}
-              />
-            </div>
-
-            {/* Selected Members Count */}
-            {selectedMembers.length > 0 && (
-              <div
-                className={`p-3 ${tw.rounded} border-2 mb-4`}
-                style={{
-                  borderColor: color.primary.accent,
-                  backgroundColor: "white",
-                }}
-              >
-                <p className="text-sm font-medium" style={{ color: "black" }}>
-                  {selectedMembers.length} customer
-                  {selectedMembers.length !== 1 ? "s" : ""} selected
-                </p>
-              </div>
-            )}
-
-            {/* Customers List */}
-            <div className="border border-gray-200 rounded-md overflow-hidden max-h-64 overflow-y-auto">
-              {customerLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <LoadingSpinner variant="modern" size="md" />
-                </div>
-              ) : filteredCustomers.length === 0 ? (
-                <div className="px-6 py-8 text-center">
-                  <p className="text-sm text-gray-500">No customers found</p>
-                </div>
-              ) : (
-                <div className="divide-y divide-gray-200">
-                  {filteredCustomers.map((customer) => {
-                    const customerId =
-                      typeof customer.customerId === "string"
-                        ? parseInt(customer.customerId, 10)
-                        : customer.customerId ||
-                          (typeof customer.id === "string"
-                            ? parseInt(customer.id, 10)
-                            : customer.id);
-                    const fullName =
-                      `${customer.first_name || ""} ${customer.last_name || ""}`.trim();
-                    const isSelected = selectedMembers.some(
-                      (m) => m.customer_id === customerId
-                    );
-                    const selectedChannelCodes = channels
-                      .filter((ch) => selectedChannelIds.includes(ch.id))
-                      .map((ch) => ch.code.toUpperCase());
-                    const alreadyInSelectedChannels = isCustomerInDNDForChannels(
-                      customerId,
-                      selectedChannelCodes
-                    );
-
-                    return (
-                      <div
-                        key={customerId}
-                        className="px-4 py-3 flex items-center gap-3 hover:bg-gray-50 cursor-pointer"
-                        onClick={() => handleCustomerSelect(customer)}
-                      >
-                        <Checkbox
-                          id={`customer-${customerId}`}
-                          checked={isSelected}
-                          onChange={() => handleCustomerSelect(customer)}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm font-medium text-gray-900">
-                              {fullName || customer.msisdn || "Unknown"}
-                            </p>
-                            {alreadyInSelectedChannels.length > 0 && (
-                              <div
-                                className="flex items-center gap-1 px-2 py-0.5 rounded-full"
-                                style={{
-                                  backgroundColor: `${color.primary.accent}20`,
-                                }}
-                              >
-                                <Check
-                                  className="w-3 h-3 flex-shrink-0"
-                                  style={{ color: color.primary.accent }}
-                                />
-                                <span
-                                  className="text-xs font-medium"
-                                  style={{ color: color.primary.accent }}
-                                >
-                                  In {alreadyInSelectedChannels.join(", ")}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                          <div className="mt-1 flex flex-wrap gap-2 text-xs text-gray-500">
-                            {customer.msisdn && <span>{customer.msisdn}</span>}
-                            {customer.email && <span>{customer.email}</span>}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* Pagination */}
-            {!customerLoading && totalCustomers > pageSize && (
-              <Pagination
-                currentPage={page}
-                pageSize={pageSize}
-                totalItems={totalCustomers}
-                onPageChange={setPage}
-              />
-            )}
-          </div>
-
           {/* Action Buttons */}
-          <div className="flex gap-3 pt-4 justify-end">
+          <div className="flex gap-3 justify-end mt-6">
             <button
-              onClick={handleClose}
-              className={`px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors disabled:opacity-50`}
-              disabled={isLoading}
+              onClick={handleCloseModal}
+              className={`border border-gray-300 text-gray-700 font-medium ${tw.rounded} transition-colors hover:bg-gray-50`}
+              style={getButtonStyles(buttons.bordered)}
             >
               Cancel
             </button>
             <button
-              onClick={handleAddMembers}
-              className={`px-6 py-2 text-sm font-medium text-white ${tw.rounded} transition-colors disabled:opacity-50 flex items-center justify-center gap-2`}
-              style={{ backgroundColor: color.primary.action }}
+              onClick={handleAddMember}
               disabled={
-                isLoading ||
-                selectedMembers.length === 0 ||
-                !selectedDNDTypeId ||
-                selectedChannelIds.length === 0
+                isAddingMember ||
+                !formData.dnd_type_id ||
+                formData.selected_channels.length === 0 ||
+                (formData.mode === "existing_customer"
+                  ? !formData.customer_id || !formData.msisdn
+                  : !formData.external_name)
               }
+              className={`text-white font-medium ${tw.rounded} transition-colors flex items-center justify-center gap-2 ${
+                isAddingMember ||
+                !formData.dnd_type_id ||
+                formData.selected_channels.length === 0 ||
+                (formData.mode === "existing_customer"
+                  ? !formData.customer_id || !formData.msisdn
+                  : !formData.external_name)
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:opacity-90"
+              }`}
+              style={getButtonStyles(buttons.action)}
             >
-              {isLoading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Adding...
-                </>
-              ) : (
-                "Add to DND"
-              )}
+              {isAddingMember && <LoadingSpinner size={16} />}
+              {isAddingMember ? "Adding..." : "Add Member"}
             </button>
           </div>
         </div>
       </div>
-    </div>,
-    document.body
+    </div>
   );
 }

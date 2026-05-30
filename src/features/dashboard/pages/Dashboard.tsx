@@ -565,9 +565,9 @@ const SettingsPages = {
     () =>
       import(/* webpackPrefetch: true */ "../../routes/pages/USSDRoutesContainer"),
   ),
-  RoutesManagementPage: lazy(
+  RoutesContainer: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../../routes/pages/RoutesManagementPage"),
+      import(/* webpackPrefetch: true */ "../../routes/pages/RoutesContainer"),
   ),
   GatewayConfigurationsPage: lazy(
     () =>
@@ -1280,8 +1280,8 @@ export default function Dashboard() {
             element={<SettingsPages.USSDRoutesPage />}
           />
           <Route
-            path="/routes"
-            element={<SettingsPages.RoutesManagementPage />}
+            path="/routes/*"
+            element={<SettingsPages.RoutesContainer />}
           />
           <Route
             path="/gateway-configurations/*"
