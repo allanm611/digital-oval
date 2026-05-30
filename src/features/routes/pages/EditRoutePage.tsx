@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Save } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import Input from "../../../shared/components/ui/Input";
@@ -58,12 +58,13 @@ const ENCODING_OPTIONS = [
   { value: "UCS2", label: "UCS2" },
 ];
 
-export default function CreateRoutePage() {
+export default function EditRoutePage() {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
 
   const [formData, setFormData] = useState<FormData>({
-    channel: "",
+    channel: "SMS",
     channel_id: undefined,
     name: "",
     description: "",
@@ -94,7 +95,7 @@ export default function CreateRoutePage() {
 
   useEffect(() => {
     loadInitialData();
-  }, []);
+  }, [id]);
 
   useEffect(() => {
     if (channels.length > 0) {
@@ -107,19 +108,12 @@ export default function CreateRoutePage() {
     try {
       setLoading(true);
       await loadChannels();
+      if (id) {
+        await loadRouteData();
+      }
     } finally {
       setLoading(false);
     }
-  };
-
-  const getChannelType = (code: string): Channel => {
-    const codeUpper = code?.toUpperCase() || "";
-    if (codeUpper.includes("SMS")) return "SMS";
-    if (codeUpper.includes("EMAIL")) return "EMAIL";
-    if (codeUpper.includes("PUSH")) return "PUSH";
-    if (codeUpper.includes("MESSENGER") || codeUpper.includes("WHATSAPP")) return "WHATSAPP";
-    if (codeUpper.includes("USSD")) return "USSD";
-    return "";
   };
 
   const loadChannels = async () => {
@@ -129,6 +123,32 @@ export default function CreateRoutePage() {
     } catch (error) {
       console.error("Failed to load channels:", error);
       setChannels([]);
+    }
+  };
+
+  const loadRouteData = async () => {
+    if (!id) return;
+    try {
+      // Try to load from each service
+      const smsRoutes = await smsRouteService.getAllRoutes();
+      const route = smsRoutes.find((r) => r.id === Number(id));
+      if (route) {
+        setFormData((prev) => ({
+          ...prev,
+          channel: "SMS",
+          name: route.name,
+          description: route.description || "",
+          gateway_config_id: route.gateway_config_id,
+          is_active: route.is_active,
+          backup_route_id: route.backup_route_id,
+          use_backup_on_failure: route.use_backup_on_failure,
+          retry_attempts: route.retry_attempts,
+          senderId: route.sender_id || "",
+        }));
+      }
+    } catch (error) {
+      console.error("Failed to load route:", error);
+      showError("Error", "Failed to load route data");
     }
   };
 
@@ -206,11 +226,11 @@ export default function CreateRoutePage() {
       };
 
       if (formData.channel === "SMS") {
-        await smsRouteService.createRoute(baseData);
+        await smsRouteService.updateRoute(Number(id), baseData);
       } else if (formData.channel === "EMAIL") {
-        await emailRouteService.createRoute(baseData);
+        await emailRouteService.updateRoute(Number(id), baseData);
       } else if (formData.channel === "PUSH") {
-        await pushNotificationRouteService.createRoute({
+        await pushNotificationRouteService.updateRoute(Number(id), {
           ...baseData,
           platforms: formData.platforms || [],
           default_ttl: formData.defaultTTL,
@@ -218,14 +238,14 @@ export default function CreateRoutePage() {
           webhook_url: formData.webhookUrl || undefined,
         });
       } else if (formData.channel === "WHATSAPP") {
-        await whatsappRouteService.createRoute({
+        await whatsappRouteService.updateRoute(Number(id), {
           ...baseData,
           webhook_url: formData.webhookUrl || undefined,
           template_support: formData.templateSupport === "true",
           quality_threshold: Number(formData.qualityThreshold),
         });
       } else if (formData.channel === "USSD") {
-        await ussdRouteService.createRoute({
+        await ussdRouteService.updateRoute(Number(id), {
           ...baseData,
           ussd_code: formData.ussdCode || undefined,
           network_code: formData.networkCode || undefined,
@@ -234,10 +254,10 @@ export default function CreateRoutePage() {
         });
       }
 
-      success("Route created successfully");
+      success("Route updated successfully");
       navigate("/dashboard/routes");
     } catch (error) {
-      showError("Error", extractBackendError(error, "Failed to create route"));
+      showError("Error", extractBackendError(error, "Failed to update route"));
     } finally {
       setSaving(false);
     }
@@ -253,15 +273,13 @@ export default function CreateRoutePage() {
 
   return (
     <div className="space-y-6">
-      {/* Breadcrumb */}
       <BackButton
         fallbackTo="/dashboard/routes"
         showBreadcrumb={true}
         parentLabel="Routes"
-        currentLabel="Create Route"
+        currentLabel="Edit Route"
       />
 
-      {/* Form Container */}
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information Section */}
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
@@ -271,37 +289,15 @@ export default function CreateRoutePage() {
           <div className="space-y-4">
             {/* Channel and Name Row */}
             <div className="grid grid-cols-2 gap-4">
-              {/* Channel Selection */}
               <div>
-                <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
+                <label className={`block text-sm font-medium text-gray-700 mb-2`}>
                   Channel *
                 </label>
-                <HeadlessSelect
-                  value={String(formData.channel_id || "")}
-                  onChange={(value) => {
-                    const selectedChannel = channels.find((c) => c.id === Number(value));
-                    if (selectedChannel) {
-                      const channelType = getChannelType(selectedChannel.code);
-                      setFormData({
-                        ...formData,
-                        channel: channelType,
-                        channel_id: selectedChannel.id,
-                        gateway_config_id: 0,
-                        backup_route_id: undefined,
-                      });
-                      setErrors({});
-                    }
-                  }}
-                  options={channels.map((channel) => ({
-                    id: channel.id,
-                    value: String(channel.id),
-                    label: channel.name,
-                  }))}
-                  placeholder="Select channel..."
-                  disabled={saving}
-                />
+                <div className="px-3 py-2 border border-gray-300 rounded bg-gray-50 text-sm text-gray-600">
+                  {formData.channel}
+                </div>
               </div>
-              {/* Name */}
+
               <div>
                 <label className={`block text-sm font-medium text-gray-700 mb-2`}>
                   Route Name *
@@ -321,7 +317,6 @@ export default function CreateRoutePage() {
               </div>
             </div>
 
-            {/* Description */}
             <div>
               <label className={`block text-sm font-medium text-gray-700 mb-2`}>
                 Description
@@ -421,189 +416,6 @@ export default function CreateRoutePage() {
             </div>
         </div>
 
-        {/* Channel-Specific Configuration */}
-        {formData.channel && formData.channel === "PUSH" && (
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
-              Push Notification Configuration
-            </h2>
-            <div className="space-y-4">
-              <div>
-                <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                  Platforms
-                </label>
-                <HeadlessSelect
-                  value={formData.platforms?.[0] || ""}
-                  onChange={(value) => {
-                    const platforms = formData.platforms || [];
-                    if (platforms.includes(value)) {
-                      setFormData({ ...formData, platforms: platforms.filter((p) => p !== value) });
-                    } else {
-                      setFormData({ ...formData, platforms: [...platforms, value] });
-                    }
-                  }}
-                  options={PUSH_PLATFORM_OPTIONS}
-                  disabled={saving}
-                />
-              </div>
-
-              <div>
-                <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                  Default TTL
-                </label>
-                <Input
-                  value={formData.defaultTTL || "3600"}
-                  onChange={(value) => setFormData({ ...formData, defaultTTL: value })}
-                  placeholder="3600"
-                  variant="medium"
-                  disabled={saving}
-                />
-              </div>
-
-              <div>
-                <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                  Priority Level
-                </label>
-                <HeadlessSelect
-                  value={formData.priorityLevel || "NORMAL"}
-                  onChange={(value) => setFormData({ ...formData, priorityLevel: value })}
-                  options={PRIORITY_LEVEL_OPTIONS}
-                  disabled={saving}
-                />
-              </div>
-
-              <div>
-                <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                  Webhook URL
-                </label>
-                <Input
-                  value={formData.webhookUrl || ""}
-                  onChange={(value) => setFormData({ ...formData, webhookUrl: value })}
-                  placeholder="https://example.com/webhook"
-                  type="url"
-                  variant="medium"
-                  disabled={saving}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {formData.channel && formData.channel === "WHATSAPP" && (
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
-              WhatsApp Configuration
-            </h2>
-            <div className="space-y-4">
-              <div>
-                <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                  Webhook URL
-                </label>
-                <Input
-                  value={formData.webhookUrl || ""}
-                  onChange={(value) => setFormData({ ...formData, webhookUrl: value })}
-                  placeholder="https://example.com/webhook"
-                  type="url"
-                  variant="medium"
-                  disabled={saving}
-                />
-              </div>
-
-              <div>
-                <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                  Template Support
-                </label>
-                <HeadlessSelect
-                  value={formData.templateSupport || "false"}
-                  onChange={(value) => setFormData({ ...formData, templateSupport: value })}
-                  options={[
-                    { value: "true", label: "Enabled" },
-                    { value: "false", label: "Disabled" },
-                  ]}
-                  disabled={saving}
-                />
-              </div>
-
-              <div>
-                <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                  Quality Threshold
-                </label>
-                <Input
-                  value={formData.qualityThreshold || "50"}
-                  onChange={(value) => setFormData({ ...formData, qualityThreshold: value })}
-                  placeholder="50"
-                  type="number"
-                  min="0"
-                  max="100"
-                  variant="medium"
-                  disabled={saving}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {formData.channel && formData.channel === "USSD" && (
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
-              USSD Configuration
-            </h2>
-            <div className="space-y-4">
-              <div>
-                <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                  USSD Code
-                </label>
-                <Input
-                  value={formData.ussdCode || ""}
-                  onChange={(value) => setFormData({ ...formData, ussdCode: value })}
-                  placeholder="*123#"
-                  variant="medium"
-                  disabled={saving}
-                />
-              </div>
-
-              <div>
-                <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                  Network Code
-                </label>
-                <Input
-                  value={formData.networkCode || ""}
-                  onChange={(value) => setFormData({ ...formData, networkCode: value })}
-                  placeholder="Network code"
-                  variant="medium"
-                  disabled={saving}
-                />
-              </div>
-
-              <div>
-                <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                  Session Timeout
-                </label>
-                <Input
-                  value={formData.sessionTimeout || "60"}
-                  onChange={(value) => setFormData({ ...formData, sessionTimeout: value })}
-                  placeholder="60"
-                  type="number"
-                  variant="medium"
-                  disabled={saving}
-                />
-              </div>
-
-              <div>
-                <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                  Encoding
-                </label>
-                <HeadlessSelect
-                  value={formData.encoding || "UTF-8"}
-                  onChange={(value) => setFormData({ ...formData, encoding: value })}
-                  options={ENCODING_OPTIONS}
-                  disabled={saving}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Action Buttons */}
         <div className="flex gap-3 justify-end">
           <button
@@ -629,7 +441,7 @@ export default function CreateRoutePage() {
             style={{ backgroundColor: color.primary.action }}
           >
             {saving && <LoadingSpinner size={16} />}
-            {saving ? "Creating..." : "Create Route"}
+            {saving ? "Updating..." : "Update Route"}
           </button>
         </div>
       </form>

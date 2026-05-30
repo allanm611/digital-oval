@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, Loader2 } from "lucide-react";
+import { X, Loader2, HelpCircle } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { buttons } from "../../../shared/utils/tokens";
 import { useToast } from "../../../contexts/ToastContext";
@@ -306,13 +306,21 @@ export default function NotificationTypeModal({
 
           {/* Message Template */}
           <div className="space-y-1.5">
-            <label className={`text-sm font-medium ${tw.textPrimary}`}>
-              Message Template <span className="text-red-500">*</span>
-            </label>
+            <div className="flex items-center gap-2">
+              <label className={`text-sm font-medium ${tw.textPrimary}`}>
+                Message Template <span className="text-red-500">*</span>
+              </label>
+              <div className="group relative cursor-help">
+                <HelpCircle className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block bg-gray-900 text-white text-xs rounded px-3 py-2 z-10 whitespace-nowrap">
+                  Use placeholders: {"{record_id}"}, {"{actor_id}"}, {"{table_name}"}, {"{action_type}"}
+                </div>
+              </div>
+            </div>
             <textarea
               value={formData.message_template}
               onChange={(e) => setFormData({ ...formData, message_template: e.target.value })}
-              placeholder="e.g., A new {table_name} has been {action_type}"
+              placeholder="e.g., {actor_id} created {table_name} {record_id}"
               rows={3}
               className={`w-full px-3 py-2 ${tw.rounded} border text-sm transition-colors focus:outline-none resize-none`}
               style={{

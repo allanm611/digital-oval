@@ -103,7 +103,6 @@ function EmailRoutesListView() {
             parentLabel="Administration"
             currentLabel="Email Routes"
           />
-          <CreateButton onClick={handleCreateRoute} />
         </div>
         <p className={`text-sm ${tw.textSecondary}`}>
           Manage email SMTP routes for message delivery. Routes determine which SMTP
@@ -137,9 +136,8 @@ function EmailRoutesListView() {
             <p className={`${tw.textMuted} mb-6`}>
               {searchTerm
                 ? "Try adjusting your search"
-                : "Create your first email route to get started"}
+                : "Use the unified routes management page to create email routes"}
             </p>
-            {!searchTerm && <CreateButton onClick={handleCreateRoute} className="mx-auto" />}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -182,19 +180,10 @@ function EmailRoutesListView() {
                     style={{
                       color: color.surface.tableHeaderText,
                       backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Status
-                  </th>
-                  <th
-                    className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
                       borderTopRightRadius: "0.375rem",
                     }}
                   >
-                    Actions
+                    Status
                   </th>
                 </tr>
               </thead>
@@ -242,54 +231,6 @@ function EmailRoutesListView() {
                       </span>
                     </td>
 
-                    <td
-                      className="px-6 py-4 text-center"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopRightRadius: "0.375rem",
-                        borderBottomRightRadius: "0.375rem",
-                      }}
-                    >
-                      <div className="flex items-center justify-center space-x-2">
-                        <ActivateDeactivateButton
-                          isActive={route.isActive}
-                          onToggle={() => handleToggleActive(route)}
-                          disabled={togglingItemId === route.id}
-                          isLoading={togglingItemId === route.id}
-                          title={
-                            route.isActive
-                              ? `Deactivate ${route.name}`
-                              : `Activate ${route.name}`
-                          }
-                        />
-
-                        <button
-                          onClick={() => handleEditRoute(route)}
-                          className={`p-2 ${tw.rounded} transition-colors`}
-                          style={{
-                            color: color.primary.action,
-                            backgroundColor: "transparent",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = `${color.primary.action}10`;
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = "transparent";
-                          }}
-                          title={`Edit ${route.name}`}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-
-                        <button
-                          onClick={() => handleDeleteClick(route)}
-                          className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
-                          title={`Delete ${route.name}`}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
                   </tr>
                 ))}
               </tbody>

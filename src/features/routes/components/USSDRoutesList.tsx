@@ -113,15 +113,6 @@ export default function USSDRoutesList() {
             parentLabel="Administration"
             currentLabel="USSD Routes"
           />
-          <button
-            onClick={() => navigate("create")}
-            disabled={loading}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-md whitespace-nowrap disabled:opacity-60"
-            style={{ backgroundColor: color.primary.action }}
-          >
-            <Plus className="w-4 h-4" />
-            Create
-          </button>
         </div>
         <p className={`text-sm ${tw.textSecondary}`}>
           Manage USSD gateway routes for message delivery. Routes determine which
@@ -182,22 +173,13 @@ export default function USSDRoutesList() {
                   Description
                 </th>
                 <th
-                  className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                  className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider rounded-tr-md"
                   style={{
                     color: color.surface.tableHeaderText,
                     backgroundColor: color.surface.tableHeader,
                   }}
                 >
                   Status
-                </th>
-                <th
-                  className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider rounded-tr-md"
-                  style={{
-                    color: color.surface.tableHeaderText,
-                    backgroundColor: color.surface.tableHeader,
-                  }}
-                >
-                  Actions
                 </th>
               </tr>
             </thead>
@@ -215,41 +197,6 @@ export default function USSDRoutesList() {
                     </td>
                     <td className="px-6 py-4 text-sm text-black">
                       {route.is_active ? "Active" : "Inactive"}
-                    </td>
-                    <td className="px-6 py-4 text-sm">
-                      <div className="flex items-center justify-end space-x-2">
-                        <ActivateDeactivateButton
-                          isActive={route.is_active}
-                          onToggle={() => handleToggleStatus(route)}
-                          disabled={
-                            deleting === route.id ||
-                            togglingStatus === route.id ||
-                            loading
-                          }
-                          isLoading={togglingStatus === route.id}
-                          title={
-                            route.is_active
-                              ? "Deactivate route"
-                              : "Activate route"
-                          }
-                        />
-                        <button
-                          onClick={() => navigate(`${route.id}/edit`)}
-                          disabled={deleting === route.id || loading}
-                          className={`p-2 ${tw.rounded} text-black disabled:opacity-60`}
-                          title="Edit route"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(route)}
-                          disabled={deleting === route.id || loading}
-                          className={`p-2 text-red-600 hover:bg-red-50 ${tw.rounded} disabled:opacity-60`}
-                          title="Delete route"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
                     </td>
                   </tr>
               ))}

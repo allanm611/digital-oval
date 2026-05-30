@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Save } from "lucide-react";
-import { tw, color } from "../../../../shared/utils/utils";
+import { tw, color, button } from "../../../../shared/utils/utils";
 import Input from "../../../../shared/components/ui/Input";
 import { USSDGatewayConfig, CreateUSSDGatewayConfigRequest } from "../../types/ussdGatewayConfig";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
@@ -196,12 +196,18 @@ export default function USSDGatewayForm({
         </div>
       </div>
 
-      <div className="flex items-center justify-between pt-6 border-t border-gray-200">
+      <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-200">
         <button
           type="button"
           onClick={onCancel}
           disabled={isLoading}
-          className="px-6 py-2 text-sm font-medium border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-60"
+          className="text-sm font-medium rounded-md transition-colors disabled:opacity-60"
+          style={{
+            backgroundColor: button.bordered.background,
+            color: button.bordered.color,
+            border: button.bordered.border,
+            padding: `${button.bordered.paddingY} ${button.bordered.paddingX}`,
+          }}
         >
           Cancel
         </button>
@@ -209,10 +215,9 @@ export default function USSDGatewayForm({
         <button
           type="submit"
           disabled={isLoading}
-          className="inline-flex items-center gap-2 px-6 py-2 text-sm font-medium text-white rounded-md transition-colors disabled:opacity-60"
+          className="px-6 py-2 text-sm font-medium text-white rounded-md transition-colors disabled:opacity-60"
           style={{ backgroundColor: color.primary.action }}
         >
-          <Save className="w-4 h-4" />
           {isLoading ? "Saving..." : "Save Configuration"}
         </button>
       </div>

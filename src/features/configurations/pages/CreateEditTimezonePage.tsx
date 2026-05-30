@@ -398,7 +398,6 @@ export default function CreateEditTimezonePage() {
             className="inline-flex items-center gap-2 px-6 py-2 text-sm font-medium text-white rounded-md transition-colors disabled:opacity-60"
             style={{ backgroundColor: color.primary.action }}
           >
-            <Save className="w-4 h-4" />
             {saving ? "Saving..." : isEditMode ? "Update Timezone" : "Create Timezone"}
           </button>
         </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Trash2, Edit, Plus } from "lucide-react";
+import { Trash2, Edit, Plus, Eye } from "lucide-react";
+import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -49,6 +50,10 @@ export default function RoutesManagementPage() {
   } | null>(null);
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
   const [isRemoving, setIsRemoving] = useState(false);
+  const [togglingStatus, setTogglingStatus] = useState<{
+    id: number;
+    channel: CommunicationChannel;
+  } | null>(null);
 
   useEffect(() => {
     loadAllRoutes();
@@ -165,7 +170,7 @@ export default function RoutesManagementPage() {
 
       setRoutes(unifiedRoutes);
     } catch (err) {
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -212,9 +217,44 @@ export default function RoutesManagementPage() {
       setDeleteConfirmName("");
     } catch (err) {
       setRoutes(oldRoutes);
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsRemoving(false);
+    }
+  };
+
+  const handleToggleStatus = async (route: UnifiedRoute) => {
+    const oldRoutes = routes;
+    try {
+      setTogglingStatus({ id: route.id, channel: route.channel });
+      const newStatus = !route.is_active;
+
+      setRoutes(
+        routes.map((r) =>
+          r.id === route.id && r.channel === route.channel
+            ? { ...r, is_active: newStatus }
+            : r
+        )
+      );
+
+      if (route.channel === "SMS") {
+        await smsRouteService.updateRoute(route.id, { is_active: newStatus });
+      } else if (route.channel === "EMAIL") {
+        await emailRouteService.updateRoute(route.id, { is_active: newStatus });
+      } else if (route.channel === "PUSH") {
+        await pushNotificationRouteService.updateRoute(route.id, { is_active: newStatus });
+      } else if (route.channel === "WHATSAPP") {
+        await whatsappRouteService.updateRoute(route.id, { is_active: newStatus });
+      } else if (route.channel === "USSD") {
+        await ussdRouteService.updateRoute(route.id, { is_active: newStatus });
+      }
+
+      showSuccess("Success", `Route ${newStatus ? "activated" : "deactivated"} successfully`);
+    } catch (err) {
+      setRoutes(oldRoutes);
+      showError("Error", extractBackendError(err, "Error. Please try again."));
+    } finally {
+      setTogglingStatus(null);
     }
   };
 
@@ -354,16 +394,6 @@ export default function RoutesManagementPage() {
                     Status
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      borderTopRightRadius: "0.375rem",
-                    }}
-                  >
-                    Updated
-                  </th>
-                  {/* <th
                     className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
                     style={{
                       color: color.surface.tableHeaderText,
@@ -372,7 +402,7 @@ export default function RoutesManagementPage() {
                     }}
                   >
                     Actions
-                  </th> */}
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -423,18 +453,6 @@ export default function RoutesManagementPage() {
                       </span>
                     </td>
                     <td
-                      className="px-6 py-4"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopRightRadius: "0.375rem",
-                        borderBottomRightRadius: "0.375rem",
-                      }}
-                    >
-                      <span className="text-sm text-black">
-                        <DateFormatter date={route.updated_at} />
-                      </span>
-                    </td>
-                    {/* <td
                       className="px-6 py-4 text-center"
                       style={{
                         backgroundColor: color.surface.tablebodybg,
@@ -443,9 +461,27 @@ export default function RoutesManagementPage() {
                       }}
                     >
                       <div className="flex items-center justify-center gap-2">
+                        <ActivateDeactivateButton
+                          isActive={route.is_active}
+                          onToggle={() => handleToggleStatus(route)}
+                          disabled={
+                            togglingStatus?.id === route.id && togglingStatus?.channel === route.channel
+                          }
+                          isLoading={
+                            togglingStatus?.id === route.id && togglingStatus?.channel === route.channel
+                          }
+                          title={route.is_active ? "Deactivate" : "Activate"}
+                        />
                         <button
-                          onClick={() => navigateToEdit(route)}
-                          className={`p-2 ${tw.textSecondary} hover:bg-gray-100 ${tw.rounded} transition-colors`}
+                          onClick={() => navigate(`/dashboard/routes/${route.id}`)}
+                          className={`p-2 ${tw.rounded} text-gray-600 hover:bg-gray-100 transition-colors`}
+                          title="View Details"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => navigate(`/dashboard/routes/${route.id}/edit`)}
+                          className={`p-2 ${tw.rounded} text-gray-600 hover:bg-gray-100 transition-colors`}
                           title="Edit"
                         >
                           <Edit className="w-4 h-4" />
@@ -458,7 +494,7 @@ export default function RoutesManagementPage() {
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
-                    </td> */}
+                    </td>
                   </tr>
                 ))}
               </tbody>
