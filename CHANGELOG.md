@@ -1,3 +1,11 @@
+## [1.4.2](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.1...v1.4.2) (2026-05-30)
+
+
+### Bug Fixes
+
+* fixed the route manageemnt and gateway config create forms ([5726faf](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/5726faf5bc7de157c7a810ae77ccdcf77d96d13c))
+* updated the settings notificaitons page to group notificaitons by categories and also udpated the create notificaitons rule modal to have the catgeoreis drodpown ([26e99ab](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/26e99abd36d1a17e530c1a3b42247966864b3d1b))
+
 ## [1.4.1](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.0...v1.4.1) (2026-05-30)
 
 
