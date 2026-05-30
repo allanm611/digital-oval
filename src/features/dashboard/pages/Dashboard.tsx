@@ -543,11 +543,11 @@ const SettingsPages = {
   ),
   EmailRoutesPage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../../offers/pages/EmailRoutesPage"),
+      import(/* webpackPrefetch: true */ "../../routes/pages/EmailRoutesContainer"),
   ),
   SMSRoutesPage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../../routes/pages/RoutesContainer"),
+      import(/* webpackPrefetch: true */ "../../routes/pages/SMSRoutesContainer"),
   ),
   SMSTestPage: lazy(
     () =>

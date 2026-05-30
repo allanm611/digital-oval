@@ -9,6 +9,7 @@ import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { notificationTypeService, NotificationRule } from "../../../shared/services/notificationTypeService";
+import { notificationCategoryService } from "../../notifications/services/notificationCategoryService";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import NotificationTypeModal from "../components/NotificationTypeModal";
 
@@ -17,6 +18,7 @@ export default function NotificationTypesPage() {
   const { t } = useLanguage();
 
   const [notificationRules, setNotificationRules] = useState<NotificationRule[]>([]);
+  const [categoryMap, setCategoryMap] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -30,8 +32,19 @@ export default function NotificationTypesPage() {
   const loadNotificationRules = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await notificationTypeService.getAll();
-      setNotificationRules(data || []);
+      const [rules, categories] = await Promise.all([
+        notificationTypeService.getAll(),
+        notificationCategoryService.getNotificationCategories(),
+      ]);
+      setNotificationRules(rules || []);
+
+      const map: Record<string, string> = {};
+      (Array.isArray(categories) ? categories : []).forEach((cat: any) => {
+        if (cat.id) {
+          map[String(cat.id)] = cat.name || "";
+        }
+      });
+      setCategoryMap(map);
     } catch (error) {
       showError(extractBackendError(error, "Failed to load notification types. Please try again."));
       console.error(error);
@@ -169,7 +182,7 @@ export default function NotificationTypesPage() {
               <thead>
                 <tr>
                   <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    className="px-6 py-4 text-left text-sm font-medium"
                     style={{
                       color: color.surface.tableHeaderText,
                       backgroundColor: color.surface.tableHeader,
@@ -179,7 +192,7 @@ export default function NotificationTypesPage() {
                     Name
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    className="px-6 py-4 text-left text-sm font-medium"
                     style={{
                       color: color.surface.tableHeaderText,
                       backgroundColor: color.surface.tableHeader,
@@ -188,7 +201,7 @@ export default function NotificationTypesPage() {
                     Table
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    className="px-6 py-4 text-left text-sm font-medium"
                     style={{
                       color: color.surface.tableHeaderText,
                       backgroundColor: color.surface.tableHeader,
@@ -197,7 +210,16 @@ export default function NotificationTypesPage() {
                     Action Type
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    className="px-6 py-4 text-left text-sm font-medium"
+                    style={{
+                      color: color.surface.tableHeaderText,
+                      backgroundColor: color.surface.tableHeader,
+                    }}
+                  >
+                    Category
+                  </th>
+                  <th
+                    className="px-6 py-4 text-left text-sm font-medium"
                     style={{
                       color: color.surface.tableHeaderText,
                       backgroundColor: color.surface.tableHeader,
@@ -206,7 +228,7 @@ export default function NotificationTypesPage() {
                     Description
                   </th>
                   <th
-                    className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
+                    className="px-6 py-4 text-center text-sm font-medium"
                     style={{
                       color: color.surface.tableHeaderText,
                       backgroundColor: color.surface.tableHeader,
@@ -236,7 +258,7 @@ export default function NotificationTypesPage() {
                       className="px-6 py-4"
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
-                      <div className={`text-sm ${tw.textSecondary} font-mono`}>
+                      <div className={`text-sm ${tw.textSecondary}`}>
                         {rule.table_name}
                       </div>
                     </td>
@@ -246,6 +268,14 @@ export default function NotificationTypesPage() {
                     >
                       <div className={`text-sm ${tw.textSecondary}`}>
                         {rule.action_type}
+                      </div>
+                    </td>
+                    <td
+                      className="px-6 py-4"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      <div className={`text-sm ${tw.textSecondary}`}>
+                        {rule.category_id ? categoryMap[String(rule.category_id)] || "-" : "-"}
                       </div>
                     </td>
                     <td

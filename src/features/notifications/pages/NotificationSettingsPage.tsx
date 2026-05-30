@@ -1,11 +1,12 @@
 import { useEffect, useState, useCallback } from "react";
-import { Volume2, VolumeX } from "lucide-react";
+import { Volume2, VolumeX, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useNotificationSettings } from "../../../contexts/NotificationSettingsContext";
 import { useToast } from "../../../contexts/ToastContext";
 import { notificationService } from "../services/notificationService";
+import { notificationCategoryService } from "../services/notificationCategoryService";
 import { color, tw } from "../../../shared/utils/utils";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -18,6 +19,7 @@ interface NotificationSubscription {
   description?: string;
   table_name: string;
   action_type: string;
+  category_id?: string | number;
   is_subscribed: boolean;
 }
 
@@ -63,6 +65,8 @@ export default function NotificationSettingsPage() {
 
   const [subscriptions, setSubscriptions] = useState<NotificationSubscription[]>([]);
   const [localSubscriptions, setLocalSubscriptions] = useState<NotificationSubscription[]>([]);
+  const [categoryMap, setCategoryMap] = useState<Record<string, string>>({});
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   const [isLoadingSubscriptions, setIsLoadingSubscriptions] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -85,11 +89,24 @@ export default function NotificationSettingsPage() {
   const loadSubscriptions = useCallback(async () => {
     setIsLoadingSubscriptions(true);
     try {
-      const result = await notificationService.getNotificationSubscriptions();
-      if (result.success && result.data) {
-        setSubscriptions(result.data as NotificationSubscription[]);
-        setLocalSubscriptions(result.data as NotificationSubscription[]);
+      const [subscriptionResult, categories] = await Promise.all([
+        notificationService.getNotificationSubscriptions(),
+        notificationCategoryService.getNotificationCategories(),
+      ]);
+
+      if (subscriptionResult.success && subscriptionResult.data) {
+        setSubscriptions(subscriptionResult.data as NotificationSubscription[]);
+        setLocalSubscriptions(subscriptionResult.data as NotificationSubscription[]);
       }
+
+      // Create category map
+      const map: Record<string, string> = {};
+      (Array.isArray(categories) ? categories : []).forEach((cat: any) => {
+        if (cat.id) {
+          map[String(cat.id)] = cat.name || "";
+        }
+      });
+      setCategoryMap(map);
     } catch (err) {
       console.error("Failed to load subscriptions:", err);
       showError(
@@ -111,6 +128,13 @@ export default function NotificationSettingsPage() {
       ),
     );
     setHasChanges(true);
+  };
+
+  const toggleCategoryExpansion = (categoryId: string) => {
+    setExpandedCategories((prev) => ({
+      ...prev,
+      [categoryId]: !prev[categoryId],
+    }));
   };
 
   const handleSettingChange = (key: string, value: any) => {
@@ -505,36 +529,79 @@ export default function NotificationSettingsPage() {
               <p className="text-sm">{t.notifications.settings.noSubscriptions}</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
-              {localSubscriptions.map((subscription) => (
-                <div
-                  key={subscription.rule_id}
-                  className="flex items-start gap-3 py-4 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="pt-1 flex-shrink-0">
-                    <Checkbox
-                      id={`subscription-${subscription.rule_id}`}
-                      checked={subscription.is_subscribed}
-                      onChange={() =>
-                        handleSubscriptionToggle(subscription.rule_id)
-                      }
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900">
-                      {subscription.name}
-                    </p>
-                    {subscription.description && (
-                      <p className="text-xs text-gray-600 mt-1">
-                        {subscription.description}
-                      </p>
-                    )}
-                    <p className="text-xs text-gray-500 mt-1">
-                      {subscription.table_name} • {subscription.action_type}
-                    </p>
-                  </div>
-                </div>
-              ))}
+            <div className="space-y-0 divide-y divide-gray-100">
+              {(() => {
+                // Group subscriptions by category
+                const grouped: Record<string, NotificationSubscription[]> = {};
+                localSubscriptions.forEach((sub) => {
+                  const catId = String(sub.category_id || "uncategorized");
+                  if (!grouped[catId]) {
+                    grouped[catId] = [];
+                  }
+                  grouped[catId].push(sub);
+                });
+
+                // Only show categories that have subscriptions
+                return Object.entries(grouped).map(([categoryId, subs]) => {
+                  const categoryName =
+                    categoryId !== "uncategorized"
+                      ? categoryMap[categoryId] || "Uncategorized"
+                      : "Uncategorized";
+
+                  const isExpanded = expandedCategories[categoryId] ?? true;
+
+                  return (
+                    <div key={categoryId} className="py-4">
+                      <button
+                        onClick={() => toggleCategoryExpansion(categoryId)}
+                        className="w-full flex items-center gap-3 text-left hover:bg-gray-50 -mx-6 px-6 py-2"
+                      >
+                        <ChevronDown
+                          className={`w-4 h-4 text-gray-600 transition-transform ${
+                            isExpanded ? "" : "-rotate-90"
+                          }`}
+                        />
+                        <h3 className="text-sm font-semibold text-gray-900 flex-1 flex items-center gap-2">
+                          {categoryName}
+                          <span
+                            className="text-xs text-white px-2 py-0.5 rounded"
+                            style={{ backgroundColor: color.primary.accent }}
+                          >
+                            {subs.length}
+                          </span>
+                        </h3>
+                      </button>
+
+                      {isExpanded && (
+                        <div className="space-y-2 mt-3 ml-7">
+                          {subs.map((subscription) => (
+                            <div
+                              key={subscription.rule_id}
+                              className="flex items-center gap-3 py-2 hover:bg-gray-50 transition-colors rounded px-2"
+                            >
+                              <div className="flex-shrink-0">
+                                <Checkbox
+                                  id={`subscription-${subscription.rule_id}`}
+                                  checked={subscription.is_subscribed}
+                                  onChange={() =>
+                                    handleSubscriptionToggle(subscription.rule_id)
+                                  }
+                                />
+                              </div>
+                              <label
+                                htmlFor={`subscription-${subscription.rule_id}`}
+                                className="text-sm text-gray-900 cursor-pointer flex-1"
+                              >
+                                {subscription.name}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                });
+              })()}
             </div>
           )}
         </div>

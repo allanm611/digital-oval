@@ -8,6 +8,7 @@ export interface NotificationRule {
   table_name: string;
   action_type: string;
   message_template: string;
+  category_id?: string | number;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -21,6 +22,7 @@ export interface CreateNotificationRuleRequest {
   table_name: string;
   action_type: string;
   message_template: string;
+  category_id?: string | number;
   is_active?: boolean;
 }
 
@@ -30,6 +32,7 @@ export interface UpdateNotificationRuleRequest {
   table_name?: string;
   action_type?: string;
   message_template?: string;
+  category_id?: string | number;
   is_active?: boolean;
 }
 

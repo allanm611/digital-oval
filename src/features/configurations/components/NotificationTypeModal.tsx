@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { X, Loader2 } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
+import { buttons } from "../../../shared/utils/tokens";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { notificationTypeService, NotificationRule, CreateNotificationRuleRequest } from "../../../shared/services/notificationTypeService";
+import { notificationCategoryService } from "../../notifications/services/notificationCategoryService";
 
 interface NotificationTypeModalProps {
   isOpen: boolean;
@@ -28,20 +30,17 @@ export default function NotificationTypeModal({
   const { error: showError, success: showSuccess } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingTables, setIsLoadingTables] = useState(false);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [tableOptions, setTableOptions] = useState<Array<{ value: string; label: string }>>([]);
+  const [categoryOptions, setCategoryOptions] = useState<Array<{ value: number | string; label: string }>>([]);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     table_name: "",
     action_type: "",
     message_template: "",
+    category_id: "",
   });
-
-  useEffect(() => {
-    if (isOpen) {
-      loadTables();
-    }
-  }, [isOpen]);
 
   const loadTables = async () => {
     setIsLoadingTables(true);
@@ -72,6 +71,30 @@ export default function NotificationTypeModal({
     }
   };
 
+  const loadCategories = async () => {
+    setIsLoadingCategories(true);
+    try {
+      const categories = await notificationCategoryService.getNotificationCategories();
+      const options = (Array.isArray(categories) ? categories : []).map((cat: any) => ({
+        value: String(cat.id || ""),
+        label: cat.name || "",
+      }));
+      setCategoryOptions(options);
+    } catch (error) {
+      console.error("Failed to load notification categories:", error);
+      showError(extractBackendError(error, "Failed to load categories. Please try again."));
+    } finally {
+      setIsLoadingCategories(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      loadTables();
+      loadCategories();
+    }
+  }, [isOpen]);
+
   useEffect(() => {
     if (editingRule) {
       setFormData({
@@ -80,6 +103,7 @@ export default function NotificationTypeModal({
         table_name: editingRule.table_name,
         action_type: editingRule.action_type,
         message_template: editingRule.message_template,
+        category_id: editingRule.category_id || "",
       });
     } else {
       setFormData({
@@ -88,6 +112,7 @@ export default function NotificationTypeModal({
         table_name: "",
         action_type: "",
         message_template: "",
+        category_id: "",
       });
     }
   }, [editingRule, isOpen]);
@@ -124,6 +149,10 @@ export default function NotificationTypeModal({
         action_type: formData.action_type,
         message_template: formData.message_template.trim(),
       };
+
+      if (formData.category_id) {
+        payload.category_id = formData.category_id as any;
+      }
 
       if (editingRule) {
         await notificationTypeService.update(editingRule.id, payload);
@@ -255,6 +284,26 @@ export default function NotificationTypeModal({
             </div>
           </div>
 
+          {/* Category */}
+          <div className="space-y-1.5">
+            <label className={`text-sm font-medium ${tw.textPrimary}`}>
+              Category
+              {isLoadingCategories && (
+                <span className="ml-2 inline-flex items-center">
+                  <Loader2 className="w-3 h-3 animate-spin" style={{ color: color.primary.action }} />
+                </span>
+              )}
+            </label>
+            <HeadlessSelect
+              options={categoryOptions}
+              value={formData.category_id}
+              onChange={(value) => setFormData({ ...formData, category_id: String(value) })}
+              placeholder="Select a category..."
+              disabled={isLoadingCategories}
+              searchable={true}
+            />
+          </div>
+
           {/* Message Template */}
           <div className="space-y-1.5">
             <label className={`text-sm font-medium ${tw.textPrimary}`}>
@@ -276,15 +325,17 @@ export default function NotificationTypeModal({
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-3 pt-4 justify-end">
             <button
               type="button"
               onClick={onClose}
-              className={`flex-1 px-4 py-2 ${tw.rounded} text-sm font-medium transition-colors`}
+              className="text-sm font-medium transition-colors"
               style={{
-                color: color.primary.action,
-                backgroundColor: `${color.primary.action}10`,
-                border: `1px solid ${color.primary.action}20`,
+                backgroundColor: buttons.bordered.background,
+                color: buttons.bordered.color,
+                border: buttons.bordered.border,
+                padding: `${buttons.bordered.paddingY} ${buttons.bordered.paddingX}`,
+                borderRadius: buttons.bordered.borderRadius,
               }}
               disabled={isSubmitting}
             >
@@ -292,8 +343,12 @@ export default function NotificationTypeModal({
             </button>
             <button
               type="submit"
-              className={`flex-1 px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors flex items-center justify-center gap-2`}
-              style={{ backgroundColor: color.primary.action }}
+              className="text-sm font-medium text-white transition-colors flex items-center justify-center gap-2"
+              style={{
+                backgroundColor: buttons.action.background,
+                padding: `${buttons.action.paddingY} ${buttons.action.paddingX}`,
+                borderRadius: buttons.action.borderRadius,
+              }}
               disabled={isSubmitting}
             >
               {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
