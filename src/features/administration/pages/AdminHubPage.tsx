@@ -293,8 +293,8 @@ export default function AdminHubPage() {
           category: "System Configuration",
         },
         {
-          title: "Dynamic Modal Generator",
-          description: "Manage customer identity fields available for dynamic variable insertion in messages and creatives",
+          title: "Message Variables Configuration",
+          description: "Manage KPI fields available for dynamic variable insertion in messages and creatives",
           icon: Layers,
           href: "/dashboard/dynamic-message-variables",
           category: "System Configuration",

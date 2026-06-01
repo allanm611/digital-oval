@@ -128,16 +128,14 @@ class KPIService {
   }
 
   async toggleKPIStatus(
-    fieldValue: string,
-    isActive: boolean,
-    updatedBy: number
+    id: number,
+    isActive: boolean
   ): Promise<void> {
     await this.request<void>("/status", {
       method: "PATCH",
       body: JSON.stringify({
-        fieldValue,
+        id,
         is_active: isActive,
-        updated_by: updatedBy,
       }),
     });
   }

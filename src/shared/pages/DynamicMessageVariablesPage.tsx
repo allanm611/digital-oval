@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { color, tw } from '../utils/utils';
 import { useMessageVariableFields } from '../../features/manual-broadcast/hooks/useMessageVariableFields';
-import { dynamicMessageVariableService } from '../../features/manual-broadcast/services/dynamicMessageVariableService';
 import { useToast } from '../../contexts/ToastContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { extractBackendError } from "../utils/errorHandler";;;
+import { kpiService } from '../../features/kpis/services/kpiService';
+import { kpiCategoryService } from '../../features/kpis/services/kpiCategoryService';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import BackButton from '../components/ui/BackButton';
 import ActivateDeactivateButton from '../components/ui/ActivateDeactivateButton';
@@ -24,25 +26,24 @@ interface MessageVariableFieldConfig {
 
 interface CategoryConfig {
   id?: string;
+  backendId?: number;
   name: string;
   is_active: boolean;
   fields: MessageVariableFieldConfig[];
   sub_categories?: CategoryConfig[];
 }
 
-// Mock endpoint calls while waiting for backend
-const MOCK_DYNAMIC_MESSAGE_VARIABLES = true;
-
 export default function DynamicMessageVariablesPage() {
   const { categories, allFields, isLoading } = useMessageVariableFields();
   const { success: showToast, error: showError } = useToast();
+  const { user } = useAuth();
 
   const [categoryConfigs, setCategoryConfigs] = useState<CategoryConfig[]>([]);
   const [fieldConfigs, setFieldConfigs] = useState<MessageVariableFieldConfig[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [togglingId, setTogglingId] = useState<number | null>(null);
+  const [togglingFieldIds, setTogglingFieldIds] = useState<Map<number, 'activate' | 'deactivate'>>(new Map());
   const [togglingCategoryId, setTogglingCategoryId] = useState<string | null>(null);
   const [isFieldsModalOpen, setIsFieldsModalOpen] = useState(false);
   const [selectedCategoryForModal, setSelectedCategoryForModal] = useState<CategoryConfig | null>(null);
@@ -57,59 +58,52 @@ export default function DynamicMessageVariablesPage() {
 
   // Initialize configurations from fetched fields
   useEffect(() => {
-    const loadStoredConfigurations = async () => {
-      try {
-        const storedConfigs = await dynamicMessageVariableService.loadConfigurations();
+    try {
+      const configs: MessageVariableFieldConfig[] = allFields.map((field) => ({
+        id: field.id,
+        field_name: field.field_name,
+        field_value: field.field_value,
+        description: field.description,
+        type: field.type,
+        is_active: field.is_active !== false,
+        default_value: field.default_value || '',
+      }));
+      setFieldConfigs(configs);
 
-        const configs: MessageVariableFieldConfig[] = allFields.map((field) => {
-          const stored = storedConfigs.find((c) => c.id === field.id);
-          return (
-            stored || {
-              id: field.id,
-              field_name: field.field_name,
-              field_value: field.field_value,
-              description: field.description,
-              type: field.type,
-              is_active: true,
-              default_value: field.default_value || '',
-            }
-          );
+      // Build category configs with sub-categories support
+      const buildCategoryConfigs = (categories: any[]): CategoryConfig[] => {
+        return categories
+          .filter((cat) => {
+            const catValue = (cat.value || '').toLowerCase();
+            return !['segments', 'quicklists'].includes(catValue);
+          })
+          .map((cat) => {
+          // Get direct fields
+          const catFieldIds = new Set<number>();
+          if (cat.fields && Array.isArray(cat.fields)) {
+            cat.fields.forEach((f: any) => catFieldIds.add(f.id));
+          }
+
+          // Build sub-categories if they exist
+          const subCategoryConfigs = cat.sub_categories
+            ? buildCategoryConfigs(cat.sub_categories)
+            : undefined;
+
+          return {
+            id: cat.name || cat.category || 'General',
+            backendId: cat.id,
+            name: cat.name || cat.category || 'General',
+            is_active: cat.is_active !== false,
+            fields: configs.filter((field) => catFieldIds.has(field.id)),
+            sub_categories: subCategoryConfigs,
+          };
         });
-        setFieldConfigs(configs);
+      };
 
-        // Build category configs with sub-categories support
-        const buildCategoryConfigs = (categories: any[]): CategoryConfig[] => {
-          return categories.map((cat) => {
-            // Get direct fields
-            const catFieldIds = new Set<number>();
-            if (cat.fields && Array.isArray(cat.fields)) {
-              cat.fields.forEach((f: any) => catFieldIds.add(f.id));
-            }
-
-            // Build sub-categories if they exist
-            const subCategoryConfigs = cat.sub_categories
-              ? buildCategoryConfigs(cat.sub_categories)
-              : undefined;
-
-            return {
-              id: cat.name || cat.category || 'General',
-              name: cat.name || cat.category || 'General',
-              is_active: true,
-              fields: configs.filter((field) => catFieldIds.has(field.id)),
-              sub_categories: subCategoryConfigs,
-            };
-          });
-        };
-
-        const catConfigs = buildCategoryConfigs(categories);
-        setCategoryConfigs(catConfigs);
-      } catch (error) {
-        console.error('Failed to load configurations:', error);
-      }
-    };
-
-    if (allFields.length > 0) {
-      loadStoredConfigurations();
+      const catConfigs = buildCategoryConfigs(categories);
+      setCategoryConfigs(catConfigs);
+    } catch (error) {
+      console.error('Failed to load configurations:', error);
     }
   }, [allFields, categories]);
 
@@ -168,13 +162,19 @@ export default function DynamicMessageVariablesPage() {
       };
 
       const foundCat = findCategoryRecursive(categoryConfigs);
-      const isDeactivating = foundCat?.is_active;
+      if (!foundCat || !foundCat.backendId) {
+        showError('Failed to update category');
+        return;
+      }
 
-      // Toggle category recursively
+      const isDeactivating = foundCat.is_active;
+      const newStatus = !isDeactivating;
+
+      // Toggle category recursively in UI (optimistic update)
       const toggleCategoryRecursive = (cats: CategoryConfig[]): CategoryConfig[] => {
         return cats.map((cat) => {
           if (cat.id === categoryId) {
-            return { ...cat, is_active: !cat.is_active };
+            return { ...cat, is_active: newStatus };
           }
           if (cat.sub_categories) {
             return { ...cat, sub_categories: toggleCategoryRecursive(cat.sub_categories) };
@@ -183,13 +183,15 @@ export default function DynamicMessageVariablesPage() {
         });
       };
 
+      const oldCategoryConfigs = categoryConfigs;
       const updated = toggleCategoryRecursive(categoryConfigs);
       setCategoryConfigs(updated);
 
-      // If deactivating, also deactivate all fields in this category
-      let updatedFields = fieldConfigs;
+      // If deactivating, also deactivate all fields in this category (optimistic)
+      let oldFieldConfigs = fieldConfigs;
       if (isDeactivating && foundCat) {
-        updatedFields = fieldConfigs.map((field) =>
+        oldFieldConfigs = fieldConfigs;
+        const updatedFields = fieldConfigs.map((field) =>
           foundCat.fields.some((f) => f.id === field.id)
             ? { ...field, is_active: false }
             : field
@@ -197,13 +199,24 @@ export default function DynamicMessageVariablesPage() {
         setFieldConfigs(updatedFields);
       }
 
-      if (!MOCK_DYNAMIC_MESSAGE_VARIABLES) {
-        await dynamicMessageVariableService.saveConfigurations(updatedFields);
+      try {
+        // Call backend to update category status
+        await kpiCategoryService.updateKpiCategory(foundCat.backendId, {
+          is_active: newStatus,
+        });
+
+        // Emit event to notify other components about configuration changes
+        window.dispatchEvent(new CustomEvent('messageVariablesConfigurationUpdated'));
+        showToast(`Category ${isDeactivating ? 'deactivated' : 'activated'} successfully`);
+      } catch (error) {
+        // Revert UI if API fails
+        setCategoryConfigs(oldCategoryConfigs);
+        setFieldConfigs(oldFieldConfigs);
+        throw error;
       }
-      showToast(`Category ${isDeactivating ? 'deactivated' : 'activated'} successfully`);
     } catch (error) {
       console.error('Failed to toggle category activation:', error);
-      showError('Failed to update category');
+      showError(extractBackendError(error, 'Failed to update category'));
     } finally {
       setTogglingCategoryId(null);
     }
@@ -211,24 +224,47 @@ export default function DynamicMessageVariablesPage() {
 
   const handleToggleFieldActive = async (fieldId: number, desiredState?: boolean) => {
     try {
-      setTogglingId(fieldId);
+      const field = fieldConfigs.find((f) => f.id === fieldId);
+      if (!field) {
+        showError('Failed to update field');
+        return;
+      }
+
+      const newState = desiredState !== undefined ? desiredState : !field.is_active;
+      const action = newState ? 'activate' : 'deactivate';
+
+      setTogglingFieldIds((prev) => new Map(prev).set(fieldId, action));
+
+      // Update UI optimistically
+      const oldFieldConfigs = fieldConfigs;
       const updated = fieldConfigs.map((config) =>
         config.id === fieldId
-          ? { ...config, is_active: desiredState !== undefined ? desiredState : !config.is_active }
+          ? { ...config, is_active: newState }
           : config
       );
       setFieldConfigs(updated);
-      if (!MOCK_DYNAMIC_MESSAGE_VARIABLES) {
-        await dynamicMessageVariableService.saveConfigurations(updated);
+
+      try {
+        // Call backend to update field status
+        await kpiService.toggleKPIStatus(field.id, newState);
+
+        // Emit event to notify other components about configuration changes
+        window.dispatchEvent(new CustomEvent('messageVariablesConfigurationUpdated'));
+        showToast(`Field ${newState ? 'activated' : 'deactivated'} successfully`);
+      } catch (error) {
+        // Revert UI if API fails
+        setFieldConfigs(oldFieldConfigs);
+        throw error;
       }
-      const field = fieldConfigs.find((f) => f.id === fieldId);
-      const newState = desiredState !== undefined ? desiredState : !field?.is_active;
-      showToast(`Field ${newState ? 'activated' : 'deactivated'} successfully`);
     } catch (error) {
       console.error('Failed to toggle field activation:', error);
-      showError('Failed to update field');
+      showError(extractBackendError(error, 'Failed to update field'));
     } finally {
-      setTogglingId(null);
+      setTogglingFieldIds((prev) => {
+        const next = new Map(prev);
+        next.delete(fieldId);
+        return next;
+      });
     }
   };
 
@@ -277,7 +313,7 @@ export default function DynamicMessageVariablesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <BackButton fallbackTo="/dashboard/configurations" showBreadcrumb={true} currentLabel="Dynamic Modal Generator" />
+      <BackButton fallbackTo="/dashboard/administration" showBreadcrumb={true} currentLabel="Message Variables Configuration" />
 
       {/* Search Bar and Category Filter */}
       <div className="flex gap-4">
@@ -315,7 +351,7 @@ export default function DynamicMessageVariablesPage() {
             {searchTerm ? 'No categories found' : 'No categories available'}
           </h3>
           <p className={tw.textSecondary}>
-            {searchTerm ? 'Try adjusting your search terms' : 'No categories are available'}
+            {searchTerm ? 'Try adjusting your search terms' : 'No message variables have been activated yet'}
           </p>
         </div>
       ) : (
@@ -447,18 +483,18 @@ export default function DynamicMessageVariablesPage() {
                             <div className="flex gap-2 justify-center">
                               <button
                                 onClick={() => handleToggleFieldActive(field.id, true)}
-                                disabled={field.is_active || togglingId === field.id || !selectedCategoryForModal.is_active}
+                                disabled={field.is_active || togglingFieldIds.has(field.id) || !selectedCategoryForModal.is_active}
                                 className="px-4 py-2 text-sm font-medium text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 style={{ backgroundColor: color.primary.action }}
                               >
-                                {togglingId === field.id ? '...' : 'Activate'}
+                                {togglingFieldIds.get(field.id) === 'activate' ? '...' : 'Activate'}
                               </button>
                               <button
                                 onClick={() => handleToggleFieldActive(field.id, false)}
-                                disabled={!field.is_active || togglingId === field.id || !selectedCategoryForModal.is_active}
+                                disabled={!field.is_active || togglingFieldIds.has(field.id) || !selectedCategoryForModal.is_active}
                                 className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                               >
-                                {togglingId === field.id ? '...' : 'Deactivate'}
+                                {togglingFieldIds.get(field.id) === 'deactivate' ? '...' : 'Deactivate'}
                               </button>
                             </div>
                           </td>

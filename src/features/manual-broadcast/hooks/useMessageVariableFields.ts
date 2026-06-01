@@ -3,15 +3,14 @@ import { customerIdentityService } from '../../customerIdentity/services/custome
 
 /**
  * Hook to fetch and manage message variable fields for dynamic variable insertion
- * 
+ *
  * USED BY:
  * - Manual Communications (CascadingVariableSelector)
  * - Offer Creatives (OfferCreativeModal - variable insertion)
- * 
- * FUTURE: When backend adds support, will filter by:
- * - is_active: true (only activated fields shown)
- * - default_value: used as placeholder/default
- * 
+ *
+ * Filters by is_active: true to only show fields activated in Message Variables Configuration
+ * default_value is used as placeholder/default
+ *
  * Same endpoint as customer identity fields, but filtered for message variables only
  */
 
@@ -43,6 +42,7 @@ interface UseMessageVariableFieldsReturn {
   error: string | null;
   getFieldById: (id: number) => MessageVariableField | undefined;
   getFieldByValue: (value: string) => MessageVariableField | undefined;
+  refetch: () => Promise<void>;
 }
 
 export function useMessageVariableFields(): UseMessageVariableFieldsReturn {
@@ -51,49 +51,75 @@ export function useMessageVariableFields(): UseMessageVariableFieldsReturn {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const fetchFields = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Fetch all categories with their fields
+      const profiles = await customerIdentityService.getProfiles(true);
+      const allCategories = profiles.data?.[0]?.field_selector_config ?? [];
+
+      // Extract all fields across all categories (including sub-categories), filtering by is_active
+      const allFieldsList: MessageVariableField[] = [];
+      const extractFieldsFromCategory = (cat: any) => {
+        // Extract fields from the category itself (only if is_active)
+        if (cat.fields && Array.isArray(cat.fields)) {
+          const activeFields = cat.fields.filter((f: any) => f.is_active !== false);
+          allFieldsList.push(...activeFields);
+        }
+        // Extract fields from sub-categories
+        if (cat.sub_categories && Array.isArray(cat.sub_categories)) {
+          cat.sub_categories.forEach((subCat: any) => {
+            if (subCat.fields && Array.isArray(subCat.fields)) {
+              const activeSubFields = subCat.fields.filter((f: any) => f.is_active !== false);
+              allFieldsList.push(...activeSubFields);
+            }
+          });
+        }
+      };
+      allCategories.forEach(extractFieldsFromCategory);
+
+      // Filter categories recursively to only include those that are active and have active fields
+      const filterCategoriesRecursive = (cats: any[]): MessageVariableCategory[] => {
+        return cats
+          .filter((cat) => cat.is_active !== false)
+          .map((cat) => ({
+            ...cat,
+            fields: (cat.fields || []).filter((f: any) => f.is_active !== false),
+            sub_categories: cat.sub_categories ? filterCategoriesRecursive(cat.sub_categories) : undefined,
+          }))
+          .filter((cat) => (cat.fields && cat.fields.length > 0) || (cat.sub_categories && cat.sub_categories.length > 0));
+      };
+
+      const filteredCategories = filterCategoriesRecursive(allCategories);
+
+      // Set categories and all fields
+      setCategories(filteredCategories as MessageVariableCategory[]);
+      setAllFields(allFieldsList);
+    } catch (err) {
+      console.error('Failed to fetch message variable fields:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load message variable fields');
+      setCategories([]);
+      setAllFields([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    const fetchFields = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
+    fetchFields();
+  }, [fetchFields]);
 
-        // Fetch all categories with their fields
-        const profiles = await customerIdentityService.getProfiles(true);
-        const allCategories = profiles.data?.[0]?.field_selector_config ?? [];
-
-        // Extract all fields across all categories (including sub-categories)
-        const allFieldsList: MessageVariableField[] = [];
-        const extractFieldsFromCategory = (cat: any) => {
-          // Extract fields from the category itself
-          if (cat.fields && Array.isArray(cat.fields)) {
-            allFieldsList.push(...cat.fields);
-          }
-          // Extract fields from sub-categories
-          if (cat.sub_categories && Array.isArray(cat.sub_categories)) {
-            cat.sub_categories.forEach((subCat: any) => {
-              if (subCat.fields && Array.isArray(subCat.fields)) {
-                allFieldsList.push(...subCat.fields);
-              }
-            });
-          }
-        };
-        allCategories.forEach(extractFieldsFromCategory);
-
-        // Set categories and all fields
-        setCategories(allCategories as MessageVariableCategory[]);
-        setAllFields(allFieldsList);
-      } catch (err) {
-        console.error('Failed to fetch message variable fields:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load message variable fields');
-        setCategories([]);
-        setAllFields([]);
-      } finally {
-        setIsLoading(false);
-      }
+  // Listen for updates from Message Variables Configuration
+  useEffect(() => {
+    const handleConfigurationUpdate = () => {
+      fetchFields();
     };
 
-    fetchFields();
-  }, []);
+    window.addEventListener('messageVariablesConfigurationUpdated', handleConfigurationUpdate);
+    return () => window.removeEventListener('messageVariablesConfigurationUpdated', handleConfigurationUpdate);
+  }, [fetchFields]);
 
   const getFieldById = useCallback(
     (id: number): MessageVariableField | undefined => {
@@ -116,5 +142,6 @@ export function useMessageVariableFields(): UseMessageVariableFieldsReturn {
     error,
     getFieldById,
     getFieldByValue,
+    refetch: fetchFields,
   };
 }

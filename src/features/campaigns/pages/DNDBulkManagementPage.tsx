@@ -63,9 +63,8 @@ export default function DNDBulkManagementPage() {
       setChannels(allChannels.filter((ch) => ch.is_active));
       setDndSubscriptions(subscriptions);
       setSelectedRows(new Set());
-      setSelectAll(false);
     } catch (err) {
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -123,7 +122,7 @@ export default function DNDBulkManagementPage() {
       setShowBatchDeleteModal(false);
       await loadData();
     } catch (err) {
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsBatchProcessing(false);
     }
@@ -162,7 +161,7 @@ export default function DNDBulkManagementPage() {
       setShowAddModal(false);
       await loadData();
     } catch (err) {
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     }
   };
 
@@ -194,7 +193,7 @@ export default function DNDBulkManagementPage() {
       setDeleteConfirmName("");
     } catch (err) {
       setDndSubscriptions(oldSubscriptions);
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsRemoving(false);
     }
