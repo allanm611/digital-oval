@@ -259,14 +259,33 @@ export default function ManageQuickListCustomersModal({
   const getTableColumns = () => {
     if (mode === "add") return ["Name", "Msisdn", "Email", "Status"];
     if (items.length > 0) {
-      return Object.keys(items[0] as QuickListData)
-        .filter(
-          (key) =>
-            !key.startsWith("_") &&
-            key !== "id" &&
-            !["id", "quicklist_id"].includes(key),
-        )
-        .slice(0, 4);
+      const item = items[0] as any;
+      const columns: string[] = [];
+
+      // Add identifier first
+      columns.push("identifier");
+
+      // Add identifier_type
+      if ("identifier_type" in item) {
+        columns.push("identifier_type");
+      }
+
+      // Add fields from row_data (excluding subscription id)
+      if (item.row_data && typeof item.row_data === "object") {
+        const rowDataKeys = Object.keys(item.row_data)
+          .filter((key) => !key.toLowerCase().includes("subscription id"))
+          // Prioritize first name and last name
+          .sort((a, b) => {
+            const aIsName = a.toLowerCase().includes("name");
+            const bIsName = b.toLowerCase().includes("name");
+            if (aIsName && !bIsName) return -1;
+            if (!aIsName && bIsName) return 1;
+            return 0;
+          });
+        columns.push(...rowDataKeys);
+      }
+
+      return columns;
     }
     return [];
   };
@@ -287,8 +306,15 @@ export default function ManageQuickListCustomersModal({
           return "—";
       }
     }
-    const data = item as QuickListData;
-    return String(data[column as keyof QuickListData] || "—");
+    const data = item as any;
+
+    // Check if value is in row_data first
+    if (data.row_data && column in data.row_data) {
+      return String(data.row_data[column] || "—");
+    }
+
+    // Otherwise check top-level properties
+    return String(data[column] || "—");
   };
 
   if (!isOpen || !quicklist) return null;

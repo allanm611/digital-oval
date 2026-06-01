@@ -19,7 +19,6 @@ export default defineConfig({
       output: {
         manualChunks: {
           // Vendor chunks
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           'vendor-ui': ['@headlessui/react', 'lucide-react'],
 
           // Feature chunks
@@ -35,6 +34,9 @@ export default defineConfig({
           'vendor-geo': ['world-countries', 'i18n-iso-countries'],
         }
       }
+    },
+    optimizeDeps: {
+      include: ['react', 'react-dom', 'react-router-dom'],
     }
   }
 });

@@ -85,7 +85,7 @@ export default function SegmentDetailsPage() {
   const [segment, setSegment] = useState<Segment | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [membersCount, setMembersCount] = useState<number>(0);
-  const [mockCustomerCount, setMockCustomerCount] = useState<number | null>(
+  const [segmentSize, setSegmentSize] = useState<number | null>(
     null,
   );
   const [isLoadingMembers, setIsLoadingMembers] = useState(false);
@@ -300,7 +300,20 @@ export default function SegmentDetailsPage() {
       // Extract data from response (backend wraps it in data object)
       const segmentData =
         (response as { data?: Segment }).data || (response as Segment);
+      console.log("=== Full segmentData:", segmentData);
+      console.log("=== segmentData keys:", Object.keys(segmentData || {}));
       setSegment(segmentData as Segment);
+
+      // Load size_estimate from segment if available
+      console.log("=== Loaded segment, size_estimate:", (segmentData as any).size_estimate);
+      console.log("=== Type of size_estimate:", typeof (segmentData as any).size_estimate);
+      if ((segmentData as any).size_estimate) {
+        const sizeEstimate = Number((segmentData as any).size_estimate);
+        console.log("=== Setting segmentSize to:", sizeEstimate);
+        setSegmentSize(sizeEstimate);
+      } else {
+        console.log("=== size_estimate NOT FOUND in segmentData");
+      }
 
       // Load category name if category exists
       if ((segmentData as Segment).category) {
@@ -500,33 +513,6 @@ export default function SegmentDetailsPage() {
     }
   }, [id, loadSegment, loadMembersCount]);
 
-  // Load mock customer count from localStorage
-  useEffect(() => {
-    if (id) {
-      const saved = localStorage.getItem("segmentMockCounts");
-      if (saved) {
-        try {
-          const counts = JSON.parse(saved);
-          setMockCustomerCount(counts[Number(id)] || null);
-        } catch {
-          setMockCustomerCount(null);
-        }
-      }
-    }
-  }, [id]);
-
-  // Load mock customer count from localStorage on mount
-  useEffect(() => {
-    if (id) {
-      const saved = localStorage.getItem("segmentMockCounts");
-      if (saved) {
-        const counts = JSON.parse(saved);
-        if (counts[Number(id)]) {
-          setMockCustomerCount(counts[Number(id)]);
-        }
-      }
-    }
-  }, [id]);
 
   // Separate effect for members to avoid loops
   useEffect(() => {
@@ -727,25 +713,32 @@ export default function SegmentDetailsPage() {
   };
 
   const handleComputeSize = async () => {
-    if (!id) return;
+    console.log("=== handleComputeSize called ===");
+    if (!id) {
+      console.log("No ID provided");
+      return;
+    }
     setIsComputingSize(true);
     try {
+      console.log("Calling computeSegmentSize with id:", id);
       const response = await segmentService.computeSegmentSize(Number(id));
-      if (response.success) {
-        // Update the mock customer count with the actual computed size
-        const computedSize =
-          response.data?.estimated_size || Math.floor(Math.random() * 7) + 4;
-        setMockCustomerCount(computedSize);
+      console.log("=== Full response ===", response);
+      console.log("=== response.data ===", response.data);
+      console.log("=== size_estimate ===", response.data?.size_estimate);
+      console.log("=== response.success ===", response.success);
 
-        // Save to localStorage
-        const saved = localStorage.getItem("segmentMockCounts");
-        const counts = saved ? JSON.parse(saved) : {};
-        counts[Number(id)] = computedSize;
-        localStorage.setItem("segmentMockCounts", JSON.stringify(counts));
+      if (response.success) {
+        // Update the customer count with the backend response
+        const computedSize = response.data?.size_estimate ? Number(response.data.size_estimate) : null;
+        console.log("=== Computed size (final) ===", computedSize);
+        setSegmentSize(computedSize);
 
         success("Size computed", `Segment size: ${computedSize} customers`);
+      } else {
+        console.log("Response not successful:", response);
       }
     } catch (err) {
+      console.error("=== Error in handleComputeSize ===", err);
       showError("Error computing size", extractBackendError(err, "Error computing size. Please try again."));
     } finally {
       setIsComputingSize(false);
@@ -1267,9 +1260,9 @@ export default function SegmentDetailsPage() {
               </div>
             ) : (
               <p className="text-xl font-bold text-gray-900">
-                {mockCustomerCount !== null
-                  ? mockCustomerCount.toLocaleString()
-                  : "0"}
+                {segmentSize !== null
+                  ? segmentSize.toLocaleString()
+                  : "—"}
               </p>
             )}
           </div>

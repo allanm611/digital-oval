@@ -534,7 +534,7 @@ export default function NotificationSettingsPage() {
                 // Group subscriptions by category
                 const grouped: Record<string, NotificationSubscription[]> = {};
                 localSubscriptions.forEach((sub) => {
-                  const catId = String(sub.category_id || "uncategorized");
+                  const catId = String(sub.category_id || "Categories");
                   if (!grouped[catId]) {
                     grouped[catId] = [];
                   }
@@ -544,9 +544,9 @@ export default function NotificationSettingsPage() {
                 // Only show categories that have subscriptions
                 return Object.entries(grouped).map(([categoryId, subs]) => {
                   const categoryName =
-                    categoryId !== "uncategorized"
-                      ? categoryMap[categoryId] || "Uncategorized"
-                      : "Uncategorized";
+                    categoryId !== "Categories"
+                      ? categoryMap[categoryId] || "Categories"
+                      : "Categories";
 
                   const isExpanded = expandedCategories[categoryId] ?? true;
 

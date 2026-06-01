@@ -11,6 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import {
@@ -19,6 +20,8 @@ import {
   Download,
   MousePointerClick,
   Users2,
+  Eye,
+  FileText,
 } from "lucide-react";
 import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
 import { colors } from "../../../shared/utils/tokens";
@@ -427,6 +430,7 @@ const statIcons = {
 };
 
 export default function CampaignReportsPage() {
+  const navigate = useNavigate();
   const { t } = useLanguage();
   const { error: showError } = useToast();
   const [tableQuery, setTableQuery] = useState("");
@@ -1259,6 +1263,7 @@ export default function CampaignReportsPage() {
                     "Target Group %",
                     "Control Group %",
                     "Last Run",
+                    "Actions",
                   ].map((header, idx, arr) => (
                     <th
                       key={header}
@@ -1372,11 +1377,40 @@ export default function CampaignReportsPage() {
                       className="px-6 py-4"
                       style={{
                         backgroundColor: colors.surface.tablebodybg,
+                      }}
+                    >
+                      {entry.lastRunDate}
+                    </td>
+                    <td
+                      className="px-6 py-4 space-x-2 flex items-center"
+                      style={{
+                        backgroundColor: colors.surface.tablebodybg,
                         borderTopRightRadius: "0.375rem",
                         borderBottomRightRadius: "0.375rem",
                       }}
                     >
-                      {entry.lastRunDate}
+                      <button
+                        onClick={() => {
+                          if (entry.campaign?.id) {
+                            navigate(`/dashboard/campaigns/${entry.campaign.id}`);
+                          }
+                        }}
+                        className="inline-flex items-center justify-center p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                        title="View campaign details"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (entry.campaign?.id) {
+                            navigate(`/dashboard/campaigns/${entry.campaign.id}/report`);
+                          }
+                        }}
+                        className="inline-flex items-center justify-center p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                        title="View campaign report"
+                      >
+                        <FileText className="h-4 w-4" />
+                      </button>
                     </td>
                   </tr>
                 ))}

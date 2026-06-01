@@ -1220,9 +1220,7 @@ export default function CampaignDetailsPage() {
                 {/* View Campaign Report */}
                 <button
                   onClick={() => {
-                    navigate(`/dashboard/reports/campaigns/${id}`, {
-                      state: { returnTo: { pathname: location.pathname } },
-                    });
+                    navigate(`/dashboard/campaigns/${id}/report`);
                     setShowMoreMenu(false);
                   }}
                   className="w-full flex items-center px-4 py-2 text-sm text-gray-700"

@@ -697,6 +697,12 @@ const AnalyticsPages = {
         /* webpackPrefetch: true */ "../../reports-analytics/pages/CampaignReportsPage"
       ),
   ),
+  CampaignDetailReportPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../reports-analytics/pages/CampaignDetailReportPage"
+      ),
+  ),
   DeliverySMSReportsPage: lazy(
     () =>
       import(
@@ -889,6 +895,10 @@ export default function Dashboard() {
           <Route
             path="/campaigns/:id"
             element={<CampaignPages.CampaignDetailsPage />}
+          />
+          <Route
+            path="/campaigns/:id/report"
+            element={<AnalyticsPages.CampaignDetailReportPage />}
           />
           <Route
             path="/campaigns/:campaignId/flows/:flowId"
