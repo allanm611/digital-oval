@@ -1,3 +1,10 @@
+## [1.4.3](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.2...v1.4.3) (2026-06-01)
+
+
+### Bug Fixes
+
+* fixing the remove modal on quicklists, remove dummy data from segment details, set up a campaign reports page ([bbcab02](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/bbcab02fcfe1cbda6f22a9773ca2e73f5f0f0a16))
+
 ## [1.4.2](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.1...v1.4.2) (2026-05-30)
 
 
