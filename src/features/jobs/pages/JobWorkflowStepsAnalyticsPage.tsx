@@ -315,7 +315,7 @@ export default function JobWorkflowStepsAnalyticsPage() {
   return (
     <div className="">
       {/* Header */}
-      <BackButton` : ""}`} showBreadcrumb={true} currentLabel="Job Workflow Steps Analytics" />
+      <BackButton showBreadcrumb={true} currentLabel="Job Workflow Steps Analytics" />
 
       {!analyticsData ? (
         <div

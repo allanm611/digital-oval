@@ -96,7 +96,7 @@ export default function OfferApprovalHistoryPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <BackButton`} showBreadcrumb={true} currentLabel="Offer Approval History" />
+      <BackButton showBreadcrumb={true} currentLabel="Offer Approval History" />
 
       {/* Content */}
       <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
