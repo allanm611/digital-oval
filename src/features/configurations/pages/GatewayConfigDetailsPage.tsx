@@ -151,7 +151,7 @@ export default function GatewayConfigDetailsPage({ channel }: GatewayConfigDetai
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <BackButton fallbackTo="/dashboard/gateway-configurations" showBreadcrumb={true} currentLabel="Gateway Configuration Details" />
+          <BackButton showBreadcrumb={true} currentLabel="Gateway Configuration Details" />
           <div></div>
         </div>
 

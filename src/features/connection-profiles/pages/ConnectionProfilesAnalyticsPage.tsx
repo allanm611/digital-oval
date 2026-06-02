@@ -259,7 +259,7 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
 
   return (
     <div className="space-y-6">
-      <BackButton fallbackTo="/dashboard/connection-profiles" showBreadcrumb={true} currentLabel="Connection Profiles Analytics" />
+      <BackButton showBreadcrumb={true} currentLabel="Connection Profiles Analytics" />
 
       {isLoading ? (
         <div className="flex justify-center py-16">

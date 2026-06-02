@@ -255,9 +255,9 @@ export default function CreateRoutePage() {
     <div className="space-y-6">
       {/* Breadcrumb */}
       <BackButton
-        fallbackTo="/dashboard/routes"
+       
         showBreadcrumb={true}
-        parentLabel="Routes"
+       
         currentLabel="Create Route"
       />
 

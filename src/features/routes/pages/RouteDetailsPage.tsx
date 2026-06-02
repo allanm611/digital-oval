@@ -147,7 +147,7 @@ export default function RouteDetailsPage() {
   if (!route) {
     return (
       <div className="space-y-6">
-        <BackButton fallbackTo="/dashboard/routes" showBreadcrumb={true} currentLabel="Route Details" />
+        <BackButton showBreadcrumb={true} currentLabel="Route Details" />
         <p className={tw.textSecondary}>Route not found</p>
       </div>
     );
@@ -158,7 +158,7 @@ export default function RouteDetailsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <BackButton fallbackTo="/dashboard/routes" showBreadcrumb={true} currentLabel="Route Details" />
+          <BackButton showBreadcrumb={true} currentLabel="Route Details" />
           <div></div>
         </div>
 

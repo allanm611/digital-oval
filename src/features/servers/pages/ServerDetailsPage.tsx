@@ -391,7 +391,7 @@ export default function ServerDetailsPage() {
           className={`mt-4 inline-flex items-center gap-2 ${tw.rounded} border border-gray-200 px-4 py-2 text-sm font-medium text-black hover:bg-gray-50`}
         >
           <BackButton
-            fallbackTo="/dashboard/servers"
+           
             iconSize="w-4 h-4"
             className="p-0 text-black hover:text-black"
           />
@@ -404,7 +404,7 @@ export default function ServerDetailsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-        <BackButton fallbackTo="/dashboard/servers" showBreadcrumb={true} currentLabel="Server Details" />
+        <BackButton showBreadcrumb={true} currentLabel="Server Details" />
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={handleActivationToggle}

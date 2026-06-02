@@ -990,7 +990,7 @@ export default function OverallDashboardPerformancePage() {
   return (
     <div className="space-y-6">
       <header className="space-y-4">
-        <BackButton fallbackTo="/dashboard" showBreadcrumb={true} currentLabel="Overall Dashboard Performance" />
+        <BackButton showBreadcrumb={true} currentLabel="Overall Dashboard Performance" />
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap gap-2">
             {timeRangeOptions.map((option) => (

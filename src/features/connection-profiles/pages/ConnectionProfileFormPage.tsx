@@ -555,7 +555,7 @@ export default function ConnectionProfileFormPage({
     <div className="space-y-6">
       {!onSuccess && (
         <BackButton
-          fallbackTo="/dashboard/connection-profiles"
+         
           showBreadcrumb={true}
           currentLabel={
             mode === "create"
@@ -1456,12 +1456,12 @@ export default function ConnectionProfileFormPage({
             {saving ? (
               <>
                 <LoadingSpinner size="sm" color="white" />
-                Saving...
+                {mode === "create" ? "Creating..." : "Updating..."}
               </>
             ) : (
               <>
                 <Save className="w-4 h-4" />
-                {mode === "create" ? "Create Profile" : "Update Profile"}
+                {mode === "create" ? "Create" : "Update"}
               </>
             )}
           </button>

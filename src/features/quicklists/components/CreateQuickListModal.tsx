@@ -1032,9 +1032,9 @@ export default function CreateQuickListModal({
                   {isFileProcessing
                     ? "Processing file..."
                     : isSubmitting
-                      ? "Creating..."
+                      ? isCreateMode ? "Creating..." : "Updating..."
                       : submitLabel ||
-                        (isCreateMode ? "Create quick list" : "Save Changes")}
+                        (isCreateMode ? "Create" : "Update")}
                 </button>
             </div>
           </div>

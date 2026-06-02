@@ -176,8 +176,6 @@ export default function OfferCreativeDetailsPage() {
       <div className="flex items-center justify-between">
         <div className="space-y-3">
           <BackButton
-            fallbackTo={`/dashboard/offers/${creative?.offer_id || ""}`}
-            onClick={handleBack}
             showBreadcrumb={true}
             currentLabel="Creative Details"
           />

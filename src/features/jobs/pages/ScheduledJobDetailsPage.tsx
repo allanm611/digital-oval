@@ -540,7 +540,7 @@ export default function ScheduledJobDetailsPage() {
 
   if (!job) {
     return (
-      <div className="space-y-6 p-6">
+      <div className=" p-6">
         <div className="text-center py-12">
           <AlertCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
           <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
@@ -563,10 +563,10 @@ export default function ScheduledJobDetailsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="">
       {/* Header */}
       <BackButton
-        fallbackTo="/dashboard/scheduled-jobs"
+       
         showBreadcrumb={true}
         currentLabel="Scheduled Job Details"
       />
@@ -663,7 +663,7 @@ export default function ScheduledJobDetailsPage() {
       </div>
 
       {/* Main Content */}
-      <div className="space-y-6">
+      <div className="">
         {/* Performance Stats Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <div
@@ -853,7 +853,7 @@ export default function ScheduledJobDetailsPage() {
           <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
             How the Job Runs
           </h2>
-          <div className="space-y-6">
+          <div className="">
             {/* Behavior Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className={`${tw.rounded} border border-gray-200 bg-white p-4`}>
@@ -954,7 +954,7 @@ export default function ScheduledJobDetailsPage() {
           <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
             Execution History
           </h2>
-          <div className="space-y-6">
+          <div className="">
             {/* Timeline Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className={`${tw.rounded} border border-gray-200 bg-white p-4`}>
@@ -1259,7 +1259,7 @@ export default function ScheduledJobDetailsPage() {
             Metadata
           </h2>
           {job.metadata && Object.keys(job.metadata || {}).length > 0 ? (
-            <div className="space-y-6">
+            <div className="">
               {/* Non-segment metadata fields on one line */}
               {(() => {
                 const otherFields: Record<string, unknown> = {};

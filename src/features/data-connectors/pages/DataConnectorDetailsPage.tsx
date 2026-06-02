@@ -258,7 +258,7 @@ export default function DataConnectorDetailsPage() {
 
   if (!connector) {
     return (
-      <div className="space-y-6">
+      <div className="">
         <div className="text-center py-12">
           <Database
             className={`w-16 h-16 text-[${color.primary.accent}] mx-auto mb-4`}
@@ -286,11 +286,11 @@ export default function DataConnectorDetailsPage() {
   const connectorTypeLabel = getConnectorDisplayName(connector.type);
 
   return (
-    <div className="space-y-6">
+    <div className="">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <BackButton
-          fallbackTo="/dashboard/data-connectors"
+         
           showBreadcrumb={true}
           currentLabel="Data Connector Details"
         />

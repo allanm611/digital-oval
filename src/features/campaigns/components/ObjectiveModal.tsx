@@ -493,18 +493,23 @@ export default function ObjectiveModal({
 
           {/* Footer */}
           <div className="p-6 border-t border-gray-200 bg-gray-50">
-            <div className="flex space-x-3">
+            <div className="flex items-center justify-end space-x-3">
               <button
                 type="button"
                 onClick={onClose}
-                className={`flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors`}
+                className={`px-4 py-2 text-sm font-medium ${tw.rounded} transition-colors`}
+                style={{
+                  background: "transparent",
+                  color: color.primary.action,
+                  border: `1px solid ${color.primary.action}`,
+                }}
               >
                 Cancel
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={isLoading}
-                className={`flex-1 px-4 py-2 text-sm font-medium text-white ${tw.rounded} transition-colors flex items-center justify-center`}
+                className={`px-4 py-2 text-sm font-medium text-white ${tw.rounded} transition-colors flex items-center justify-center`}
                 style={{
                   backgroundColor: color.primary.action,
                   opacity: isLoading ? 0.7 : 1,
@@ -530,12 +535,12 @@ export default function ObjectiveModal({
                       color="white"
                       className="mr-2"
                     />
-                    Saving...
+                    {objective ? "Updating..." : "Creating..."}
                   </>
                 ) : (
                   <>
                     <Save className="w-4 h-4 mr-2" />
-                    {objective ? "Update Objective" : "Create Objective"}
+                    {objective ? "Update" : "Create"}
                   </>
                 )}
               </button>

@@ -58,7 +58,7 @@ export default function ManualRewardDetailsPage() {
     return (
       <div className="space-y-6">
         <BackButton
-          fallbackTo="/dashboard/manual-broadcasts"
+         
           showBreadcrumb={true}
           currentLabel="Manual Reward Details"
         />
@@ -90,7 +90,7 @@ export default function ManualRewardDetailsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <BackButton
-          fallbackTo="/dashboard/manual-broadcasts"
+         
           showBreadcrumb={true}
           currentLabel="Manual Reward Details"
         />

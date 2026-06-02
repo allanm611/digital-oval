@@ -313,7 +313,7 @@ export default function DynamicMessageVariablesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <BackButton fallbackTo="/dashboard/administration" showBreadcrumb={true} currentLabel="Message Variables Configuration" />
+      <BackButton showBreadcrumb={true} currentLabel="Message Variables Configuration" />
 
       {/* Search Bar and Category Filter */}
       <div className="flex gap-4">

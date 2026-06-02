@@ -168,7 +168,7 @@ export default function CreateEditTimezonePage() {
   return (
     <div className="space-y-6">
       {/* Header with Back Button */}
-      <BackButton fallbackTo="/dashboard/timezones" showBreadcrumb={true} currentLabel={isEditMode ? "Edit Timezone" : "Create Timezone"} />
+      <BackButton showBreadcrumb={true} currentLabel={isEditMode ? "Edit Timezone" : "Create Timezone"} />
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -382,12 +382,17 @@ export default function CreateEditTimezonePage() {
         </div>
 
         {/* Form Actions */}
-        <div className="flex items-center justify-between pt-6 border-t border-gray-200">
+        <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-200">
           <button
             type="button"
             onClick={() => navigate("/dashboard/timezones")}
             disabled={saving}
-            className="px-6 py-2 text-sm font-medium border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-60"
+            className="px-4 py-2 text-sm font-medium rounded-md transition-colors disabled:opacity-60"
+            style={{
+              background: "transparent",
+              color: color.primary.action,
+              border: `1px solid ${color.primary.action}`,
+            }}
           >
             Cancel
           </button>
@@ -398,7 +403,7 @@ export default function CreateEditTimezonePage() {
             className="inline-flex items-center gap-2 px-6 py-2 text-sm font-medium text-white rounded-md transition-colors disabled:opacity-60"
             style={{ backgroundColor: color.primary.action }}
           >
-            {saving ? "Saving..." : isEditMode ? "Update Timezone" : "Create Timezone"}
+            {saving ? (isEditMode ? "Updating..." : "Creating...") : isEditMode ? "Update" : "Create"}
           </button>
         </div>
       </form>

@@ -253,6 +253,10 @@ export default function ConfigurationManagerAPI({
     "/dashboard/offer-catalogs",
     "/dashboard/products/catalogs",
     "/dashboard/segment-catalogs",
+    "/campaign-types",
+    "/segment-types",
+    "/offer-types",
+    "/product-types",
   ];
 
   const showBackButton = !pagesInSidebar.some((path) =>
@@ -260,31 +264,34 @@ export default function ConfigurationManagerAPI({
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Breadcrumb */}
       {showBackButton && (
-        <BackButton
-          fallbackTo={config.backPath}
-          showBreadcrumb={true}
-          parentLabel={(config as any).parentLabel}
-          currentLabel={config.title}
-        />
-      )}
-      {!showBackButton && (
-        <div>
-          <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
-            {config.title}
-          </h1>
-        </div>
-      )}
+        <div className="flex items-center justify-between">
+          <BackButton
 
-      {/* Description and Create Button */}
-      <div className="flex items-start justify-between gap-4">
-        <p className={`text-sm ${tw.textSecondary}`}>{config.subtitle}</p>
-        <div className="flex items-center gap-3 w-auto ml-auto">
+            showBreadcrumb={true}
+            parentLabel={(config as any).parentLabel}
+            currentLabel={config.title}
+          />
           {!config.disableCreate && <CreateButton onClick={handleCreateItem} />}
         </div>
-      </div>
+      )}
+      {!showBackButton && (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+          <div>
+            <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
+              {config.title}
+            </h1>
+            <p className={`text-sm ${tw.textSecondary} mt-2`}>{config.subtitle}</p>
+          </div>
+          {!config.disableCreate && (
+            <div className="flex gap-3">
+              <CreateButton onClick={handleCreateItem} />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Search */}
       <div className="my-5">

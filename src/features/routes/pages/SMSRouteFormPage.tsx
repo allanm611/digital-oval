@@ -269,7 +269,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
   return (
     <div className="space-y-6">
       {/* Header with Back Button */}
-      <BackButton fallbackTo="/dashboard/sms-routes" showBreadcrumb={true} currentLabel={mode === "create" ? "Create SMS Route" : "Edit SMS Route"} />
+      <BackButton showBreadcrumb={true} currentLabel={mode === "create" ? "Create SMS Route" : "Edit SMS Route"} />
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">

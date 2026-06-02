@@ -137,7 +137,7 @@ export default function EditQuickListModal({
               style={{ backgroundColor: color.primary.action }}
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Saving..." : "Save Changes"}
+              {isSubmitting ? "Updating..." : "Update"}
             </button>
           </div>
         </form>

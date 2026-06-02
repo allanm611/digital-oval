@@ -300,19 +300,12 @@ export default function SegmentDetailsPage() {
       // Extract data from response (backend wraps it in data object)
       const segmentData =
         (response as { data?: Segment }).data || (response as Segment);
-      console.log("=== Full segmentData:", segmentData);
-      console.log("=== segmentData keys:", Object.keys(segmentData || {}));
       setSegment(segmentData as Segment);
 
       // Load size_estimate from segment if available
-      console.log("=== Loaded segment, size_estimate:", (segmentData as any).size_estimate);
-      console.log("=== Type of size_estimate:", typeof (segmentData as any).size_estimate);
       if ((segmentData as any).size_estimate) {
         const sizeEstimate = Number((segmentData as any).size_estimate);
-        console.log("=== Setting segmentSize to:", sizeEstimate);
         setSegmentSize(sizeEstimate);
-      } else {
-        console.log("=== size_estimate NOT FOUND in segmentData");
       }
 
       // Load category name if category exists
@@ -1072,8 +1065,6 @@ export default function SegmentDetailsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <BackButton
-          fallbackTo="/dashboard/segments"
-          onClick={handleBack}
           showBreadcrumb={true}
           currentLabel="Segment Details"
         />

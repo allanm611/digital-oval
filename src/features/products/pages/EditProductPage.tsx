@@ -277,8 +277,6 @@ export default function EditProductPage() {
     <div className="space-y-6">
       {/* Header */}
       <BackButton
-        fallbackTo="/dashboard/products"
-        onClick={navigateBack}
         showBreadcrumb={true}
         currentLabel="Edit Product"
       />

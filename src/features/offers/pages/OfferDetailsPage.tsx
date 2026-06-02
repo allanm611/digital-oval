@@ -1685,8 +1685,6 @@ export default function OfferDetailsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <BackButton
-          fallbackTo="/dashboard/offers"
-          onClick={handleBack}
           showBreadcrumb={true}
           currentLabel="Offer Details"
         />

@@ -1542,7 +1542,7 @@ export default function CreateCampaignPage() {
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-4 pb-4 md:flex-row md:items-start md:justify-between">
             <BackButton
-              fallbackTo="/dashboard/campaigns"
+             
               showBreadcrumb={true}
               currentLabel={isEditMode ? "Edit Campaign" : "Create Campaign"}
             />
@@ -1550,7 +1550,12 @@ export default function CreateCampaignPage() {
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center md:justify-end">
                 <button
                   onClick={handleCancel}
-                  className={`inline-flex w-full items-center justify-center px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-all duration-200 sm:w-auto`}
+                  className={`inline-flex w-full items-center justify-center px-4 py-2 text-sm font-medium ${tw.rounded} transition-all duration-200 sm:w-auto`}
+                  style={{
+                    background: "transparent",
+                    color: color.primary.action,
+                    border: `1px solid ${color.primary.action}`,
+                  }}
                 >
                   Cancel
                 </button>

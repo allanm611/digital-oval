@@ -337,7 +337,7 @@ export default function CreateKPIPage() {
 
   return (
     <div className="space-y-6">
-      <BackButton fallbackTo="/dashboard/kpis/all" showBreadcrumb={true} currentLabel={isEditMode ? "Edit KPI" : "Create KPI"} />
+      <BackButton showBreadcrumb={true} currentLabel={isEditMode ? "Edit KPI" : "Create KPI"} />
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information Section */}

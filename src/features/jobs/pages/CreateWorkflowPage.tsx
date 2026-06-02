@@ -111,7 +111,7 @@ export default function CreateWorkflowPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="">
       {/* Header */}
       <div className="flex items-center gap-4">
         <button
@@ -126,7 +126,7 @@ export default function CreateWorkflowPage() {
         </h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="">
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h2 className="mb-4 text-lg font-semibold text-gray-900">
             {t.workflows.workflowInformation}

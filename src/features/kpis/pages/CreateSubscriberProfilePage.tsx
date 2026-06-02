@@ -156,7 +156,7 @@ export default function CreateSubscriberProfilePage() {
 
   return (
     <div className="space-y-6">
-      <BackButton fallbackTo="/dashboard/kpis/subscriber-profiles" showBreadcrumb={true} currentLabel={mode === "edit" ? "Edit Profile Field" : "Create Profile Field"} />
+      <BackButton showBreadcrumb={true} currentLabel={mode === "edit" ? "Edit Profile Field" : "Create Profile Field"} />
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information Section */}

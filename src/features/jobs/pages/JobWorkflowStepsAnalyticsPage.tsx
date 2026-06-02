@@ -313,9 +313,9 @@ export default function JobWorkflowStepsAnalyticsPage() {
     })) || [];
 
   return (
-    <div className="space-y-6">
+    <div className="">
       {/* Header */}
-      <BackButton fallbackTo={`/dashboard/job-workflow-steps${jobIdParam ? `?job_id=${jobIdParam}` : ""}`} showBreadcrumb={true} currentLabel="Job Workflow Steps Analytics" />
+      <BackButton` : ""}`} showBreadcrumb={true} currentLabel="Job Workflow Steps Analytics" />
 
       {!analyticsData ? (
         <div
@@ -533,7 +533,7 @@ export default function JobWorkflowStepsAnalyticsPage() {
 
           {/* Most Failed Steps - Bar Chart and Table */}
           {analyticsData.mostFailed.length > 0 && (
-            <div className="space-y-6">
+            <div className="">
               <div
                 className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
               >
@@ -696,7 +696,7 @@ export default function JobWorkflowStepsAnalyticsPage() {
 
           {/* Longest Running Steps - Bar Chart and Table */}
           {analyticsData.longestRunning.length > 0 && (
-            <div className="space-y-6">
+            <div className="">
               <div
                 className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
               >

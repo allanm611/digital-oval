@@ -279,7 +279,12 @@ export default function ProgramModal({
             <button
               type="button"
               onClick={onClose}
-              className={`px-4 py-2 text-gray-700 bg-gray-100 ${tw.rounded} transition-colors`}
+              className={`px-4 py-2 text-sm font-medium ${tw.rounded} transition-colors`}
+              style={{
+                background: "transparent",
+                color: color.primary.action,
+                border: `1px solid ${color.primary.action}`,
+              }}
             >
               Cancel
             </button>

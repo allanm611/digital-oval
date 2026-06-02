@@ -106,7 +106,7 @@ export default function PushNotificationRouteDetailsPage() {
 
   return (
     <div className="space-y-6">
-      <BackButton fallbackTo="/dashboard/push-notification-routes" showBreadcrumb={true} currentLabel="Push Notification Route Details" />
+      <BackButton showBreadcrumb={true} currentLabel="Push Notification Route Details" />
 
       {/* Header */}
       <div className="flex items-start justify-between">

@@ -529,7 +529,7 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
 
   return (
     <div className="space-y-6">
-      <BackButton fallbackTo="/dashboard/campaigns" showBreadcrumb={true} currentLabel="Campaigns Analytics" />
+      <BackButton showBreadcrumb={true} currentLabel="Campaigns Analytics" />
 
       {isLoading ? (
         <div className="flex justify-center py-16">

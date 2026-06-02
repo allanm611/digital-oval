@@ -240,7 +240,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
 
   return (
     <div className="space-y-6">
-      <BackButton fallbackTo="/dashboard/servers" showBreadcrumb={true} currentLabel={mode === "create" ? "Add Server" : "Edit Server"} />
+      <BackButton showBreadcrumb={true} currentLabel={mode === "create" ? "Add Server" : "Edit Server"} />
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div

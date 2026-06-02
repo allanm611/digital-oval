@@ -517,9 +517,9 @@ export default function CampaignDetailReportPage() {
       {/* Header */}
       <header className="space-y-4">
         <BackButton
-          fallbackTo={fallbackPath}
+         
           showBreadcrumb={true}
-          parentLabel="Campaign Details"
+         
           currentLabel="Report"
         />
         <div>

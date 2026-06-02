@@ -107,7 +107,7 @@ export default function SubscriberProfileDetailPage() {
   if (!profile) {
     return (
       <div className="space-y-6">
-        <BackButton fallbackTo="/dashboard/kpis/subscriber-profiles" showBreadcrumb={true} currentLabel="Subscriber Profile Details" parentLabel={parentLabel} />
+        <BackButton showBreadcrumb={true} currentLabel="Subscriber Profile Details" parentLabel={parentLabel} />
         <div className="text-center py-12">
           <p className="text-gray-600">Profile field not found</p>
         </div>
@@ -120,7 +120,7 @@ export default function SubscriberProfileDetailPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <BackButton fallbackTo="/dashboard/kpis/subscriber-profiles" showBreadcrumb={true} currentLabel="Subscriber Profile Details" parentLabel={parentLabel} />
+          <BackButton showBreadcrumb={true} currentLabel="Subscriber Profile Details" parentLabel={parentLabel} />
           <div></div>
         </div>
         {/* Action Buttons */}

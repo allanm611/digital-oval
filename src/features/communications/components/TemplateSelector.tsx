@@ -113,7 +113,6 @@ export default function TemplateSelector({
                     ? "shadow-md"
                     : "border-gray-200 hover:border-gray-300"
                 }
-              `}
               style={
                 selectedId === template.id
                   ? {

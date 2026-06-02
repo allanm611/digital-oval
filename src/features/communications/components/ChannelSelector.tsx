@@ -41,7 +41,6 @@ export default function ChannelSelector({
                     ? "shadow-md"
                     : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
                 }
-              `}
               style={
                 isSelected
                   ? {
@@ -56,7 +55,6 @@ export default function ChannelSelector({
                   className={`
                     p-3 ${tw.rounded} transition-colors
                     ${isSelected ? "bg-white" : "bg-gray-50"}
-                  `}
                   style={{ color: isSelected ? channelColor : "#9CA3AF" }}
                 >
                   <Icon className="w-6 h-6" />
@@ -65,7 +63,6 @@ export default function ChannelSelector({
                   className={`
                     text-sm font-medium transition-colors
                     ${isSelected ? "text-gray-900" : "text-gray-700"}
-                  `}
                 >
                   {label}
                 </span>

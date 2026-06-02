@@ -121,7 +121,7 @@ export default function LanguagesPage() {
   return (
     <div className="space-y-6">
       <BackButton
-        fallbackTo="/dashboard/configuration"
+       
         showBreadcrumb={true}
         currentLabel="Languages"
       />

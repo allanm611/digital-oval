@@ -268,7 +268,7 @@ export default function JobExecutionsAnalyticsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="">
       <div className="flex items-center gap-4">
         <button
           onClick={() => navigate("/dashboard/job-executions")}

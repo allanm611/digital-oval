@@ -197,7 +197,7 @@ export default function AllKPIsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <BackButton fallbackTo="/dashboard/kpis" />
+        <BackButton />
         <CreateButton route="/dashboard/kpis/create" />
       </div>
 <p className={`text-sm ${tw.textSecondary}`}>

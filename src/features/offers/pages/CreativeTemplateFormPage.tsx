@@ -186,7 +186,7 @@ export default function CreativeTemplateFormPage() {
   return (
     <div className="space-y-4">
       <BackButton
-        fallbackTo="/dashboard/creative-templates"
+       
         showBreadcrumb={true}
         currentLabel={id ? "Edit Creative Template" : "Create Creative Template"}
       />

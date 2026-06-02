@@ -147,10 +147,10 @@ export default function WorkflowDetailsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="">
       {/* Header */}
       <BackButton
-        fallbackTo="/dashboard/workflows"
+       
         showBreadcrumb={true}
         currentLabel="Workflow Details"
       />

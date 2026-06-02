@@ -148,7 +148,7 @@ export default function RevenueMetricsPage() {
     <div className="space-y-6">
       {/* Header with Back Button and Create Button */}
       <div className="flex items-center justify-between gap-4 mb-6">
-        <BackButton fallbackTo="/dashboard/kpis" showBreadcrumb={true} currentLabel="Revenue Metrics" />
+        <BackButton showBreadcrumb={true} currentLabel="Revenue Metrics" />
         <button
           onClick={() => navigate("/dashboard/kpis/revenue-metrics/create")}
           className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-md whitespace-nowrap disabled:opacity-60"

@@ -545,12 +545,12 @@ export default function CreateScheduledJobPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="">
       {/* Header */}
-      <BackButton fallbackTo="/dashboard/scheduled-jobs" showBreadcrumb={true} currentLabel={isEditMode ? "Edit Scheduled Job" : "Create Scheduled Job"} />
+      <BackButton showBreadcrumb={true} currentLabel={isEditMode ? "Edit Scheduled Job" : "Create Scheduled Job"} />
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="">
         {/* Basic Information */}
         <div ref={basicInfoRef} className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
           <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>

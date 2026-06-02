@@ -243,7 +243,7 @@ export default function CreateEditUSSDRoutePage() {
     <div className="space-y-6">
       {/* Header with Back Button */}
       <BackButton
-        fallbackTo="/dashboard/ussd-routes"
+       
         showBreadcrumb={true}
         currentLabel={id ? "Edit USSD Route" : "Create USSD Route"}
       />

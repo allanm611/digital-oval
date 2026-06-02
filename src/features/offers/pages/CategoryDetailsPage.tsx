@@ -279,7 +279,7 @@ export default function CategoryDetailsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
-          <BackButton fallbackTo="/dashboard/offer-catalogs" showBreadcrumb={true} currentLabel="Category Details" />
+          <BackButton showBreadcrumb={true} currentLabel="Category Details" />
         </div>
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           <button
@@ -665,7 +665,7 @@ export default function CategoryDetailsPage() {
               <div className="flex justify-end space-x-3 mt-6">
                 <button
                   onClick={() => setIsEditModalOpen(false)}
-                  className={`px-4 py-2 text-gray-700 bg-gray-100 ${tw.rounded} hover:bg-gray-200 transition-colors`}
+                  className={`px-4 py-2 text-gray-700 border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors`}
                 >
                   Cancel
                 </button>
@@ -674,7 +674,7 @@ export default function CategoryDetailsPage() {
                   className={`px-4 py-2 text-white ${tw.rounded} transition-colors`}
                   style={{ backgroundColor: color.primary.action }}
                 >
-                  Save Changes
+                  Update
                 </button>
               </div>
             </div>

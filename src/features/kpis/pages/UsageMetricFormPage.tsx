@@ -257,7 +257,7 @@ export default function UsageMetricFormPage({ mode }: UsageMetricFormPageProps) 
   return (
     <div className="space-y-6">
       {/* Header with Back Button */}
-      <BackButton fallbackTo="/dashboard/kpis/usage-metrics" showBreadcrumb={true} currentLabel={mode === "create" ? "Create Usage Metric" : "Edit Usage Metric"} />
+      <BackButton showBreadcrumb={true} currentLabel={mode === "create" ? "Create Usage Metric" : "Edit Usage Metric"} />
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">

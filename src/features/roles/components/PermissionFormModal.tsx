@@ -377,7 +377,12 @@ export default function PermissionFormModal({
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              background: "transparent",
+              color: color.primary.action,
+              border: `1px solid ${color.primary.action}`,
+            }}
           >
             Cancel
           </button>

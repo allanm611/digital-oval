@@ -76,7 +76,7 @@ export default function KpiDetailsPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <BackButton fallbackTo="/dashboard/kpis/all" showBreadcrumb={true} currentLabel="KPI Details" parentLabel={parentLabel} />
+          <BackButton showBreadcrumb={true} currentLabel="KPI Details" parentLabel={parentLabel} />
           <p className={tw.textSecondary}>KPI not found</p>
         </div>
       </div>
@@ -88,7 +88,7 @@ export default function KpiDetailsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <BackButton fallbackTo="/dashboard/kpis/all" showBreadcrumb={true} currentLabel="KPI Details" parentLabel={parentLabel} />
+          <BackButton showBreadcrumb={true} currentLabel="KPI Details" parentLabel={parentLabel} />
           <div></div>
         </div>
 

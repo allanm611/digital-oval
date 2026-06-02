@@ -352,9 +352,9 @@ export default function EtlAnalyticsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="">
       {/* Header */}
-      <BackButton fallbackTo="/dashboard/etl" showBreadcrumb={true} currentLabel="ETL Analytics" />
+      <BackButton showBreadcrumb={true} currentLabel="ETL Analytics" />
 
       {/* Summary Cards */}
       {(() => {

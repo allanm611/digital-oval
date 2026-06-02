@@ -185,9 +185,9 @@ export default function MonitoringPage() {
       {/* Header */}
       <div className="flex flex-col gap-4">
         <BackButton
-          fallbackTo="/dashboard"
+         
           showBreadcrumb={true}
-          parentLabel="Administration"
+         
           currentLabel="Execution Monitoring"
         />
         <p className={`${tw.textSecondary} text-sm`}>

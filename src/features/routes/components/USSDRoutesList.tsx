@@ -108,9 +108,9 @@ export default function USSDRoutesList() {
       <div className="flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <BackButton
-            fallbackTo="/dashboard"
+           
             showBreadcrumb={true}
-            parentLabel="Administration"
+           
             currentLabel="USSD Routes"
           />
         </div>

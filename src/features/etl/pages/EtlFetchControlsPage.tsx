@@ -196,7 +196,7 @@ export default function EtlFetchControlsPage() {
   }));
 
   return (
-    <div className="space-y-6">
+    <div className="">
       {/* Header */}
       <div>
         <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>

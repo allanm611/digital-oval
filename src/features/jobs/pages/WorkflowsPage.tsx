@@ -383,14 +383,14 @@ export default function WorkflowsPage() {
 
   return (
     <>
-      <div className="space-y-6">
+      <div className="">
         {/* Header */}
         <div className="flex flex-col gap-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <BackButton
-              fallbackTo="/dashboard"
+             
               showBreadcrumb={true}
-              parentLabel="Administration"
+             
               currentLabel="Job Workflows"
             />
             <div className="flex items-center gap-3">

@@ -40,7 +40,7 @@ export default function DNDManagementPage() {
     <div className="space-y-6">
       {/* Breadcrumb */}
       <BackButton
-        fallbackTo="/dashboard/configuration"
+       
         showBreadcrumb={true}
         currentLabel="DND Management"
       />

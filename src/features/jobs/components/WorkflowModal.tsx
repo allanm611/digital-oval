@@ -200,17 +200,17 @@ export default function WorkflowModal({
         </form>
 
         {/* Footer */}
-        <div className="flex gap-3 p-6 bg-gray-50">
+        <div className="flex items-center justify-end gap-3 p-6 bg-gray-50">
           <button
             onClick={onClose}
-            className={`flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors`}
+            className={`px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors`}
           >
             {t.common.cancel}
           </button>
           <button
             onClick={handleSubmit}
             disabled={isSaving}
-            className={`flex-1 px-4 py-2 text-sm font-semibold text-white ${tw.rounded} disabled:opacity-50 disabled:cursor-not-allowed transition-colors inline-flex items-center justify-center gap-2`}
+            className={`px-4 py-2 text-sm font-semibold text-white ${tw.rounded} disabled:opacity-50 disabled:cursor-not-allowed transition-colors inline-flex items-center justify-center gap-2`}
             style={{ backgroundColor: color.primary.action }}
           >
             {isSaving ? (

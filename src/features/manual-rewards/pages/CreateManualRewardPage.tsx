@@ -295,7 +295,7 @@ export default function CreateManualRewardPage() {
           {/* Header */}
           <div className="flex items-center justify-between pb-3">
             <BackButton
-              fallbackTo={returnTo?.pathname || "/dashboard/manual-broadcasts"}
+             
               showBreadcrumb={true}
               currentLabel={isEditMode ? "Edit Manual Reward" : "Create Manual Reward"}
             />

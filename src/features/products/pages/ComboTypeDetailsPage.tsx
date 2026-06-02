@@ -77,7 +77,7 @@ export default function ComboTypeDetailsPage() {
   if (error || !comboType) {
     return (
       <div className="space-y-6">
-        <BackButton fallbackTo="/dashboard/combo-types" showBreadcrumb={true} />
+        <BackButton showBreadcrumb={true} />
         <div className="text-center py-12">
           <Briefcase className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
@@ -103,7 +103,7 @@ export default function ComboTypeDetailsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <BackButton
-          fallbackTo="/dashboard/combo-types"
+         
           showBreadcrumb={true}
           currentLabel="Combo Type Details"
         />

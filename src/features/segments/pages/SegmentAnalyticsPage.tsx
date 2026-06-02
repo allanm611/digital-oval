@@ -238,7 +238,7 @@ export default function SegmentAnalyticsPage(): JSX.Element {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <BackButton fallbackTo="/dashboard/segments" showBreadcrumb={true} currentLabel="Segment Analytics" />
+      <BackButton showBreadcrumb={true} currentLabel="Segment Analytics" />
 
       {isLoading ? (
         <div className="flex justify-center py-16">

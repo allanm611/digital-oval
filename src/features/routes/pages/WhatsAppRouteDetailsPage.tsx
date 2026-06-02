@@ -106,7 +106,7 @@ export default function WhatsAppRouteDetailsPage() {
 
   return (
     <div className="space-y-6">
-      <BackButton fallbackTo="/dashboard/whatsapp-routes" showBreadcrumb={true} currentLabel="WhatsApp Route Details" />
+      <BackButton showBreadcrumb={true} currentLabel="WhatsApp Route Details" />
 
       {/* Header */}
       <div className="flex items-start justify-between">

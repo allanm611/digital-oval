@@ -148,7 +148,7 @@ export default function BroadcastDetailsPage() {
     <div className="space-y-6">
       {/* Header */}
       <BackButton
-        fallbackTo="/dashboard/manual-broadcasts"
+       
         showBreadcrumb={true}
         currentLabel="Broadcast Details"
       />

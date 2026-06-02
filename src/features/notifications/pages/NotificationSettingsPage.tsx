@@ -220,8 +220,6 @@ export default function NotificationSettingsPage() {
       {/* Header with Breadcrumb and Buttons */}
       <div className="mb-8 flex items-center justify-between">
         <BackButton
-          fallbackTo="/dashboard/notifications"
-          parentLabel="Notifications"
           currentLabel="Notification Settings"
           showBreadcrumb={true}
         />

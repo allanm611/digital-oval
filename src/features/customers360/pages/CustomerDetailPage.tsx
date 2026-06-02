@@ -964,7 +964,7 @@ export default function CustomerDetailPage() {
         {/* Header */}
         <div className="flex items-center justify-between gap-4">
           <BackButton
-            fallbackTo="/dashboard/customers"
+           
             showBreadcrumb={true}
             currentLabel="Customer Details"
           />

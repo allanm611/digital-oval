@@ -87,8 +87,6 @@ export default function CustomerIdentityFieldDetailsPage() {
   return (
     <div className="space-y-6">
       <BackButton
-        fallbackTo="/dashboard/customer-identity"
-        onClick={handleBack}
         showBreadcrumb={true}
         currentLabel="Field Details"
       />

@@ -26,7 +26,6 @@ const DataConnectorCard: React.FC<DataConnectorCardProps> = ({
         relative bg-white ${tw.rounded} border ${tw.borderDefault} p-5 sm:p-6 transition-all duration-200 hover:shadow-md hover:border-gray-300 cursor-pointer
         ${onClick ? "hover:bg-gray-50" : ""}
         ${className}
-      `}
     >
       <div className="flex items-start justify-between mb-4">
         <div

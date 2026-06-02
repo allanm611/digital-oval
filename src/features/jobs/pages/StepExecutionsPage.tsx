@@ -434,10 +434,10 @@ export default function StepExecutionsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="">
       {/* Header */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <BackButton fallbackTo="/dashboard/jobs" showBreadcrumb={true} currentLabel="Step Executions" />
+        <BackButton showBreadcrumb={true} currentLabel="Step Executions" />
         <div className="flex gap-3">
           <button
             onClick={() => navigate("/dashboard/step-executions/analytics")}

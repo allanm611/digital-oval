@@ -648,16 +648,13 @@ export default function ServersPage() {
   ) => actionState?.id === serverId && actions.includes(actionState.action);
 
   return (
-    <div className="space-y-6 overflow-x-auto">
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <BackButton
-            fallbackTo="/dashboard"
-            showBreadcrumb={true}
-            parentLabel="Administration"
-            currentLabel="Servers"
-          />
-          <div className="flex items-center gap-3">
+    <div className="overflow-x-auto">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+        <BackButton
+          showBreadcrumb={true}
+          currentLabel="Servers"
+        />
+        <div className="flex items-center gap-3">
             <PermissionGate permission="servers.select">
               <button
                 onClick={() => {
@@ -693,22 +690,23 @@ export default function ServersPage() {
             <PermissionGate permission="servers.create">
               <CreateButton route="/dashboard/servers/new" />
             </PermissionGate>
-          </div>
         </div>
       </div>
-      <p className={`${tw.textSecondary} text-sm -mt-4`}>
+      <p className={`${tw.textSecondary} text-sm mt-1`}>
         {t.servers.description}
       </p>
 
-      <ServerStatsCards
-        healthStats={healthStats}
-        environmentCounts={environmentCounts}
-        protocolCounts={protocolCounts}
-        regionCounts={regionCounts}
-        isLoading={isLoadingStats}
-      />
+      <div className="mt-6">
+        <ServerStatsCards
+          healthStats={healthStats}
+          environmentCounts={environmentCounts}
+          protocolCounts={protocolCounts}
+          regionCounts={regionCounts}
+          isLoading={isLoadingStats}
+        />
+      </div>
 
-      <div className="space-y-4">
+      <div className="space-y-4 mt-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center">
           <div className="flex-1">
             <SearchInput

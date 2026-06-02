@@ -164,7 +164,7 @@ export default function WorkflowsAnalyticsPage() {
   }));
 
   return (
-    <div className="space-y-6">
+    <div className="">
       {/* Header */}
       <div className="flex items-center space-x-2 sm:space-x-4">
         <button

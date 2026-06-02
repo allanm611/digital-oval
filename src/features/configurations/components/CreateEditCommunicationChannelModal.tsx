@@ -226,7 +226,7 @@ export default function CreateEditCommunicationChannelModal({
               style={{ backgroundColor: button.action.background }}
               disabled={isSaving}
             >
-              {isSaving ? "Saving..." : mode === "create" ? "Create" : "Update"}
+              {isSaving ? (mode === "create" ? "Creating..." : "Updating...") : mode === "create" ? "Create" : "Update"}
             </button>
           </div>
         </form>

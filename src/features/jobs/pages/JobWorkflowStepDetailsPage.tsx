@@ -241,10 +241,10 @@ export default function JobWorkflowStepDetailsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="">
       {/* Header */}
       <BackButton
-        fallbackTo="/dashboard/job-workflow-steps"
+       
         showBreadcrumb={true}
         currentLabel="Workflow Step Details"
       />
@@ -342,7 +342,7 @@ export default function JobWorkflowStepDetailsPage() {
         </div>
 
       {/* Main Content Grid */}
-      <div className="space-y-6">
+      <div className="">
         {/* Top Row: Basic Information and Execution Configuration side by side */}
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Basic Information */}
@@ -521,7 +521,7 @@ export default function JobWorkflowStepDetailsPage() {
         {/* Bottom Section: Two columns */}
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Left Column */}
-          <div className="space-y-6">
+          <div className="">
             {/* Parallel Group */}
             {step.is_parallel && step.parallel_group_id && (
               <div
@@ -602,7 +602,7 @@ export default function JobWorkflowStepDetailsPage() {
           </div>
 
           {/* Right Column */}
-          <div className="space-y-6">
+          <div className="">
             {/* Next Step */}
             {nextStep && (
               <div

@@ -340,9 +340,9 @@ export default function VIPListManagementPage() {
       <div className="flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <BackButton
-            fallbackTo="/dashboard"
+           
             showBreadcrumb={true}
-            parentLabel="Administration"
+           
             currentLabel="VIP List Management"
           />
           {/* Tab-specific buttons */}
@@ -364,7 +364,7 @@ export default function VIPListManagementPage() {
                 style={{ backgroundColor: color.primary.action }}
               >
                 <Plus className="w-4 h-4" />
-                Create List
+                Create
               </button>
             )}
           </div>

@@ -77,7 +77,7 @@ export default function ComboTypesPage() {
   return (
     <div className="space-y-6">
       <BackButton
-        fallbackTo="/dashboard/configuration"
+       
         showBreadcrumb={true}
         currentLabel="Combo Types"
       />

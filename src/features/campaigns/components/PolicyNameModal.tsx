@@ -88,7 +88,12 @@ export default function PolicyNameModal({
             <button
               type="button"
               onClick={onClose}
-              className={`px-4 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-colors`}
+              className={`px-4 py-2 text-sm font-medium ${tw.rounded} transition-colors`}
+              style={{
+                background: "transparent",
+                color: color.primary.action,
+                border: `1px solid ${color.primary.action}`,
+              }}
             >
               Cancel
             </button>
@@ -97,7 +102,7 @@ export default function PolicyNameModal({
               disabled={!policyName.trim()}
               className={`${tw.button} disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              Create Policy
+              Create
             </button>
           </div>
         </form>

@@ -238,8 +238,8 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
   }, [loadAnalytics]);
 
   return (
-    <div className="space-y-6">
-      <BackButton fallbackTo="/dashboard/job-dependencies" showBreadcrumb={true} currentLabel="Job Dependencies Analytics" />
+    <div className="">
+      <BackButton showBreadcrumb={true} currentLabel="Job Dependencies Analytics" />
 
       {isLoading ? (
         <div className="flex justify-center py-16">

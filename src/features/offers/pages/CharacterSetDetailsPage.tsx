@@ -109,7 +109,7 @@ export default function CharacterSetDetailsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
         <BackButton
-          fallbackTo="/dashboard/character-sets"
+         
           showBreadcrumb={true}
           currentLabel="Character Set Details"
         />

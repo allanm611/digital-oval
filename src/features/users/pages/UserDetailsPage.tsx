@@ -261,8 +261,6 @@ export default function UserDetailsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <BackButton
-          fallbackTo="/dashboard/user-management"
-          onClick={navigateBack}
           showBreadcrumb={true}
           currentLabel="User Details"
         />

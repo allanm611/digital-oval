@@ -136,7 +136,7 @@ export default function OfferCreativesPage() {
 
   return (
     <div className="space-y-6">
-      <BackButton fallbackTo="/dashboard/configuration" showBreadcrumb currentLabel="Offer Creatives" />
+      <BackButton showBreadcrumb currentLabel="Offer Creatives" />
 
       {/* Description and Create Button */}
       <div className="flex items-start justify-between gap-4">

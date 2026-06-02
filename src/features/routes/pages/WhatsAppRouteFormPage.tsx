@@ -228,7 +228,7 @@ export default function WhatsAppRouteFormPage({ mode }: WhatsAppRouteFormPagePro
   return (
     <div className="space-y-6">
       {/* Header with Back Button */}
-      <BackButton fallbackTo="/dashboard/whatsapp-routes" showBreadcrumb={true} currentLabel={mode === "create" ? "Create WhatsApp Route" : "Edit WhatsApp Route"} />
+      <BackButton showBreadcrumb={true} currentLabel={mode === "create" ? "Create WhatsApp Route" : "Edit WhatsApp Route"} />
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">

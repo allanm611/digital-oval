@@ -1009,7 +1009,12 @@ export default function CommunicationPolicyModal({
             <button
               type="button"
               onClick={onClose}
-              className={`px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors`}
+              className={`px-5 py-2.5 text-sm font-medium ${tw.rounded} transition-colors`}
+              style={{
+                background: "transparent",
+                color: color.primary.action,
+                border: `1px solid ${color.primary.action}`,
+              }}
             >
               Cancel
             </button>

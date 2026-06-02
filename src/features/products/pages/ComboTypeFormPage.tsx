@@ -302,7 +302,7 @@ export default function ComboTypeFormPage() {
   if (error && id) {
     return (
       <div className="space-y-6">
-        <BackButton fallbackTo="/dashboard/combo-types" showBreadcrumb={true} />
+        <BackButton showBreadcrumb={true} />
         <div className="text-center py-12">
           <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
             Error Loading Combo Type
@@ -325,7 +325,7 @@ export default function ComboTypeFormPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <BackButton
-          fallbackTo="/dashboard/combo-types"
+         
           showBreadcrumb={true}
           currentLabel={id ? "Edit Combo Type" : "Create Combo Type"}
         />

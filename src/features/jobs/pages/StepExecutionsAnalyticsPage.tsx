@@ -333,8 +333,8 @@ export default function StepExecutionsAnalyticsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <BackButton fallbackTo="/dashboard/step-executions" showBreadcrumb={true} currentLabel="Step Executions Analytics" />
+    <div className="">
+      <BackButton showBreadcrumb={true} currentLabel="Step Executions Analytics" />
 
       {/* Key Metrics - All Statistics */}
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">

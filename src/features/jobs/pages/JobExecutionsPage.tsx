@@ -539,65 +539,62 @@ export default function JobExecutionsPage() {
 
   return (
     <>
-      <div className="space-y-6">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <BackButton
-              fallbackTo="/dashboard"
-              showBreadcrumb={true}
-              parentLabel="Administration"
-              currentLabel="Job Executions"
-            />
-            <div className="flex gap-3">
+      <div className="overflow-x-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+          <BackButton
+            showBreadcrumb={true}
+            currentLabel="Job Executions"
+          />
+          <div className="flex gap-3">
             <button
-            onClick={() => navigate("/dashboard/job-executions/analytics")}
-            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
-            style={{
-              backgroundColor: "transparent",
-              color: color.primary.action,
-              border: `1px solid ${color.primary.action}`,
-            }}
-          >
-            <BarChart3 className="h-4 w-4" />
-            Analytics
-          </button>
-          <PermissionGate permission="job-executions.select">
-            <button
-              onClick={() => {
-                if (!isSelectionMode) {
-                  setIsSelectionMode(true);
-                  setSelectedExecutions(
-                    new Set(filteredExecutions.map((exec) => exec.id)),
-                  );
-                } else {
-                  setIsSelectionMode(false);
-                  setSelectedExecutions(new Set());
-                }
-              }}
+              onClick={() => navigate("/dashboard/job-executions/analytics")}
               className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
               style={{
-                backgroundColor: isSelectionMode
-                  ? color.primary.action
-                  : "transparent",
-                color: isSelectionMode ? "white" : color.primary.action,
+                backgroundColor: "transparent",
+                color: color.primary.action,
                 border: `1px solid ${color.primary.action}`,
               }}
             >
-              {isSelectionMode ? (
-                <CheckSquare className="h-4 w-4" />
-              ) : (
-                <Square className="h-4 w-4" />
-              )}
-              {isSelectionMode ? "Exit Selection" : "Select Executions"}
+              <BarChart3 className="h-4 w-4" />
+              Analytics
             </button>
-          </PermissionGate>
-            </div>
+            <PermissionGate permission="job-executions.select">
+              <button
+                onClick={() => {
+                  if (!isSelectionMode) {
+                    setIsSelectionMode(true);
+                    setSelectedExecutions(
+                      new Set(filteredExecutions.map((exec) => exec.id)),
+                    );
+                  } else {
+                    setIsSelectionMode(false);
+                    setSelectedExecutions(new Set());
+                  }
+                }}
+                className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
+                style={{
+                  backgroundColor: isSelectionMode
+                    ? color.primary.action
+                    : "transparent",
+                  color: isSelectionMode ? "white" : color.primary.action,
+                  border: `1px solid ${color.primary.action}`,
+                }}
+              >
+                {isSelectionMode ? (
+                  <CheckSquare className="h-4 w-4" />
+                ) : (
+                  <Square className="h-4 w-4" />
+                )}
+                {isSelectionMode ? "Exit Selection" : "Select Executions"}
+              </button>
+            </PermissionGate>
           </div>
         </div>
-        <p className={`${tw.textSecondary} text-sm`}>
+        <p className={`${tw.textSecondary} text-sm mt-1`}>
           Monitor and track all job execution records
         </p>
 
+      <div className="mt-6">
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
         <div
@@ -687,9 +684,11 @@ export default function JobExecutionsPage() {
           </p>
         </div>
       </div>
+      </div>
 
-      <div className="flex gap-4">
-        <SearchInput
+      <div className="space-y-4 mt-6">
+        <div className="flex gap-4">
+          <SearchInput
           placeholder="Search by execution ID, job ID, status, trace ID, or correlation ID"
           value={searchTerm}
           onChange={setSearchTerm}
@@ -721,6 +720,7 @@ export default function JobExecutionsPage() {
             </span>
           )}
         </button>
+        </div>
       </div>
 
       {/* Batch Actions Toolbar */}

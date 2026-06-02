@@ -2916,7 +2916,7 @@ export default function CreateOfferPage({
           <div className="flex flex-col gap-4 pb-4 md:flex-row md:items-start md:justify-between">
             <div className="flex items-center space-x-3">
               <BackButton
-                fallbackTo={getBackButtonFallback()}
+               
                 showBreadcrumb={true}
                 currentLabel={isEditMode ? "Edit Offer" : isDuplicateMode ? "Duplicate Offer" : "Create Offer"}
               />

@@ -409,7 +409,7 @@ export default function CreateControlGroupPage() {
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between pb-3">
             <BackButton
-              fallbackTo="/dashboard/control-groups"
+             
               showBreadcrumb={true}
               currentLabel={isEditMode ? `Edit ${controlGroupName || "Control Group"}` : "Create Control Group"}
             />

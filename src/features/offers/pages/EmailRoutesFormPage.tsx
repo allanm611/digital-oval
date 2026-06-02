@@ -134,7 +134,7 @@ export default function EmailRoutesFormPage() {
     <div className="space-y-6">
       {/* Breadcrumb */}
       <BackButton
-        fallbackTo="/dashboard/email-routes"
+       
         showBreadcrumb={true}
         currentLabel={isEditMode ? "Edit Email Route" : "Create Email Route"}
       />

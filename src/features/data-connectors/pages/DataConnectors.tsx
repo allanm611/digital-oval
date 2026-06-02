@@ -242,33 +242,30 @@ export default function DataConnectors() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="overflow-x-auto">
       {/* Header */}
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <BackButton
-            fallbackTo="/dashboard"
-            showBreadcrumb={true}
-            parentLabel="Administration"
-            currentLabel="Data Connectors"
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+        <BackButton
+          showBreadcrumb={true}
+          currentLabel="Data Connectors"
+        />
+        <PermissionGate permission="servers.create">
+          <CreateButton
+            onClick={() => {
+              setEditingConnector(null);
+              setShowCreateModal(true);
+            }}
           />
-          <PermissionGate permission="servers.create">
-            <CreateButton
-              onClick={() => {
-                setEditingConnector(null);
-                setShowCreateModal(true);
-              }}
-            />
-          </PermissionGate>
-        </div>
+        </PermissionGate>
       </div>
-      <p className={`${tw.textSecondary} text-sm`}>
+      <p className={`${tw.textSecondary} text-sm mt-1`}>
         Manage connector configurations and monitor integration health.
       </p>
 
       {/* Stats Cards */}
+      <div className="mt-6">
       {statistics && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <div
             className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
           >
@@ -339,9 +336,10 @@ export default function DataConnectors() {
           </div>
         </div>
       )}
-
+      </div>
 
       {/* Controls */}
+      <div className="space-y-4 mt-6">
       <div className="flex flex-col sm:flex-row gap-4 items-end">
         <div className="flex-1">
           <SearchInput
@@ -391,6 +389,7 @@ export default function DataConnectors() {
             placeholder="Filter by status"
           />
         </div>
+      </div>
       </div>
 
       {/* Content */}

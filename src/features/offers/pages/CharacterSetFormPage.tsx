@@ -110,7 +110,7 @@ export default function CharacterSetFormPage() {
 
   return (
     <div className="space-y-6">
-      <BackButton fallbackTo="/dashboard/character-sets" showBreadcrumb={true} currentLabel={id ? "Edit Character Set" : "Create Character Set"} />
+      <BackButton showBreadcrumb={true} currentLabel={id ? "Edit Character Set" : "Create Character Set"} />
 
       <form onSubmit={handleSubmit} className="space-y-4 bg-white rounded-lg p-6 border border-gray-200">
         <h2 className="text-sm font-semibold text-gray-900">

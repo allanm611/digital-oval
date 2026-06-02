@@ -20,6 +20,7 @@ import GlobalLoader from "./shared/components/GlobalLoader";
 import { AppErrorBoundary } from "./shared/components/AppErrorBoundary";
 import { SafeRoute } from "./shared/components/SafeRoute";
 import { ProtectedRoute } from "./shared/components/ProtectedRoute";
+import { NavigationHistoryProvider } from "./shared/contexts/NavigationHistoryContext";
 
 // Lazy load all pages for better performance
 const LoginPage = lazy(() => import("./features/auth/pages/LoginPage"));
@@ -123,13 +124,15 @@ function App() {
                       <NotificationSettingsProvider>
                         <DocsVersionProvider>
                           <Router>
-                            <div
-                              className="min-h-screen"
-                              style={{ backgroundColor: color.primary.background }}
-                            >
-                              <GlobalLoader />
-                              <AppRoutes />
-                            </div>
+                            <NavigationHistoryProvider>
+                              <div
+                                className="min-h-screen"
+                                style={{ backgroundColor: color.primary.background }}
+                              >
+                                <GlobalLoader />
+                                <AppRoutes />
+                              </div>
+                            </NavigationHistoryProvider>
                           </Router>
                         </DocsVersionProvider>
                       </NotificationSettingsProvider>

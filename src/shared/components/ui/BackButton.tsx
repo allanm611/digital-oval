@@ -2,9 +2,9 @@ import { useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, ChevronRight } from "lucide-react";
 import { navigateBackOrFallback } from "../../utils/navigation";
+import { useNavigationHistory } from "../../contexts/NavigationHistoryContext";
 
 interface BackButtonProps {
-  fallbackTo?: string;
   className?: string;
   onClick?: () => void;
   iconSize?: string;
@@ -66,7 +66,6 @@ function getPathLabel(path: string): string {
 }
 
 export default function BackButton({
-  fallbackTo,
   className,
   onClick,
   iconSize,
@@ -76,16 +75,35 @@ export default function BackButton({
 }: BackButtonProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { previousPath } = useNavigationHistory();
 
   const handleClick = onClick
     ? onClick
-    : () => navigateBackOrFallback(navigate, fallbackTo || "/");
+    : () => navigateBackOrFallback(navigate, "/");
 
   // Keep compact/icon-only behavior for places that provide explicit icon sizing.
   const shouldShowBreadcrumb = showBreadcrumb ?? !iconSize;
 
   const breadcrumbData = useMemo(() => {
-    const fallbackLabel = parentLabel || (fallbackTo ? getPathLabel(fallbackTo) : "Back");
+    let fallbackLabel = parentLabel || "Back";
+
+    // If no parentLabel provided, infer from actual previous path or current path structure
+    if (!parentLabel) {
+      // First priority: use the actual previous page the user came from
+      if (previousPath) {
+        fallbackLabel = getPathLabel(previousPath);
+      } else {
+        // Fallback: infer from current path structure
+        const segments = location.pathname.split("/").filter(Boolean);
+        if (segments.length > 1) {
+          // Remove last segment (the detail/analytics page) to get parent
+          const parentSegments = segments.slice(0, -1);
+          const parentPath = "/" + parentSegments.join("/");
+          fallbackLabel = getPathLabel(parentPath);
+        }
+      }
+    }
+
     const computedCurrentLabel =
       currentLabel || getPathLabel(location.pathname);
 
@@ -93,9 +111,9 @@ export default function BackButton({
       fallbackLabel,
       computedCurrentLabel,
     };
-  }, [fallbackTo, currentLabel, location.pathname, parentLabel]);
+  }, [currentLabel, location.pathname, parentLabel, previousPath]);
 
-  if (shouldShowBreadcrumb && fallbackTo) {
+  if (shouldShowBreadcrumb) {
     return (
       <nav
         aria-label="Breadcrumb"

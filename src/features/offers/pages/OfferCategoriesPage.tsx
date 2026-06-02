@@ -1032,7 +1032,7 @@ function OfferCategoriesPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div className="flex items-center space-x-2 sm:space-x-4">
-          {/* <BackButton fallbackTo="/dashboard/offers" /> */}
+          {/* <BackButton /> */}
           <div>
             <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
               {t.offerCatalogs.title}

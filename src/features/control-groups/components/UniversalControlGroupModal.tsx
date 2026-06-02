@@ -395,7 +395,7 @@ function CreateControlGroupModal({
                 e.currentTarget.style.backgroundColor = "#588157";
               }}
             >
-              {editingGroup ? "Update" : "Create"} Control Group
+              {editingGroup ? "Update" : "Create"}
             </button>
           ) : (
             <button

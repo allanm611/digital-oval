@@ -369,7 +369,7 @@ export default function ProgramDetailsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-        <BackButton fallbackTo="/dashboard/programs" onClick={handleBack} showBreadcrumb={true} currentLabel="Program Details" />
+        <BackButton showBreadcrumb={true} currentLabel="Program Details" />
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={handleEdit}

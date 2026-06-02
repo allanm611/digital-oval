@@ -23,7 +23,6 @@ export default function CampaignLifecycleHistoryPage() {
         {/* Header */}
         <div className="mb-6">
           <BackButton
-            fallbackTo={`/dashboard/campaigns/${id}`}
             showBreadcrumb={true}
             currentLabel="Lifecycle History"
           />

@@ -664,7 +664,7 @@ export default function ConnectionProfilesPage() {
 
   return (
     <>
-      <div className="space-y-6">
+      <div className="">
         <div className="flex flex-col gap-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <BackButton
@@ -726,12 +726,12 @@ export default function ConnectionProfilesPage() {
           </div>
           </div>
         </div>
-        <p className={`${tw.textSecondary} text-sm -mt-4`}>
+        <p className={`${tw.textSecondary} text-sm mt-1`}>
           Manage secure connections and governance for integration endpoints
         </p>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
           {statsCards.map((card) => {
             const Icon = card.icon;
             return (
@@ -791,7 +791,7 @@ export default function ConnectionProfilesPage() {
         )}
 
         {/* Search & Filters */}
-        <div className="space-y-4">
+        <div className="space-y-4 mt-6">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <SearchInput
               value={searchTerm}

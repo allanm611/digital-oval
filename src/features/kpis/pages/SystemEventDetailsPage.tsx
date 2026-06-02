@@ -55,7 +55,7 @@ export default function SystemEventDetailsPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <BackButton fallbackTo="/dashboard/kpis/system-events" />
+          <BackButton />
           <p className={tw.textSecondary}>Event not found</p>
         </div>
       </div>
@@ -66,7 +66,7 @@ export default function SystemEventDetailsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-        <BackButton fallbackTo="/dashboard/kpis/system-events" showBreadcrumb={true} currentLabel="System Event Details" parentLabel={parentLabel} />
+        <BackButton showBreadcrumb={true} currentLabel="System Event Details" parentLabel={parentLabel} />
       </div>
 
       {/* Event Information */}

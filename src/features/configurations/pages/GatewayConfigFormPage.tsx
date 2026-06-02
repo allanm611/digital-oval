@@ -199,7 +199,7 @@ export default function GatewayConfigFormPage({ mode }: GatewayConfigFormPagePro
   return (
     <div className="space-y-6">
       <BackButton
-        fallbackTo="/dashboard/gateway-configurations"
+       
         showBreadcrumb={true}
         currentLabel={mode === "create" ? "Create Gateway Configuration" : "Edit Gateway Configuration"}
       />

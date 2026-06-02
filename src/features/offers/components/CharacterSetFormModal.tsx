@@ -347,7 +347,12 @@ export default function CharacterSetFormModal({
               type="button"
               onClick={onClose}
               disabled={isSaving}
-              className="px-4 py-2 border border-gray-300 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+              className="px-4 py-2 rounded text-sm font-medium transition-colors disabled:opacity-50"
+              style={{
+                background: "transparent",
+                color: color.primary.action,
+                border: `1px solid ${color.primary.action}`,
+              }}
             >
               Cancel
             </button>
@@ -360,7 +365,7 @@ export default function CharacterSetFormModal({
               {isSaving && (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
               )}
-              {isSaving ? "Saving..." : characterSet ? "Update" : "Create"}
+              {isSaving ? (characterSet ? "Updating..." : "Creating...") : characterSet ? "Update" : "Create"}
             </button>
           </div>
         </form>

@@ -90,7 +90,7 @@ export default function EmailRouteDetailsPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <BackButton fallbackTo="/dashboard/email-routes" />
+          <BackButton />
           <p className={tw.textSecondary}>Route not found</p>
         </div>
       </div>
@@ -101,7 +101,7 @@ export default function EmailRouteDetailsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <BackButton
-          fallbackTo="/dashboard/email-routes"
+         
           showBreadcrumb={true}
           currentLabel="Email Route Details"
         />

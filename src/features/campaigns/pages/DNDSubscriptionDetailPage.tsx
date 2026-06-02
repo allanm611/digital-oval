@@ -115,8 +115,6 @@ export default function DNDSubscriptionDetailPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <BackButton
-          fallbackTo={`/dashboard/dnd-management/${channelParam}`}
-          onClick={navigateBack}
           showBreadcrumb={true}
           currentLabel="Subscription Details"
         />

@@ -214,7 +214,7 @@ export default function CreateProductPage({
     <div className="space-y-6">
       {/* Header with Back Button and Close Button */}
       <div className="flex items-center justify-between gap-4 mb-4">
-        <BackButton fallbackTo={getBackButtonFallback()} showBreadcrumb={true} currentLabel="Create Product" />
+        <BackButton showBreadcrumb={true} currentLabel="Create Product" />
         {onClose && (
           <button
             onClick={onClose}

@@ -208,10 +208,12 @@ export default function CreateTestListModal({
             style={{ backgroundColor: color.primary.action }}
           >
             {isLoading
-              ? "Saving..."
+              ? mode === "edit"
+                ? "Updating..."
+                : "Creating..."
               : mode === "edit"
-                ? "Update List"
-                : "Create List"}
+                ? "Update"
+                : "Create"}
           </button>
         </div>
       </div>

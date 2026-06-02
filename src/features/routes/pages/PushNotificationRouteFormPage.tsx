@@ -242,7 +242,7 @@ export default function PushNotificationRouteFormPage({ mode }: PushNotification
   return (
     <div className="space-y-6">
       {/* Header with Back Button */}
-      <BackButton fallbackTo="/dashboard/push-notification-routes" showBreadcrumb={true} currentLabel={mode === "create" ? "Create Push Notification Route" : "Edit Push Notification Route"} />
+      <BackButton showBreadcrumb={true} currentLabel={mode === "create" ? "Create Push Notification Route" : "Edit Push Notification Route"} />
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">

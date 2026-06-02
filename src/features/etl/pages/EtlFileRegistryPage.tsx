@@ -177,17 +177,14 @@ export default function EtlFileRegistryPage() {
     !isLoadingFiles && searchTerm && filteredFiles.length === 0;
 
   return (
-    <div className="space-y-6">
+    <div className="overflow-x-auto">
       {/* Header */}
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <BackButton
-            fallbackTo="/dashboard"
-            showBreadcrumb={true}
-            parentLabel="Administration"
-            currentLabel="ETL"
-          />
-          <div className="flex flex-wrap gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+        <BackButton
+          showBreadcrumb={true}
+          currentLabel="ETL"
+        />
+        <div className="flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => setShowFetchDropdown(!showFetchDropdown)}
@@ -259,12 +256,12 @@ export default function EtlFileRegistryPage() {
             {t.etl.analytics}
           </button>
         </div>
-        </div>
-        <p className={`${tw.textSecondary} text-sm -mt-4`}>
-          {t.etl.fileRegistryDescription}
-        </p>
       </div>
+      <p className={`${tw.textSecondary} text-sm mt-1`}>
+        {t.etl.fileRegistryDescription}
+      </p>
 
+      <div className="mt-6">
       {/* Stats Cards */}
       {!isLoadingStats &&
         stats &&
@@ -387,9 +384,11 @@ export default function EtlFileRegistryPage() {
             </div>
           );
         })()}
+      </div>
 
       {/* Filters */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center">
+      <div className="space-y-4 mt-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center">
         <SearchInput
           placeholder={t.etl.searchByFileName}
           value={searchTerm}
@@ -409,6 +408,7 @@ export default function EtlFileRegistryPage() {
           placeholder={t.etl.categoryPlaceholder}
           className="md:w-48"
         />
+      </div>
       </div>
 
       {/* Table */}

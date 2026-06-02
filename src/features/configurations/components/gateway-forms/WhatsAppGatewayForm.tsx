@@ -256,7 +256,7 @@ export default function WhatsAppGatewayForm({
           className="px-6 py-2 text-sm font-medium text-white rounded-md transition-colors disabled:opacity-60"
           style={{ backgroundColor: color.primary.action }}
         >
-          {isLoading ? "Saving..." : "Save Configuration"}
+          {isLoading ? (mode === "create" ? "Creating..." : "Updating...") : (mode === "create" ? "Create" : "Update")}
         </button>
       </div>
     </form>

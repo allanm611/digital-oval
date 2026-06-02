@@ -1693,12 +1693,12 @@ export default function CreateCustomerModal({
         </form>
 
         {/* Footer */}
-        <div className={`flex gap-3 p-6`}>
+        <div className={`flex items-center justify-end gap-3 p-6`}>
           <button
             type="button"
             onClick={onClose}
             disabled={isLoading}
-            className={`flex-1 px-4 py-2 border ${tw.borderDefault} ${tw.textSecondary} ${tw.rounded} hover:bg-gray-50 transition-colors font-medium text-sm disabled:opacity-50`}
+            className={`px-4 py-2 border ${tw.borderDefault} ${tw.textSecondary} ${tw.rounded} hover:bg-gray-50 transition-colors font-medium text-sm disabled:opacity-50`}
           >
             Cancel
           </button>
@@ -1714,7 +1714,7 @@ export default function CreateCustomerModal({
               (activeTab === "bulk" && bulkValidation.invalid > 0) ||
               (activeTab === "import" && !mappingConfirmed)
             }
-            className={`flex-1 px-4 py-2 ${tw.rounded} text-white font-medium text-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2`}
+            className={`px-4 py-2 ${tw.rounded} text-white font-medium text-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2`}
             style={{ backgroundColor: color.primary.action }}
           >
             {isLoading ? (

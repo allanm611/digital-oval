@@ -244,7 +244,7 @@ export default function RevenueMetricFormPage({ mode }: RevenueMetricFormPagePro
   return (
     <div className="space-y-6">
       {/* Header with Back Button */}
-      <BackButton fallbackTo="/dashboard/kpis/revenue-metrics" showBreadcrumb={true} currentLabel={mode === "create" ? "Create Revenue Metric" : "Edit Revenue Metric"} />
+      <BackButton showBreadcrumb={true} currentLabel={mode === "create" ? "Create Revenue Metric" : "Edit Revenue Metric"} />
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">

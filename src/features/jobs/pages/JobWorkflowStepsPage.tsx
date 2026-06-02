@@ -905,13 +905,13 @@ export default function JobWorkflowStepsPage() {
 
   return (
     <>
-      <div className="space-y-6">
+      <div className="">
         <div className="flex flex-col gap-4">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <BackButton
-              fallbackTo="/dashboard"
+             
               showBreadcrumb={true}
-              parentLabel="Administration"
+             
               currentLabel="Job Workflow Steps"
             />
             <div className="flex gap-3">

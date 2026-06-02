@@ -223,7 +223,7 @@ export default function ConfigurationManager({
       {/* Breadcrumb */}
       {showBackButton && (
         <BackButton
-          fallbackTo={config.backPath}
+         
           showBreadcrumb={true}
           currentLabel={config.title}
         />

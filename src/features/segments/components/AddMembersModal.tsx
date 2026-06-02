@@ -352,7 +352,12 @@ export default function AddMembersModal({
           <div className="flex items-center space-x-3">
             <button
               onClick={handleClose}
-              className={`px-4 py-2 border border-gray-300 text-black ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-colors`}
+              className={`px-4 py-2 text-sm font-medium ${tw.rounded} transition-colors`}
+              style={{
+                background: "transparent",
+                color: color.primary.action,
+                border: `1px solid ${color.primary.action}`,
+              }}
             >
               Cancel
             </button>

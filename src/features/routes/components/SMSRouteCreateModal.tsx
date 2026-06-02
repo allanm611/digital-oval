@@ -247,28 +247,28 @@ export default function SMSRouteCreateModal({
           </div>
 
           {/* Footer */}
-          <div className="flex gap-3 pt-4">
-            <button
-              type="submit"
-              disabled={loading}
-              className={`flex-1 px-4 py-2 text-sm text-white ${tw.rounded} font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-              style={{ backgroundColor: color.primary.action }}
-            >
-              {loading
-                ? isEditMode
-                  ? "Saving..."
-                  : "Creating..."
-                : isEditMode
-                  ? "Save"
-                  : "Create"}
-            </button>
+          <div className="flex items-center justify-end gap-3 pt-4">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="flex-1 px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className={`px-4 py-2 text-sm text-white ${tw.rounded} font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+              style={{ backgroundColor: color.primary.action }}
+            >
+              {loading
+                ? isEditMode
+                  ? "Updating..."
+                  : "Creating..."
+                : isEditMode
+                  ? "Update"
+                  : "Create"}
             </button>
           </div>
         </form>

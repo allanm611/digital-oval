@@ -274,9 +274,9 @@ export default function EditRoutePage() {
   return (
     <div className="space-y-6">
       <BackButton
-        fallbackTo="/dashboard/routes"
+       
         showBreadcrumb={true}
-        parentLabel="Routes"
+       
         currentLabel="Edit Route"
       />
 

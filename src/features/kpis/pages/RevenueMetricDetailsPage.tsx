@@ -87,7 +87,7 @@ export default function RevenueMetricDetailsPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <BackButton fallbackTo="/dashboard/kpis/revenue-metrics" showBreadcrumb={true} currentLabel="Revenue Metric Details" parentLabel={parentLabel} />
+          <BackButton showBreadcrumb={true} currentLabel="Revenue Metric Details" parentLabel={parentLabel} />
           <p className={tw.textSecondary}>Metric not found</p>
         </div>
       </div>
@@ -99,7 +99,7 @@ export default function RevenueMetricDetailsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <BackButton fallbackTo="/dashboard/kpis/revenue-metrics" showBreadcrumb={true} currentLabel="Revenue Metric Details" parentLabel={parentLabel} />
+          <BackButton showBreadcrumb={true} currentLabel="Revenue Metric Details" parentLabel={parentLabel} />
           <div></div>
         </div>
 

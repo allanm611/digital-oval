@@ -452,9 +452,9 @@ export default function CreateJobWorkflowStepPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="">
       <BackButton
-        fallbackTo="/dashboard/job-workflow-steps"
+       
         showBreadcrumb={true}
         currentLabel={
           isDuplicateMode
@@ -664,11 +664,11 @@ export default function CreateJobWorkflowStepPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="">
         {!batchMode ? (
           <div className="grid gap-6 lg:grid-cols-2">
             {/* Left Column */}
-            <div className="space-y-6">
+            <div className="">
               {/* Basic Information */}
               <div
                 className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
@@ -963,7 +963,7 @@ export default function CreateJobWorkflowStepPage() {
             </div>
 
             {/* Right Column */}
-            <div className="space-y-6">
+            <div className="">
               {/* Dependencies & Parallel Execution */}
               <div
                 className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}

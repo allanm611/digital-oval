@@ -699,7 +699,12 @@ export default function SegmentListModal({
               <button
                 type="button"
                 onClick={handleClose}
-                className={`${tw.rounded} border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50`}
+                className={`${tw.rounded} px-4 py-2 text-sm font-medium transition-colors`}
+                style={{
+                  background: "transparent",
+                  color: color.primary.action,
+                  border: `1px solid ${color.primary.action}`,
+                }}
               >
                 Cancel
               </button>
@@ -714,7 +719,7 @@ export default function SegmentListModal({
                 }}
               >
                 {submitLabel ||
-                  (isCreateMode ? "Create quick list" : "Save Changes")}
+                  (isCreateMode ? "Create" : "Update")}
               </button>
             </div>
           </div>

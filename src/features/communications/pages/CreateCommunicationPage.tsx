@@ -294,7 +294,7 @@ export default function CreateCommunicationPage() {
         {/* Breadcrumb */}
         <div className="mb-6">
           <BackButton
-            fallbackTo="/dashboard/quick-lists"
+           
             showBreadcrumb={true}
             currentLabel="Send Communication"
           />

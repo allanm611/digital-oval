@@ -203,7 +203,7 @@ export default function DNDBulkManagementPage() {
     <div className="space-y-6">
       {/* Breadcrumb */}
       <BackButton
-        fallbackTo="/dashboard/dnd-management"
+       
         showBreadcrumb={true}
         currentLabel="Bulk Management"
       />

@@ -345,7 +345,7 @@ export default function SMSTestPage() {
     <div>
       <div className="space-y-4">
         {/* Header */}
-        <BackButton fallbackTo="/dashboard/manual-actions" showBreadcrumb={true} currentLabel="Test Message Tool" />
+        <BackButton showBreadcrumb={true} currentLabel="Test Message Tool" />
 
         <div>
           {/* Main Form */}

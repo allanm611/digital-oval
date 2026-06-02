@@ -853,7 +853,7 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
       {/* Header */}
       <div className="flex flex-col space-y-4">
         <div className="flex items-center gap-4">
-          <BackButton fallbackTo="/dashboard" />
+          <BackButton />
           <div>
             {/* <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}> */}
             <h1 className="text-2xl font-bold">

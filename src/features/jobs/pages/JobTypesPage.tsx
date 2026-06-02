@@ -348,7 +348,7 @@ function JobTypeViewModal({
             <LoadingSpinner />
           </div>
         ) : jobType ? (
-          <div className="space-y-6">
+          <div className="">
             <div>
               <h3 className="text-xl font-semibold text-gray-900 mb-1">
                 {jobType.name}
@@ -670,13 +670,13 @@ export default function JobTypesPage() {
 
   return (
     <>
-      <div className="space-y-6">
+      <div className="">
         <div className="flex flex-col gap-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <BackButton
-              fallbackTo="/dashboard"
+             
               showBreadcrumb={true}
-              parentLabel="Administration"
+             
               currentLabel="Job Types"
             />
             <PermissionGate permission="job-types.create">

@@ -357,7 +357,7 @@ export default function ProgramsPage() {
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
-      <BackButton fallbackTo="/dashboard/configuration" showBreadcrumb={true} currentLabel={t.programs.title} />
+      <BackButton showBreadcrumb={true} currentLabel={t.programs.title} />
 
       {/* Description and Create Button */}
       <div className="flex items-start justify-between gap-4">

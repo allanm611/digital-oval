@@ -350,7 +350,7 @@ export default function ManualRewardsTestPage() {
       <div className="space-y-4">
         {/* Header */}
         <BackButton
-          fallbackTo="/dashboard/manual-actions"
+         
           showBreadcrumb={true}
           currentLabel="Test Reward"
         />

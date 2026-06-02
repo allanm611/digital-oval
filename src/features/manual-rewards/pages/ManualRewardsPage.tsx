@@ -164,7 +164,7 @@ export default function ManualRewardsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <BackButton
-          fallbackTo="/dashboard/manual-broadcasts"
+         
           showBreadcrumb={true}
           currentLabel="Manual Rewards"
         />

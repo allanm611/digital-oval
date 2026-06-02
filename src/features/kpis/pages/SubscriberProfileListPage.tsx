@@ -132,7 +132,7 @@ export default function SubscriberProfileListPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
-        <BackButton fallbackTo="/dashboard/kpis" />
+        <BackButton />
         <CreateButton route="/dashboard/kpis/subscriber-profiles/create" />
       </div>
 

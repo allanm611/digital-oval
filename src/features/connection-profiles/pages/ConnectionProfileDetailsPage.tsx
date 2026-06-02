@@ -300,7 +300,7 @@ export default function ConnectionProfileDetailsPage() {
           The connection profile you're looking for doesn't exist.
         </p>
         <BackButton
-          fallbackTo="/dashboard/connection-profiles"
+         
           label="Back to Connection Profiles"
         />
       </div>
@@ -311,7 +311,7 @@ export default function ConnectionProfileDetailsPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-          <BackButton fallbackTo="/dashboard/connection-profiles" showBreadcrumb={true} currentLabel="Connection Profile Details" />
+          <BackButton showBreadcrumb={true} currentLabel="Connection Profile Details" />
           <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={handleToggleActive}

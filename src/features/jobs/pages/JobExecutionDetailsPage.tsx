@@ -350,9 +350,9 @@ export default function JobExecutionDetailsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="">
       <BackButton
-        fallbackTo="/dashboard/job-executions"
+       
         showBreadcrumb={true}
         currentLabel="Job Execution Details"
       />
@@ -739,7 +739,7 @@ export default function JobExecutionDetailsPage() {
               <LoadingSpinner />
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="">
               {/* SLA Prediction */}
               {slaPrediction && (
                 <div className="border-b border-gray-200 pb-4">

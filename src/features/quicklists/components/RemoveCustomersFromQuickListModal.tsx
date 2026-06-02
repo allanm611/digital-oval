@@ -400,7 +400,12 @@ export default function RemoveCustomersFromQuickListModal({
             <button
               onClick={handleClose}
               disabled={isLoading}
-              className={`px-4 py-2 border border-gray-300 text-black ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-50`}
+              className={`px-4 py-2 text-sm font-medium ${tw.rounded} transition-colors disabled:opacity-50`}
+              style={{
+                background: "transparent",
+                color: color.primary.action,
+                border: `1px solid ${color.primary.action}`,
+              }}
             >
               Cancel
             </button>

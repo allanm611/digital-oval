@@ -73,7 +73,7 @@ export default function KPIsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4">
-        <BackButton fallbackTo="/dashboard" showBreadcrumb={true} parentLabel="Administration" currentLabel="KPIs" />
+        <BackButton showBreadcrumb={true} currentLabel="KPIs" />
       </div>
 
       {/* Stats Cards */}

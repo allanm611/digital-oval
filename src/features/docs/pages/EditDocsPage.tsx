@@ -355,7 +355,7 @@ function EditDocsPageContent() {
             className={styles.saveButton}
             disabled={isSaving || isDeleting}
           >
-            {isSaving ? (isAddMode ? 'Creating...' : 'Saving...') : (isAddMode ? 'Create Document' : 'Save Changes')}
+            {isSaving ? (isAddMode ? 'Creating...' : 'Updating...') : (isAddMode ? 'Create' : 'Update')}
           </button>
         </div>
       </div>

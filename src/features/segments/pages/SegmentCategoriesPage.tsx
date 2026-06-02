@@ -759,7 +759,7 @@ export default function SegmentCategoriesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center space-x-2 sm:space-x-4 flex-1 min-w-0">
-          {/* <BackButton fallbackTo="/dashboard/segments" /> */}
+          {/* <BackButton /> */}
           <div className="min-w-0 flex-1">
             <h1 className={`${tw.mainHeading} ${tw.textPrimary} truncate`}>
               {t.segmentCatalogs.title}

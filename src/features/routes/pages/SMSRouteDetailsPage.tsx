@@ -90,7 +90,7 @@ export default function SMSRouteDetailsPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <BackButton fallbackTo="/dashboard/sms-routes" />
+          <BackButton />
           <p className={tw.textSecondary}>Route not found</p>
         </div>
       </div>
@@ -101,7 +101,7 @@ export default function SMSRouteDetailsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-        <BackButton fallbackTo="/dashboard/sms-routes" showBreadcrumb={true} currentLabel="SMS Route Details" />
+        <BackButton showBreadcrumb={true} currentLabel="SMS Route Details" />
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2">

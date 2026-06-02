@@ -87,9 +87,9 @@ export default function ExecutionDetailsPage() {
     return (
       <div className="space-y-6">
         <BackButton
-          fallbackTo="/dashboard/monitoring"
+         
           showBreadcrumb={true}
-          parentLabel="Monitoring"
+         
           currentLabel="Execution Details"
         />
         <div className="flex items-center justify-center py-12">
@@ -104,9 +104,9 @@ export default function ExecutionDetailsPage() {
     return (
       <div className="space-y-6">
         <BackButton
-          fallbackTo="/dashboard/monitoring"
+         
           showBreadcrumb={true}
-          parentLabel="Monitoring"
+         
           currentLabel="Execution Details"
         />
         <div className="text-center py-12">
@@ -119,9 +119,9 @@ export default function ExecutionDetailsPage() {
   return (
     <div className="space-y-6">
       <BackButton
-        fallbackTo="/dashboard/monitoring"
+       
         showBreadcrumb={true}
-        parentLabel="Monitoring"
+       
         currentLabel={execution.name}
       />
 

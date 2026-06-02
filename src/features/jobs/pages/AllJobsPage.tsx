@@ -70,7 +70,7 @@ export default function AllJobsPage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <BackButton fallbackTo="/dashboard" showBreadcrumb={true} currentLabel={t.jobs.allJobs} />
+          <BackButton showBreadcrumb={true} currentLabel={t.jobs.allJobs} />
         </div>
 
         {/* Actions Bar */}

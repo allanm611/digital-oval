@@ -421,7 +421,7 @@ function JobDependencyViewModal({
             <LoadingSpinner />
           </div>
         ) : dependency ? (
-          <div className="space-y-6">
+          <div className="">
             <div>
               <h3 className="text-xl font-semibold text-gray-900 mb-1">
                 Dependency {dependency.id}
@@ -1739,13 +1739,13 @@ export default function JobDependenciesPage() {
 
   return (
     <>
-      <div className="space-y-6">
+      <div className="">
         <div className="flex flex-col gap-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <BackButton
-              fallbackTo="/dashboard"
+             
               showBreadcrumb={true}
-              parentLabel="Administration"
+             
               currentLabel="Job Dependencies"
             />
             <div className="flex flex-wrap justify-end gap-2">
@@ -2785,7 +2785,7 @@ export default function JobDependenciesPage() {
                 <LoadingSpinner />
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="">
                 {statusData ? (
                   <>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">

@@ -174,8 +174,6 @@ export default function EditSegmentPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <BackButton
-          fallbackTo="/dashboard/segments"
-          onClick={handleCancel}
           showBreadcrumb={true}
           currentLabel="Edit Segment"
         />
@@ -207,12 +205,12 @@ export default function EditSegmentPage() {
             {isSaving ? (
               <>
                 <LoadingSpinner size="sm" className="inline mr-2" />
-                Saving...
+                Updating...
               </>
             ) : (
               <>
                 <Save className="w-4 h-4 inline mr-2" />
-                Save Changes
+                Update
               </>
             )}
           </button>

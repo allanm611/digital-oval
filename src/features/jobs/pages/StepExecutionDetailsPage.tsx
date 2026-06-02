@@ -152,9 +152,9 @@ export default function StepExecutionDetailsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="">
       <div className="flex items-center justify-between">
-        <BackButton fallbackTo="/dashboard/step-executions" showBreadcrumb={true} currentLabel="Step Execution Details" />
+        <BackButton showBreadcrumb={true} currentLabel="Step Execution Details" />
         <div className="flex gap-2">
           {canWrite && execution.execution_status === "running" && (
             <button

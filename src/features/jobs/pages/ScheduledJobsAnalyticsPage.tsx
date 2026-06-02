@@ -340,15 +340,15 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
   }, [loadAnalytics]);
 
   return (
-    <div className="space-y-6">
-      <BackButton fallbackTo="/dashboard/scheduled-jobs" showBreadcrumb={true} currentLabel="Scheduled Jobs Analytics" />
+    <div className="">
+      <BackButton showBreadcrumb={true} currentLabel="Scheduled Jobs Analytics" />
 
       {isLoading ? (
         <div className="flex justify-center py-16">
           <LoadingSpinner />
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="">
           {slaCompliance && (
             <div className="grid gap-4 md:grid-cols-3">
               <div
@@ -404,7 +404,7 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
             </div>
           )}
 
-          <div className="space-y-6">
+          <div className="">
             {mostFailed.length > 0 && (
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
@@ -656,7 +656,7 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
             )}
           </div>
 
-          <div className="space-y-6">
+          <div className="">
             <div className="grid gap-6 md:grid-cols-2">
               {statusCounts.length > 0 && (
                 <div
@@ -835,7 +835,7 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
             )}
 
             {executionStats && Object.keys(executionStats).length > 0 && (
-              <div className="space-y-6">
+              <div className="">
                 <div
                   className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
                 >

@@ -548,8 +548,8 @@ export default function QuickListPage() {
         onSubmit={handleModalSubmit}
         submitLabel={
           modalMode === "create"
-            ? t.quicklist?.createList || "Create quick list"
-            : t.quicklist?.saveChanges || "Save Changes"
+            ? "Create"
+            : "Update"
         }
       />
     </div>

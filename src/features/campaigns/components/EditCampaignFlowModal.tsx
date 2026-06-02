@@ -404,7 +404,7 @@ export default function EditCampaignFlowModal({
                   : ""
               }
             >
-              {isActionLoading ? "Saving..." : "Save Changes"}
+              {isActionLoading ? "Updating..." : "Update"}
             </button>
           </div>
         </div>
