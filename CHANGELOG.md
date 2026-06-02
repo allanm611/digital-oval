@@ -1,3 +1,12 @@
+## [1.4.4](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.3...v1.4.4) (2026-06-02)
+
+
+### Bug Fixes
+
+* fix build ([eca4eca](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/eca4eca77c32fa2fc55aff7d321241550b8709a2))
+* making all buttons be consistent ([73c51e8](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/73c51e8139286bab1184fb999f6a678fc3f566af))
+* setting up the message varibales config ([ad24693](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/ad24693fef88c4de98d5c0903a402440bf356bf3))
+
 ## [1.4.3](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.2...v1.4.3) (2026-06-01)
 
 
