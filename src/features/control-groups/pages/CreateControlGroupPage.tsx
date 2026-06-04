@@ -363,7 +363,7 @@ export default function CreateControlGroupPage() {
         type: "manual",
         percentage: controlGroupPercentage,
         customer_source_type: selectedCustomerBase as "active_subscribers" | "all_customers" | "saved_segment" | "manual",
-        generation_method: generationMethod as "random" | "stratified",
+        generation_method: "random" as const,
         recurrence_pattern: scheduling.recurrence_pattern as "one_time" | "daily" | "weekly" | "monthly",
         start_date: scheduling.start_date,
         ...(scheduling.end_date && { end_date: scheduling.end_date }),

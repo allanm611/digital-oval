@@ -280,7 +280,7 @@ export default function AddMembersModal({
 
                     return (
                       <tr
-                        key={customer.customerId}
+                        key={customerId}
                         onClick={() => handleToggleCustomer(customer)}
                         className="cursor-pointer transition-colors hover:bg-gray-50"
                       >

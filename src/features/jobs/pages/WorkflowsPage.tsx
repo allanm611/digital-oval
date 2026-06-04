@@ -383,78 +383,79 @@ export default function WorkflowsPage() {
 
   return (
     <>
-      <div className="">
+      <div className="overflow-x-auto">
         {/* Header */}
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <BackButton
-             
-              showBreadcrumb={true}
-             
-              currentLabel="Job Workflows"
-            />
-            <div className="flex items-center gap-3">
-            <button
-            onClick={() => navigate("/dashboard/workflows/analytics")}
-            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
-            style={{
-              backgroundColor: "transparent",
-              color: color.primary.action,
-              border: `1px solid ${color.primary.action}`,
-            }}
-          >
-            <BarChart3 className="h-4 w-4" />
-            Analytics
-          </button>
-          <PermissionGate permission="job-workflows.select">
-            <button
-              onClick={() => {
-                if (!isSelectionMode) {
-                  setIsSelectionMode(true);
-                  setSelectedWorkflows(new Set(workflows.map((w) => w.id)));
-                } else {
-                  setIsSelectionMode(false);
-                  setSelectedWorkflows(new Set());
-                }
-              }}
-              className={`inline-flex items-center gap-2 ${tw.rounded} text-sm font-medium`}
-              style={{
-                background: button.bordered.background,
-                color: button.bordered.color,
-                border: button.bordered.border,
-                paddingTop: button.bordered.paddingY,
-                paddingBottom: button.bordered.paddingY,
-                paddingLeft: button.bordered.paddingX,
-                paddingRight: button.bordered.paddingX,
-                borderRadius: button.bordered.borderRadius,
-                fontSize: button.bordered.fontSize,
-              }}
-            >
-              {isSelectionMode ? "Cancel" : "Select"}
-            </button>
-          </PermissionGate>
-          <PermissionGate permission="job-workflows.create">
-            <button
-              onClick={() => {
-                setEditingWorkflow(null);
-                setShowWorkflowModal(true);
-              }}
-              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-semibold text-white`}
-              style={{ backgroundColor: color.primary.action }}
-            >
-              <Plus className="h-4 w-4" />
-              {t.workflows.createWorkflow}
-            </button>
-          </PermissionGate>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+          <div>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <BackButton
+                showBreadcrumb={true}
+                currentLabel="Job Workflows"
+              />
             </div>
+            <p className={`${tw.textSecondary} text-sm mt-1`}>
+              Manage and monitor workflows
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate("/dashboard/workflows/analytics")}
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
+              style={{
+                backgroundColor: "transparent",
+                color: color.primary.action,
+                border: `1px solid ${color.primary.action}`,
+              }}
+            >
+              <BarChart3 className="h-4 w-4" />
+              Analytics
+            </button>
+            <PermissionGate permission="job-workflows.select">
+              <button
+                onClick={() => {
+                  if (!isSelectionMode) {
+                    setIsSelectionMode(true);
+                    setSelectedWorkflows(new Set(workflows.map((w) => w.id)));
+                  } else {
+                    setIsSelectionMode(false);
+                    setSelectedWorkflows(new Set());
+                  }
+                }}
+                className={`inline-flex items-center gap-2 ${tw.rounded} text-sm font-medium`}
+                style={{
+                  background: button.bordered.background,
+                  color: button.bordered.color,
+                  border: button.bordered.border,
+                  paddingTop: button.bordered.paddingY,
+                  paddingBottom: button.bordered.paddingY,
+                  paddingLeft: button.bordered.paddingX,
+                  paddingRight: button.bordered.paddingX,
+                  borderRadius: button.bordered.borderRadius,
+                  fontSize: button.bordered.fontSize,
+                }}
+              >
+                {isSelectionMode ? "Cancel" : "Select"}
+              </button>
+            </PermissionGate>
+            <PermissionGate permission="job-workflows.create">
+              <button
+                onClick={() => {
+                  setEditingWorkflow(null);
+                  setShowWorkflowModal(true);
+                }}
+                className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-semibold text-white`}
+                style={{ backgroundColor: color.primary.action }}
+              >
+                <Plus className="h-4 w-4" />
+                {t.workflows.createWorkflow}
+              </button>
+            </PermissionGate>
           </div>
         </div>
-        <p className={`${tw.textSecondary} text-sm -mt-2`}>
-          Manage and monitor workflows
-        </p>
 
-      {/* Stats Cards (inline loader like scheduled jobs) */}
-      <div className="grid gap-4 md:grid-cols-4">
+        {/* Stats Cards */}
+        <div className="mt-6">
+          <div className="grid gap-4 md:grid-cols-4">
         <div
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
@@ -510,10 +511,12 @@ export default function WorkflowsPage() {
             {isLoadingStats ? "..." : stats.pending_activation}
           </p>
         </div>
-      </div>
+          </div>
+        </div>
 
-      {/* Filters and Search */}
-      <div className="flex flex-col sm:flex-row gap-4">
+        {/* Filters and Search */}
+        <div className="space-y-4 mt-6">
+          <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1">
           <SearchInput
             placeholder="Search workflows..."
@@ -544,9 +547,10 @@ export default function WorkflowsPage() {
           placeholder="Status"
           className="w-full sm:w-40"
         />
-      </div>
+          </div>
+        </div>
 
-      {/* Batch Actions Toolbar */}
+        {/* Batch Actions Toolbar */}
       {isSelectionMode && selectedWorkflows.size > 0 && (
         <div
           className={`${tw.rounded} border border-gray-200 bg-white p-4 flex items-center justify-between`}
@@ -846,6 +850,7 @@ export default function WorkflowsPage() {
           )}
         </div>
       )}
+      </div>
 
       <DeleteConfirmModal
         isOpen={showDeleteModal}

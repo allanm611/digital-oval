@@ -923,7 +923,7 @@ export default function SchedulingComponent({
           <h3 className="text-lg font-semibold text-gray-900 mb-2">
             Notification Preferences
           </h3>
-          <p className="text-sm text-gray-600">
+          <p className="text-xs text-gray-600">
             Check the channels where you want to receive notifications for each campaign stage. At least one channel must be selected to enable notifications for a stage.
           </p>
         </div>

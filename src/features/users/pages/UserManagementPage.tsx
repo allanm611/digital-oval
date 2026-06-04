@@ -1437,75 +1437,76 @@ export default function UserManagementPage() {
 
   return (
     <>
-      <div className="space-y-6">
+      <div className="overflow-x-auto">
         {/* Header */}
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <BackButton
-             
-              showBreadcrumb={true}
-             
-              currentLabel="Users"
-            />
-            <div className="flex items-center gap-3 flex-shrink-0">
-          {activeTab === "users" && (
-            <button
-              onClick={() => {
-                if (!isSelectionMode) {
-                  setIsSelectionMode(true);
-                  setSelectedUsers(new Set(filteredUsers.map((user) => user.id)));
-                } else {
-                  setIsSelectionMode(false);
-                  setSelectedUsers(new Set());
-                }
-              }}
-              className={`inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
-              style={{
-                backgroundColor: isSelectionMode
-                  ? color.primary.action
-                  : "transparent",
-                color: isSelectionMode ? "white" : color.primary.action,
-                border: `1px solid ${color.primary.action}`,
-              }}
-              title={isSelectionMode ? "Exit selection mode" : "Enter selection mode"}
-            >
-              {isSelectionMode ? (
-                <CheckSquare className="h-4 w-4" />
-              ) : (
-                <Square className="h-4 w-4" />
-              )}
-              {isSelectionMode ? "Exit Selection" : "Select Users"}
-            </button>
-          )}
-          <button
-            onClick={() => navigate("./analytics")}
-            className={`${tw.button} flex items-center gap-2`}
-            title="View user analytics"
-          >
-            <BarChart3 className="h-4 w-4" />
-            Analytics
-          </button>
-          <PermissionGate permission="users.create">
-            <button
-              onClick={() => {
-                setSelectedUser(null);
-                setIsModalOpen(true);
-              }}
-              className={`${tw.button} flex items-center gap-2`}
-            >
-              <Plus className="w-4 h-4" />
-              {t.userManagement.addUser}
-            </button>
-          </PermissionGate>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+          <div>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <BackButton
+                showBreadcrumb={true}
+                currentLabel="Users"
+              />
             </div>
+            <p className={`${tw.textSecondary} text-sm mt-1`}>
+              {t.userManagement.description}
+            </p>
           </div>
-          <p className={`${tw.textSecondary} text-sm`}>
-            {t.userManagement.description}
-          </p>
+          <div className="flex items-center gap-3 flex-shrink-0">
+            {activeTab === "users" && (
+              <button
+                onClick={() => {
+                  if (!isSelectionMode) {
+                    setIsSelectionMode(true);
+                    setSelectedUsers(new Set(filteredUsers.map((user) => user.id)));
+                  } else {
+                    setIsSelectionMode(false);
+                    setSelectedUsers(new Set());
+                  }
+                }}
+                className={`inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
+                style={{
+                  backgroundColor: isSelectionMode
+                    ? color.primary.action
+                    : "transparent",
+                  color: isSelectionMode ? "white" : color.primary.action,
+                  border: `1px solid ${color.primary.action}`,
+                }}
+                title={isSelectionMode ? "Exit selection mode" : "Enter selection mode"}
+              >
+                {isSelectionMode ? (
+                  <CheckSquare className="h-4 w-4" />
+                ) : (
+                  <Square className="h-4 w-4" />
+                )}
+                {isSelectionMode ? "Exit Selection" : "Select Users"}
+              </button>
+            )}
+            <button
+              onClick={() => navigate("./analytics")}
+              className={`${tw.button} flex items-center gap-2`}
+              title="View user analytics"
+            >
+              <BarChart3 className="h-4 w-4" />
+              Analytics
+            </button>
+            <PermissionGate permission="users.create">
+              <button
+                onClick={() => {
+                  setSelectedUser(null);
+                  setIsModalOpen(true);
+                }}
+                className={`${tw.button} flex items-center gap-2`}
+              >
+                <Plus className="w-4 h-4" />
+                {t.userManagement.addUser}
+              </button>
+            </PermissionGate>
+          </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        {/* Stats Cards */}
+        <div className="mt-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {userStatsCards.map((stat) => {
           const Icon = stat.icon;
           return (
@@ -1535,10 +1536,12 @@ export default function UserManagementPage() {
             </div>
           );
         })}
-      </div>
+          </div>
+        </div>
 
-      {/* Tabs */}
-      <style>{`
+        {/* Tabs */}
+        <div className="mt-6">
+          <style>{`
         @media (max-width: 640px) {
           .user-management-tabs::-webkit-scrollbar {
             display: none;
@@ -1610,7 +1613,7 @@ export default function UserManagementPage() {
 
       {/* Search and Filters - Only show on Users tab */}
       {activeTab === "users" && (
-        <div className="flex flex-col lg:flex-row gap-4 lg:items-center">
+        <div className="flex flex-col lg:flex-row gap-4 lg:items-center mt-4">
           <div className="flex-1">
             <SearchInput
               placeholder={t.userManagement.searchUsers}
@@ -1739,9 +1742,10 @@ export default function UserManagementPage() {
           </div>
         </div>
       )}
+        </div>
 
-      {/* Content */}
-      <div
+        {/* Content */}
+        <div
         className={` ${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
       >
         {!rolesReady || isLoading ? (
@@ -2567,6 +2571,7 @@ export default function UserManagementPage() {
             </>
           )
         ) :  null}
+        </div>
       </div>
 
       {/* User Modal */}

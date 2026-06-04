@@ -55,6 +55,7 @@ import {
 import { color, tw } from "../../../shared/utils/utils";
 import { zIndex } from "../../../shared/utils/tokens";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
+import { getStatusBadgeConfig } from "../../../shared/utils/statusColors";
 import { supportsHtmlBody, requiresHtmlBody } from "../utils/channelUtils";
 import BackButton from "../../../shared/components/ui/BackButton";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
@@ -1934,29 +1935,23 @@ export default function OfferDetailsPage() {
         </div>
       </div>
 
-      {/* Main Offer Info */}
-      <div
-        className={`bg-white ${tw.rounded} border p-6`}
-        style={{ borderColor: color.border.default }}
-      >
-        <div className="flex items-start space-x-4">
-          <div className="flex-1">
-            <h2 className={`${tw.tableFirstColumn} ${tw.textPrimary} mb-2`}>
-              {offer.name}
-            </h2>
-            <p className={`${tw.textSecondary} mb-4`}>
-              {offer.description || "No description available"}
-            </p>
-            <div className="flex items-center flex-wrap gap-2">
-              <span
-                className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${statusColor.bg} ${statusColor.text}`}
-              >
-                <StatusIcon className="w-4 h-4 mr-1" />
-                {offer.status}
-              </span>
+      {/* Main Offer Info + Details */}
+      <div className={`bg-white ${tw.rounded} p-6 shadow-sm`}>
+        <div className="space-y-6">
+          {/* Header Section */}
+          <div>
+            <div className="flex items-center flex-wrap gap-2 mb-3">
+              <div>
+                <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+                  Name
+                </label>
+                <p className={`text-sm ${tw.textPrimary} font-semibold`}>
+                  {offer.name}
+                </p>
+              </div>
               {offer.is_reusable && (
                 <span
-                  className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-white"
+                  className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium text-white h-fit mt-4"
                   style={{ backgroundColor: color.primary.accent }}
                 >
                   Reusable
@@ -1964,69 +1959,99 @@ export default function OfferDetailsPage() {
               )}
               {offer.supports_multi_language && (
                 <span
-                  className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[${color.primary.accent}]/10 text-[${color.primary.accent}]`}
+                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium h-fit mt-4 bg-[${color.primary.accent}]/10 text-[${color.primary.accent}]`}
                 >
                   Multi-language
                 </span>
               )}
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Offer Details */}
-      <div
-        className={`bg-white ${tw.rounded} border p-6`}
-        style={{ borderColor: color.border.default }}
-      >
-        <h3 className={`${tw.cardHeading} mb-4`}>Offer Information</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
-              Offer ID
-            </label>
-            <p className={`text-base ${tw.textPrimary} font-mono`}>
-              {offer.id}
-            </p>
-          </div>
-          <div>
-            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
-              Catalog
-            </label>
-            <p className={`text-base ${tw.textPrimary}`}>{categoryName}</p>
-          </div>
-          <div>
-            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
-              Offer Type
-            </label>
-            <p className={`text-base ${tw.textPrimary}`}>
-              {getOfferType(offer)}
-            </p>
-          </div>
-          <div>
-            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
-              Created Date
-            </label>
-            <p className={`text-base ${tw.textPrimary} flex items-center`}>
-              <Clock className="w-4 h-4 mr-2 text-gray-400" />
-              {offer.created_at ? (
-                <DateFormatter date={offer.created_at} useUserTimezone includeTime />
-              ) : (
-                "N/A"
-              )}
-            </p>
-          </div>
-          <div>
-            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
-              Last Updated
-            </label>
-            <p className={`text-base ${tw.textPrimary}`}>
-              {offer.updated_at ? (
-                <DateFormatter date={offer.updated_at} useUserTimezone includeTime />
-              ) : (
-                "N/A"
-              )}
-            </p>
+          {/* Details Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+                Offer ID
+              </label>
+              <p className={`text-sm ${tw.textPrimary} font-mono`}>
+                {offer.id}
+              </p>
+            </div>
+            <div>
+              <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+                Catalog
+              </label>
+              <p className={`text-sm ${tw.textPrimary}`}>{categoryName}</p>
+            </div>
+            <div>
+              <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+                Offer Type
+              </label>
+              <p className={`text-sm ${tw.textPrimary}`}>
+                {getOfferType(offer)}
+              </p>
+            </div>
+            <div>
+              <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+                Status
+              </label>
+              <div className="flex items-center flex-wrap gap-2">
+                {offer.status && (() => {
+                  const { className, style } = getStatusBadgeConfig(offer.status, "workflow");
+                  return (
+                    <span
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${className}`}
+                      style={style}
+                    >
+                      {offer.status?.replace(/_/g, " ")}
+                    </span>
+                  );
+                })()}
+              </div>
+            </div>
+            <div>
+              <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+                Approval Status
+              </label>
+              <div className="flex items-center flex-wrap gap-2">
+                {offer.approval_status && (() => {
+                  const { className, style } = getStatusBadgeConfig(offer.approval_status, "approval");
+                  return (
+                    <span
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${className}`}
+                      style={style}
+                    >
+                      {offer.approval_status?.replace(/_/g, " ")}
+                    </span>
+                  );
+                })()}
+                {!offer.approval_status && <span className={`text-sm ${tw.textPrimary}`}>—</span>}
+              </div>
+            </div>
+            <div>
+              <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+                Created Date
+              </label>
+              <p className={`text-sm ${tw.textPrimary}`}>
+                {offer.created_at ? (
+                  <DateFormatter date={offer.created_at} useUserTimezone includeTime />
+                ) : (
+                  "N/A"
+                )}
+              </p>
+            </div>
+            <div>
+              <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+                Last Updated
+              </label>
+              <p className={`text-sm ${tw.textPrimary}`}>
+                {offer.updated_at ? (
+                  <DateFormatter date={offer.updated_at} useUserTimezone includeTime />
+                ) : (
+                  "N/A"
+                )}
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -2150,7 +2175,7 @@ export default function OfferDetailsPage() {
                               onClick={() =>
                                 navigateToProductDetails(productId as number)
                               }
-                              className={`font-semibold text-sm sm:text-base ${tw.textPrimary} truncate`}
+                              className={`font-semibold text-sm ${tw.textPrimary} truncate`}
                               title={productName}
                               style={{ color: color.primary.accent }}
                             >
@@ -2158,7 +2183,7 @@ export default function OfferDetailsPage() {
                             </button>
                           ) : (
                             <span
-                              className={`font-semibold text-sm sm:text-base ${tw.textPrimary} truncate`}
+                              className={`font-semibold text-sm ${tw.textPrimary} truncate`}
                             >
                               {productName}
                             </span>
@@ -2170,14 +2195,14 @@ export default function OfferDetailsPage() {
                         >
                           {product.description ? (
                             <div
-                              className={`text-xs sm:text-sm ${tw.textMuted} truncate`}
+                              className={`text-sm ${tw.textMuted} truncate`}
                               title={product.description}
                             >
                               {product.description}
                             </div>
                           ) : (
                             <span
-                              className={`text-xs sm:text-sm ${tw.textMuted}`}
+                              className={`text-sm ${tw.textMuted}`}
                             >
                               No description provided
                             </span>
@@ -2188,12 +2213,12 @@ export default function OfferDetailsPage() {
                           style={{ backgroundColor: color.surface.tablebodybg }}
                         >
                           {isPrimary ? (
-                            <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-green-100 text-green-800">
+                            <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
                               Primary
                             </span>
                           ) : (
                             <span
-                              className={`text-xs sm:text-sm ${tw.textMuted}`}
+                              className={`text-sm ${tw.textMuted}`}
                             >
                               —
                             </span>
@@ -2420,7 +2445,7 @@ export default function OfferDetailsPage() {
                                     creativeId as number,
                                   )
                                 }
-                                className={`font-semibold text-sm sm:text-base ${tw.textPrimary} truncate`}
+                                className={`font-semibold text-sm ${tw.textPrimary} truncate`}
                                 title={creativeLabel}
                                 style={{ color: color.primary.accent }}
                               >
@@ -2428,7 +2453,7 @@ export default function OfferDetailsPage() {
                               </button>
                             ) : (
                               <span
-                                className={`font-semibold text-sm sm:text-base ${tw.textPrimary} truncate`}
+                                className={`font-semibold text-sm ${tw.textPrimary} truncate`}
                               >
                                 {creativeLabel}
                               </span>
@@ -2457,11 +2482,11 @@ export default function OfferDetailsPage() {
                             }}
                           >
                             {creative.is_active ? (
-                              <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-green-100 text-green-800">
+                              <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
                                 Active
                               </span>
                             ) : (
-                              <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-gray-100 text-gray-600">
+                              <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600">
                                 Inactive
                               </span>
                             )}

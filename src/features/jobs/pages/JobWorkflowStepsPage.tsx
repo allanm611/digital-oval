@@ -905,101 +905,49 @@ export default function JobWorkflowStepsPage() {
 
   return (
     <>
-      <div className="">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <BackButton
-             
-              showBreadcrumb={true}
-             
-              currentLabel="Job Workflow Steps"
-            />
-            <div className="flex gap-3">
+      <div className="overflow-x-auto">
+        {/* Header */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+          <div>
+            <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+              <BackButton
+                showBreadcrumb={true}
+                currentLabel="Job Workflow Steps"
+              />
+            </div>
+            <p className={`${tw.textSecondary} text-sm mt-1`}>
+              Manage and monitor workflow steps for scheduled jobs
+            </p>
+          </div>
+          <div className="flex gap-3">
             {jobIdFilter && (
-            <>
-              <button
-                onClick={handleOpenReorderModal}
-                className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
-                style={{
-                  backgroundColor: "transparent",
-                  color: color.primary.action,
-                  border: `1px solid ${color.primary.action}`,
-                }}
-              >
-                <Workflow className="h-4 w-4" />
-                Reorder Steps
-              </button>
-              <button
-                onClick={() => {
-                  setDeleteAllJobId(Number(jobIdFilter));
-                  setShowDeleteAllModal(true);
-                }}
-                className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-red-700 bg-white border border-red-300 hover:bg-red-50`}
-              >
-                <Trash2 className="h-4 w-4" />
-                Delete All
-              </button>
-            </>
-          )}
-          <button
-            onClick={() => navigate("/dashboard/job-workflow-steps/analytics")}
-            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
-            style={{
-              backgroundColor: "transparent",
-              color: color.primary.action,
-              border: `1px solid ${color.primary.action}`,
-            }}
-          >
-            <BarChart3 className="h-4 w-4" />
-            Analytics
-          </button>
-          <PermissionGate permission="job-workflow-steps.select">
+              <>
+                <button
+                  onClick={handleOpenReorderModal}
+                  className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
+                  style={{
+                    backgroundColor: "transparent",
+                    color: color.primary.action,
+                    border: `1px solid ${color.primary.action}`,
+                  }}
+                >
+                  <Workflow className="h-4 w-4" />
+                  Reorder Steps
+                </button>
+                <button
+                  onClick={() => {
+                    setDeleteAllJobId(Number(jobIdFilter));
+                    setShowDeleteAllModal(true);
+                  }}
+                  className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-red-700 bg-white border border-red-300 hover:bg-red-50`}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete All
+                </button>
+              </>
+            )}
             <button
-              onClick={() => {
-                if (!isSelectionMode) {
-                  setIsSelectionMode(true);
-                  setSelectedSteps(
-                    new Set(filteredSteps.map((step) => step.id)),
-                  );
-                } else {
-                  setIsSelectionMode(false);
-                  setSelectedSteps(new Set());
-                }
-              }}
-              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
-              style={{
-                backgroundColor: isSelectionMode
-                  ? color.primary.action
-                  : "transparent",
-                color: isSelectionMode ? "white" : color.primary.action,
-                border: `1px solid ${color.primary.action}`,
-              }}
-            >
-              {isSelectionMode ? (
-                <CheckSquare className="h-4 w-4" />
-              ) : (
-                <Square className="h-4 w-4" />
-              )}
-              {isSelectionMode ? "Exit Selection" : "Select Steps"}
-            </button>
-          </PermissionGate>
-          <PermissionGate permission="job-workflow-steps.create">
-            <CreateButton
-              route={
-                jobIdFilter
-                  ? `/dashboard/job-workflow-steps/create?job_id=${jobIdFilter}`
-                  : "/dashboard/job-workflow-steps/create"
-              }
-            />
-          </PermissionGate>
-          {jobIdFilter && (
-            <button
-              onClick={() => {
-                // Open batch create modal - for now navigate to create page
-                navigate(
-                  `/dashboard/job-workflow-steps/create?job_id=${jobIdFilter}&batch=true`,
-                );
-              }}
+              onClick={() => navigate("/dashboard/job-workflow-steps/analytics")}
               className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
               style={{
                 backgroundColor: "transparent",
@@ -1007,19 +955,72 @@ export default function JobWorkflowStepsPage() {
                 border: `1px solid ${color.primary.action}`,
               }}
             >
-              <Plus className="h-4 w-4" />
-              Batch Create
+              <BarChart3 className="h-4 w-4" />
+              Analytics
             </button>
-          )}
-            </div>
+            <PermissionGate permission="job-workflow-steps.select">
+              <button
+                onClick={() => {
+                  if (!isSelectionMode) {
+                    setIsSelectionMode(true);
+                    setSelectedSteps(
+                      new Set(filteredSteps.map((step) => step.id)),
+                    );
+                  } else {
+                    setIsSelectionMode(false);
+                    setSelectedSteps(new Set());
+                  }
+                }}
+                className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
+                style={{
+                  backgroundColor: isSelectionMode
+                    ? color.primary.action
+                    : "transparent",
+                  color: isSelectionMode ? "white" : color.primary.action,
+                  border: `1px solid ${color.primary.action}`,
+                }}
+              >
+                {isSelectionMode ? (
+                  <CheckSquare className="h-4 w-4" />
+                ) : (
+                  <Square className="h-4 w-4" />
+                )}
+                {isSelectionMode ? "Exit Selection" : "Select Steps"}
+              </button>
+            </PermissionGate>
+            <PermissionGate permission="job-workflow-steps.create">
+              <CreateButton
+                route={
+                  jobIdFilter
+                    ? `/dashboard/job-workflow-steps/create?job_id=${jobIdFilter}`
+                    : "/dashboard/job-workflow-steps/create"
+                }
+              />
+            </PermissionGate>
+            {jobIdFilter && (
+              <button
+                onClick={() => {
+                  navigate(
+                    `/dashboard/job-workflow-steps/create?job_id=${jobIdFilter}&batch=true`,
+                  );
+                }}
+                className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
+                style={{
+                  backgroundColor: "transparent",
+                  color: color.primary.action,
+                  border: `1px solid ${color.primary.action}`,
+                }}
+              >
+                <Plus className="h-4 w-4" />
+                Batch Create
+              </button>
+            )}
           </div>
         </div>
-        <p className={`${tw.textSecondary} text-sm`}>
-          Manage and monitor workflow steps for scheduled jobs
-        </p>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+        {/* Stats Cards */}
+        <div className="mt-6">
+          <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
         <div
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
@@ -1101,9 +1102,12 @@ export default function JobWorkflowStepsPage() {
             {isLoadingStats ? "..." : stats.parallelGroups}
           </p>
         </div>
-      </div>
+          </div>
+        </div>
 
-      <div className="flex gap-4">
+        {/* Filters and Search */}
+        <div className="space-y-4 mt-6">
+          <div className="flex gap-4">
         <SearchInput
           placeholder="Search by step name or code"
           value={searchTerm}
@@ -1143,9 +1147,10 @@ export default function JobWorkflowStepsPage() {
             )}
           </button>
         </div>
-      </div>
+          </div>
+        </div>
 
-      {/* Batch Actions Toolbar */}
+        {/* Batch Actions Toolbar */}
       {isSelectionMode && selectedSteps.size > 0 && (
         <PermissionGate permission="job-workflow-steps.update">
           <div
@@ -1508,6 +1513,7 @@ export default function JobWorkflowStepsPage() {
             onPageChange={setCurrentPage}
           />
         )}
+        </div>
       </div>
 
       {/* Action Menu Dropdown */}
@@ -2362,7 +2368,6 @@ export default function JobWorkflowStepsPage() {
           </div>,
           document.body,
         )}
-    </div>
     </>
   );
 }

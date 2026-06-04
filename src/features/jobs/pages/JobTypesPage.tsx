@@ -669,26 +669,28 @@ export default function JobTypesPage() {
 
   return (
     <>
-      <div className="">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <BackButton
-             
-              showBreadcrumb={true}
-             
-              currentLabel="Job Types"
-            />
-            <PermissionGate permission="job-types.create">
-              <CreateButton onClick={handleCreate} />
-            </PermissionGate>
+      <div className="overflow-x-auto">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+          <div>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <BackButton
+                showBreadcrumb={true}
+                currentLabel="Job Types"
+              />
+            </div>
+            <p className={`${tw.textSecondary} text-sm mt-1`}>
+              Manage the classification codes used when creating scheduled jobs.
+            </p>
           </div>
+          <PermissionGate permission="job-types.create">
+            <CreateButton onClick={handleCreate} />
+          </PermissionGate>
         </div>
-        <p className={`${tw.textSecondary} text-sm`}>
-          Manage the classification codes used when creating scheduled jobs.
-        </p>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+        {/* Stats Cards */}
+        <div className="mt-6">
+          <div className="grid gap-4 md:grid-cols-3">
         <div
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
@@ -735,10 +737,12 @@ export default function JobTypesPage() {
             {isLoadingStats ? "..." : stats.unusedCount}
           </p>
         </div>
-      </div>
+          </div>
+        </div>
 
-      <div className="my-5">
-        <div className="relative w-full">
+        {/* Search */}
+        <div className="space-y-4 mt-6">
+          <div className="relative w-full">
           <SearchInput
             placeholder="Search job types by name, code, or description..."
             value={searchTerm}
@@ -749,11 +753,11 @@ export default function JobTypesPage() {
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-[#3b8169]"></div>
             </div>
           )}
+          </div>
         </div>
-      </div>
 
-      <div className={`${tw.rounded}`}>
-        {loadError && (
+        <div className={`${tw.rounded}`}>
+          {loadError && (
           <div className="border-b border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 flex items-center gap-2">
             <AlertTriangle className="w-4 h-4" />
             {loadError}
@@ -940,6 +944,7 @@ export default function JobTypesPage() {
             onPageChange={setCurrentPage}
           />
         )}
+        </div>
       </div>
 
       <JobTypeModal
@@ -979,7 +984,6 @@ export default function JobTypesPage() {
         confirmText="Delete"
         cancelText="Cancel"
       />
-    </div>
     </>
   );
 }

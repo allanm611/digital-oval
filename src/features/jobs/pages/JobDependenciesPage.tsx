@@ -1739,75 +1739,77 @@ export default function JobDependenciesPage() {
 
   return (
     <>
-      <div className="">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <BackButton
-             
-              showBreadcrumb={true}
-             
-              currentLabel="Job Dependencies"
-            />
-            <div className="flex flex-wrap justify-end gap-2">
+      <div className="overflow-x-auto">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+          <div>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <BackButton
+                showBreadcrumb={true}
+                currentLabel="Job Dependencies"
+              />
+            </div>
+            <p className={`${tw.textSecondary} text-sm mt-1`}>
+              Manage relationships between scheduled jobs to control execution order.
+            </p>
+          </div>
+          <div className="flex flex-wrap justify-end gap-2">
             <PermissionGate permission="job-dependencies.select">
+              <button
+                onClick={() => {
+                  if (!isSelectionMode) {
+                    setIsSelectionMode(true);
+                    setSelectedDependencyIds(
+                      new Set(filteredDependencies.map((dep) => dep.id)),
+                    );
+                  } else {
+                    setIsSelectionMode(false);
+                    setSelectedDependencyIds(new Set());
+                  }
+                }}
+                className={`px-4 py-2 ${tw.rounded} font-semibold flex items-center gap-2 text-sm transition-colors`}
+                style={{
+                  backgroundColor: isSelectionMode
+                    ? color.primary.action
+                    : "transparent",
+                  color: isSelectionMode ? "white" : color.primary.action,
+                  border: `1px solid ${color.primary.action}`,
+                }}
+              >
+                {isSelectionMode ? (
+                  <CheckSquare className="h-4 w-4" />
+                ) : (
+                  <Square className="h-4 w-4" />
+                )}
+                <span className="hidden sm:inline">
+                  {isSelectionMode ? "Exit Selection" : "Select Dependencies"}
+                </span>
+                <span className="sm:hidden">
+                  {isSelectionMode ? "Exit" : "Select"}
+                </span>
+              </button>
+            </PermissionGate>
             <button
-              onClick={() => {
-                if (!isSelectionMode) {
-                  setIsSelectionMode(true);
-                  setSelectedDependencyIds(
-                    new Set(filteredDependencies.map((dep) => dep.id)),
-                  );
-                } else {
-                  setIsSelectionMode(false);
-                  setSelectedDependencyIds(new Set());
-                }
-              }}
-              className={`px-4 py-2 ${tw.rounded} font-semibold flex items-center gap-2 text-sm transition-colors`}
+              onClick={() => navigate("/dashboard/job-dependencies/analytics")}
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-3 sm:px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
               style={{
-                backgroundColor: isSelectionMode
-                  ? color.primary.action
-                  : "transparent",
-                color: isSelectionMode ? "white" : color.primary.action,
+                backgroundColor: "transparent",
+                color: color.primary.action,
                 border: `1px solid ${color.primary.action}`,
               }}
             >
-              {isSelectionMode ? (
-                <CheckSquare className="h-4 w-4" />
-              ) : (
-                <Square className="h-4 w-4" />
-              )}
-              <span className="hidden sm:inline">
-                {isSelectionMode ? "Exit Selection" : "Select Dependencies"}
-              </span>
-              <span className="sm:hidden">
-                {isSelectionMode ? "Exit" : "Select"}
-              </span>
+              <BarChart3 className="h-4 w-4" />
+              <span className="hidden sm:inline">Analytics</span>
             </button>
-          </PermissionGate>
-          <button
-            onClick={() => navigate("/dashboard/job-dependencies/analytics")}
-            className={`inline-flex items-center gap-2 ${tw.rounded} px-3 sm:px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
-            style={{
-              backgroundColor: "transparent",
-              color: color.primary.action,
-              border: `1px solid ${color.primary.action}`,
-            }}
-          >
-            <BarChart3 className="h-4 w-4" />
-            <span className="hidden sm:inline">Analytics</span>
-          </button>
-          <PermissionGate permission="job-dependencies.create">
-            <CreateButton onClick={handleCreate} />
-          </PermissionGate>
-            </div>
+            <PermissionGate permission="job-dependencies.create">
+              <CreateButton onClick={handleCreate} />
+            </PermissionGate>
           </div>
         </div>
-        <p className={`${tw.textSecondary} text-sm`}>
-          Manage relationships between scheduled jobs to control execution order.
-        </p>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        {/* Stats Cards */}
+        <div className="mt-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <div
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
@@ -1888,10 +1890,12 @@ export default function JobDependenciesPage() {
             {isLoadingStats ? "..." : stats.optionalDependencies}
           </p>
         </div>
-      </div>
+          </div>
+        </div>
 
-      {/* Search and Filters */}
-      <div className="flex flex-col gap-3 md:flex-row md:gap-4">
+        {/* Search and Filters */}
+        <div className="space-y-4 mt-6">
+          <div className="flex flex-col gap-3 md:flex-row md:gap-4">
         <SearchInput
           placeholder="Search by job ID, dependency type, or status..."
           value={searchTerm}
@@ -1942,9 +1946,10 @@ export default function JobDependenciesPage() {
               </span>
             )}
           </button>
-      </div>
+          </div>
+        </div>
 
-      {/* Batch Actions Toolbar */}
+        {/* Batch Actions Toolbar */}
       {isSelectionMode && selectedDependencyIds.size > 0 && (
         <PermissionGate permission="job-dependencies.update">
           <div
@@ -2543,6 +2548,7 @@ export default function JobDependenciesPage() {
             onPageChange={setCurrentPage}
           />
         )}
+        </div>
       </div>
 
       {/* Chain/Path Modal */}
@@ -4531,7 +4537,6 @@ export default function JobDependenciesPage() {
         confirmText="Delete All"
         cancelText="Cancel"
       />
-    </div>
     </>
   );
 }
