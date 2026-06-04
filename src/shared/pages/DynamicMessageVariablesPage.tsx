@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { color, tw } from '../utils/utils';
-import { useMessageVariableFields } from '../../features/manual-broadcast/hooks/useMessageVariableFields';
 import { useToast } from '../../contexts/ToastContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { customerIdentityService } from '../../features/customerIdentity/services/customerIdentityService';
 import { extractBackendError } from "../utils/errorHandler";;;
 import { kpiService } from '../../features/kpis/services/kpiService';
 import { kpiCategoryService } from '../../features/kpis/services/kpiCategoryService';
@@ -34,9 +34,13 @@ interface CategoryConfig {
 }
 
 export default function DynamicMessageVariablesPage() {
-  const { categories, allFields, isLoading } = useMessageVariableFields();
   const { success: showToast, error: showError } = useToast();
   const { user } = useAuth();
+
+  // Fetch ALL data (including inactive) for config management
+  const [categories, setCategories] = useState<any[]>([]);
+  const [allFields, setAllFields] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [categoryConfigs, setCategoryConfigs] = useState<CategoryConfig[]>([]);
   const [fieldConfigs, setFieldConfigs] = useState<MessageVariableFieldConfig[]>([]);
@@ -47,6 +51,42 @@ export default function DynamicMessageVariablesPage() {
   const [togglingCategoryId, setTogglingCategoryId] = useState<string | null>(null);
   const [isFieldsModalOpen, setIsFieldsModalOpen] = useState(false);
   const [selectedCategoryForModal, setSelectedCategoryForModal] = useState<CategoryConfig | null>(null);
+
+  // Fetch all data without filtering (including inactive categories/fields)
+  useEffect(() => {
+    const loadAllData = async () => {
+      try {
+        setIsLoading(true);
+        const response = await customerIdentityService.getProfiles(true);
+        const allCategories = response.data?.[0]?.field_selector_config ?? [];
+
+        // Extract all fields (including inactive)
+        const allFieldsList: any[] = [];
+        const extractAllFields = (cat: any) => {
+          if (cat.fields && Array.isArray(cat.fields)) {
+            allFieldsList.push(...cat.fields);
+          }
+          if (cat.sub_categories && Array.isArray(cat.sub_categories)) {
+            cat.sub_categories.forEach((subCat: any) => {
+              if (subCat.fields && Array.isArray(subCat.fields)) {
+                allFieldsList.push(...subCat.fields);
+              }
+            });
+          }
+        };
+        allCategories.forEach(extractAllFields);
+
+        setCategories(allCategories);
+        setAllFields(allFieldsList);
+      } catch (error) {
+        console.error('Failed to load all message variable data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadAllData();
+  }, []);
 
   // Debounce search
   useEffect(() => {
