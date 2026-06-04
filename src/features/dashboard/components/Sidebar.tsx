@@ -617,13 +617,8 @@ export default function Sidebar({
 
   const getItemClasses = (isActive: boolean) => {
     return isActive
-<<<<<<< Updated upstream
-      ? `text-white border-l-[2px] border-white/60  ${tw.rounded} font-bold`
-      : `text-white/90 hover:text-white hover:bg-white/10 transition-all duration-200 font-normal`;
-=======
       ? `${tw.textAction} border-l-[2px] ${tw.borderDefault}/60  ${tw.rounded} font-bold`
       : `${tw.textAction}/90 hover:${tw.textAction} hover:${tw.surfaceBackground}/10 transition-all duration-200 font-normal`;
->>>>>>> Stashed changes
   };
 
   const getIconClasses = (isActive: boolean) => {
@@ -840,7 +835,7 @@ export default function Sidebar({
               </div>
               <button
                 onClick={onClose}
-                className={`${tw.rounded} p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100`}
+                className={`${tw.rounded} p-2 text-white/70 hover:text-white hover:bg-white/10`}
               >
                 <X className="h-6 w-6" />
               </button>
@@ -882,9 +877,9 @@ export default function Sidebar({
                                 {item.name}
                               </div>
                               {isExpanded ? (
-                                <ChevronDown className="h-4 w-4 text-gray-400" />
+                                <ChevronDown className={`h-4 w-4 ${tw.textAction}/70`} />
                               ) : (
-                                <ChevronRight className="h-4 w-4 text-gray-400" />
+                                <ChevronRight className={`h-4 w-4 ${tw.textAction}/70`} />
                               )}
                             </button>
 
@@ -959,9 +954,9 @@ export default function Sidebar({
                                 {item.name}
                               </div>
                               {isExpanded ? (
-                                <ChevronDown className="h-4 w-4 text-gray-400" />
+                                <ChevronDown className={`h-4 w-4 ${tw.textAction}/70`} />
                               ) : (
-                                <ChevronRight className="h-4 w-4 text-gray-400" />
+                                <ChevronRight className={`h-4 w-4 ${tw.textAction}/70`} />
                               )}
                             </button>
 
@@ -1036,9 +1031,9 @@ export default function Sidebar({
                                 {item.name}
                               </div>
                               {isExpanded ? (
-                                <ChevronDown className="h-4 w-4 text-gray-400" />
+                                <ChevronDown className={`h-4 w-4 ${tw.textAction}/70`} />
                               ) : (
-                                <ChevronRight className="h-4 w-4 text-gray-400" />
+                                <ChevronRight className={`h-4 w-4 ${tw.textAction}/70`} />
                               )}
                             </button>
 
@@ -1110,9 +1105,9 @@ export default function Sidebar({
                                 {item.name}
                               </div>
                               {isExpanded ? (
-                                <ChevronDown className="h-4 w-4 text-gray-400" />
+                                <ChevronDown className={`h-4 w-4 ${tw.textAction}/70`} />
                               ) : (
-                                <ChevronRight className="h-4 w-4 text-gray-400" />
+                                <ChevronRight className={`h-4 w-4 ${tw.textAction}/70`} />
                               )}
                             </button>
 
@@ -1204,9 +1199,9 @@ export default function Sidebar({
                                 {item.name}
                               </div>
                               {isExpanded ? (
-                                <ChevronDown className="h-4 w-4 text-gray-400" />
+                                <ChevronDown className={`h-4 w-4 ${tw.textAction}/70`} />
                               ) : (
-                                <ChevronRight className="h-4 w-4 text-gray-400" />
+                                <ChevronRight className={`h-4 w-4 ${tw.textAction}/70`} />
                               )}
                             </button>
 
@@ -1298,9 +1293,9 @@ export default function Sidebar({
                                 {item.name}
                               </div>
                               {isExpanded ? (
-                                <ChevronDown className="h-4 w-4 text-gray-400" />
+                                <ChevronDown className={`h-4 w-4 ${tw.textAction}/70`} />
                               ) : (
-                                <ChevronRight className="h-4 w-4 text-gray-400" />
+                                <ChevronRight className={`h-4 w-4 ${tw.textAction}/70`} />
                               )}
                             </button>
 
@@ -1389,9 +1384,9 @@ export default function Sidebar({
                                 {item.name}
                               </div>
                               {isExpanded ? (
-                                <ChevronDown className="h-4 w-4 text-gray-400" />
+                                <ChevronDown className={`h-4 w-4 ${tw.textAction}/70`} />
                               ) : (
-                                <ChevronRight className="h-4 w-4 text-gray-400" />
+                                <ChevronRight className={`h-4 w-4 ${tw.textAction}/70`} />
                               )}
                             </button>
 
@@ -1483,9 +1478,9 @@ export default function Sidebar({
                                 {item.name}
                               </div>
                               {isExpanded ? (
-                                <ChevronDown className="h-4 w-4 text-gray-400" />
+                                <ChevronDown className={`h-4 w-4 ${tw.textAction}/70`} />
                               ) : (
-                                <ChevronRight className="h-4 w-4 text-gray-400" />
+                                <ChevronRight className={`h-4 w-4 ${tw.textAction}/70`} />
                               )}
                             </button>
 
@@ -1574,9 +1569,9 @@ export default function Sidebar({
                                 {item.name}
                               </div>
                               {isExpanded ? (
-                                <ChevronDown className="h-4 w-4 text-gray-400" />
+                                <ChevronDown className={`h-4 w-4 ${tw.textAction}/70`} />
                               ) : (
-                                <ChevronRight className="h-4 w-4 text-gray-400" />
+                                <ChevronRight className={`h-4 w-4 ${tw.textAction}/70`} />
                               )}
                             </button>
 
@@ -1665,9 +1660,9 @@ export default function Sidebar({
                                 {item.name}
                               </div>
                               {isExpanded ? (
-                                <ChevronDown className="h-4 w-4 text-gray-400" />
+                                <ChevronDown className={`h-4 w-4 ${tw.textAction}/70`} />
                               ) : (
-                                <ChevronRight className="h-4 w-4 text-gray-400" />
+                                <ChevronRight className={`h-4 w-4 ${tw.textAction}/70`} />
                               )}
                             </button>
 
@@ -1961,13 +1956,8 @@ export default function Sidebar({
 
             <div className={`px-6 pb-6 pt-4 border-t ${tw.borderDefault}/10`}>
               <div className="flex items-center gap-x-3">
-<<<<<<< Updated upstream
-                <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
-                  <User className="w-5 h-5 text-white" />
-=======
                 <div className="w-12 h-12 rounded-full ${tw.surfaceBackground}/10 flex items-center justify-center">
                   <User className={`w-5 h-5 `} />
->>>>>>> Stashed changes
                 </div>
                 <div className="min-w-0">
                   <p className={`text-sm font-semibold  truncate`}>
@@ -1980,11 +1970,7 @@ export default function Sidebar({
               </div>
               <button
                 onClick={handleSidebarLogout}
-<<<<<<< Updated upstream
-                className={`mt-4 inline-flex w-full items-center justify-center gap-x-2 ${tw.rounded} border border-white/20 px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10 transition-colors`}
-=======
                 className={`mt-4 inline-flex w-full items-center justify-center gap-x-2 ${tw.rounded} border ${tw.borderDefault}/20 px-3 py-2 text-sm ${tw.textAction}/80 hover:${tw.textAction} hover:${tw.surfaceBackground}/10 transition-colors`}
->>>>>>> Stashed changes
               >
                 <LogOut className="h-4 w-4" />
                 {t.sidebar.user.signOut}
@@ -3341,11 +3327,7 @@ export default function Sidebar({
 
                       {/* Tooltip for minimized sidebar */}
                       <div
-<<<<<<< Updated upstream
-                        className={`md:block ${isMinimized ? "xl:block" : "xl:hidden"} absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-xs font-medium ${tw.rounded} whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-75 pointer-events-none shadow-xl`}
-=======
                         className={`md:block ${isMinimized ? "xl:block" : "xl:hidden"} absolute left-full ml-4 px-3 py-2 ${tw.textAction} text-xs font-medium ${tw.rounded} whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-75 pointer-events-none shadow-xl`}
->>>>>>> Stashed changes
                         style={{
                           top: "50%",
                           transform: "translateY(-50%)",
@@ -3409,11 +3391,7 @@ export default function Sidebar({
 
                                   {/* Tooltip for child */}
                                   <div
-<<<<<<< Updated upstream
-                                    className={`md:block ${isMinimized ? "xl:block" : "xl:hidden"} absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-xs font-medium ${tw.rounded} whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-75 pointer-events-none shadow-xl`}
-=======
                                     className={`md:block ${isMinimized ? "xl:block" : "xl:hidden"} absolute left-full ml-4 px-3 py-2 ${tw.textAction} text-xs font-medium ${tw.rounded} whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-75 pointer-events-none shadow-xl`}
->>>>>>> Stashed changes
                                     style={{
                                       top: "50%",
                                       transform: "translateY(-50%)",
@@ -3467,11 +3445,7 @@ export default function Sidebar({
 
                                               {/* Tooltip for grandchild */}
                                               <div
-<<<<<<< Updated upstream
-                                                className={`md:block ${isMinimized ? "xl:block" : "xl:hidden"} absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-xs font-medium ${tw.rounded} whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-75 pointer-events-none shadow-xl`}
-=======
                                                 className={`md:block ${isMinimized ? "xl:block" : "xl:hidden"} absolute left-full ml-4 px-3 py-2 ${tw.textAction} text-xs font-medium ${tw.rounded} whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-75 pointer-events-none shadow-xl`}
->>>>>>> Stashed changes
                                                 style={{
                                                   top: "50%",
                                                   transform: "translateY(-50%)",
@@ -3523,11 +3497,7 @@ export default function Sidebar({
 
                                 {/* Tooltip for child */}
                                 <div
-<<<<<<< Updated upstream
-                                  className={`md:block ${isMinimized ? "xl:block" : "xl:hidden"} absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-sm font-medium ${tw.rounded} whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-xl`}
-=======
                                   className={`md:block ${isMinimized ? "xl:block" : "xl:hidden"} absolute left-full ml-4 px-3 py-2 ${tw.textAction} text-sm font-medium ${tw.rounded} whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-xl`}
->>>>>>> Stashed changes
                                   style={{
                                     top: "50%",
                                     transform: "translateY(-50%)",
@@ -3579,11 +3549,7 @@ export default function Sidebar({
 
                     {/* Tooltip for minimized sidebar */}
                     <div
-<<<<<<< Updated upstream
-                      className={`md:block ${isMinimized ? "xl:block" : "xl:hidden"} absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-sm font-medium ${tw.rounded} whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-xl`}
-=======
                       className={`md:block ${isMinimized ? "xl:block" : "xl:hidden"} absolute left-full ml-4 px-3 py-2 ${tw.textAction} text-sm font-medium ${tw.rounded} whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-xl`}
->>>>>>> Stashed changes
                       style={{
                         top: "50%",
                         transform: "translateY(-50%)",
@@ -3638,11 +3604,7 @@ export default function Sidebar({
 
                     {/* Tooltip for minimized sidebar */}
                     <div
-<<<<<<< Updated upstream
-                      className={`md:block ${isMinimized ? "xl:block" : "xl:hidden"} absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-sm font-medium ${tw.rounded} whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-xl`}
-=======
                       className={`md:block ${isMinimized ? "xl:block" : "xl:hidden"} absolute left-full ml-4 px-3 py-2 ${tw.textAction} text-sm font-medium ${tw.rounded} whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-xl`}
->>>>>>> Stashed changes
                       style={{
                         top: "50%",
                         transform: "translateY(-50%)",

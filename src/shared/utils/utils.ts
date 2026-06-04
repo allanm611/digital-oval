@@ -157,6 +157,7 @@ export const tw = {
   textSecondary: "text-[var(--c-text-secondary)]",
   textMuted: "text-[var(--c-text-muted)]",
   textInverse: "text-[var(--c-text-inverse)]",
+  textAction: "text-white",
 
   hover: "hover:bg-[var(--c-interactive-hover)]",
   active: "active:bg-[var(--c-interactive-active)]",

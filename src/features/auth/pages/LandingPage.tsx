@@ -192,11 +192,7 @@ export default function LandingPage() {
         <section className="pt-32 pb-20 overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
-<<<<<<< Updated upstream
-              <div className="inline-flex items-center px-6 py-3 bg-white/10 backdrop-blur-sm text-white rounded-full text-sm font-semibold mb-8 border border-white/20">
-=======
               <div className={`inline-flex items-center px-6 py-3 ${tw.surfaceBackground}/10 backdrop-blur-sm  rounded-full text-sm font-semibold mb-8 border border-white/20`}>
->>>>>>> Stashed changes
                 <Sparkles className="w-4 h-4 mr-2 text-emerald-400 animate-pulse" />
                 {t.landing.nextGenPlatform}
               </div>

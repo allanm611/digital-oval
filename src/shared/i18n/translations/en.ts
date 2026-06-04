@@ -259,8 +259,6 @@ export const en: Translations = {
       title: "Broadcast Schedule Range",
       subtitle: "Configure your campaign broadcast schedule and delivery settings",
     },
-<<<<<<< Updated upstream
-=======
     broadcasts: {
       title: "Campaign Broadcasts",
       subtitle: "View and manage campaign broadcast execution history",
@@ -403,7 +401,6 @@ export const en: Translations = {
         description: "Are you sure you want to delete this campaign? This action cannot be undone.",
       },
     },
->>>>>>> Stashed changes
   },
   settings: {
     title: "Settings",
@@ -2521,12 +2518,6 @@ export const en: Translations = {
     totalPrograms: "Total Programs",
     activePrograms: "Active Programs",
     inactivePrograms: "Inactive Programs",
-<<<<<<< Updated upstream
-    totalBudget: "Total Budget",
-    spentBudget: "Spent Budget",
-    loading: "Loading programs...",
-    noPrograms: "No programs found",
-=======
     loading: "Loading programs...",
     noPrograms: "No programs found",
     totalBudget: "Total Budget",
@@ -2555,7 +2546,6 @@ export const en: Translations = {
     updateError: "Failed to update program",
     loadError: "Failed to load program",
     updateSuccess: "Program updated successfully",
->>>>>>> Stashed changes
     programName: "Program Name",
     budget: "Budget",
     startDate: "Start Date",

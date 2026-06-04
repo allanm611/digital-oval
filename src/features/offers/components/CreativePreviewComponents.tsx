@@ -57,11 +57,7 @@ export function SMSButtonPhonePreview({
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, "*", 0, "#"].map((key) => (
                 <div
                   key={key}
-<<<<<<< Updated upstream
-                  className="bg-gray-800 text-white text-xs font-semibold rounded py-2 text-center"
-=======
                   className={`${tw.surfaceSecondary}00  text-xs font-semibold rounded py-2 text-center`}
->>>>>>> Stashed changes
                 >
                   {key}
                 </div>
