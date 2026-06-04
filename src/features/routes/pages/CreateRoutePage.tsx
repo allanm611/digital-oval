@@ -258,7 +258,7 @@ export default function CreateRoutePage() {
        
         showBreadcrumb={true}
        
-        currentLabel="Create Route"
+        currentLabel="Create"
       />
 
       {/* Form Container */}
@@ -629,7 +629,7 @@ export default function CreateRoutePage() {
             style={{ backgroundColor: color.primary.action }}
           >
             {saving && <LoadingSpinner size={16} />}
-            {saving ? "Creating..." : "Create Route"}
+            {saving ? "Creating..." : "Create"}
           </button>
         </div>
       </form>

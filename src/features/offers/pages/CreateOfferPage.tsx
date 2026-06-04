@@ -2925,7 +2925,12 @@ export default function CreateOfferPage({
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center md:justify-end">
                 <button
                   onClick={handleCancel}
-                  className={`inline-flex w-full items-center justify-center px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-all duration-200 sm:w-auto`}
+                  className={`inline-flex w-full items-center justify-center px-4 py-2 ${tw.rounded} text-sm font-medium transition-all duration-200 sm:w-auto`}
+                  style={{
+                    background: "transparent",
+                    color: color.primary.action,
+                    border: `1px solid ${color.primary.action}`,
+                  }}
                 >
                   Cancel
                 </button>
@@ -3035,14 +3040,14 @@ export default function CreateOfferPage({
                   isLoading ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      {isEditMode ? "Updating..." : isDuplicateMode ? "Creating Copy..." : "Creating..."}
+                      {isEditMode ? "Updating..." : isDuplicateMode ? "Creating..." : "Creating..."}
                     </>
                   ) : isEditMode ? (
-                    "Update Offer"
+                    "Update"
                   ) : isDuplicateMode ? (
-                    "Create a Copy"
+                    "Create"
                   ) : (
-                    "Create Offer"
+                    "Create"
                   )
                 ) : (
                   "Next Step"

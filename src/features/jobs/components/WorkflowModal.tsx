@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { X, Save } from "lucide-react";
-import { color, tw, button } from "../../../shared/utils/utils";
+import { X } from "lucide-react";
+import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -203,7 +203,8 @@ export default function WorkflowModal({
         <div className="flex items-center justify-end gap-3 p-6 bg-gray-50">
           <button
             onClick={onClose}
-            className={`px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors`}
+            className="transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80"
+            style={getButtonStyles(button.bordered)}
           >
             {t.common.cancel}
           </button>
@@ -213,17 +214,9 @@ export default function WorkflowModal({
             className={`px-4 py-2 text-sm font-semibold text-white ${tw.rounded} disabled:opacity-50 disabled:cursor-not-allowed transition-colors inline-flex items-center justify-center gap-2`}
             style={{ backgroundColor: color.primary.action }}
           >
-            {isSaving ? (
-              <>
-                <LoadingSpinner />
-                {t.common.saving}
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4" />
-                {t.common.save}
-              </>
-            )}
+            {isSaving
+              ? workflow ? t.common.updating : t.common.creating
+              : workflow ? t.common.update : t.common.create}
           </button>
         </div>
       </div>

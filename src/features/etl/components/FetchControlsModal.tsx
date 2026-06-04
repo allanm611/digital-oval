@@ -573,20 +573,9 @@ export default function FetchControlsModal({
         <div className="flex justify-end gap-3 p-6">
           <button
             onClick={onClose}
-            className={`px-4 py-2 ${tw.rounded} text-sm font-medium transition-colors`}
-            style={{
-              borderWidth: "1px",
-              borderColor: color.border.default,
-              color: color.text.secondary,
-              backgroundColor: "transparent",
-            }}
+            className="transition-colors disabled:opacity-60"
+            style={getButtonStyles(button.bordered)}
             disabled={isLoading}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = color.surface.cards;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "transparent";
-            }}
           >
             Cancel
           </button>

@@ -205,8 +205,6 @@ export default function DynamicMessageVariablesPage() {
           is_active: newStatus,
         });
 
-        // Emit event to notify other components about configuration changes
-        window.dispatchEvent(new CustomEvent('messageVariablesConfigurationUpdated'));
         showToast(`Category ${isDeactivating ? 'deactivated' : 'activated'} successfully`);
       } catch (error) {
         // Revert UI if API fails
@@ -248,8 +246,6 @@ export default function DynamicMessageVariablesPage() {
         // Call backend to update field status
         await kpiService.toggleKPIStatus(field.id, newState);
 
-        // Emit event to notify other components about configuration changes
-        window.dispatchEvent(new CustomEvent('messageVariablesConfigurationUpdated'));
         showToast(`Field ${newState ? 'activated' : 'deactivated'} successfully`);
       } catch (error) {
         // Revert UI if API fails

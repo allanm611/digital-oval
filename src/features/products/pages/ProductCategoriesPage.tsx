@@ -16,6 +16,7 @@ import {
   Star,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
+import Input from "../../../shared/components/ui/Input";
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import BackButton from "../../../shared/components/ui/BackButton";
@@ -1431,7 +1432,7 @@ export default function ProductCatalogsPage() {
       {/* Edit Catalog Modal */}
       {editingCatalog &&
         createPortal(
-          <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-[9999] backdrop-blur-sm">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
             <div
               className={`bg-white ${tw.rounded} shadow-xl w-full max-w-md mx-4 border border-gray-100`}
             >
@@ -1478,7 +1479,7 @@ export default function ProductCatalogsPage() {
                   />
                 </div>
 
-                <div className="flex justify-end space-x-3">
+                <div className="flex justify-end gap-3">
                   <button
                     type="button"
                     onClick={() => {
@@ -1486,7 +1487,12 @@ export default function ProductCatalogsPage() {
                       setEditName("");
                       setEditDescription("");
                     }}
-                    className={`px-4 py-2 text-gray-700 bg-gray-100 ${tw.rounded} hover:bg-gray-200 transition-colors text-sm`}
+                    className={`px-4 py-2 ${tw.rounded} transition-colors text-sm`}
+                    style={{
+                      background: "transparent",
+                      color: color.primary.action,
+                      border: `1px solid ${color.primary.action}`,
+                    }}
                   >
                     {t.productCatalogs.cancel}
                   </button>

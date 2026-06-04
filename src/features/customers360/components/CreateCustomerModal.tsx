@@ -1724,7 +1724,6 @@ export default function CreateCustomerModal({
               </>
             ) : (
               <>
-                <Plus className="w-4 h-4" />
                 {activeTab === "single"
                   ? "Add Single Customer"
                   : activeTab === "bulk"

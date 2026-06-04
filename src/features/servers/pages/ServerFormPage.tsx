@@ -13,7 +13,7 @@ import { serverService } from "../services/serverService";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Input from "../../../shared/components/ui/Input";
@@ -595,7 +595,8 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
             onClick={() =>
               navigateBackOrFallback(navigate, "/dashboard/servers")
             }
-            className={`${tw.rounded} border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50`}
+            className="transition-colors disabled:opacity-60"
+            style={getButtonStyles(button.bordered)}
             disabled={isSubmitting}
           >
             Cancel
@@ -611,7 +612,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
                 {mode === "create" ? "Creating..." : "Updating..."}
               </>
             ) : (
-              `${mode === "create" ? "Create" : "Update"} Server`
+              `${mode === "create" ? "Create" : "Update"}`
             )}
           </button>
         </div>

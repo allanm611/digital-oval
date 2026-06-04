@@ -2040,8 +2040,8 @@ export const fr: Translations = {
     catalogNamePlaceholder: "Entrez le nom du catalogue d'offres",
     descriptionPlaceholder: "Entrez la description du catalogue d'offres",
     cancel: "Annuler",
-    create: "Créer une Catégorie",
-    update: "Mettre à jour la Catégorie",
+    create: "Créer",
+    update: "Mettre à jour",
     catalogNameRequired: "Le nom du catalogue est requis",
     saveFailed:
       "Échec de l'enregistrement de la catégorie. Veuillez réessayer plus tard.",

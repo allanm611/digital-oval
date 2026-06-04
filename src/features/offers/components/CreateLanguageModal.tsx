@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
-import { tw, color } from "../../../shared/utils/utils";
+import { tw, color, button, getButtonStyles } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -303,12 +303,8 @@ export default function CreateLanguageModal({
               type="button"
               onClick={onClose}
               disabled={isSaving}
-              className="px-4 py-2 rounded text-sm font-medium transition-colors disabled:opacity-50"
-              style={{
-                background: "transparent",
-                color: color.primary.action,
-                border: `1px solid ${color.primary.action}`,
-              }}
+              className="transition-colors disabled:opacity-60"
+              style={getButtonStyles(button.bordered)}
             >
               Cancel
             </button>
@@ -318,10 +314,14 @@ export default function CreateLanguageModal({
               className="px-4 py-2 text-white rounded text-sm font-medium disabled:opacity-50 transition-colors flex items-center gap-2"
               style={{ backgroundColor: color.primary.action }}
             >
-              {isSaving && (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              {isSaving ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Creating...
+                </>
+              ) : (
+                "Create"
               )}
-              {isSaving ? "Creating..." : "Create"}
             </button>
           </div>
         </form>

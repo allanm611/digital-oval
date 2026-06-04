@@ -1035,10 +1035,12 @@ export default function CommunicationPolicyModal({
               }}
             >
               {isSaving
-                ? "Saving..."
+                ? policy
+                  ? "Updating..."
+                  : "Creating..."
                 : policy
-                ? "Update Policy"
-                : "Create Policy"}
+                ? "Update"
+                : "Create"}
             </button>
           </div>
         </form>

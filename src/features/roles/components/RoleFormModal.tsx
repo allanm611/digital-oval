@@ -469,7 +469,7 @@ export default function RoleFormModal({
 
         {/* Footer */}
         <div className="sticky bottom-0 px-6 py-4 border-t border-gray-200 bg-white">
-          <div className="flex justify-end gap-3">
+          <div className="flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
@@ -482,12 +482,12 @@ export default function RoleFormModal({
             <button
               type="submit"
               disabled={isLoading}
-              className={`px-4 py-2 text-sm font-medium text-white ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
+              className={`px-4 py-2 text-sm font-medium text-white ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
               style={{ backgroundColor: color.primary.action }}
             >
               {isLoading ? (
                 <>
-                  <LoadingSpinner />
+                  <LoadingSpinner variant="modern" size="sm" color="primary" className="mr-2" />
                   {role ? "Updating..." : "Creating..."}
                 </>
               ) : (

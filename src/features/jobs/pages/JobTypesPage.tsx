@@ -14,7 +14,7 @@ import Input from "../../../shared/components/ui/Input";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import Pagination from "../../../shared/components/ui/Pagination";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -281,13 +281,14 @@ function JobTypeModal({
             </div>
           )}
 
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="flex items-center justify-end gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className={`${tw.rounded} border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50`}
+              className="transition-colors disabled:opacity-60"
+              style={getButtonStyles(button.bordered)}
             >
-              {t.genericConfig.cancel}
+              Cancel
             </button>
             <button
               type="submit"
@@ -296,10 +297,8 @@ function JobTypeModal({
               style={{ backgroundColor: color.primary.action }}
             >
               {isSaving
-                ? t.profile.saving
-                : initialData
-                  ? t.jobs.updateJobType
-                  : t.jobs.createJobType}
+                ? initialData ? "Updating..." : "Creating..."
+                : initialData ? "Update" : "Create"}
             </button>
           </div>
         </form>

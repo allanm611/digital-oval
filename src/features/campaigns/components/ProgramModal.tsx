@@ -301,10 +301,12 @@ export default function ProgramModal({
               }}
             >
               {isSaving
-                ? "Saving..."
+                ? program
+                  ? "Updating..."
+                  : "Creating..."
                 : program
-                ? "Update Program"
-                : "Create Program"}
+                ? "Update"
+                : "Create"}
             </button>
           </div>
         </form>

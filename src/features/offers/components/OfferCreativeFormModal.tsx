@@ -762,15 +762,9 @@ export default function OfferCreativeFormModal({
                 onConfirm={handleSave}
                 cancelText="Cancel"
                 confirmText={isSaving ? (
-                  <span className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Saving...
-                  </span>
+                  mode === "edit" ? "Updating..." : "Creating..."
                 ) : (
-                  <span className="flex items-center gap-2">
-                    <Save className="w-4 h-4" />
-                    Save Creative
-                  </span>
+                  mode === "edit" ? "Update" : "Create"
                 )}
                 isLoading={isSaving}
                 confirmClassName={`px-4 py-2 text-white ${tw.rounded} transition-colors disabled:opacity-50 flex items-center gap-2`}

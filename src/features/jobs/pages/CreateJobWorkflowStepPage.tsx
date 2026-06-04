@@ -18,7 +18,7 @@ import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import { color, tw, noteStyles } from "../../../shared/utils/utils";
+import { color, tw, noteStyles, button, getButtonStyles } from "../../../shared/utils/utils";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 
 const getStepTypes = (t: any): { value: StepType; label: string }[] => [
@@ -461,7 +461,7 @@ export default function CreateJobWorkflowStepPage() {
             ? "Duplicate Step"
             : isEditMode
             ? "Edit Step"
-            : "Create Step"
+            : "Create"
         }
       />
 
@@ -1230,32 +1230,24 @@ export default function CreateJobWorkflowStepPage() {
                 }`
               )
             }
-            className={`${tw.rounded} border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50`}
+            className="transition-colors disabled:opacity-60"
+            style={getButtonStyles(button.bordered)}
           >
-            {t.common.cancel}
+            Cancel
           </button>
           <button
             type="submit"
             disabled={isSaving || (batchMode && batchSteps.length === 0)}
-            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-semibold text-white disabled:opacity-50`}
+            className={`${tw.rounded} px-4 py-2 text-sm font-semibold text-white disabled:opacity-50`}
             style={{ backgroundColor: color.primary.action }}
           >
             {isSaving ? (
               <>
                 <LoadingSpinner />
-                {isDuplicateMode ? "Duplicating..." : batchMode ? t.jobs.jobWorkflow.creating : t.jobs.jobWorkflow.saving}
+                {isEditMode ? "Updating..." : "Creating..."}
               </>
             ) : (
-              <>
-                <Save className="h-4 w-4" />
-                {isDuplicateMode
-                  ? "Duplicate Step"
-                  : isEditMode
-                  ? t.jobs.jobWorkflow.updateStep
-                  : batchMode
-                  ? `${t.jobs.jobWorkflow.createStep} ${batchSteps.length}`
-                  : t.jobs.jobWorkflow.createStep}
-              </>
+              isEditMode ? "Update" : "Create"
             )}
           </button>
         </div>

@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Save } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import { connectionProfileService } from "../services/connectionProfileService";
@@ -1459,10 +1458,7 @@ export default function ConnectionProfileFormPage({
                 {mode === "create" ? "Creating..." : "Updating..."}
               </>
             ) : (
-              <>
-                <Save className="w-4 h-4" />
-                {mode === "create" ? "Create" : "Update"}
-              </>
+              mode === "create" ? "Create" : "Update"
             )}
           </button>
         </div>

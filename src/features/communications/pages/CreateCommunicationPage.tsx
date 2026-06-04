@@ -344,10 +344,15 @@ export default function CreateCommunicationPage() {
             </div>
 
             {/* Send Button */}
-            <div className="flex items-center justify-end space-x-3">
+            <div className="flex items-center justify-end gap-3">
               <button
                 onClick={() => navigate("/dashboard/manual-communications")}
-                className={`px-6 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors`}
+                className={`px-6 py-3 text-sm font-medium ${tw.rounded} transition-colors`}
+                style={{
+                  background: "transparent",
+                  color: color.primary.action,
+                  border: `1px solid ${color.primary.action}`,
+                }}
               >
                 Cancel
               </button>

@@ -910,22 +910,23 @@ export default function ComboTypeFormPage() {
           </div>
 
           {/* Footer */}
-          <div className="flex gap-3 pt-6">
+          <div className="flex items-center justify-end gap-3 pt-6">
+            <button
+              type="button"
+              onClick={() => navigate("/dashboard/combo-types")}
+              disabled={isSaving}
+              className="transition-colors disabled:opacity-60"
+              style={getButtonStyles(button.bordered)}
+            >
+              Cancel
+            </button>
             <button
               type="submit"
               disabled={isSaving}
               className="px-8 py-2 text-white rounded-md font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ backgroundColor: color.primary.action }}
             >
-              {isSaving ? "Saving..." : "Save"}
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate("/dashboard/combo-types")}
-              disabled={isSaving}
-              className="px-8 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Cancel
+              {isSaving ? (id ? "Updating..." : "Creating...") : (id ? "Update" : "Create")}
             </button>
           </div>
         </form>

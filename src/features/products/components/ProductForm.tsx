@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Save, HelpCircle, Plus, Trash2, X, ChevronDown, Edit } from "lucide-react";
+import { HelpCircle, Plus, Trash2, X, ChevronDown, Edit } from "lucide-react";
 import {
   CreateProductRequest,
   UpdateProductRequest,
@@ -1954,16 +1954,9 @@ export default function ProductForm({
                 onClick={onCancel}
                 className={`px-6 py-2.5 ${tw.rounded} text-sm font-medium transition-colors`}
                 style={{
-                  borderWidth: "1px",
-                  borderColor: color.border.default,
-                  color: color.text.secondary,
-                  backgroundColor: "transparent",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = color.surface.cards;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "transparent";
+                  background: "transparent",
+                  color: color.primary.action,
+                  border: `1px solid ${color.primary.action}`,
                 }}
               >
                 Cancel
@@ -1983,10 +1976,7 @@ export default function ProductForm({
                   {loadingText}
                 </>
               ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  {submitButtonText}
-                </>
+                submitButtonText
               )}
             </button>
           </div>

@@ -26,7 +26,7 @@ import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 
@@ -545,12 +545,12 @@ export default function CreateScheduledJobPage() {
   }
 
   return (
-    <div className="">
+    <div className="space-y-6">
       {/* Header */}
       <BackButton showBreadcrumb={true} currentLabel={isEditMode ? "Edit Scheduled Job" : "Create Scheduled Job"} />
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information */}
         <div ref={basicInfoRef} className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
           <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
@@ -1544,16 +1544,9 @@ export default function CreateScheduledJobPage() {
             onClick={() =>
               navigateBackOrFallback(navigate, "/dashboard/scheduled-jobs")
             }
-            className={`inline-flex items-center gap-2 text-sm font-medium ${tw.rounded} focus:outline-none`}
-            style={{
-              backgroundColor: "transparent",
-              color: color.primary.action,
-              border: `1px solid ${color.primary.action}`,
-              padding: "0.5rem 1rem",
-              borderRadius: "0.5rem",
-            }}
+            className="transition-colors disabled:opacity-60"
+            style={getButtonStyles(button.bordered)}
           >
-            <X className="h-4 w-4" />
             Cancel
           </button>
           <button
@@ -1562,14 +1555,13 @@ export default function CreateScheduledJobPage() {
             className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed`}
             style={{ backgroundColor: color.primary.action }}
           >
-            <Save className="h-4 w-4" />
             {isSaving
               ? isEditMode
                 ? "Updating..."
                 : "Creating..."
               : isEditMode
-                ? "Update Job"
-                : "Create Job"}
+                ? "Update"
+                : "Create"}
           </button>
         </div>
       </form>

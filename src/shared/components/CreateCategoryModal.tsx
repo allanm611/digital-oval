@@ -120,7 +120,7 @@ export default function CreateCategoryModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center backdrop-blur-sm"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
       style={{ zIndex: zIndex.modal }}
     >
       <div
@@ -166,7 +166,7 @@ export default function CreateCategoryModal({
             />
           </div>
 
-          <div className="flex justify-end space-x-3">
+          <div className="flex justify-end gap-3">
             <button
               type="button"
               onClick={handleClose}
@@ -177,11 +177,11 @@ export default function CreateCategoryModal({
             </button>
             <button
               onClick={handleCreateCategory}
-              disabled={!newCategoryName.trim() || isCreating}
+              disabled={isCreating}
               className={`px-4 py-2 text-white ${tw.rounded} transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm`}
               style={{ backgroundColor: color.primary.action }}
             >
-              {isCreating ? "Creating..." : "Create Catalog"}
+              {isCreating ? "Creating..." : "Create"}
             </button>
           </div>
         </div>

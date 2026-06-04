@@ -9,7 +9,7 @@ import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DateFormatter from "../../../shared/components/DateFormatter";
-import { color, tw, button } from "../../../shared/utils/utils";
+import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Input from "../../../shared/components/ui/Input";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -355,9 +355,9 @@ export default function UserProfilePage() {
             <>
               <button
                 onClick={handleCancel}
-                className={`inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors w-auto`}
+                className="inline-flex items-center transition-colors w-auto"
+                style={getButtonStyles(button.bordered)}
               >
-                <X className="w-4 h-4 mr-2" />
                 {t.profile.cancel}
               </button>
               <button

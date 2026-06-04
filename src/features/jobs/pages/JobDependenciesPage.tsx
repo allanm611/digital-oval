@@ -26,7 +26,7 @@ import Pagination from "../../../shared/components/ui/Pagination";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import Input from "../../../shared/components/ui/Input";
 import { PermissionGate } from "../../auth/components/PermissionGate";
-import { color, tw, zIndex } from "../../../shared/utils/utils";
+import { color, tw, zIndex, button, getButtonStyles } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -371,8 +371,8 @@ function JobDependencyModal({
               {isSaving
                 ? t.profile.saving
                 : initialData
-                  ? "Update Dependency"
-                  : "Create Dependency"}
+                  ? "Update"
+                  : "Create"}
             </button>
           </div>
         </form>

@@ -319,7 +319,7 @@ export default function CharacterSetFormPage() {
               e.currentTarget.style.opacity = saving ? "0.5" : "1";
             }}
           >
-            {saving ? "Saving..." : "Save"}
+            {saving ? (id ? "Updating..." : "Creating...") : (id ? "Update" : "Create")}
           </button>
         </div>
       </form>

@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Save } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
 
 // Dummy data - same as list page
 const DUMMY_PROFILE_FIELDS = [
@@ -314,23 +313,23 @@ export default function CreateSubscriberProfilePage() {
         </div>
 
         {/* Submit Button */}
-        <div className="flex items-center gap-3">
-          <button
-            type="submit"
-            disabled={saving}
-            className="inline-flex items-center gap-2 px-6 py-2 text-sm font-medium text-white rounded-md disabled:opacity-60"
-            style={{ backgroundColor: color.primary.action }}
-          >
-            <Save className="w-4 h-4" />
-            {saving ? (mode === "edit" ? "Updating..." : "Creating...") : (mode === "edit" ? "Update Profile Field" : "Create Profile Field")}
-          </button>
+        <div className="flex items-center justify-end gap-3">
           <button
             type="button"
             onClick={() => navigate(mode === "edit" ? `/dashboard/kpis/subscriber-profiles/${id}` : "/dashboard/kpis/subscriber-profiles")}
             disabled={saving}
-            className="px-6 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-60"
+            className="transition-colors disabled:opacity-60"
+            style={getButtonStyles(button.bordered)}
           >
             Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={saving}
+            className="px-6 py-2 text-sm font-medium text-white rounded-md disabled:opacity-60"
+            style={{ backgroundColor: color.primary.action }}
+          >
+            {saving ? (mode === "edit" ? "Updating..." : "Creating...") : (mode === "edit" ? "Update" : "Create")}
           </button>
         </div>
       </form>

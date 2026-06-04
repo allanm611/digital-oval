@@ -166,11 +166,16 @@ function CategoryModal({
             </div>
           </div>
 
-          <div className="flex items-center justify-end space-x-3 mt-6">
+          <div className="flex items-center justify-end gap-3 mt-6">
             <button
               type="button"
               onClick={onClose}
-              className={`px-4 py-2 text-gray-700 bg-gray-100 ${tw.rounded} transition-colors`}
+              className={`px-4 py-2 ${tw.rounded} transition-colors`}
+              style={{
+                background: "transparent",
+                color: color.primary.action,
+                border: `1px solid ${color.primary.action}`,
+              }}
             >
               Cancel
             </button>
@@ -181,10 +186,12 @@ function CategoryModal({
               style={{ backgroundColor: color.primary.action }}
             >
               {isSaving
-                ? "Saving..."
+                ? category
+                  ? "Updating..."
+                  : "Creating..."
                 : category
-                  ? "Update Category"
-                  : "Create Category"}
+                  ? "Update"
+                  : "Create"}
             </button>
           </div>
         </form>

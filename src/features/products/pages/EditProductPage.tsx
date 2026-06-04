@@ -293,7 +293,7 @@ export default function EditProductPage() {
         onShowCreateModal={setShowCreateModal}
         refreshTrigger={refreshTrigger}
         onCategoryCreated={handleCategoryCreated}
-        submitButtonText="Update Product"
+        submitButtonText="Update"
         loadingText="Updating..."
         onCancel={() => navigate("/dashboard/products")}
       />

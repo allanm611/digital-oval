@@ -309,6 +309,57 @@ const statIcons = {
   growth: ArrowUpRight,
 };
 
+// Generate campaign-specific dummy data based on campaign ID
+const generateCampaignDummyData = (campaignId: string | undefined) => {
+  if (!campaignId) return campaignSummaryData;
+
+  // Use campaign ID to generate a consistent variation
+  const idHash = campaignId.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const multiplier = 0.5 + (idHash % 100) / 100; // Range: 0.5 to 1.49
+
+  return {
+    "7d": {
+      reach: Math.round(132_400 * multiplier),
+      impressions: Math.round(280_000 * multiplier),
+      opens: Math.round(56_000 * multiplier),
+      clicks: Math.round(42_000 * multiplier),
+      clickRate: 8.4 + (idHash % 30) / 10 - 1.5,
+      engagementRate: 12.1 + (idHash % 40) / 10 - 2,
+      conversions: Math.round(9_300 * multiplier),
+      conversionRate: 6.4 + (idHash % 20) / 10 - 1,
+      revenue: Math.round(415_000 * multiplier),
+      roas: 4.6 + (idHash % 30) / 10 - 1.5,
+      cac: 18.4 + (idHash % 25) / 2 - 6.25,
+    },
+    "30d": {
+      reach: Math.round(497_000 * multiplier),
+      impressions: Math.round(1_180_000 * multiplier),
+      opens: Math.round(210_000 * multiplier),
+      clicks: Math.round(148_000 * multiplier),
+      clickRate: 9.2 + (idHash % 30) / 10 - 1.5,
+      engagementRate: 13.3 + (idHash % 40) / 10 - 2,
+      conversions: Math.round(34_400 * multiplier),
+      conversionRate: 7.1 + (idHash % 20) / 10 - 1,
+      revenue: Math.round(1_620_000 * multiplier),
+      roas: 4.9 + (idHash % 30) / 10 - 1.5,
+      cac: 17.2 + (idHash % 25) / 2 - 6.25,
+    },
+    "90d": {
+      reach: Math.round(1_420_000 * multiplier),
+      impressions: Math.round(3_420_000 * multiplier),
+      opens: Math.round(620_000 * multiplier),
+      clicks: Math.round(438_000 * multiplier),
+      clickRate: 9.8 + (idHash % 30) / 10 - 1.5,
+      engagementRate: 14.2 + (idHash % 40) / 10 - 2,
+      conversions: Math.round(102_000 * multiplier),
+      conversionRate: 7.6 + (idHash % 20) / 10 - 1,
+      revenue: Math.round(4_950_000 * multiplier),
+      roas: 5.1 + (idHash % 30) / 10 - 1.5,
+      cac: 16.5 + (idHash % 25) / 2 - 6.25,
+    },
+  };
+};
+
 export default function CampaignDetailReportPage() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
@@ -374,7 +425,8 @@ export default function CampaignDetailReportPage() {
     activeRangeKey,
   ]);
 
-  const baseSummary = campaignSummaryData[activeRangeKey];
+  const campaignData = useMemo(() => generateCampaignDummyData(id), [id]);
+  const baseSummary = campaignData[activeRangeKey];
   const summary = useMemo(() => {
     if (!useDummyData) {
       return {

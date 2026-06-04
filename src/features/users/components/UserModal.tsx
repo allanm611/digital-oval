@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { X, User as UserIcon, Mail, Save, Lock } from "lucide-react";
+import { X, User as UserIcon, Mail, Lock } from "lucide-react";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { userService } from "../../users/services/userService";
 import { accountService } from "../../account/services/accountService";
@@ -12,7 +12,7 @@ import {
 import { useToast } from "../../../contexts/ToastContext";
 import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import { color, tw, zIndex } from "../../../shared/utils/utils";
+import { color, tw, zIndex, button, getButtonStyles } from "../../../shared/utils/utils";
 import { roleService } from "../../roles/services/roleService";
 import { Role } from "../../roles/types/role";
 
@@ -464,29 +464,20 @@ export default function UserModal({
               </div>
 
               {/* Actions */}
-              <div className="flex space-x-3 pt-4">
+              <div className="flex justify-end gap-3 pt-4">
                 <button
                   type="button"
                   onClick={onClose}
-                  className={`flex-1 px-4 py-3 border ${tw.borderDefault} ${tw.textSecondary} ${tw.rounded} hover:bg-gray-50 transition-colors font-medium text-sm`}
+                  className="transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80"
+                  style={getButtonStyles(button.bordered)}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className={`flex-1 text-white ${tw.rounded} transition-all duration-200 font-medium text-sm flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed`}
+                  className={`text-white ${tw.rounded} transition-all duration-200 font-medium text-sm px-4 py-2 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed`}
                   style={{ backgroundColor: color.primary.action }}
-                  onMouseEnter={(e) => {
-                    if (!isLoading) {
-                      (e.target as HTMLButtonElement).style.backgroundColor =
-                        color.primary.action;
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.target as HTMLButtonElement).style.backgroundColor =
-                      color.primary.action;
-                  }}
                 >
                   {isLoading ? (
                     <>
@@ -499,10 +490,7 @@ export default function UserModal({
                       {user ? "Updating..." : "Creating..."}
                     </>
                   ) : (
-                    <>
-                      <Save className="w-4 h-4 mr-2" />
-                      {user ? "Update" : "Create"}
-                    </>
+                    user ? "Update" : "Create"
                   )}
                 </button>
               </div>

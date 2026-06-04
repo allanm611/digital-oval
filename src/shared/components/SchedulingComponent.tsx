@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { Calendar, AlertCircle, Trash2 } from "lucide-react";
-import { tw } from "../utils/utils";
+import { Calendar, AlertCircle, Trash2, Bell } from "lucide-react";
+import { tw, color } from "../utils/utils";
 import { buttons } from "../utils/tokens";
 import Input from "./ui/Input";
 import HeadlessSelect from "./ui/HeadlessSelect";
@@ -14,6 +14,26 @@ import { getSettingsTimezone } from "../utils/settingsHelper";
 import { timezoneService } from "../../features/configurations/services/timezoneService";
 import { formatDateWithTimezone } from "../services/dateService";
 import type { TimeZone } from "../../features/configurations/types/timezone";
+
+interface NotificationPreference {
+  stage: string;
+  channels: ('email' | 'sms' | 'in_app' | 'platform')[];
+}
+
+const executionStages = [
+  { id: 'target_rendering', label: 'Target Rendering Started' },
+  { id: 'delivery_started', label: 'Delivery Started' },
+  { id: 'delivery_completed', label: 'Delivery Completed' },
+  { id: 'campaign_failed', label: 'Campaign Failed' },
+  { id: 'campaign_paused', label: 'Campaign Paused' },
+];
+
+const notificationChannels = [
+  { id: 'email', label: 'Email' },
+  { id: 'sms', label: 'SMS' },
+  { id: 'in_app', label: 'In-App' },
+  { id: 'platform', label: 'Platform Notification' },
+];
 
 const daysOfWeek = [
   { value: 0, label: "Sunday" },
@@ -57,6 +77,11 @@ export default function SchedulingComponent({
   const [targetRenderTime, setTargetRenderTime] = useState("Real Time");
   const [startBroadcastBefore, setStartBroadcastBefore] = useState("Before");
   const [hoursBeforeBroadcast, setHoursBeforeBroadcast] = useState(0);
+
+  // Notification preferences state
+  const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreference[]>(
+    (scheduling?.notification_preferences as NotificationPreference[]) || []
+  );
 
   // Timezone state - fetch from API
   const [timezoneList, setTimezoneList] = useState<TimeZone[]>([]);
@@ -112,6 +137,13 @@ export default function SchedulingComponent({
       updateScheduling({ time_zone: settingsTimezone });
     }
   }, [timezoneList, scheduling, onSchedulingChange]);
+
+  // Sync notification preferences with scheduling
+  useEffect(() => {
+    if (scheduling && notificationPreferences.length > 0) {
+      updateScheduling({ notification_preferences: notificationPreferences });
+    }
+  }, [notificationPreferences]);
 
   useEffect(() => {
     if (!scheduling) return;
@@ -237,6 +269,50 @@ export default function SchedulingComponent({
     setSpecificDayStartTimes((prev) => {
       if (!Array.isArray(prev) || prev.length <= 1) return prev || [];
       return prev.filter((entry) => entry && entry.id !== id);
+    });
+  };
+
+  const toggleStageNotification = (stageId: string) => {
+    setNotificationPreferences((prev) => {
+      const existing = prev.find((p) => p.stage === stageId);
+      if (existing) {
+        return prev.filter((p) => p.stage !== stageId);
+      } else {
+        return [...prev, { stage: stageId, channels: ['email'] }];
+      }
+    });
+  };
+
+  const updateStageChannels = (stageId: string, channels: ('email' | 'sms' | 'in_app' | 'platform')[]) => {
+    setNotificationPreferences((prev) =>
+      prev.map((p) =>
+        p.stage === stageId ? { ...p, channels } : p
+      )
+    );
+  };
+
+  const toggleChannel = (stageId: string, channel: 'email' | 'sms' | 'in_app' | 'platform') => {
+    setNotificationPreferences((prev) => {
+      const existing = prev.find((p) => p.stage === stageId);
+
+      if (!existing) {
+        // Stage doesn't exist, create it with this channel
+        return [...prev, { stage: stageId, channels: [channel] }];
+      }
+
+      // Stage exists, toggle the channel
+      const newChannels = existing.channels.includes(channel)
+        ? existing.channels.filter((c) => c !== channel)
+        : [...existing.channels, channel];
+
+      // If no channels left, remove the stage entirely
+      if (newChannels.length === 0) {
+        return prev.filter((p) => p.stage !== stageId);
+      }
+
+      return prev.map((p) =>
+        p.stage === stageId ? { ...p, channels: newChannels } : p
+      );
     });
   };
 
@@ -838,6 +914,84 @@ export default function SchedulingComponent({
             </div>
           )}
 
+        </div>
+      </div>
+
+      {/* Notification Preferences Table */}
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Notification Preferences
+          </h3>
+          <p className="text-sm text-gray-600">
+            Check the channels where you want to receive notifications for each campaign stage. At least one channel must be selected to enable notifications for a stage.
+          </p>
+        </div>
+
+        <div className={`bg-white border border-gray-200 ${tw.rounded} overflow-hidden`}>
+          <table className="w-full divide-y" style={{ borderColor: 'rgb(229, 231, 235)' }}>
+            <thead style={{ backgroundColor: 'rgb(249, 250, 251)' }}>
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                  Execution Stage
+                </th>
+                {notificationChannels.map((channel) => (
+                  <th
+                    key={channel.id}
+                    className="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider"
+                  >
+                    {channel.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y" style={{ borderColor: 'rgb(229, 231, 235)' }}>
+              {executionStages.map((stage) => {
+                const preference = notificationPreferences.find((p) => p.stage === stage.id);
+                const isEnabled = !!preference;
+
+                return (
+                  <tr key={stage.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                      {stage.label}
+                    </td>
+                    {notificationChannels.map((channel) => (
+                      <td
+                        key={`${stage.id}-${channel.id}`}
+                        className="px-6 py-4 text-center"
+                      >
+                        <div
+                          className="flex items-center justify-center cursor-pointer"
+                          onClick={() =>
+                            toggleChannel(
+                              stage.id,
+                              channel.id as 'email' | 'sms' | 'in_app' | 'platform'
+                            )
+                          }
+                        >
+                          <Checkbox
+                            id={`notif-${stage.id}-${channel.id}`}
+                            checked={
+                              isEnabled &&
+                              preference.channels.includes(
+                                channel.id as 'email' | 'sms' | 'in_app' | 'platform'
+                              )
+                            }
+                            onChange={() =>
+                              toggleChannel(
+                                stage.id,
+                                channel.id as 'email' | 'sms' | 'in_app' | 'platform'
+                              )
+                            }
+                          />
+                        </div>
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
 

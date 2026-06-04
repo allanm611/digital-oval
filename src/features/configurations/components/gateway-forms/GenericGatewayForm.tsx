@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Plus, Trash2, Save, X } from "lucide-react";
 import Input from "../../../../shared/components/ui/Input";
-import { color, tw } from "../../../../shared/utils/utils";
+import { color, tw, button, getButtonStyles } from "../../../../shared/utils/utils";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
 
 interface GenericGatewayFormProps {
@@ -226,7 +226,8 @@ export default function GenericGatewayForm({
           type="button"
           onClick={onCancel}
           disabled={isLoading}
-          className="px-6 py-2 text-sm font-medium border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-60"
+          className="transition-colors disabled:opacity-60"
+          style={getButtonStyles(button.bordered)}
         >
           Cancel
         </button>

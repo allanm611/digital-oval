@@ -441,7 +441,7 @@ export default function EditRoutePage() {
             style={{ backgroundColor: color.primary.action }}
           >
             {saving && <LoadingSpinner size={16} />}
-            {saving ? "Updating..." : "Update Route"}
+            {saving ? "Updating..." : "Update"}
           </button>
         </div>
       </form>

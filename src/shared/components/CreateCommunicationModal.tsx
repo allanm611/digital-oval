@@ -1387,7 +1387,12 @@ export default function CreateCommunicationModal({
           <button
             onClick={handleClose}
             disabled={sending}
-            className={`w-full sm:w-auto px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors disabled:opacity-50`}
+            className={`w-full sm:w-auto px-6 py-2.5 text-sm font-medium ${tw.rounded} transition-colors disabled:opacity-50`}
+            style={{
+              background: "transparent",
+              color: color.primary.action,
+              border: `1px solid ${color.primary.action}`,
+            }}
           >
             Cancel
           </button>

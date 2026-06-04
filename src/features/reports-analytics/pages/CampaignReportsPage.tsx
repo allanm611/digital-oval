@@ -451,6 +451,7 @@ export default function CampaignReportsPage() {
   const [showOffersModal, setShowOffersModal] = useState(false);
   const [showSegmentsModal, setShowSegmentsModal] = useState(false);
   const [selectedCampaignForModal, setSelectedCampaignForModal] = useState<CampaignDisplay | null>(null);
+  const [selectedCampaignFilter, setSelectedCampaignFilter] = useState<string>("");
 
   // Fetch real campaigns on mount
   const fetchCampaigns = async () => {
@@ -485,6 +486,12 @@ export default function CampaignReportsPage() {
   useEffect(() => {
     fetchCampaigns();
   }, []);
+
+  useEffect(() => {
+    if (selectedCampaignFilter) {
+      navigate(`/dashboard/campaigns/${selectedCampaignFilter}/report`);
+    }
+  }, [selectedCampaignFilter, navigate]);
 
   const handleRun = () => {
     setAppliedCustomRange(customRange);
@@ -840,7 +847,7 @@ export default function CampaignReportsPage() {
           </p>
         </div>
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {rangeOptions.map((option) => (
               <button
                 key={option}
@@ -861,6 +868,19 @@ export default function CampaignReportsPage() {
                 {getRangeLabel(option)}
               </button>
             ))}
+            <div className="border-l border-gray-300 h-6" />
+            <HeadlessSelect
+              value={selectedCampaignFilter}
+              onChange={setSelectedCampaignFilter}
+              options={[
+                { label: "All Campaigns", value: "" },
+                ...campaigns.map((campaign) => ({
+                  label: campaign.name,
+                  value: campaign.id?.toString() || "",
+                })),
+              ]}
+              placeholder="Select campaign"
+            />
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <div

@@ -17,7 +17,6 @@ import {
   Rocket,
   Clock,
   CheckCircle,
-  Save,
   AlertCircle,
 } from "lucide-react";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
@@ -538,10 +537,7 @@ export default function ObjectiveModal({
                     {objective ? "Updating..." : "Creating..."}
                   </>
                 ) : (
-                  <>
-                    <Save className="w-4 h-4 mr-2" />
-                    {objective ? "Update" : "Create"}
-                  </>
+                  objective ? "Update" : "Create"
                 )}
               </button>
             </div>

@@ -801,7 +801,7 @@ export default function EtlFileRegistryPage() {
             )}
 
             {/* Buttons */}
-            <div className="flex gap-3 pt-4">
+            <div className="flex items-center justify-end gap-3 pt-4">
               <button
                 onClick={() => {
                   setIsUploadModalOpen(false);
@@ -809,11 +809,8 @@ export default function EtlFileRegistryPage() {
                   setUploadPreview(null);
                   setUploadError(null);
                 }}
-                className={`flex-1 px-4 py-2 ${tw.rounded} border font-medium transition-colors`}
-                style={{
-                  borderColor: color.border.default,
-                  color: tw.textPrimary,
-                }}
+                className="transition-colors disabled:opacity-60"
+                style={getButtonStyles(button.bordered)}
               >
                 Cancel
               </button>
@@ -880,7 +877,7 @@ export default function EtlFileRegistryPage() {
                     setIsUploading(false);
                   }
                 }}
-                className={`flex-1 px-4 py-2 text-white ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`px-4 py-2 text-white ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                 style={{ backgroundColor: color.primary.action }}
               >
                 {isUploading ? "Uploading..." : "Upload"}

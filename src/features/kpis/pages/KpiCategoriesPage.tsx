@@ -1,8 +1,5 @@
-import { ConfigurationManagerAPI } from "../../configurations/components/ConfigurationManager";
-import { getKpiCategoriesApiConfig } from "../../configurations/configs/configurationPageConfigs";
-import { useLanguage } from "../../../contexts/LanguageContext";
+import KpiCategoriesListPage from "../components/KpiCategoriesListPage";
 
 export default function KpiCategoriesPage() {
-  const { t } = useLanguage();
-  return <ConfigurationManagerAPI config={getKpiCategoriesApiConfig(t)} />;
+  return <KpiCategoriesListPage />;
 }

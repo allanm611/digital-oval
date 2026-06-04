@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
+import Input from "../../../shared/components/ui/Input";
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { color, tw, button } from "../../../shared/utils/utils";
@@ -220,11 +221,16 @@ function CategoryModal({
                 <p className="text-sm text-red-600 mt-4">{formError}</p>
               )}
 
-              <div className="flex items-center justify-end space-x-3 mt-6">
+              <div className="flex items-center justify-end gap-3 mt-6">
                 <button
                   type="button"
                   onClick={onClose}
-                  className={`px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 ${tw.rounded} transition-colors`}
+                  className={`px-4 py-2 ${tw.rounded} transition-colors`}
+                  style={{
+                    background: "transparent",
+                    color: color.primary.action,
+                    border: `1px solid ${color.primary.action}`,
+                  }}
                 >
                   {t.offerCatalogs.cancel}
                 </button>
@@ -235,7 +241,9 @@ function CategoryModal({
                   style={{ backgroundColor: color.primary.action }}
                 >
                   {isLoading
-                    ? t.offerCatalogs.saving
+                    ? category
+                      ? "Updating..."
+                      : "Creating..."
                     : category
                       ? t.offerCatalogs.update
                       : t.offerCatalogs.create}

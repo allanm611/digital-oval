@@ -1958,8 +1958,8 @@ export const es: Translations = {
     catalogNamePlaceholder: "Ingrese el nombre del catálogo de ofertas",
     descriptionPlaceholder: "Ingrese la descripción del catálogo de ofertas",
     cancel: "Cancelar",
-    create: "Crear Categoría",
-    update: "Actualizar Categoría",
+    create: "Crear",
+    update: "Actualizar",
     catalogNameRequired: "El nombre del catálogo es requerido",
     saveFailed:
       "Error al guardar la categoría. Por favor, intente nuevamente más tarde.",

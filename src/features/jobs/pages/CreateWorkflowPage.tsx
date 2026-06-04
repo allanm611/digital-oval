@@ -7,7 +7,7 @@ import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useAuth } from "../../../contexts/AuthContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Input from "../../../shared/components/ui/Input";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import type { CreateWorkflowPayload, UpdateWorkflowPayload } from "../types/workflow";
 
@@ -192,26 +192,24 @@ export default function CreateWorkflowPage() {
           <button
             type="button"
             onClick={() => navigate("/dashboard/workflows")}
-            className={`${tw.rounded} border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50`}
+            className="transition-colors disabled:opacity-60"
+            style={getButtonStyles(button.bordered)}
           >
-            {t.common.cancel}
+            Cancel
           </button>
           <button
             type="submit"
             disabled={isSaving}
-            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-semibold text-white disabled:opacity-50`}
+            className={`${tw.rounded} px-4 py-2 text-sm font-semibold text-white disabled:opacity-50`}
             style={{ backgroundColor: color.primary.action }}
           >
             {isSaving ? (
               <>
                 <LoadingSpinner />
-                {isEditMode ? t.workflows.updating : t.workflows.creating}
+                {isEditMode ? "Updating..." : "Creating..."}
               </>
             ) : (
-              <>
-                <Save className="h-4 w-4" />
-                {isEditMode ? t.workflows.editWorkflow : t.workflows.createWorkflow}
-              </>
+              isEditMode ? "Update" : "Create"
             )}
           </button>
         </div>

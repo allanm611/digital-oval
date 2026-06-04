@@ -9,7 +9,7 @@ import { UsageMetric, UsageMetricOperator } from "../types/usageMetrics";
 import { usageMetricService } from "../services/usageMetricService";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 
 const CATEGORY_OPTIONS = [
@@ -427,23 +427,23 @@ export default function UsageMetricFormPage({ mode }: UsageMetricFormPageProps) 
         </div>
 
         {/* Submit Button */}
-        <div className="flex items-center gap-3">
-          <button
-            type="submit"
-            disabled={saving}
-            className="inline-flex items-center gap-2 px-6 py-2 text-sm font-medium text-white rounded-md disabled:opacity-60"
-            style={{ backgroundColor: color.primary.action }}
-          >
-            <Save className="w-4 h-4" />
-            {saving ? "Saving..." : "Save Metric"}
-          </button>
+        <div className="flex items-center justify-end gap-3">
           <button
             type="button"
             onClick={() => navigate("/dashboard/kpis/usage-metrics")}
             disabled={saving}
-            className="px-6 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-60"
+            className="transition-colors disabled:opacity-60"
+            style={getButtonStyles(button.bordered)}
           >
             Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={saving}
+            className="px-6 py-2 text-sm font-medium text-white rounded-md disabled:opacity-60"
+            style={{ backgroundColor: color.primary.action }}
+          >
+            {saving ? "Creating..." : "Create"}
           </button>
         </div>
       </form>

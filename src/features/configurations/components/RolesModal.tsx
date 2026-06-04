@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { X, Loader2 } from "lucide-react";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useAuth } from "../../../contexts/AuthContext";
@@ -263,28 +263,30 @@ export default function RolesModal({
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 pt-4">
+          <div className="flex items-center justify-end gap-3 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className={`flex-1 px-4 py-2 ${tw.rounded} text-sm font-medium transition-colors`}
-              style={{
-                color: color.primary.action,
-                backgroundColor: `${color.primary.action}10`,
-                border: `1px solid ${color.primary.action}20`,
-              }}
+              className="transition-colors disabled:opacity-60"
+              style={getButtonStyles(button.bordered)}
               disabled={isSubmitting}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className={`flex-1 px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors flex items-center justify-center gap-2`}
+              className={`px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors flex items-center justify-center gap-2 disabled:opacity-60`}
               style={{ backgroundColor: color.primary.action }}
               disabled={isSubmitting}
             >
-              {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-              {editingRole ? "Update" : "Create"}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  {editingRole ? "Updating..." : "Creating..."}
+                </>
+              ) : (
+                editingRole ? "Update" : "Create"
+              )}
             </button>
           </div>
         </form>

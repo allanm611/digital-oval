@@ -342,7 +342,7 @@ export default function CreateManualRewardPage() {
                       {isEditMode ? "Updating..." : "Creating..."}
                     </>
                   ) : (
-                    isEditMode ? "Update Reward" : "Create Reward"
+                    isEditMode ? "Update" : "Create"
                   )
                 ) : (
                   "Next"

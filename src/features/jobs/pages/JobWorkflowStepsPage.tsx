@@ -30,7 +30,7 @@ import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
 import Input from "../../../shared/components/ui/Input";
-import { color, tw, zIndex, noteStyles } from "../../../shared/utils/utils";
+import { color, tw, zIndex, noteStyles, button, getButtonStyles } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -2076,20 +2076,21 @@ export default function JobWorkflowStepsPage() {
 
                 {/* Footer */}
                 <div className="p-4 border-t border-gray-200 bg-gray-50">
-                  <div className="flex space-x-3">
+                  <div className="flex items-center justify-end gap-3">
                     <button
                       onClick={() => setShowReorderModal(false)}
-                      className={`flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors`}
+                      className="transition-colors disabled:opacity-60"
+                      style={getButtonStyles(button.bordered)}
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleReorderSteps}
                       disabled={isReordering}
-                      className={`flex-1 px-4 py-2 text-sm font-semibold text-white ${tw.rounded} transition-colors disabled:opacity-50`}
+                      className={`px-4 py-2 text-sm font-semibold text-white ${tw.rounded} transition-colors disabled:opacity-50`}
                       style={{ backgroundColor: color.primary.action }}
                     >
-                      {isReordering ? "Reordering..." : "Save Order"}
+                      {isReordering ? "Reordering..." : "Update"}
                     </button>
                   </div>
                 </div>
@@ -2335,23 +2336,24 @@ export default function JobWorkflowStepsPage() {
 
                 {/* Footer */}
                 <div className="p-4 border-t border-gray-200 bg-gray-50">
-                  <div className="flex space-x-3">
+                  <div className="flex items-center justify-end gap-3">
                     <button
                       onClick={() => {
                         setShowBatchUpdateModal(false);
                         setBatchUpdateFields({});
                       }}
-                      className={`flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors`}
+                      className="transition-colors disabled:opacity-60"
+                      style={getButtonStyles(button.bordered)}
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleBatchUpdate}
                       disabled={isBatchUpdating}
-                      className={`flex-1 px-4 py-2 text-sm font-semibold text-white ${tw.rounded} transition-colors disabled:opacity-50`}
+                      className={`px-4 py-2 text-sm font-semibold text-white ${tw.rounded} transition-colors disabled:opacity-50`}
                       style={{ backgroundColor: color.primary.action }}
                     >
-                      {isBatchUpdating ? "Updating..." : "Update Steps"}
+                      {isBatchUpdating ? "Updating..." : "Update"}
                     </button>
                   </div>
                 </div>

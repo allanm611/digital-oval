@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Save } from "lucide-react";
-import { tw, color, button } from "../../../../shared/utils/utils";
+import { tw, color, button, getButtonStyles } from "../../../../shared/utils/utils";
 import Input from "../../../../shared/components/ui/Input";
 import { USSDGatewayConfig, CreateUSSDGatewayConfigRequest } from "../../types/ussdGatewayConfig";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
@@ -201,13 +201,8 @@ export default function USSDGatewayForm({
           type="button"
           onClick={onCancel}
           disabled={isLoading}
-          className="text-sm font-medium rounded-md transition-colors disabled:opacity-60"
-          style={{
-            backgroundColor: button.bordered.background,
-            color: button.bordered.color,
-            border: button.bordered.border,
-            padding: `${button.bordered.paddingY} ${button.bordered.paddingX}`,
-          }}
+          className="transition-colors disabled:opacity-60"
+          style={getButtonStyles(button.bordered)}
         >
           Cancel
         </button>

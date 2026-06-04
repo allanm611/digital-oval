@@ -237,7 +237,7 @@ export default function CreateProductPage({
         onShowCreateModal={setShowCreateModal}
         refreshTrigger={refreshTrigger}
         onCategoryCreated={handleCategoryCreated}
-        submitButtonText="Create Product"
+        submitButtonText="Create"
         loadingText="Creating..."
         onCancel={() => navigate("/dashboard/products")}
       />

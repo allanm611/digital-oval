@@ -90,7 +90,7 @@ export default function AddVIPMembersModal({
     setLoadingCustomers(true);
     try {
       const response = await customerService.getAllCustomers({
-        limit: 1000,
+        limit: 100,
         offset: 0,
         skipCache: true,
       });

@@ -1405,12 +1405,17 @@ export default function SegmentModal({
 
               {/* Footer - Sticky */}
               <div
-                className={`flex items-center justify-end space-x-4 p-6 border-t border-[${tw.borderDefault}]  flex-shrink-0`}
+                className={`flex items-center justify-end gap-3 p-6 border-t border-[${tw.borderDefault}]  flex-shrink-0`}
               >
                 <button
                   type="button"
                   onClick={onClose}
-                  className={`px-6 py-2 ${tw.textSecondary} bg-white border border-[${tw.borderDefault}] ${tw.rounded} hover:bg-[${color.surface.cards}] transition-colors text-sm`}
+                  className={`px-6 py-2 ${tw.rounded} transition-colors text-sm`}
+                  style={{
+                    background: "transparent",
+                    color: color.primary.action,
+                    border: `1px solid ${color.primary.action}`,
+                  }}
                 >
                   Cancel
                 </button>
@@ -1438,10 +1443,12 @@ export default function SegmentModal({
                   }}
                 >
                   {isLoading
-                    ? "Saving..."
+                    ? segment
+                      ? "Updating..."
+                      : "Creating..."
                     : segment
-                      ? "Update Segment"
-                      : "Create Segment"}
+                      ? "Update"
+                      : "Create"}
                 </button>
               </div>
             </div>

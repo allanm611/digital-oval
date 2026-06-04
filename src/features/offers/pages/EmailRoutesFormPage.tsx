@@ -299,7 +299,7 @@ export default function EmailRoutesFormPage() {
             style={{ backgroundColor: color.primary.action }}
           >
             {isSaving && <LoadingSpinner variant="modern" size="sm" color="inherit" />}
-            {isEditMode ? "Update Route" : "Create Route"}
+            {isEditMode ? "Update" : "Create"}
           </button>
         </div>
       </form>

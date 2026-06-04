@@ -278,7 +278,7 @@ export default function ConfigurationModal({
           )}
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-end space-x-3 mt-6">
+          <div className="flex items-center justify-end gap-3 mt-6">
             <button
               type="button"
               onClick={onClose}
@@ -294,16 +294,12 @@ export default function ConfigurationModal({
               style={{ backgroundColor: color.primary.action }}
             >
               {isSaving
-                ? t.genericConfig.saving
+                ? item
+                  ? "Updating..."
+                  : "Creating..."
                 : item
-                  ? t.genericConfig.update.replace(
-                      "{entityName}",
-                      config.entityName
-                    )
-                  : t.genericConfig.create.replace(
-                      "{entityName}",
-                      config.entityName
-                    )}
+                  ? "Update"
+                  : "Create"}
             </button>
           </div>
         </form>

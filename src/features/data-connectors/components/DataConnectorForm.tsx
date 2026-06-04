@@ -6,7 +6,7 @@ import {
   ProcessedDataConnector,
 } from "../types/dataConnector";
 import { getConnectorDisplayName } from "../utils/connectorIcons";
-import { color, zIndex } from "../../../shared/utils/utils";
+import { color, zIndex, button, getButtonStyles } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 
@@ -201,7 +201,8 @@ const DataConnectorForm: React.FC<DataConnectorFormProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors font-medium text-sm"
+            className="transition-colors disabled:opacity-60"
+            style={getButtonStyles(button.bordered)}
           >
             Cancel
           </button>
@@ -212,7 +213,7 @@ const DataConnectorForm: React.FC<DataConnectorFormProps> = ({
             className="px-4 py-2 text-white rounded-md font-medium text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-md"
             style={{ backgroundColor: color.primary.action }}
           >
-            {loading ? "Saving..." : isEditing ? "Update Connector" : "Create Connector"}
+            {loading ? (isEditing ? "Updating..." : "Creating...") : (isEditing ? "Update" : "Create")}
           </button>
         </div>
       </div>

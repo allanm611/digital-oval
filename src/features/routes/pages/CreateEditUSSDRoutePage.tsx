@@ -459,12 +459,17 @@ export default function CreateEditUSSDRoutePage() {
 
 
         {/* Form Actions */}
-        <div className="flex items-center justify-between pt-6 border-t border-gray-200">
+        <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-200">
           <button
             type="button"
             onClick={() => navigate("/dashboard/ussd-routes")}
             disabled={saving}
-            className="px-6 py-2 text-sm font-medium border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-60"
+            className="px-6 py-2 text-sm font-medium rounded-md transition-colors disabled:opacity-60"
+            style={{
+              background: "transparent",
+              color: color.primary.action,
+              border: `1px solid ${color.primary.action}`,
+            }}
           >
             Cancel
           </button>
@@ -476,7 +481,7 @@ export default function CreateEditUSSDRoutePage() {
             style={{ backgroundColor: color.primary.action }}
           >
             <Save className="w-4 h-4" />
-            {saving ? "Saving..." : id ? "Update Route" : "Create Route"}
+            {saving ? (id ? "Updating..." : "Creating...") : id ? "Update" : "Create"}
           </button>
         </div>
       </form>
