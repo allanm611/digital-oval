@@ -892,7 +892,6 @@ export default function WorkflowsPage() {
         }}
         workflow={editingWorkflow}
       />
-    </div>
     </>
   );
 }

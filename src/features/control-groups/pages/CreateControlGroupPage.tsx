@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Users, BarChart3, Calendar, Eye, Loader2 } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import BackButton from "../../../shared/components/ui/BackButton";
+import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import ProgressStepper, {
   Step,
 } from "../../../shared/components/ui/ProgressStepper";
@@ -21,9 +22,27 @@ import Input from "../../../shared/components/ui/Input";
 
 export default function CreateControlGroupPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams<{ id: string }>();
   const { success: showToast, error: showError } = useToast();
   const isEditMode = !!id;
+
+  // Get returnTo from location state
+  const returnTo = (
+    location.state as {
+      returnTo?: {
+        pathname: string;
+      };
+    }
+  )?.returnTo;
+
+  const handleBack = () => {
+    if (returnTo?.pathname) {
+      navigate(returnTo.pathname, { replace: true });
+      return;
+    }
+    navigateBackOrFallback(navigate, "/dashboard/control-groups");
+  };
 
   const [currentStep, setCurrentStep] = useState(1);
   const [controlGroupCode, setControlGroupCode] = useState("");
@@ -89,7 +108,7 @@ export default function CreateControlGroupPage() {
     } catch (error) {
       console.error("Failed to load control group:", error);
       showError(extractBackendError(error, "Failed to load control group data. Please try again."));
-      navigate("/dashboard/control-groups");
+      handleBack();
     } finally {
       setIsLoading(false);
     }
@@ -381,7 +400,7 @@ export default function CreateControlGroupPage() {
         showToast("Control group created successfully");
       }
 
-      navigate("/dashboard/control-groups");
+      handleBack();
     } catch (error) {
       console.error("Failed to save control group:", error);
       showError(
@@ -409,7 +428,7 @@ export default function CreateControlGroupPage() {
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between pb-3">
             <BackButton
-             
+              onBack={handleBack}
               showBreadcrumb={true}
               currentLabel={isEditMode ? `Edit ${controlGroupName || "Control Group"}` : "Create Control Group"}
             />

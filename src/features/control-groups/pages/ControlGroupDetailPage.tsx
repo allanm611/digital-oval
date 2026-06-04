@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Users, Percent, Calendar, Edit, Trash2, Loader2, Plus } from "lucide-react";
 import { color, tw, button } from "../../../shared/utils/utils";
 import BackButton from "../../../shared/components/ui/BackButton";
@@ -7,6 +7,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { controlGroupService } from "../services/controlGroupService";
+import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import type { ControlGroupApiModel, ControlGroupMember } from "../types/controlGroup";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import Pagination from "../../../shared/components/ui/Pagination";
@@ -15,11 +16,29 @@ import AddMembersModal from "../components/AddMembersModal";
 export default function ControlGroupDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { success: showSuccess, error: showError } = useToast();
   const [group, setGroup] = useState<ControlGroupApiModel | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  // Get returnTo from location state
+  const returnTo = (
+    location.state as {
+      returnTo?: {
+        pathname: string;
+      };
+    }
+  )?.returnTo;
+
+  const handleBack = () => {
+    if (returnTo?.pathname) {
+      navigate(returnTo.pathname, { replace: true });
+      return;
+    }
+    navigateBackOrFallback(navigate, "/dashboard/control-groups");
+  };
 
   // Members management
   const [members, setMembers] = useState<ControlGroupMember[]>([]);
@@ -241,14 +260,16 @@ export default function ControlGroupDetailPage() {
       {/* Header with Back Button and Action Buttons */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <BackButton
-         
+          onBack={handleBack}
           showBreadcrumb={true}
           currentLabel="Control Group Details"
         />
         <div className="flex items-center gap-2">
           <button
             onClick={() =>
-              navigate(`/dashboard/control-groups/${group.id}/edit`)
+              navigate(`/dashboard/control-groups/${group.id}/edit`, {
+                state: { returnTo: { pathname: location.pathname } }
+              })
             }
             className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors hover:opacity-90`}
             style={{ backgroundColor: color.primary.action }}
