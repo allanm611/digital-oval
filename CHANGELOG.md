@@ -1,3 +1,10 @@
+## [1.4.5](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.4...v1.4.5) (2026-06-04)
+
+
+### Bug Fixes
+
+* creating a consistent pattern on all cretae/update and cancle buttons in forms and modals ([0d47556](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/0d47556c77f81a7b5caef38bb2b98cd407cad22a))
+
 ## [1.4.4](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.3...v1.4.4) (2026-06-02)
 
 
