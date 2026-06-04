@@ -136,9 +136,11 @@ export const tw = {
   surfaceCards: "bg-[var(--c-surface-cards)]",
   surfaceBackground: "bg-[var(--c-surface-background)]",
   tableHeader: "bg-[var(--c-surface-table-header)]",
+  bgTabActive: "bg-[var(--c-bg-tab-active)]",
+  bgTabInactive: "bg-[var(--c-bg-tab-inactive)]",
 
   success: `text-[${colors.status.success}]`,
-  danger: `text-[${colors.status.danger}]`,
+  danger: "text-[var(--c-text-danger)]",
   warning: `text-[${colors.status.warning}]`,
   info: `text-[${colors.status.info}]`,
 
@@ -157,6 +159,9 @@ export const tw = {
   textSecondary: "text-[var(--c-text-secondary)]",
   textMuted: "text-[var(--c-text-muted)]",
   textInverse: "text-[var(--c-text-inverse)]",
+  textSuccess: "text-[var(--c-text-success)]",
+  textDanger: "text-[var(--c-text-danger)]",
+  textLight: "text-white",
   textAction: "text-white",
 
   hover: "hover:bg-[var(--c-interactive-hover)]",
@@ -168,6 +173,7 @@ export const tw = {
   borderDefault: "border-[var(--c-border-default)]",
   borderAccent: "border-[var(--c-border-accent)]",
   borderMuted: "border-[var(--c-border-muted)]",
+  borderLight: "border-[var(--c-border-light)]",
 
   fontPrimary: "font-sans",
   fontSecondary: "font-mono",

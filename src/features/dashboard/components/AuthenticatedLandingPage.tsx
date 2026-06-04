@@ -19,7 +19,7 @@ import FixedBackground from "../../../shared/components/FixedBackground";
 
 import { GuestHeader } from "./Header";
 
-import { tw } from '../../../shared/utils/utils';
+import { tw, color } from '../../../shared/utils/utils';
 export default function AuthenticatedLandingPage() {
   const navigate = useNavigate();
   const { logout } = useAuth();
@@ -156,10 +156,10 @@ export default function AuthenticatedLandingPage() {
           <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-8">
             {/* Title Section */}
             <div className="text-center mb-12">
-              <h1 className={`text-4xl sm:text-5xl font-bold  mb-4`}>
+              <h1 className={`text-4xl sm:text-5xl font-bold ${tw.textLight} mb-4`}>
                 {t.landing.corePlatform}
               </h1>
-              <p className={`text-xl /80 max-w-2xl mx-auto`}>
+              <p className={`text-xl ${tw.textLight} text-white/80 max-w-2xl mx-auto`}>
                 {t.landing.corePlatformDescription}
               </p>
             </div>
@@ -190,20 +190,22 @@ export default function AuthenticatedLandingPage() {
                       </div>
 
                       {/* Title and Subtitle */}
-                      <h3 className={`text-base font-bold  mb-1 text-center leading-tight`}>
+                      <h3
+                        className={`text-base font-bold mb-1 text-center leading-tight`}
+                        style={{ color: color.primary.accent }}
+                      >
                         {module.name}
                       </h3>
                       {module.subtitle && (
                         <p
-                          className="font-semibold text-sm text-center leading-tight mb-3"
-                          style={{ color: colors.primary.accent }}
+                          className={`font-semibold text-sm text-center leading-tight mb-3 ${tw.textLight}`}
                         >
                           {module.subtitle}
                         </p>
                       )}
 
                       {/* Description Inside Card */}
-                      <p className={`/80 text-sm leading-relaxed text-center`}>
+                      <p className={`text-sm leading-relaxed text-center ${tw.textLight} text-white/70`}>
                         {module.description}
                       </p>
                     </div>

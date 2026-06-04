@@ -570,7 +570,6 @@ export default function SettingsPage() {
 
   const handleThemeChange = (newTheme: "light" | "dark") => {
     setSettings({ ...settings, theme: newTheme });
-    setTheme(newTheme);
   };
 
   const handleSave = async () => {

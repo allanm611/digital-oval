@@ -1739,7 +1739,7 @@ export default function DashboardHome() {
           {t.dashboard.welcome}, {getFirstName()}
         </h1>
         {/* <p className={`${tw.textSecondary} ${tw.body}`}> */}
-        <p className="text-gray-900 text-sm md:text-base">
+        <p className={`${tw.textPrimary} text-sm md:text-base`}>
           {t.dashboard.welcomeMessage}
         </p>
       </div>
@@ -1750,8 +1750,8 @@ export default function DashboardHome() {
           const Icon = stat.icon;
           const trendColor =
             stat.changeType === "positive"
-              ? "text-emerald-600"
-              : "text-red-600";
+              ? tw.textSuccess
+              : tw.textDanger;
           return (
             <div
               key={stat.name}
@@ -1763,7 +1763,7 @@ export default function DashboardHome() {
                     className="h-5 w-5"
                     style={{ color: color.primary.accent }}
                   />
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className={`text-sm font-medium ${tw.textSecondary}`}>
                     {stat.name}
                   </p>
                 </div>
@@ -1771,10 +1771,10 @@ export default function DashboardHome() {
                   {stat.changeType === "positive" ? "↑" : "↓"} {stat.change}
                 </span>
               </div>
-              <p className="mt-3 text-3xl font-bold text-gray-900">
+              <p className={`mt-3 text-3xl font-bold ${tw.textPrimary}`}>
                 {stat.value}
               </p>
-              <p className="mt-1 text-sm text-gray-500">
+              <p className={`mt-1 text-sm ${tw.textMuted}`}>
                 {t.dashboard.vsLastMonth}
               </p>
             </div>
@@ -1785,11 +1785,11 @@ export default function DashboardHome() {
       {/* Quick insights */}
       <div className="space-y-2">
         {/* <h2 className={`${tw.mainHeading} ${tw.textPrimary}`}> */}
-        <h2 className="text-2xl font-semibold text-black">
+        <h2 className={`text-2xl font-semibold ${tw.textPrimary}`}>
           {t.dashboard.quickInsights}
         </h2>
         {/* <p className={`${tw.textSecondary} ${tw.body}`}> */}
-        <p className="text-gray-900 text-base ">
+        <p className={`${tw.textPrimary} text-base `}>
           {t.dashboard.instantHighlights}
         </p>
       </div>
@@ -1808,14 +1808,14 @@ export default function DashboardHome() {
                   className="h-5 w-5"
                   style={{ color: color.primary.accent }}
                 />
-                <p className="text-sm font-medium text-gray-600">
+                <p className={`text-sm font-medium ${tw.textSecondary}`}>
                   {insight.label}
                 </p>
               </div>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
+              <p className={`mt-2 text-3xl font-bold ${tw.textPrimary}`}>
                 {insight.value}
               </p>
-              <p className="mt-1 text-sm text-gray-500">
+              <p className={`mt-1 text-sm ${tw.textMuted}`}>
                 {insight.description}
               </p>
             </div>
@@ -1834,7 +1834,7 @@ export default function DashboardHome() {
                   <h2 className={tw.cardHeading}>
                     {t.dashboard.recentlyAdded}
                   </h2>
-                  <p className={`${tw.cardSubHeading} text-black mt-1`}>
+                  <p className={`${tw.cardSubHeading} ${tw.textPrimary} mt-1`}>
                     {t.dashboard.newlyCreated}
                   </p>
                 </div>
@@ -1848,7 +1848,7 @@ export default function DashboardHome() {
                     onClick={() =>
                       setIsFilterDropdownOpen(!isFilterDropdownOpen)
                     }
-                    className={`w-full sm:w-auto flex items-center justify-between gap-2 px-4 py-2 ${tw.rounded} text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all border border-gray-200`}
+                    className={`w-full sm:w-auto flex items-center justify-between gap-2 px-4 py-2 ${tw.rounded} text-sm font-medium bg-gray-100 ${tw.textSecondary} hover:bg-gray-200 transition-all border border-gray-200`}
                   >
                     <span>
                       {[
@@ -1888,8 +1888,8 @@ export default function DashboardHome() {
                           }}
                           className={`w-full text-left px-4 py-2 text-sm font-medium transition-colors ${
                             latestItemsFilter === tab.key
-                              ? "bg-gray-900 text-white"
-                              : "text-gray-700 hover:bg-gray-100"
+                              ? "${tw.bgTabActive} ${tw.textLight}"
+                              : "${tw.textSecondary} hover:bg-gray-100"
                           } ${
                             tab.key !== "products"
                               ? "border-b border-gray-100"
@@ -1924,8 +1924,8 @@ export default function DashboardHome() {
                       }
                       className={`px-4 py-2 ${tw.rounded} text-sm font-medium transition-all ${
                         latestItemsFilter === tab.key
-                          ? "bg-gray-900 text-white"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                          ? "${tw.bgTabActive} ${tw.textLight}"
+                          : "bg-gray-100 ${tw.textSecondary} hover:bg-gray-200"
                       }`}
                     >
                       {tab.label}
@@ -1941,7 +1941,7 @@ export default function DashboardHome() {
                 {recentItemsLoading && (
                   <div className="flex items-center justify-center py-12">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-600"></div>
-                    <span className="ml-3 text-sm text-gray-500">
+                    <span className={`ml-3 text-sm ${tw.textMuted}`}>
                       {t.dashboard.loading}{" "}
                       {(() => {
                         const pageKey =
@@ -1976,32 +1976,32 @@ export default function DashboardHome() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2 min-w-0">
                           <h3
-                            className="font-semibold text-base text-gray-900 truncate max-w-[60vw] sm:max-w-xs"
+                            className={`font-semibold text-base ${tw.textPrimary} truncate max-w-[60vw] sm:max-w-xs`}
                             title={campaign.name}
                           >
                             {campaign.name}
                           </h3>
-                          <span className="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200 flex-shrink-0">
+                          <span className={`px-3 py-1 rounded-full text-sm font-medium bg-gray-100 ${tw.textSecondary} border border-gray-200 flex-shrink-0`}>
                             {campaign.statusDisplay}
                           </span>
                         </div>
-                        <div className="flex flex-wrap gap-3 text-sm text-black">
+                        <div className={`flex flex-wrap gap-3 text-sm ${tw.textPrimary}`}>
                           {(() => {
                             return campaign.description && campaign.description.trim() !== "" ? (
-                              <span className="text-black/80">
+                              <span className={`${tw.textPrimary}/80`}>
                                 {campaign.description}
                               </span>
                             ) : null;
                           })()}
                           {campaign.performance && (
-                            <span className="text-black/80">
+                            <span className={`${tw.textPrimary}/80`}>
                               {campaign.performance.converted.toLocaleString()}{" "}
                               {t.dashboard.converted}
                             </span>
                           )}
                         </div>
                       </div>
-                      <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-gray-600 flex-shrink-0 self-start" />
+                      <ArrowRight className={`h-5 w-5 ${tw.textMuted} group-hover:${tw.textSecondary} flex-shrink-0 self-start`} />
                     </div>
                   ))}
 
@@ -2026,21 +2026,21 @@ export default function DashboardHome() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2 min-w-0">
                           <h3
-                            className="font-semibold text-base text-gray-900 truncate max-w-[60vw] sm:max-w-xs"
+                            className={`font-semibold text-base ${tw.textPrimary} truncate max-w-[60vw] sm:max-w-xs`}
                             title={offer.name}
                           >
                             {offer.name}
                           </h3>
-                          <span className="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200 flex-shrink-0">
+                          <span className={`px-3 py-1 rounded-full text-sm font-medium bg-gray-100 ${tw.textSecondary} border border-gray-200 flex-shrink-0`}>
                             {offer.status}
                           </span>
                         </div>
-                        <div className="flex flex-wrap gap-3 text-sm text-black">
-                          <span className="text-black/80">{offer.type}</span>
-                          <span className="text-black/80">{offer.created}</span>
+                        <div className={`flex flex-wrap gap-3 text-sm ${tw.textPrimary}`}>
+                          <span className={`${tw.textPrimary}/80`}>{offer.type}</span>
+                          <span className={`${tw.textPrimary}/80`}>{offer.created}</span>
                         </div>
                       </div>
-                      <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-gray-600 flex-shrink-0 self-start" />
+                      <ArrowRight className={`h-5 w-5 ${tw.textMuted} group-hover:${tw.textSecondary} flex-shrink-0 self-start`} />
                     </div>
                   ))}
 
@@ -2067,26 +2067,26 @@ export default function DashboardHome() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2 min-w-0">
                           <h3
-                            className="font-semibold text-base text-gray-900 truncate max-w-[60vw] sm:max-w-xs"
+                            className={`font-semibold text-base ${tw.textPrimary} truncate max-w-[60vw] sm:max-w-xs`}
                             title={segment.name}
                           >
                             {segment.name}
                           </h3>
-                          <span className="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200 flex-shrink-0">
+                          <span className={`px-3 py-1 rounded-full text-sm font-medium bg-gray-100 ${tw.textSecondary} border border-gray-200 flex-shrink-0`}>
                             {segment.type}
                           </span>
                         </div>
-                        <div className="flex flex-wrap gap-3 text-sm text-black">
-                          <span className="text-black/80">
+                        <div className={`flex flex-wrap gap-3 text-sm ${tw.textPrimary}`}>
+                          <span className={`${tw.textPrimary}/80`}>
                             {segment.members.toLocaleString()}{" "}
                             {t.dashboard.members}
                           </span>
-                          <span className="text-black/80">
+                          <span className={`${tw.textPrimary}/80`}>
                             {segment.created}
                           </span>
                         </div>
                       </div>
-                      <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-gray-600 flex-shrink-0 self-start" />
+                      <ArrowRight className={`h-5 w-5 ${tw.textMuted} group-hover:${tw.textSecondary} flex-shrink-0 self-start`} />
                     </div>
                   ))}
 
@@ -2113,25 +2113,25 @@ export default function DashboardHome() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2 min-w-0">
                           <h3
-                            className="font-semibold text-base text-gray-900 truncate max-w-[60vw] sm:max-w-xs"
+                            className={`font-semibold text-base ${tw.textPrimary} truncate max-w-[60vw] sm:max-w-xs`}
                             title={product.name}
                           >
                             {product.name}
                           </h3>
-                          <span className="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200 flex-shrink-0">
+                          <span className={`px-3 py-1 rounded-full text-sm font-medium bg-gray-100 ${tw.textSecondary} border border-gray-200 flex-shrink-0`}>
                             {product.status}
                           </span>
                         </div>
-                        <div className="flex flex-wrap gap-3 text-sm text-black">
-                          <span className="text-black/80">
+                        <div className={`flex flex-wrap gap-3 text-sm ${tw.textPrimary}`}>
+                          <span className={`${tw.textPrimary}/80`}>
                             {t.dashboard.code}: {product.code}
                           </span>
-                          <span className="text-black/80">
+                          <span className={`${tw.textPrimary}/80`}>
                             {product.created}
                           </span>
                         </div>
                       </div>
-                      <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-gray-600 flex-shrink-0 self-start" />
+                      <ArrowRight className={`h-5 w-5 ${tw.textMuted} group-hover:${tw.textSecondary} flex-shrink-0 self-start`} />
                     </div>
                   ))}
 
@@ -2147,7 +2147,7 @@ export default function DashboardHome() {
                       recentProducts.length === 0)) && (
                     <div className="flex items-center justify-center py-12">
                       <div className="text-center">
-                        <p className="text-sm text-gray-500 mb-2">
+                        <p className={`text-sm ${tw.textMuted} mb-2`}>
                           {t.dashboard.noItemsFound.replace(
                             "{type}",
                             t.pages[latestItemsFilter as keyof typeof t.pages]
@@ -2165,7 +2165,7 @@ export default function DashboardHome() {
                               navigate("/dashboard/products/create");
                             }
                           }}
-                          className="text-sm font-medium text-black hover:text-gray-700"
+                          className={`text-sm font-medium ${tw.textPrimary} hover:${tw.textSecondary}`}
                         >
                           {t.dashboard.createFirst.replace(
                             "{type}",
@@ -2182,10 +2182,10 @@ export default function DashboardHome() {
 
         {/* Quick Actions - Takes 1 column */}
         <div>
-          <div className={`bg-white ${tw.rounded} border border-gray-200 overflow-hidden h-full`}>
+          <div className={`${tw.surfaceCards} ${tw.rounded} border border-gray-200 overflow-hidden h-full`}>
             <div className="px-6 py-4 border-b border-gray-100">
               <h2 className={tw.cardHeading}>{t.dashboard.quickActions}</h2>
-              <p className={`${tw.cardSubHeading} text-black mt-1`}>
+              <p className={`${tw.cardSubHeading} ${tw.textPrimary} mt-1`}>
                 {t.dashboard.quickActionsDescription}
               </p>
             </div>
@@ -2207,7 +2207,7 @@ export default function DashboardHome() {
                     >
                       <Icon className="h-5 w-5 text-white" />
                     </div>
-                    <span className="font-semibold text-sm text-gray-700">
+                    <span className={`font-semibold text-sm ${tw.textSecondary}`}>
                       {action.name}
                     </span>
                   </button>
@@ -2226,7 +2226,7 @@ export default function DashboardHome() {
             <h2 className={tw.cardHeading}>
               {t.dashboard.offerTypeDistribution}
             </h2>
-            <p className={`${tw.cardSubHeading} text-black mt-1`}>
+            <p className={`${tw.cardSubHeading} ${tw.textPrimary} mt-1`}>
               {t.dashboard.offerTypeDistributionDescription}
             </p>
           </div>
@@ -2235,7 +2235,7 @@ export default function DashboardHome() {
               <div className="flex items-center justify-center h-64">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
-                  <p className="text-sm text-black">
+                  <p className={`text-sm ${tw.textPrimary}`}>
                     {t.dashboard.loadingDistribution}
                   </p>
                 </div>
@@ -2243,7 +2243,7 @@ export default function DashboardHome() {
             ) : offerTypeDistribution.length === 0 ? (
               <div className="flex items-center justify-center h-64">
                 <div className="text-center">
-                  <p className="text-sm text-black">
+                  <p className={`text-sm ${tw.textPrimary}`}>
                     {t.dashboard.noOfferTypeData}
                   </p>
                 </div>
@@ -2299,7 +2299,7 @@ export default function DashboardHome() {
             <h2 className={tw.cardHeading}>
               {t.dashboard.segmentTypeDistribution}
             </h2>
-            <p className={`${tw.cardSubHeading} text-black mt-1`}>
+            <p className={`${tw.cardSubHeading} ${tw.textPrimary} mt-1`}>
               {t.dashboard.segmentTypeDistributionDescription}
             </p>
           </div>
@@ -2307,7 +2307,7 @@ export default function DashboardHome() {
             {segmentTypeDistribution.length === 0 ? (
               <div className="flex items-center justify-center h-64">
                 <div className="text-center">
-                  <p className="text-sm text-black">
+                  <p className={`text-sm ${tw.textPrimary}`}>
                     {t.dashboard.noSegmentTypeData}
                   </p>
                 </div>
@@ -2365,7 +2365,7 @@ export default function DashboardHome() {
         <div className={`bg-white ${tw.rounded} border border-gray-200 overflow-hidden`}>
           <div className="px-6 py-4 border-b border-gray-100">
             <h2 className={tw.cardHeading}>{t.dashboard.campaignStatus}</h2>
-            <p className={`${tw.cardSubHeading} text-black mt-1`}>
+            <p className={`${tw.cardSubHeading} ${tw.textPrimary} mt-1`}>
               {t.dashboard.campaignStatusDistribution}
             </p>
           </div>
@@ -2440,8 +2440,8 @@ export default function DashboardHome() {
                   onClick={() => setTopPerformersFilter("participants")}
                   className={`px-3 py-1.5 text-sm font-medium ${tw.rounded} transition-colors ${
                     topPerformersFilter === "participants"
-                      ? "bg-gray-900 text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      ? "${tw.bgTabActive} ${tw.textLight}"
+                      : "bg-gray-100 ${tw.textSecondary} hover:bg-gray-200"
                   }`}
                 >
                   {t.dashboard.participants}
@@ -2450,15 +2450,15 @@ export default function DashboardHome() {
                   onClick={() => setTopPerformersFilter("spend")}
                   className={`px-3 py-1.5 text-sm font-medium ${tw.rounded} transition-colors ${
                     topPerformersFilter === "spend"
-                      ? "bg-gray-900 text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      ? "${tw.bgTabActive} ${tw.textLight}"
+                      : "bg-gray-100 ${tw.textSecondary} hover:bg-gray-200"
                   }`}
                 >
                   {t.dashboard.spend}
                 </button>
               </div>
             </div>
-            <p className={`${tw.cardSubHeading} text-black`}>
+            <p className={`${tw.cardSubHeading} ${tw.textPrimary}`}>
               {topPerformersFilter === "participants"
                 ? t.dashboard.campaignsByParticipants
                 : t.dashboard.campaignsBySpend}
@@ -2468,14 +2468,14 @@ export default function DashboardHome() {
             {topCampaignsLoading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-600"></div>
-                <span className="ml-3 text-sm text-gray-500">
+                <span className={`ml-3 text-sm ${tw.textMuted}`}>
                   {t.dashboard.loadingTopCampaigns}
                 </span>
               </div>
             ) : topCampaigns.length === 0 ? (
               <div className="flex items-center justify-center py-12">
                 <div className="text-center">
-                  <p className="text-sm text-gray-500 mb-2">
+                  <p className={`text-sm ${tw.textMuted} mb-2`}>
                     {t.dashboard.noCampaignPerformanceData}
                   </p>
                 </div>
@@ -2502,10 +2502,10 @@ export default function DashboardHome() {
                         {index + 1}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="font-semibold text-sm text-black truncate mb-2">
+                        <p className={`font-semibold text-sm ${tw.textPrimary} truncate mb-2`}>
                           {campaign.name}
                         </p>
-                        <div className="flex flex-wrap items-center gap-2 text-sm text-black">
+                        <div className={`flex flex-wrap items-center gap-2 text-sm ${tw.textPrimary}`}>
                           {campaign.conversionRate && (
                             <span>
                               {t.dashboard.conversion}:{" "}
@@ -2527,7 +2527,7 @@ export default function DashboardHome() {
                               </span>
                             )}
                           {campaign.performanceMetric && (
-                            <span className="px-3 py-1 rounded-full text-xs sm:text-sm font-semibold text-gray-700 bg-gray-100 whitespace-nowrap">
+                            <span className={`px-3 py-1 rounded-full text-xs sm:text-sm font-semibold ${tw.textSecondary} bg-gray-100 whitespace-nowrap`}>
                               {topPerformersFilter === "participants"
                                 ? `${
                                     t.dashboard.participationRate ||
@@ -2540,7 +2540,7 @@ export default function DashboardHome() {
                           )}
                         </div>
                       </div>
-                      <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-gray-600 flex-shrink-0 mt-1" />
+                      <ArrowRight className={`h-5 w-5 ${tw.textMuted} group-hover:${tw.textSecondary} flex-shrink-0 mt-1`} />
                     </div>
                   </div>
                 ))}
@@ -2555,7 +2555,7 @@ export default function DashboardHome() {
             <h2 className={tw.cardHeading}>
               {t.dashboard.topPerformingOffers}
             </h2>
-            <p className={`${tw.cardSubHeading} text-black mt-1`}>
+            <p className={`${tw.cardSubHeading} ${tw.textPrimary} mt-1`}>
               {t.dashboard.offersByAcceptanceRate}
             </p>
           </div>
@@ -2579,10 +2579,10 @@ export default function DashboardHome() {
                       {index + 1}
                     </div>
                     <div className="min-w-0">
-                      <p className="font-semibold text-sm text-black truncate">
+                      <p className={`font-semibold text-sm ${tw.textPrimary} truncate`}>
                         {offer.name}
                       </p>
-                      <p className="text-sm text-black">
+                      <p className={`text-sm ${tw.textPrimary}`}>
                         {t.dashboard.acceptance}: {offer.acceptanceRate}
                       </p>
                     </div>
@@ -2599,14 +2599,14 @@ export default function DashboardHome() {
                       <span
                         className={`px-3 py-1 rounded-full text-sm flex-shrink-0 ${
                           offer.status.toLowerCase() === "active"
-                            ? "text-black bg-transparent border-0 font-normal"
+                            ? "${tw.textPrimary} bg-transparent border-0 font-normal"
                             : `font-bold border ${getStatusColor(offer.status)}`
                         }`}
                       >
                         {offer.status}
                       </span>
                     </div>
-                    <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-gray-600 flex-shrink-0" />
+                    <ArrowRight className={`h-5 w-5 ${tw.textMuted} group-hover:${tw.textSecondary} flex-shrink-0`} />
                   </div>
                 </div>
               ))}
@@ -2620,7 +2620,7 @@ export default function DashboardHome() {
               <h2 className={tw.cardHeading}>
                 {t.dashboard.requiresAttention}
               </h2>
-              <p className={`${tw.cardSubHeading} text-black mt-1`}>
+              <p className={`${tw.cardSubHeading} ${tw.textPrimary} mt-1`}>
                 {t.dashboard.actionItemsNeedReview}
               </p>
             </div>
@@ -2641,8 +2641,8 @@ export default function DashboardHome() {
                   }
                   className={`px-4 py-2 ${tw.rounded} text-sm font-medium transition-all ${
                     requiresAttentionFilter === tab.key
-                      ? "bg-gray-900 text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      ? "${tw.bgTabActive} ${tw.textLight}"
+                      : "bg-gray-100 ${tw.textSecondary} hover:bg-gray-200"
                   }`}
                 >
                   {tab.label}
@@ -2657,7 +2657,7 @@ export default function DashboardHome() {
               {requiresAttentionLoading && (
                 <div className="flex items-center justify-center py-12">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-600"></div>
-                  <span className="ml-3 text-sm text-gray-500">
+                  <span className={`ml-3 text-sm ${tw.textMuted}`}>
                     {t.dashboard.loading}...
                   </span>
                 </div>
@@ -2667,7 +2667,7 @@ export default function DashboardHome() {
               {!requiresAttentionLoading && requiresAttentionItems.length === 0 && (
                 <div className="flex items-center justify-center py-12">
                   <div className="text-center">
-                    <p className="text-sm text-gray-500">
+                    <p className={`text-sm ${tw.textMuted}`}>
                       {t.dashboard.allCaughtUp || "All caught up! No items requiring attention."}
                     </p>
                   </div>
@@ -2710,17 +2710,17 @@ export default function DashboardHome() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2 min-w-0">
                           <h3
-                            className="font-semibold text-sm text-gray-900 truncate max-w-[60vw] sm:max-w-xs"
+                            className={`font-semibold text-sm ${tw.textPrimary} truncate max-w-[60vw] sm:max-w-xs`}
                             title={item.name}
                           >
                             {item.name}
                           </h3>
-                          <span className="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200 flex-shrink-0">
+                          <span className={`px-3 py-1 rounded-full text-sm font-medium bg-gray-100 ${tw.textSecondary} border border-gray-200 flex-shrink-0`}>
                             {item.status}
                           </span>
                         </div>
                       </div>
-                      <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-gray-600 flex-shrink-0 self-start" />
+                      <ArrowRight className={`h-5 w-5 ${tw.textMuted} group-hover:${tw.textSecondary} flex-shrink-0 self-start`} />
                     </div>
                   );
                 })}
