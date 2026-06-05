@@ -1,3 +1,10 @@
+## [1.4.6](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.5...v1.4.6) (2026-06-05)
+
+
+### Bug Fixes
+
+* fix the map fields in create quicklists and segments and also add field value in kpi creation ([e0a1104](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/e0a1104935952d3145b9de1449cf47fb2d819f2e))
+
 ## [1.4.5](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.4...v1.4.5) (2026-06-04)
 
 
