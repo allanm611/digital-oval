@@ -21,7 +21,7 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 
 // Primary color for styling
 const PRIMARY_COLOR = "#3B82F6";
-import { useSegmentationFields } from "../../segments/hooks/useSegmentationFields";
+import { useMessageVariableFields } from "../hooks/useMessageVariableFields";
 import ProfileSourceSelector from "./ProfileSourceSelector";
 import ProfileFieldSelector from "./ProfileFieldSelector";
 import type { TemplateVariable, ProfileSource, ProfileField } from "../types";
@@ -44,7 +44,7 @@ export default function HierarchicalVariableSelector({
   className = "",
 }: HierarchicalVariableSelectorProps) {
   const { t } = useLanguage();
-  const { categories, isLoading, error } = useSegmentationFields();
+  const { categories, isLoading, error } = useMessageVariableFields();
   const [selectedSourceId, setSelectedSourceId] = useState<number | null>(
     initialSelectedSource ?? null
   );

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { X, Plus } from "lucide-react";
 import {
@@ -21,8 +21,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Input from "../../../shared/components/ui/Input";
 import CreateCategoryModal from "../../../shared/components/CreateCategoryModal";
 import CreateSegmentTypeModal from "./CreateSegmentTypeModal";
-import { customerIdentityService } from "../../customerIdentity/services/customerIdentityService";
-import { CustomerIdentityField } from "../../customerIdentity/types/customerIdentity";
+import { useMessageVariableFields } from "../../manual-broadcast/hooks/useMessageVariableFields";
 import { convertConditionsToPayload } from "../utils/conditionPayloadBuilder";
 import { formatSQL } from "../utils/segmentConditionUtils";
 import { useToast } from "../../../contexts/ToastContext";
@@ -84,12 +83,27 @@ export default function SegmentModal({
   const [categoryRefreshTrigger, setCategoryRefreshTrigger] = useState(0);
   const [showCreateCatalogModal, setShowCreateCatalogModal] = useState(false);
   const [showCreateTypeModal, setShowCreateTypeModal] = useState(false);
-  const [customerIdentityFields, setCustomerIdentityFields] = useState<
-    CustomerIdentityField[]
-  >([]);
-  const [isLoadingIdentityFields, setIsLoadingIdentityFields] = useState(false);
   const [isConditionsValid, setIsConditionsValid] = useState(false);
   const isUserInteractionRef = useRef(false);
+
+  // Hook for fetching filtered message variable fields
+  const { categories, isLoading: isLoadingIdentityFields } = useMessageVariableFields();
+
+  // Extract Customer Identity fields from filtered categories
+  const customerIdentityFields = useMemo(() => {
+    const customer360 = categories.find(
+      (cat) => cat.value === "customer_360" || cat.name?.toLowerCase().includes("customer 360")
+    );
+
+    if (customer360?.sub_categories) {
+      const customerIdentity = customer360.sub_categories.find(
+        (sub) => sub.value === "customer_identity" || sub.name?.toLowerCase().includes("customer identity")
+      );
+      return customerIdentity?.fields || [];
+    }
+
+    return [];
+  }, [categories]);
 
   // Rule Type State (rule, sql, dsl, ai_assisted, hybrid)
   const [ruleType, setRuleType] = useState<"rule" | "sql" | "dsl" | "ai_assisted" | "hybrid">("rule");
@@ -138,28 +152,6 @@ export default function SegmentModal({
     loadSegmentTypes();
   }, []);
 
-  // Load customer identity fields when modal opens
-  useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
-
-    const loadCustomerIdentityFields = async () => {
-      try {
-        setIsLoadingIdentityFields(true);
-        const fields =
-          await customerIdentityService.getCustomerIdentityFields(true);
-        setCustomerIdentityFields(fields);
-      } catch (err) {
-        console.error("Failed to load customer identity fields:", err);
-        setCustomerIdentityFields([]);
-      } finally {
-        setIsLoadingIdentityFields(false);
-      }
-    };
-
-    loadCustomerIdentityFields();
-  }, [isOpen]);
 
   // Update formData.category when selectedCategoryIds changes (use first one)
   // This only runs when user manually changes the selection
@@ -1130,33 +1122,40 @@ export default function SegmentModal({
                     <p className={`text-xs ${tw.textSecondary} mb-2`}>
                       Select which customer field this segment represents
                     </p>
-                    <HeadlessSelect
-                      options={customerIdentityFields.map((field) => ({
-                        value: field.field_value,
-                        label: field.field_name,
-                      }))}
-                      value={formData.unique_identifier || ""}
-                      onChange={(value) => {
-                        setFormData((prev) => ({
-                          ...prev,
-                          unique_identifier: String(value),
-                          customer_identity_field_mapping: String(value),
-                        }));
-                        setFieldErrors((prev) => ({
-                          ...prev,
-                          unique_identifier: undefined,
-                        }));
-                      }}
-                      placeholder="Select identity field..."
-                      disabled={
-                        isLoadingIdentityFields ||
-                        customerIdentityFields.length === 0
-                      }
-                    />
-                    {fieldErrors.unique_identifier && (
-                      <p className="mt-2 text-sm text-red-600">
-                        {fieldErrors.unique_identifier}
-                      </p>
+                    {customerIdentityFields.length === 0 ? (
+                      <div className="p-3 rounded border" style={{ borderColor: color.primary.accent, backgroundColor: color.surface.background }}>
+                        <p className="text-xs" style={{ color: color.text.primary }}>
+                          Customer identity fields are deactivated. Please activate them in Message Variables Configuration under Administration.
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <HeadlessSelect
+                          options={customerIdentityFields.map((field) => ({
+                            value: field.field_value,
+                            label: field.field_name,
+                          }))}
+                          value={formData.unique_identifier || ""}
+                          onChange={(value) => {
+                            setFormData((prev) => ({
+                              ...prev,
+                              unique_identifier: String(value),
+                              customer_identity_field_mapping: String(value),
+                            }));
+                            setFieldErrors((prev) => ({
+                              ...prev,
+                              unique_identifier: undefined,
+                            }));
+                          }}
+                          placeholder="Select identity field..."
+                          disabled={isLoadingIdentityFields}
+                        />
+                        {fieldErrors.unique_identifier && (
+                          <p className="mt-2 text-sm text-red-600">
+                            {fieldErrors.unique_identifier}
+                          </p>
+                        )}
+                      </>
                     )}
                   </div>
 

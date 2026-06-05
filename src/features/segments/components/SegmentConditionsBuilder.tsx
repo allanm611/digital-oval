@@ -15,7 +15,7 @@ import {
 } from "../types/segment";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import { useSegmentationFields } from "../hooks/useSegmentationFields";
+import { useMessageVariableFields } from "../../../features/manual-broadcast/hooks/useMessageVariableFields";
 import {  getOperatorsForField,  TIME_WINDOWS, OPERATORS } from "../../../shared/utils/operatorMapper";
 import UnifiedPickerModal from "./UnifiedPickerModal";
 import SystemEventPickerModal from "./SystemEventPickerModal";
@@ -357,14 +357,14 @@ export default function SegmentConditionsBuilder({
     loadSegmentTypes();
   }, []);
 
-  // Load segmentation fields from backend
+  // Load segmentation fields from backend (using shared hook that filters active items)
   const {
     categories,
     allFields,
     isLoading: isLoadingFields,
     error: fieldsError,
     getFieldByValue,
-  } = useSegmentationFields();
+  } = useMessageVariableFields();
 
   const getFieldType = (fieldKey: string) => getFieldTypeUtil(fieldKey, getFieldByValue);
 

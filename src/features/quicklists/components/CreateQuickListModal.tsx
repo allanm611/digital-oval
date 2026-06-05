@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { X, Upload, FileText, AlertCircle, Download } from "lucide-react";
 import { button as buttonTokens, color, tw } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import SubscriptionIdSelector from "../../manual-broadcast/components/SubscriptionIdSelector";
 import { CreateQuickListRequest } from "../types/quicklist";
-import { customerIdentityService } from "../../customerIdentity/services/customerIdentityService";
+import { useMessageVariableFields } from "../../manual-broadcast/hooks/useMessageVariableFields";
 import { CustomerIdentityField } from "../../customerIdentity/types/customerIdentity";
 import { quicklistService } from "../services/quicklistService";
 
@@ -57,15 +57,30 @@ export default function CreateQuickListModal({
   const [isDragging, setIsDragging] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFileProcessing, setIsFileProcessing] = useState(false);
-  const [customerIdentityFields, setCustomerIdentityFields] = useState<
-    CustomerIdentityField[]
-  >([]);
-  const [isLoadingFields, setIsLoadingFields] = useState(false);
   const [uploadTypes, setUploadTypes] = useState<
     Array<{ id: number; upload_type: string; description?: string; expected_columns?: string[] }>
   >([]);
   const [isLoadingUploadTypes, setIsLoadingUploadTypes] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Hook for fetching filtered message variable fields
+  const { categories, isLoading: isLoadingFields } = useMessageVariableFields();
+
+  // Extract Customer Identity fields from filtered categories
+  const customerIdentityFields = useMemo(() => {
+    const customer360 = categories.find(
+      (cat) => cat.value === "customer_360" || cat.name?.toLowerCase().includes("customer 360")
+    );
+
+    if (customer360?.sub_categories) {
+      const customerIdentity = customer360.sub_categories.find(
+        (sub) => sub.value === "customer_identity" || sub.name?.toLowerCase().includes("customer identity")
+      );
+      return customerIdentity?.fields || [];
+    }
+
+    return [];
+  }, [categories]);
 
   const isCreateMode = mode === "create";
 
@@ -124,29 +139,6 @@ export default function CreateQuickListModal({
     loadUploadTypes();
   }, [isOpen]);
 
-  // Load customer identity fields when modal opens
-  useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
-
-    const loadCustomerIdentityFields = async () => {
-      try {
-        setIsLoadingFields(true);
-        const fields = await customerIdentityService.getCustomerIdentityFields(
-          true
-        );
-        setCustomerIdentityFields(fields);
-      } catch (err) {
-        console.error("Failed to load customer identity fields:", err);
-        setCustomerIdentityFields([]);
-      } finally {
-        setIsLoadingFields(false);
-      }
-    };
-
-    loadCustomerIdentityFields();
-  }, [isOpen]);
 
   if (!isOpen) {
     return null;
@@ -559,58 +551,60 @@ export default function CreateQuickListModal({
               )}
             </div>
 
-            <div>
-              <label className="text-sm font-medium text-black mb-1 block">
-                File Delimiter
-              </label>
-              <HeadlessSelect
-                value={form.file_delimiter}
-                onChange={(value) =>
-                  handleInputChange("file_delimiter", value as string)
-                }
-                options={[
-                  { label: "Comma (,)", value: "," },
-                  { label: "Semicolon (;)", value: ";" },
-                  { label: "Tab", value: "\t" },
-                  { label: "Pipe (|)", value: "|" },
-                ]}
-                placeholder="Select delimiter"
-                error={!!errors.file_delimiter}
-                className="w-full"
-                disabled={isSubmitting}
-                zIndex={10100}
-              />
-              {errors.file_delimiter && (
-                <p className="mt-1 text-xs text-red-500">
-                  {errors.file_delimiter}
-                </p>
-              )}
-            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium text-black mb-1 block">
+                  File Delimiter
+                </label>
+                <HeadlessSelect
+                  value={form.file_delimiter}
+                  onChange={(value) =>
+                    handleInputChange("file_delimiter", value as string)
+                  }
+                  options={[
+                    { label: "Comma (,)", value: "," },
+                    { label: "Semicolon (;)", value: ";" },
+                    { label: "Tab", value: "\t" },
+                    { label: "Pipe (|)", value: "|" },
+                  ]}
+                  placeholder="Select delimiter"
+                  error={!!errors.file_delimiter}
+                  className="w-full"
+                  disabled={isSubmitting}
+                  zIndex={10100}
+                />
+                {errors.file_delimiter && (
+                  <p className="mt-1 text-xs text-red-500">
+                    {errors.file_delimiter}
+                  </p>
+                )}
+              </div>
 
-            <div>
-              <label className="text-sm font-medium text-black mb-1 block">
-                Upload Type
-              </label>
-              <HeadlessSelect
-                value={form.upload_type}
-                onChange={(value) =>
-                  handleInputChange("upload_type", String(value))
-                }
-                options={uploadTypes.map((type) => ({
-                  label: type.upload_type,
-                  value: type.upload_type,
-                }))}
-                placeholder="Select upload type"
-                error={!!errors.upload_type}
-                className="w-full"
-                disabled={isSubmitting || isLoadingUploadTypes}
-                zIndex={10100}
-              />
-              {errors.upload_type && (
-                <p className="mt-1 text-xs text-red-500">
-                  {errors.upload_type}
-                </p>
-              )}
+              <div>
+                <label className="text-sm font-medium text-black mb-1 block">
+                  Upload Type
+                </label>
+                <HeadlessSelect
+                  value={form.upload_type}
+                  onChange={(value) =>
+                    handleInputChange("upload_type", String(value))
+                  }
+                  options={uploadTypes.map((type) => ({
+                    label: type.upload_type,
+                    value: type.upload_type,
+                  }))}
+                  placeholder="Select upload type"
+                  error={!!errors.upload_type}
+                  className="w-full"
+                  disabled={isSubmitting || isLoadingUploadTypes}
+                  zIndex={10100}
+                />
+                {errors.upload_type && (
+                  <p className="mt-1 text-xs text-red-500">
+                    {errors.upload_type}
+                  </p>
+                )}
+              </div>
             </div>
 
             <div>
@@ -961,32 +955,42 @@ export default function CreateQuickListModal({
                     <p className={`text-xs ${tw.textSecondary} mb-2`}>
                       Select which customer field this column represents
                     </p>
-                    <HeadlessSelect
-                      options={customerIdentityFields.map((field) => ({
-                        value: field.field_value,
-                        label: field.field_name,
-                      }))}
-                      value={form.subscriber_id_field_mapping || ""}
-                      onChange={(value) =>
-                        handleInputChange(
-                          "subscriber_id_field_mapping",
-                          String(value)
-                        )
-                      }
-                      placeholder={
-                        !form.subscriber_id_col_name.trim()
-                          ? "Select subscriber ID column first..."
-                          : "Select identity field..."
-                      }
-                      placeholderClassName="text-sm"
-                      disabled={isSubmitting || isLoadingFields || customerIdentityFields.length === 0 || !form.subscriber_id_col_name.trim()}
-                      error={!!errors.subscriber_id_field_mapping}
-                      zIndex={10100}
-                    />
-                    {errors.subscriber_id_field_mapping && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {errors.subscriber_id_field_mapping}
-                      </p>
+                    {customerIdentityFields.length === 0 ? (
+                      <div className="p-3 rounded border" style={{ borderColor: color.primary.accent, backgroundColor: color.surface.background }}>
+                        <p className="text-xs" style={{ color: color.text.primary }}>
+                          Customer identity fields are deactivated. Please activate them in Message Variables Configuration under Administration.
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <HeadlessSelect
+                          options={customerIdentityFields.map((field) => ({
+                            value: field.field_value,
+                            label: field.field_name,
+                          }))}
+                          value={form.subscriber_id_field_mapping || ""}
+                          onChange={(value) =>
+                            handleInputChange(
+                              "subscriber_id_field_mapping",
+                              String(value)
+                            )
+                          }
+                          placeholder={
+                            !form.subscriber_id_col_name.trim()
+                              ? "Select subscriber ID column first..."
+                              : "Select identity field..."
+                          }
+                          placeholderClassName="text-sm"
+                          disabled={isSubmitting || isLoadingFields || !form.subscriber_id_col_name.trim()}
+                          error={!!errors.subscriber_id_field_mapping}
+                          zIndex={10100}
+                        />
+                        {errors.subscriber_id_field_mapping && (
+                          <p className="mt-1 text-xs text-red-500">
+                            {errors.subscriber_id_field_mapping}
+                          </p>
+                        )}
+                      </>
                     )}
                   </div>
                 </>

@@ -78,6 +78,7 @@ export default function CreateKPIPage() {
   const [tables, setTables] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     name: "",
+    field_value: "",
     description: "",
     field_type: "number" as any,
     calculationType: "value_set" as "value_set" | "computed" | "static",
@@ -146,6 +147,7 @@ export default function CreateKPIPage() {
         // Map KPI data back to form fields
         setFormData({
           name: kpi.field_name,
+          field_value: kpi.field_value || "",
           description: kpi.description || "",
           field_type: kpi.field_type?.toLowerCase() === "text" ? "text" : kpi.field_type?.toLowerCase() || "number",
           calculationType: kpi.is_computable ? "computed" : "value_set",
@@ -221,6 +223,7 @@ export default function CreateKPIPage() {
 
       const kpiPayload: any = {
         field_name: formData.name,
+        field_value: formData.field_value,
         field_category_id: Number(formData.field_category_id),
         field_type: formData.field_type,
         field_pg_type: pgTypeMap[formData.field_type] || "numeric",
@@ -361,19 +364,32 @@ export default function CreateKPIPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Field Category *
+                  Field Value *
                 </label>
-                {loadingCategories ? (
-                  <div className="p-2 text-sm text-gray-500">Loading categories...</div>
-                ) : (
-                  <HeadlessSelect
-                    options={categories && categories.length > 0 ? categories.map((cat) => ({ label: cat.name, value: cat.id?.toString() || "" })) : []}
-                    value={formData.field_category_id ? formData.field_category_id.toString() : ""}
-                    onChange={(value) => handleSelectChange("field_category_id", value)}
-                    disabled={saving || loadingCategories}
-                  />
-                )}
+                <Input
+                  placeholder="e.g., p_data_2g_revenue"
+                  value={formData.field_value}
+                  onChange={handleInputChange('field_value')}
+                  variant="medium"
+                  disabled={saving}
+                />
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Field Category *
+              </label>
+              {loadingCategories ? (
+                <div className="p-2 text-sm text-gray-500">Loading categories...</div>
+              ) : (
+                <HeadlessSelect
+                  options={categories && categories.length > 0 ? categories.map((cat) => ({ label: cat.name, value: cat.id?.toString() || "" })) : []}
+                  value={formData.field_category_id ? formData.field_category_id.toString() : ""}
+                  onChange={(value) => handleSelectChange("field_category_id", value)}
+                  disabled={saving || loadingCategories}
+                />
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
