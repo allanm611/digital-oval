@@ -1,4 +1,5 @@
 import Input from '../../../shared/components/ui/Input';
+import Textarea from '../../../shared/components/ui/Textarea';
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -287,12 +288,10 @@ export default function CommunicationPolicyModal({
     const timeConfig = configs.timeWindow;
     return (
       <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Start Time
-            </label>
             <Input
+              label="Start Time"
               type="time"
               placeholder=""
               value={timeConfig.startTime}
@@ -305,10 +304,8 @@ export default function CommunicationPolicyModal({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              End Time
-            </label>
             <Input
+              label="End Time"
               type="time"
               placeholder=""
               value={timeConfig.endTime}
@@ -455,6 +452,7 @@ export default function CommunicationPolicyModal({
                 </div>
                 <div>
                   <Input
+                    label="Maximum Count"
                     type="number"
                     placeholder="0"
                     min="1"
@@ -749,6 +747,7 @@ export default function CommunicationPolicyModal({
                 {/* Priority Input */}
                 <div>
                   <Input
+                    label="Priority"
                     type="number"
                     placeholder="1"
                     min="1"
@@ -902,10 +901,8 @@ export default function CommunicationPolicyModal({
             {/* Basic Information */}
             <div className="px-4 pt-3 pb-6 space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Policy Name <span className="text-red-500">*</span>
-                </label>
                 <Input
+                  label="Policy Name *"
                   type="text"
                   value={name}
                   onChange={(value) => setName(String(value))}
@@ -918,13 +915,10 @@ export default function CommunicationPolicyModal({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
-                </label>
-                <textarea
+                <Textarea
+                  label="Description"
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className={`w-full px-4 py-2.5 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm resize-none transition-all bg-white`}
+                  onChange={(value) => setDescription(value)}
                   placeholder="Enter policy description"
                   rows={3}
                 />

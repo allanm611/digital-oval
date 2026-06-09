@@ -23,6 +23,7 @@ import {
   MoreHorizontal,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
+import Textarea from "../../../shared/components/ui/Textarea";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -1658,7 +1659,7 @@ export default function JobWorkflowStepsPage() {
                         value={stepCodeFilter}
                         onChange={(value) => setStepCodeFilter(String(value))}
                         placeholder="Enter step code"
-                        variant="medium"
+                       
                       />
                     </div>
 
@@ -1676,7 +1677,7 @@ export default function JobWorkflowStepsPage() {
                           )
                         }
                         placeholder="Enter step order"
-                        variant="medium"
+                       
                       />
                       <p className="mt-1 text-xs text-gray-500">
                         Use with Job ID for precise lookup
@@ -1695,7 +1696,7 @@ export default function JobWorkflowStepsPage() {
                           setJobIdFilter(value ? Number(value) : "")
                         }
                         placeholder="Enter job ID"
-                        variant="medium"
+                       
                       />
                     </div>
 
@@ -1890,7 +1891,7 @@ export default function JobWorkflowStepsPage() {
                           )
                         }
                         placeholder="All Groups"
-                        variant="medium"
+                       
                       />
                     </div>
                   </div>
@@ -2038,7 +2039,7 @@ export default function JobWorkflowStepsPage() {
                             }}
                             onClick={(e) => e.stopPropagation()}
                             className="w-20"
-                            variant="medium"
+                           
                           />
                           <div className="text-gray-400">
                             <svg
@@ -2262,7 +2263,7 @@ export default function JobWorkflowStepsPage() {
                                 timeout_seconds: Number(value) || 300,
                               })
                             }
-                            variant="medium"
+                           
                           />
                         </div>
                       )}
@@ -2293,7 +2294,7 @@ export default function JobWorkflowStepsPage() {
                                 retry_count: Number(value) || 0,
                               })
                             }
-                            variant="medium"
+                           
                           />
                         </div>
                       )}

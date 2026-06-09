@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Save } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -311,25 +312,20 @@ export default function EditRoutePage() {
                   placeholder="Enter route name"
                   hasError={!!errors.name}
                   disabled={saving}
-                  variant="medium"
+                 
                 />
                 {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
               </div>
             </div>
 
-            <div>
-              <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                Description
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Add notes about this route..."
-                rows={3}
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                disabled={saving}
-              />
-            </div>
+            <Textarea
+              label="Description"
+              value={formData.description}
+              onChange={(value) => setFormData({ ...formData, description: value })}
+              placeholder="Add notes about this route..."
+              rows={3}
+              disabled={saving}
+            />
 
             {/* Gateway Configuration */}
             <div>
@@ -407,7 +403,7 @@ export default function EditRoutePage() {
                       onChange={(value) => setFormData({ ...formData, retry_attempts: Number(value) })}
                       placeholder="3"
                       min="0"
-                      variant="medium"
+                     
                       disabled={saving}
                     />
                   </div>

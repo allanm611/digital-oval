@@ -65,8 +65,8 @@ export default function UsageMetricsPage() {
         )
       );
 
-      // Call API - TODO: Add toggleMetricStatus to usageMetricService
-      // await usageMetricService.toggleMetricStatus(metric.id, newStatus);
+      // Call API
+      await usageMetricService.toggleMetricStatus(metric.id, newStatus);
 
       success(
         "Success",

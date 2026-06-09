@@ -7,6 +7,7 @@ import Checkbox from "../../../shared/components/ui/Checkbox";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import { tw, color, getButtonStyles, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -333,40 +334,28 @@ export default function ComboTypeFormPage() {
 
       {/* Form */}
       <div className="bg-white rounded-lg border border-gray-200">
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-6 space-y-8">
           {/* Basic Fields */}
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Name *
-              </label>
-              <Input
-                type="text"
-                value={formData.name}
-                onChange={(value) =>
-                  setFormData({ ...formData, name: String(value) })
-                }
-                placeholder="Enter combo type name"
-                disabled={isSaving}
-                variant="medium"
-              />
-            </div>
+          <div className="space-y-6">
+            <Input
+              type="text"
+              label="Name"
+              value={formData.name}
+              onChange={(value) =>
+                setFormData({ ...formData, name: String(value) })
+              }
+              disabled={isSaving}
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter description"
-                disabled={isSaving}
-              />
-            </div>
+            <Textarea
+              label="Description"
+              value={formData.description}
+              onChange={(value) =>
+                setFormData({ ...formData, description: value })
+              }
+              rows={3}
+              disabled={isSaving}
+            />
 
 
             <div className="flex items-center gap-2 cursor-pointer" onClick={() =>
@@ -455,50 +444,36 @@ export default function ComboTypeFormPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 {/* Shared Validity Hours */}
                 {comboSettings.sharedValidity && (
-                  <div>
-                    <label
-                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                    >
-                      Validity (Hours) <span style={{ color: color.status.danger }}>*</span>
-                    </label>
-                    <Input
-                      type="number"
-                      value={tempResourceData.validityHours}
-                      onChange={(value) =>
-                        setTempResourceData({
-                          ...tempResourceData,
-                          validityHours: String(value),
-                        })
-                      }
-                      placeholder="e.g., 720 (30 days)"
-                      disabled={isSaving}
-                      variant="medium"
-                    />
-                  </div>
+                  <Input
+                    type="number"
+                    label="Validity (Hours)"
+                    value={tempResourceData.validityHours}
+                    onChange={(value) =>
+                      setTempResourceData({
+                        ...tempResourceData,
+                        validityHours: String(value),
+                      })
+                    }
+                    disabled={isSaving}
+                   
+                  />
                 )}
 
                 {/* Shared Combo Price */}
                 {comboSettings.sharedPrice && (
-                  <div>
-                    <label
-                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                    >
-                      Combo Price <span style={{ color: color.status.danger }}>*</span>
-                    </label>
-                    <Input
-                      type="number"
-                      value={tempResourceData.price}
-                      onChange={(value) =>
-                        setTempResourceData({
-                          ...tempResourceData,
-                          price: String(value),
-                        })
-                      }
-                      placeholder="Enter combo price"
-                      disabled={isSaving}
-                      variant="medium"
-                    />
-                  </div>
+                  <Input
+                    type="number"
+                    label="Combo Price"
+                    value={tempResourceData.price}
+                    onChange={(value) =>
+                      setTempResourceData({
+                        ...tempResourceData,
+                        price: String(value),
+                      })
+                    }
+                    disabled={isSaving}
+                   
+                  />
                 )}
               </div>
             </div>
@@ -620,11 +595,9 @@ export default function ComboTypeFormPage() {
                     )}
 
                     <div>
-                      <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
-                        Value
-                      </label>
                       <Input
                         type="text"
+                        label="Value"
                         value={tempResourceData.value}
                         onChange={(value) =>
                           setTempResourceData({
@@ -632,19 +605,16 @@ export default function ComboTypeFormPage() {
                             value: String(value),
                           })
                         }
-                        placeholder="Enter value"
                         disabled={isSaving}
-                        variant="medium"
+                       
                       />
                     </div>
 
                     {!comboSettings.sharedPrice && (
                       <div>
-                        <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
-                          Price
-                        </label>
                         <Input
                           type="number"
+                          label="Price"
                           value={tempResourceData.price}
                           onChange={(value) =>
                             setTempResourceData({
@@ -652,20 +622,17 @@ export default function ComboTypeFormPage() {
                               price: String(value),
                             })
                           }
-                          placeholder="Enter price"
                           disabled={isSaving}
-                          variant="medium"
+                         
                         />
                       </div>
                     )}
 
                     {!comboSettings.sharedValidity && (
                       <div>
-                        <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
-                          Validity Hours
-                        </label>
                         <Input
                           type="number"
+                          label="Validity Hours"
                           value={tempResourceData.validityHours}
                           onChange={(value) =>
                             setTempResourceData({
@@ -673,9 +640,8 @@ export default function ComboTypeFormPage() {
                               validityHours: String(value),
                             })
                           }
-                          placeholder="Enter validity hours"
                           disabled={isSaving}
-                          variant="medium"
+                         
                         />
                       </div>
                     )}
@@ -837,7 +803,7 @@ export default function ComboTypeFormPage() {
                               unit: String(value),
                             })
                           }
-                          variant="medium"
+                         
                           className={editingCardResourceId !== resource.id ? "bg-gray-50" : ""}
                         />
                       </div>
@@ -856,7 +822,7 @@ export default function ComboTypeFormPage() {
                               value: String(value),
                             })
                           }
-                          variant="medium"
+                         
                           className={editingCardResourceId !== resource.id ? "bg-gray-50" : ""}
                         />
                       </div>
@@ -876,7 +842,7 @@ export default function ComboTypeFormPage() {
                                 validityHours: String(value),
                               })
                             }
-                            variant="medium"
+                           
                             className={editingCardResourceId !== resource.id ? "bg-gray-50" : ""}
                           />
                         </div>
@@ -897,7 +863,7 @@ export default function ComboTypeFormPage() {
                                 price: String(value),
                               })
                             }
-                            variant="medium"
+                           
                             className={editingCardResourceId !== resource.id ? "bg-gray-50" : ""}
                           />
                         </div>

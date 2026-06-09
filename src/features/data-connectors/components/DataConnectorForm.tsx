@@ -8,6 +8,7 @@ import {
 import { getConnectorDisplayName } from "../utils/connectorIcons";
 import { color, zIndex, button, getButtonStyles } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 
 interface DataConnectorFormProps {
@@ -143,10 +144,8 @@ const DataConnectorForm: React.FC<DataConnectorFormProps> = ({
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Name <span className="text-red-500">*</span>
-                </label>
                 <Input
+                  label="Name*"
                   type="text"
                   required
                   value={formData.name}
@@ -154,7 +153,6 @@ const DataConnectorForm: React.FC<DataConnectorFormProps> = ({
                     setFormData((prev) => ({ ...prev, name: String(value) }))
                   }
                   placeholder="Enter connector name"
-                  variant="medium"
                 />
               </div>
 
@@ -176,23 +174,18 @@ const DataConnectorForm: React.FC<DataConnectorFormProps> = ({
           </div>
 
           <div className="flex-1 px-6 py-2 overflow-y-auto">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    description: e.target.value,
-                  }))
-                }
-                rows={3}
-                placeholder="Enter a description for this connector"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 text-sm resize-none"
-              />
-            </div>
+            <Textarea
+              label="Description"
+              value={formData.description}
+              onChange={(value) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  description: value,
+                }))
+              }
+              rows={3}
+              placeholder="Enter a description for this connector"
+            />
           </div>
         </form>
 

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Save } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -238,16 +239,15 @@ export default function WhatsAppRouteFormPage({ mode }: WhatsAppRouteFormPagePro
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Route Name *
-                </label>
                 <Input
+                  label="Route Name"
                   placeholder="e.g., Meta WhatsApp Business"
                   value={formData.name}
                   onChange={handleInputChange('name')}
                   hasError={!!errors.name}
-                  variant="medium"
+                 
                   disabled={saving}
+                  required
                 />
                 {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
               </div>
@@ -279,29 +279,23 @@ export default function WhatsAppRouteFormPage({ mode }: WhatsAppRouteFormPagePro
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description
-              </label>
-              <textarea
-                name="description"
+              <Textarea
+                label="Description"
                 value={formData.description || ""}
-                onChange={handleTextareaChange}
+                onChange={(value) => setFormData((prev) => ({ ...prev, description: value }))}
                 placeholder="Add notes about this route..."
                 rows={3}
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
                 disabled={saving}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Webhook URL
-              </label>
               <Input
+                label="Webhook URL"
                 placeholder="e.g., https://api.example.com/webhooks/whatsapp"
                 value={extendedFormData.webhookUrl}
                 onChange={(value) => handleExtendedFieldChange("webhookUrl", value)}
-                variant="medium"
+               
                 disabled={saving}
               />
             </div>
@@ -322,21 +316,16 @@ export default function WhatsAppRouteFormPage({ mode }: WhatsAppRouteFormPagePro
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Quality Threshold (%)
-                </label>
-                <Input
-                  type="number"
-                  placeholder="50"
-                  value={extendedFormData.qualityThreshold}
-                  onChange={(value) => handleExtendedFieldChange("qualityThreshold", value)}
-                  variant="medium"
-                  min="0"
-                  max="100"
-                  disabled={saving}
-                />
-              </div>
+              <Input
+                label="Quality Threshold (%)"
+                type="number"
+                placeholder="50"
+                value={extendedFormData.qualityThreshold}
+                onChange={(value) => handleExtendedFieldChange("qualityThreshold", value)}
+                min="0"
+                max="100"
+                disabled={saving}
+              />
             </div>
 
             <div className="pt-4">
@@ -389,24 +378,19 @@ export default function WhatsAppRouteFormPage({ mode }: WhatsAppRouteFormPagePro
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Retry Attempts Before Failover
-                    </label>
-                    <Input
-                      type="number"
-                      placeholder="3"
-                      value={String(formData.retry_attempts || 3)}
-                      onChange={(value) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          retry_attempts: value ? Number(value) : 3,
-                        }))
-                      }
-                      variant="medium"
-                      disabled={saving}
-                    />
-                  </div>
+                  <Input
+                    label="Retry Attempts Before Failover"
+                    type="number"
+                    placeholder="3"
+                    value={String(formData.retry_attempts || 3)}
+                    onChange={(value) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        retry_attempts: value ? Number(value) : 3,
+                      }))
+                    }
+                    disabled={saving}
+                  />
                 </div>
               )}
             </div>

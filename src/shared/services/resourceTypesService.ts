@@ -57,8 +57,8 @@ class ResourceTypesService {
       if (limit) params.append("limit", limit.toString());
       if (offset) params.append("offset", offset.toString());
       const query = params.toString() ? `?${params.toString()}` : "";
-      const data = await this.request<ResourceTypeDto[]>(`/${query}`);
-      return data;
+      const data = await this.request<ResourceTypeDto[] | { data: ResourceTypeDto[] }>(`/${query}`);
+      return Array.isArray(data) ? data : (data as any).data || [];
     } catch (err) {
       console.error("Failed to fetch resource types:", err);
       return [];

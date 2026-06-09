@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Input from '../../../shared/components/ui/Input';
+import Textarea from '../../../shared/components/ui/Textarea';
 import { X } from "lucide-react";
 import { segmentTypeService } from "../services/segmentTypeService";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
@@ -92,33 +93,21 @@ export default function CreateSegmentTypeModal({
           </button>
         </div>
 
-        <div className="p-4 sm:p-6">
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Type Name *
-            </label>
-            <Input
-              type="text"
-              value={newTypeName}
-              onChange={(value) => setNewTypeName(String(value))}
-              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:outline-none`}
-              placeholder="e.g., Behavioral, Demographic, RFM..."
-              required
-            />
-          </div>
+        <div className="p-4 sm:p-6 space-y-6">
+          <Input
+            type="text"
+            label="Type Name"
+            value={newTypeName}
+            onChange={(value) => setNewTypeName(String(value))}
+            required
+          />
 
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
-            <textarea
-              value={newTypeDescription}
-              onChange={(e) => setNewTypeDescription(e.target.value)}
-              rows={3}
-              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:outline-none`}
-              placeholder="Segment type description..."
-            />
-          </div>
+          <Textarea
+            label="Description"
+            value={newTypeDescription}
+            onChange={(value) => setNewTypeDescription(value)}
+            rows={3}
+          />
 
           <ModalFooter
             onCancel={handleClose}

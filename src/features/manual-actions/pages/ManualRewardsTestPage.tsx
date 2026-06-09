@@ -3,6 +3,7 @@ import { AlertCircle, CheckCircle, Loader, ChevronDown } from "lucide-react";
 import { Listbox } from "@headlessui/react";
 import { color, tw } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -789,14 +790,12 @@ export default function ManualRewardsTestPage() {
 
               {/* Description/Body - not shown for USSD */}
               {channelCategory !== "USSD" && (
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {channelCategory === "PUSH" ? "Body *" : "Description *"}
-                  </label>
-                  <textarea
+                <div>
+                  <Textarea
+                    label={<>{channelCategory === "PUSH" ? "Body *" : "Description *"}</>}
                     value={description}
-                    onChange={(e) => {
-                      setDescription(e.target.value);
+                    onChange={(value) => {
+                      setDescription(value);
                       setDescriptionError("");
                     }}
                     placeholder={
@@ -805,11 +804,7 @@ export default function ManualRewardsTestPage() {
                         : "Enter reward description..."
                     }
                     rows={5}
-                    className={`w-full px-4 py-2 border ${
-                      descriptionError ? "border-red-400" : "border-gray-300"
-                    } ${tw.rounded} focus:ring-2 ${
-                      descriptionError ? "focus:ring-red-400" : "focus:ring-blue-500"
-                    } focus:border-transparent text-sm`}
+                    hasError={!!descriptionError}
                   />
                   {descriptionError ? (
                     <p className="mt-2 flex items-center gap-1.5 text-sm text-red-600">

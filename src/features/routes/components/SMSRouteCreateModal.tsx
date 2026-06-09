@@ -6,6 +6,7 @@ import { smsRouteService } from "../services/smsRouteService";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw } from "../../../shared/utils/utils";
 
@@ -173,16 +174,15 @@ export default function SMSRouteCreateModal({
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* Route Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Route Name *
-            </label>
             <Input
+              label="Route Name"
               placeholder=""
               value={formData.name}
               onChange={(value) => handleInputChange({ target: { name: "name", value } } as any)}
               hasError={!!errors.name}
-              variant="medium"
+             
               disabled={loading}
+              required
             />
             {errors.name && (
               <p className="text-red-500 text-xs mt-1">{errors.name}</p>
@@ -233,15 +233,11 @@ export default function SMSRouteCreateModal({
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
-            <textarea
-              name="description"
+            <Textarea
+              label="Description"
               value={formData.description || ""}
-              onChange={handleInputChange}
+              onChange={(value) => setFormData((prev) => ({ ...prev, description: value }))}
               rows={3}
-              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:outline-none`}
               disabled={loading}
             />
           </div>

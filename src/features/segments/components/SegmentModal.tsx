@@ -19,6 +19,7 @@ import MultiCategorySelector from "../../../shared/components/MultiCategorySelec
 import TypeSelector from "../../../shared/components/TypeSelector";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import CreateCategoryModal from "../../../shared/components/CreateCategoryModal";
 import CreateSegmentTypeModal from "./CreateSegmentTypeModal";
 import { useMessageVariableFields } from "../../manual-broadcast/hooks/useMessageVariableFields";
@@ -1062,12 +1063,8 @@ export default function SegmentModal({
                   {/* Basic Information */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label
-                        className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                      >
-                        Segment Name *
-                      </label>
                       <Input
+                        label="Segment Name"
                         value={formData.name}
                         onChange={(value) =>
                           setFormData((prev) => ({
@@ -1166,10 +1163,11 @@ export default function SegmentModal({
                       >
                         Tags
                       </label>
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         <div className="flex">
                           <div className="flex-1">
                             <Input
+                              label="Add Tag"
                               value={tagInput}
                               onChange={(value) => {
                                 setTagInput(value);
@@ -1314,17 +1312,13 @@ export default function SegmentModal({
                   </div>
 
                   <div>
-                    <label
-                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                    >
-                      Description *
-                    </label>
-                    <textarea
+                    <Textarea
+                      label="Description"
                       value={formData.description}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setFormData((prev) => ({
                           ...prev,
-                          description: e.target.value,
+                          description: value,
                         }))
                       }
                       onBlur={() => {
@@ -1343,12 +1337,8 @@ export default function SegmentModal({
                       }
                       placeholder="Describe this segment..."
                       rows={3}
-                      className={`w-full px-4 py-3 border ${tw.rounded} text-sm focus:outline-none`}
-                      style={{
-                        borderColor: fieldErrors.description
-                          ? "#ef4444"
-                          : tw.borderDefault,
-                      }}
+                      hasError={!!fieldErrors.description}
+                      required
                     />
                     {fieldErrors.description && (
                       <p className="mt-2 text-sm text-red-600">

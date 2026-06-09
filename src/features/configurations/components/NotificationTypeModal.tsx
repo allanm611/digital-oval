@@ -4,6 +4,8 @@ import { color, tw } from "../../../shared/utils/utils";
 import { buttons } from "../../../shared/utils/tokens";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
+import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { notificationTypeService, NotificationRule, CreateNotificationRuleRequest } from "../../../shared/services/notificationTypeService";
 import { notificationCategoryService } from "../../notifications/services/notificationCategoryService";
@@ -210,41 +212,24 @@ export default function NotificationTypeModal({
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* Name */}
           <div className="space-y-1.5">
-            <label className={`text-sm font-medium ${tw.textPrimary}`}>
-              Name <span className="text-red-500">*</span>
-            </label>
-            <input
+            <Input
+              label="Name"
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(value) => setFormData({ ...formData, name: String(value) })}
               placeholder="e.g., Campaign Created"
-              className={`w-full px-3 py-2 ${tw.rounded} border text-sm transition-colors focus:outline-none`}
-              style={{
-                borderColor: color.border.default,
-                backgroundColor: color.surface.input,
-              }}
-              onFocus={(e) => (e.target.style.borderColor = color.primary.action)}
-              onBlur={(e) => (e.target.style.borderColor = color.border.default)}
+              required
             />
           </div>
 
           {/* Description */}
           <div className="space-y-1.5">
-            <label className={`text-sm font-medium ${tw.textPrimary}`}>
-              Description
-            </label>
-            <textarea
+            <Textarea
+              label="Description"
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(value) => setFormData({ ...formData, description: value })}
               placeholder="Optional description"
               rows={2}
-              className={`w-full px-3 py-2 ${tw.rounded} border text-sm transition-colors focus:outline-none resize-none`}
-              style={{
-                borderColor: color.border.default,
-                backgroundColor: color.surface.input,
-              }}
-              onFocus={(e) => (e.target.style.borderColor = color.primary.action)}
-              onBlur={(e) => (e.target.style.borderColor = color.border.default)}
             />
           </div>
 
@@ -307,9 +292,14 @@ export default function NotificationTypeModal({
           {/* Message Template */}
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <label className={`text-sm font-medium ${tw.textPrimary}`}>
-                Message Template <span className="text-red-500">*</span>
-              </label>
+              <Textarea
+                label="Message Template"
+                value={formData.message_template}
+                onChange={(value) => setFormData({ ...formData, message_template: value })}
+                placeholder="e.g., {actor_id} created {table_name} {record_id}"
+                rows={3}
+                required
+              />
               <div className="group relative cursor-help">
                 <HelpCircle className="w-4 h-4 text-gray-400 hover:text-gray-600" />
                 <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block bg-gray-900 text-white text-xs rounded px-3 py-2 z-10 whitespace-nowrap">
@@ -317,19 +307,6 @@ export default function NotificationTypeModal({
                 </div>
               </div>
             </div>
-            <textarea
-              value={formData.message_template}
-              onChange={(e) => setFormData({ ...formData, message_template: e.target.value })}
-              placeholder="e.g., {actor_id} created {table_name} {record_id}"
-              rows={3}
-              className={`w-full px-3 py-2 ${tw.rounded} border text-sm transition-colors focus:outline-none resize-none`}
-              style={{
-                borderColor: color.border.default,
-                backgroundColor: color.surface.input,
-              }}
-              onFocus={(e) => (e.target.style.borderColor = color.primary.action)}
-              onBlur={(e) => (e.target.style.borderColor = color.border.default)}
-            />
           </div>
 
           {/* Actions */}

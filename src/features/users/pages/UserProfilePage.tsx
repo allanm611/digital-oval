@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { User, Save, X } from "lucide-react";
+import { User, X } from "lucide-react";
 import { userService } from "../services/userService";
 import { UserType, UpdateUserRequest } from "../types/user";
 // import { sessionService } from "../../auth/services/sessionService"; // TODO: Uncomment when backend confirms /user-sessions endpoints
@@ -377,10 +377,7 @@ export default function UserProfilePage() {
                     <span className="ml-2">{t.profile.saving}</span>
                   </>
                 ) : (
-                  <>
-                    <Save className="w-4 h-4 mr-2" />
-                    {t.profile.saveChanges}
-                  </>
+                  "Update"
                 )}
               </button>
             </>
@@ -481,28 +478,27 @@ export default function UserProfilePage() {
         <div className="space-y-8">
           {/* Personal Information */}
           <div>
-            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
+            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
               {t.profile.personalInformation}
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <label
-                className={`block text-sm font-medium ${tw.textSecondary} mb-1`}
-              >
-                {t.profile.firstName}
-              </label>
               {isEditing ? (
                 <Input
-                  placeholder={t.profile.firstName}
+                  label={t.profile.firstName}
                   name="first_name"
                   value={formData.first_name}
                   onChange={(val) => setFormData({ ...formData, first_name: val })}
-                  variant="medium"
                 />
               ) : (
-                <p className={`text-sm ${tw.textPrimary}`}>
-                  {user.first_name || "N/A"}
-                </p>
+                <div>
+                  <label className={`block text-sm font-medium ${tw.textSecondary} mb-1`}>
+                    {t.profile.firstName}
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    {user.first_name || "N/A"}
+                  </p>
+                </div>
               )}
             </div>
 
@@ -528,87 +524,83 @@ export default function UserProfilePage() {
             </div> */}
 
             <div>
-              <label
-                className={`block text-sm font-medium ${tw.textSecondary} mb-1`}
-              >
-                {t.profile.lastName}
-              </label>
               {isEditing ? (
                 <Input
-                  placeholder={t.profile.lastName}
+                  label={t.profile.lastName}
                   name="last_name"
                   value={formData.last_name}
                   onChange={(val) => setFormData({ ...formData, last_name: val })}
-                  variant="medium"
                 />
               ) : (
-                <p className={`text-sm ${tw.textPrimary}`}>
-                  {user.last_name || "N/A"}
-                </p>
+                <div>
+                  <label className={`block text-sm font-medium ${tw.textSecondary} mb-1`}>
+                    {t.profile.lastName}
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    {user.last_name || "N/A"}
+                  </p>
+                </div>
               )}
             </div>
 
             <div>
-              <label
-                className={`block text-sm font-medium ${tw.textSecondary} mb-1`}
-              >
-                Middle Name
-              </label>
               {isEditing ? (
                 <Input
-                  placeholder="Middle Name"
+                  label="Middle Name"
                   name="middle_name"
                   value={formData.middle_name || ""}
                   onChange={(val) => setFormData({ ...formData, middle_name: val || null })}
-                  variant="medium"
                 />
               ) : (
-                <p className={`text-sm ${tw.textPrimary}`}>
-                  {user.middle_name || "N/A"}
-                </p>
+                <div>
+                  <label className={`block text-sm font-medium ${tw.textSecondary} mb-1`}>
+                    Middle Name
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    {user.middle_name || "N/A"}
+                  </p>
+                </div>
               )}
             </div>
 
             <div>
-              <label
-                className={`block text-sm font-medium ${tw.textSecondary} mb-1`}
-              >
-                Preferred Name
-              </label>
               {isEditing ? (
                 <Input
-                  placeholder="Preferred Name"
+                  label="Preferred Name"
                   name="preferred_name"
                   value={formData.preferred_name || ""}
                   onChange={(val) => setFormData({ ...formData, preferred_name: val || null })}
-                  variant="medium"
                 />
               ) : (
-                <p className={`text-sm ${tw.textPrimary}`}>
-                  {user.preferred_name || "N/A"}
-                </p>
+                <div>
+                  <label className={`block text-sm font-medium ${tw.textSecondary} mb-1`}>
+                    Preferred Name
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    {user.preferred_name || "N/A"}
+                  </p>
+                </div>
               )}
             </div>
 
             <div>
-              <label
-                className={`block text-sm font-medium ${tw.textSecondary} mb-1`}
-              >
-                {t.profile.phoneNumber}
-              </label>
               {isEditing ? (
                 <Input
-                  placeholder={t.profile.phoneNumber}
+                  label={t.profile.phoneNumber}
                   type="tel"
                   name="phone_number"
                   value={formData.phone_number || ""}
                   onChange={(val) => setFormData({ ...formData, phone_number: val || null })}
-                  variant="medium"
                 />
               ) : (
-                <p className={`text-sm ${tw.textPrimary}`}>
-                  {user.phone_number || "N/A"}
-                </p>
+                <div>
+                  <label className={`block text-sm font-medium ${tw.textSecondary} mb-1`}>
+                    {t.profile.phoneNumber}
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    {user.phone_number || "N/A"}
+                  </p>
+                </div>
               )}
             </div>
 
@@ -630,49 +622,47 @@ export default function UserProfilePage() {
 
           {/* Professional Information */}
           <div>
-            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
+            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
               {t.profile.professionalInformation}
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <label
-                className={`block text-sm font-medium ${tw.textSecondary} mb-1`}
-              >
-                {t.profile.department}
-              </label>
               {isEditing ? (
                 <Input
-                  placeholder={t.profile.department}
+                  label={t.profile.department}
                   name="department"
                   value={formData.department || ""}
                   onChange={(val) => setFormData({ ...formData, department: val || null })}
-                  variant="medium"
                 />
               ) : (
-                <p className={`text-sm ${tw.textPrimary}`}>
-                  {user.department || "N/A"}
-                </p>
+                <div>
+                  <label className={`block text-sm font-medium ${tw.textSecondary} mb-1`}>
+                    {t.profile.department}
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    {user.department || "N/A"}
+                  </p>
+                </div>
               )}
             </div>
 
             <div>
-              <label
-                className={`block text-sm font-medium ${tw.textSecondary} mb-1`}
-              >
-                {t.profile.jobTitle}
-              </label>
               {isEditing ? (
                 <Input
-                  placeholder={t.profile.jobTitle}
+                  label={t.profile.jobTitle}
                   name="job_title"
                   value={formData.job_title || ""}
                   onChange={(val) => setFormData({ ...formData, job_title: val || null })}
-                  variant="medium"
                 />
               ) : (
-                <p className={`text-sm ${tw.textPrimary}`}>
-                  {user.job_title || "N/A"}
-                </p>
+                <div>
+                  <label className={`block text-sm font-medium ${tw.textSecondary} mb-1`}>
+                    {t.profile.jobTitle}
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    {user.job_title || "N/A"}
+                  </p>
+                </div>
               )}
             </div>
 
@@ -706,7 +696,7 @@ export default function UserProfilePage() {
 
         {/* Account Information (Read-only) */}
         <div className="mt-8 pt-6">
-          <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
+          <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
             {t.profile.accountInformation}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -760,7 +750,7 @@ export default function UserProfilePage() {
               </label>
               <p className={`text-sm ${tw.textPrimary}`}>
                 {user.created_at ? (
-                  <DateFormatter date={user.created_at} useLocale />
+                  <DateFormatter date={user.created_at} includeTime useLocale />
                 ) : (
                   "N/A"
                 )}
@@ -774,7 +764,7 @@ export default function UserProfilePage() {
               </label>
               <p className={`text-sm ${tw.textPrimary}`}>
                 {user.updated_at ? (
-                  <DateFormatter date={user.updated_at} useLocale />
+                  <DateFormatter date={user.updated_at} includeTime useLocale />
                 ) : (
                   "N/A"
                 )}
@@ -786,7 +776,7 @@ export default function UserProfilePage() {
         {/* TODO: Uncomment when backend confirms /user-sessions endpoints
         Active Sessions / Manage Devices
         <div className="mt-8 pt-6">
-          <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
+          <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
             Active Sessions
           </h3>
 

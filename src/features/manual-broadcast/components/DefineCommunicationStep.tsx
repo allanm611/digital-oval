@@ -35,6 +35,7 @@ import {
 import { useConfigurationData } from "../../../shared/services/configurationDataService";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import { CommunicationPolicyConfiguration } from "../../campaigns/types/communicationPolicyConfig";
 import { communicationPolicyService } from "../../campaigns/services/communicationPolicyService";
 import CommunicationPolicyModal from "../../campaigns/components/CommunicationPolicyModal";
@@ -1038,13 +1039,9 @@ export default function DefineCommunicationStep({
             {/* Subject Line for Email */}
             {selectedChannel === "EMAIL" && (
               <div>
-                <label
-                  className={`text-sm font-medium ${tw.textPrimary} mb-2 block`}
-                >
-                  Subject Line <span className="text-red-500">*</span>
-                </label>
                 <Input
                   ref={titleInputRef}
+                  label="Subject Line"
                   placeholder="Enter email subject..."
                   value={messageTitle}
                   onChange={(value) => {
@@ -1075,18 +1072,14 @@ export default function DefineCommunicationStep({
                     setActiveField("title");
                     setCursorPosition(e.currentTarget.selectionStart || 0);
                   }}
-                  variant="medium"
+                 
+                  required
                 />
               </div>
             )}
 
             {/* Message Body */}
             <div>
-              <label
-                className={`text-sm font-medium ${tw.textPrimary} mb-2 block`}
-              >
-                Message Body <span className="text-red-500">*</span>
-              </label>
               {isRichText ? (
                 <div
                   onClick={() => setActiveField("body")}
@@ -1100,18 +1093,21 @@ export default function DefineCommunicationStep({
                   />
                 </div>
               ) : (
-                <textarea
+                <Textarea
                   ref={bodyTextareaRef}
+                  label="Message Body"
                   value={messageBody}
-                  onChange={(e) => {
-                    const editError = validateNoEditInsideVariables(messageBody, e.target.value);
+                  onChange={(value) => {
+                    const editError = validateNoEditInsideVariables(messageBody, value);
                     if (editError) {
                       setVariableError(editError);
                       return;
                     }
-                    setMessageBody(e.target.value);
-                    setCursorPosition(e.target.selectionStart || 0);
-                    const syntaxError = validateMessageSyntax(e.target.value);
+                    setMessageBody(value);
+                    if (bodyTextareaRef.current) {
+                      setCursorPosition(bodyTextareaRef.current.selectionStart || 0);
+                    }
+                    const syntaxError = validateMessageSyntax(value);
                     setVariableError(syntaxError);
                   }}
                   onKeyDown={(e) => {
@@ -1133,8 +1129,7 @@ export default function DefineCommunicationStep({
                   }}
                   placeholder="Enter your message... Click 'Insert Variable' to add dynamic content like {{customer_identity.first_name}}"
                   rows={10}
-                  className="w-full px-4 py-3 border rounded-md  focus:outline-none focus:ring-2 transition-all text-sm resize-none"
-                  style={{ borderColor: color.border.default }}
+                  required
                 />
               )}
 

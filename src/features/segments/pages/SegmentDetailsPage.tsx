@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import { ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import {
   LineChart,
@@ -1506,6 +1507,7 @@ export default function SegmentDetailsPage() {
                 {showAddTagInput ? (
                   <div className="flex gap-2">
                     <Input
+                      label="Tag Name"
                       placeholder="Enter tag name"
                       value={newTag}
                       onChange={setNewTag}
@@ -1827,17 +1829,15 @@ export default function SegmentDetailsPage() {
         </div>
 
         {showAdvancedEdit ? (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {/* Update Query Section */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Segment Query
-              </label>
-              <textarea
+              <Textarea
+                label="Segment Query"
                 value={editQuery}
-                onChange={(e) => setEditQuery(e.target.value)}
+                onChange={(value) => setEditQuery(value)}
                 placeholder="Enter SQL query..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                className="font-mono"
                 rows={5}
               />
               <div className="flex justify-end gap-2 mt-3">

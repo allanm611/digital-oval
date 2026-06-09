@@ -138,10 +138,8 @@ export default function CreateEditCommunicationChannelModal({
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Channel Code *
-            </label>
             <Input
+              label="Channel Code *"
               type="text"
               value={formData.code}
               onChange={(value) =>
@@ -156,41 +154,33 @@ export default function CreateEditCommunicationChannelModal({
             {mode === "edit" && <p className="text-xs text-gray-500 mt-1">Code cannot be changed after creation</p>}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Channel Name *
-            </label>
-            <Input
-              type="text"
-              value={formData.name}
-              onChange={(value) =>
-                setFormData((prev) => ({ ...prev, name: String(value) }))
-              }
-              className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
-              placeholder="e.g., SMS, Email, Push"
-              maxLength={100}
-              required
-            />
-          </div>
+          <Input
+            label="Channel Name *"
+            type="text"
+            value={formData.name}
+            onChange={(value) =>
+              setFormData((prev) => ({ ...prev, name: String(value) }))
+            }
+            className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+            placeholder="e.g., SMS, Email, Push"
+            maxLength={100}
+            required
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  description: e.target.value,
-                }))
-              }
-              className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none`}
-              placeholder="Enter description"
-              maxLength={500}
-              rows={3}
-            />
-          </div>
+          <Textarea
+            label="Description"
+            value={formData.description}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                description: e.target.value,
+              }))
+            }
+            className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none`}
+            placeholder="Enter description"
+            maxLength={500}
+            rows={3}
+          />
 
           <div className="flex items-center gap-2">
             <Checkbox

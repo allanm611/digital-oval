@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Save } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -256,16 +257,14 @@ export default function CreateEditUSSDRoutePage() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Route Name *
-                </label>
                 <Input
+                  label="Route Name"
                   placeholder="e.g., Primary USSD Gateway"
                   value={formData.name}
                   onChange={handleInputChange("name")}
                   hasError={!!errors.name}
-                  variant="medium"
                   disabled={saving}
+                  required
                 />
                 {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
               </div>
@@ -297,16 +296,12 @@ export default function CreateEditUSSDRoutePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description
-              </label>
-              <textarea
-                name="description"
+              <Textarea
+                label="Description"
                 value={formData.description || ""}
-                onChange={handleTextareaChange}
+                onChange={(value) => setFormData((prev) => ({ ...prev, description: value }))}
                 placeholder="Add notes about this route..."
                 rows={3}
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
                 disabled={saving}
               />
             </div>
@@ -376,50 +371,37 @@ export default function CreateEditUSSDRoutePage() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  USSD Code *
-                </label>
                 <Input
+                  label="USSD Code *"
                   placeholder="e.g., *123#"
                   value={extendedFormData.ussdCode}
                   onChange={(value) => handleExtendedFieldChange("ussdCode", value)}
                   hasError={!!errors.ussdCode}
-                  variant="medium"
                   disabled={saving}
                 />
                 {errors.ussdCode && <p className="text-red-500 text-xs mt-1">{errors.ussdCode}</p>}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Network Code (Optional)
-                </label>
-                <Input
-                  placeholder="e.g., MCC/MNC code"
-                  value={extendedFormData.networkCode}
-                  onChange={(value) => handleExtendedFieldChange("networkCode", value)}
-                  variant="medium"
-                  disabled={saving}
-                />
-              </div>
+              <Input
+                label="Network Code (Optional)"
+                placeholder="e.g., MCC/MNC code"
+                value={extendedFormData.networkCode}
+                onChange={(value) => handleExtendedFieldChange("networkCode", value)}
+                disabled={saving}
+              />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Session Timeout (seconds)
-                </label>
-                <Input
-                  type="number"
-                  placeholder="60"
-                  value={extendedFormData.sessionTimeout}
-                  onChange={(value) => handleExtendedFieldChange("sessionTimeout", value)}
-                  variant="medium"
-                  min="10"
-                  max="300"
-                  disabled={saving}
-                />
-              </div>
+              <Input
+                label="Session Timeout (seconds)"
+                type="number"
+                placeholder="60"
+                value={extendedFormData.sessionTimeout}
+                onChange={(value) => handleExtendedFieldChange("sessionTimeout", value)}
+                min="10"
+                max="300"
+                disabled={saving}
+              />
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -435,10 +417,8 @@ export default function CreateEditUSSDRoutePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Retry Attempts
-              </label>
               <Input
+                label="Retry Attempts"
                 type="number"
                 placeholder="3"
                 value={String(formData.retry_attempts || 3)}
@@ -448,7 +428,6 @@ export default function CreateEditUSSDRoutePage() {
                     retry_attempts: value ? Number(value) : 3,
                   }))
                 }
-                variant="medium"
                 min="1"
                 max="10"
                 disabled={saving}

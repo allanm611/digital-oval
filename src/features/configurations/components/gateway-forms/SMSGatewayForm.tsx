@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Save } from "lucide-react";
 import { tw, color, button, getButtonStyles } from "../../../../shared/utils/utils";
 import Input from "../../../../shared/components/ui/Input";
+import Textarea from "../../../../shared/components/ui/Textarea";
 import Checkbox from "../../../../shared/components/ui/Checkbox";
 import { SMSGatewayConfig, CreateSMSGatewayConfigRequest } from "../../types/smsGatewayConfig";
 import { SMS_GATEWAY_OPTIONS } from "../../../routes/constants/smsRouteEnums";
@@ -93,34 +94,24 @@ export default function SMSGatewayForm({
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Configuration Name *
-            </label>
-            <Input
-              placeholder="e.g., Twilio Primary SMS"
-              value={formData.name}
-              onChange={(value) => setFormData((prev) => ({ ...prev, name: value }))}
-              variant="medium"
-              disabled={isLoading}
-            />
-          </div>
+          <Input
+            label="Configuration Name *"
+            placeholder="e.g., Twilio Primary SMS"
+            value={formData.name}
+            onChange={(value) => setFormData((prev) => ({ ...prev, name: value }))}
+            disabled={isLoading}
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, description: e.target.value }))
-              }
-              placeholder="Add notes about this configuration..."
-              rows={3}
-              className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
-              disabled={isLoading}
-            />
-          </div>
+          <Textarea
+            label="Description"
+            value={formData.description}
+            onChange={(value) =>
+              setFormData((prev) => ({ ...prev, description: value }))
+            }
+            placeholder="Add notes about this configuration..."
+            rows={3}
+            disabled={isLoading}
+          />
         </div>
       </div>
 
@@ -128,90 +119,60 @@ export default function SMSGatewayForm({
         <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>API Credentials</h2>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                API Key *
-              </label>
-              <Input
-                type="password"
-                placeholder="Enter API key"
-                value={formData.credentials.api_key}
-                onChange={(value) => updateCredential("api_key", value)}
-                variant="medium"
-                disabled={isLoading}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                API Secret
-              </label>
-              <Input
-                type="password"
-                placeholder="Enter API secret (if required)"
-                value={formData.credentials.api_secret}
-                onChange={(value) => updateCredential("api_secret", value)}
-                variant="medium"
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Account SID / Account ID
-            </label>
             <Input
-              type="text"
-              placeholder="e.g., AC1234567890abcdef"
-              value={formData.credentials.account_sid}
-              onChange={(value) => updateCredential("account_sid", value)}
-              variant="medium"
+              label="API Key *"
+              type="password"
+              placeholder="Enter API key"
+              value={formData.credentials.api_key}
+              onChange={(value) => updateCredential("api_key", value)}
+              disabled={isLoading}
+            />
+
+            <Input
+              label="API Secret"
+              type="password"
+              placeholder="Enter API secret (if required)"
+              value={formData.credentials.api_secret}
+              onChange={(value) => updateCredential("api_secret", value)}
               disabled={isLoading}
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Phone Number / Sender ID
-            </label>
-            <Input
-              type="text"
-              placeholder="e.g., +1234567890 or Company Name"
-              value={formData.credentials.phone_number}
-              onChange={(value) => updateCredential("phone_number", value)}
-              variant="medium"
-              disabled={isLoading}
-            />
-          </div>
+          <Input
+            label="Account SID / Account ID"
+            type="text"
+            placeholder="e.g., AC1234567890abcdef"
+            value={formData.credentials.account_sid}
+            onChange={(value) => updateCredential("account_sid", value)}
+            disabled={isLoading}
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Gateway URL
-            </label>
-            <Input
-              type="url"
-              placeholder="e.g., https://api.gateway.com/sms"
-              value={formData.credentials.gateway_url}
-              onChange={(value) => updateCredential("gateway_url", value)}
-              variant="medium"
-              disabled={isLoading}
-            />
-          </div>
+          <Input
+            label="Phone Number / Sender ID"
+            type="text"
+            placeholder="e.g., +1234567890 or Company Name"
+            value={formData.credentials.phone_number}
+            onChange={(value) => updateCredential("phone_number", value)}
+            disabled={isLoading}
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Messaging Service ID
-            </label>
-            <Input
-              type="text"
-              placeholder="e.g., MG1234567890abcdef (Twilio)"
-              value={formData.credentials.messaging_service_id}
-              onChange={(value) => updateCredential("messaging_service_id", value)}
-              variant="medium"
-              disabled={isLoading}
-            />
-          </div>
+          <Input
+            label="Gateway URL"
+            type="url"
+            placeholder="e.g., https://api.gateway.com/sms"
+            value={formData.credentials.gateway_url}
+            onChange={(value) => updateCredential("gateway_url", value)}
+            disabled={isLoading}
+          />
+
+          <Input
+            label="Messaging Service ID"
+            type="text"
+            placeholder="e.g., MG1234567890abcdef (Twilio)"
+            value={formData.credentials.messaging_service_id}
+            onChange={(value) => updateCredential("messaging_service_id", value)}
+            disabled={isLoading}
+          />
         </div>
       </div>
 

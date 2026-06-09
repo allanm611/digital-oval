@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { tw, color, button, getButtonStyles } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { languageService, Language } from "../../configurations/services/languageService";
@@ -196,15 +197,14 @@ export default function CreateLanguageModal({
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Name */}
           <div>
-            <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-              Name <span className="text-red-600">*</span>
-            </label>
             <Input
+              label="Name"
               placeholder="e.g., English, French"
               value={formData.name}
               onChange={(value) => handleInputChange("name", value)}
               hasError={!!errors.name}
-              variant="medium"
+             
+              required
             />
             {errors.name && (
               <p className="mt-1 text-sm text-red-600">{errors.name}</p>
@@ -213,16 +213,15 @@ export default function CreateLanguageModal({
 
           {/* Language Code */}
           <div>
-            <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-              Language Code <span className="text-red-600">*</span>
-            </label>
             <Input
+              label="Language Code"
               placeholder="e.g., en, fr, es, sw"
               value={formData.language_code}
               onChange={(value) => handleInputChange("language_code", value)}
               hasError={!!errors.language_code}
-              variant="medium"
+             
               className="font-mono"
+              required
             />
             {errors.language_code && (
               <p className="mt-1 text-sm text-red-600">{errors.language_code}</p>
@@ -231,15 +230,11 @@ export default function CreateLanguageModal({
 
           {/* Description */}
           <div>
-            <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-              Description
-            </label>
-            <textarea
+            <Textarea
+              label="Description"
               value={formData.description}
-              onChange={(e) => handleInputChange("description", e.target.value)}
+              onChange={(value) => handleInputChange("description", value)}
               rows={2}
-              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none`}
-              placeholder="Enter description (optional)"
             />
           </div>
 

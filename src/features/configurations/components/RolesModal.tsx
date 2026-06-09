@@ -4,6 +4,8 @@ import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils"
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useAuth } from "../../../contexts/AuthContext";
+import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { roleService } from "../../roles/services/roleService";
 import { Role, CreateRoleRequest, UpdateRoleRequest } from "../../roles/types/role";
@@ -150,64 +152,52 @@ export default function RolesModal({
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* Name */}
-          <div className="space-y-1.5">
-            <label className={`text-sm font-medium ${tw.textPrimary}`}>
-              Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="e.g., Administrator"
-              className={`w-full px-3 py-2 ${tw.rounded} border text-sm transition-colors focus:outline-none`}
-              style={{
-                borderColor: color.border.default,
-                backgroundColor: color.surface.input,
-              }}
-              onFocus={(e) => (e.target.style.borderColor = color.primary.action)}
-              onBlur={(e) => (e.target.style.borderColor = color.border.default)}
-            />
-          </div>
+          <Input
+            label={<>Name <span className="text-red-500">*</span></>}
+            type="text"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            placeholder="e.g., Administrator"
+            className={`w-full px-3 py-2 ${tw.rounded} border text-sm transition-colors focus:outline-none`}
+            style={{
+              borderColor: color.border.default,
+              backgroundColor: color.surface.input,
+            }}
+            onFocus={(e) => (e.target.style.borderColor = color.primary.action)}
+            onBlur={(e) => (e.target.style.borderColor = color.border.default)}
+          />
 
           {/* Code */}
-          <div className="space-y-1.5">
-            <label className={`text-sm font-medium ${tw.textPrimary}`}>
-              Code <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={formData.code}
-              onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-              placeholder="e.g., ADMIN"
-              className={`w-full px-3 py-2 ${tw.rounded} border text-sm transition-colors focus:outline-none`}
-              style={{
-                borderColor: color.border.default,
-                backgroundColor: color.surface.input,
-              }}
-              onFocus={(e) => (e.target.style.borderColor = color.primary.action)}
-              onBlur={(e) => (e.target.style.borderColor = color.border.default)}
-            />
-          </div>
+          <Input
+            label={<>Code <span className="text-red-500">*</span></>}
+            type="text"
+            value={formData.code}
+            onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+            placeholder="e.g., ADMIN"
+            className={`w-full px-3 py-2 ${tw.rounded} border text-sm transition-colors focus:outline-none`}
+            style={{
+              borderColor: color.border.default,
+              backgroundColor: color.surface.input,
+            }}
+            onFocus={(e) => (e.target.style.borderColor = color.primary.action)}
+            onBlur={(e) => (e.target.style.borderColor = color.border.default)}
+          />
 
           {/* Description */}
-          <div className="space-y-1.5">
-            <label className={`text-sm font-medium ${tw.textPrimary}`}>
-              Description
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Optional description"
-              rows={2}
-              className={`w-full px-3 py-2 ${tw.rounded} border text-sm transition-colors focus:outline-none resize-none`}
-              style={{
-                borderColor: color.border.default,
-                backgroundColor: color.surface.input,
-              }}
-              onFocus={(e) => (e.target.style.borderColor = color.primary.action)}
-              onBlur={(e) => (e.target.style.borderColor = color.border.default)}
-            />
-          </div>
+          <Textarea
+            label="Description"
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            placeholder="Optional description"
+            rows={2}
+            className={`w-full px-3 py-2 ${tw.rounded} border text-sm transition-colors focus:outline-none resize-none`}
+            style={{
+              borderColor: color.border.default,
+              backgroundColor: color.surface.input,
+            }}
+            onFocus={(e) => (e.target.style.borderColor = color.primary.action)}
+            onBlur={(e) => (e.target.style.borderColor = color.border.default)}
+          />
 
           {/* Data Access Level */}
           <div className="space-y-1.5">
@@ -223,44 +213,36 @@ export default function RolesModal({
           </div>
 
           {/* Role Level */}
-          <div className="space-y-1.5">
-            <label className={`text-sm font-medium ${tw.textPrimary}`}>
-              Role Level
-            </label>
-            <input
-              type="number"
-              value={formData.role_level}
-              onChange={(e) => setFormData({ ...formData, role_level: parseInt(e.target.value) || 0 })}
-              placeholder="0"
-              className={`w-full px-3 py-2 ${tw.rounded} border text-sm transition-colors focus:outline-none`}
-              style={{
-                borderColor: color.border.default,
-                backgroundColor: color.surface.input,
-              }}
-              onFocus={(e) => (e.target.style.borderColor = color.primary.action)}
-              onBlur={(e) => (e.target.style.borderColor = color.border.default)}
-            />
-          </div>
+          <Input
+            label="Role Level"
+            type="number"
+            value={formData.role_level}
+            onChange={(e) => setFormData({ ...formData, role_level: parseInt(e.target.value) || 0 })}
+            placeholder="0"
+            className={`w-full px-3 py-2 ${tw.rounded} border text-sm transition-colors focus:outline-none`}
+            style={{
+              borderColor: color.border.default,
+              backgroundColor: color.surface.input,
+            }}
+            onFocus={(e) => (e.target.style.borderColor = color.primary.action)}
+            onBlur={(e) => (e.target.style.borderColor = color.border.default)}
+          />
 
           {/* Max Users */}
-          <div className="space-y-1.5">
-            <label className={`text-sm font-medium ${tw.textPrimary}`}>
-              Max Users
-            </label>
-            <input
-              type="number"
-              value={formData.max_users}
-              onChange={(e) => setFormData({ ...formData, max_users: e.target.value })}
-              placeholder="Unlimited"
-              className={`w-full px-3 py-2 ${tw.rounded} border text-sm transition-colors focus:outline-none`}
-              style={{
-                borderColor: color.border.default,
-                backgroundColor: color.surface.input,
-              }}
-              onFocus={(e) => (e.target.style.borderColor = color.primary.action)}
-              onBlur={(e) => (e.target.style.borderColor = color.border.default)}
-            />
-          </div>
+          <Input
+            label="Max Users"
+            type="number"
+            value={formData.max_users}
+            onChange={(e) => setFormData({ ...formData, max_users: e.target.value })}
+            placeholder="Unlimited"
+            className={`w-full px-3 py-2 ${tw.rounded} border text-sm transition-colors focus:outline-none`}
+            style={{
+              borderColor: color.border.default,
+              backgroundColor: color.surface.input,
+            }}
+            onFocus={(e) => (e.target.style.borderColor = color.primary.action)}
+            onBlur={(e) => (e.target.style.borderColor = color.border.default)}
+          />
 
           {/* Actions */}
           <div className="flex items-center justify-end gap-3 pt-4">

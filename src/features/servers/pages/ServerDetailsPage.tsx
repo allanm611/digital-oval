@@ -740,18 +740,13 @@ export default function ServerDetailsPage() {
                   }
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-black">
-                  Details (optional)
-                </label>
-                <textarea
-                  value={healthResultDetails}
-                  onChange={(e) => setHealthResultDetails(e.target.value)}
-                  placeholder="Additional details about the health check..."
-                  className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
-                  rows={3}
-                />
-              </div>
+              <Textarea
+                label="Details (optional)"
+                value={healthResultDetails}
+                onChange={setHealthResultDetails}
+                placeholder="Additional details about the health check..."
+                rows={3}
+              />
             </div>
             <div className="mt-6 flex justify-end gap-3">
               <button

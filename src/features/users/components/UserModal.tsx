@@ -288,59 +288,43 @@ export default function UserModal({
             {/* Form */}
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label
-                    className={`block text-sm font-semibold ${tw.textPrimary} mb-2`}
-                  >
-                    First Name *
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <UserIcon className={`w-5 h-5 ${tw.textMuted}`} />
-                    </div>
-                    <Input
-                      name="first_name"
-                      value={formData.first_name}
-                      onChange={handleInputChange('first_name')}
-                      required
-                      className={`block w-full pl-10 pr-3 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 text-sm`}
-                      placeholder="First Name"
-                    />
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <UserIcon className={`w-5 h-5 ${tw.textMuted}`} />
                   </div>
+                  <Input
+                    label="First Name *"
+                    name="first_name"
+                    value={formData.first_name}
+                    onChange={handleInputChange('first_name')}
+                    required
+                    className={`block w-full pl-10 pr-3 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 text-sm`}
+                    placeholder="First Name"
+                  />
                 </div>
-                <div>
-                  <label
-                    className={`block text-sm font-semibold ${tw.textPrimary} mb-2`}
-                  >
-                    Last Name *
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <UserIcon className={`w-5 h-5 ${tw.textMuted}`} />
-                    </div>
-                    <Input
-                      name="last_name"
-                      value={formData.last_name}
-                      onChange={handleInputChange('last_name')}
-                      required
-                      className={`block w-full pl-10 pr-3 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 text-sm`}
-                      placeholder="Last Name"
-                    />
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <UserIcon className={`w-5 h-5 ${tw.textMuted}`} />
                   </div>
+                  <Input
+                    label="Last Name *"
+                    name="last_name"
+                    value={formData.last_name}
+                    onChange={handleInputChange('last_name')}
+                    required
+                    className={`block w-full pl-10 pr-3 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 text-sm`}
+                    placeholder="Last Name"
+                  />
                 </div>
               </div>
 
               <div>
-                <label
-                  className={`block text-sm font-semibold ${tw.textPrimary} mb-2`}
-                >
-                  Email *
-                </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Mail className={`w-5 h-5 ${tw.textMuted}`} />
                   </div>
                   <Input
+                    label="Email *"
                     name="email_address"
                     type="email"
                     value={formData.email_address}
@@ -366,46 +350,31 @@ export default function UserModal({
 
               {!user && (
                 <>
-                  <div>
-                    <label
-                      className={`block text-sm font-semibold ${tw.textPrimary} mb-2`}
-                    >
-                      Username
-                    </label>
-                    <Input
-                      name="username"
-                      type="text"
-                      value={formData.username}
-                      onChange={handleInputChange('username')}
-                      className={`block w-full px-3 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 text-sm`}
-                      placeholder="Leave empty to auto-generate from email"
-                    />
-                  </div>
+                  <Input
+                    label="Username"
+                    name="username"
+                    type="text"
+                    value={formData.username}
+                    onChange={handleInputChange('username')}
+                    className={`block w-full px-3 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 text-sm`}
+                    placeholder="Leave empty to auto-generate from email"
+                  />
 
-                  <div>
-                    <label
-                      className={`block text-sm font-semibold ${tw.textPrimary} mb-2`}
-                    >
-                      Password *{" "}
-                      <span className="text-xs text-gray-500">
-                        (min 8 characters)
-                      </span>
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Lock className={`w-5 h-5 ${tw.textMuted}`} />
-                      </div>
-                      <Input
-                        name="password"
-                        type="password"
-                        value={formData.password}
-                        onChange={handleInputChange('password')}
-                        required
-                        minLength={8}
-                        className={`block w-full pl-10 pr-3 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 text-sm`}
-                        placeholder="Password"
-                      />
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Lock className={`w-5 h-5 ${tw.textMuted}`} />
                     </div>
+                    <Input
+                      label={<>Password * <span className="text-xs text-gray-500">(min 8 characters)</span></>}
+                      name="password"
+                      type="password"
+                      value={formData.password}
+                      onChange={handleInputChange('password')}
+                      required
+                      minLength={8}
+                      className={`block w-full pl-10 pr-3 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 text-sm`}
+                      placeholder="Password"
+                    />
                   </div>
                 </>
               )}
@@ -446,21 +415,15 @@ export default function UserModal({
                     <p className="mt-2 text-xs text-red-600">{rolesError}</p>
                   )}
                 </div>
-                <div>
-                  <label
-                    className={`block text-sm font-semibold ${tw.textPrimary} mb-2`}
-                  >
-                    Department
-                  </label>
-                  <Input
-                    name="department"
-                    type="text"
-                    value={formData.department}
-                    onChange={handleInputChange('department')}
-                    className={`block w-full px-3 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 text-sm`}
-                    placeholder="Department"
-                  />
-                </div>
+                <Input
+                  label="Department"
+                  name="department"
+                  type="text"
+                  value={formData.department}
+                  onChange={handleInputChange('department')}
+                  className={`block w-full px-3 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 text-sm`}
+                  placeholder="Department"
+                />
               </div>
 
               {/* Actions */}

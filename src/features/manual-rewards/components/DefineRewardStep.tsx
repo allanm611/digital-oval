@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import Input from '../../../shared/components/ui/Input';
+import Textarea from '../../../shared/components/ui/Textarea';
 import {
   AlertCircle,
   Package,
@@ -622,14 +623,13 @@ export default function DefineRewardStep({
         {/* Subject Line (for Email channel only) */}
         {selectedChannel === "EMAIL" && (
           <div>
-            <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-              Subject Line <span className="text-red-500">*</span>
-            </label>
             <Input
+              label="Subject Line"
               placeholder="Enter email subject..."
               value={rewardTitle}
               onChange={(value) => setRewardTitle(String(value))}
-              variant="medium"
+             
+              required
             />
           </div>
         )}
@@ -739,21 +739,13 @@ export default function DefineRewardStep({
 
         {/* Description (Optional) */}
         <div>
-          <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-            {t.manualRewards.descriptionLabel}{" "}
-            <span className={tw.textMuted}>({t.manualRewards.optional})</span>
-          </label>
-          <textarea
+          <Textarea
+            label={`${t.manualRewards.descriptionLabel} (${t.manualRewards.optional})`}
             value={description}
-            onChange={(e) => {
-              setDescription(e.target.value);
+            onChange={(value) => {
+              setDescription(value);
               onUpdate({ description: String(value) });
               resetRewardValidation();
-            }}
-            className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none focus:ring-2`}
-            style={{
-              borderColor: color.border.default,
-              color: color.text.primary,
             }}
             placeholder={t.manualRewards.descriptionPlaceholder}
             rows={3}

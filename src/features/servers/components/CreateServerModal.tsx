@@ -150,7 +150,7 @@ export default function CreateServerModal({
                 value={form.name}
                 onChange={(val) => setForm((prev) => ({...prev, name: val}))}
                 hasError={!!errors.name}
-                variant="medium"
+               
               />
               {errors.name && (
                 <p className="mt-1 text-xs text-red-500">{errors.name}</p>
@@ -167,7 +167,7 @@ export default function CreateServerModal({
                 value={form.code}
                 onChange={(val) => setForm((prev) => ({...prev, code: val}))}
                 hasError={!!errors.code}
-                variant="medium"
+               
               />
               {errors.code && (
                 <p className="mt-1 text-xs text-red-500">{errors.code}</p>
@@ -207,7 +207,7 @@ export default function CreateServerModal({
                 value={form.host}
                 onChange={(val) => setForm((prev) => ({...prev, host: val}))}
                 hasError={!!errors.host}
-                variant="medium"
+               
               />
               {errors.host && (
                 <p className="mt-1 text-xs text-red-500">{errors.host}</p>
@@ -246,7 +246,7 @@ export default function CreateServerModal({
                 name="region"
                 value={form.region}
                 onChange={(val) => setForm((prev) => ({...prev, region: val}))}
-                variant="medium"
+               
               />
             </div>
 
@@ -269,7 +269,7 @@ export default function CreateServerModal({
                 name="base_path"
                 value={form.base_path}
                 onChange={(val) => setForm((prev) => ({...prev, base_path: val}))}
-                variant="medium"
+               
               />
             </div>
           </div>
@@ -332,7 +332,7 @@ export default function CreateServerModal({
                     name="health_check_url"
                     value={form.health_check_url}
                     onChange={(val) => setForm((prev) => ({...prev, health_check_url: val}))}
-                    variant="medium"
+                   
                   />
                 </div>
 
@@ -416,7 +416,7 @@ export default function CreateServerModal({
               name="authentication_type"
               value={form.authentication_type}
               onChange={(val) => setForm((prev) => ({...prev, authentication_type: val}))}
-              variant="medium"
+             
             />
           </div>
 

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Save } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { EmailRoute, CreateEmailRouteRequest } from "../types/emailRoute";
@@ -200,31 +201,26 @@ export default function EmailRouteFormPage({ mode }: EmailRouteFormPageProps) {
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Basic Information</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Route Name *
-              </label>
               <Input
+                label="Route Name"
                 placeholder="e.g., Primary Email Route"
                 value={formData.name}
                 onChange={handleInputChange('name')}
                 hasError={!!errors.name}
-                variant="medium"
+               
                 disabled={saving}
+                required
               />
               {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description
-              </label>
-              <textarea
-                name="description"
+              <Textarea
+                label="Description"
                 value={formData.description || ""}
-                onChange={handleTextareaChange}
+                onChange={(value) => setFormData((prev) => ({ ...prev, description: value }))}
                 placeholder="Add notes about this route..."
                 rows={3}
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
                 disabled={saving}
               />
             </div>
@@ -233,39 +229,43 @@ export default function EmailRouteFormPage({ mode }: EmailRouteFormPageProps) {
 
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Gateway Configuration</h2>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email Gateway Configuration *
-            </label>
-            <HeadlessSelect
-              options={gatewayConfigOptions}
-              value={String(formData.gateway_config_id || "")}
-              onChange={(value) => handleSelectChange("gateway_config_id", value)}
-              placeholder="Select gateway configuration"
-              disabled={saving}
-              error={!!errors.gateway_config_id}
-            />
-            {errors.gateway_config_id && (
-              <p className="text-red-500 text-xs mt-1">{errors.gateway_config_id}</p>
-            )}
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Email Gateway Configuration *
+              </label>
+              <HeadlessSelect
+                options={gatewayConfigOptions}
+                value={String(formData.gateway_config_id || "")}
+                onChange={(value) => handleSelectChange("gateway_config_id", value)}
+                placeholder="Select gateway configuration"
+                disabled={saving}
+                error={!!errors.gateway_config_id}
+              />
+              {errors.gateway_config_id && (
+                <p className="text-red-500 text-xs mt-1">{errors.gateway_config_id}</p>
+              )}
+            </div>
           </div>
         </div>
 
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Status</h2>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Route Status
-            </label>
-            <HeadlessSelect
-              options={[
-                { value: "true", label: "Active" },
-                { value: "false", label: "Inactive" },
-              ]}
-              value={formData.is_active ? "true" : "false"}
-              onChange={(value) => handleSelectChange("is_active", value)}
-              disabled={saving}
-            />
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Route Status
+              </label>
+              <HeadlessSelect
+                options={[
+                  { value: "true", label: "Active" },
+                  { value: "false", label: "Inactive" },
+                ]}
+                value={formData.is_active ? "true" : "false"}
+                onChange={(value) => handleSelectChange("is_active", value)}
+                disabled={saving}
+              />
+            </div>
           </div>
         </div>
 

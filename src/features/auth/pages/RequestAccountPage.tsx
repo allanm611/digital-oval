@@ -6,6 +6,7 @@ import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { accountService } from "../../account/services/accountService";
 import { useToast } from "../../../contexts/ToastContext";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { departmentService } from "../../campaigns/services/departmentService";
 import { roleService } from "../../roles/services/roleService";
@@ -617,23 +618,20 @@ export default function RequestAccountPage() {
                     </div>
 
                     <div className="form-group">
-                      <label htmlFor="reason">
-                        {t.auth.requestAccount.reasonLabel} <span className="required">*</span>
-                      </label>
-                      <textarea
-                        id="reason"
+                      <Textarea
+                        label={<>{t.auth.requestAccount.reasonLabel} <span className="required">*</span></>}
                         value={formData.reason}
-                        onChange={(e) => {
+                        onChange={(value) => {
                           setFormData((prev) => ({
                             ...prev,
-                            reason: e.target.value,
+                            reason: value,
                           }));
                           clearError("reason");
                         }}
                         required
                         rows={4}
                         placeholder={t.auth.requestAccount.reasonPlaceholder}
-                        className={validationErrors.reason ? "invalid" : ""}
+                        hasError={!!validationErrors.reason}
                       />
                       <span
                         className="error-message"

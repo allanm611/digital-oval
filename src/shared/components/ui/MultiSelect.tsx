@@ -152,7 +152,7 @@ export default function MultiSelect({
                 placeholder="Search options..."
                 value={searchTerm}
                 onChange={setSearchTerm}
-                variant="medium"
+               
                 className={`w-full text-sm border border-gray-200`}
               />
             </div>

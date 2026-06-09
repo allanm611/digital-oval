@@ -14,6 +14,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import TypeSelector from "../../../shared/components/TypeSelector";
 import CreateProductTypeModal from "./CreateProductTypeModal";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import { ConfigurationItem } from "../../configurations/components/ConfigurationManager";
 import { tw, color, zIndex, getButtonStyles, button } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -538,7 +539,7 @@ export default function ProductForm({
   return (
     <>
       {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-8">
         {/* Product Information Card */}
         <div
           className={`${tw.rounded} border p-6`}
@@ -547,18 +548,12 @@ export default function ProductForm({
             backgroundColor: color.surface.background,
           }}
         >
-          <div className="space-y-5">
+          <div className="space-y-6">
             {/* Product Name & Product Code */}
             <div className="grid gap-5 md:grid-cols-2">
               <div>
-                <label
-                  className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                >
-                  {t.products.form.productName}{" "}
-                  <span style={{ color: color.status.danger }}>*</span>
-                </label>
                 <Input
-                  placeholder={t.products.form.enterProductName}
+                  label={t.products.form.productName}
                   value={formData.name || ""}
                   onChange={(value) => {
                     onInputChange("name", value);
@@ -600,14 +595,8 @@ export default function ProductForm({
               </div>
 
               <div>
-                <label
-                  className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                >
-                  {t.products.form.productCode}{" "}
-                  <span style={{ color: color.status.danger }}>*</span>
-                </label>
                 <Input
-                  placeholder={t.products.form.enterProductCode}
+                  label={t.products.form.productCode}
                   value={formData.product_code || ""}
                   onChange={(value) =>
                     onInputChange("product_code", value)
@@ -646,15 +635,10 @@ export default function ProductForm({
             <div className="grid gap-5 md:grid-cols-2">
               {!isComboType && (
                 <div>
-                  <label
-                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                  >
-                    {t.products.form.pricing}{" "}
-                    <span style={{ color: color.status.danger }}>*</span>
-                  </label>
                   <Input
-                    placeholder="0.00"
-                    value={String(formData.price || 0)}
+                    type="number"
+                    label={t.products.form.pricing}
+                    value={String(formData.price || "")}
                     onChange={(value) =>
                       onInputChange("price", parseFloat(value) || 0)
                     }
@@ -691,13 +675,8 @@ export default function ProductForm({
 
               {!isComboType && (
                 <div>
-                  <label
-                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                  >
-                    DA ID <span style={{ color: color.status.danger }}>*</span>
-                  </label>
                   <Input
-                    placeholder="Enter DA ID"
+                    label="DA ID"
                     value={formData.da_id || ""}
                     onChange={(value) => onInputChange("da_id", value)}
                     hasError={!!errors.da_id}
@@ -734,18 +713,11 @@ export default function ProductForm({
 
             {/* Description */}
             <div>
-              <label
-                className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-              >
-                {t.products.form.productDescription}{" "}
-                <span style={{ color: color.status.danger }}>*</span>
-              </label>
-              <textarea
-                name="description"
-                rows={4}
+              <Textarea
+                label={t.products.form.productDescription}
                 value={formData.description || ""}
-                onChange={(e) => {
-                  onInputChange("description", e.target.value);
+                onChange={(value) => {
+                  onInputChange("description", value);
                   if (errors.description) {
                     setErrors((prev) => {
                       const newErrors = { ...prev };
@@ -754,18 +726,10 @@ export default function ProductForm({
                     });
                   }
                 }}
-                className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all resize-none outline-none ${
-                  focusedField === "description"
-                    ? errors.description
-                      ? "border-red-500 ring-2 ring-red-500/20"
-                      : "border-blue-500 ring-2 ring-blue-500/20"
-                    : errors.description
-                      ? "border-red-500"
-                      : "border-gray-300"
-                }`}
-                placeholder={t.products.form.enterProductDescription}
+                hasError={!!errors.description}
                 onFocus={() => setFocusedField("description")}
                 onBlur={() => setFocusedField(null)}
+                rows={4}
               />
               {errors.description && (
                 <p
@@ -793,96 +757,89 @@ export default function ProductForm({
             </div>
 
             {/* Tags - Full Width */}
-            <div>
-              <label
-                className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-              >
-                Tags
-              </label>
-                <div className="space-y-2">
-                  <div className="flex">
-                    <div className="flex-1">
-                      <Input
-                        placeholder="Type tags separated by commas"
-                        value={tagInput}
-                        onChange={(value) => {
-                          setTagInput(value);
+            <div className="space-y-2">
+              <div className="flex">
+                <div className="flex-1">
+                  <Input
+                    label="Tags"
+                    value={tagInput}
+                    onChange={(value) => {
+                      setTagInput(value);
 
-                          // Auto-add tag when comma is typed
-                          if (value.includes(",")) {
-                            const tag = value.replace(",", "").trim();
-                            const currentTags = getCurrentTagsAsArray();
-                            if (tag && !currentTags.includes(tag.toLowerCase())) {
-                              const updatedTags = [
-                                ...currentTags,
-                                tag.toLowerCase(),
-                              ];
-                              onInputChange("tags", updatedTags);
-                              setTagInput("");
-                            }
-                          }
-                        }}
-                        onKeyDown={(e) => {
-                          handleAddTag(e);
-                        }}
-                        onFocus={() => setFocusedField("tags")}
-                        onBlur={() => setFocusedField(null)}
-                        className="w-full"
-                        style={{
-                          borderTopRightRadius: "0",
-                          borderBottomRightRadius: "0",
-                        }}
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (tagInput.trim()) {
-                          const newTag = tagInput.trim().toLowerCase();
-                          const currentTags = getCurrentTagsAsArray();
-                          if (!currentTags.includes(newTag)) {
-                            const updatedTags = [...currentTags, newTag];
-                            onInputChange("tags", updatedTags);
-                            setTagInput("");
-                          }
+                      // Auto-add tag when comma is typed
+                      if (value.includes(",")) {
+                        const tag = value.replace(",", "").trim();
+                        const currentTags = getCurrentTagsAsArray();
+                        if (tag && !currentTags.includes(tag.toLowerCase())) {
+                          const updatedTags = [
+                            ...currentTags,
+                            tag.toLowerCase(),
+                          ];
+                          onInputChange("tags", updatedTags);
+                          setTagInput("");
                         }
-                      }}
-                      className="px-3 py-2 text-white rounded-r-md flex items-center justify-center text-sm border-l-0 font-medium"
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      handleAddTag(e);
+                    }}
+                    onFocus={() => setFocusedField("tags")}
+                    onBlur={() => setFocusedField(null)}
+                    className="w-full"
+                    style={{
+                      borderTopRightRadius: "0",
+                      borderBottomRightRadius: "0",
+                    }}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (tagInput.trim()) {
+                      const newTag = tagInput.trim().toLowerCase();
+                      const currentTags = getCurrentTagsAsArray();
+                      if (!currentTags.includes(newTag)) {
+                        const updatedTags = [...currentTags, newTag];
+                        onInputChange("tags", updatedTags);
+                        setTagInput("");
+                      }
+                    }
+                  }}
+                  className="px-3 py-3 text-white rounded-r-md flex items-center justify-center text-sm border-l-0 font-medium"
+                  style={{
+                    backgroundColor: color.primary.action,
+                    borderColor: color.primary.action,
+                  }}
+                >
+                  Add
+                </button>
+              </div>
+              {getCurrentTagsAsArray().length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {getCurrentTagsAsArray().map((tag, index) => (
+                    <span
+                      key={`${tag}-${index}`}
+                      className="inline-flex items-center px-3 py-1 text-sm font-medium rounded-full border"
                       style={{
-                        backgroundColor: color.primary.action,
-                        borderColor: color.primary.action,
+                        backgroundColor: color.primary.accent,
+                        borderColor: color.primary.accent,
+                        color: "#FFFFFF",
                       }}
                     >
-                      Add
-                    </button>
-                  </div>
-                  {getCurrentTagsAsArray().length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {getCurrentTagsAsArray().map((tag, index) => (
-                        <span
-                          key={`${tag}-${index}`}
-                          className="inline-flex items-center px-3 py-1 text-sm font-medium rounded-full border"
-                          style={{
-                            backgroundColor: color.primary.accent,
-                            borderColor: color.primary.accent,
-                            color: "#FFFFFF",
-                          }}
-                        >
-                          {tag}
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveTag(tag)}
-                            className="ml-2 hover:opacity-80"
-                            style={{ color: "#FFFFFF" }}
-                            aria-label={`Remove tag ${tag}`}
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTag(tag)}
+                        className="ml-2 hover:opacity-80"
+                        style={{ color: "#FFFFFF" }}
+                        aria-label={`Remove tag ${tag}`}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
                 </div>
+              )}
             </div>
 
             {/* Category */}
@@ -907,9 +864,7 @@ export default function ProductForm({
 
             {/* Product Type */}
             <div>
-              <label
-                className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-              >
+              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
                 {t.products.form.productType}
               </label>
               <TypeSelector
@@ -1118,81 +1073,57 @@ export default function ProductForm({
                   <div className="grid gap-4 md:grid-cols-3">
                     {/* Shared Validity Hours */}
                     {comboSettings.shared_validity && (
-                      <div>
-                        <label
-                          className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                        >
-                          Validity (Hours){" "}
-                          <span style={{ color: color.status.danger }}>*</span>
-                        </label>
-                        <Input type="number"
-                          min="1"
-                          step="1"
-                          value={comboData.shared_validity_hours ?? ""}
-                          onChange={(value) =>
-                            setComboData({
-                              ...comboData,
-                              shared_validity_hours: String(value)
-                                ? parseInt(String(value), 10)
-                                : undefined,
-                            })
-                          }
-                          className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
-                          style={{ borderColor: color.border.default }}
-                          placeholder="e.g., 720 (30 days)"
-                        />
-                      </div>
+                      <Input
+                        type="number"
+                        label="Validity (Hours)"
+                        min="1"
+                        step="1"
+                        value={comboData.shared_validity_hours ?? ""}
+                        onChange={(value) =>
+                          setComboData({
+                            ...comboData,
+                            shared_validity_hours: String(value)
+                              ? parseInt(String(value), 10)
+                              : undefined,
+                          })
+                        }
+                        required
+                      />
                     )}
 
                     {/* Shared Combo Price */}
                     {comboSettings.shared_price && (
-                      <div>
-                        <label
-                          className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                        >
-                          Combo Price{" "}
-                          <span style={{ color: color.status.danger }}>*</span>
-                        </label>
-                        <Input type="number"
-                          min="0"
-                          step="0.01"
-                          value={comboData.price ?? ""}
-                          onChange={(value) =>
-                            setComboData({
-                              ...comboData,
-                              price: String(value)
-                                ? parseFloat(String(value))
-                                : undefined,
-                            })
-                          }
-                          className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
-                          style={{ borderColor: color.border.default }}
-                          placeholder="Enter combo price"
-                        />
-                      </div>
+                      <Input
+                        type="number"
+                        label="Combo Price"
+                        min="0"
+                        step="0.01"
+                        value={comboData.price ?? ""}
+                        onChange={(value) =>
+                          setComboData({
+                            ...comboData,
+                            price: String(value)
+                              ? parseFloat(String(value))
+                              : undefined,
+                          })
+                        }
+                        required
+                      />
                     )}
 
                     {/* Shared DAID Account */}
                     {comboSettings.shared_daid && (
-                      <div>
-                        <label
-                          className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                        >
-                          DAID Account{" "}
-                          <span style={{ color: color.status.danger }}>*</span>
-                        </label>
-                        <Input
-                          placeholder="Enter shared DAID"
-                          value={comboData.shared_daid_account ?? ""}
-                          onChange={(value) =>
-                            setComboData({
-                              ...comboData,
-                              shared_daid_account: value || undefined,
-                            })
-                          }
-                          required
-                        />
-                      </div>
+                      <Input
+                        label="DAID Account"
+                        value={comboData.shared_daid_account ?? ""}
+                        onChange={(value) =>
+                          setComboData({
+                            ...comboData,
+                            shared_daid_account: value || undefined,
+                          })
+                        }
+                        required
+                      />
                     )}
                   </div>
                 </div>
@@ -1266,9 +1197,7 @@ export default function ProductForm({
                         >
                           {/* Resource Type Dropdown */}
                           <div>
-                            <label
-                              className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
-                            >
+                            <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
                               Resource Type
                             </label>
                             <HeadlessSelect
@@ -1303,9 +1232,7 @@ export default function ProductForm({
 
                           {/* Unit Dropdown */}
                           <div>
-                            <label
-                              className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
-                            >
+                            <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
                               Unit
                             </label>
                             <HeadlessSelect
@@ -1325,9 +1252,7 @@ export default function ProductForm({
                           {/* Utility Selection - show when Utility resource type is selected */}
                           {selectedResourceType === "utility" && (
                             <div>
-                              <label
-                                className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
-                              >
+                              <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
                                 Utility *
                               </label>
                               <HeadlessSelect
@@ -1350,14 +1275,9 @@ export default function ProductForm({
 
                           {/* Resource Value */}
                           <div>
-                            <label
-                              className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
-                            >
-                              Value{" "}
-                              {tempResourceData.resource_unit &&
-                                `(${tempResourceData.resource_unit})`}
-                            </label>
-                            <Input type="number"
+                            <Input
+                              type="number"
+                              label={`Value${tempResourceData.resource_unit ? ` (${tempResourceData.resource_unit})` : ""}`}
                               min="0"
                               step="1"
                               value={
@@ -1375,86 +1295,63 @@ export default function ProductForm({
                                   resource_value: isNaN(val) ? 0 : val,
                                 });
                               }}
-                              className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm transition-all`}
-                              style={{ borderColor: color.border.default }}
-                              placeholder="Enter value"
+                             
                             />
                           </div>
 
                           {/* Validity (if not shared) */}
                           {!comboSettings.shared_validity && (
-                            <div>
-                              <label
-                                className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
-                              >
-                                Validity (Hours)
-                              </label>
-                              <Input type="number"
-                                min="1"
-                                step="1"
-                                value={tempResourceData.validity_hours ?? ""}
-                                onChange={(value) =>
-                                  setTempResourceData({
-                                    ...tempResourceData,
-                                    validity_hours: String(value)
-                                      ? parseInt(String(value), 10)
-                                      : undefined,
-                                  })
-                                }
-                                className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm transition-all`}
-                                style={{ borderColor: color.border.default }}
-                                placeholder="e.g., 72"
-                              />
-                            </div>
+                            <Input
+                              type="number"
+                              label="Validity (Hours)"
+                              min="1"
+                              step="1"
+                              value={tempResourceData.validity_hours ?? ""}
+                              onChange={(value) =>
+                                setTempResourceData({
+                                  ...tempResourceData,
+                                  validity_hours: String(value)
+                                    ? parseInt(String(value), 10)
+                                    : undefined,
+                                })
+                              }
+                             
+                            />
                           )}
 
                           {/* Price (if not shared) */}
                           {!comboSettings.shared_price && (
-                            <div>
-                              <label
-                                className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
-                              >
-                                Price
-                              </label>
-                              <Input type="number"
-                                min="0"
-                                step="0.01"
-                                value={tempResourceData.price ?? ""}
-                                onChange={(value) =>
-                                  setTempResourceData({
-                                    ...tempResourceData,
-                                    price: String(value)
-                                      ? parseFloat(String(value))
-                                      : undefined,
-                                  })
-                                }
-                                className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm transition-all`}
-                                style={{ borderColor: color.border.default }}
-                                placeholder="Enter price"
-                              />
-                            </div>
+                            <Input
+                              type="number"
+                              label="Price"
+                              min="0"
+                              step="0.01"
+                              value={tempResourceData.price ?? ""}
+                              onChange={(value) =>
+                                setTempResourceData({
+                                  ...tempResourceData,
+                                  price: String(value)
+                                    ? parseFloat(String(value))
+                                    : undefined,
+                                })
+                              }
+                             
+                            />
                           )}
 
                           {/* DAID (if not shared) */}
                           {!comboSettings.shared_daid && (
-                            <div>
-                              <label
-                                className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
-                              >
-                                DAID Account
-                              </label>
-                              <Input
-                                placeholder="Enter DAID"
-                                value={tempResourceData.daid_account ?? ""}
-                                onChange={(value) =>
-                                  setTempResourceData({
-                                    ...tempResourceData,
-                                    daid_account: value || undefined,
-                                  })
-                                }
-                                variant="medium"
-                              />
-                            </div>
+                            <Input
+                              label="DAID Account"
+                              value={tempResourceData.daid_account ?? ""}
+                              onChange={(value) =>
+                                setTempResourceData({
+                                  ...tempResourceData,
+                                  daid_account: value || undefined,
+                                })
+                              }
+                             
+                            />
                           )}
                         </div>
 
@@ -1665,173 +1562,114 @@ export default function ProductForm({
                                 : "md:grid-cols-2"
                           } mb-3`}
                         >
-                          <div>
-                            <label
-                              className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
-                            >
-                              Unit
-                            </label>
-                            <Input type="text"
-                              value={editingCardResourceIndex === index ? editingCardData.resource_unit : getResourceTypeLabel(resource.resource_unit)}
+                          <Input
+                            type="text"
+                            label="Unit"
+                            value={editingCardResourceIndex === index ? editingCardData.resource_unit : getResourceTypeLabel(resource.resource_unit)}
+                            disabled={editingCardResourceIndex !== index}
+                            onChange={(value) =>
+                              setEditingCardData({
+                                ...editingCardData,
+                                resource_unit: String(value),
+                              })
+                            }
+                            variant="compact"
+                          />
+
+                          <Input
+                            type="number"
+                            label={`Value ${isDataType(resource.resource_unit) ? "(MB)" : ""}`}
+                            min="0"
+                            step="1"
+                            value={
+                              editingCardResourceIndex === index
+                                ? editingCardData.resource_value === 0
+                                  ? ""
+                                  : editingCardData.resource_value ?? ""
+                                : resource.resource_value === 0
+                                ? ""
+                                : (resource.resource_value ?? "")
+                            }
+                            disabled={editingCardResourceIndex !== index}
+                            onChange={(value) => {
+                              const val =
+                                String(value) === ""
+                                  ? 0
+                                  : parseFloat(String(value));
+                              setEditingCardData({
+                                ...editingCardData,
+                                resource_value: isNaN(val) ? 0 : val,
+                              });
+                            }}
+                            variant="compact"
+                          />
+
+                          {!comboSettings.shared_validity && (
+                            <Input
+                              type="number"
+                              label="Validity (Hours)"
+                              min="1"
+                              step="1"
+                              value={
+                                editingCardResourceIndex === index
+                                  ? editingCardData.validity_hours ?? ""
+                                  : resource.validity_hours ?? ""
+                              }
                               disabled={editingCardResourceIndex !== index}
                               onChange={(value) =>
                                 setEditingCardData({
                                   ...editingCardData,
-                                  resource_unit: String(value),
+                                  validity_hours: String(value)
+                                    ? parseInt(String(value), 10)
+                                    : (0 as number),
                                 })
                               }
-                              className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm ${
-                                editingCardResourceIndex === index ? "" : "bg-gray-50"
-                              }`}
-                              style={{
-                                borderColor: color.border.default,
-                                color: editingCardResourceIndex === index ? "auto" : color.text.secondary,
-                              }}
+                              variant="compact"
                             />
-                          </div>
-
-                          <div>
-                            <label
-                              className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
-                            >
-                              Value {isDataType(resource.resource_unit) && "(MB)"}
-                            </label>
-                            <Input type="number"
-                              min="0"
-                              step="1"
-                              value={
-                                editingCardResourceIndex === index
-                                  ? editingCardData.resource_value === 0
-                                    ? ""
-                                    : editingCardData.resource_value ?? ""
-                                  : resource.resource_value === 0
-                                  ? ""
-                                  : (resource.resource_value ?? "")
-                              }
-                              disabled={editingCardResourceIndex !== index}
-                              onChange={(value) => {
-                                const val =
-                                  String(value) === ""
-                                    ? 0
-                                    : parseFloat(String(value));
-                                setEditingCardData({
-                                  ...editingCardData,
-                                  resource_value: isNaN(val) ? 0 : val,
-                                });
-                              }}
-                              className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm ${
-                                editingCardResourceIndex === index ? "" : "bg-gray-50"
-                              }`}
-                              style={{
-                                borderColor: color.border.default,
-                                color: editingCardResourceIndex === index ? "auto" : color.text.secondary,
-                              }}
-                              placeholder="Enter value"
-                            />
-                          </div>
-
-                          {!comboSettings.shared_validity && (
-                            <div>
-                              <label
-                                className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
-                              >
-                                Validity (Hours)
-                              </label>
-                              <Input type="number"
-                                min="1"
-                                step="1"
-                                value={
-                                  editingCardResourceIndex === index
-                                    ? editingCardData.validity_hours ?? ""
-                                    : resource.validity_hours ?? ""
-                                }
-                                disabled={editingCardResourceIndex !== index}
-                                onChange={(value) =>
-                                  setEditingCardData({
-                                    ...editingCardData,
-                                    validity_hours: String(value)
-                                      ? parseInt(String(value), 10)
-                                      : (0 as number),
-                                  })
-                                }
-                                className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm ${
-                                  editingCardResourceIndex === index ? "" : "bg-gray-50"
-                                }`}
-                                style={{
-                                  borderColor: color.border.default,
-                                  color: editingCardResourceIndex === index ? "auto" : color.text.secondary,
-                                }}
-                                placeholder="e.g., 72"
-                              />
-                            </div>
                           )}
 
                           {!comboSettings.shared_price && (
-                            <div>
-                              <label
-                                className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
-                              >
-                                Price
-                              </label>
-                              <Input type="number"
-                                min="0"
-                                step="0.01"
-                                value={
-                                  editingCardResourceIndex === index
-                                    ? editingCardData.price ?? ""
-                                    : resource.price ?? ""
-                                }
-                                disabled={editingCardResourceIndex !== index}
-                                onChange={(value) =>
-                                  setEditingCardData({
-                                    ...editingCardData,
-                                    price: String(value)
-                                      ? parseFloat(String(value))
-                                      : (0 as number),
-                                  })
-                                }
-                                className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm ${
-                                  editingCardResourceIndex === index ? "" : "bg-gray-50"
-                                }`}
-                                style={{
-                                  borderColor: color.border.default,
-                                  color: editingCardResourceIndex === index ? "auto" : color.text.secondary,
-                                }}
-                                placeholder="Enter price"
-                              />
-                            </div>
+                            <Input
+                              type="number"
+                              label="Price"
+                              min="0"
+                              step="0.01"
+                              value={
+                                editingCardResourceIndex === index
+                                  ? editingCardData.price ?? ""
+                                  : resource.price ?? ""
+                              }
+                              disabled={editingCardResourceIndex !== index}
+                              onChange={(value) =>
+                                setEditingCardData({
+                                  ...editingCardData,
+                                  price: String(value)
+                                    ? parseFloat(String(value))
+                                    : (0 as number),
+                                })
+                              }
+                              variant="compact"
+                            />
                           )}
 
                           {!comboSettings.shared_daid && (
-                            <div>
-                              <label
-                                className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
-                              >
-                                DAID Account
-                              </label>
-                              <Input type="text"
-                                value={
-                                  editingCardResourceIndex === index
-                                    ? editingCardData.daid_account ?? ""
-                                    : resource.daid_account ?? ""
-                                }
-                                disabled={editingCardResourceIndex !== index}
-                                onChange={(value) =>
-                                  setEditingCardData({
-                                    ...editingCardData,
-                                    daid_account: String(value),
-                                  })
-                                }
-                                className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm ${
-                                  editingCardResourceIndex === index ? "" : "bg-gray-50"
-                                }`}
-                                style={{
-                                  borderColor: color.border.default,
-                                  color: editingCardResourceIndex === index ? "auto" : color.text.secondary,
-                                }}
-                                placeholder="Enter DAID"
-                              />
-                            </div>
+                            <Input
+                              type="text"
+                              label="DAID Account"
+                              value={
+                                editingCardResourceIndex === index
+                                  ? editingCardData.daid_account ?? ""
+                                  : resource.daid_account ?? ""
+                              }
+                              disabled={editingCardResourceIndex !== index}
+                              onChange={(value) =>
+                                setEditingCardData({
+                                  ...editingCardData,
+                                  daid_account: String(value),
+                                })
+                              }
+                              variant="compact"
+                            />
                           )}
                         </div>
                       </div>
@@ -1844,9 +1682,7 @@ export default function ProductForm({
             {/* Scope & Unit */}
             <div className="grid gap-5 md:grid-cols-2">
               <div>
-                <label
-                  className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                >
+                <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
                   Scope
                 </label>
                 <HeadlessSelect
@@ -1866,9 +1702,7 @@ export default function ProductForm({
 
               {!isComboType && (
                 <div>
-                  <label
-                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                  >
+                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
                     Unit
                   </label>
                   <HeadlessSelect
@@ -1889,12 +1723,9 @@ export default function ProductForm({
             {!isComboType && (
               <div className="grid gap-5 md:grid-cols-2">
                 <div>
-                  <label
-                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                  >
-                    Value ({currentUnitLabel})
-                  </label>
-                  <Input type="number"
+                  <Input
+                    type="number"
+                    label={`Value (${currentUnitLabel})`}
                     min="0"
                     step="1"
                     value={
@@ -1907,19 +1738,13 @@ export default function ProductForm({
                         String(value) === "" ? 0 : parseFloat(String(value));
                       onInputChange("unit_value", isNaN(val) ? 0 : val);
                     }}
-                    className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
-                    style={{ borderColor: color.border.default }}
-                    placeholder="Enter unit value"
                   />
                 </div>
 
                 <div>
-                  <label
-                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                  >
-                    Validity (Hours)
-                  </label>
-                  <Input type="number"
+                  <Input
+                    type="number"
+                    label="Validity (Hours)"
                     min="1"
                     max="8760"
                     step="1"
@@ -1932,12 +1757,6 @@ export default function ProductForm({
                           : undefined,
                       )
                     }
-                    className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all outline-none ${
-                      focusedField === "validity_hours"
-                        ? "border-blue-500 ring-2 ring-blue-500/20"
-                        : "border-gray-300"
-                    }`}
-                    placeholder="1-8760 hours"
                     onFocus={() => setFocusedField("validity_hours")}
                     onBlur={() => setFocusedField(null)}
                   />

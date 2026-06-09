@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Save } from "lucide-react";
 import { tw, color, button, getButtonStyles } from "../../../../shared/utils/utils";
 import Input from "../../../../shared/components/ui/Input";
+import Textarea from "../../../../shared/components/ui/Textarea";
 import Checkbox from "../../../../shared/components/ui/Checkbox";
 import { WhatsAppGatewayConfig, CreateWhatsAppGatewayConfigRequest } from "../../types/whatsappGatewayConfig";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
@@ -99,33 +100,26 @@ export default function WhatsAppGatewayForm({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Configuration Name *
-            </label>
             <Input
+              label="Configuration Name *"
               placeholder="e.g., Twilio WhatsApp Business"
               value={formData.name}
               onChange={(value) => setFormData((prev) => ({ ...prev, name: value }))}
-              variant="medium"
+
               disabled={isLoading}
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, description: e.target.value }))
-              }
-              placeholder="Add notes about this configuration..."
-              rows={3}
-              className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
-              disabled={isLoading}
-            />
-          </div>
+          <Textarea
+            label="Description"
+            value={formData.description}
+            onChange={(value) =>
+              setFormData((prev) => ({ ...prev, description: value }))
+            }
+            placeholder="Add notes about this configuration..."
+            rows={3}
+            disabled={isLoading}
+          />
         </div>
       </div>
 
@@ -134,100 +128,86 @@ export default function WhatsAppGatewayForm({
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                API Key *
-              </label>
               <Input
+                label="API Key *"
                 type="password"
                 placeholder="Enter API key"
                 value={formData.credentials.api_key}
                 onChange={(value) => updateCredential("api_key", value)}
-                variant="medium"
+
                 disabled={isLoading}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                API Secret
-              </label>
               <Input
+                label="API Secret"
                 type="password"
                 placeholder="Enter API secret (if required)"
                 value={formData.credentials.api_secret}
                 onChange={(value) => updateCredential("api_secret", value)}
-                variant="medium"
+
                 disabled={isLoading}
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Business Account ID *
-            </label>
             <Input
+              label="Business Account ID *"
               type="text"
               placeholder="e.g., 102334567890123456"
               value={formData.credentials.business_account_id}
               onChange={(value) => updateCredential("business_account_id", value)}
-              variant="medium"
+
               disabled={isLoading}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Phone Number ID *
-            </label>
             <Input
+              label="Phone Number ID *"
               type="text"
               placeholder="e.g., 1234567890123456"
               value={formData.credentials.phone_number_id}
               onChange={(value) => updateCredential("phone_number_id", value)}
-              variant="medium"
+
               disabled={isLoading}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Display Name
-            </label>
             <Input
+              label="Display Name"
               type="text"
               placeholder="e.g., Company Support"
               value={formData.credentials.display_name}
               onChange={(value) => updateCredential("display_name", value)}
-              variant="medium"
+
               disabled={isLoading}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Webhook URL
-            </label>
             <Input
+              label="Webhook URL"
               type="url"
               placeholder="e.g., https://company.com/webhooks/whatsapp"
               value={formData.credentials.webhook_url}
               onChange={(value) => updateCredential("webhook_url", value)}
-              variant="medium"
+
               disabled={isLoading}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Webhook Verify Token
-            </label>
             <Input
+              label="Webhook Verify Token"
               type="password"
               placeholder="Webhook verification token"
               value={formData.credentials.webhook_verify_token}
               onChange={(value) => updateCredential("webhook_verify_token", value)}
-              variant="medium"
+
               disabled={isLoading}
             />
           </div>

@@ -1,4 +1,5 @@
 import Input from '../../../shared/components/ui/Input';
+import Textarea from "../../../shared/components/ui/Textarea";
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import MarkdownIt from 'markdown-it';
@@ -421,10 +422,10 @@ function EditDocsPageContent() {
             </div>
           )}
 
-          <textarea
+          <Textarea
             ref={textareaRef}
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={setContent}
             placeholder="# Write your markdown here..."
             disabled={isSaving}
             className={styles.contentTextarea}

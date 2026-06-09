@@ -5,6 +5,7 @@ import { NOTIFICATION_CHANNEL_OPTIONS, SMS_GATEWAY_OPTIONS } from "../constants/
 import { color, tw, components } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 
 interface SMSRouteFormProps {
@@ -138,16 +139,15 @@ export default function SMSRouteForm({
         <div className="space-y-6">
           {/* Row 1: Name */}
           <div>
-            <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-              Route Name *
-            </label>
             <Input
+              label="Route Name"
               placeholder="e.g., Primary SMS Gateway"
               value={formData.name}
               onChange={(value) => handleInputChange({ target: { name: "name", value } } as any)}
               hasError={!!errors.name}
-              variant="medium"
+             
               disabled={isLoading}
+              required
             />
             {errors.name && (
               <p className="text-red-500 text-sm mt-1">{errors.name}</p>
@@ -219,17 +219,12 @@ export default function SMSRouteForm({
 
           {/* Row 4: Description */}
           <div>
-            <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-              Description
-            </label>
-            <textarea
-              name="description"
+            <Textarea
+              label="Description"
               value={formData.description || ""}
-              onChange={handleInputChange}
+              onChange={(value) => setFormData((prev) => ({ ...prev, description: value }))}
               placeholder="Add notes about this route..."
               rows={4}
-              className={`w-full px-4 py-2 border ${tw.rounded} text-sm`}
-              style={{ borderColor: color.border.default }}
               disabled={isLoading}
             />
           </div>

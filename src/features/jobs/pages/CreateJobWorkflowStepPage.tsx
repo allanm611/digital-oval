@@ -6,6 +6,7 @@ import { jobWorkflowStepService } from "../services/jobWorkflowStepService";
 import { scheduledJobService } from "../services/scheduledJobService";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import {
   CreateJobWorkflowStepPayload,
   UpdateJobWorkflowStepPayload,
@@ -577,21 +578,15 @@ export default function CreateJobWorkflowStepPage() {
                     )}
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      {t.jobs.jobWorkflow.stepDescription} *
-                    </label>
-                    <textarea
+                    <Textarea
+                      label={`${t.jobs.jobWorkflow.stepDescription} *`}
                       value={step.step_description || ""}
-                      onChange={(e) =>
-                        updateBatchStep(idx, "step_description", e.target.value)
+                      onChange={(value) =>
+                        updateBatchStep(idx, "step_description", value)
                       }
-                      className={`w-full ${tw.rounded} border ${
-                        errors[`batch_step_${idx}_description`]
-                          ? "border-red-300"
-                          : "border-gray-300"
-                      } px-2 py-1.5 text-sm`}
                       rows={2}
                       placeholder={t.jobs.jobWorkflow.enterStepDescription}
+                      hasError={!!errors[`batch_step_${idx}_description`]}
                     />
                     {errors[`batch_step_${idx}_description`] && (
                       <p className="mt-1 text-xs text-red-600">
@@ -635,21 +630,16 @@ export default function CreateJobWorkflowStepPage() {
                     />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      {t.jobs.jobWorkflow.stepAction} *
-                    </label>
-                    <textarea
+                    <Textarea
+                      label={`${t.jobs.jobWorkflow.stepAction} *`}
                       value={step.step_action || ""}
-                      onChange={(e) =>
-                        updateBatchStep(idx, "step_action", e.target.value)
+                      onChange={(value) =>
+                        updateBatchStep(idx, "step_action", value)
                       }
                       rows={2}
-                      className={`w-full ${tw.rounded} border ${
-                        errors[`batch_step_${idx}_action`]
-                          ? "border-red-300"
-                          : "border-gray-300"
-                      } px-2 py-1.5 text-sm font-mono`}
+                      className="font-mono"
                       placeholder={t.jobs.jobWorkflow.enterStepAction}
+                      hasError={!!errors[`batch_step_${idx}_action`]}
                     />
                     {errors[`batch_step_${idx}_action`] && (
                       <p className="mt-1 text-xs text-red-600">
@@ -709,10 +699,8 @@ export default function CreateJobWorkflowStepPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {t.jobs.jobWorkflow.stepName} <span className="text-red-500">*</span>
-                    </label>
                     <Input
+                      label={`${t.jobs.jobWorkflow.stepName}*`}
                       type="text"
                       value={formData.step_name}
                       onChange={(value) =>
@@ -720,7 +708,6 @@ export default function CreateJobWorkflowStepPage() {
                       }
                       placeholder={t.jobs.jobWorkflow.enterStepName}
                       hasError={!!errors.step_name}
-                      variant="medium"
                     />
                     {errors.step_name && (
                       <p className="mt-1 text-sm text-red-600">
@@ -730,10 +717,8 @@ export default function CreateJobWorkflowStepPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {t.jobs.jobWorkflow.stepCode} <span className="text-red-500">*</span>
-                    </label>
                     <Input
+                      label={`${t.jobs.jobWorkflow.stepCode}*`}
                       type="text"
                       value={formData.step_code}
                       onChange={(value) =>
@@ -744,7 +729,6 @@ export default function CreateJobWorkflowStepPage() {
                       }
                       placeholder={t.jobs.jobWorkflow.enterStepCode}
                       hasError={!!errors.step_code}
-                      variant="medium"
                     />
                     {errors.step_code && (
                       <p className="mt-1 text-sm text-red-600">
@@ -754,10 +738,8 @@ export default function CreateJobWorkflowStepPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {t.jobs.jobWorkflow.stepOrder} <span className="text-red-500">*</span>
-                    </label>
                     <Input
+                      label={`${t.jobs.jobWorkflow.stepOrder}*`}
                       type="number"
                       value={String(formData.step_order)}
                       onChange={(value) =>
@@ -768,7 +750,6 @@ export default function CreateJobWorkflowStepPage() {
                       }
                       placeholder="1"
                       hasError={!!errors.step_order}
-                      variant="medium"
                     />
                     {errors.step_order && (
                       <p className="mt-1 text-sm text-red-600">
@@ -796,23 +777,17 @@ export default function CreateJobWorkflowStepPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {t.jobs.jobWorkflow.stepDescription} <span className="text-red-500">*</span>
-                    </label>
-                    <textarea
+                    <Textarea
+                      label={`${t.jobs.jobWorkflow.stepDescription} *`}
                       value={formData.step_description ?? ""}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setFormData({
                           ...formData,
-                          step_description: e.target.value,
+                          step_description: value,
                         })
                       }
                       rows={3}
-                      className={`w-full ${tw.rounded} border ${
-                        errors.step_description
-                          ? "border-red-300"
-                          : "border-gray-300"
-                      } px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
+                      hasError={!!errors.step_description}
                       placeholder={t.jobs.jobWorkflow.enterStepDescription}
                     />
                     {errors.step_description && (
@@ -833,24 +808,19 @@ export default function CreateJobWorkflowStepPage() {
                 </h2>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {t.jobs.jobWorkflow.stepAction} <span className="text-red-500">*</span>
-                    </label>
-                    <textarea
+                    <Textarea
+                      label={`${t.jobs.jobWorkflow.stepAction} *`}
                       value={formData.step_action}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setFormData({
                           ...formData,
-                          step_action: e.target.value,
+                          step_action: value,
                         })
                       }
                       rows={4}
-                      className={`w-full ${tw.rounded} border ${
-                        errors.step_action
-                          ? "border-red-300"
-                          : "border-gray-300"
-                      } px-3 py-2 text-sm font-mono focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
+                      className="font-mono"
                       placeholder={t.jobs.jobWorkflow.enterStepAction}
+                      hasError={!!errors.step_action}
                     />
                     {errors.step_action && (
                       <p className="mt-1 text-sm text-red-600">
@@ -861,11 +831,8 @@ export default function CreateJobWorkflowStepPage() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        {t.jobs.jobWorkflow.timeoutSeconds}{" "}
-                        <span className="text-red-500">*</span>
-                      </label>
                       <Input
+                        label={`${t.jobs.jobWorkflow.timeoutSeconds}*`}
                         type="number"
                         min="1"
                         max="86400"
@@ -876,11 +843,7 @@ export default function CreateJobWorkflowStepPage() {
                             timeout_seconds: Number(String(value)) || 300,
                           })
                         }
-                        className={`w-full ${tw.rounded} border ${
-                          errors.timeout_seconds
-                            ? "border-red-300"
-                            : "border-gray-300"
-                        } px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
+                        hasError={!!errors.timeout_seconds}
                       />
                       {errors.timeout_seconds && (
                         <p className="mt-1 text-sm text-red-600">
@@ -913,10 +876,8 @@ export default function CreateJobWorkflowStepPage() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        {t.jobs.jobWorkflow.retryCount}
-                      </label>
                       <Input
+                        label={t.jobs.jobWorkflow.retryCount}
                         type="number"
                         min="0"
                         max="10"
@@ -927,11 +888,7 @@ export default function CreateJobWorkflowStepPage() {
                             retry_count: Number(String(value)) || 0,
                           })
                         }
-                        className={`w-full ${tw.rounded} border ${
-                          errors.retry_count
-                            ? "border-red-300"
-                            : "border-gray-300"
-                        } px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
+                        hasError={!!errors.retry_count}
                       />
                       {errors.retry_count && (
                         <p className="mt-1 text-sm text-red-600">
@@ -941,10 +898,8 @@ export default function CreateJobWorkflowStepPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        {t.jobs.jobWorkflow.retryDelaySeconds}
-                      </label>
                       <Input
+                        label={t.jobs.jobWorkflow.retryDelaySeconds}
                         type="number"
                         min="0"
                         value={formData.retry_delay_seconds}
@@ -954,7 +909,6 @@ export default function CreateJobWorkflowStepPage() {
                             retry_delay_seconds: Number(String(value)) || 0,
                           })
                         }
-                        className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
                       />
                     </div>
                   </div>
@@ -1000,10 +954,8 @@ export default function CreateJobWorkflowStepPage() {
 
                   {formData.is_parallel && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        {t.jobs.jobWorkflow.parallelGroupId}
-                      </label>
                       <Input
+                        label={t.jobs.jobWorkflow.parallelGroupId}
                         type="number"
                         min="1"
                         value={formData.parallel_group_id || ""}
@@ -1015,7 +967,6 @@ export default function CreateJobWorkflowStepPage() {
                               : null,
                           })
                         }
-                        className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
                         placeholder={t.jobs.jobWorkflow.enterParallelGroupId}
                       />
                     </div>
@@ -1088,82 +1039,66 @@ export default function CreateJobWorkflowStepPage() {
                   {t.jobs.jobWorkflow.validation}
                 </h2>
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {t.jobs.jobWorkflow.preValidationQuery}
-                    </label>
-                    <textarea
-                      value={formData.pre_validation_query || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          pre_validation_query: e.target.value || null,
-                        })
-                      }
-                      rows={3}
-                      className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm font-mono focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
-                      placeholder={t.jobs.jobWorkflow.sqlBeforeExecution}
-                    />
-                  </div>
+                  <Textarea
+                    label={t.jobs.jobWorkflow.preValidationQuery}
+                    value={formData.pre_validation_query || ""}
+                    onChange={(value) =>
+                      setFormData({
+                        ...formData,
+                        pre_validation_query: value || null,
+                      })
+                    }
+                    rows={3}
+                    className="font-mono"
+                    placeholder={t.jobs.jobWorkflow.sqlBeforeExecution}
+                  />
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {t.jobs.jobWorkflow.postValidationQuery}
-                    </label>
-                    <textarea
-                      value={formData.post_validation_query || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          post_validation_query: e.target.value || null,
-                        })
-                      }
-                      rows={3}
-                      className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm font-mono focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
-                      placeholder={t.jobs.jobWorkflow.sqlAfterExecution}
-                    />
-                  </div>
+                  <Textarea
+                    label={t.jobs.jobWorkflow.postValidationQuery}
+                    value={formData.post_validation_query || ""}
+                    onChange={(value) =>
+                      setFormData({
+                        ...formData,
+                        post_validation_query: value || null,
+                      })
+                    }
+                    rows={3}
+                    className="font-mono"
+                    placeholder={t.jobs.jobWorkflow.sqlAfterExecution}
+                  />
 
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        {t.jobs.jobWorkflow.minExpectedRows}
-                      </label>
-                      <Input
-                        type="number"
-                        min="0"
-                        value={formData.expected_row_count_min || ""}
-                        onChange={(value) =>
-                          setFormData({
-                            ...formData,
-                            expected_row_count_min: String(value)
-                              ? Number(String(value))
-                              : null,
-                          })
-                        }
-                        className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
-                      />
-                    </div>
+                    <Input
+                      label={t.jobs.jobWorkflow.minExpectedRows}
+                      type="number"
+                      min="0"
+                      value={formData.expected_row_count_min || ""}
+                      onChange={(value) =>
+                        setFormData({
+                          ...formData,
+                          expected_row_count_min: String(value)
+                            ? Number(String(value))
+                            : null,
+                        })
+                      }
+                      className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
+                    />
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        {t.jobs.jobWorkflow.maxExpectedRows}
-                      </label>
-                      <Input
-                        type="number"
-                        min="0"
-                        value={formData.expected_row_count_max || ""}
-                        onChange={(value) =>
-                          setFormData({
-                            ...formData,
-                            expected_row_count_max: String(value)
-                              ? Number(String(value))
-                              : null,
-                          })
-                        }
-                        className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
-                      />
-                    </div>
+                    <Input
+                      label={t.jobs.jobWorkflow.maxExpectedRows}
+                      type="number"
+                      min="0"
+                      value={formData.expected_row_count_max || ""}
+                      onChange={(value) =>
+                        setFormData({
+                          ...formData,
+                          expected_row_count_max: String(value)
+                            ? Number(String(value))
+                            : null,
+                        })
+                      }
+                      className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
+                    />
                   </div>
                 </div>
               </div>

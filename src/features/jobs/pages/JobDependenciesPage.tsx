@@ -16,6 +16,7 @@ import {
   MoreHorizontal,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
+import Textarea from "../../../shared/components/ui/Textarea";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -304,34 +305,28 @@ function JobDependencyModal({
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Max Wait Minutes (0-1440, optional)
-            </label>
-            <Input type="number"
-              value={maxWaitMinutes}
-              onChange={(value) => setMaxWaitMinutes(String(value))}
-              className={`mt-1 w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
-              placeholder="e.g. 60 (leave empty for no limit)"
-              min="0"
-              max="1440"
-            />
-          </div>
+          <Input
+            label="Max Wait Minutes (0-1440, optional)"
+            type="number"
+            value={maxWaitMinutes}
+            onChange={(value) => setMaxWaitMinutes(String(value))}
+            className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
+            placeholder="e.g. 60 (leave empty for no limit)"
+            min="0"
+            max="1440"
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Lookback Days (0-30)
-            </label>
-            <Input type="number"
-              value={lookbackDays}
-              onChange={(value) => setLookbackDays(String(value))}
-              className={`mt-1 w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
-              placeholder="0"
-              min="0"
-              max="30"
-              required
-            />
-          </div>
+          <Input
+            label="Lookback Days (0-30)"
+            type="number"
+            value={lookbackDays}
+            onChange={(value) => setLookbackDays(String(value))}
+            className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
+            placeholder="0"
+            min="0"
+            max="30"
+            required
+          />
 
           <div
             className="flex items-center gap-2 cursor-pointer"
@@ -4236,55 +4231,46 @@ export default function JobDependenciesPage() {
                 <div className="flex-1 overflow-y-auto p-4">
                   <div className="space-y-4">
                     {/* ID Filter */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Dependency ID
-                      </label>
-                      <Input type="number"
-                        value={filterId || ""}
-                        onChange={(value) =>
-                          setFilterId(
-                            String(value) ? Number(String(value)) : "",
-                          )
-                        }
-                        placeholder="All IDs"
-                        className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
-                      />
-                    </div>
+                    <Input
+                      label="Dependency ID"
+                      type="number"
+                      value={filterId || ""}
+                      onChange={(value) =>
+                        setFilterId(
+                          String(value) ? Number(String(value)) : "",
+                        )
+                      }
+                      placeholder="All IDs"
+                      className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
+                    />
 
                     {/* Job ID Filter */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Job ID
-                      </label>
-                      <Input type="number"
-                        value={filterJobId || ""}
-                        onChange={(value) =>
-                          setFilterJobId(
-                            String(value) ? Number(String(value)) : "",
-                          )
-                        }
-                        placeholder="All Job IDs"
-                        className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
-                      />
-                    </div>
+                    <Input
+                      label="Job ID"
+                      type="number"
+                      value={filterJobId || ""}
+                      onChange={(value) =>
+                        setFilterJobId(
+                          String(value) ? Number(String(value)) : "",
+                        )
+                      }
+                      placeholder="All Job IDs"
+                      className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
+                    />
 
                     {/* Depends On Job ID Filter */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Depends On Job ID
-                      </label>
-                      <Input type="number"
-                        value={filterDependsOnJobId || ""}
-                        onChange={(value) =>
-                          setFilterDependsOnJobId(
-                            String(value) ? Number(String(value)) : "",
-                          )
-                        }
-                        placeholder="All Depends On Job IDs"
-                        className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
-                      />
-                    </div>
+                    <Input
+                      label="Depends On Job ID"
+                      type="number"
+                      value={filterDependsOnJobId || ""}
+                      onChange={(value) =>
+                        setFilterDependsOnJobId(
+                          String(value) ? Number(String(value)) : "",
+                        )
+                      }
+                      placeholder="All Depends On Job IDs"
+                      className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
+                    />
 
                     {/* Dependency Type Filter */}
                     <div>
@@ -4370,80 +4356,68 @@ export default function JobDependenciesPage() {
                     </div>
 
                     {/* Lookback Days Min Filter */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Lookback Days (Min)
-                      </label>
-                      <Input type="number"
-                        value={filterLookbackDaysMin || ""}
-                        onChange={(value) =>
-                          setFilterLookbackDaysMin(
-                            String(value) ? Number(String(value)) : "",
-                          )
-                        }
-                        placeholder="Min"
-                        min="0"
-                        max="30"
-                        className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
-                      />
-                    </div>
+                    <Input
+                      label="Lookback Days (Min)"
+                      type="number"
+                      value={filterLookbackDaysMin || ""}
+                      onChange={(value) =>
+                        setFilterLookbackDaysMin(
+                          String(value) ? Number(String(value)) : "",
+                        )
+                      }
+                      placeholder="Min"
+                      min="0"
+                      max="30"
+                      className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
+                    />
 
                     {/* Lookback Days Max Filter */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Lookback Days (Max)
-                      </label>
-                      <Input type="number"
-                        value={filterLookbackDaysMax || ""}
-                        onChange={(value) =>
-                          setFilterLookbackDaysMax(
-                            String(value) ? Number(String(value)) : "",
-                          )
-                        }
-                        placeholder="Max"
-                        min="0"
-                        max="30"
-                        className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
-                      />
-                    </div>
+                    <Input
+                      label="Lookback Days (Max)"
+                      type="number"
+                      value={filterLookbackDaysMax || ""}
+                      onChange={(value) =>
+                        setFilterLookbackDaysMax(
+                          String(value) ? Number(String(value)) : "",
+                        )
+                      }
+                      placeholder="Max"
+                      min="0"
+                      max="30"
+                      className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
+                    />
 
                     {/* Max Wait Minutes Min Filter */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Max Wait Minutes (Min)
-                      </label>
-                      <Input type="number"
-                        value={filterMaxWaitMinutesMin || ""}
-                        onChange={(value) =>
-                          setFilterMaxWaitMinutesMin(
-                            String(value) ? Number(String(value)) : "",
-                          )
-                        }
-                        placeholder="Min"
-                        min="0"
-                        max="1440"
-                        className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
-                      />
-                    </div>
+                    <Input
+                      label="Max Wait Minutes (Min)"
+                      type="number"
+                      value={filterMaxWaitMinutesMin || ""}
+                      onChange={(value) =>
+                        setFilterMaxWaitMinutesMin(
+                          String(value) ? Number(String(value)) : "",
+                        )
+                      }
+                      placeholder="Min"
+                      min="0"
+                      max="1440"
+                      className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
+                    />
 
                     {/* Max Wait Minutes Max Filter */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Max Wait Minutes (Max)
-                      </label>
-                      <Input type="number"
-                        value={filterMaxWaitMinutesMax || ""}
-                        onChange={(value) =>
-                          setFilterMaxWaitMinutesMax(
-                            String(value) ? Number(String(value)) : "",
-                          )
-                        }
-                        placeholder="Max"
-                        min="0"
-                        max="1440"
-                        className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
-                      />
-                    </div>
+                    <Input
+                      label="Max Wait Minutes (Max)"
+                      type="number"
+                      value={filterMaxWaitMinutesMax || ""}
+                      onChange={(value) =>
+                        setFilterMaxWaitMinutesMax(
+                          String(value) ? Number(String(value)) : "",
+                        )
+                      }
+                      placeholder="Max"
+                      min="0"
+                      max="1440"
+                      className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
+                    />
                   </div>
                 </div>
 

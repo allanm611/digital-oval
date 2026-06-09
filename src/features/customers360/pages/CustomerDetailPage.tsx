@@ -1232,7 +1232,7 @@ export default function CustomerDetailPage() {
                       onChange={(value) => setEventSearchTerm(String(value))}
                       placeholder="Search events..."
                       className="pl-10 pr-4"
-                      variant="medium"
+                     
                     />
                   </div>
                   <HeadlessSelect
@@ -1269,7 +1269,7 @@ export default function CustomerDetailPage() {
                       onChange={(value) => setEventDateFrom(String(value))}
                       placeholder="From Date"
                       className="pl-10 pr-10"
-                      variant="medium"
+                     
                       onClick={(e) =>
                         (e.currentTarget as HTMLInputElement).showPicker()
                       }
@@ -1291,7 +1291,7 @@ export default function CustomerDetailPage() {
                       onChange={(value) => setEventDateTo(String(value))}
                       placeholder="To Date"
                       className="pl-10 pr-10"
-                      variant="medium"
+                     
                       onClick={(e) =>
                         (e.currentTarget as HTMLInputElement).showPicker()
                       }

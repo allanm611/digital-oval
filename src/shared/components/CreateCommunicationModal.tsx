@@ -1102,7 +1102,7 @@ export default function CreateCommunicationModal({
                               e.currentTarget.selectionStart || 0,
                             );
                           }}
-                          variant="medium"
+                         
                         />
                         {!messageTitle.trim() && error?.includes("Subject") && (
                           <p className="text-xs text-red-600 mt-1">Subject line is required for email</p>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import Input from "../../../../shared/components/ui/Input";
+import Textarea from "../../../../shared/components/ui/Textarea";
 import { ChevronDown, Search, Settings, X, Plus } from "lucide-react";
 import MultiCategorySelector from "../../../../shared/components/MultiCategorySelector";
 import { CreateCampaignRequest } from "../../types/campaign";
@@ -488,10 +489,9 @@ export default function CampaignDefinitionStep({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 px-0">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {tLanguage.campaigns.campaignDefinition.campaignName}
-            </label>
-            <Input type="text"
+            <Input
+              label={tLanguage.campaigns.campaignDefinition.campaignName}
+              type="text"
               value={formData.name}
               onChange={(value) => {
                 setFormData({ ...formData, name: String(value) });
@@ -499,13 +499,7 @@ export default function CampaignDefinitionStep({
                   clearValidationErrors();
                 }
               }}
-              className={`w-full px-3 py-2 border ${
-                tw.rounded
-              } focus:ring-1 text-sm ${
-                validationErrors.name
-                  ? "border-red-300 focus:ring-red-500 focus:border-red-500"
-                  : "border-gray-300 focus:ring-[#588157] focus:border-[#588157]"
-              }`}
+              hasError={!!validationErrors.name}
               placeholder={tLanguage.campaigns.campaignDefinition.enterCampaignName}
               required
             />
@@ -1379,22 +1373,16 @@ export default function CampaignDefinitionStep({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            {tLanguage.campaigns.campaignDefinition.campaignDescription} *
-          </label>
-          <textarea
+          <Textarea
+            label={`${tLanguage.campaigns.campaignDefinition.campaignDescription} *`}
             value={formData.description}
-            onChange={(e) => {
-              setFormData({ ...formData, description: e.target.value });
+            onChange={(value) => {
+              setFormData({ ...formData, description: value });
               if (validationErrors?.description && clearValidationErrors) {
                 clearValidationErrors();
               }
             }}
-            className={`w-full px-3 py-2 border ${tw.rounded} focus:ring-1 text-sm ${
-              validationErrors?.description
-                ? "border-red-300 focus:ring-red-500 focus:border-red-500"
-                : "border-gray-300 focus:ring-[#588157] focus:border-[#588157]"
-            }`}
+            hasError={!!validationErrors?.description}
             placeholder="Describe your campaign goals and objectives"
             rows={3}
           />
@@ -1407,14 +1395,13 @@ export default function CampaignDefinitionStep({
 
         {/* Budget Allocation */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            {t.campaigns.budgetAllocated}
-          </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+            <span className="absolute left-3 top-8 -translate-y-1/2 text-gray-500 text-sm">
               {getCurrencySymbol()}
             </span>
-            <Input type="number"
+            <Input
+              label={t.campaigns.budgetAllocated}
+              type="number"
               min="0"
               step="0.01"
               value={formData.budget_allocated || ""}
@@ -1451,10 +1438,8 @@ export default function CampaignDefinitionStep({
         {/* Campaign Schedule */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {tLanguage.campaigns.campaignDefinition.startDate}
-            </label>
             <Input
+              label={tLanguage.campaigns.campaignDefinition.startDate}
               type="datetime-local"
               value={
                 formData.start_date
@@ -1471,7 +1456,6 @@ export default function CampaignDefinitionStep({
                 // Trigger date picker on click
                 (e.target as HTMLInputElement).showPicker?.();
               }}
-              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-1 focus:ring-[#588157] focus:border-[#588157] text-sm cursor-pointer`}
             />
             <p className="text-xs text-gray-500 mt-1">
               When should this campaign start?
@@ -1479,10 +1463,8 @@ export default function CampaignDefinitionStep({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {tLanguage.campaigns.campaignDefinition.endDate}
-            </label>
             <Input
+              label={tLanguage.campaigns.campaignDefinition.endDate}
               type="datetime-local"
               value={
                 formData.end_date
@@ -1502,13 +1484,7 @@ export default function CampaignDefinitionStep({
                 // Trigger date picker on click
                 (e.target as HTMLInputElement).showPicker?.();
               }}
-              className={`w-full px-3 py-2 border ${
-                tw.rounded
-              } focus:ring-1 text-sm cursor-pointer ${
-                validationErrors.end_date
-                  ? "border-red-300 focus:ring-red-500 focus:border-red-500"
-                  : "border-gray-300 focus:ring-[#588157] focus:border-[#588157]"
-              }`}
+              hasError={!!validationErrors.end_date}
               min={
                 formData.start_date
                   ? new Date(formData.start_date).toISOString().slice(0, 16)

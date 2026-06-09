@@ -1405,10 +1405,9 @@ function ControlGroupConfigModal({
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {t.campaigns.audienceConfiguration.percentage}
-                    </label>
-                    <Input type="number"
+                    <Input
+                      label={t.campaigns.audienceConfiguration.percentage}
+                      type="number"
                       min="0.1"
                       max="50"
                       step="0.1"
@@ -1420,7 +1419,6 @@ function ControlGroupConfigModal({
                           percentage: Number(String(value)),
                         })
                       }
-                      className={`w-24 px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-transparent`}
                     />
                     <p className="text-xs text-gray-500 mt-1">
                       {calculateControlGroupSize().toLocaleString()}{" "}
@@ -1503,10 +1501,9 @@ function ControlGroupConfigModal({
                 </h4>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t.campaigns.audienceConfiguration.numberOfCustomers}
-                  </label>
-                  <Input type="number"
+                  <Input
+                    label={t.campaigns.audienceConfiguration.numberOfCustomers}
+                    type="number"
                     min="1"
                     max={segment.customer_count || 0}
                     placeholder="10000"
@@ -1517,7 +1514,6 @@ function ControlGroupConfigModal({
                         fixed_number: Number(String(value)),
                       })
                     }
-                    className={`w-32 px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-transparent`}
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     {(

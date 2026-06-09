@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
-import { tw, zIndex } from "../../../shared/utils/utils";
+import { tw, zIndex, color } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
 
 interface PolicyNameModalProps {
@@ -73,13 +73,12 @@ export default function PolicyNameModal({
         {/* Content */}
         <form onSubmit={handleSubmit} className="p-6">
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Policy Name
-            </label>
             <Input
+              label="Policy Name"
               placeholder="Enter a name for the new policy"
               value={policyName}
               onChange={setPolicyName}
+              required
             />
           </div>
 

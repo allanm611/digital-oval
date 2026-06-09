@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Input from '../../../../shared/components/ui/Input';
+import Textarea from "../../../../shared/components/ui/Textarea";
 import { ChevronDown, Search } from "lucide-react";
 import StepFlowLayout from "../../../../shared/components/ui/StepFlowLayout";
 import { CreateOfferRequest } from "../../../types/offer";
@@ -55,21 +56,16 @@ export default function OfferDefinitionStep({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Offer Name */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Offer Name *
-            </label>
-            <Input
-              type="text"
-              value={formData.name || ""}
-              onChange={(value) =>
-                setFormData({ ...formData, name: String(value) })
-              }
-              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-1 focus:ring-[#588157] focus:border-[#588157] text-sm`}
-              placeholder="Enter offer name"
-              required
-            />
-          </div>
+          <Input
+            label="Offer Name *"
+            type="text"
+            value={formData.name || ""}
+            onChange={(value) =>
+              setFormData({ ...formData, name: String(value) })
+            }
+            placeholder="Enter offer name"
+            required
+          />
 
           {/* Offer Type */}
           <div className="relative">
@@ -150,21 +146,16 @@ export default function OfferDefinitionStep({
         </div>
 
         {/* Offer Description */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Offer Description *
-          </label>
-          <textarea
-            value={formData.description || ""}
-            onChange={(e) =>
-              setFormData({ ...formData, description: e.target.value })
-            }
-            className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-1 focus:ring-[#588157] focus:border-[#588157] text-sm`}
-            placeholder="Describe your offer details and benefits"
-            rows={3}
-            required
-          />
-        </div>
+        <Textarea
+          label="Offer Description *"
+          value={formData.description || ""}
+          onChange={(value) =>
+            setFormData({ ...formData, description: value })
+          }
+          placeholder="Describe your offer details and benefits"
+          rows={3}
+          required
+        />
       </div>
     </StepFlowLayout>
   );

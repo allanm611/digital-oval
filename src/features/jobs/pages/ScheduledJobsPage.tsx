@@ -18,6 +18,7 @@ import {
   BarChart3,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
+import Textarea from "../../../shared/components/ui/Textarea";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { useNavigate, useLocation } from "react-router-dom";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -1070,7 +1071,7 @@ export default function ScheduledJobsPage() {
                           )
                         }
                         placeholder="All Owners"
-                        variant="medium"
+                       
                       />
                     </div>
 
@@ -1084,7 +1085,7 @@ export default function ScheduledJobsPage() {
                         value={tagFilter}
                         onChange={(value) => setTagFilter(String(value))}
                         placeholder="All Tags"
-                        variant="medium"
+                       
                       />
                     </div>
 
@@ -1125,7 +1126,7 @@ export default function ScheduledJobsPage() {
                           )
                         }
                         placeholder="All Profiles"
-                        variant="medium"
+                       
                       />
                     </div>
 
@@ -1143,7 +1144,7 @@ export default function ScheduledJobsPage() {
                           )
                         }
                         placeholder="All Tenants"
-                        variant="medium"
+                       
                       />
                     </div>
 
@@ -1157,7 +1158,7 @@ export default function ScheduledJobsPage() {
                         value={jobCodeFilter}
                         onChange={(value) => setJobCodeFilter(String(value))}
                         placeholder="Enter job code"
-                        variant="medium"
+                       
                       />
                     </div>
 

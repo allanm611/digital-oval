@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Save } from "lucide-react";
 import { tw, color, button, getButtonStyles } from "../../../../shared/utils/utils";
 import Input from "../../../../shared/components/ui/Input";
+import Textarea from "../../../../shared/components/ui/Textarea";
 import Checkbox from "../../../../shared/components/ui/Checkbox";
 import { PushGatewayConfig, CreatePushGatewayConfigRequest } from "../../types/pushGatewayConfig";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
@@ -105,33 +106,26 @@ export default function PushGatewayForm({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Configuration Name *
-            </label>
             <Input
+              label="Configuration Name *"
               placeholder="e.g., Firebase Production"
               value={formData.name}
               onChange={(value) => setFormData((prev) => ({ ...prev, name: value }))}
-              variant="medium"
+
               disabled={isLoading}
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, description: e.target.value }))
-              }
-              placeholder="Add notes about this configuration..."
-              rows={3}
-              className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
-              disabled={isLoading}
-            />
-          </div>
+          <Textarea
+            label="Description"
+            value={formData.description}
+            onChange={(value) =>
+              setFormData((prev) => ({ ...prev, description: value }))
+            }
+            placeholder="Add notes about this configuration..."
+            rows={3}
+            disabled={isLoading}
+          />
         </div>
       </div>
 
@@ -141,72 +135,60 @@ export default function PushGatewayForm({
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Server Key *
-                </label>
                 <Input
+                  label="Server Key *"
                   type="password"
                   placeholder="Enter Firebase server key"
                   value={formData.credentials.server_key}
                   onChange={(value) => updateCredential("server_key", value)}
-                  variant="medium"
+
                   disabled={isLoading}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Sender ID *
-                </label>
                 <Input
+                  label="Sender ID *"
                   type="text"
                   placeholder="e.g., 123456789012"
                   value={formData.credentials.sender_id}
                   onChange={(value) => updateCredential("sender_id", value)}
-                  variant="medium"
+
                   disabled={isLoading}
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Project ID *
-              </label>
               <Input
+                label="Project ID *"
                 type="text"
                 placeholder="e.g., company-firebase-project"
                 value={formData.credentials.project_id}
                 onChange={(value) => updateCredential("project_id", value)}
-                variant="medium"
+
                 disabled={isLoading}
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Private Key *
-              </label>
-              <textarea
-                value={formData.credentials.private_key}
-                onChange={(e) => updateCredential("private_key", e.target.value)}
-                placeholder="Paste Firebase private key JSON"
-                rows={4}
-                className={`w-full px-3 py-2 text-sm font-mono border border-gray-300 ${tw.rounded} focus:outline-none`}
-                disabled={isLoading}
-              />
-            </div>
+            <Textarea
+              label="Private Key *"
+              value={formData.credentials.private_key}
+              onChange={(value) => updateCredential("private_key", value)}
+              placeholder="Paste Firebase private key JSON"
+              rows={4}
+              className="font-mono"
+              disabled={isLoading}
+            />
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Client Email *
-              </label>
               <Input
+                label="Client Email *"
                 type="email"
                 placeholder="e.g., firebase-adminsdk@project.iam.gserviceaccount.com"
                 value={formData.credentials.client_email}
                 onChange={(value) => updateCredential("client_email", value)}
-                variant="medium"
+
                 disabled={isLoading}
               />
             </div>
@@ -219,71 +201,61 @@ export default function PushGatewayForm({
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Apple APNS Credentials</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Certificate Path *
-              </label>
               <Input
+                label="Certificate Path *"
                 type="text"
                 placeholder="e.g., /certs/apns_production.p8"
                 value={formData.credentials.certificate_path}
                 onChange={(value) => updateCredential("certificate_path", value)}
-                variant="medium"
+
                 disabled={isLoading}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Certificate Password
-              </label>
               <Input
+                label="Certificate Password"
                 type="password"
                 placeholder="Certificate password (if encrypted)"
                 value={formData.credentials.certificate_password}
                 onChange={(value) => updateCredential("certificate_password", value)}
-                variant="medium"
+
                 disabled={isLoading}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Team ID *
-              </label>
               <Input
+                label="Team ID *"
                 type="text"
                 placeholder="e.g., ABCD123456"
                 value={formData.credentials.team_id}
                 onChange={(value) => updateCredential("team_id", value)}
-                variant="medium"
+
                 disabled={isLoading}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Key ID *
-              </label>
               <Input
+                label="Key ID *"
                 type="text"
                 placeholder="e.g., XYZKEY1234"
                 value={formData.credentials.key_id}
                 onChange={(value) => updateCredential("key_id", value)}
-                variant="medium"
+
                 disabled={isLoading}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Bundle ID *
-              </label>
               <Input
+                label="Bundle ID *"
                 type="text"
                 placeholder="e.g., com.company.app"
                 value={formData.credentials.bundle_id}
                 onChange={(value) => updateCredential("bundle_id", value)}
-                variant="medium"
+
                 disabled={isLoading}
               />
             </div>

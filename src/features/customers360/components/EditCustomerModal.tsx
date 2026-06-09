@@ -5,6 +5,7 @@ import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { isValidCountryCodePhone } from "../../../shared/utils/validation";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
@@ -312,29 +313,26 @@ export default function EditCustomerModal({
           {/* Subscription ID & Phone */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                Subscription ID
-              </label>
               <Input
+                label="Subscription ID"
                 type="text"
                 value={formData.subscriptionId}
                 onChange={() => {}}
                 disabled
-                variant="medium"
+               
                 placeholder=""
               />
             </div>
             <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                Phone Number (MSISDN) *
-              </label>
               <Input
+                label="Phone Number (MSISDN)"
                 type="text"
                 value={formData.msisdn}
                 onChange={(value) => setFormData({ ...formData, msisdn: String(value) })}
                 placeholder="+256..."
                 disabled={isLoading}
-                variant="medium"
+               
+                required
               />
             </div>
           </div>
@@ -342,29 +340,27 @@ export default function EditCustomerModal({
           {/* First Name & Last Name */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                First Name *
-              </label>
               <Input
+                label="First Name"
                 type="text"
                 value={formData.firstName}
                 onChange={(value) => setFormData({ ...formData, firstName: String(value) })}
                 placeholder="John"
                 disabled={isLoading}
-                variant="medium"
+               
+                required
               />
             </div>
             <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                Last Name *
-              </label>
               <Input
+                label="Last Name"
                 type="text"
                 value={formData.lastName}
                 onChange={(value) => setFormData({ ...formData, lastName: String(value) })}
                 placeholder="Doe"
                 disabled={isLoading}
-                variant="medium"
+               
+                required
               />
             </div>
           </div>
@@ -372,16 +368,14 @@ export default function EditCustomerModal({
           {/* Alternate Phone & Gender */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                Alternate Phone Numbers (MSISDN)
-              </label>
               <Input
+                label="Alternate Phone Numbers (MSISDN)"
                 type="text"
                 value={formData.alternatemsisdns}
                 onChange={(value) => setFormData({ ...formData, alternatemsisdns: String(value) })}
                 placeholder="+256..., +256..."
                 disabled={isLoading}
-                variant="medium"
+               
               />
             </div>
             <div>
@@ -405,45 +399,40 @@ export default function EditCustomerModal({
           {/* Email & Alternate Email */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                Email *
-              </label>
               <Input
+                label="Email"
                 type="email"
                 value={formData.email}
                 onChange={(value) => setFormData({ ...formData, email: String(value) })}
                 placeholder="john@example.com"
                 disabled={isLoading}
-                variant="medium"
+               
+                required
               />
             </div>
             <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                Alternate Email
-              </label>
               <Input
+                label="Alternate Email"
                 type="email"
                 value={formData.alternateEmail}
                 onChange={(value) => setFormData({ ...formData, alternateEmail: String(value) })}
                 placeholder="john2@example.com"
                 disabled={isLoading}
-                variant="medium"
+               
               />
             </div>
           </div>
 
           {/* City */}
           <div>
-            <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-              City
-            </label>
             <Input
+              label="City"
               type="text"
               value={formData.city}
               onChange={(value) => setFormData({ ...formData, city: String(value) })}
               placeholder="Kampala"
               disabled={isLoading}
-              variant="medium"
+             
             />
           </div>
 
@@ -454,15 +443,13 @@ export default function EditCustomerModal({
             </h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                  Date of Birth
-                </label>
                 <Input
+                  label="Date of Birth"
                   type="date"
                   value={formData.dateOfBirth}
                   onChange={(value) => setFormData({ ...formData, dateOfBirth: String(value) })}
                   disabled={isLoading}
-                  variant="medium"
+                 
                 />
               </div>
               <div>
@@ -490,44 +477,36 @@ export default function EditCustomerModal({
               Address Information
             </h3>
             <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                Physical Address
-              </label>
-              <textarea
-                name="physicalAddress"
+              <Textarea
+                label="Physical Address"
                 value={formData.physicalAddress}
-                onChange={handleInputChange}
+                onChange={(value) => setFormData({ ...formData, physicalAddress: String(value) })}
                 disabled={isLoading}
                 rows={2}
-                className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4 mt-4">
               <div>
-                <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                  Region
-                </label>
                 <Input
+                  label="Region"
                   type="text"
                   value={formData.region}
                   onChange={(value) => setFormData({ ...formData, region: String(value) })}
                   placeholder="Central Region"
                   disabled={isLoading}
-                  variant="medium"
+                 
                 />
               </div>
               <div>
-                <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                  Postal Code
-                </label>
                 <Input
+                  label="Postal Code"
                   type="text"
                   value={formData.postalCode}
                   onChange={(value) => setFormData({ ...formData, postalCode: String(value) })}
                   placeholder="00256"
                   disabled={isLoading}
-                  variant="medium"
+                 
                 />
               </div>
             </div>

@@ -56,7 +56,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
             value={query}
             onChange={setQuery}
             className={styles.searchInput}
-            variant="medium"
+           
           />
           <button onClick={onClose} className={styles.closeButton}>
             <X size={20} />

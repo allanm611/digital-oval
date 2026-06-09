@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { color, tw, button } from "../../../shared/utils/utils";
@@ -182,39 +183,28 @@ function CategoryModal({
             </div>
 
             <form onSubmit={handleSubmit} className="p-4 sm:p-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t.offerCatalogs.catalogNameLabel} *
-                  </label>
-                  <Input type="text"
-                    value={formData.name}
-                    onChange={(value) =>
-                      setFormData((prev) => ({ ...prev, name: String(value) }))
-                    }
-                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
-                    placeholder={t.offerCatalogs.catalogNamePlaceholder}
-                    required
-                  />
-                </div>
+              <div className="space-y-8">
+                <Input
+                  type="text"
+                  label={t.offerCatalogs.catalogNameLabel}
+                  value={formData.name}
+                  onChange={(value) =>
+                    setFormData((prev) => ({ ...prev, name: String(value) }))
+                  }
+                  required
+                />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t.offerCatalogs.description}
-                  </label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        description: e.target.value,
-                      }))
-                    }
-                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
-                    placeholder={t.offerCatalogs.descriptionPlaceholder}
-                    rows={3}
-                  />
-                </div>
+                <Textarea
+                  label={t.offerCatalogs.description}
+                  value={formData.description}
+                  onChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      description: value,
+                    }))
+                  }
+                  rows={3}
+                />
               </div>
 
               {formError && (

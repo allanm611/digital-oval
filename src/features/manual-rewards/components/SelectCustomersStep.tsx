@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import Input from '../../../shared/components/ui/Input';
+import Textarea from '../../../shared/components/ui/Textarea';
 import { AlertCircle, Loader2, Plus, List } from "lucide-react";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
@@ -180,21 +181,14 @@ export default function SelectCustomersStep({
       <div className="p-6 space-y-6">
         {/* Reward Name */}
         <div>
-          <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-            {t.manualRewards.listNameLabel}
-          </label>
           <Input
+            label={t.manualRewards.listNameLabel}
             type="text"
             value={listName}
             onChange={(value) => {
               setListName(String(value));
               onUpdate({ audienceName: String(value) });
               setError("");
-            }}
-            className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none focus:ring-2`}
-            style={{
-              borderColor: color.border.default,
-              color: color.text.primary,
             }}
             placeholder={t.manualRewards.listNamePlaceholder}
             required
@@ -312,30 +306,22 @@ export default function SelectCustomersStep({
         {/* Manual Input - Show only when Manual Input is selected */}
         {inputMethod === "manual" && (
           <div>
-            <label
-              className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-            >
-              {t.manualRewards.manualEntryLabel}
-            </label>
-            <textarea
+            <Textarea
+              label={t.manualRewards.manualEntryLabel}
               value={manualInput}
-              onChange={(e) => {
-                setManualInput(e.target.value);
+              onChange={(value) => {
+                setManualInput(value);
                 // Count recipients
-                const recipientLines = String(e.target.value)
+                const recipientLines = String(value)
                   .split("\n")
                   .filter((line) => line.trim());
                 onUpdate({
-                  audienceFileText: String(e.target.value),
+                  audienceFileText: String(value),
                   rowCount: recipientLines.length
                 });
                 setError("");
               }}
-              className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none focus:ring-2 font-mono`}
-              style={{
-                borderColor: color.border.default,
-                color: color.text.primary,
-              }}
+              className="font-mono"
               placeholder={t.manualRewards.manualEntryPlaceholder}
               rows={10}
               disabled={isSubmitting}

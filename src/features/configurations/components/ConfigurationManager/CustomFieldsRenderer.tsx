@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { tw } from "../../../../shared/utils/utils";
+import Input from "../../../../shared/components/ui/Input";
+import Textarea from "../../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../../shared/components/ui/Checkbox";
 import type { MetadataField } from "./ConfigurationManager";
@@ -47,48 +49,44 @@ export default function CustomFieldsRenderer({
 
     return (
       <div key={field.key} className="flex flex-col flex-1">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          {field.label} {field.required && "*"}
-        </label>
-
             {field.type === "text" && (
-              <input
+              <Input
+                label={`${field.label}${field.required ? " *" : ""}`}
                 type="text"
                 value={formData[field.key] || ""}
-                onChange={(e) => onFieldChange(field.key, e.target.value)}
+                onChange={(value) => onFieldChange(field.key, value)}
                 placeholder={field.placeholder}
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
                 required={field.required}
               />
             )}
 
             {field.type === "number" && (
-              <input
+              <Input
+                label={`${field.label}${field.required ? " *" : ""}`}
                 type="number"
                 value={formData[field.key] || ""}
-                onChange={(e) => onFieldChange(field.key, e.target.value ? Number(e.target.value) : "")}
+                onChange={(value) => onFieldChange(field.key, value ? Number(value) : "")}
                 placeholder={field.placeholder}
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
                 required={field.required}
               />
             )}
 
             {field.type === "date" && (
-              <input
+              <Input
+                label={`${field.label}${field.required ? " *" : ""}`}
                 type="date"
                 value={formData[field.key] || ""}
-                onChange={(e) => onFieldChange(field.key, e.target.value)}
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                onChange={(value) => onFieldChange(field.key, value)}
                 required={field.required}
               />
             )}
 
             {field.type === "textarea" && (
-              <textarea
+              <Textarea
+                label={`${field.label}${field.required ? " *" : ""}`}
                 value={formData[field.key] || ""}
-                onChange={(e) => onFieldChange(field.key, e.target.value)}
+                onChange={(value) => onFieldChange(field.key, value)}
                 placeholder={field.placeholder}
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
                 rows={3}
                 required={field.required}
               />

@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import { Program } from "../types/program";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -133,48 +134,40 @@ export default function ProgramModal({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6">
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Program Name *
-              </label>
               <Input
+                label="Program Name"
                 placeholder="Enter program name"
                 value={formData.name}
                 onChange={(value) => {
                   setFormData((prev) => ({ ...prev, name: value }));
                   if (errors.name) setErrors(prev => ({ ...prev, name: "" }));
                 }}
-                className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none focus:ring-2 ${
-                  errors.name ? "border-red-300 focus:ring-red-500 focus:border-red-500" : "border-gray-300 focus:ring-purple-500 focus:border-transparent"
-                }`}
+                hasError={!!errors.name}
+                required
               />
               {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Program Code *
-              </label>
               <Input
+                label="Program Code"
                 placeholder="Enter program code (e.g., PROG-Q4-2024)"
                 value={formData.code}
                 onChange={(value) => {
                   setFormData((prev) => ({ ...prev, code: value }));
                   if (errors.code) setErrors(prev => ({ ...prev, code: "" }));
                 }}
-                className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none focus:ring-2 ${
-                  errors.code ? "border-red-300 focus:ring-red-500 focus:border-red-500" : "border-gray-300 focus:ring-purple-500 focus:border-transparent"
-                }`}
+                hasError={!!errors.code}
+                required
               />
               {errors.code && <p className="mt-1 text-sm text-red-600">{errors.code}</p>}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Budget Total *
-              </label>
               <Input
+                label="Budget Total"
                 type="number"
                 value={formData.budget_total}
                 onChange={(value) => {
@@ -184,40 +177,34 @@ export default function ProgramModal({
                   }));
                   if (errors.budget_total) setErrors(prev => ({ ...prev, budget_total: "" }));
                 }}
-                className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none focus:ring-2 ${
-                  errors.budget_total ? "border-red-300 focus:ring-red-500 focus:border-red-500" : "border-gray-300 focus:ring-purple-500 focus:border-transparent"
-                }`}
+                hasError={!!errors.budget_total}
                 placeholder="Enter budget amount"
                 min="0"
                 step="0.01"
+                required
               />
               {errors.budget_total && <p className="mt-1 text-sm text-red-600">{errors.budget_total}</p>}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description
-              </label>
-              <textarea
+              <Textarea
+                label="Description"
                 value={formData.description}
-                onChange={(e) =>
+                onChange={(value) =>
                   setFormData((prev) => ({
                     ...prev,
-                    description: e.target.value,
+                    description: value,
                   }))
                 }
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
                 placeholder="Enter program description"
                 rows={3}
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Start Date
-                </label>
                 <Input
+                  label="Start Date"
                   type="date"
                   value={formData.start_date}
                   onChange={(value) => {
@@ -236,14 +223,12 @@ export default function ProgramModal({
                       setDateError("");
                     }
                   }}
-                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                  hasError={!!dateError}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  End Date
-                </label>
                 <Input
+                  label="End Date"
                   type="date"
                   value={formData.end_date}
                   onChange={(value) => {
@@ -262,11 +247,7 @@ export default function ProgramModal({
                       setDateError("");
                     }
                   }}
-                  className={`w-full px-3 py-2 text-sm border ${
-                    dateError ? "border-red-300" : "border-gray-300"
-                  } ${tw.rounded} focus:outline-none focus:ring-2 ${
-                    dateError ? "focus:ring-red-500 focus:border-red-500" : "focus:ring-purple-500 focus:border-transparent"
-                  }`}
+                  hasError={!!dateError}
                 />
                 {dateError && (
                   <p className="mt-1 text-sm text-red-600">{dateError}</p>

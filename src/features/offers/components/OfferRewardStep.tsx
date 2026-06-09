@@ -6,6 +6,7 @@ import { zIndex } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import { rewardTypeService, RewardType } from "../services/rewardTypeService";
 
 interface RewardRule {
@@ -270,10 +271,8 @@ export default function OfferRewardStep({
                   {/* Reward Settings */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Reward Name
-                      </label>
                       <Input
+                        label="Reward Name"
                         type="text"
                         value={selectedRewardData.name}
                         onChange={(value) =>
@@ -282,7 +281,6 @@ export default function OfferRewardStep({
                           })
                         }
                         placeholder="Reward name"
-                        variant="medium"
                       />
                     </div>
 
@@ -448,38 +446,28 @@ export default function OfferRewardStep({
 
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Rule Name
-                    </label>
-                    <Input
-                      type="text"
-                      value={editingRule.name}
-                      onChange={(value) =>
-                        setEditingRule({ ...editingRule, name: String(value) })
-                      }
-                      placeholder="Rule name"
-                      variant="medium"
-                    />
-                  </div>
+                  <Input
+                    label="Rule Name"
+                    type="text"
+                    value={editingRule.name}
+                    onChange={(value) =>
+                      setEditingRule({ ...editingRule, name: String(value) })
+                    }
+                    placeholder="Rule name"
+                  />
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Priority
-                    </label>
-                    <Input
-                      type="number"
-                      value={String(editingRule.priority)}
-                      onChange={(value) =>
-                        setEditingRule({
-                          ...editingRule,
-                          priority: parseInt(String(value)) || 1,
-                        })
-                      }
-                      placeholder="1"
-                      variant="medium"
-                    />
-                  </div>
+                  <Input
+                    label="Priority"
+                    type="number"
+                    value={String(editingRule.priority)}
+                    onChange={(value) =>
+                      setEditingRule({
+                        ...editingRule,
+                        priority: parseInt(String(value)) || 1,
+                      })
+                    }
+                    placeholder="1"
+                  />
                 </div>
 
                 <div>
@@ -529,42 +517,32 @@ export default function OfferRewardStep({
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Reward Value
-                    </label>
-                    <Input
-                      type="text"
-                      value={editingRule.reward_value}
-                      onChange={(value) =>
-                        setEditingRule({
-                          ...editingRule,
-                          reward_value: String(value),
-                        })
-                      }
-                      placeholder="Enter reward value..."
-                      variant="medium"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Success Text
-                  </label>
-                  <textarea
-                    value={editingRule.success_text}
-                    onChange={(e) =>
+                  <Input
+                    label="Reward Value"
+                    type="text"
+                    value={editingRule.reward_value}
+                    onChange={(value) =>
                       setEditingRule({
                         ...editingRule,
-                        success_text: e.target.value,
+                        reward_value: String(value),
                       })
                     }
-                    placeholder="Enter success message..."
-                    rows={2}
-                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
+                    placeholder="Enter reward value..."
                   />
                 </div>
+
+                <Textarea
+                  label="Success Text"
+                  value={editingRule.success_text}
+                  onChange={(value) =>
+                    setEditingRule({
+                      ...editingRule,
+                      success_text: value,
+                    })
+                  }
+                  placeholder="Enter success message..."
+                  rows={2}
+                />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -581,7 +559,7 @@ export default function OfferRewardStep({
                         })
                       }
                       placeholder="e.g., Low balance Failure [01]"
-                      variant="medium"
+                     
                     />
                   </div>
 
@@ -599,7 +577,7 @@ export default function OfferRewardStep({
                         })
                       }
                       placeholder="Enter failure message..."
-                      variant="medium"
+                     
                     />
                   </div>
                 </div>

@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { tw, color } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 import type { CharacterSet } from "../../configurations/types/characterSetType";
 
 interface CharacterSetFormModalProps {
@@ -172,16 +174,14 @@ export default function CharacterSetFormModal({
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Name */}
           <div>
-            <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-              Name
-              <span className="text-red-600">*</span>
-            </label>
             <Input
+              label="Name"
               placeholder="Enter character set name"
               value={formData.name}
               onChange={handleInputChange('name')}
               hasError={!!errors.name}
-              variant="medium"
+             
+              required
             />
             {errors.name && (
               <p className="mt-1 text-sm text-red-600">{errors.name}</p>
@@ -190,16 +190,11 @@ export default function CharacterSetFormModal({
 
           {/* Description */}
           <div>
-            <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-              Description
-            </label>
-            <textarea
-              name="description"
+            <Textarea
+              label="Description"
               value={formData.description}
-              onChange={handleTextareaChange}
+              onChange={(value) => handleInputChange('description')(value)}
               rows={2}
-              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none`}
-              placeholder="Enter description (optional)"
             />
           </div>
 
@@ -247,14 +242,11 @@ export default function CharacterSetFormModal({
 
             {/* Character Set Size */}
             <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                Character Set Size
-                <span className="text-red-600">*</span>
-              </label>
-              <Input type="number"
+              <Input
+                type="number"
+                label="Character Set Size"
                 value={formData.character_set_size}
                 onChange={handleInputChange('character_set_size')}
-                className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="e.g., 160"
               />
             </div>
@@ -262,19 +254,14 @@ export default function CharacterSetFormModal({
 
           {/* Standard Characters */}
           <div>
-            <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-              Standard Characters
-              <span className="text-red-600">*</span>
-            </label>
-            <textarea
-              name="standard_chars"
+            <Textarea
+              label="Standard Characters"
               value={formData.standard_chars}
-              onChange={handleTextareaChange}
+              onChange={(value) => handleInputChange('standard_chars')(value)}
               rows={3}
-              className={`w-full px-3 py-2 border ${
-                errors.standard_chars ? "border-red-500" : "border-gray-300"
-              } ${tw.rounded} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none`}
-              placeholder="Enter standard characters"
+              hasError={!!errors.standard_chars}
+              className="font-mono"
+              required
             />
             {errors.standard_chars && (
               <p className="mt-1 text-sm text-red-600">
@@ -284,59 +271,42 @@ export default function CharacterSetFormModal({
           </div>
 
           {/* Optional Character Fields */}
-          <div className="space-y-4">
-            <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                Double Characters
-              </label>
-              <textarea
-                name="double_chars"
-                value={formData.double_chars}
-                onChange={handleTextareaChange}
-                rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                placeholder="Enter double characters (optional)"
-              />
-            </div>
+          <div className="space-y-6">
+            <Textarea
+              label="Double Characters (optional)"
+              value={formData.double_chars}
+              onChange={(value) => handleInputChange('double_chars')(value)}
+              rows={2}
+              className="font-mono"
+            />
 
-            <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                Triple Characters
-              </label>
-              <textarea
-                name="triple_chars"
-                value={formData.triple_chars}
-                onChange={handleTextareaChange}
-                rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                placeholder="Enter triple characters (optional)"
-              />
-            </div>
+            <Textarea
+              label="Triple Characters (optional)"
+              value={formData.triple_chars}
+              onChange={(value) => handleInputChange('triple_chars')(value)}
+              rows={2}
+              className="font-mono"
+            />
 
-            <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                Quad Characters
-              </label>
-              <textarea
-                name="quad_chars"
-                value={formData.quad_chars}
-                onChange={handleTextareaChange}
-                rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                placeholder="Enter quad characters (optional)"
-              />
-            </div>
+            <Textarea
+              label="Quad Characters (optional)"
+              value={formData.quad_chars}
+              onChange={(value) => handleInputChange('quad_chars')(value)}
+              rows={2}
+              className="font-mono"
+            />
           </div>
 
           {/* Status */}
-          <div className="flex items-center">
-            <Input
-              type="checkbox"
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() =>
+            handleCheckboxChange('is_active')(!formData.is_active)
+          }>
+            <Checkbox
+              id="charset-active"
               checked={formData.is_active}
               onChange={handleCheckboxChange('is_active')}
-              className="w-4 h-4 rounded border-gray-300 cursor-pointer"
             />
-            <label className={`ml-2 text-sm font-medium ${tw.textPrimary}`}>
+            <label className={`text-sm font-medium ${tw.textPrimary} cursor-pointer`}>
               Active
             </label>
           </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Input from '../../../shared/components/ui/Input';
+import Textarea from "../../../shared/components/ui/Textarea";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,

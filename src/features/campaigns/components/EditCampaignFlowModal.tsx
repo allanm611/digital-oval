@@ -1,6 +1,7 @@
 import { X } from "lucide-react";
 import { color, tw, button } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import {
   CampaignFlowConfig,
@@ -199,15 +200,10 @@ export default function EditCampaignFlowModal({
               </div>
 
               <div>
-                <label
-                  className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                >
-                  Condition Rule (JSON)
-                </label>
-                <textarea
+                <Textarea
+                  label="Condition Rule (JSON)"
                   value={rawConditionRuleInput}
-                  onChange={(e) => {
-                    const value = e.target.value;
+                  onChange={(value) => {
                     setRawConditionRuleInput(value);
                     setConditionRuleError(""); // Clear error on change
 
@@ -229,9 +225,8 @@ export default function EditCampaignFlowModal({
                     }
                   }}
                   placeholder='{"condition": "value"}'
-                  className={`w-full px-3 py-2 border ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-xs ${
-                    conditionRuleError ? "border-red-500" : "border-gray-300"
-                  }`}
+                  className="font-mono text-xs"
+                  hasError={!!conditionRuleError}
                   rows={3}
                 />
                 {conditionRuleError && (

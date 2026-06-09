@@ -1,30 +1,28 @@
 import React, { forwardRef, useState } from 'react';
 import { tw } from '../../utils/utils';
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   placeholder?: string;
-  value: string | number;
-  onChange: (value: string | number) => void;
+  value: string;
+  onChange: (value: string) => void;
   disabled?: boolean;
   hasError?: boolean;
   className?: string;
-  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   variant?: 'default' | 'medium' | 'compact'; // default: px-4 py-2, medium: px-3 py-2, compact: px-3 py-1
-  type?: 'text' | 'number' | 'email' | 'password' | 'tel' | 'url' | 'search' | 'date' | 'time'; // default: text
   label?: string; // Floating label (optional)
+  rows?: number;
 }
 
-const Input = forwardRef<HTMLInputElement, InputProps>(({
+const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
   placeholder,
   value,
   onChange,
   disabled = false,
   hasError = false,
   className = '',
-  onKeyDown,
   variant = 'medium',
-  type = 'text',
   label,
+  rows = 3,
   ...rest
 }, ref) => {
   const [isFocused, setIsFocused] = useState(false);
@@ -42,25 +40,22 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
   if (disabled) bgClass = 'bg-gray-100 cursor-not-allowed text-gray-500';
   else if (isReadOnly) bgClass = 'bg-gray-50 cursor-default text-gray-600';
 
-  const hasValue = value !== '' && value !== 0;
+  const hasValue = value !== '';
   const shouldFloatLabel = isFocused || hasValue;
 
   // Without floating label (backward compatible)
   if (!label) {
     return (
-      <input
+      <textarea
         ref={ref}
-        type={type}
         placeholder={placeholder}
         value={value}
-        onChange={(e) => {
-          const newValue = type === 'number' ? (e.target.value === '' ? '' : Number(e.target.value)) : e.target.value;
-          onChange(newValue);
-        }}
+        onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        onKeyDown={onKeyDown}
+        rows={rows}
         className={`w-full ${paddingClass} text-sm placeholder:text-sm border ${borderClass} ${tw.rounded}
           transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+          resize-none
           ${bgClass}
           ${className}`}
         {...rest}
@@ -71,19 +66,16 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
   // With floating label
   return (
     <div className="relative w-full">
-      <input
+      <textarea
         ref={ref}
-        type={type}
         placeholder=""
         value={value}
-        onChange={(e) => {
-          const newValue = type === 'number' ? (e.target.value === '' ? '' : Number(e.target.value)) : e.target.value;
-          onChange(newValue);
-        }}
+        onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        onKeyDown={onKeyDown}
+        rows={rows}
         className={`w-full px-3 py-3 text-sm border ${borderClass} ${tw.rounded}
           transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+          resize-none
           ${bgClass}
           ${className}`}
         {...rest}
@@ -96,7 +88,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         className={`absolute left-3 transition-all duration-200 pointer-events-none text-sm font-medium
           ${shouldFloatLabel
             ? 'top-0 -translate-y-1/2 bg-white px-1 text-gray-700'
-            : 'top-1/2 -translate-y-1/2 text-gray-700'
+            : 'top-3 text-gray-700'
           }
         `}
       >
@@ -106,5 +98,5 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
   );
 });
 
-Input.displayName = 'Input';
-export default Input;
+Textarea.displayName = 'Textarea';
+export default Textarea;

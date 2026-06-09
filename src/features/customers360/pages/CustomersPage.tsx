@@ -25,6 +25,7 @@ import {
   getSubscriptionDisplayName,
   searchCustomers as searchCustomersUtil,
 } from "../utils/customerSubscriptionHelpers";
+import { formatDate } from "../../../shared/services/dateService";
 import { customerService } from "../services/customerServices";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";

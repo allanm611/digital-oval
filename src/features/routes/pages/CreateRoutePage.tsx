@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Save } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -302,39 +303,29 @@ export default function CreateRoutePage() {
                 />
               </div>
               {/* Name */}
-              <div>
-                <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                  Route Name *
-                </label>
-                <Input
-                  value={formData.name}
-                  onChange={(value) => {
-                    setFormData({ ...formData, name: value });
-                    if (errors.name) setErrors({ ...errors, name: undefined });
-                  }}
-                  placeholder="Enter route name"
-                  hasError={!!errors.name}
-                  disabled={saving}
-                  variant="medium"
-                />
-                {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
-              </div>
+              <Input
+                label="Route Name *"
+                value={formData.name}
+                onChange={(value) => {
+                  setFormData({ ...formData, name: value });
+                  if (errors.name) setErrors({ ...errors, name: undefined });
+                }}
+                placeholder="Enter route name"
+                hasError={!!errors.name}
+                disabled={saving}
+              />
+              {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
             </div>
 
             {/* Description */}
-            <div>
-              <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                Description
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Add notes about this route..."
-                rows={3}
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                disabled={saving}
-              />
-            </div>
+            <Textarea
+              label="Description"
+              value={formData.description}
+              onChange={(value) => setFormData({ ...formData, description: value })}
+              placeholder="Add notes about this route..."
+              rows={3}
+              disabled={saving}
+            />
 
             {/* Gateway Configuration */}
             <div>
@@ -402,20 +393,15 @@ export default function CreateRoutePage() {
                     />
                   </div>
 
-                  <div>
-                    <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                      Retry Attempts
-                    </label>
-                    <Input
-                      type="number"
-                      value={String(formData.retry_attempts)}
-                      onChange={(value) => setFormData({ ...formData, retry_attempts: Number(value) })}
-                      placeholder="3"
-                      min="0"
-                      variant="medium"
-                      disabled={saving}
-                    />
-                  </div>
+                  <Input
+                    label="Retry Attempts"
+                    type="number"
+                    value={String(formData.retry_attempts)}
+                    onChange={(value) => setFormData({ ...formData, retry_attempts: Number(value) })}
+                    placeholder="3"
+                    min="0"
+                    disabled={saving}
+                  />
                 </>
               )}
             </div>
@@ -447,18 +433,13 @@ export default function CreateRoutePage() {
                 />
               </div>
 
-              <div>
-                <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                  Default TTL
-                </label>
-                <Input
-                  value={formData.defaultTTL || "3600"}
-                  onChange={(value) => setFormData({ ...formData, defaultTTL: value })}
-                  placeholder="3600"
-                  variant="medium"
-                  disabled={saving}
-                />
-              </div>
+              <Input
+                label="Default TTL"
+                value={formData.defaultTTL || "3600"}
+                onChange={(value) => setFormData({ ...formData, defaultTTL: value })}
+                placeholder="3600"
+                disabled={saving}
+              />
 
               <div>
                 <label className={`block text-sm font-medium text-gray-700 mb-2`}>
@@ -472,19 +453,14 @@ export default function CreateRoutePage() {
                 />
               </div>
 
-              <div>
-                <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                  Webhook URL
-                </label>
-                <Input
-                  value={formData.webhookUrl || ""}
-                  onChange={(value) => setFormData({ ...formData, webhookUrl: value })}
-                  placeholder="https://example.com/webhook"
-                  type="url"
-                  variant="medium"
-                  disabled={saving}
-                />
-              </div>
+              <Input
+                label="Webhook URL"
+                value={formData.webhookUrl || ""}
+                onChange={(value) => setFormData({ ...formData, webhookUrl: value })}
+                placeholder="https://example.com/webhook"
+                type="url"
+                disabled={saving}
+              />
             </div>
           </div>
         )}
@@ -495,19 +471,14 @@ export default function CreateRoutePage() {
               WhatsApp Configuration
             </h2>
             <div className="space-y-4">
-              <div>
-                <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                  Webhook URL
-                </label>
-                <Input
-                  value={formData.webhookUrl || ""}
-                  onChange={(value) => setFormData({ ...formData, webhookUrl: value })}
-                  placeholder="https://example.com/webhook"
-                  type="url"
-                  variant="medium"
-                  disabled={saving}
-                />
-              </div>
+              <Input
+                label="Webhook URL"
+                value={formData.webhookUrl || ""}
+                onChange={(value) => setFormData({ ...formData, webhookUrl: value })}
+                placeholder="https://example.com/webhook"
+                type="url"
+                disabled={saving}
+              />
 
               <div>
                 <label className={`block text-sm font-medium text-gray-700 mb-2`}>
@@ -524,21 +495,16 @@ export default function CreateRoutePage() {
                 />
               </div>
 
-              <div>
-                <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                  Quality Threshold
-                </label>
-                <Input
-                  value={formData.qualityThreshold || "50"}
-                  onChange={(value) => setFormData({ ...formData, qualityThreshold: value })}
-                  placeholder="50"
-                  type="number"
-                  min="0"
-                  max="100"
-                  variant="medium"
-                  disabled={saving}
-                />
-              </div>
+              <Input
+                label="Quality Threshold"
+                value={formData.qualityThreshold || "50"}
+                onChange={(value) => setFormData({ ...formData, qualityThreshold: value })}
+                placeholder="50"
+                type="number"
+                min="0"
+                max="100"
+                disabled={saving}
+              />
             </div>
           </div>
         )}
@@ -549,45 +515,30 @@ export default function CreateRoutePage() {
               USSD Configuration
             </h2>
             <div className="space-y-4">
-              <div>
-                <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                  USSD Code
-                </label>
-                <Input
-                  value={formData.ussdCode || ""}
-                  onChange={(value) => setFormData({ ...formData, ussdCode: value })}
-                  placeholder="*123#"
-                  variant="medium"
-                  disabled={saving}
-                />
-              </div>
+              <Input
+                label="USSD Code"
+                value={formData.ussdCode || ""}
+                onChange={(value) => setFormData({ ...formData, ussdCode: value })}
+                placeholder="*123#"
+                disabled={saving}
+              />
 
-              <div>
-                <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                  Network Code
-                </label>
-                <Input
-                  value={formData.networkCode || ""}
-                  onChange={(value) => setFormData({ ...formData, networkCode: value })}
-                  placeholder="Network code"
-                  variant="medium"
-                  disabled={saving}
-                />
-              </div>
+              <Input
+                label="Network Code"
+                value={formData.networkCode || ""}
+                onChange={(value) => setFormData({ ...formData, networkCode: value })}
+                placeholder="Network code"
+                disabled={saving}
+              />
 
-              <div>
-                <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                  Session Timeout
-                </label>
-                <Input
-                  value={formData.sessionTimeout || "60"}
-                  onChange={(value) => setFormData({ ...formData, sessionTimeout: value })}
-                  placeholder="60"
-                  type="number"
-                  variant="medium"
-                  disabled={saving}
-                />
-              </div>
+              <Input
+                label="Session Timeout"
+                value={formData.sessionTimeout || "60"}
+                onChange={(value) => setFormData({ ...formData, sessionTimeout: value })}
+                placeholder="60"
+                type="number"
+                disabled={saving}
+              />
 
               <div>
                 <label className={`block text-sm font-medium text-gray-700 mb-2`}>

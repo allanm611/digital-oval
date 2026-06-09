@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Save } from "lucide-react";
 import { tw, color, button, getButtonStyles } from "../../../../shared/utils/utils";
 import Input from "../../../../shared/components/ui/Input";
+import Textarea from "../../../../shared/components/ui/Textarea";
 import Checkbox from "../../../../shared/components/ui/Checkbox";
 import { EmailGatewayConfig, CreateEmailGatewayConfigRequest } from "../../types/emailGatewayConfig";
 import { EMAIL_GATEWAY_OPTIONS } from "../../../routes/constants/emailRouteEnums";
@@ -94,34 +95,24 @@ export default function EmailGatewayForm({
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Configuration Name *
-            </label>
-            <Input
-              placeholder="e.g., SendGrid Production"
-              value={formData.name}
-              onChange={(value) => setFormData((prev) => ({ ...prev, name: value }))}
-              variant="medium"
-              disabled={isLoading}
-            />
-          </div>
+          <Input
+            label="Configuration Name *"
+            placeholder="e.g., SendGrid Production"
+            value={formData.name}
+            onChange={(value) => setFormData((prev) => ({ ...prev, name: value }))}
+            disabled={isLoading}
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, description: e.target.value }))
-              }
-              placeholder="Add notes about this configuration..."
-              rows={3}
-              className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
-              disabled={isLoading}
-            />
-          </div>
+          <Textarea
+            label="Description"
+            value={formData.description}
+            onChange={(value) =>
+              setFormData((prev) => ({ ...prev, description: value }))
+            }
+            placeholder="Add notes about this configuration..."
+            rows={3}
+            disabled={isLoading}
+          />
         </div>
       </div>
 
@@ -129,92 +120,62 @@ export default function EmailGatewayForm({
         <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>SMTP Credentials</h2>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                SMTP Host *
-              </label>
-              <Input
-                type="text"
-                placeholder="e.g., smtp.sendgrid.net"
-                value={formData.credentials.smtp_host}
-                onChange={(value) => updateCredential("smtp_host", value)}
-                variant="medium"
-                disabled={isLoading}
-              />
-            </div>
+            <Input
+              label="SMTP Host *"
+              type="text"
+              placeholder="e.g., smtp.sendgrid.net"
+              value={formData.credentials.smtp_host}
+              onChange={(value) => updateCredential("smtp_host", value)}
+              disabled={isLoading}
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                SMTP Port *
-              </label>
-              <Input
-                type="number"
-                value={String(formData.credentials.smtp_port)}
-                onChange={(value) => updateCredential("smtp_port", parseInt(value))}
-                variant="medium"
-                disabled={isLoading}
-              />
-            </div>
+            <Input
+              label="SMTP Port *"
+              type="number"
+              value={String(formData.credentials.smtp_port)}
+              onChange={(value) => updateCredential("smtp_port", parseInt(value))}
+              disabled={isLoading}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                SMTP Username *
-              </label>
-              <Input
-                type="text"
-                placeholder="e.g., apikey"
-                value={formData.credentials.smtp_username}
-                onChange={(value) => updateCredential("smtp_username", value)}
-                variant="medium"
-                disabled={isLoading}
-              />
-            </div>
+            <Input
+              label="SMTP Username *"
+              type="text"
+              placeholder="e.g., apikey"
+              value={formData.credentials.smtp_username}
+              onChange={(value) => updateCredential("smtp_username", value)}
+              disabled={isLoading}
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                SMTP Password *
-              </label>
-              <Input
-                type="password"
-                placeholder="Enter SMTP password"
-                value={formData.credentials.smtp_password}
-                onChange={(value) => updateCredential("smtp_password", value)}
-                variant="medium"
-                disabled={isLoading}
-              />
-            </div>
+            <Input
+              label="SMTP Password *"
+              type="password"
+              placeholder="Enter SMTP password"
+              value={formData.credentials.smtp_password}
+              onChange={(value) => updateCredential("smtp_password", value)}
+              disabled={isLoading}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                From Address *
-              </label>
-              <Input
-                type="email"
-                placeholder="e.g., noreply@company.com"
-                value={formData.credentials.from_address}
-                onChange={(value) => updateCredential("from_address", value)}
-                variant="medium"
-                disabled={isLoading}
-              />
-            </div>
+            <Input
+              label="From Address *"
+              type="email"
+              placeholder="e.g., noreply@company.com"
+              value={formData.credentials.from_address}
+              onChange={(value) => updateCredential("from_address", value)}
+              disabled={isLoading}
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Reply-To Address
-              </label>
-              <Input
-                type="email"
-                placeholder="e.g., support@company.com"
-                value={formData.credentials.reply_to_address}
-                onChange={(value) => updateCredential("reply_to_address", value)}
-                variant="medium"
-                disabled={isLoading}
-              />
-            </div>
+            <Input
+              label="Reply-To Address"
+              type="email"
+              placeholder="e.g., support@company.com"
+              value={formData.credentials.reply_to_address}
+              onChange={(value) => updateCredential("reply_to_address", value)}
+              disabled={isLoading}
+            />
           </div>
 
           <div className="pt-2 flex items-center gap-2">

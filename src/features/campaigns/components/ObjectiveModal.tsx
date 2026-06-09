@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import {
@@ -336,15 +337,14 @@ export default function ObjectiveModal({
             <div className="space-y-6">
               {/* Objective Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Objective Name <span className="text-red-500">*</span>
-                </label>
                 <Input
+                  label="Objective Name"
                   placeholder="Enter objective name..."
                   value={formData.name}
                   onChange={(value) => handleInputChange("name", value)}
                   hasError={!!errors.name}
-                  variant="medium"
+                 
+                  required
                 />
                 {errors.name && (
                   <div className="flex items-center mt-1 text-sm text-red-600">
@@ -356,16 +356,13 @@ export default function ObjectiveModal({
 
               {/* Description */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
-                </label>
-                <textarea
+                <Textarea
+                  label="Description"
                   value={formData.description}
-                  onChange={(e) =>
-                    handleInputChange("description", e.target.value)
+                  onChange={(value) =>
+                    handleInputChange("description", value)
                   }
                   rows={3}
-                  className={`w-full px-4 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
                   placeholder="Enter objective description..."
                 />
               </div>
@@ -474,16 +471,13 @@ export default function ObjectiveModal({
 
               {/* Business Rules */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Business Rules (Optional)
-                </label>
-                <textarea
+                <Textarea
+                  label="Business Rules (Optional)"
                   value={formData.business_rules}
-                  onChange={(e) =>
-                    handleInputChange("business_rules", e.target.value)
+                  onChange={(value) =>
+                    handleInputChange("business_rules", value)
                   }
                   rows={4}
-                  className={`w-full px-4 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
                   placeholder="Enter business rules or guidelines..."
                 />
               </div>

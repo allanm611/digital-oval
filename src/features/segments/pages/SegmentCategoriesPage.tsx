@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import NumberFormatter from "../../../shared/components/NumberFormatter";
@@ -177,13 +178,10 @@ function CategoryModal({
             </div>
 
             <form onSubmit={handleSubmit} className="p-4 sm:p-6">
-              <div className="space-y-4">
+              <div className="space-y-8">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Segment Catalog Name *
-                  </label>
                   <Input
-                    placeholder="e.g., Marketing Segments, Retention Campaigns"
+                    label="Segment Catalog Name"
                     value={formData.name}
                     onChange={(value) =>
                       setFormData((prev) => ({ ...prev, name: value }))
@@ -198,23 +196,17 @@ function CategoryModal({
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Description
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        description: e.target.value,
-                      }))
-                    }
-                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm`}
-                    placeholder="Optional description for this segment catalog"
-                  />
-                </div>
+                <Textarea
+                  label="Description"
+                  rows={3}
+                  value={formData.description}
+                  onChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      description: value,
+                    }))
+                  }
+                />
               </div>
 
               <div className="flex items-center justify-end gap-3 mt-6">

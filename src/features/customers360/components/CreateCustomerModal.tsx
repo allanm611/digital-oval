@@ -14,6 +14,7 @@ import { isValidCountryCodePhone } from "../../../shared/utils/validation";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { customerService } from "../services/customerServices";
 import { timezoneService } from "../../../features/configurations/services/timezoneService";
@@ -836,17 +837,14 @@ export default function CreateCustomerModal({
             <>
               <div className="space-y-4">
                 <div>
-                  <label
-                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                  >
-                    Phone Number (MSISDN) *
-                  </label>
                   <Input
+                    label="Phone Number (MSISDN)"
                     placeholder=""
                     value={formData.msisdn}
                     onChange={(value) => handleInputChange({ target: { name: "msisdn", value } } as any)}
                     hasError={!!formErrors.msisdn}
-                    variant="medium"
+                   
+                    required
                   />
                   {formErrors.msisdn && (
                     <p className="text-red-600 text-sm mt-1">
@@ -864,17 +862,14 @@ export default function CreateCustomerModal({
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label
-                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                    >
-                      First Name *
-                    </label>
                     <Input
+                      label="First Name"
                       placeholder="First Name"
                       value={formData.firstName}
                       onChange={(value) => handleInputChange({ target: { name: "firstName", value } } as any)}
                       hasError={!!formErrors.firstName}
-                      variant="medium"
+                     
+                      required
                     />
                     {formErrors.firstName && (
                       <p className="text-red-600 text-sm mt-1">
@@ -883,17 +878,14 @@ export default function CreateCustomerModal({
                     )}
                   </div>
                   <div>
-                    <label
-                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                    >
-                      Last Name *
-                    </label>
                     <Input
+                      label="Last Name"
                       placeholder="Last Name"
                       value={formData.lastName}
                       onChange={(value) => handleInputChange({ target: { name: "lastName", value } } as any)}
                       hasError={!!formErrors.lastName}
-                      variant="medium"
+                     
+                      required
                     />
                     {formErrors.lastName && (
                       <p className="text-red-600 text-sm mt-1">
@@ -905,17 +897,13 @@ export default function CreateCustomerModal({
 
                 <div className="grid grid-cols-2 gap-4 mt-4">
                   <div>
-                    <label
-                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                    >
-                      Alternate Phone Numbers (MSISDN)
-                    </label>
                     <Input
+                      label="Alternate Phone Numbers (MSISDN)"
                       placeholder=""
                       value={formData.alternatemsisdns}
                       onChange={(value) => handleInputChange({ target: { name: "alternatemsisdns", value } } as any)}
                       hasError={!!alternatePhoneError}
-                      variant="medium"
+                     
                     />
                     {alternatePhoneError && (
                       <p className="text-red-600 text-sm mt-1">
@@ -945,18 +933,14 @@ export default function CreateCustomerModal({
 
                 <div className="grid grid-cols-2 gap-4 mt-4">
                   <div>
-                    <label
-                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                    >
-                      Email
-                    </label>
                     <Input
+                      label="Email"
                       type="email"
                       placeholder=""
                       value={formData.email}
                       onChange={(value) => handleInputChange({ target: { name: "email", value } } as any)}
                       hasError={!!formErrors.email}
-                      variant="medium"
+                     
                     />
                     {formErrors.email && (
                       <p className="text-red-600 text-sm mt-1">
@@ -965,12 +949,8 @@ export default function CreateCustomerModal({
                     )}
                   </div>
                   <div>
-                    <label
-                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                    >
-                      Alternate Email
-                    </label>
                     <Input
+                      label="Alternate Email"
                       type="email"
                       value={formData.alternateEmail}
                       onChange={(value) => handleInputChange({ target: { name: "alternateEmail", value } } as any)}
@@ -981,12 +961,8 @@ export default function CreateCustomerModal({
 
                 <div className="grid grid-cols-2 gap-4 mt-4">
                   <div>
-                    <label
-                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                    >
-                      Date of Birth
-                    </label>
                     <Input
+                      label="Date of Birth"
                       type="date"
                       value={formData.dateOfBirth}
                       onChange={(value) => handleInputChange({ target: { name: "dateOfBirth", value } } as any)}
@@ -1015,12 +991,8 @@ export default function CreateCustomerModal({
               </div>
 
               <div>
-                <label
-                  className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                >
-                  City
-                </label>
                 <Input
+                  label="City"
                   type="text"
                   value={formData.city}
                   onChange={(value) => handleInputChange({ target: { name: "city", value } } as any)}
@@ -1035,29 +1007,19 @@ export default function CreateCustomerModal({
                 </h3>
 
                 <div>
-                  <label
-                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                  >
-                    Physical Address
-                  </label>
-                  <textarea
-                    name="physicalAddress"
+                  <Textarea
+                    label="Physical Address"
                     value={formData.physicalAddress}
-                    onChange={handleInputChange}
+                    onChange={(value) => handleInputChange({ target: { name: "physicalAddress", value } } as any)}
                     placeholder="Street address"
                     rows={2}
-                    className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mt-4">
                   <div>
-                    <label
-                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                    >
-                      Region
-                    </label>
                     <Input
+                      label="Region"
                       type="text"
                       value={formData.region}
                       onChange={(value) => handleInputChange({ target: { name: "region", value } } as any)}
@@ -1066,12 +1028,8 @@ export default function CreateCustomerModal({
                     />
                   </div>
                   <div>
-                    <label
-                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                    >
-                      Postal Code
-                    </label>
                     <Input
+                      label="Postal Code"
                       type="text"
                       value={formData.postalCode}
                       onChange={(value) => handleInputChange({ target: { name: "postalCode", value } } as any)}
@@ -1195,16 +1153,12 @@ export default function CreateCustomerModal({
                 </div>
               </div>
 
-              <label
-                className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-              >
-                Paste Customer Data
-              </label>
-              <textarea
+              <Textarea
+                label="Paste Customer Data"
                 value={bulkText}
-                onChange={(e) => setBulkText(e.target.value)}
+                onChange={setBulkText}
                 placeholder="FirstName,LastName,Phone,AlternatePhone,Email,AlternateEmail,Gender,DateOfBirth,LanguagePreference,City,PhysicalAddress,Region,PostalCode,CountryCode,CustomerTier,PreferredChannel,Timezone&#10;David,Kipchoge,254750902921,254712345679,david.kipchoge@email.com,david.alt@email.com,Male,1990-05-15,en,Nairobi,123 Kenyatta Ave,Nairobi,00100,KEN,Gold,SMS,Africa/Nairobi"
-                className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm font-mono`}
+                className="font-mono"
                 rows={8}
               />
 

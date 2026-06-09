@@ -65,8 +65,8 @@ export default function RevenueMetricsPage() {
         )
       );
 
-      // Call API - TODO: Add toggleMetricStatus to revenueMetricService
-      // await revenueMetricService.toggleMetricStatus(metric.id, newStatus);
+      // Call API
+      await revenueMetricService.toggleMetricStatus(metric.id, newStatus);
 
       success(
         "Success",

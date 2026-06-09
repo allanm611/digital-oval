@@ -48,17 +48,6 @@ export const formatDateTime = (value?: string | null) => {
   });
 };
 
-export const formatDate = (value?: string | null) => {
-  if (!value) return "—";
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return value;
-  return parsed.toLocaleString("en-KE", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-};
-
 const deriveChurnRisk = (status?: string | null) => {
   const normalized = status?.toLowerCase();
   if (normalized === "active") return 20;

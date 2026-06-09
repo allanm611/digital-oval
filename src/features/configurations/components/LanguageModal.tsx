@@ -3,6 +3,8 @@ import { X, Loader2 } from "lucide-react";
 import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
+import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { languageService, Language, CreateLanguageRequest } from "../services/languageService";
 import { characterSetService, CharacterSet } from "../services/characterSetService";
@@ -173,41 +175,24 @@ export default function LanguageModal({
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* Name */}
           <div className="space-y-1.5">
-            <label className={`text-sm font-medium ${tw.textPrimary}`}>
-              Name <span className="text-red-500">*</span>
-            </label>
-            <input
+            <Input
+              label="Name"
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(value) => setFormData({ ...formData, name: String(value) })}
               placeholder="e.g., English"
-              className={`w-full px-3 py-2 ${tw.rounded} border text-sm transition-colors focus:outline-none`}
-              style={{
-                borderColor: color.border.default,
-                backgroundColor: color.surface.input,
-              }}
-              onFocus={(e) => (e.target.style.borderColor = color.primary.action)}
-              onBlur={(e) => (e.target.style.borderColor = color.border.default)}
+              required
             />
           </div>
 
           {/* Description */}
           <div className="space-y-1.5">
-            <label className={`text-sm font-medium ${tw.textPrimary}`}>
-              Description
-            </label>
-            <textarea
+            <Textarea
+              label="Description"
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(value) => setFormData({ ...formData, description: value })}
               placeholder="Optional description"
               rows={2}
-              className={`w-full px-3 py-2 ${tw.rounded} border text-sm transition-colors focus:outline-none resize-none`}
-              style={{
-                borderColor: color.border.default,
-                backgroundColor: color.surface.input,
-              }}
-              onFocus={(e) => (e.target.style.borderColor = color.primary.action)}
-              onBlur={(e) => (e.target.style.borderColor = color.border.default)}
             />
           </div>
 
@@ -227,21 +212,13 @@ export default function LanguageModal({
 
           {/* Language Code */}
           <div className="space-y-1.5">
-            <label className={`text-sm font-medium ${tw.textPrimary}`}>
-              Language Code <span className="text-red-500">*</span>
-            </label>
-            <input
+            <Input
+              label="Language Code"
               type="text"
               value={formData.language_code}
-              onChange={(e) => setFormData({ ...formData, language_code: e.target.value })}
+              onChange={(value) => setFormData({ ...formData, language_code: String(value) })}
               placeholder="e.g., en, en-US, en-GB"
-              className={`w-full px-3 py-2 ${tw.rounded} border text-sm transition-colors focus:outline-none`}
-              style={{
-                borderColor: color.border.default,
-                backgroundColor: color.surface.input,
-              }}
-              onFocus={(e) => (e.target.style.borderColor = color.primary.action)}
-              onBlur={(e) => (e.target.style.borderColor = color.border.default)}
+              required
             />
             <p className={`text-xs ${tw.textMuted}`}>
               Auto-filled when you select a country

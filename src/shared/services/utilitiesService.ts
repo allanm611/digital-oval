@@ -55,8 +55,8 @@ class UtilitiesService {
       if (limit) params.append("limit", limit.toString());
       if (offset) params.append("offset", offset.toString());
       const query = params.toString() ? `?${params.toString()}` : "";
-      const data = await this.request<UtilityDto[]>(`/${query}`);
-      return data;
+      const data = await this.request<UtilityDto[] | { data: UtilityDto[] }>(`/${query}`);
+      return Array.isArray(data) ? data : (data as any).data || [];
     } catch (err) {
       console.error("Failed to fetch utilities:", err);
       return [];

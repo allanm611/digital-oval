@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Input from '../../../shared/components/ui/Input';
+import Textarea from '../../../shared/components/ui/Textarea';
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Save } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
@@ -112,39 +113,27 @@ export default function CharacterSetFormPage() {
     <div className="space-y-6">
       <BackButton showBreadcrumb={true} currentLabel={id ? "Edit Character Set" : "Create Character Set"} />
 
-      <form onSubmit={handleSubmit} className="space-y-4 bg-white rounded-lg p-6 border border-gray-200">
+      <form onSubmit={handleSubmit} className="space-y-8 bg-white rounded-lg p-6 border border-gray-200">
         <h2 className="text-sm font-semibold text-gray-900">
           {id ? "Edit Character Set" : "Create Character Set"}
         </h2>
 
         {/* Basic Info */}
-        <div className="space-y-3 pb-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Name *
-            </label>
-            <Input
-              type="text"
-              value={name}
-              onChange={(value) => setName(String(value))}
-              required
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="e.g., GSM Default"
-            />
-          </div>
+        <div className="space-y-6">
+          <Input
+            type="text"
+            label="Name"
+            value={name}
+            onChange={(value) => setName(String(value))}
+            required
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={2}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-              placeholder="Describe this character set"
-            />
-          </div>
+          <Textarea
+            label="Description"
+            value={description}
+            onChange={(value) => setDescription(value)}
+            rows={2}
+          />
         </div>
 
         {/* Configuration */}
@@ -177,76 +166,50 @@ export default function CharacterSetFormPage() {
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Character Set Size
-            </label>
-            <Input
-              type="number"
-              value={characterSetSize}
-              onChange={(value) => setCharacterSetSize(String(value))}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="e.g., 160"
-            />
-          </div>
+          <Input
+            type="number"
+            label="Character Set Size"
+            value={characterSetSize}
+            onChange={(value) => setCharacterSetSize(String(value))}
+          />
         </div>
 
         {/* Characters */}
-        <div className="space-y-4">
+        <div className="space-y-6">
           <h3 className="text-sm font-semibold text-gray-900">Character Strings</h3>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Standard Characters *
-            </label>
-            <textarea
-              value={standardChars}
-              onChange={(e) => setStandardChars(e.target.value)}
-              rows={3}
-              required
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono"
-              placeholder="e.g., ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-            />
-          </div>
+          <Textarea
+            label="Standard Characters"
+            value={standardChars}
+            onChange={(value) => setStandardChars(value)}
+            rows={3}
+            required
+            className="font-mono"
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Double Characters (optional)
-            </label>
-            <textarea
-              value={doubleChars}
-              onChange={(e) => setDoubleChars(e.target.value)}
-              rows={2}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono"
-              placeholder="Characters that take 2 positions"
-            />
-          </div>
+          <Textarea
+            label="Double Characters (optional)"
+            value={doubleChars}
+            onChange={(value) => setDoubleChars(value)}
+            rows={2}
+            className="font-mono"
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Triple Characters (optional)
-            </label>
-            <textarea
-              value={tripleChars}
-              onChange={(e) => setTripleChars(e.target.value)}
-              rows={2}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono"
-              placeholder="Characters that take 3 positions"
-            />
-          </div>
+          <Textarea
+            label="Triple Characters (optional)"
+            value={tripleChars}
+            onChange={(value) => setTripleChars(value)}
+            rows={2}
+            className="font-mono"
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Quad Characters (optional)
-            </label>
-            <textarea
-              value={quadChars}
-              onChange={(e) => setQuadChars(e.target.value)}
-              rows={2}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono"
-              placeholder="Characters that take 4 positions"
-            />
-          </div>
+          <Textarea
+            label="Quad Characters (optional)"
+            value={quadChars}
+            onChange={(value) => setQuadChars(value)}
+            rows={2}
+            className="font-mono"
+          />
         </div>
 
         {/* Active Status */}

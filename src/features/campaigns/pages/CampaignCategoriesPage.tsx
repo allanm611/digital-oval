@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { createPortal } from "react-dom";
 import Input from '../../../shared/components/ui/Input';
+import Textarea from '../../../shared/components/ui/Textarea';
 import SearchInput from '../../../shared/components/ui/SearchInput';
 import { useNavigate } from "react-router-dom";
 import { Edit, Trash2, MessageSquare, Grid, List } from "lucide-react";
@@ -128,42 +129,30 @@ function CategoryModal({
         </div>
 
         <form onSubmit={handleSubmit} className="p-4 sm:p-6">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Campaign Catalog Name *
-              </label>
-              <Input
-                type="text"
-                value={formData.name}
-                onChange={(value) =>
-                  setFormData((prev) => ({ ...prev, name: String(value) }))
-                }
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
-                placeholder="Enter campaign catalog name"
-                maxLength={64}
-                required
-              />
-            </div>
+          <div className="space-y-8">
+            <Input
+              type="text"
+              label="Campaign Catalog Name"
+              value={formData.name}
+              onChange={(value) =>
+                setFormData((prev) => ({ ...prev, name: String(value) }))
+              }
+              maxLength={64}
+              required
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    description: e.target.value,
-                  }))
-                }
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
-                placeholder="Enter campaign catalog description"
-                rows={3}
-                maxLength={500}
-              />
-            </div>
+            <Textarea
+              label="Description"
+              value={formData.description}
+              onChange={(value) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  description: value,
+                }))
+              }
+              rows={3}
+              maxLength={500}
+            />
           </div>
 
           <div className="flex items-center justify-end gap-3 mt-6">

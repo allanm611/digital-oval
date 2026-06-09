@@ -17,6 +17,7 @@ import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils"
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 
@@ -251,15 +252,12 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
           </h2>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
-              <label className="text-sm font-medium text-gray-700">
-                Name<span className="text-red-500">*</span>
-              </label>
               <Input
+                label="Name*"
                 placeholder="Server name"
                 value={form.name}
                 onChange={(val) => setForm((prev) => ({...prev, name: val}))}
                 hasError={!!errors.name}
-                variant="medium"
               />
               {errors.name && (
                 <p className="mt-1 text-xs text-red-500">{errors.name}</p>
@@ -267,15 +265,12 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700">
-                Code<span className="text-red-500">*</span>
-              </label>
               <Input
+                label="Code*"
                 placeholder="Server code"
                 value={form.code}
                 onChange={(val) => setForm((prev) => ({...prev, code: val}))}
                 hasError={!!errors.code}
-                variant="medium"
               />
               {errors.code && (
                 <p className="mt-1 text-xs text-red-500">{errors.code}</p>
@@ -310,15 +305,12 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700">
-                Host<span className="text-red-500">*</span>
-              </label>
               <Input
+                label="Host*"
                 placeholder="Host address"
                 value={form.host}
                 onChange={(val) => setForm((prev) => ({...prev, host: val}))}
                 hasError={!!errors.host}
-                variant="medium"
               />
               {errors.host && (
                 <p className="mt-1 text-xs text-red-500">{errors.host}</p>
@@ -349,65 +341,55 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700">
-                Region
-              </label>
-              <p className="text-xs text-gray-500 mb-1">
-                The physical or logical location of the server (e.g. Uganda,
-                EU-West).
-              </p>
               <Input
+                label="Region"
                 placeholder="Region"
                 value={form.region}
                 onChange={(val) => setForm((prev) => ({...prev, region: val}))}
-                variant="medium"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                The physical or logical location of the server (e.g. Uganda,
+                EU-West).
+              </p>
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700">Port</label>
-              <p className="text-xs text-gray-500 mb-1">
-                The network port used to connect (e.g. 80 for HTTP, 443 for
-                HTTPS).
-              </p>
               <Input
+                label="Port"
                 type="number"
                 placeholder="Port"
                 value={form.port}
                 onChange={(val) => setForm((prev) => ({...prev, port: String(val)}))}
-                variant="medium"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                The network port used to connect (e.g. 80 for HTTP, 443 for
+                HTTPS).
+              </p>
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700">
-                Base Path
-              </label>
-              <p className="text-xs text-gray-500 mb-1">
-                The starting path for API calls (e.g. /api/v1).
-              </p>
               <Input
+                label="Base Path"
                 placeholder="Base path"
                 value={form.base_path}
                 onChange={(val) => setForm((prev) => ({...prev, base_path: val}))}
-                variant="medium"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                The starting path for API calls (e.g. /api/v1).
+              </p>
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700">
-                Server Type
-              </label>
-              <p className="text-xs text-gray-500 mb-1">
-                Classification of server type (e.g. database, api,
-                file-storage).
-              </p>
               <Input
+                label="Server Type"
                 placeholder="Server type"
                 value={form.server_type}
                 onChange={(val) => setForm((prev) => ({...prev, server_type: val}))}
-                variant="medium"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Classification of server type (e.g. database, api,
+                file-storage).
+              </p>
             </div>
           </div>
         </div>
@@ -420,28 +402,22 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
           </h2>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
-              <label className="text-sm font-medium text-gray-700">
-                Timeout (seconds)
-              </label>
               <Input
+                label="Timeout (seconds)"
                 type="number"
                 placeholder="Timeout"
                 value={form.timeout_seconds}
                 onChange={(val) => setForm((prev) => ({...prev, timeout_seconds: Number(val) || 30}))}
-                variant="medium"
               />
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700">
-                Max Retries
-              </label>
               <Input
+                label="Max Retries"
                 type="number"
                 placeholder="Max Retries"
                 value={form.max_retries}
                 onChange={(val) => setForm((prev) => ({...prev, max_retries: Number(val) || 3}))}
-                variant="medium"
               />
             </div>
           </div>
@@ -472,27 +448,21 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
           {form.health_check_enabled && (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 mt-4">
               <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Health Check URL
-                </label>
                 <Input
+                  label="Health Check URL"
                   placeholder="Health check URL"
                   value={form.health_check_url}
                   onChange={(val) => setForm((prev) => ({...prev, health_check_url: val}))}
-                  variant="medium"
                 />
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Interval (seconds)
-                </label>
                 <Input
+                  label="Interval (seconds)"
                   type="number"
                   placeholder="Interval"
                   value={form.health_check_interval_seconds}
                   onChange={(val) => setForm((prev) => ({...prev, health_check_interval_seconds: Number(val) || 300}))}
-                  variant="medium"
                 />
               </div>
             </div>
@@ -523,15 +493,12 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
 
           {form.circuit_breaker_enabled && (
             <div className="mt-4">
-              <label className="text-sm font-medium text-gray-700">
-                Failure Threshold
-              </label>
               <Input
+                label="Failure Threshold"
                 type="number"
                 placeholder="Threshold"
                 value={form.circuit_breaker_threshold}
                 onChange={(val) => setForm((prev) => ({...prev, circuit_breaker_threshold: Number(val) || 5}))}
-                variant="medium"
               />
             </div>
           )}
@@ -556,18 +523,15 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
           <div className="space-y-4">
             {form.tls_enabled && (
               <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Authentication Type
-                </label>
-                <p className="text-xs text-gray-500 mb-1">
-                  Specify the authentication method for secure connections (e.g. mTLS, OAuth, API Key).
-                </p>
                 <Input
+                  label="Authentication Type"
                   placeholder="Authentication type"
                   value={form.authentication_type}
                   onChange={(val) => setForm((prev) => ({...prev, authentication_type: val}))}
-                  variant="medium"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Specify the authentication method for secure connections (e.g. mTLS, OAuth, API Key).
+                </p>
               </div>
             )}
             <div>
@@ -578,10 +542,11 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
                 Additional metadata as JSON (e.g. &#x7B;&quot;key&quot;:
                 &quot;value&quot;&#x7D;).
               </p>
-              <textarea
+              <Textarea
+                label="Metadata"
                 value={form.metadata}
-                onChange={(e) => setForm((prev) => ({...prev, metadata: e.target.value}))}
-                className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none font-mono`}
+                onChange={(value) => setForm((prev) => ({...prev, metadata: value}))}
+                className="font-mono"
                 rows={3}
                 placeholder='{"key": "value"}'
               />

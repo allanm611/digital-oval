@@ -34,6 +34,7 @@ import { getWorkflowStatusColor, getApprovalStatusColor, getStatusStyle, getStat
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import BackButton from "../../../shared/components/ui/BackButton";
+import Textarea from "../../../shared/components/ui/Textarea";
 import { campaignService } from "../services/campaignService";
 import { campaignFlowService } from "../services/campaignFlowService";
 import {
@@ -2367,16 +2368,11 @@ export default function CampaignDetailsPage() {
               </div>
 
               <div className="mb-4">
-                <label
-                  className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                >
-                  Rejection Comments <span className="text-red-500">*</span>
-                </label>
-                <textarea
+                <Textarea
+                  label="Rejection Comments *"
                   value={rejectComments}
-                  onChange={(e) => setRejectComments(e.target.value)}
+                  onChange={setRejectComments}
                   placeholder="Explain why this campaign is being rejected..."
-                  className={`w-full px-4 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent`}
                   rows={4}
                   maxLength={500}
                 />
@@ -2827,15 +2823,10 @@ export default function CampaignDetailsPage() {
                   </div>
 
                   <div>
-                    <label
-                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                    >
-                      Condition Rule (JSON)
-                    </label>
-                    <textarea
+                    <Textarea
+                      label="Condition Rule (JSON)"
                       value={rawConditionRuleInput}
-                      onChange={(e) => {
-                        const value = e.target.value;
+                      onChange={(value) => {
                         setRawConditionRuleInput(value);
                         setConditionRuleError(""); // Clear error on change
 
@@ -2857,11 +2848,8 @@ export default function CampaignDetailsPage() {
                         }
                       }}
                       placeholder='{"condition": "value"}'
-                      className={`w-full px-3 py-2 border ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-xs ${
-                        conditionRuleError
-                          ? "border-red-500"
-                          : "border-gray-300"
-                      }`}
+                      className="font-mono text-xs"
+                      hasError={!!conditionRuleError}
                       rows={3}
                     />
                     {conditionRuleError && (

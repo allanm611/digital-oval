@@ -4,6 +4,7 @@ import CodeMirror from "@uiw/react-codemirror";
 import { sql as sqlLanguage } from "@codemirror/lang-sql";
 import BackButton from "../../../shared/components/ui/BackButton";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -274,7 +275,7 @@ export default function CreateSubscriberProfilePage() {
                   value={formData.name}
                   onChange={handleInputChange('name')}
                   hasError={!!errors.name}
-                  variant="medium"
+                 
                   disabled={saving}
                 />
                 {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
@@ -288,7 +289,7 @@ export default function CreateSubscriberProfilePage() {
                   placeholder="e.g., p_account_type"
                   value={formData.field_value}
                   onChange={handleInputChange('field_value')}
-                  variant="medium"
+                 
                   disabled={saving}
                 />
               </div>
@@ -333,7 +334,7 @@ export default function CreateSubscriberProfilePage() {
                   value={formData.default_value}
                   onChange={handleInputChange('default_value')}
                   hasError={!!errors.default_value}
-                  variant="medium"
+                 
                   disabled={saving}
                   step={formData.field_type === "decimal" ? "0.01" : undefined}
                 />
@@ -342,18 +343,13 @@ export default function CreateSubscriberProfilePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description
-              </label>
-              <textarea
-                name="description"
+              <Textarea
+                label="Description"
                 value={formData.description}
-                onChange={handleTextareaChange}
+                onChange={(value) => handleTextareaChange({ target: { name: "description", value } } as any)}
                 placeholder="Describe this profile field..."
                 rows={3}
-                className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none ${
-                  errors.description ? "border-red-500" : "border-gray-300"
-                }`}
+                hasError={!!errors.description}
                 disabled={saving}
               />
               {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description}</p>}
@@ -368,7 +364,7 @@ export default function CreateSubscriberProfilePage() {
                 placeholder="e.g., 0"
                 value={formData.display_order}
                 onChange={handleInputChange('display_order')}
-                variant="medium"
+               
                 disabled={saving}
               />
             </div>
@@ -429,7 +425,7 @@ export default function CreateSubscriberProfilePage() {
                     value={formData.range_min}
                     onChange={handleInputChange('range_min')}
                     hasError={!!errors.range_min}
-                    variant="medium"
+                   
                     disabled={saving}
                   />
                   {errors.range_min && <p className="text-red-500 text-xs mt-1">{errors.range_min}</p>}
@@ -444,7 +440,7 @@ export default function CreateSubscriberProfilePage() {
                     value={formData.range_max}
                     onChange={handleInputChange('range_max')}
                     hasError={!!errors.range_max}
-                    variant="medium"
+                   
                     disabled={saving}
                   />
                   {errors.range_max && <p className="text-red-500 text-xs mt-1">{errors.range_max}</p>}
@@ -462,7 +458,7 @@ export default function CreateSubscriberProfilePage() {
                   value={formData.discrete_values}
                   onChange={handleInputChange('discrete_values')}
                   hasError={!!errors.discrete_values}
-                  variant="medium"
+                 
                   disabled={saving}
                 />
                 {errors.discrete_values && <p className="text-red-500 text-xs mt-1">{errors.discrete_values}</p>}

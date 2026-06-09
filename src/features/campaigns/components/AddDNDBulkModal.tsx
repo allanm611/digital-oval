@@ -321,10 +321,8 @@ export default function AddDNDBulkModal({
 
                 {/* MSISDN */}
                 <div>
-                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                    MSISDN *
-                  </label>
                   <Input
+                    label="MSISDN *"
                     type="tel"
                     value={formData.msisdn}
                     onChange={(value) => {
@@ -338,7 +336,6 @@ export default function AddDNDBulkModal({
                     }}
                     placeholder="Country code + number (e.g., 254712345678)"
                     hasError={!!errors.msisdn}
-                    variant="medium"
                   />
                   {errors.msisdn && (
                     <p className="text-xs text-red-500 mt-1">{errors.msisdn}</p>
@@ -352,10 +349,8 @@ export default function AddDNDBulkModal({
               <>
                 {/* Name */}
                 <div>
-                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                    Name *
-                  </label>
                   <Input
+                    label="Name *"
                     value={formData.external_name}
                     onChange={(value) => {
                       setFormData({ ...formData, external_name: value });
@@ -365,7 +360,6 @@ export default function AddDNDBulkModal({
                     }}
                     placeholder="Full name"
                     hasError={!!errors.external_name}
-                    variant="medium"
                   />
                   {errors.external_name && (
                     <p className="text-xs text-red-500 mt-1">{errors.external_name}</p>
@@ -374,10 +368,8 @@ export default function AddDNDBulkModal({
 
                 {/* Email */}
                 <div>
-                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                    Email
-                  </label>
                   <Input
+                    label="Email"
                     type="email"
                     value={formData.external_email}
                     onChange={(value) => {
@@ -388,16 +380,13 @@ export default function AddDNDBulkModal({
                     }}
                     placeholder="Email address"
                     hasError={!!errors.external_email}
-                    variant="medium"
                   />
                 </div>
 
                 {/* MSISDN */}
                 <div>
-                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                    MSISDN
-                  </label>
                   <Input
+                    label="MSISDN"
                     type="tel"
                     value={formData.external_msisdn}
                     onChange={(value) => {
@@ -411,7 +400,6 @@ export default function AddDNDBulkModal({
                     }}
                     placeholder="Country code + number (e.g., 254712345678)"
                     hasError={!!errors.external_msisdn}
-                    variant="medium"
                   />
                   {errors.external_msisdn && (
                     <p className="text-xs text-red-500 mt-1">{errors.external_msisdn}</p>
@@ -494,22 +482,14 @@ export default function AddDNDBulkModal({
 
             {/* Custom Duration Date */}
             {formData.duration === "custom" && (
-              <div>
-                <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                  Expiry Date
-                </label>
-                <input
-                  type="date"
-                  value={formData.custom_duration_date}
-                  onChange={(e) => {
-                    setFormData({ ...formData, custom_duration_date: e.target.value });
-                  }}
-                  className={`w-full px-3 py-2 border ${tw.rounded} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                  style={{
-                    borderColor: color.border.default,
-                  }}
-                />
-              </div>
+              <Input
+                label="Expiry Date"
+                type="date"
+                value={formData.custom_duration_date}
+                onChange={(value) => {
+                  setFormData({ ...formData, custom_duration_date: value });
+                }}
+              />
             )}
           </div>
 

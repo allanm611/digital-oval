@@ -136,7 +136,7 @@ export default function SendTestModal({
             placeholder={getRecipientPlaceholder()}
             value={recipient}
             onChange={(value) => setRecipient(value)}
-            variant="medium"
+           
           />
         </div>
 

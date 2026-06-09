@@ -5,6 +5,7 @@ import { isValidCountryCodePhone, validateContacts } from "../../../shared/utils
 import { ManualBroadcastData } from "../pages/CreateManualBroadcastPage";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import QuickListPickerModal from "../../segments/components/QuickListPickerModal";
 import CreateQuickListModal from "../../quicklists/components/CreateQuickListModal";
@@ -293,10 +294,8 @@ export default function TargetAudienceStep({
       <div className="p-6 space-y-6">
         {/* Broadcast Name */}
         <div>
-          <label className="text-sm font-medium text-gray-900 block mb-1">
-            Broadcast Name *
-          </label>
           <Input
+            label="Broadcast Name"
             placeholder="e.g., Q4 Campaign Audience"
             value={listName}
             onChange={(value) => {
@@ -304,6 +303,7 @@ export default function TargetAudienceStep({
               setError("");
             }}
             disabled={isSubmitting}
+            required
           />
         </div>
 
@@ -417,19 +417,15 @@ export default function TargetAudienceStep({
         {/* Manual Input - Show only when Manual Input is selected */}
         {inputMethod === "manual" && (
           <div>
-            <label className="text-sm font-medium text-gray-900 block mb-2">
-              Enter Contacts Manually *
-            </label>
-
             {/* Error Message above textarea */}
             {manualInputError && (
               <p className="mb-2 text-sm text-red-600">{manualInputError}</p>
             )}
 
-            <textarea
+            <Textarea
+              label="Enter Contacts Manually"
               value={manualInput}
-              onChange={(e) => {
-                const value = e.target.value;
+              onChange={(value) => {
                 console.log("[TargetAudienceStep] Manual input changed:", {
                   length: value.length,
                   value: value.substring(0, 50) + (value.length > 50 ? "..." : ""),
@@ -456,11 +452,9 @@ export default function TargetAudienceStep({
               placeholder="Enter emails or phone numbers (one per line)&#10;Phone numbers must begin with country code&#10;&#10;Example:&#10;john@example.com&#10;jane@example.com&#10;254 764 555 247&#10;(254) 764-5524"
               rows={10}
               disabled={isSubmitting}
-              className={`w-full px-3 py-2 text-sm border ${
-                manualInputError ? "border-red-400" : "border-gray-300"
-              } rounded-md focus:outline-none focus:ring-2 ${
-                manualInputError ? "focus:ring-red-400" : "focus:ring-[var(--primary-color,#5EC6B1)]"
-              } disabled:opacity-50 font-mono`}
+              hasError={!!manualInputError}
+              className="font-mono"
+              required
             />
 
             {(manualInput?.trim() || data?.rowCount) && !manualInputError && (

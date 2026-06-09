@@ -1248,10 +1248,8 @@ export default function SeedListManagementPage() {
 
                     {/* MSISDN */}
                     <div>
-                      <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                        MSISDN *
-                      </label>
                       <Input
+                        label="MSISDN *"
                         type="tel"
                         value={formData.phone_number}
                         onChange={(value) => {
@@ -1265,7 +1263,6 @@ export default function SeedListManagementPage() {
                         }}
                         placeholder="Country code + number (e.g., 254712345678)"
                         hasError={!!errors.phone_number}
-                        variant="medium"
                       />
                       {errors.phone_number && (
                         <p className="text-xs text-red-500 mt-1">{errors.phone_number}</p>
@@ -1279,10 +1276,8 @@ export default function SeedListManagementPage() {
                   <>
                     {/* Name */}
                     <div>
-                      <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                        Name *
-                      </label>
                       <Input
+                        label="Name *"
                         value={formData.external_name}
                         onChange={(value) => {
                           setFormData({ ...formData, external_name: value });
@@ -1292,7 +1287,6 @@ export default function SeedListManagementPage() {
                         }}
                         placeholder="Full name"
                         hasError={!!errors.external_name}
-                        variant="medium"
                       />
                       {errors.external_name && (
                         <p className="text-xs text-red-500 mt-1">{errors.external_name}</p>
@@ -1301,10 +1295,8 @@ export default function SeedListManagementPage() {
 
                     {/* Email */}
                     <div>
-                      <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                        Email
-                      </label>
                       <Input
+                        label="Email"
                         type="email"
                         value={formData.external_email}
                         onChange={(value) => {
@@ -1315,7 +1307,6 @@ export default function SeedListManagementPage() {
                         }}
                         placeholder="Email address"
                         hasError={!!errors.external_email}
-                        variant="medium"
                       />
                       {errors.external_email && (
                         <p className="text-xs text-red-500 mt-1">{errors.external_email}</p>
@@ -1324,10 +1315,8 @@ export default function SeedListManagementPage() {
 
                     {/* MSISDN */}
                     <div>
-                      <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                        MSISDN
-                      </label>
                       <Input
+                        label="MSISDN"
                         type="tel"
                         value={formData.external_msisdn}
                         onChange={(value) => {
@@ -1341,7 +1330,6 @@ export default function SeedListManagementPage() {
                         }}
                         placeholder="Country code + number (e.g., 254712345678)"
                         hasError={!!errors.external_msisdn}
-                        variant="medium"
                       />
                       {errors.external_msisdn && (
                         <p className="text-xs text-red-500 mt-1">{errors.external_msisdn}</p>

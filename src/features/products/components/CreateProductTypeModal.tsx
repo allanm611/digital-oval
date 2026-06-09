@@ -6,6 +6,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useAuth } from "../../../contexts/AuthContext";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import ModalFooter from "../../../shared/components/ui/ModalFooter";
 
 interface CreateProductTypeModalProps {
@@ -92,32 +93,20 @@ export default function CreateProductTypeModal({
           </button>
         </div>
 
-        <div className="p-4 sm:p-6">
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Type Name *
-            </label>
-            <Input
-              type="text"
-              value={newTypeName}
-              onChange={(value) => setNewTypeName(String(value))}
-              placeholder="e.g., Data, Voice, Bundle..."
-              variant="medium"
-            />
-          </div>
+        <div className="p-4 sm:p-6 space-y-6">
+          <Input
+            type="text"
+            label="Type Name"
+            value={newTypeName}
+            onChange={(value) => setNewTypeName(String(value))}
+          />
 
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
-            <textarea
-              value={newTypeDescription}
-              onChange={(e) => setNewTypeDescription(e.target.value)}
-              rows={3}
-              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:outline-none`}
-              placeholder="Product type description..."
-            />
-          </div>
+          <Textarea
+            label="Description"
+            value={newTypeDescription}
+            onChange={(value) => setNewTypeDescription(value)}
+            rows={3}
+          />
 
           <ModalFooter
             onCancel={handleClose}

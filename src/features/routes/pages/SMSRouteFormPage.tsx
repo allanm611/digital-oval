@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Save, Plus } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -279,16 +280,15 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Route Name *
-                </label>
                 <Input
+                  label="Route Name"
                   placeholder="e.g., Primary SMS Gateway"
                   value={formData.name}
                   onChange={handleInputChange('name')}
                   hasError={!!errors.name}
-                  variant="medium"
+                 
                   disabled={saving}
+                  required
                 />
                 {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
               </div>
@@ -315,16 +315,12 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description
-              </label>
-              <textarea
-                name="description"
+              <Textarea
+                label="Description"
                 value={formData.description || ""}
-                onChange={handleTextareaChange}
+                onChange={(value) => setFormData((prev) => ({ ...prev, description: value }))}
                 placeholder="Add notes about this route..."
                 rows={3}
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
                 disabled={saving}
               />
             </div>
@@ -418,27 +414,22 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
                     </p>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Retry Attempts Before Failover
-                    </label>
-                    <Input
-                      type="number"
-                      placeholder="3"
-                      value={String(formData.retry_attempts || 3)}
-                      onChange={(value) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          retry_attempts: value ? Number(value) : 3,
-                        }))
-                      }
-                      variant="medium"
-                      disabled={saving}
-                    />
-                    <p className={`text-xs ${tw.textSecondary} mt-2`}>
-                      Number of times to retry this route before using the backup route
-                    </p>
-                  </div>
+                  <Input
+                    label="Retry Attempts Before Failover"
+                    type="number"
+                    placeholder="3"
+                    value={String(formData.retry_attempts || 3)}
+                    onChange={(value) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        retry_attempts: value ? Number(value) : 3,
+                      }))
+                    }
+                    disabled={saving}
+                  />
+                  <p className={`text-xs ${tw.textSecondary} mt-2`}>
+                    Number of times to retry this route before using the backup route
+                  </p>
                 </div>
               )}
             </div>

@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import {
   useFormDataPersistence,
   clearPersistedFormData,
@@ -351,35 +352,26 @@ function BasicInfoStep({
           Let's start with the essential details of your offer
         </p>
       </div>
-      <div className="space-y-6">
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Offer Name *
-          </label>
-          <Input
-            placeholder="e.g., Summer Data Bundle"
-            value={formData.name}
-            onChange={(value) => {
-              setFormData({ ...formData, name: value });
-              if (validationErrors?.name && clearValidationErrors) {
-                clearValidationErrors();
-              }
-            }}
-            hasError={!!validationErrors?.name}
-            variant="medium"
-            required
-          />
-          {validationErrors?.name && (
-            <p className="mt-1 text-sm text-red-600">{validationErrors.name}</p>
-          )}
-        </div>
+      <div className="space-y-8">
+        <Input
+          label="Offer Name"
+          value={formData.name}
+          onChange={(value) => {
+            setFormData({ ...formData, name: value });
+            if (validationErrors?.name && clearValidationErrors) {
+              clearValidationErrors();
+            }
+          }}
+          hasError={!!validationErrors?.name}
+          required
+        />
+        {validationErrors?.name && (
+          <p className="mt-1 text-sm text-red-600">{validationErrors.name}</p>
+        )}
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Offer Code *
-          </label>
           <Input
-            placeholder="e.g., SUMMER_DATA_2024"
+            label="Offer Code"
             value={formData.code || ""}
             onChange={(value) => {
               setFormData({ ...formData, code: value });
@@ -388,7 +380,6 @@ function BasicInfoStep({
               }
             }}
             hasError={!!validationErrors?.code}
-            variant="medium"
             required
           />
           {validationErrors?.code && (
@@ -400,20 +391,14 @@ function BasicInfoStep({
           </p>
         </div>
 
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Description
-          </label>
-          <textarea
-            value={formData.description || ""}
-            onChange={(e) =>
-              setFormData({ ...formData, description: e.target.value })
-            }
-            placeholder="Describe what this offer provides to customers..."
-            rows={3}
-            className={`w-full px-3 py-1.5 border border-gray-300 ${tw.rounded} focus:outline-none transition-all duration-200 text-sm placeholder:text-sm`}
-          />
-        </div>
+        <Textarea
+          label="Description"
+          value={formData.description || ""}
+          onChange={(value) =>
+            setFormData({ ...formData, description: value })
+          }
+          rows={3}
+        />
 
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -710,13 +695,10 @@ function BasicInfoStep({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Max Usage Per Customer
-          </label>
           <Input
             type="number"
+            label="Max Usage Per Customer"
             min="0"
-            placeholder="e.g., 1, 5, 10"
             value={(formData.max_usage_per_customer || "").toString()}
             onChange={(value) => {
               setFormData({
@@ -733,7 +715,6 @@ function BasicInfoStep({
               }
             }}
             hasError={!!validationErrors?.max_usage_per_customer}
-            variant="medium"
           />
           {validationErrors?.max_usage_per_customer && (
             <p className="mt-1 text-sm text-red-600">

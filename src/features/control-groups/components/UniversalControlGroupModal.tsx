@@ -220,11 +220,9 @@ function CreateControlGroupModal({
           {currentStep === 1 && (
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Control Group Name *
-                </label>
                 <Input
                   type="text"
+                  label="Control Group Name *"
                   value={formData.name}
                   onChange={(value) =>
                     setFormData({ ...formData, name: String(value) })

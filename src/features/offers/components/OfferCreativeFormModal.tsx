@@ -3,6 +3,7 @@ import { Save, Eye, File, X, Send } from "lucide-react";
 import RegularModal from "../../../shared/components/ui/RegularModal";
 import ModalFooter from "../../../shared/components/ui/ModalFooter";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import TypeSelector from "../../../shared/components/TypeSelector";
@@ -560,10 +561,8 @@ export default function OfferCreativeFormModal({
               </div>
             ) : (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Subject Line
-                </label>
                 <Input
+                  label="Subject Line"
                   ref={titleInputRef}
                   placeholder="Enter subject..."
                   maxLength={160}
@@ -577,7 +576,7 @@ export default function OfferCreativeFormModal({
                     setActiveField("title");
                     setCursorPosition(e.currentTarget.selectionStart || 0);
                   }}
-                  variant="medium"
+                 
                 />
                 {errors.title && (
                   <p className="text-xs text-red-600 mt-1">{errors.title}</p>
@@ -658,9 +657,6 @@ export default function OfferCreativeFormModal({
 
             {/* Message Body */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Message Body
-              </label>
               {isRichText ? (
                 <div
                   onClick={() => setActiveField("body")}
@@ -674,13 +670,16 @@ export default function OfferCreativeFormModal({
                   />
                 </div>
               ) : (
-                <textarea
+                <Textarea
                   ref={bodyTextareaRef}
+                  label="Message Body"
                   value={formData.text_body || ""}
-                  onChange={(e) => {
+                  onChange={(value) => {
                     setActiveField("body");
-                    setCursorPosition(e.target.selectionStart || 0);
-                    setFormData((prev) => ({ ...prev, text_body: e.target.value }));
+                    if (bodyTextareaRef.current) {
+                      setCursorPosition(bodyTextareaRef.current.selectionStart || 0);
+                    }
+                    setFormData((prev) => ({ ...prev, text_body: value }));
                   }}
                   onClick={(e) => {
                     setActiveField("body");
@@ -692,7 +691,6 @@ export default function OfferCreativeFormModal({
                   }}
                   placeholder="Enter your message..."
                   rows={8}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
                 />
               )}
               {variableError && <div className="mt-2 text-sm text-red-700">{variableError}</div>}

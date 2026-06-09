@@ -11,6 +11,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import HeadlessMultiSelect from "../../../shared/components/ui/HeadlessMultiSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import Textarea from "../../../shared/components/ui/Textarea";
 import { timezoneService } from "../services/timezoneService";
 import { TimeZone, CreateTimeZoneRequest, UpdateTimeZoneRequest } from "../types/timezone";
 import { getCountriesList } from "../../../shared/services/countryDataService";
@@ -176,10 +177,8 @@ export default function CreateEditTimezonePage() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  IANA Timezone ID <span className="text-red-500">*</span>
-                </label>
                 <Input
+                  label="IANA Timezone ID"
                   type="text"
                   value={formData.value}
                   onChange={(value) => handleInputChange("value", value)}
@@ -189,10 +188,8 @@ export default function CreateEditTimezonePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Timezone Label <span className="text-red-500">*</span>
-                </label>
                 <Input
+                  label="Timezone Label"
                   type="text"
                   value={formData.label}
                   onChange={(value) => handleInputChange("label", value)}
@@ -204,10 +201,8 @@ export default function CreateEditTimezonePage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  UTC Offset <span className="text-red-500">*</span>
-                </label>
                 <Input
+                  label="UTC Offset"
                   type="text"
                   value={formData.utc_offset}
                   onChange={(value) => handleInputChange("utc_offset", value)}
@@ -217,10 +212,8 @@ export default function CreateEditTimezonePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Abbreviation
-                </label>
                 <Input
+                  label="Abbreviation"
                   type="text"
                   value={formData.abbreviation}
                   onChange={(value) => handleInputChange("abbreviation", value)}
@@ -231,10 +224,8 @@ export default function CreateEditTimezonePage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Sort Order
-                </label>
                 <Input
+                  label="Sort Order"
                   type="number"
                   value={formData.sort_order}
                   onChange={(value) => handleInputChange("sort_order", value)}
@@ -243,10 +234,8 @@ export default function CreateEditTimezonePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Windows Timezone ID
-                </label>
                 <Input
+                  label="Windows Timezone ID"
                   type="text"
                   value={formData.windows_tz_id}
                   onChange={(value) => handleInputChange("windows_tz_id", value)}
@@ -257,15 +246,12 @@ export default function CreateEditTimezonePage() {
             </div>
           </div>
           <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
-            <textarea
+            <Textarea
+              label="Description"
               value={formData.description}
-              onChange={(e) => handleInputChange("description", e.target.value)}
+              onChange={(value) => handleInputChange("description", value)}
               placeholder="Optional description"
               rows={2}
-              className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none disabled:opacity-50 disabled:cursor-not-allowed`}
               disabled={saving}
             />
           </div>
@@ -289,10 +275,8 @@ export default function CreateEditTimezonePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Representative City
-                </label>
                 <Input
+                  label="Representative City"
                   type="text"
                   value={formData.representative_city}
                   onChange={(value) => handleInputChange("representative_city", value)}
@@ -339,10 +323,8 @@ export default function CreateEditTimezonePage() {
             {formData.uses_dst && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    DST Offset
-                  </label>
                   <Input
+                    label="DST Offset"
                     type="text"
                     value={formData.dst_offset}
                     onChange={(value) => handleInputChange("dst_offset", value)}
@@ -351,10 +333,8 @@ export default function CreateEditTimezonePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    DST Start Date
-                  </label>
                   <Input
+                    label="DST Start Date"
                     type="text"
                     value={formData.dst_start_date}
                     onChange={(value) => handleInputChange("dst_start_date", value)}
@@ -363,10 +343,8 @@ export default function CreateEditTimezonePage() {
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    DST End Date
-                  </label>
                   <Input
+                    label="DST End Date"
                     type="text"
                     value={formData.dst_end_date}
                     onChange={(value) => handleInputChange("dst_end_date", value)}

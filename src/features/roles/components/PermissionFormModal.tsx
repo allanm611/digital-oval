@@ -7,6 +7,7 @@ import { permissionService } from "../services/permissionService";
 import { color } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 
@@ -239,16 +240,13 @@ export default function PermissionFormModal({
           {/* Name and Code Row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Permission Name *
-              </label>
               <Input
+                label="Permission Name *"
                 type="text"
                 value={formData.name}
                 onChange={(value) => setFormData({ ...formData, name: String(value) })}
                 placeholder="e.g., User Management"
                 hasError={!!errors.name}
-                variant="medium"
               />
               {errors.name && (
                 <p className="mt-1 text-sm text-red-600">{errors.name}</p>
@@ -256,17 +254,14 @@ export default function PermissionFormModal({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Code *
-              </label>
               <Input
+                label="Code *"
                 type="text"
                 value={formData.code}
                 onChange={(value) => setFormData({ ...formData, code: String(value) })}
                 disabled={!!permission}
                 placeholder="e.g., permission.action.resource"
                 hasError={!!errors.code}
-                variant="medium"
               />
               {errors.code && (
                 <p className="mt-1 text-sm text-red-600">{errors.code}</p>
@@ -281,19 +276,13 @@ export default function PermissionFormModal({
           </div>
 
           {/* Description */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Description
-            </label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              rows={3}
-              placeholder="Enter permission description..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+          <Textarea
+            label="Description"
+            value={formData.description}
+            onChange={(value) => setFormData({ ...formData, description: value })}
+            rows={3}
+            placeholder="Enter permission description..."
+          />
 
           {/* Action and Resource Type */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -317,18 +306,13 @@ export default function PermissionFormModal({
               )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Resource Type ID (Optional)
-              </label>
-              <Input
-                type="number"
-                value={String(formData.resource_type_id)}
-                onChange={(value) => setFormData({ ...formData, resource_type_id: value === "" ? "" : parseInt(String(value)) || "" })}
-                placeholder="e.g., 1"
-                variant="medium"
-              />
-            </div>
+            <Input
+              label="Resource Type ID (Optional)"
+              type="number"
+              value={String(formData.resource_type_id)}
+              onChange={(value) => setFormData({ ...formData, resource_type_id: value === "" ? "" : parseInt(String(value)) || "" })}
+              placeholder="e.g., 1"
+            />
           </div>
 
           {/* Security Checkboxes */}

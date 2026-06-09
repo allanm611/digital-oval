@@ -19,6 +19,7 @@ import { controlGroupService } from "../services/controlGroupService";
 import type { CreateControlGroupRequest, TargetRenderTime } from "../types/controlGroup";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 
 export default function CreateControlGroupPage() {
   const navigate = useNavigate();
@@ -459,7 +460,7 @@ export default function CreateControlGroupPage() {
                         setControlGroupName(value);
                         if (nameError) setNameError("");
                       }}
-                      variant="medium"
+                     
                       hasError={!!nameError}
                     />
                     {nameError && (
@@ -478,7 +479,7 @@ export default function CreateControlGroupPage() {
                         setControlGroupCode(value);
                         if (codeError) setCodeError("");
                       }}
-                      variant="medium"
+                     
                       hasError={!!codeError}
                     />
                     {codeError && (
@@ -487,25 +488,15 @@ export default function CreateControlGroupPage() {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Description
-                  </label>
-                  <textarea
-                    placeholder="Enter control group description"
-                    value={controlGroupDescription}
-                    onChange={(e) => setControlGroupDescription(e.target.value)}
-                    className={`w-full px-3 text-sm py-2 border ${tw.rounded} transition-all outline-none resize-none ${
-                      focusedField === "description"
-                        ? "border-blue-500 ring-2 ring-blue-500/20"
-                        : "border-gray-300"
-                    }`}
-                    onFocus={() => setFocusedField("description")}
-                    onBlur={() => setFocusedField(null)}
-
-                    rows={3}
-                  />
-                </div>
+                <Textarea
+                  label="Description"
+                  placeholder="Enter control group description"
+                  value={controlGroupDescription}
+                  onChange={setControlGroupDescription}
+                  rows={3}
+                  onFocus={() => setFocusedField("description")}
+                  onBlur={() => setFocusedField(null)}
+                />
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 my-3">

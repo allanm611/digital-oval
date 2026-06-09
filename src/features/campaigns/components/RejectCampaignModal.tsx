@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { X, XCircle } from "lucide-react";
+import Textarea from "../../../shared/components/ui/Textarea";
 import { campaignService } from "../services/campaignService";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -110,21 +111,16 @@ export default function RejectCampaignModal({
             </p>
 
             <div className="mb-4">
-              <label
-                className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-              >
-                Rejection Reason *
-              </label>
-              <textarea
+              <Textarea
+                label="Rejection Reason"
                 value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
+                onChange={(value) => setRejectionReason(value)}
                 placeholder="Explain why this campaign is being rejected..."
-                className={`w-full px-3 py-2 border ${tw.rounded} focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors resize-none text-sm ${tw.textPrimary}`}
-                style={{ borderColor: color.border.default }}
                 rows={4}
                 disabled={isRejecting}
+                required
               />
-              <p className={`text-xs ${tw.textSecondary} mt-1`}>
+              <p className={`text-xs ${tw.textSecondary} mt-2`}>
                 This reason will be visible to the campaign owner
               </p>
             </div>

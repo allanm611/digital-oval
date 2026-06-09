@@ -28,6 +28,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 
 const SCHEDULE_TYPES: {
@@ -558,19 +559,14 @@ export default function CreateScheduledJobPage() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Name <span className="text-red-500">*</span>
-              </label>
-              <Input type="text"
+              <Input
+                label="Name*"
+                type="text"
                 value={formData.name}
                 onChange={(value) =>
                   setFormData({ ...formData, name: String(value) })
                 }
-                className={`w-full ${tw.rounded} border px-3 py-2 text-sm ${
-                  errors.name
-                    ? "border-red-300 focus:border-red-500 focus:ring-red-500"
-                    : "border-gray-300 focus:border-[#3b8169] focus:ring-[#3b8169]"
-                } focus:outline-none focus:ring-1`}
+                hasError={!!errors.name}
                 placeholder="Enter job name"
               />
               {errors.name && (
@@ -579,10 +575,9 @@ export default function CreateScheduledJobPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Code <span className="text-red-500">*</span>
-              </label>
-              <Input type="text"
+              <Input
+                label="Code*"
+                type="text"
                 value={formData.code}
                 onChange={(value) =>
                   setFormData({
@@ -590,11 +585,7 @@ export default function CreateScheduledJobPage() {
                     code: String(value),
                   })
                 }
-                className={`w-full ${tw.rounded} border px-3 py-2 text-sm ${
-                  errors.code
-                    ? "border-red-300 focus:border-red-500 focus:ring-red-500"
-                    : "border-gray-300 focus:border-[#3b8169] focus:ring-[#3b8169]"
-                } focus:outline-none focus:ring-1`}
+                hasError={!!errors.code}
                 placeholder="JOB_CODE"
               />
               {errors.code && (
@@ -603,20 +594,14 @@ export default function CreateScheduledJobPage() {
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description <span className="text-red-500">*</span>
-              </label>
-              <textarea
+              <Textarea
+                label="Description *"
                 value={formData.description || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
+                onChange={(value) =>
+                  setFormData({ ...formData, description: value })
                 }
                 rows={3}
-                className={`w-full ${tw.rounded} border px-3 py-2 text-sm ${
-                  errors.description
-                    ? "border-red-300 focus:border-red-500 focus:ring-red-500"
-                    : "border-gray-300 focus:border-[#3b8169] focus:ring-[#3b8169]"
-                } focus:outline-none focus:ring-1`}
+                hasError={!!errors.description}
                 placeholder="Enter job description"
               />
               {errors.description && (
@@ -1164,40 +1149,32 @@ export default function CreateScheduledJobPage() {
               </div>
 
               {/* Batch Size */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Batch Size
-                </label>
-                <Input type="number"
-                  min="1"
-                  value={campaignMeta.batch_size}
-                  onChange={(value) =>
-                    setCampaignMeta((prev) => ({
-                      ...prev,
-                      batch_size: Number(String(value)),
-                    }))
-                  }
-                  className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
-                />
-              </div>
+              <Input
+                label="Batch Size"
+                type="number"
+                min="1"
+                value={campaignMeta.batch_size}
+                onChange={(value) =>
+                  setCampaignMeta((prev) => ({
+                    ...prev,
+                    batch_size: Number(String(value)),
+                  }))
+                }
+              />
 
               {/* Max Parallel Broadcasts */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Max Parallel Broadcasts
-                </label>
-                <Input type="number"
-                  min="1"
-                  value={campaignMeta.max_parallel_broadcasts}
-                  onChange={(value) =>
-                    setCampaignMeta((prev) => ({
-                      ...prev,
-                      max_parallel_broadcasts: Number(String(value)),
-                    }))
-                  }
-                  className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
-                />
-              </div>
+              <Input
+                label="Max Parallel Broadcasts"
+                type="number"
+                min="1"
+                value={campaignMeta.max_parallel_broadcasts}
+                onChange={(value) =>
+                  setCampaignMeta((prev) => ({
+                    ...prev,
+                    max_parallel_broadcasts: Number(String(value)),
+                  }))
+                }
+              />
             </div>
           </div>
         )}
@@ -1318,10 +1295,9 @@ export default function CreateScheduledJobPage() {
 
             {formData.schedule_type === "interval" && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Repeat Every (seconds) <span className="text-red-500">*</span>
-                </label>
-                <Input type="number"
+                <Input
+                  label="Repeat Every (seconds)*"
+                  type="number"
                   min="1"
                   value={formData.interval_seconds || ""}
                   onChange={(value) =>
@@ -1332,11 +1308,7 @@ export default function CreateScheduledJobPage() {
                         : undefined,
                     })
                   }
-                  className={`w-full ${tw.rounded} border px-3 py-2 text-sm ${
-                    errors.interval_seconds
-                      ? "border-red-300 focus:border-red-500 focus:ring-red-500"
-                      : "border-gray-300 focus:border-[#3b8169] focus:ring-[#3b8169]"
-                  } focus:outline-none focus:ring-1`}
+                  hasError={!!errors.interval_seconds}
                   placeholder="60"
                 />
                 {errors.interval_seconds && (
@@ -1434,57 +1406,45 @@ export default function CreateScheduledJobPage() {
               </Listbox>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Priority
-              </label>
-              <Input type="number"
-                min="0"
-                max="100"
-                value={formData.priority || 50}
-                onChange={(value) =>
-                  setFormData({
-                    ...formData,
-                    priority: Number(String(value)),
-                  })
-                }
-                className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
-              />
-            </div>
+            <Input
+              label="Priority"
+              type="number"
+              min="0"
+              max="100"
+              value={formData.priority || 50}
+              onChange={(value) =>
+                setFormData({
+                  ...formData,
+                  priority: Number(String(value)),
+                })
+              }
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Max Concurrent Executions
-              </label>
-              <Input type="number"
-                min="1"
-                value={formData.max_concurrent_executions || 1}
-                onChange={(value) =>
-                  setFormData({
-                    ...formData,
-                    max_concurrent_executions: Number(String(value)),
-                  })
-                }
-                className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
-              />
-            </div>
+            <Input
+              label="Max Concurrent Executions"
+              type="number"
+              min="1"
+              value={formData.max_concurrent_executions || 1}
+              onChange={(value) =>
+                setFormData({
+                  ...formData,
+                  max_concurrent_executions: Number(String(value)),
+                })
+              }
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Execution Timeout (minutes)
-              </label>
-              <Input type="number"
-                min="1"
-                value={formData.execution_timeout_minutes || 60}
-                onChange={(value) =>
-                  setFormData({
-                    ...formData,
-                    execution_timeout_minutes: Number(String(value)),
-                  })
-                }
-                className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
-              />
-            </div>
+            <Input
+              label="Execution Timeout (minutes)"
+              type="number"
+              min="1"
+              value={formData.execution_timeout_minutes || 60}
+              onChange={(value) =>
+                setFormData({
+                  ...formData,
+                  execution_timeout_minutes: Number(String(value)),
+                })
+              }
+            />
           </div>
         </div>
 

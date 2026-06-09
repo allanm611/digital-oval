@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 
 interface EditQuickListModalProps {
   isOpen: boolean;
@@ -90,33 +91,22 @@ export default function EditQuickListModal({
 
           {/* Name */}
           <div>
-            <label
-              htmlFor="edit-name"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Name <span className="text-red-500">*</span>
-            </label>
             <Input
+              label="Name"
               placeholder="Enter QuickList name"
               value={name}
               onChange={setName}
+              required
             />
           </div>
 
           {/* Description */}
           <div>
-            <label
-              htmlFor="edit-description"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Description
-            </label>
-            <textarea
-              id="edit-description"
+            <Textarea
+              label="Description"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(value) => setDescription(value)}
               rows={3}
-              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 ${tw.textPrimary}`}
               placeholder="Enter description (optional)"
             />
           </div>

@@ -7,6 +7,7 @@ import {
   Trash2,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
+import Textarea from "../../../shared/components/ui/Textarea";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -217,31 +218,25 @@ function JobTypeModal({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Name
-            </label>
             <Input
+              label="Name"
               placeholder="e.g. ETL Pipeline"
               value={name}
               onChange={setName}
               hasError={false}
-              variant="medium"
               maxLength={255}
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Code
-            </label>
             <div className="relative">
               <Input
+                label="Code"
                 placeholder="e.g. etl_pipeline"
                 value={code}
                 onChange={setCode}
                 hasError={!!codeValidationError}
-                variant="medium"
                 maxLength={100}
                 required
               />
@@ -259,19 +254,14 @@ function JobTypeModal({
             )}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Description
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className={`mt-1 w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
-              rows={4}
-              placeholder="Optional context for this job type"
-              maxLength={500}
-            />
-          </div>
+          <Textarea
+            label="Description"
+            value={description}
+            onChange={setDescription}
+            rows={4}
+            placeholder="Optional context for this job type"
+            maxLength={500}
+          />
 
           {error && (
             <div

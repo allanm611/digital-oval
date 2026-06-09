@@ -5,7 +5,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useState, useEffect } from "react";
-import { segmentService } from "../../segments/services/segmentService";
+import { subscriberProfileService } from "../services/subscriberProfileService";
 import { getOperatorsForFieldType } from "../../../shared/utils/operatorMapper";
 
 interface Profile {
@@ -37,38 +37,21 @@ export default function SubscriberProfileDetailPage() {
     if (!id) return;
     try {
       setLoading(true);
-      const response = await segmentService.getSegmentationFields(true);
-      if (response && response.success && response.data && response.data.length > 0) {
-        const config = response.data[0]?.field_selector_config || [];
-        const customer360Category = config.find(
-          (cat: any) => cat.value === "customer_360" || cat.value === "customer_identity"
-        );
-
-        if (customer360Category && customer360Category.sub_categories) {
-          let foundProfile: Profile | null = null;
-          for (const subCat of customer360Category.sub_categories) {
-            if (subCat.fields && Array.isArray(subCat.fields)) {
-              const field = subCat.fields.find((f: any) => (f.id || 0) === Number(id));
-              if (field) {
-                foundProfile = {
-                  id: field.id || Number(id),
-                  name: field.field_name || field.name || "",
-                  description: field.field_description || field.description || "",
-                  dataSource: subCat.display_name || subCat.name || "—",
-                  frequency: field.data_latency || "—",
-                  status: "—",
-                  field_type: field.field_type || "text",
-                };
-                break;
-              }
-            }
-          }
-          setProfile(foundProfile);
-          if (!foundProfile) {
-            showToast("error", "Profile field not found");
-            navigate("/dashboard/kpis/subscriber-profiles");
-          }
-        }
+      const profileData = await subscriberProfileService.getProfileById(Number(id));
+      if (profileData) {
+        const mappedProfile: Profile = {
+          id: profileData.id,
+          name: profileData.name,
+          description: profileData.description,
+          dataSource: profileData.data_source || "—",
+          frequency: profileData.data_latency || "—",
+          status: profileData.is_active ? "Active" : "Inactive",
+          field_type: profileData.field_type || "text",
+        };
+        setProfile(mappedProfile);
+      } else {
+        showToast("error", "Profile field not found");
+        navigate("/dashboard/kpis/subscriber-profiles");
       }
     } catch (err) {
       showToast("error", "Failed to load profile details");

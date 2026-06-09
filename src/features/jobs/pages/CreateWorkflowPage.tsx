@@ -7,6 +7,7 @@ import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useAuth } from "../../../contexts/AuthContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import type { CreateWorkflowPayload, UpdateWorkflowPayload } from "../types/workflow";
@@ -133,46 +134,36 @@ export default function CreateWorkflowPage() {
           </h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t.common.name} <span className="text-red-500">*</span>
-              </label>
               <Input
+                label={`${t.common.name}*`}
                 placeholder={t.workflows.enterWorkflowName}
                 value={formData.name}
                 onChange={(val) =>
                   setFormData({ ...formData, name: val })
                 }
                 hasError={!!errors.name}
-                variant="medium"
               />
               {errors.name && (
                 <p className="mt-1 text-sm text-red-600">{errors.name}</p>
               )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t.common.description}
-              </label>
-              <textarea
-                value={formData.description || ""}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    description: e.target.value || null,
-                  })
-                }
-                rows={4}
-                className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
-                placeholder={t.workflows.enterWorkflowDescription}
-              />
-            </div>
+            <Textarea
+              label={t.common.description}
+              value={formData.description || ""}
+              onChange={(value) =>
+                setFormData({
+                  ...formData,
+                  description: value || null,
+                })
+              }
+              rows={4}
+              placeholder={t.workflows.enterWorkflowDescription}
+            />
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t.common.type}
-              </label>
               <Input
+                label={t.common.type}
                 placeholder={t.workflows.enterWorkflowType}
                 value={formData.workflow_type || ""}
                 onChange={(val) =>
@@ -181,7 +172,6 @@ export default function CreateWorkflowPage() {
                     workflow_type: val || null,
                   })
                 }
-                variant="medium"
               />
             </div>
           </div>

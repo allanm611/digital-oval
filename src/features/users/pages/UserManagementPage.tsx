@@ -17,6 +17,7 @@ import {
   Square,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
+import Textarea from "../../../shared/components/ui/Textarea";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { useNavigate } from "react-router-dom";
 import { userService } from "../../users/services/userService";
@@ -2638,15 +2639,12 @@ export default function UserManagementPage() {
               's request?
             </p>
 
-            <label className="block mb-4">
-              <span className="text-sm font-medium text-gray-700 mb-2 block">
-                Rejection Reason
-              </span>
-              <textarea
+            <div className="block mb-4">
+              <Textarea
+                label="Rejection Reason"
                 value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
+                onChange={setRejectionReason}
                 placeholder="Please provide a reason for rejecting this request..."
-                className={`w-full px-3 py-2 border ${tw.rounded} text-sm focus:outline-none focus:ring-2`}
                 rows={4}
                 style={{
                   borderColor: color.border.default,
@@ -2654,7 +2652,7 @@ export default function UserManagementPage() {
                 } as React.CSSProperties & { "--tw-ring-color": string }}
                 disabled={loadingActions.rejecting.size > 0}
               />
-            </label>
+            </div>
 
             <div className="flex gap-3 justify-end">
               <button

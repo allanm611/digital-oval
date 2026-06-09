@@ -43,10 +43,10 @@ import {
   getSubscriptionDisplayName,
   formatMsisdn,
   formatDateTime,
-  formatDate,
   convertSubscriptionToCustomerRow,
   type CustomerRow,
 } from "../../customers360/utils/customerSubscriptionHelpers";
+import { formatDate } from "../../../shared/services/dateService";
 import { customerService } from "../../customers360/services/customerServices";
 import { useToast } from "../../../contexts/ToastContext";
 

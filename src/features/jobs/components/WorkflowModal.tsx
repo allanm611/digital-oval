@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { workflowService } from "../services/workflowService";
@@ -125,39 +126,31 @@ export default function WorkflowModal({
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {t.common.name} <span className="text-red-500">*</span>
-            </label>
             <Input
+              label={<>{t.common.name} <span className="text-red-500">*</span></>}
               type="text"
               placeholder={t.workflows.enterWorkflowName}
               value={formData.name}
               onChange={(val) => setFormData({ ...formData, name: String(val) })}
               hasError={!!errors.name}
-              variant="medium"
             />
             {errors.name && (
               <p className="mt-1 text-sm text-red-600">{errors.name}</p>
             )}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {t.common.description}
-            </label>
-            <textarea
-              value={formData.description || ""}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  description: e.target.value || null,
-                })
-              }
-              rows={3}
-              className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
-              placeholder={t.workflows.enterWorkflowDescription}
-            />
-          </div>
+          <Textarea
+            label={t.common.description}
+            value={formData.description || ""}
+            onChange={(value) =>
+              setFormData({
+                ...formData,
+                description: value || null,
+              })
+            }
+            rows={3}
+            placeholder={t.workflows.enterWorkflowDescription}
+          />
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -193,7 +186,7 @@ export default function WorkflowModal({
                     workflow_type: val ? String(val) : null,
                   })
                 }
-                variant="medium"
+               
               />
             )}
           </div>

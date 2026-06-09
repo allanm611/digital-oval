@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import BackButton from "../../../shared/components/ui/BackButton";
@@ -1452,32 +1453,21 @@ export default function ProductCatalogsPage() {
                 </button>
               </div>
 
-              <div className="p-6">
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t.productCatalogs.catalogNameLabel} *
-                  </label>
-                  <Input type="text"
-                    value={editName}
-                    onChange={(value) => setEditName(String(value))}
-                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:outline-none`}
-                    placeholder={t.productCatalogs.catalogNamePlaceholder}
-                    required
-                  />
-                </div>
+              <div className="p-6 space-y-8">
+                <Input
+                  type="text"
+                  label={t.productCatalogs.catalogNameLabel}
+                  value={editName}
+                  onChange={(value) => setEditName(String(value))}
+                  required
+                />
 
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t.productCatalogs.description}
-                  </label>
-                  <textarea
-                    value={editDescription}
-                    onChange={(e) => setEditDescription(e.target.value)}
-                    rows={3}
-                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:outline-none`}
-                    placeholder={t.productCatalogs.descriptionPlaceholder}
-                  />
-                </div>
+                <Textarea
+                  label={t.productCatalogs.description}
+                  value={editDescription}
+                  onChange={(value) => setEditDescription(value)}
+                  rows={3}
+                />
 
                 <div className="flex justify-end gap-3">
                   <button

@@ -69,7 +69,7 @@ export const APIConfig: React.FC<ConfigComponentProps> = ({
             placeholder="api.example.com"
             value={config.host || ""}
             onChange={(value) => updateConfiguration("host", value)}
-            variant="medium"
+           
           />
         </div>
       </div>
@@ -83,7 +83,7 @@ export const APIConfig: React.FC<ConfigComponentProps> = ({
             placeholder="Optional"
             value={config.username || ""}
             onChange={(value) => updateConfiguration("username", value)}
-            variant="medium"
+           
           />
         </div>
         <div>
@@ -229,7 +229,7 @@ export const APIConfig: React.FC<ConfigComponentProps> = ({
                             newHeaders[newKey] = value;
                             updateConfiguration("request_headers", newHeaders);
                           }}
-                          variant="medium"
+                         
                         />
                       </div>
                       <div className="flex-1">
@@ -242,7 +242,7 @@ export const APIConfig: React.FC<ConfigComponentProps> = ({
                               [key]: newValue,
                             })
                           }
-                          variant="medium"
+                         
                         />
                       </div>
                       <button
@@ -370,7 +370,7 @@ export const APIConfig: React.FC<ConfigComponentProps> = ({
                   onChange={(value) =>
                     updateConfiguration("success_response", value)
                   }
-                  variant="medium"
+                 
                 />
               </div>
               <div>
@@ -383,7 +383,7 @@ export const APIConfig: React.FC<ConfigComponentProps> = ({
                   onChange={(value) =>
                     updateConfiguration("result_code", value)
                   }
-                  variant="medium"
+                 
                 />
               </div>
               <div>
@@ -396,7 +396,7 @@ export const APIConfig: React.FC<ConfigComponentProps> = ({
                   onChange={(value) =>
                     updateConfiguration("result_description", value)
                   }
-                  variant="medium"
+                 
                 />
               </div>
             </div>
@@ -409,7 +409,7 @@ export const APIConfig: React.FC<ConfigComponentProps> = ({
                 placeholder="//response/result"
                 value={config.xpath || ""}
                 onChange={(value) => updateConfiguration("xpath", value)}
-                variant="medium"
+               
               />
             </div>
           </div>
@@ -469,7 +469,7 @@ export const JDBCConfig: React.FC<ConfigComponentProps> = ({
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Database Name <span className="text-red-500">*</span></label>
-          <Input placeholder="database_name" required value={config.database || ""} onChange={(value) => updateConfiguration("database", value)} variant="medium" />
+          <Input placeholder="database_name" required value={config.database || ""} onChange={(value) => updateConfiguration("database", value)} />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Timeout (seconds)</label>
@@ -480,7 +480,7 @@ export const JDBCConfig: React.FC<ConfigComponentProps> = ({
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Username <span className="text-red-500">*</span></label>
-          <Input placeholder="Database username" required value={config.username || ""} onChange={(value) => updateConfiguration("username", value)} variant="medium" />
+          <Input placeholder="Database username" required value={config.username || ""} onChange={(value) => updateConfiguration("username", value)} />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Password <span className="text-red-500">*</span></label>
@@ -495,7 +495,7 @@ export const JDBCConfig: React.FC<ConfigComponentProps> = ({
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Connection String (Optional)</label>
-        <Input placeholder="jdbc:mysql://localhost:3306/database" value={config.connection_string || ""} onChange={(value) => updateConfiguration("connection_string", value)} variant="medium" />
+        <Input placeholder="jdbc:mysql://localhost:3306/database" value={config.connection_string || ""} onChange={(value) => updateConfiguration("connection_string", value)} />
       </div>
 
       <div>
@@ -524,7 +524,7 @@ export const WebSocketConfig: React.FC<ConfigComponentProps> = ({config, updateC
     <h4 className="text-sm font-semibold text-gray-700">WebSocket Configuration</h4>
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">Connection Name</label>
-      <Input placeholder="My WebSocket Connection" value={config.connection_name || ""} onChange={(value) => updateConfiguration("connection_name", value)} variant="medium" />
+      <Input placeholder="My WebSocket Connection" value={config.connection_name || ""} onChange={(value) => updateConfiguration("connection_name", value)} />
     </div>
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">URL</label>
@@ -532,12 +532,12 @@ export const WebSocketConfig: React.FC<ConfigComponentProps> = ({config, updateC
     </div>
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">HTTP Path</label>
-      <Input placeholder="/ws" value={config.http_path || "/ws"} onChange={(value) => updateConfiguration("http_path", value)} variant="medium" />
+      <Input placeholder="/ws" value={config.http_path || "/ws"} onChange={(value) => updateConfiguration("http_path", value)} />
     </div>
     <div className="grid grid-cols-2 gap-3">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
-        <Input placeholder="Optional" value={config.username || ""} onChange={(value) => updateConfiguration("username", value)} variant="medium" />
+        <Input placeholder="Optional" value={config.username || ""} onChange={(value) => updateConfiguration("username", value)} />
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
@@ -563,11 +563,11 @@ export const KafkaConfig: React.FC<ConfigComponentProps> = ({config, updateConfi
       <h4 className="text-sm font-semibold text-gray-700">Kafka Configuration</h4>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Connection Name</label>
-        <Input placeholder="My Kafka Connection" value={config.connection_name || ""} onChange={(value) => updateConfiguration("connection_name", value)} variant="medium" />
+        <Input placeholder="My Kafka Connection" value={config.connection_name || ""} onChange={(value) => updateConfiguration("connection_name", value)} />
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Topic Name <span className="text-red-500">*</span></label>
-        <Input placeholder="my-topic" required value={config.topic_name || ""} onChange={(value) => updateConfiguration("topic_name", value)} variant="medium" />
+        <Input placeholder="my-topic" required value={config.topic_name || ""} onChange={(value) => updateConfiguration("topic_name", value)} />
       </div>
       <div className="mb-2">
         <button type="button" onClick={() => setIsAdvancedOpen(!isAdvancedOpen)} className="w-full flex items-center justify-between hover:bg-gray-50 py-2">
@@ -578,11 +578,11 @@ export const KafkaConfig: React.FC<ConfigComponentProps> = ({config, updateConfi
           <div className="space-y-4 pt-2">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Brokers <span className="text-red-500">*</span></label>
-              <Input placeholder="localhost:9092, localhost:9093" required value={Array.isArray(config.brokers) ? config.brokers.join(", ") : config.brokers || ""} onChange={(value) => handleBrokersChange(value)} variant="medium" />
+              <Input placeholder="localhost:9092, localhost:9093" required value={Array.isArray(config.brokers) ? config.brokers.join(", ") : config.brokers || ""} onChange={(value) => handleBrokersChange(value)} />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Group Identifier</label>
-              <Input placeholder="my-consumer-group" value={config.group_identifier || ""} onChange={(value) => updateConfiguration("group_identifier", value)} variant="medium" />
+              <Input placeholder="my-consumer-group" value={config.group_identifier || ""} onChange={(value) => updateConfiguration("group_identifier", value)} />
             </div>
           </div>
         )}
@@ -606,7 +606,7 @@ export const TCPConfig: React.FC<ConfigComponentProps> = ({config, updateConfigu
     </div>
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">Decoder</label>
-      <Input placeholder="Carnage Returned Line Feed" value={config.decoder || ""} onChange={(value) => updateConfiguration("decoder", value)} variant="medium" />
+      <Input placeholder="Carnage Returned Line Feed" value={config.decoder || ""} onChange={(value) => updateConfiguration("decoder", value)} />
     </div>
     <div className="space-y-2">
       <div className="flex items-center cursor-pointer" onClick={() => updateConfiguration("non_blocking_io", !(config.non_blocking_io || false))}>
@@ -624,7 +624,7 @@ export const FilesConfig: React.FC<ConfigComponentProps> = ({config, updateConfi
       <h4 className="text-sm font-semibold text-gray-700">Files Configuration</h4>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Job Name</label>
-        <Input placeholder="File Processing Job" value={config.job_name || ""} onChange={(value) => updateConfiguration("job_name", value)} variant="medium" />
+        <Input placeholder="File Processing Job" value={config.job_name || ""} onChange={(value) => updateConfiguration("job_name", value)} />
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Protocol</label>
@@ -643,21 +643,21 @@ export const FilesConfig: React.FC<ConfigComponentProps> = ({config, updateConfi
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Connection Name</label>
-        <Input placeholder="File Connection Name" value={config.Connection_Name || ""} onChange={(value) => updateConfiguration("Connection_Name", value)} variant="medium" />
+        <Input placeholder="File Connection Name" value={config.Connection_Name || ""} onChange={(value) => updateConfiguration("Connection_Name", value)} />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Input Path</label>
-          <Input placeholder="/path/to/input" value={config.input_path || ""} onChange={(value) => updateConfiguration("input_path", value)} variant="medium" />
+          <Input placeholder="/path/to/input" value={config.input_path || ""} onChange={(value) => updateConfiguration("input_path", value)} />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Output Path</label>
-          <Input placeholder="/path/to/output" value={config.output_path || ""} onChange={(value) => updateConfiguration("output_path", value)} variant="medium" />
+          <Input placeholder="/path/to/output" value={config.output_path || ""} onChange={(value) => updateConfiguration("output_path", value)} />
         </div>
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Regex</label>
-        <Input placeholder="*.txt, *.csv" value={config.regex_pattern || ""} onChange={(value) => updateConfiguration("regex_pattern", value)} variant="medium" />
+        <Input placeholder="*.txt, *.csv" value={config.regex_pattern || ""} onChange={(value) => updateConfiguration("regex_pattern", value)} />
       </div>
     </div>
   );
@@ -671,11 +671,11 @@ export const SMSInboxConfig: React.FC<ConfigComponentProps> = ({config, updateCo
       <div className="space-y-3">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Connection Name <span className="text-red-500">*</span></label>
-          <Input placeholder="" required value={config.connection_name} onChange={(value) => updateConfiguration("connection_name", value)} variant="medium" />
+          <Input placeholder="" required value={config.connection_name} onChange={(value) => updateConfiguration("connection_name", value)} />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Select Inbox <span className="text-red-500">*</span></label>
-          <Input placeholder="" required value={config.short_code } onChange={(value) => updateConfiguration("short_code", value)} variant="medium" />
+          <Input placeholder="" required value={config.short_code } onChange={(value) => updateConfiguration("short_code", value)} />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Provider</label>
@@ -703,11 +703,11 @@ export const SMSInboxConfig: React.FC<ConfigComponentProps> = ({config, updateCo
           <div className="space-y-4 pt-2">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Delimiter to identify Keyword</label>
-              <Input placeholder="Comma" value={config.keyword_delimiter || ","} onChange={(value) => updateConfiguration("keyword_delimiter", value)} variant="medium" />
+              <Input placeholder="Comma" value={config.keyword_delimiter || ","} onChange={(value) => updateConfiguration("keyword_delimiter", value)} />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Keyword to identify messages</label>
-              <Input placeholder="Enter keywords to filter" value={config.keyword_identifier || ""} onChange={(value) => updateConfiguration("keyword_identifier", value)} variant="medium" />
+              <Input placeholder="Enter keywords to filter" value={config.keyword_identifier || ""} onChange={(value) => updateConfiguration("keyword_identifier", value)} />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -728,7 +728,7 @@ export const SMSInboxConfig: React.FC<ConfigComponentProps> = ({config, updateCo
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Value</label>
-                <Input placeholder="e.g., VISA, PAYMENT" value={config.keyword_value || ""} onChange={(value) => updateConfiguration("keyword_value", value)} variant="medium" />
+                <Input placeholder="e.g., VISA, PAYMENT" value={config.keyword_value || ""} onChange={(value) => updateConfiguration("keyword_value", value)} />
               </div>
             </div>
           </div>
@@ -754,7 +754,7 @@ export const SFTPConfig: React.FC<ConfigComponentProps> = ({config, updateConfig
     <div className="grid grid-cols-2 gap-3">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Username <span className="text-red-500">*</span></label>
-        <Input required value={config.username || ""} onChange={(value) => updateConfiguration("username", value)} placeholder="sftp user" variant="medium" />
+        <Input required value={config.username || ""} onChange={(value) => updateConfiguration("username", value)} placeholder="sftp user" />
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Password (or use Private Key)</label>
@@ -773,11 +773,11 @@ export const SFTPConfig: React.FC<ConfigComponentProps> = ({config, updateConfig
     <div className="grid grid-cols-2 gap-3">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Remote Path</label>
-        <Input placeholder="/data/incoming" value={config.remote_path || ""} onChange={(value) => updateConfiguration("remote_path", value)} variant="medium" />
+        <Input placeholder="/data/incoming" value={config.remote_path || ""} onChange={(value) => updateConfiguration("remote_path", value)} />
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Local Path</label>
-        <Input placeholder="/local/staging" value={config.local_path || ""} onChange={(value) => updateConfiguration("local_path", value)} variant="medium" />
+        <Input placeholder="/local/staging" value={config.local_path || ""} onChange={(value) => updateConfiguration("local_path", value)} />
       </div>
     </div>
   </div>
@@ -799,7 +799,7 @@ export const FTPConfig: React.FC<ConfigComponentProps> = ({config, updateConfigu
     <div className="grid grid-cols-2 gap-3">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Username <span className="text-red-500">*</span></label>
-        <Input required value={config.username || ""} onChange={(value) => updateConfiguration("username", value)} placeholder="ftp user" variant="medium" />
+        <Input required value={config.username || ""} onChange={(value) => updateConfiguration("username", value)} placeholder="ftp user" />
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Password <span className="text-red-500">*</span></label>

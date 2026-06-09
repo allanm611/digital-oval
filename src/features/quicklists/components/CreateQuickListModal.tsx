@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useMemo } from "react";
 import { X, Upload, FileText, AlertCircle, Download } from "lucide-react";
 import { button as buttonTokens, color, tw } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import SubscriptionIdSelector from "../../manual-broadcast/components/SubscriptionIdSelector";
 import { CreateQuickListRequest } from "../types/quicklist";
@@ -511,15 +512,14 @@ export default function CreateQuickListModal({
         >
           <div className="space-y-6">
             <div>
-              <label className="text-sm font-medium text-black mb-1 block">
-                List Name
-              </label>
               <Input
+                label="List Name"
                 placeholder="e.g., High Value Customers"
                 value={form.name}
                 onChange={(value) => handleInputChange("name", value)}
                 disabled={isSubmitting}
                 hasError={!!errors.name}
+                required
               />
               {errors.name && (
                 <p className="mt-1 text-xs text-red-500">{errors.name}</p>
@@ -527,22 +527,16 @@ export default function CreateQuickListModal({
             </div>
 
             <div>
-              <label className="text-sm font-medium text-black mb-1 block">
-                Description
-              </label>
-              <textarea
+              <Textarea
+                label="Description"
                 value={form.description}
-                onChange={(e) =>
-                  handleInputChange("description", e.target.value)
+                onChange={(value) =>
+                  handleInputChange("description", value)
                 }
                 rows={4}
                 placeholder="Describe who belongs in this list and how you'll use it."
                 disabled={isSubmitting}
-                className={`w-full ${tw.rounded} border px-3 py-2 text-sm focus:outline-none focus:ring-2 disabled:opacity-50 ${
-                  errors.description
-                    ? "border-red-400 focus:ring-red-200"
-                    : "border-gray-300 focus:ring-[var(--primary-color,#5EC6B1)]"
-                }`}
+                hasError={!!errors.description}
               />
               {errors.description && (
                 <p className="mt-1 text-xs text-red-500">

@@ -19,6 +19,7 @@ import {
 } from "../types/connectionProfile";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -573,36 +574,30 @@ export default function ConnectionProfileFormPage({
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Profile Name *
-              </label>
               <Input
+                label="Profile Name*"
                 placeholder="Profile name"
                 value={formData.profile_name}
                 onChange={(val) => {
                   setFormData({ ...formData, profile_name: val });
                   if (errors.profile_name) setErrors({ ...errors, profile_name: "" });
                 }}
-                variant="medium"
-                className={errors.profile_name ? "border-red-500" : ""}
+                hasError={!!errors.profile_name}
               />
               {errors.profile_name && (
                 <p className="text-sm text-red-500 mt-1">{errors.profile_name}</p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Profile Code *
-              </label>
               <Input
+                label="Profile Code*"
                 placeholder="Profile code (letters and numbers only)"
                 value={formData.profile_code}
                 onChange={(val) => {
                   handleProfileCodeChange(val);
                   if (errors.profile_code) setErrors({ ...errors, profile_code: "" });
                 }}
-                variant="medium"
-                className={errors.profile_code ? "border-red-500" : ""}
+                hasError={!!errors.profile_code}
               />
               {errors.profile_code && (
                 <p className="text-sm text-red-500 mt-1">{errors.profile_code}</p>
@@ -959,13 +954,9 @@ export default function ConnectionProfileFormPage({
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 ">
-                Records Per Batch *
-              </label>
-              <p className="text-xs text-gray-500 mb-2">
-                How many records to process at a time.
-              </p>
-              <Input type="number"
+              <Input
+                label="Records Per Batch*"
+                type="number"
                 value={formData.batch_size}
                 onChange={(value) => {
                   setFormData({
@@ -974,22 +965,21 @@ export default function ConnectionProfileFormPage({
                   });
                   if (errors.batch_size) setErrors({ ...errors, batch_size: "" });
                 }}
-                className={`w-full px-3 py-2 text-sm border ${errors.batch_size ? "border-red-500" : "border-gray-300"} ${tw.rounded} focus:outline-none`}
+                hasError={!!errors.batch_size}
                 required
                 min={1}
               />
+              <p className="text-xs text-gray-500 mt-1">
+                How many records to process at a time.
+              </p>
               {errors.batch_size && (
                 <p className="text-sm text-red-500 mt-1">{errors.batch_size}</p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Number of Parallel Tasks *
-              </label>
-              <p className="text-xs text-gray-500 mb-2">
-                How many tasks run at the same time for faster processing.
-              </p>
-              <Input type="number"
+              <Input
+                label="Number of Parallel Tasks*"
+                type="number"
                 value={formData.parallel_threads}
                 onChange={(value) => {
                   setFormData({
@@ -998,23 +988,22 @@ export default function ConnectionProfileFormPage({
                   });
                   if (errors.parallel_threads) setErrors({ ...errors, parallel_threads: "" });
                 }}
-                className={`w-full px-3 py-2 text-sm border ${errors.parallel_threads ? "border-red-500" : "border-gray-300"} ${tw.rounded} focus:outline-none`}
+                hasError={!!errors.parallel_threads}
                 required
                 min={1}
                 max={32}
               />
+              <p className="text-xs text-gray-500 mt-1">
+                How many tasks run at the same time for faster processing.
+              </p>
               {errors.parallel_threads && (
                 <p className="text-sm text-red-500 mt-1">{errors.parallel_threads}</p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Minimum Connections *
-              </label>
-              {/* <p className="text-xs text-gray-500 mb-1">
-                Smallest number of connections to keep open to the service. Example: 2 for always-ready SMS connections.
-              </p> */}
-              <Input type="number"
+              <Input
+                label="Minimum Connections*"
+                type="number"
                 value={formData.min_pool_size}
                 onChange={(value) =>
                   setFormData({
@@ -1022,19 +1011,14 @@ export default function ConnectionProfileFormPage({
                     min_pool_size: Number(String(value)),
                   })
                 }
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
                 required
                 min={1}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Maximum Connections *
-              </label>
-              {/* <p className="text-xs text-gray-500 mb-1">
-                Largest number of connections allowed at once. 
-              </p> */}
-              <Input type="number"
+              <Input
+                label="Maximum Connections*"
+                type="number"
                 value={formData.max_pool_size}
                 onChange={(value) =>
                   setFormData({
@@ -1042,19 +1026,14 @@ export default function ConnectionProfileFormPage({
                     max_pool_size: Number(String(value)),
                   })
                 }
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
                 required
                 min={formData.min_pool_size}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 ">
-                Connection Wait Time (seconds) *
-              </label>
-              <p className="text-xs text-gray-500 mb-2">
-                How long to wait for a connection before giving up.
-              </p>
-              <Input type="number"
+              <Input
+                label="Connection Wait Time (seconds)*"
+                type="number"
                 value={formData.connection_timeout_seconds}
                 onChange={(value) =>
                   setFormData({
@@ -1062,19 +1041,17 @@ export default function ConnectionProfileFormPage({
                     connection_timeout_seconds: Number(String(value)),
                   })
                 }
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
                 required
                 min={1}
               />
+              <p className="text-xs text-gray-500 mt-1">
+                How long to wait for a connection before giving up.
+              </p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Idle Disconnect Time (seconds) *
-              </label>
-              <p className="text-xs text-gray-500 mb-2">
-                How long a connection can be unused before closing.
-              </p>
-              <Input type="number"
+              <Input
+                label="Idle Disconnect Time (seconds)*"
+                type="number"
                 value={formData.idle_timeout_seconds}
                 onChange={(value) =>
                   setFormData({
@@ -1082,19 +1059,17 @@ export default function ConnectionProfileFormPage({
                     idle_timeout_seconds: Number(String(value)),
                   })
                 }
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
                 required
                 min={1}
               />
+              <p className="text-xs text-gray-500 mt-1">
+                How long a connection can be unused before closing.
+              </p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Max Retries *
-              </label>
-              <p className="text-xs text-gray-500 mb-2">
-                Maximum number of retry attempts on failure.
-              </p>
-              <Input type="number"
+              <Input
+                label="Max Retries*"
+                type="number"
                 value={formData.max_retries}
                 onChange={(value) =>
                   setFormData({
@@ -1102,19 +1077,17 @@ export default function ConnectionProfileFormPage({
                     max_retries: Number(String(value)),
                   })
                 }
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
                 required
                 min={0}
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Maximum number of retry attempts on failure.
+              </p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Retry Backoff Multiplier *
-              </label>
-              <p className="text-xs text-gray-500 mb-2">
-                Exponential backoff multiplier for retries.
-              </p>
-              <Input type="number"
+              <Input
+                label="Retry Backoff Multiplier*"
+                type="number"
                 value={formData.retry_backoff_multiplier}
                 onChange={(value) =>
                   setFormData({
@@ -1122,20 +1095,18 @@ export default function ConnectionProfileFormPage({
                     retry_backoff_multiplier: Number(String(value)),
                   })
                 }
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
                 required
                 min={1}
                 step={0.1}
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Exponential backoff multiplier for retries.
+              </p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Circuit Breaker Threshold *
-              </label>
-              <p className="text-xs text-gray-500 mb-2">
-                Number of failures before circuit opens.
-              </p>
-              <Input type="number"
+              <Input
+                label="Circuit Breaker Threshold*"
+                type="number"
                 value={formData.circuit_breaker_threshold}
                 onChange={(value) =>
                   setFormData({
@@ -1143,10 +1114,12 @@ export default function ConnectionProfileFormPage({
                     circuit_breaker_threshold: Number(String(value)),
                   })
                 }
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
                 required
                 min={1}
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Number of failures before circuit opens.
+              </p>
             </div>
           </div>
         </div>
@@ -1228,28 +1201,25 @@ export default function ConnectionProfileFormPage({
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Valid From *
-              </label>
-              <Input type="date"
+              <Input
+                label="Valid From*"
+                type="date"
                 value={formData.valid_from}
                 onChange={(value) => {
                   setFormData({ ...formData, valid_from: String(value) });
                   if (errors.valid_from) setErrors({ ...errors, valid_from: "" });
                 }}
-                className={`w-full px-3 py-2 text-sm border ${errors.valid_from ? "border-red-500" : "border-gray-300"} ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-gray-400 cursor-pointer`}
+                hasError={!!errors.valid_from}
                 required
-                onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
               />
               {errors.valid_from && (
                 <p className="text-sm text-red-500 mt-1">{errors.valid_from}</p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Valid To
-              </label>
-              <Input type="date"
+              <Input
+                label="Valid To"
+                type="date"
                 value={formData.valid_to || ""}
                 onChange={(value) =>
                   setFormData({
@@ -1257,8 +1227,6 @@ export default function ConnectionProfileFormPage({
                     valid_to: String(value) || null,
                   })
                 }
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-gray-400 cursor-pointer`}
-                onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
               />
             </div>
           </div>
@@ -1278,13 +1246,8 @@ export default function ConnectionProfileFormPage({
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Sync Column Name
-                </label>
-                <p className="text-xs text-gray-500 mb-2">
-                  Column used for tracking changes (e.g. modified_at, id).
-                </p>
                 <Input
+                  label="Sync Column Name"
                   placeholder="Sync column name"
                   value={formData.sync_column_name || ""}
                   onChange={(val) =>
@@ -1293,17 +1256,14 @@ export default function ConnectionProfileFormPage({
                       sync_column_name: val || undefined,
                     })
                   }
-                  variant="medium"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Column used for tracking changes (e.g. modified_at, id).
+                </p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Sync Column Type
-                </label>
-                <p className="text-xs text-gray-500 mb-2">
-                  Data type of the sync column.
-                </p>
                 <Input
+                  label="Sync Column Type"
                   placeholder="Sync column type"
                   value={formData.sync_column_type || ""}
                   onChange={(val) =>
@@ -1312,8 +1272,10 @@ export default function ConnectionProfileFormPage({
                       sync_column_type: val || undefined,
                     })
                   }
-                  variant="medium"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Data type of the sync column.
+                </p>
               </div>
             </div>
           </div>
@@ -1360,15 +1322,16 @@ export default function ConnectionProfileFormPage({
               <p className="text-xs text-gray-500 mb-2">
                 Query to run for health checks (e.g. SELECT 1).
               </p>
-              <textarea
+              <Textarea
+                label="Health Check Query"
                 value={formData.health_check_query || ""}
-                onChange={(e) =>
+                onChange={(value) =>
                   setFormData({
                     ...formData,
-                    health_check_query: e.target.value || undefined,
+                    health_check_query: value || undefined,
                   })
                 }
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none font-mono`}
+                className="font-mono"
                 rows={2}
                 placeholder="SELECT 1"
               />
@@ -1384,13 +1347,9 @@ export default function ConnectionProfileFormPage({
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Encryption Key Version
-              </label>
-              <p className="text-xs text-gray-500 mb-2">
-                Version of encryption key to use for sensitive data.
-              </p>
-              <Input type="number"
+              <Input
+                label="Encryption Key Version"
+                type="number"
                 value={formData.encryption_key_version || ""}
                 onChange={(value) =>
                   setFormData({
@@ -1400,9 +1359,11 @@ export default function ConnectionProfileFormPage({
                       : undefined,
                   })
                 }
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
                 min={1}
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Version of encryption key to use for sensitive data.
+              </p>
             </div>
           </div>
           <div className="mt-4">
@@ -1413,15 +1374,16 @@ export default function ConnectionProfileFormPage({
               Additional metadata as JSON (e.g. &#x7B;&quot;key&quot;:
               &quot;value&quot;&#x7D;).
             </p>
-            <textarea
+            <Textarea
+              label="Metadata"
               value={formData.metadataString || ""}
-              onChange={(e) =>
+              onChange={(value) =>
                 setFormData({
                   ...formData,
-                  metadataString: e.target.value || "",
+                  metadataString: value || "",
                 })
               }
-              className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none font-mono`}
+              className="font-mono"
               rows={3}
               placeholder='{"key": "value"}'
             />

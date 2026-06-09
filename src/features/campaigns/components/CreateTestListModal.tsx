@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import { tw, color, button, getButtonStyles } from "../../../shared/utils/utils";
 
@@ -132,19 +133,18 @@ export default function CreateTestListModal({
         </div>
 
         {/* Form */}
-        <div className="p-6 space-y-4">
+        <div className="p-6 space-y-6">
           {/* List Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1.5">
-              List Name *
-            </label>
             <Input
+              label="List Name"
               placeholder="Enter list name"
               value={formData.name}
               onChange={(value) => handleChange("name", value)}
               hasError={!!errors.name}
-              variant="medium"
+             
               disabled={isLoading}
+              required
             />
             {errors.name && (
               <p className="text-xs text-red-500 mt-1">{errors.name}</p>
@@ -153,20 +153,14 @@ export default function CreateTestListModal({
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1.5">
-              Description
-            </label>
-            <textarea
+            <Textarea
+              label="Description"
               value={formData.description || ""}
-              onChange={(e) => handleChange("description", e.target.value)}
+              onChange={(value) => handleChange("description", value)}
               placeholder="Enter description (optional)"
               disabled={isLoading}
               rows={3}
-              className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm focus:outline-none focus:ring-2 focus:ring-opacity-50 disabled:opacity-50 disabled:bg-gray-100 resize-none ${
-                errors.description
-                  ? "border-red-500 focus:ring-red-500"
-                  : "border-gray-300 focus:ring-[#588157]"
-              }`}
+              hasError={!!errors.description}
             />
             {errors.description && (
               <p className="text-xs text-red-500 mt-1">{errors.description}</p>

@@ -8,6 +8,7 @@ import { roleService } from "../services/roleService";
 import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 
@@ -282,16 +283,13 @@ export default function RoleFormModal({
           {/* Name and Code Row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Role Name *
-              </label>
               <Input
+                label="Role Name *"
                 type="text"
                 value={formData.name}
                 onChange={(value) => setFormData({ ...formData, name: String(value) })}
                 placeholder="e.g., Administrator"
                 hasError={!!errors.name}
-                variant="medium"
               />
               {errors.name && (
                 <p className="mt-1 text-sm text-red-600">{errors.name}</p>
@@ -299,17 +297,14 @@ export default function RoleFormModal({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Code *
-              </label>
               <Input
+                label="Code *"
                 type="text"
                 value={formData.code}
                 onChange={(value) => setFormData({ ...formData, code: String(value) })}
                 disabled={!!role}
                 placeholder="e.g., administrator"
                 hasError={!!errors.code}
-                variant="medium"
               />
               {errors.code && (
                 <p className="mt-1 text-sm text-red-600">{errors.code}</p>
@@ -321,35 +316,24 @@ export default function RoleFormModal({
           </div>
 
           {/* Description */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Description
-            </label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              maxLength={300}
-              rows={3}
-              placeholder="Enter role description..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+          <Textarea
+            label="Description"
+            value={formData.description}
+            onChange={(value) => setFormData({ ...formData, description: value })}
+            maxLength={300}
+            rows={3}
+            placeholder="Enter role description..."
+          />
 
           {/* Level and Data Access Row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Role Level
-              </label>
-              <Input
-                type="number"
-                value={String(formData.role_level)}
-                onChange={(value) => setFormData({ ...formData, role_level: parseInt(String(value)) || 0 })}
-                placeholder="1-10"
-                variant="medium"
-              />
-            </div>
+            <Input
+              label="Role Level"
+              type="number"
+              value={String(formData.role_level)}
+              onChange={(value) => setFormData({ ...formData, role_level: parseInt(String(value)) || 0 })}
+              placeholder="1-10"
+            />
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -397,16 +381,13 @@ export default function RoleFormModal({
 
           {/* Max Users */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Max Users (Optional)
-            </label>
             <Input
+              label="Max Users (Optional)"
               type="number"
               value={String(formData.max_users)}
               onChange={(value) => setFormData({ ...formData, max_users: value === "" ? "" : parseInt(String(value)) || "" })}
               placeholder="Unlimited"
               hasError={!!errors.max_users}
-              variant="medium"
             />
             {errors.max_users && (
               <p className="mt-1 text-sm text-red-600">{errors.max_users}</p>
@@ -429,16 +410,13 @@ export default function RoleFormModal({
 
           {/* Tags */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Add Tag (Press Enter)
-            </label>
             <Input
+              label="Add Tag (Press Enter)"
               type="text"
               value={tagInput}
               onChange={(value) => setTagInput(String(value))}
               onKeyDown={(e) => { if (e.key === 'Enter') handleAddTag(e as any); }}
               placeholder="e.g., administrator"
-              variant="medium"
             />
             {formData.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">

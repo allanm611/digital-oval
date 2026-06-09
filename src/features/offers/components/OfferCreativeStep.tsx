@@ -18,6 +18,7 @@ import { supportsHtmlBody, requiresHtmlBody } from "../utils/channelUtils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import TypeSelector from "../../../shared/components/TypeSelector";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import RegularModal from "../../../shared/components/ui/RegularModal";
 import {
   CreativeChannel,
@@ -1492,7 +1493,7 @@ export default function OfferCreativeStep({
                               e.currentTarget.selectionStart || 0,
                             );
                           }}
-                          variant="medium"
+                         
                         />
                       </div>
                     )}
@@ -1631,20 +1632,19 @@ export default function OfferCreativeStep({
                           />
                         </div>
                       ) : (
-                        <textarea
+                        <Textarea
                           ref={bodyTextareaRef}
                           value={editingCreative.text_body || ""}
-                          onChange={(e) => {
+                          onChange={(value) => {
                             setActiveField("body");
-                            setCursorPosition(e.target.selectionStart || 0);
                             selectedCreativeData && updateCreative(selectedCreativeData.id, {
-                              text_body: e.target.value,
+                              text_body: value,
                             });
                           }}
-                          onClick={(e) => {
+                          onClickCapture={(e) => {
                             setActiveField("body");
                             setCursorPosition(
-                              e.currentTarget.selectionStart || 0,
+                              (e.target as HTMLTextAreaElement).selectionStart || 0,
                             );
                           }}
                           onFocus={(e) => {
@@ -1656,7 +1656,6 @@ export default function OfferCreativeStep({
                           placeholder={t.offers.messageBody.placeholder}
                           rows={8}
                           disabled={!selectedCreativeData}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none disabled:bg-gray-50 disabled:cursor-not-allowed"
                         />
                       )}
 

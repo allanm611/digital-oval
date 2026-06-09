@@ -4,6 +4,8 @@ import { X } from "lucide-react";
 import { color, tw, zIndex, button, getButtonStyles } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useToast } from "../../../contexts/ToastContext";
+import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { kpiCategoryService } from "../services/kpiCategoryService";
 
@@ -139,18 +141,15 @@ export default function KpiCategoryModal({
           <div className="space-y-4">
             {/* Name Field */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Category Name *
-              </label>
-              <input
+              <Input
+                label="Category Name"
                 type="text"
                 value={formData.name}
-                onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-                className={`w-full px-3 py-2 text-sm border ${
-                  errors.name ? "border-red-500" : "border-gray-300"
-                } ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                onChange={(value) => setFormData((prev) => ({ ...prev, name: String(value) }))}
                 placeholder="e.g., Revenue Metrics"
                 maxLength={50}
+                required
+                hasError={!!errors.name}
               />
               {errors.name && (
                 <p className="text-red-500 text-xs mt-1">{errors.name}</p>
@@ -159,23 +158,19 @@ export default function KpiCategoryModal({
 
             {/* Description Field */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description
-              </label>
-              <textarea
+              <Textarea
+                label="Description"
                 value={formData.description || ""}
-                onChange={(e) =>
+                onChange={(value) =>
                   setFormData((prev) => ({
                     ...prev,
-                    description: e.target.value,
+                    description: value,
                   }))
                 }
-                className={`w-full px-3 py-2 text-sm border ${
-                  errors.description ? "border-red-500" : "border-gray-300"
-                } ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
                 placeholder="Category description..."
                 rows={3}
                 maxLength={255}
+                hasError={!!errors.description}
               />
               {errors.description && (
                 <p className="text-red-500 text-xs mt-1">
@@ -186,22 +181,18 @@ export default function KpiCategoryModal({
 
             {/* Display Order Field */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Display Order
-              </label>
-              <input
+              <Input
+                label="Display Order"
                 type="number"
-                value={formData.display_order || 0}
-                onChange={(e) =>
+                value={String(formData.display_order || 0)}
+                onChange={(value) =>
                   setFormData((prev) => ({
                     ...prev,
-                    display_order: parseInt(e.target.value, 10) || 0,
+                    display_order: parseInt(String(value), 10) || 0,
                   }))
                 }
-                className={`w-full px-3 py-2 text-sm border ${
-                  errors.display_order ? "border-red-500" : "border-gray-300"
-                } ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
                 placeholder="0"
+                hasError={!!errors.display_order}
               />
               {errors.display_order && (
                 <p className="text-red-500 text-xs mt-1">

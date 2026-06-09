@@ -29,6 +29,8 @@ import {
   Zap,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
+import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 
@@ -2874,10 +2876,8 @@ export default function OfferDetailsPage() {
                 </div>
               ) : (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Subject Line
-                  </label>
                   <Input
+                    label="Subject Line"
                     ref={titleInputRefAdd}
                     placeholder="Enter email subject..."
                     maxLength={160}
@@ -2897,7 +2897,7 @@ export default function OfferDetailsPage() {
                       setActiveFieldAdd("title");
                       setCursorPositionAdd(e.currentTarget.selectionStart || 0);
                     }}
-                    variant="medium"
+                   
                   />
                 </div>
               )}
@@ -3014,15 +3014,18 @@ export default function OfferDetailsPage() {
                     />
                   </div>
                 ) : (
-                  <textarea
+                  <Textarea
                     ref={bodyTextareaRefAdd}
+                    label="Message Body"
                     value={newCreativeForm.text_body || ""}
-                    onChange={(e) => {
+                    onChange={(value) => {
                       setActiveFieldAdd("body");
-                      setCursorPositionAdd(e.target.selectionStart || 0);
+                      if (bodyTextareaRefAdd.current) {
+                        setCursorPositionAdd(bodyTextareaRefAdd.current.selectionStart || 0);
+                      }
                       setNewCreativeForm((prev) => ({
                         ...prev,
-                        text_body: e.target.value,
+                        text_body: value,
                       }));
                     }}
                     onClick={(e) => {
@@ -3035,7 +3038,6 @@ export default function OfferDetailsPage() {
                     }}
                     placeholder="Enter your message... Click 'Insert Variable' to add dynamic content"
                     rows={8}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
                   />
                 )}
 

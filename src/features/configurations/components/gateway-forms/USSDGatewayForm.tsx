@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Save } from "lucide-react";
 import { tw, color, button, getButtonStyles } from "../../../../shared/utils/utils";
 import Input from "../../../../shared/components/ui/Input";
+import Textarea from "../../../../shared/components/ui/Textarea";
 import { USSDGatewayConfig, CreateUSSDGatewayConfigRequest } from "../../types/ussdGatewayConfig";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
 
@@ -90,34 +91,27 @@ export default function USSDGatewayForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Configuration Name *
-              </label>
               <Input
+                label="Configuration Name *"
                 placeholder="e.g., Infobip Production"
                 value={formData.name}
                 onChange={(value) => setFormData((prev) => ({ ...prev, name: value }))}
-                variant="medium"
+
                 disabled={isLoading}
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, description: e.target.value }))
-              }
-              placeholder="Add notes about this configuration..."
-              rows={3}
-              className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
-              disabled={isLoading}
-            />
-          </div>
+          <Textarea
+            label="Description"
+            value={formData.description}
+            onChange={(value) =>
+              setFormData((prev) => ({ ...prev, description: value }))
+            }
+            placeholder="Add notes about this configuration..."
+            rows={3}
+            disabled={isLoading}
+          />
         </div>
       </div>
 
@@ -125,44 +119,38 @@ export default function USSDGatewayForm({
         <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>API Configuration</h2>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              API Endpoint *
-            </label>
             <Input
+              label="API Endpoint *"
               type="text"
               placeholder="e.g., https://api.infobip.com/ussd/1/send"
               value={formData.credentials.api_endpoint}
               onChange={(value) => updateCredential("api_endpoint", value)}
-              variant="medium"
+
               disabled={isLoading}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                API Key *
-              </label>
               <Input
+                label="API Key *"
                 type="password"
                 placeholder="••••••••••••••••••••••"
                 value={formData.credentials.api_key}
                 onChange={(value) => updateCredential("api_key", value)}
-                variant="medium"
+
                 disabled={isLoading}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                API Secret (Optional)
-              </label>
               <Input
+                label="API Secret (Optional)"
                 type="password"
                 placeholder="••••••••••••••••••••••"
                 value={formData.credentials.api_secret}
                 onChange={(value) => updateCredential("api_secret", value)}
-                variant="medium"
+
                 disabled={isLoading}
               />
             </div>

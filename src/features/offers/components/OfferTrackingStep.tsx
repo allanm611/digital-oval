@@ -435,10 +435,8 @@ export default function OfferTrackingStep({
                   {/* Source Settings */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Source Name
-                      </label>
                       <Input
+                        label="Source Name"
                         type="text"
                         placeholder="Enter source name"
                         value={selectedSourceData.name}
@@ -447,7 +445,6 @@ export default function OfferTrackingStep({
                             name: String(value),
                           })
                         }
-                        variant="medium"
                       />
                     </div>
 
@@ -639,39 +636,29 @@ export default function OfferTrackingStep({
               </div>
 
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Rule Name
-                  </label>
-                  <Input
-                    type="text"
-                    placeholder="Rule name"
-                    value={editingRule.name}
-                    onChange={(value) =>
-                      setEditingRule({ ...editingRule, name: String(value) })
-                    }
-                    variant="medium"
-                  />
-                </div>
+                <Input
+                  label="Rule Name"
+                  type="text"
+                  placeholder="Rule name"
+                  value={editingRule.name}
+                  onChange={(value) =>
+                    setEditingRule({ ...editingRule, name: String(value) })
+                  }
+                />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Priority
-                  </label>
-                  <Input
-                    type="number"
-                    placeholder="Priority"
-                    min="1"
-                    value={editingRule.priority}
-                    onChange={(value) =>
-                      setEditingRule({
-                        ...editingRule,
-                        priority: parseInt(String(value)) || 1,
-                      })
-                    }
-                    variant="medium"
-                  />
-                </div>
+                <Input
+                  label="Priority"
+                  type="number"
+                  placeholder="Priority"
+                  min="1"
+                  value={editingRule.priority}
+                  onChange={(value) =>
+                    setEditingRule({
+                      ...editingRule,
+                      priority: parseInt(String(value)) || 1,
+                    })
+                  }
+                />
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -722,20 +709,15 @@ export default function OfferTrackingStep({
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Value
-                  </label>
-                  <Input
-                    type="text"
-                    placeholder="Enter value..."
-                    value={editingRule.value}
-                    onChange={(value) =>
-                      setEditingRule({ ...editingRule, value: String(value) })
-                    }
-                    variant="medium"
-                  />
-                </div>
+                <Input
+                  label="Value"
+                  type="text"
+                  placeholder="Enter value..."
+                  value={editingRule.value}
+                  onChange={(value) =>
+                    setEditingRule({ ...editingRule, value: String(value) })
+                  }
+                />
 
                 <div
                   className="flex items-center cursor-pointer"

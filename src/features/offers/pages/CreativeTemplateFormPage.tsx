@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Input from '../../../shared/components/ui/Input';
+import Textarea from '../../../shared/components/ui/Textarea';
 import { useNavigate, useParams } from "react-router-dom";
 import { Save } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
@@ -193,51 +194,40 @@ export default function CreativeTemplateFormPage() {
 
       <form
         onSubmit={handleSubmit}
-        className="space-y-4 bg-white rounded-lg p-6 border border-gray-200"
+        className="space-y-8 bg-white rounded-lg p-6 border border-gray-200"
       >
         <h2 className="text-sm font-semibold text-gray-900">
           {id ? "Edit Creative Template" : "Create Creative Template"}
         </h2>
 
-        <div className="space-y-3 pb-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Name *</label>
-            <Input
-              type="text"
-              value={name}
-              onChange={(value) => setName(String(value))}
-              required
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Template name"
-            />
-          </div>
+        <div className="space-y-6">
+          <Input
+            type="text"
+            label="Name"
+            value={name}
+            onChange={(value) => setName(String(value))}
+            required
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={2}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-              placeholder="Template description"
-            />
-          </div>
+          <Textarea
+            label="Description"
+            value={description}
+            onChange={(value) => setDescription(value)}
+            rows={2}
+          />
         </div>
 
-        <div className="space-y-3 pb-4">
+        <div className="space-y-6">
           <h3 className="text-sm font-semibold text-gray-900">Template Configuration</h3>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Code *</label>
-            <Input
-              type="text"
-              value={code}
-              onChange={(value) => setCode(String(value))}
-              required
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
-              placeholder="Unique template code"
-            />
-          </div>
+          <Input
+            type="text"
+            label="Code"
+            value={code}
+            onChange={(value) => setCode(String(value))}
+            required
+            className="font-mono"
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -261,53 +251,39 @@ export default function CreativeTemplateFormPage() {
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
-            <Input
-              type="text"
-              value={title}
-              onChange={(value) => setTitle(String(value))}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Template title"
-            />
-          </div>
+          <Input
+            type="text"
+            label="Title"
+            value={title}
+            onChange={(value) => setTitle(String(value))}
+          />
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           <h3 className="text-sm font-semibold text-gray-900">Template Content</h3>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Body Text</label>
-            <textarea
-              value={bodyText}
-              onChange={(e) => setBodyText(e.target.value)}
-              rows={5}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-              placeholder="Plain text content"
-            />
-          </div>
+          <Textarea
+            label="Body Text"
+            value={bodyText}
+            onChange={(value) => setBodyText(value)}
+            rows={5}
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Body HTML</label>
-            <textarea
-              value={bodyHtml}
-              onChange={(e) => setBodyHtml(e.target.value)}
-              rows={5}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono"
-              placeholder="HTML content"
-            />
-          </div>
+          <Textarea
+            label="Body HTML"
+            value={bodyHtml}
+            onChange={(value) => setBodyHtml(value)}
+            rows={5}
+            className="font-mono"
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Variables (JSON)</label>
-            <textarea
-              value={variablesText}
-              onChange={(e) => setVariablesText(e.target.value)}
-              rows={5}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono"
-              placeholder='{"name": "customer"}'
-            />
-          </div>
+          <Textarea
+            label="Variables (JSON)"
+            value={variablesText}
+            onChange={(value) => setVariablesText(value)}
+            rows={5}
+            className="font-mono"
+          />
         </div>
 
         <div className="flex items-center justify-end gap-3 pt-6">

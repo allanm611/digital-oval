@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { Save, X, Plus, Activity } from "lucide-react";
+import { Save, X, Plus, Activity, ArrowLeft } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import {
   Segment,
@@ -14,6 +14,7 @@ import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
@@ -225,36 +226,28 @@ export default function EditSegmentPage() {
             <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
               Basic Information
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-6">
               {/* Segment Name */}
               <div>
-                <label
-                  className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                >
-                  Segment Name <span className="text-red-500">*</span>
-                </label>
-                <Input type="text"
+                <Input
+                  label="Segment Name"
+                  type="text"
                   value={name}
                   onChange={(value) => setName(String(value))}
                   placeholder="Enter segment name"
-                  className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[${color.primary.action}]/20`}
                   disabled={isSaving}
+                  required
                 />
               </div>
 
               {/* Description */}
               <div>
-                <label
-                  className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                >
-                  Description
-                </label>
-                <textarea
+                <Textarea
+                  label="Description"
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  onChange={(value) => setDescription(value)}
                   placeholder="Enter segment description"
                   rows={3}
-                  className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[${color.primary.action}]/20 resize-none`}
                   disabled={isSaving}
                 />
               </div>
@@ -326,7 +319,7 @@ export default function EditSegmentPage() {
             <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
               Additional Information
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-6">
               {/* Tags */}
               <div>
                 <label
@@ -334,9 +327,11 @@ export default function EditSegmentPage() {
                 >
                   Tags
                 </label>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <div className="flex items-center space-x-2">
-                    <Input type="text"
+                    <Input
+                      label="Add Tag"
+                      type="text"
                       value={tagInput}
                       onChange={(value) => setTagInput(String(value))}
                       onKeyPress={(e) =>
@@ -344,8 +339,8 @@ export default function EditSegmentPage() {
                         (e.preventDefault(), handleAddTag())
                       }
                       placeholder="Enter a tag and press Enter"
-                      className={`flex-1 px-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[${color.primary.action}]/20`}
                       disabled={isSaving}
+                      className="flex-1"
                     />
                     <button
                       onClick={handleAddTag}
@@ -404,17 +399,12 @@ export default function EditSegmentPage() {
 
               {/* Business Purpose */}
               <div>
-                <label
-                  className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                >
-                  Business Purpose
-                </label>
-                <textarea
+                <Textarea
+                  label="Business Purpose"
                   value={businessPurpose}
-                  onChange={(e) => setBusinessPurpose(e.target.value)}
+                  onChange={(value) => setBusinessPurpose(value)}
                   placeholder="Describe the business purpose of this segment"
                   rows={3}
-                  className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[${color.primary.action}]/20 resize-none`}
                   disabled={isSaving}
                 />
               </div>

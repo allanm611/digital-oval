@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import CreateButton from "../../../shared/components/ui/CreateButton";
-import { segmentService } from "../../segments/services/segmentService";
+import { subscriberProfileService } from "../services/subscriberProfileService";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -41,40 +41,15 @@ export default function SubscriberProfileListPage() {
   const loadProfiles = async () => {
     setIsLoading(true);
     try {
-      const response = await segmentService.getSegmentationFields(true);
-      if (response && response.success && response.data && response.data.length > 0) {
-        const config = response.data[0]?.field_selector_config || [];
-
-        // Find Customer 360 category and extract fields from sub-categories
-        const customer360Category = config.find(
-          (cat: any) => cat.value === "customer_360" || cat.value === "customer_identity"
-        );
-
-        if (customer360Category) {
-          const loadedProfiles: Profile[] = [];
-
-          // Extract fields from sub-categories
-          if (customer360Category.sub_categories && Array.isArray(customer360Category.sub_categories)) {
-            customer360Category.sub_categories.forEach((subCat: any) => {
-              if (subCat.fields && Array.isArray(subCat.fields)) {
-                subCat.fields.forEach((field: any, index: number) => {
-                  loadedProfiles.push({
-                    id: field.id || index,
-                    name: field.field_name || field.name || "",
-                    description: field.field_description || field.description || "",
-                    dataSource: subCat.display_name || subCat.name || "Customer 360",
-                    is_active: true,
-                  });
-                });
-              }
-            });
-          }
-
-          setProfiles(loadedProfiles);
-        } else {
-          setProfiles([]);
-        }
-      }
+      const profiles = await subscriberProfileService.getAllProfiles();
+      const mappedProfiles: Profile[] = profiles.map((profile) => ({
+        id: profile.id,
+        name: profile.name,
+        description: profile.description || "",
+        dataSource: profile.data_source || "DB",
+        is_active: profile.is_active ?? true,
+      }));
+      setProfiles(mappedProfiles);
     } catch (err) {
       console.error("Failed to load subscriber profiles:", err);
       showToast("error", "Failed to load subscriber profiles");
@@ -142,8 +117,8 @@ export default function SubscriberProfileListPage() {
         )
       );
 
-      // Call API - TODO: Add toggleProfileStatus endpoint
-      // await subscriberProfileService.toggleProfileStatus(profile.id, newStatus);
+      // Call API
+      await subscriberProfileService.toggleProfileStatus(profile.id, newStatus);
 
       showToast(
         "success",

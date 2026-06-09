@@ -4,6 +4,7 @@ import CodeMirror from "@uiw/react-codemirror";
 import { sql as sqlLanguage } from "@codemirror/lang-sql";
 import BackButton from "../../../shared/components/ui/BackButton";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { useToast } from "../../../contexts/ToastContext";
@@ -383,30 +384,28 @@ export default function CreateKPIPage() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Name <span className="text-red-500">*</span>
-                </label>
                 <Input
+                  label="Name"
                   placeholder="e.g., Data 2G Revenue"
                   value={formData.name}
                   onChange={handleInputChange('name')}
                   hasError={!!errors.name}
-                  variant="medium"
+                 
                   disabled={saving}
+                  required
                 />
                 {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Field Value (Slug) <span className="text-red-500">*</span>
-                </label>
                 <Input
+                  label="Field Value (Slug)"
                   placeholder="e.g., p_data_2g_revenue"
                   value={formData.field_value}
                   onChange={handleInputChange('field_value')}
-                  variant="medium"
+                 
                   disabled={saving}
+                  required
                 />
               </div>
             </div>
@@ -441,10 +440,8 @@ export default function CreateKPIPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Default Value <span className="text-red-500">*</span>
-                </label>
                 <Input
+                  label="Default Value"
                   type={formData.field_type === "text" ? "text" : "number"}
                   placeholder={
                     formData.field_type === "text" ? "e.g., Default text" :
@@ -455,27 +452,23 @@ export default function CreateKPIPage() {
                   value={formData.default_value}
                   onChange={handleInputChange('default_value')}
                   hasError={!!errors.default_value}
-                  variant="medium"
+                 
                   disabled={saving}
                   step={formData.field_type === "decimal" || formData.field_type === "money" ? "0.01" : undefined}
+                  required
                 />
                 {errors.default_value && <p className="text-red-500 text-xs mt-1">{errors.default_value}</p>}
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description
-              </label>
-              <textarea
-                name="description"
+              <Textarea
+                label="Description"
                 value={formData.description}
-                onChange={handleTextareaChange}
+                onChange={(value) => setFormData((prev) => ({ ...prev, description: value }))}
                 placeholder="Describe this KPI..."
                 rows={3}
-                className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none ${
-                  errors.description ? "border-red-500" : "border-gray-300"
-                }`}
+                hasError={!!errors.description}
                 disabled={saving}
               />
               {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description}</p>}
@@ -500,15 +493,13 @@ export default function CreateKPIPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Display Order
-                </label>
                 <Input
+                  label="Display Order"
                   type="number"
                   placeholder="e.g., 0"
                   value={formData.display_order}
                   onChange={handleInputChange('display_order')}
-                  variant="medium"
+                 
                   disabled={saving}
                 />
               </div>
@@ -570,7 +561,7 @@ export default function CreateKPIPage() {
                     value={formData.range_min}
                     onChange={handleInputChange('range_min')}
                     hasError={!!errors.range_min}
-                    variant="medium"
+                   
                     disabled={saving}
                   />
                   {errors.range_min && <p className="text-red-500 text-xs mt-1">{errors.range_min}</p>}
@@ -585,7 +576,7 @@ export default function CreateKPIPage() {
                     value={formData.range_max}
                     onChange={handleInputChange('range_max')}
                     hasError={!!errors.range_max}
-                    variant="medium"
+                   
                     disabled={saving}
                   />
                   {errors.range_max && <p className="text-red-500 text-xs mt-1">{errors.range_max}</p>}
@@ -603,7 +594,7 @@ export default function CreateKPIPage() {
                   value={formData.discrete_values}
                   onChange={handleInputChange('discrete_values')}
                   hasError={!!errors.discrete_values}
-                  variant="medium"
+                 
                   disabled={saving}
                 />
                 {errors.discrete_values && <p className="text-red-500 text-xs mt-1">{errors.discrete_values}</p>}

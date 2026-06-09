@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Input from '../../../shared/components/ui/Input';
+import Textarea from '../../../shared/components/ui/Textarea';
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Trash2,
@@ -632,32 +633,26 @@ export default function CategoryDetailsPage() {
                 Edit Category
               </h3>
 
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Name
-                  </label>
                   <Input
+                    label="Name"
                     type="text"
                     value={formData.name}
                     onChange={(value) =>
                       setFormData({ ...formData, name: String(value) })
                     }
-                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Description
-                  </label>
-                  <textarea
+                  <Textarea
+                    label="Description"
                     value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
+                    onChange={(value) =>
+                      setFormData({ ...formData, description: value })
                     }
                     rows={3}
-                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   />
                 </div>
               </div>

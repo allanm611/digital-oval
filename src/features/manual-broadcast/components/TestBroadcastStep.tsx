@@ -196,15 +196,15 @@ export default function TestBroadcastStep({
       <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
         {/* Test Contact Input */}
         <div>
-          <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-            {data.channel === "EMAIL"
-              ? t.manualBroadcast.testInputLabelEmail
-              : data.channel === "SMS" || data.channel === "WHATSAPP"
-              ? t.manualBroadcast.testInputLabelPhone
-              : t.manualBroadcast.testInputLabelGeneric}
-          </label>
           <div className="flex flex-col sm:flex-row gap-2">
             <Input
+              label={
+                data.channel === "EMAIL"
+                  ? t.manualBroadcast.testInputLabelEmail
+                  : data.channel === "SMS" || data.channel === "WHATSAPP"
+                  ? t.manualBroadcast.testInputLabelPhone
+                  : t.manualBroadcast.testInputLabelGeneric
+              }
               value={currentContact}
               onChange={setCurrentContact}
               onKeyDown={(e) => {

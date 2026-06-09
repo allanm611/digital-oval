@@ -4,6 +4,7 @@ import { tw, color } from "../../../shared/utils/utils";
 import { CommunicationChannel } from "../types/communication";
 import RichTextEditor from "./RichTextEditor";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import { validateInsertPosition, validateMessageSyntax } from "../../../shared/utils/variableInsertion";
 
 interface MessageEditorProps {
@@ -184,41 +185,33 @@ export default function MessageEditor({
       </div>
 
       {hasTitle && (
-        <div>
-          <label className={`${tw.label} mb-2 block`}>
-            Subject Line <span className="text-red-500">*</span>
-          </label>
-          <Input
-            ref={titleInputRef}
-            placeholder="Enter email subject..."
-            value={title}
-            onChange={(value) => {
-              onTitleChange(value);
-              // Also validate on change
-              const error = validateMessageSyntax(value);
-              if (error) setVariableError(error);
-            }}
-            onClick={(e) => {
-              setActiveField("title");
-              setCursorPosition(e.currentTarget.selectionStart || 0);
-            }}
-            onKeyUp={(e) =>
-              setCursorPosition(e.currentTarget.selectionStart || 0)
-            }
-            onFocus={(e) => {
-              setActiveField("title");
-              setCursorPosition(e.currentTarget.selectionStart || 0);
-            }}
-            onBlur={() => {}}
-            variant="medium"
-          />
-        </div>
+        <Input
+          ref={titleInputRef}
+          label="Subject Line"
+          value={title}
+          onChange={(value) => {
+            onTitleChange(value);
+            // Also validate on change
+            const error = validateMessageSyntax(value);
+            if (error) setVariableError(error);
+          }}
+          onClick={(e) => {
+            setActiveField("title");
+            setCursorPosition(e.currentTarget.selectionStart || 0);
+          }}
+          onKeyUp={(e) =>
+            setCursorPosition(e.currentTarget.selectionStart || 0)
+          }
+          onFocus={(e) => {
+            setActiveField("title");
+            setCursorPosition(e.currentTarget.selectionStart || 0);
+          }}
+          onBlur={() => {}}
+         
+        />
       )}
 
       <div>
-        <label className={`${tw.label} mb-2 block`}>
-          Message Body <span className="text-red-500">*</span>
-        </label>
         {variableError && (
           <div className="mb-3 text-sm text-red-700">
             {variableError}
@@ -237,39 +230,36 @@ export default function MessageEditor({
             />
           </div>
         ) : (
-          <textarea
-            ref={bodyTextareaRef}
-            value={body}
-            onChange={handleBodyChange}
-            onClick={(e) => {
-              setActiveField("body");
-              setCursorPosition(e.currentTarget.selectionStart || 0);
-            }}
-            onKeyUp={(e) =>
-              setCursorPosition(e.currentTarget.selectionStart || 0)
-            }
-            placeholder="Enter your message... Use {{variable}} to insert dynamic content."
-            rows={8}
-            className={`w-full px-4 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:border-transparent transition-all font-mono text-sm resize-none`}
-            style={{
-              boxShadow: "none",
-            }}
-            onFocus={(e) => {
-              setActiveField("body");
-              setCursorPosition(e.currentTarget.selectionStart || 0);
-              e.currentTarget.style.boxShadow = `0 0 0 2px ${color.primary.accent}40`;
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.boxShadow = "none";
-            }}
-          />
+          <>
+            <Textarea
+              ref={bodyTextareaRef}
+              label="Message Body"
+              value={body}
+              onChange={(value) => {
+                onBodyChange(value);
+                handleBodyChange({ target: { value, selectionStart: 0 } } as any);
+              }}
+              onClick={(e) => {
+                setActiveField("body");
+                setCursorPosition(e.currentTarget.selectionStart || 0);
+              }}
+              onKeyUp={(e) =>
+                setCursorPosition(e.currentTarget.selectionStart || 0)
+              }
+              onFocus={(e) => {
+                setActiveField("body");
+                setCursorPosition(e.currentTarget.selectionStart || 0);
+              }}
+              onBlur={() => {}}
+              rows={8}
+              className="font-mono"
+            />
+            <p className="mt-2 text-xs text-gray-500">
+              {`Character count: ${body.length} | `}
+              Variables will be replaced with actual data when sent
+            </p>
+          </>
         )}
-        <p className="mt-2 text-xs text-gray-500">
-          {isRichText
-            ? "Use the toolbar to format your message. "
-            : `Character count: ${body.length} | `}
-          Variables will be replaced with actual data when sent
-        </p>
       </div>
     </div>
   );

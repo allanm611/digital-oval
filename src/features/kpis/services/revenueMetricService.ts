@@ -1,36 +1,22 @@
 import { RevenueMetric } from "../types/revenueMetrics";
-import { segmentService } from "../../segments/services/segmentService";
+import { kpiService } from "./kpiService";
+import { fetchWithAuthInterceptor } from "../../../shared/services/fetchInterceptor";
+import { buildApiUrl } from "../../../shared/services/api";
 
 export const revenueMetricService = {
-  // Get all metrics from segmentation profile endpoint
+  // Get all revenue metrics using KPI endpoint, filtered by tag on frontend
   getAllMetrics: async (): Promise<RevenueMetric[]> => {
     try {
-      const response = await segmentService.getSegmentationFields(true);
-      if (response && response.success && response.data && response.data.length > 0) {
-        const config = response.data[0]?.field_selector_config || [];
+      // Fetch all KPIs and filter by revenue_metric tag
+      const allKpis = await kpiService.getAllKPIs();
+      const revenueKpis = allKpis.filter((kpi: any) => kpi.tag === "revenue_metric");
 
-        // Find Revenue KPIs category and extract fields
-        const revenueKpisCategory = config.find(
-          (cat: any) => cat.value === "revenue_kpis" || cat.value === "revenue_metric"
-        );
-
-        if (revenueKpisCategory && revenueKpisCategory.fields) {
-          // Map backend fields to RevenueMetric format
-          return revenueKpisCategory.fields.map((field: any) => ({
-            id: field.id,
-            name: field.field_name,
-            description: field.field_description || "",
-            field_type: field.field_type?.toLowerCase() || "decimal",
-            category: "revenue",
-            operators: field.operators?.map((op: any) => op.label) || [],
-            source_table: field.source_table || "",
-            data_source: field.data_source || "DB",
-            frequency: field.data_latency || "Daily",
-            unit: field.unit || "",
-          }));
-        }
-      }
-      return [];
+      return revenueKpis.map((kpi: any) => ({
+        ...kpi,
+        name: kpi.field_name,
+        category: "revenue",
+        operators: kpi.default_operator_id ? [kpi.default_operator_id] : [],
+      }));
     } catch (err) {
       console.error("Failed to fetch revenue metrics:", err);
       return [];
@@ -39,7 +25,31 @@ export const revenueMetricService = {
 
   // Get a single metric by ID
   getMetricById: async (id: number): Promise<RevenueMetric | null> => {
-    const metrics = await revenueMetricService.getAllMetrics();
-    return metrics.find((m) => m.id === id) || null;
+    try {
+      const kpi = await kpiService.getKPIById(id);
+      if (!kpi) return null;
+
+      return {
+        ...kpi,
+        name: kpi.field_name,
+        category: "revenue",
+        operators: kpi.default_operator_id ? [kpi.default_operator_id] : [],
+      } as RevenueMetric;
+    } catch (err) {
+      console.error("Failed to fetch revenue metric:", err);
+      return null;
+    }
+  },
+
+  // Toggle metric status
+  toggleMetricStatus: async (id: number, isActive: boolean): Promise<void> => {
+    const baseUrl = buildApiUrl("/profile-dictionary");
+    const url = `${baseUrl}/status`;
+
+    await fetchWithAuthInterceptor(url, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, is_active: isActive }),
+    });
   },
 };

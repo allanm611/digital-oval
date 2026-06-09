@@ -302,10 +302,8 @@ export default function AddVIPMembersModal({
 
                 {/* MSISDN */}
                 <div>
-                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                    MSISDN *
-                  </label>
                   <Input
+                    label="MSISDN *"
                     type="tel"
                     value={formData.msisdn}
                     onChange={(value) => {
@@ -319,7 +317,6 @@ export default function AddVIPMembersModal({
                     }}
                     placeholder="Country code + number (e.g., 254712345678)"
                     hasError={!!errors.msisdn}
-                    variant="medium"
                   />
                   {errors.msisdn && (
                     <p className="text-xs text-red-500 mt-1">{errors.msisdn}</p>
@@ -333,10 +330,8 @@ export default function AddVIPMembersModal({
               <>
                 {/* Name */}
                 <div>
-                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                    Name *
-                  </label>
                   <Input
+                    label="Name *"
                     value={formData.external_name}
                     onChange={(value) => {
                       setFormData({ ...formData, external_name: value });
@@ -346,7 +341,6 @@ export default function AddVIPMembersModal({
                     }}
                     placeholder="Full name"
                     hasError={!!errors.external_name}
-                    variant="medium"
                   />
                   {errors.external_name && (
                     <p className="text-xs text-red-500 mt-1">{errors.external_name}</p>
@@ -355,10 +349,8 @@ export default function AddVIPMembersModal({
 
                 {/* Email */}
                 <div>
-                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                    Email
-                  </label>
                   <Input
+                    label="Email"
                     type="email"
                     value={formData.external_email}
                     onChange={(value) => {
@@ -369,7 +361,6 @@ export default function AddVIPMembersModal({
                     }}
                     placeholder="Email address"
                     hasError={!!errors.external_email}
-                    variant="medium"
                   />
                   {errors.external_email && (
                     <p className="text-xs text-red-500 mt-1">{errors.external_email}</p>
@@ -378,10 +369,8 @@ export default function AddVIPMembersModal({
 
                 {/* MSISDN */}
                 <div>
-                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                    MSISDN
-                  </label>
-                  <Input
+                    <Input
+                    label="MSISDN"
                     type="tel"
                     value={formData.external_msisdn}
                     onChange={(value) => {
@@ -395,7 +384,6 @@ export default function AddVIPMembersModal({
                     }}
                     placeholder="Country code + number (e.g., 254712345678)"
                     hasError={!!errors.external_msisdn}
-                    variant="medium"
                   />
                   {errors.external_msisdn && (
                     <p className="text-xs text-red-500 mt-1">{errors.external_msisdn}</p>

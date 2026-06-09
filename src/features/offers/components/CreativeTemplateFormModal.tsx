@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import { tw, color } from "../../../shared/utils/utils";
 import { zIndex } from "../../../shared/utils/tokens";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import type { CreativeTemplate } from "../../configurations/services/creativeTemplateService";
 import { languageService, Language } from "../../configurations/services/languageService";
@@ -236,16 +237,14 @@ export default function CreativeTemplateFormModal({
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Name */}
           <div>
-            <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-              Name
-              <span className="text-red-600">*</span>
-            </label>
             <Input
+              label="Name"
               placeholder="Enter template name"
               value={formData.name}
               onChange={handleInputChange('name')}
               hasError={!!errors.name}
-              variant="medium"
+             
+              required
             />
             {errors.name && (
               <p className="mt-1 text-sm text-red-600">{errors.name}</p>
@@ -254,16 +253,15 @@ export default function CreativeTemplateFormModal({
 
           {/* Code */}
           <div>
-            <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-              Code
-              <span className="text-red-600">*</span>
-            </label>
             <Input
+              label="Code"
               placeholder="e.g., WELCOME_SMS"
               value={formData.code}
               onChange={handleInputChange('code')}
               hasError={!!errors.code}
-              variant="medium"
+             
+              className="font-mono"
+              required
             />
             {errors.code && (
               <p className="mt-1 text-sm text-red-600">{errors.code}</p>
@@ -272,16 +270,11 @@ export default function CreativeTemplateFormModal({
 
           {/* Description */}
           <div>
-            <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-              Description
-            </label>
-            <textarea
-              name="description"
+            <Textarea
+              label="Description"
               value={formData.description}
-              onChange={handleTextareaChange}
+              onChange={(value) => handleInputChange('description')(value)}
               rows={2}
-              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none`}
-              placeholder="Enter description (optional)"
             />
           </div>
 
@@ -330,44 +323,33 @@ export default function CreativeTemplateFormModal({
 
           {/* Title */}
           <div>
-            <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-              Title
-            </label>
-            <Input type="text"
+            <Input
+              label="Title"
+              type="text"
               value={formData.title}
               onChange={handleInputChange('title')}
-              className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Template title (optional)"
             />
           </div>
 
           {/* Text Body */}
           <div>
-            <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-              Text Body
-            </label>
-            <textarea
-              name="text_body"
+            <Textarea
+              label="Text Body"
               value={formData.text_body}
-              onChange={handleTextareaChange}
+              onChange={(value) => handleInputChange('text_body')(value)}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-              placeholder="Enter template text body"
             />
           </div>
 
           {/* HTML Body */}
           <div>
-            <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-              HTML Body
-            </label>
-            <textarea
-              name="html_body"
+            <Textarea
+              label="HTML Body"
               value={formData.html_body}
-              onChange={handleTextareaChange}
+              onChange={(value) => handleInputChange('html_body')(value)}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-              placeholder="Enter template HTML body"
+              className="font-mono"
             />
             {errors.body && (
               <p className="mt-1 text-sm text-red-600">{errors.body}</p>
