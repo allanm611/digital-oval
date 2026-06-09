@@ -272,7 +272,7 @@ export default function GatewayConfigDetailsPage({ channel }: GatewayConfigDetai
                 Created
               </label>
               <p className={`text-sm ${tw.textPrimary}`}>
-                <DateFormatter date={config.created_at} useUserTimezone />
+                <DateFormatter date={config.created_at} useUserTimezone includeTime />
               </p>
             </div>
             <div className="space-y-1">
@@ -282,7 +282,7 @@ export default function GatewayConfigDetailsPage({ channel }: GatewayConfigDetai
                 Last Updated
               </label>
               <p className={`text-sm ${tw.textPrimary}`}>
-                <DateFormatter date={config.updated_at} useUserTimezone />
+                <DateFormatter date={config.updated_at} useUserTimezone includeTime />
               </p>
             </div>
           </div>

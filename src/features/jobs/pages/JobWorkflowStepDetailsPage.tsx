@@ -412,7 +412,7 @@ export default function JobWorkflowStepDetailsPage() {
                   Created At
                 </dt>
                 <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
-                  <DateFormatter date={step.created_at} />
+                  <DateFormatter date={step.created_at} useUserTimezone includeTime />
                 </dd>
               </div>
               <div>
@@ -420,7 +420,7 @@ export default function JobWorkflowStepDetailsPage() {
                   Updated At
                 </dt>
                 <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
-                  <DateFormatter date={step.updated_at} />
+                  <DateFormatter date={step.updated_at} useUserTimezone includeTime />
                 </dd>
               </div>
               <div>

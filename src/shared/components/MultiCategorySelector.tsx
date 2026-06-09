@@ -18,6 +18,7 @@ interface MultiCategorySelectorProps {
   className?: string;
   refreshTrigger?: number;
   entityType?: "campaign" | "offer" | "product" | "segment" | "channel"; // For loading correct categories
+  data?: ProductCategory[]; // Optional: pass custom data instead of loading from API
 }
 
 export default function MultiCategorySelector({
@@ -31,6 +32,7 @@ export default function MultiCategorySelector({
   className = "",
   refreshTrigger,
   entityType = "product",
+  data,
 }: MultiCategorySelectorProps) {
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -102,6 +104,12 @@ export default function MultiCategorySelector({
     try {
       setIsLoading(true);
       setError(null);
+
+      // If custom data is provided, use it directly
+      if (data) {
+        setCategories(data);
+        return;
+      }
 
       // Load categories based on entity type - only show active ones
       let categoriesData: ProductCategory[] = [];
@@ -188,7 +196,7 @@ export default function MultiCategorySelector({
     } finally {
       setIsLoading(false);
     }
-  }, [entityType]);
+  }, [entityType, data]);
 
   useEffect(() => {
     loadCategories();

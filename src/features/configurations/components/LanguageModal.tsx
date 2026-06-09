@@ -6,7 +6,7 @@ import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { languageService, Language, CreateLanguageRequest } from "../services/languageService";
 import { characterSetService, CharacterSet } from "../services/characterSetService";
-import countries from "world-countries";
+import { getCountriesList } from "../../../shared/services/countryDataService";
 
 interface LanguageModalProps {
   isOpen: boolean;
@@ -15,13 +15,7 @@ interface LanguageModalProps {
   editingLanguage: Language | null;
 }
 
-const countriesList = countries
-  .map((country) => ({
-    name: country.name.common,
-    code: country.cca2,
-    flag: country.flag,
-  }))
-  .sort((a, b) => a.name.localeCompare(b.name));
+const countriesList = getCountriesList();
 
 const countryOptions = countriesList.map((country) => ({
   value: country.name,

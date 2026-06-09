@@ -24,7 +24,10 @@ export default function Header({
 }: HeaderProps) {
   const { user, logout } = useAuth();
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const [currentUserRole, setCurrentUserRole] = useState<string>(t.header.defaultUser);
+
+  const handleNavigateToProfile = () => navigate("/dashboard/profile");
 
   const loadCurrentUserRole = useCallback(async () => {
     if (!user?.user_id) {
@@ -109,17 +112,23 @@ export default function Header({
 
           <div className="hidden md:flex items-center gap-x-3">
             <div className="flex items-center gap-x-3">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/10">
+              <button
+                onClick={handleNavigateToProfile}
+                className="w-10 h-10 rounded-full flex items-center justify-center bg-white/10"
+              >
                 <User className="w-5 h-5 text-white" />
-              </div>
-              <div>
+              </button>
+              <button
+                onClick={handleNavigateToProfile}
+                className="text-left"
+              >
                 <div className="text-sm font-medium text-white">
                   {user?.email || "User"}
                 </div>
                 <div className="text-xs font-medium leading-[140%] tracking-[0.05em] text-white/70">
                   {currentUserRole}
                 </div>
-              </div>
+              </button>
             </div>
             <button
               onClick={logout}

@@ -1,9 +1,12 @@
 export interface KPI {
   id: string;
   name: string;
-  category: "System Event" | "Usage Metric" | "Revenue Metric" | "Subscriber Profile";
+  field_category_id?: number;
+  category?: string;
   subcategory?: string;
   description: string;
   source: string;
   field_type?: string;
+  is_active?: boolean;
+  field_value?: string;
 }

@@ -355,13 +355,13 @@ export default function StepExecutionDetailsPage() {
             <div>
               <dt className="text-sm font-medium text-gray-500">Created At</dt>
               <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
-                <DateFormatter date={execution.created_at} />
+                <DateFormatter date={execution.created_at} useUserTimezone includeTime />
               </dd>
             </div>
             <div>
               <dt className="text-sm font-medium text-gray-500">Updated At</dt>
               <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
-                <DateFormatter date={execution.updated_at} />
+                <DateFormatter date={execution.updated_at} useUserTimezone includeTime />
               </dd>
             </div>
           </dl>

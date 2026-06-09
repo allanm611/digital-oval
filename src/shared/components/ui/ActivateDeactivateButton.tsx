@@ -19,7 +19,7 @@ export default function ActivateDeactivateButton({
     <button
       onClick={onToggle}
       disabled={disabled || isLoading}
-      className="p-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+      className="p-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center rounded"
       style={{
         color: isActive ? "#FF9500" : "#10B981",
       }}

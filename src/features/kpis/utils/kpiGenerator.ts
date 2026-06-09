@@ -14,6 +14,7 @@ export const generateAllKPIs = (): KPI[] => {
       subcategory: event.category,
       description: event.event_description,
       source: "System Events Table",
+      is_active: true,
     });
   });
 
@@ -25,6 +26,7 @@ export const generateAllKPIs = (): KPI[] => {
       subcategory: metric.category,
       description: metric.description,
       source: "Revenue Table",
+      is_active: true,
     });
   });
 
@@ -36,6 +38,7 @@ export const generateAllKPIs = (): KPI[] => {
       subcategory: metric.category,
       description: metric.description,
       source: "Usage Table",
+      is_active: true,
     });
   });
 

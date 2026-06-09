@@ -446,9 +446,10 @@ export default function KpiCategoriesListPage() {
       <DeleteConfirmModal
         isOpen={showDeleteModal}
         title="Delete KPI Category"
-        message={`Are you sure you want to delete "${categoryToDelete?.name}"? This will fail if KPIs are using it.`}
+        description="This will fail if KPIs are using it."
+        itemName={categoryToDelete?.name || ""}
         onConfirm={confirmDeleteCategory}
-        onCancel={() => {
+        onClose={() => {
           setShowDeleteModal(false);
           setCategoryToDelete(null);
         }}

@@ -397,7 +397,7 @@ export default function CommunicationChannelDetailsPage() {
                   Created
                 </p>
                 <p className={`text-sm ${tw.textPrimary}`}>
-                  <DateFormatter date={channel.created_at} />
+                  <DateFormatter date={channel.created_at} useUserTimezone includeTime />
                 </p>
               </div>
               <div>
@@ -405,7 +405,7 @@ export default function CommunicationChannelDetailsPage() {
                   Last Updated
                 </p>
                 <p className={`text-sm ${tw.textPrimary}`}>
-                  <DateFormatter date={channel.updated_at} />
+                  <DateFormatter date={channel.updated_at} useUserTimezone includeTime />
                 </p>
               </div>
             </div>

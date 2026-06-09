@@ -43,6 +43,7 @@ import {
   getSubscriptionDisplayName,
   formatMsisdn,
   formatDateTime,
+  formatDate,
   convertSubscriptionToCustomerRow,
   type CustomerRow,
 } from "../../customers360/utils/customerSubscriptionHelpers";
@@ -1110,7 +1111,7 @@ export default function CustomerProfileReportsPage() {
       subscription.simType ?? "",
       subscription.status ?? "",
       subscription.activationDate
-        ? formatDateTime(subscription.activationDate)
+        ? formatDate(subscription.activationDate)
         : "",
       subscription.city ?? "",
       subscription.email ?? "",
@@ -1942,7 +1943,7 @@ export default function CustomerProfileReportsPage() {
                           style={tableCellBackground}
                         >
                           {subscription.activationDate
-                            ? formatDateTime(subscription.activationDate)
+                            ? formatDate(subscription.activationDate)
                             : "—"}
                         </td>
                         {/* City */}

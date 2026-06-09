@@ -13,8 +13,7 @@ import { tw } from "../../../shared/utils/utils";
 import { colors } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 // import DateFormatter from "../../../shared/components/DateFormatter";
-import countries from "world-countries";
-import currencyCodes from "currency-codes";
+import { getCountriesList, getCurrenciesList } from "../../../shared/services/countryDataService";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import { characterSetService } from "../../configurations/services/characterSetService";
 import { senderIdService } from "../../configurations/services/senderIdService";
@@ -32,27 +31,8 @@ import { notificationService } from "../../notifications/services/notificationSe
 import { NotificationSubscription } from "../../notifications/types/notification";
 import { TimeZone } from "../../configurations/types/timezone";
 
-// Get all countries from world-countries library, sorted alphabetically
-const countriesList = countries
-  .map((country) => ({
-    name: country.name.common,
-    code: country.cca2, // ISO 3166-1 alpha-2 code
-    flag: country.flag, // Emoji flag
-  }))
-  .sort((a, b) => a.name.localeCompare(b.name));
-
-// Get all currencies from currency-codes library
-const currenciesList = currencyCodes
-  .codes()
-  .map((code) => {
-    const currency = currencyCodes.code(code);
-    return {
-      code: code || "",
-      name: currency ? `${currency.currency} (${code})` : code,
-    };
-  })
-  .filter((c) => c.code && c.name && c.name !== `${c.code} (${c.code})`)
-  .sort((a, b) => a.code.localeCompare(b.code));
+const countriesList = getCountriesList();
+const currenciesList = getCurrenciesList();
 
 // System-wide languages - using ISO 639-1 codes
 const languages = [

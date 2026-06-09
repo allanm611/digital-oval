@@ -10,9 +10,11 @@ import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import MultiCategorySelector from "../../../shared/components/MultiCategorySelector";
 import { kpiService } from "../services/kpiService";
 import { kpiCategoryService } from "../services/kpiCategoryService";
 import { notificationTypeService } from "../../../shared/services/notificationTypeService";
+import { OPERATORS as OPERATORS_MAP, getOperatorsForFieldType } from "../../../shared/utils/operatorMapper";
 
 const FIELD_TYPE_OPTIONS = [
   { label: "Number", value: "number" },
@@ -55,14 +57,16 @@ const VALIDATION_STRATEGY_OPTIONS = [
   { label: "Pattern", value: "pattern" },
 ];
 
-const OPERATORS = [
-  { value: "equals", label: "Equals" },
-  { value: "not_equals", label: "Not Equals" },
-  { value: "greater_than", label: "Greater Than" },
-  { value: "less_than", label: "Less Than" },
-  { value: "in", label: "In" },
-  { value: "not_in", label: "Not In" },
-];
+const getOperatorData = (fieldType: string) => {
+  const filteredOperators = getOperatorsForFieldType(fieldType);
+  return filteredOperators.map((op) => ({
+    id: op.id,
+    name: op.label,
+    is_active: true,
+    created_at: "",
+    updated_at: "",
+  }));
+};
 
 export default function CreateKPIPage() {
   const { id } = useParams<{ id: string }>();
@@ -90,20 +94,51 @@ export default function CreateKPIPage() {
     range_min: "",
     range_max: "",
     discrete_values: "",
-    operators: [] as string[],
+    operators: [] as number[],
     extractionLogic: "",
     default_value: "" as string | number,
+    use_as_dynamic_variable: false,
+    tag: "" as string,
+    display_order: 0,
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
     loadCategories();
-    loadTables();
     if (isEditMode && id) {
-      loadKPI();
+      loadTablesAndKPI();
+    } else {
+      loadTables();
     }
   }, [id]);
+
+  const loadTablesAndKPI = async () => {
+    try {
+      setLoadingTables(true);
+      const data = await notificationTypeService.getTables();
+      const tableList = Array.isArray(data) ? data : [];
+      setTables(
+        tableList.map((table: any, index: number) => {
+          const tableName = typeof table === "string" ? table : table.table_name || table.name || `Table ${index}`;
+          return {
+            id: index,
+            label: tableName,
+            value: tableName,
+          };
+        })
+      );
+      // Now load the KPI after tables are ready
+      if (id) {
+        await loadKPI();
+      }
+    } catch (err) {
+      console.error("Failed to load tables:", err);
+      setTables([]);
+    } finally {
+      setLoadingTables(false);
+    }
+  };
 
   const loadCategories = async () => {
     try {
@@ -163,6 +198,7 @@ export default function CreateKPIPage() {
           operators: [],
           extractionLogic: kpi.extraction_logic || "",
           default_value: "",
+          use_as_dynamic_variable: false,
         });
       }
     } catch (err) {
@@ -179,14 +215,8 @@ export default function CreateKPIPage() {
     if (!formData.name.trim()) {
       newErrors.name = "KPI name is required";
     }
-    if (!formData.description.trim()) {
-      newErrors.description = "Description is required";
-    }
     if (!formData.source_table.trim()) {
       newErrors.source_table = "Source table is required";
-    }
-    if (formData.operators.length === 0) {
-      newErrors.operators = "At least one operator must be selected";
     }
     if (!formData.extractionLogic.trim()) {
       newErrors.extractionLogic = "Extraction logic is required";
@@ -223,7 +253,6 @@ export default function CreateKPIPage() {
 
       const kpiPayload: any = {
         field_name: formData.name,
-        field_value: formData.field_value,
         field_category_id: Number(formData.field_category_id),
         field_type: formData.field_type,
         field_pg_type: pgTypeMap[formData.field_type] || "numeric",
@@ -232,10 +261,16 @@ export default function CreateKPIPage() {
         extraction_logic: formData.extractionLogic,
         data_latency: formData.data_latency,
         validation_strategy: formData.validation_strategy,
+        default_operator_id: formData.operators.length > 0 ? formData.operators[0] : null,
         is_computable: true,
         is_active: true,
         tag: "kpi",
       };
+
+      // Only include field_value for creation (not for updates)
+      if (!isEditMode) {
+        kpiPayload.field_value = formData.field_value;
+      }
 
       // Add conditional validation fields
       if (formData.validation_strategy === "range") {
@@ -349,7 +384,7 @@ export default function CreateKPIPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Name *
+                  Name <span className="text-red-500">*</span>
                 </label>
                 <Input
                   placeholder="e.g., Data 2G Revenue"
@@ -364,7 +399,7 @@ export default function CreateKPIPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Field Value *
+                  Field Value (Slug) <span className="text-red-500">*</span>
                 </label>
                 <Input
                   placeholder="e.g., p_data_2g_revenue"
@@ -378,7 +413,7 @@ export default function CreateKPIPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Field Category *
+                Field Category <span className="text-red-500">*</span>
               </label>
               {loadingCategories ? (
                 <div className="p-2 text-sm text-gray-500">Loading categories...</div>
@@ -395,7 +430,7 @@ export default function CreateKPIPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Field Type *
+                  Field Type <span className="text-red-500">*</span>
                 </label>
                 <HeadlessSelect
                   options={FIELD_TYPE_OPTIONS}
@@ -407,7 +442,7 @@ export default function CreateKPIPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Default Value *
+                  Default Value <span className="text-red-500">*</span>
                 </label>
                 <Input
                   type={formData.field_type === "text" ? "text" : "number"}
@@ -430,7 +465,7 @@ export default function CreateKPIPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description *
+                Description
               </label>
               <textarea
                 name="description"
@@ -445,6 +480,65 @@ export default function CreateKPIPage() {
               />
               {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description}</p>}
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tag
+                </label>
+                <HeadlessSelect
+                  options={[
+                    { label: "Revenue Metric", value: "revenue_metric" },
+                    { label: "Usage Metric", value: "usage_metric" },
+                    { label: "KPI", value: "kpi" },
+                  ]}
+                  value={formData.tag}
+                  onChange={(value) => handleSelectChange("tag", value)}
+                  placeholder="Select tag type"
+                  disabled={saving}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Display Order
+                </label>
+                <Input
+                  type="number"
+                  placeholder="e.g., 0"
+                  value={formData.display_order}
+                  onChange={handleInputChange('display_order')}
+                  variant="medium"
+                  disabled={saving}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Operators
+              </label>
+              <MultiCategorySelector
+                value={formData.operators}
+                onChange={(operatorIds) => setFormData((prev) => ({ ...prev, operators: operatorIds }))}
+                data={getOperatorData(formData.field_type)}
+                placeholder="Select operators..."
+                disabled={saving}
+              />
+              {errors.operators && <p className="text-red-500 text-xs mt-2">{errors.operators}</p>}
+            </div>
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox
+                checked={formData.use_as_dynamic_variable}
+                onChange={(e) => handleInputChange('use_as_dynamic_variable')(e.target.checked ? 1 : 0)}
+                disabled={saving}
+                style={{ accentColor: color.primary.accent }}
+              />
+              <span className="text-sm font-medium text-gray-700">
+                Use as dynamic variable
+              </span>
+            </label>
           </div>
         </div>
 
@@ -454,7 +548,7 @@ export default function CreateKPIPage() {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Validation Strategy *
+                Validation Strategy <span className="text-red-500">*</span>
               </label>
               <HeadlessSelect
                 options={VALIDATION_STRATEGY_OPTIONS}
@@ -468,7 +562,7 @@ export default function CreateKPIPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Min Value *
+                    Min Value <span className="text-red-500">*</span>
                   </label>
                   <Input
                     type="number"
@@ -483,7 +577,7 @@ export default function CreateKPIPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Max Value *
+                    Max Value <span className="text-red-500">*</span>
                   </label>
                   <Input
                     type="number"
@@ -502,7 +596,7 @@ export default function CreateKPIPage() {
             {formData.validation_strategy === "discrete" && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Allowed Values *
+                  Allowed Values <span className="text-red-500">*</span>
                 </label>
                 <Input
                   placeholder="e.g., active, inactive, pending (comma-separated)"
@@ -525,7 +619,7 @@ export default function CreateKPIPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Data Source *
+                  Data Source <span className="text-red-500">*</span>
                 </label>
                 <HeadlessSelect
                   options={DATA_SOURCE_OPTIONS}
@@ -537,7 +631,7 @@ export default function CreateKPIPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Data Latency *
+                  Data Latency <span className="text-red-500">*</span>
                 </label>
                 <HeadlessSelect
                   options={DATA_LATENCY_OPTIONS}
@@ -550,7 +644,7 @@ export default function CreateKPIPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Source Table *
+                Source Table <span className="text-red-500">*</span>
               </label>
               <HeadlessSelect
                 options={tables}
@@ -565,7 +659,7 @@ export default function CreateKPIPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                How is this KPI calculated? *
+                How is this KPI calculated? <span className="text-red-500">*</span>
               </label>
               <HeadlessSelect
                 options={CALCULATION_TYPE_OPTIONS}
@@ -588,7 +682,7 @@ export default function CreateKPIPage() {
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Extraction Logic</h2>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Logic Definition *
+              Logic Definition <span className="text-red-500">*</span>
             </label>
             <div
               className={`border ${tw.rounded} overflow-hidden`}
@@ -631,31 +725,6 @@ export default function CreateKPIPage() {
               {formData.calculationType === "static" && "Fixed constant value - no SQL needed"}
             </p>
           </div>
-        </div>
-
-        {/* Operators Section */}
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Operators</h2>
-          <p className="text-sm text-gray-600 mb-4">Select all operators that apply to this KPI</p>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {OPERATORS.map((op) => (
-              <div
-                key={op.value}
-                className="flex items-center gap-2 cursor-pointer"
-                onClick={() => handleOperatorChange(op.value, !formData.operators.includes(op.value))}
-              >
-                <Checkbox
-                  id={`operator-${op.value}`}
-                  checked={formData.operators.includes(op.value)}
-                  onChange={() => handleOperatorChange(op.value, !formData.operators.includes(op.value))}
-                  disabled={saving}
-                  style={{ accentColor: color.primary.accent }}
-                />
-                <span className="text-sm text-gray-700">{op.label}</span>
-              </div>
-            ))}
-          </div>
-          {errors.operators && <p className="text-red-500 text-xs mt-3">{errors.operators}</p>}
         </div>
 
         {/* Submit Button */}

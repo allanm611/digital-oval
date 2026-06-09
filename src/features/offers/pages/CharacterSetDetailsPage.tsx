@@ -254,7 +254,7 @@ export default function CharacterSetDetailsPage() {
                   </p>
                   <p className={`text-sm ${tw.textPrimary}`}>
                     {characterSet.created_at
-                      ? <DateFormatter date={characterSet.created_at} useUserTimezone />
+                      ? <DateFormatter date={characterSet.created_at} useUserTimezone includeTime />
                       : "N/A"}
                   </p>
                 </div>
@@ -271,7 +271,7 @@ export default function CharacterSetDetailsPage() {
                   </p>
                   <p className={`text-sm ${tw.textPrimary}`}>
                     {characterSet.updated_at
-                      ? <DateFormatter date={characterSet.updated_at} useUserTimezone />
+                      ? <DateFormatter date={characterSet.updated_at} useUserTimezone includeTime />
                       : "N/A"}
                   </p>
                 </div>

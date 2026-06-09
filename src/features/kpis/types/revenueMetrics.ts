@@ -27,6 +27,7 @@ export interface RevenueMetric {
   frequency: "Per Min" | "D-1" | "Monthly";
   unit?: string;
   default_value?: string | number;
+  is_active?: boolean;
 }
 
 export const REVENUE_METRICS: RevenueMetric[] = [];

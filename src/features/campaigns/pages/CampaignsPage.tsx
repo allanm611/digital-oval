@@ -273,7 +273,7 @@ export default function CampaignsPage() {
         );
       case "created_on":
         return campaign.created_at ? (
-          <DateFormatter date={campaign.created_at} useUserTimezone includeTime className="text-sm" />
+          <DateFormatter date={campaign.created_at} useUserTimezone className="text-sm" />
         ) : (
           <span className={`text-sm ${tw.textMuted}`}>—</span>
         );
@@ -285,7 +285,7 @@ export default function CampaignsPage() {
         );
       case "updated_on":
         return campaign.updated_at ? (
-          <DateFormatter date={campaign.updated_at} useUserTimezone includeTime className="text-sm" />
+          <DateFormatter date={campaign.updated_at} useUserTimezone className="text-sm" />
         ) : (
           <span className={`text-sm ${tw.textMuted}`}>—</span>
         );

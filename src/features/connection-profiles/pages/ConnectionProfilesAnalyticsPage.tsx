@@ -683,7 +683,6 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
                             <DateFormatter
                               date={profile.last_used_at}
                               useUserTimezone
-                              includeTime
                             />
                           ) : (
                             "Never"

@@ -5,6 +5,7 @@ import { generateAllKPIs } from "../utils/kpiGenerator";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 
 const allKPIs = generateAllKPIs();
 
@@ -14,11 +15,13 @@ export default function KPIsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [kpis, setKpis] = useState(allKPIs);
+  const [togglingKpiId, setTogglingKpiId] = useState<string | null>(null);
 
-  const categories = Array.from(new Set(allKPIs.map((kpi) => kpi.category)));
+  const categories = Array.from(new Set(kpis.map((kpi) => kpi.category)));
 
   const filteredKPIs = useMemo(() => {
-    return allKPIs.filter((kpi) => {
+    return kpis.filter((kpi) => {
       const matchesSearch =
         kpi.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (kpi.description && kpi.description.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -27,7 +30,7 @@ export default function KPIsPage() {
 
       return matchesSearch && matchesCategory;
     });
-  }, [searchTerm, categoryFilter]);
+  }, [kpis, searchTerm, categoryFilter]);
 
   const totalPages = Math.ceil(filteredKPIs.length / ITEMS_PER_PAGE);
   const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -38,12 +41,32 @@ export default function KPIsPage() {
     setCurrentPage(1);
   };
 
+  const handleToggleStatus = async (id: string) => {
+    try {
+      setTogglingKpiId(id);
+      const kpiToToggle = kpis.find((k) => k.id === id);
+      const newStatus = !(kpiToToggle?.is_active ?? true);
+
+      // Optimistic update
+      setKpis((prevKpis) =>
+        prevKpis.map((kpi) =>
+          kpi.id === id ? { ...kpi, is_active: newStatus } : kpi
+        )
+      );
+
+      // Simulate async operation
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    } finally {
+      setTogglingKpiId(null);
+    }
+  };
+
   // Calculate statistics
   const stats = {
-    totalKPIs: allKPIs.length,
-    systemEvents: allKPIs.filter((k) => k.category === "System Event").length,
-    usageMetrics: allKPIs.filter((k) => k.category === "Usage Metric").length,
-    revenueMetrics: allKPIs.filter((k) => k.category === "Revenue Metric").length,
+    totalKPIs: kpis.length,
+    systemEvents: kpis.filter((k) => k.category === "System Event").length,
+    usageMetrics: kpis.filter((k) => k.category === "Usage Metric").length,
+    revenueMetrics: kpis.filter((k) => k.category === "Revenue Metric").length,
   };
 
   const statCards = [
@@ -238,19 +261,26 @@ export default function KPIsPage() {
                       >
                         <div className="flex items-center justify-center space-x-2">
                           <button
-                            className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
+                            className={`p-1 ${tw.rounded} ${tw.textMuted} hover:text-gray-900 transition-colors`}
                             title="View Details"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
                           <button
-                            className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
+                            className={`p-1 ${tw.rounded} ${tw.textMuted} hover:text-gray-900 transition-colors`}
                             title="Edit"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
+                          <ActivateDeactivateButton
+                            isActive={kpi.is_active ?? true}
+                            onToggle={() => handleToggleStatus(kpi.id)}
+                            disabled={togglingKpiId === kpi.id}
+                            isLoading={togglingKpiId === kpi.id}
+                          />
                           <button
-                            className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
+                            className={`p-1 ${tw.rounded} hover:text-red-700 transition-colors`}
+                            style={{ color: "#DC2626" }}
                             title="Delete"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -304,19 +334,24 @@ export default function KPIsPage() {
                     </div>
                     <div className="flex items-center gap-2 justify-end">
                       <button
-                        className={`p-2 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-colors`}
+                        className={`p-1 ${tw.rounded} ${tw.textMuted} hover:text-gray-900 transition-colors`}
                         title="View"
                       >
                         <Eye className="w-4 h-4" />
                       </button>
                       <button
-                        className={`p-2 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-colors`}
+                        className={`p-1 ${tw.rounded} ${tw.textMuted} hover:text-gray-900 transition-colors`}
                         title="Edit"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
+                      <ActivateDeactivateButton
+                        isActive={kpi.is_active ?? true}
+                        onToggle={() => handleToggleStatus(kpi.id)}
+                      />
                       <button
-                        className={`p-2 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-colors`}
+                        className={`p-1 ${tw.rounded} hover:text-red-700 transition-colors`}
+                        style={{ color: "#DC2626" }}
                         title="Delete"
                       >
                         <Trash2 className="w-4 h-4" />

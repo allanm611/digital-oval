@@ -3,6 +3,7 @@ import { Eye, Edit, Trash2 } from "lucide-react";
 import Input from "../../../shared/components/ui/Input";
 import Pagination from "../../../shared/components/ui/Pagination";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { color, tw } from "../../../shared/utils/utils";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { useNavigate } from "react-router-dom";
@@ -18,7 +19,7 @@ interface Profile {
   name: string;
   description?: string;
   dataSource: string;
-  status: string;
+  is_active?: boolean;
 }
 
 export default function SubscriberProfileListPage() {
@@ -31,6 +32,7 @@ export default function SubscriberProfileListPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [profileToDelete, setProfileToDelete] = useState<{ id: number; name: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [toggling, setToggling] = useState<number | null>(null);
 
   useEffect(() => {
     loadProfiles();
@@ -61,7 +63,7 @@ export default function SubscriberProfileListPage() {
                     name: field.field_name || field.name || "",
                     description: field.field_description || field.description || "",
                     dataSource: subCat.display_name || subCat.name || "Customer 360",
-                    status: "Active",
+                    is_active: true,
                   });
                 });
               }
@@ -126,6 +128,40 @@ export default function SubscriberProfileListPage() {
   const handleCancelDelete = () => {
     setShowDeleteModal(false);
     setProfileToDelete(null);
+  };
+
+  const handleToggleActive = async (profile: Profile) => {
+    try {
+      setToggling(profile.id);
+      const newStatus = !(profile.is_active ?? true);
+
+      // Optimistic update
+      setProfiles((prev) =>
+        prev.map((p) =>
+          p.id === profile.id ? { ...p, is_active: newStatus } : p
+        )
+      );
+
+      // Call API - TODO: Add toggleProfileStatus endpoint
+      // await subscriberProfileService.toggleProfileStatus(profile.id, newStatus);
+
+      showToast(
+        "success",
+        `"${profile.name}" has been ${newStatus ? "activated" : "deactivated"} successfully`
+      );
+    } catch (err) {
+      console.error("Failed to toggle profile status:", err);
+      showToast("error", "Failed to update profile status. Please try again.");
+
+      // Revert optimistic update on error
+      setProfiles((prev) =>
+        prev.map((p) =>
+          p.id === profile.id ? { ...p, is_active: !(profile.is_active ?? true) } : p
+        )
+      );
+    } finally {
+      setToggling(null);
+    }
   };
 
   return (
@@ -221,9 +257,15 @@ export default function SubscriberProfileListPage() {
                     >
                       <td className="px-6 py-4 text-sm text-gray-900 font-medium">{profile.name}</td>
                       <td className="px-6 py-4 text-sm text-gray-600">{profile.dataSource}</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">{profile.status}</td>
+                      <td className="px-6 py-4 text-sm text-gray-900">{profile.is_active ? "Active" : "Inactive"}</td>
                       <td className="px-3 py-4">
                         <div className="flex gap-1 justify-center">
+                          <ActivateDeactivateButton
+                            isActive={profile.is_active ?? true}
+                            onToggle={() => handleToggleActive(profile)}
+                            disabled={toggling === profile.id || isDeleting}
+                            isLoading={toggling === profile.id}
+                          />
                           <button
                             onClick={() => handleViewDetails(profile)}
                             className="p-2 hover:bg-gray-100 rounded transition-colors"

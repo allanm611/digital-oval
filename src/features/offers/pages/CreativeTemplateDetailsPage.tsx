@@ -252,7 +252,7 @@ export default function CreativeTemplateDetailsPage() {
                   </p>
                   <p className={`text-sm ${tw.textPrimary}`}>
                     {template.created_at
-                      ? <DateFormatter date={template.created_at} useUserTimezone />
+                      ? <DateFormatter date={template.created_at} useUserTimezone includeTime />
                       : "N/A"}
                   </p>
                 </div>
@@ -269,7 +269,7 @@ export default function CreativeTemplateDetailsPage() {
                   </p>
                   <p className={`text-sm ${tw.textPrimary}`}>
                     {template.updated_at
-                      ? <DateFormatter date={template.updated_at} useUserTimezone />
+                      ? <DateFormatter date={template.updated_at} useUserTimezone includeTime />
                       : "N/A"}
                   </p>
                 </div>

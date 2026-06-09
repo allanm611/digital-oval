@@ -8,7 +8,6 @@ import {
   Download,
 
 } from "lucide-react";
-import countries from "world-countries";
 import * as XLSX from "xlsx";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { isValidCountryCodePhone } from "../../../shared/utils/validation";
@@ -18,6 +17,7 @@ import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { customerService } from "../services/customerServices";
 import { timezoneService } from "../../../features/configurations/services/timezoneService";
+import { getCountriesList } from "../../../shared/services/countryDataService";
 import type { CustomerSubscriptionRecord } from "../types/customerSubscription";
 import type { CustomerFormData } from "../types/customer";
 import type { TimeZone } from "../../../features/configurations/types/timezone";
@@ -56,10 +56,9 @@ const LANGUAGE_OPTIONS = [
   { value: "fr", label: "French" },
 ];
 
-// Generate countries list from world-countries package
-const countriesList = countries.map((country) => ({
-  value: country.cca3,
-  label: country.name.common,
+const countriesList = getCountriesList().map((country) => ({
+  value: country.code,
+  label: country.name,
 }));
 
 const COUNTRY_OPTIONS = [

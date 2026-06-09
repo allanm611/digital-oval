@@ -13,7 +13,7 @@ import Checkbox from "../../../shared/components/ui/Checkbox";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { timezoneService } from "../services/timezoneService";
 import { TimeZone, CreateTimeZoneRequest, UpdateTimeZoneRequest } from "../types/timezone";
-import countriesData from "world-countries";
+import { getCountriesList } from "../../../shared/services/countryDataService";
 
 const regions = [
   { value: "Africa", label: "Africa" },
@@ -23,12 +23,10 @@ const regions = [
   { value: "Oceania", label: "Oceania" },
 ];
 
-const countries = countriesData
-  .map((country) => ({
-    value: country.name.common,
-    label: country.name.common,
-  }))
-  .sort((a, b) => a.label.localeCompare(b.label));
+const countries = getCountriesList().map((country) => ({
+  value: country.name,
+  label: country.name,
+}));
 
 export default function CreateEditTimezonePage() {
   const { id } = useParams<{ id: string }>();

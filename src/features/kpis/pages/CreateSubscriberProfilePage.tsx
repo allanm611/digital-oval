@@ -1,42 +1,19 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import CodeMirror from "@uiw/react-codemirror";
+import { sql as sqlLanguage } from "@codemirror/lang-sql";
 import BackButton from "../../../shared/components/ui/BackButton";
 import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
-
-// Dummy data - same as list page
-const DUMMY_PROFILE_FIELDS = [
-  {
-    id: 1,
-    name: "Account Type",
-    description: "",
-    dataSource: "DB",
-    frequency: "D-1",
-    status: "Available",
-    extractionLogic: "",
-  },
-  {
-    id: 2,
-    name: "Activation Date",
-    description: "",
-    dataSource: "DB",
-    frequency: "D-1",
-    status: "Available",
-    extractionLogic: "BIB_ADM.FLYTXT_DX_DAILY_KPI.ACTIVATION_DATE",
-  },
-  {
-    id: 3,
-    name: "CELL_ID",
-    description: "",
-    dataSource: "DB",
-    frequency: "D-1",
-    status: "Available",
-    extractionLogic: "BIB_ADM.FLYTXT_DX_DAILY_KPI.CELL_ID",
-  },
-];
+import Checkbox from "../../../shared/components/ui/Checkbox";
+import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import MultiCategorySelector from "../../../shared/components/MultiCategorySelector";
+import { OPERATORS as OPERATORS_MAP, getOperatorsForFieldType } from "../../../shared/utils/operatorMapper";
+import { kpiCategoryService } from "../services/kpiCategoryService";
+import { notificationTypeService } from "../../../shared/services/notificationTypeService";
 
 const DATA_SOURCE_OPTIONS = [
   { label: "DB", value: "DB" },
@@ -47,19 +24,33 @@ const DATA_SOURCE_OPTIONS = [
 const FREQUENCY_OPTIONS = [
   { label: "Per Min", value: "Per Min" },
   { label: "D-1", value: "D-1" },
+  { label: "Monthly", value: "Monthly" },
 ];
 
-const STATUS_OPTIONS = [
-  { label: "Available", value: "Available" },
-  { label: "Not Available", value: "Not Available" },
+const FIELD_TYPE_OPTIONS = [
+  { label: "Text", value: "text" },
+  { label: "Numeric", value: "numeric" },
+  { label: "Decimal", value: "decimal" },
+  { label: "Boolean", value: "boolean" },
 ];
 
-const EXTRACTION_LOGIC_TYPE_OPTIONS = [
-  { label: "Segment", value: "segment" },
-  { label: "SQL Script", value: "sql_script" },
-  { label: "Data Source", value: "data_source" },
-  { label: "Not Applicable", value: "not_applicable" },
+const VALIDATION_STRATEGY_OPTIONS = [
+  { label: "None", value: "none" },
+  { label: "Range", value: "range" },
+  { label: "Discrete", value: "discrete" },
+  { label: "Pattern", value: "pattern" },
 ];
+
+const getOperatorData = (fieldType: string) => {
+  const filteredOperators = getOperatorsForFieldType(fieldType);
+  return filteredOperators.map((op) => ({
+    id: op.id,
+    name: op.label,
+    is_active: true,
+    created_at: "",
+    updated_at: "",
+  }));
+};
 
 export default function CreateSubscriberProfilePage() {
   const { id } = useParams<{ id: string }>();
@@ -67,21 +58,82 @@ export default function CreateSubscriberProfilePage() {
   const { success, error: showError } = useToast();
 
   const mode = id ? "edit" : "create";
-  const existingProfile = id ? DUMMY_PROFILE_FIELDS.find((p) => p.id === Number(id)) : null;
-
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [loadingTables, setLoadingTables] = useState(true);
+  const [categoryOptions, setCategoryOptions] = useState<any[]>([]);
+  const [tables, setTables] = useState<any[]>([]);
+
   const [formData, setFormData] = useState({
-    name: existingProfile?.name || "",
-    description: existingProfile?.description || "",
-    dataSource: (existingProfile?.dataSource as "DB" | "Live" | "DB & Live") || "DB",
-    frequency: (existingProfile?.frequency as "Per Min" | "D-1") || "D-1",
-    status: (existingProfile?.status as "Available" | "Not Available") || "Available",
-    extractionLogicType: existingProfile?.extractionLogic ? "data_source" : "not_applicable" as "segment" | "sql_script" | "data_source" | "not_applicable",
-    extractionLogic: existingProfile?.extractionLogic || "",
+    name: "",
+    field_value: "",
+    description: "",
+    field_type: "text" as "text" | "numeric" | "decimal" | "boolean",
+    category: "" as string | number,
+    operators: [] as number[],
+    source_table: "",
+    data_source: "DB" as "DB" | "Live" | "DB & Live",
+    frequency: "D-1" as "Per Min" | "D-1" | "Monthly",
     default_value: "",
+    validation_strategy: "none" as "none" | "range" | "discrete" | "pattern",
+    range_min: "",
+    range_max: "",
+    discrete_values: "",
+    extractionLogic: "",
+    use_as_dynamic_variable: false,
+    tag: "kpi",
+    display_order: 0,
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  useEffect(() => {
+    loadCategories();
+    loadTables();
+  }, []);
+
+  const loadCategories = async () => {
+    try {
+      setLoadingCategories(true);
+      const categories = await kpiCategoryService.getKpiCategories();
+      // Filter for Customer 360 KPIs (parent_category_id = 60) and the parent itself
+      const subscriberCategories = categories.filter(
+        (cat: any) => cat.id === 60 || cat.parent_category_id === 60
+      );
+      setCategoryOptions(
+        subscriberCategories.map((cat: any) => ({ label: cat.name, value: cat.id?.toString() || "" }))
+      );
+    } catch (err) {
+      console.error("Failed to load categories:", err);
+      setCategoryOptions([]);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
+
+  const loadTables = async () => {
+    try {
+      setLoadingTables(true);
+      const data = await notificationTypeService.getTables();
+      const tableList = Array.isArray(data) ? data : [];
+      setTables(
+        tableList.map((table: any, index: number) => {
+          const tableName = typeof table === "string" ? table : table.table_name || table.name || `Table ${index}`;
+          return {
+            id: index,
+            label: tableName,
+            value: tableName,
+          };
+        })
+      );
+    } catch (err) {
+      console.error("Failed to load tables:", err);
+      setTables([]);
+    } finally {
+      setLoadingTables(false);
+    }
+  };
 
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
@@ -89,11 +141,11 @@ export default function CreateSubscriberProfilePage() {
     if (!formData.name.trim()) {
       newErrors.name = "Profile field name is required";
     }
-    if (!formData.default_value.toString().trim()) {
-      newErrors.default_value = "Default value is required";
+    if (!formData.source_table.trim()) {
+      newErrors.source_table = "Source table is required";
     }
-    if (formData.extractionLogicType !== "not_applicable" && !formData.extractionLogic.trim()) {
-      newErrors.extractionLogic = "Extraction logic is required";
+    if (formData.default_value === "" || formData.default_value === null) {
+      newErrors.default_value = "Default value is required";
     }
 
     setErrors(newErrors);
@@ -110,18 +162,51 @@ export default function CreateSubscriberProfilePage() {
 
     try {
       setSaving(true);
-      const message = mode === "edit" ? "Profile field updated successfully" : "Profile field created successfully";
-      success("Success", message);
+
+      const payload: any = {
+        name: formData.name,
+        description: formData.description,
+        field_type: formData.field_type,
+        category: formData.category,
+        default_operator_id: formData.operators.length > 0 ? formData.operators[0] : null,
+        source_table: formData.source_table,
+        data_source: formData.data_source,
+        frequency: formData.frequency,
+        default_value: formData.default_value || undefined,
+      };
+
+      // TODO: Implement API call for subscriber profile creation/update
+      // if (mode === "edit" && id) {
+      //   await subscriberProfileService.updateProfile(Number(id), payload);
+      // } else {
+      //   await subscriberProfileService.createProfile(payload);
+      // }
+
+      success("Success", mode === "edit" ? "Profile updated successfully" : "Profile created successfully");
       navigate("/dashboard/kpis/subscriber-profiles");
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : `Failed to ${mode} profile field`;
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", "Failed to save profile. Please try again.");
     } finally {
       setSaving(false);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (fieldName: keyof typeof formData) => (value: string | number) => {
+    setFormData((prev) => ({
+      ...prev,
+      [fieldName]: value,
+    }));
+
+    if (errors[fieldName]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[fieldName];
+        return newErrors;
+      });
+    }
+  };
+
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -153,25 +238,41 @@ export default function CreateSubscriberProfilePage() {
     }
   };
 
+  const handleOperatorChange = (operator: string, checked: boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      operators: checked
+        ? [...prev.operators, operator]
+        : prev.operators.filter((o) => o !== operator),
+    }));
+
+    if (errors.operators) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.operators;
+        return newErrors;
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <BackButton showBreadcrumb={true} currentLabel={mode === "edit" ? "Edit Profile Field" : "Create Profile Field"} />
+      <BackButton showBreadcrumb={true} currentLabel={mode === "create" ? "Create Subscriber Profile" : "Edit Subscriber Profile"} />
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Basic Information Section */}
+        {/* Basic Information Section <span className="text-red-500">*</span>/}
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Basic Information</h2>
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Profile Field Name *
+                  Name <span className="text-red-500">*</span>
                 </label>
                 <Input
                   placeholder="e.g., Account Type"
-                  name="name"
                   value={formData.name}
-                  onChange={handleChange}
+                  onChange={handleInputChange('name')}
                   hasError={!!errors.name}
                   variant="medium"
                   disabled={saving}
@@ -181,17 +282,60 @@ export default function CreateSubscriberProfilePage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Default Value *
+                  Field Value (Slug) <span className="text-red-500">*</span>
                 </label>
                 <Input
-                  type="text"
-                  placeholder="e.g., Default value"
-                  name="default_value"
+                  placeholder="e.g., p_account_type"
+                  value={formData.field_value}
+                  onChange={handleInputChange('field_value')}
+                  variant="medium"
+                  disabled={saving}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Category <span className="text-red-500">*</span>
+              </label>
+              {loadingCategories ? (
+                <div className="p-2 text-sm text-gray-500">Loading categories...</div>
+              ) : (
+                <HeadlessSelect
+                  options={categoryOptions}
+                  value={formData.category ? formData.category.toString() : ""}
+                  onChange={(value) => handleSelectChange("category", value)}
+                  disabled={saving || loadingCategories}
+                />
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Field Type <span className="text-red-500">*</span>
+                </label>
+                <HeadlessSelect
+                  options={FIELD_TYPE_OPTIONS}
+                  value={formData.field_type}
+                  onChange={(value) => handleSelectChange("field_type", value)}
+                  disabled={saving}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Default Value <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  type={formData.field_type === "numeric" || formData.field_type === "decimal" ? "number" : "text"}
+                  placeholder={formData.field_type === "decimal" ? "e.g., 100.50" : formData.field_type === "numeric" ? "e.g., 100" : "e.g., Value"}
                   value={formData.default_value}
-                  onChange={handleChange}
+                  onChange={handleInputChange('default_value')}
                   hasError={!!errors.default_value}
                   variant="medium"
                   disabled={saving}
+                  step={formData.field_type === "decimal" ? "0.01" : undefined}
                 />
                 {errors.default_value && <p className="text-red-500 text-xs mt-1">{errors.default_value}</p>}
               </div>
@@ -199,12 +343,12 @@ export default function CreateSubscriberProfilePage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description (optional)
+                Description
               </label>
               <textarea
                 name="description"
                 value={formData.description}
-                onChange={handleChange}
+                onChange={handleTextareaChange}
                 placeholder="Describe this profile field..."
                 rows={3}
                 className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none ${
@@ -212,30 +356,141 @@ export default function CreateSubscriberProfilePage() {
                 }`}
                 disabled={saving}
               />
+              {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description}</p>}
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Display Order
+              </label>
+              <Input
+                type="number"
+                placeholder="e.g., 0"
+                value={formData.display_order}
+                onChange={handleInputChange('display_order')}
+                variant="medium"
+                disabled={saving}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Operators
+              </label>
+              <MultiCategorySelector
+                value={formData.operators}
+                onChange={(operatorIds) => setFormData((prev) => ({ ...prev, operators: operatorIds }))}
+                data={getOperatorData(formData.field_type)}
+                placeholder="Select operators..."
+                disabled={saving}
+              />
+              {errors.operators && <p className="text-red-500 text-xs mt-2">{errors.operators}</p>}
+            </div>
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox
+                checked={formData.use_as_dynamic_variable}
+                onChange={(e) => handleInputChange('use_as_dynamic_variable')(e.target.checked ? 1 : 0)}
+                disabled={saving}
+                style={{ accentColor: color.primary.accent }}
+              />
+              <span className="text-sm font-medium text-gray-700">
+                Use as dynamic variable
+              </span>
+            </label>
           </div>
         </div>
 
-        {/* Data Source Configuration Section */}
+        {/* Validation Configuration Section */}
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Validation Configuration</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Validation Strategy <span className="text-red-500">*</span>
+              </label>
+              <HeadlessSelect
+                options={VALIDATION_STRATEGY_OPTIONS}
+                value={formData.validation_strategy}
+                onChange={(value) => handleSelectChange("validation_strategy", value)}
+                disabled={saving}
+              />
+            </div>
+
+            {formData.validation_strategy === "range" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Min Value <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    type="number"
+                    placeholder="e.g., 0"
+                    value={formData.range_min}
+                    onChange={handleInputChange('range_min')}
+                    hasError={!!errors.range_min}
+                    variant="medium"
+                    disabled={saving}
+                  />
+                  {errors.range_min && <p className="text-red-500 text-xs mt-1">{errors.range_min}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Max Value <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    type="number"
+                    placeholder="e.g., 100"
+                    value={formData.range_max}
+                    onChange={handleInputChange('range_max')}
+                    hasError={!!errors.range_max}
+                    variant="medium"
+                    disabled={saving}
+                  />
+                  {errors.range_max && <p className="text-red-500 text-xs mt-1">{errors.range_max}</p>}
+                </div>
+              </div>
+            )}
+
+            {formData.validation_strategy === "discrete" && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Allowed Values <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  placeholder="e.g., active, inactive, pending (comma-separated)"
+                  value={formData.discrete_values}
+                  onChange={handleInputChange('discrete_values')}
+                  hasError={!!errors.discrete_values}
+                  variant="medium"
+                  disabled={saving}
+                />
+                {errors.discrete_values && <p className="text-red-500 text-xs mt-1">{errors.discrete_values}</p>}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Data Source Configuration Section <span className="text-red-500">*</span>/}
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Data Source Configuration</h2>
           <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Data Source *
+                  Data Source <span className="text-red-500">*</span>
                 </label>
                 <HeadlessSelect
                   options={DATA_SOURCE_OPTIONS}
-                  value={formData.dataSource}
-                  onChange={(value) => handleSelectChange("dataSource", value)}
+                  value={formData.data_source}
+                  onChange={(value) => handleSelectChange("data_source", value)}
                   disabled={saving}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Frequency *
+                  Frequency <span className="text-red-500">*</span>
                 </label>
                 <HeadlessSelect
                   options={FREQUENCY_OPTIONS}
@@ -244,71 +499,65 @@ export default function CreateSubscriberProfilePage() {
                   disabled={saving}
                 />
               </div>
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Current Platform Status *
-                </label>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Source Table <span className="text-red-500">*</span>
+              </label>
+              {loadingTables ? (
+                <div className="p-2 text-sm text-gray-500">Loading tables...</div>
+              ) : (
                 <HeadlessSelect
-                  options={STATUS_OPTIONS}
-                  value={formData.status}
-                  onChange={(value) => handleSelectChange("status", value)}
-                  disabled={saving}
+                  options={tables}
+                  value={formData.source_table}
+                  onChange={(value) => handleSelectChange("source_table", value)}
+                  placeholder="Select a table"
+                  disabled={saving || loadingTables}
+                  searchable={true}
                 />
-              </div>
+              )}
+              {errors.source_table && <p className="text-red-500 text-xs mt-1">{errors.source_table}</p>}
             </div>
           </div>
         </div>
 
-        {/* Extraction Logic Section */}
+        {/* Extraction Logic Section <span className="text-red-500">*</span>/}
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Extraction Logic</h2>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Logic Type *
-              </label>
-              <HeadlessSelect
-                options={EXTRACTION_LOGIC_TYPE_OPTIONS}
-                value={formData.extractionLogicType}
-                onChange={(value) => handleSelectChange("extractionLogicType", value)}
-                disabled={saving}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Logic Definition <span className="text-red-500">*</span>
+            </label>
+            <div
+              className={`border ${tw.rounded} overflow-hidden`}
+              style={{
+                borderColor: errors.extractionLogic ? "#ef4444" : tw.borderDefault,
+                minHeight: "200px",
+              }}
+            >
+              <CodeMirror
+                value={formData.extractionLogic}
+                height="200px"
+                extensions={[sqlLanguage()]}
+                onChange={(value) => handleTextareaChange({ target: { name: "extractionLogic", value } } as any)}
+                theme="light"
+                basicSetup={{
+                  lineNumbers: true,
+                  highlightActiveLineGutter: true,
+                  foldGutter: true,
+                  dropCursor: true,
+                  indentOnInput: true,
+                  bracketMatching: true,
+                  closeBrackets: true,
+                  autocompletion: true,
+                  searchKeymap: true,
+                }}
+                className="codemirror-editor"
+                placeholder="e.g., account_type (reference a field from your table)"
               />
-              <p className="text-xs text-gray-500 mt-2">
-                {formData.extractionLogicType === "segment" && "Import logic from an existing segment definition"}
-                {formData.extractionLogicType === "sql_script" && "Define extraction logic using SQL script"}
-                {formData.extractionLogicType === "data_source" && "Reference a table or column from a data source"}
-                {formData.extractionLogicType === "not_applicable" && "Use a default value (no extraction needed)"}
-              </p>
             </div>
-
-            {formData.extractionLogicType !== "not_applicable" && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {formData.extractionLogicType === "segment" && "Segment Name *"}
-                  {formData.extractionLogicType === "sql_script" && "SQL Script *"}
-                  {formData.extractionLogicType === "data_source" && "Data Source Reference *"}
-                </label>
-                <textarea
-                  name="extractionLogic"
-                  value={formData.extractionLogic}
-                  onChange={handleChange}
-                  placeholder={
-                    formData.extractionLogicType === "segment"
-                      ? "e.g., customer_segment_1"
-                      : formData.extractionLogicType === "sql_script"
-                      ? "e.g., SELECT * FROM table WHERE condition"
-                      : "e.g., BIB_ADM.FLYTXT_DX_DAILY_KPI.ACCOUNT_TYPE or table.column"
-                  }
-                  rows={4}
-                  className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none font-mono ${
-                    errors.extractionLogic ? "border-red-500" : "border-gray-300"
-                  }`}
-                  disabled={saving}
-                />
-                {errors.extractionLogic && <p className="text-red-500 text-xs mt-1">{errors.extractionLogic}</p>}
-              </div>
-            )}
+            {errors.extractionLogic && <p className="text-red-500 text-xs mt-2">{errors.extractionLogic}</p>}
           </div>
         </div>
 
@@ -316,7 +565,7 @@ export default function CreateSubscriberProfilePage() {
         <div className="flex items-center justify-end gap-3">
           <button
             type="button"
-            onClick={() => navigate(mode === "edit" ? `/dashboard/kpis/subscriber-profiles/${id}` : "/dashboard/kpis/subscriber-profiles")}
+            onClick={() => navigate("/dashboard/kpis/subscriber-profiles")}
             disabled={saving}
             className="transition-colors disabled:opacity-60"
             style={getButtonStyles(button.bordered)}

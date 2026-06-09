@@ -25,7 +25,6 @@ export default function UsageMetricsPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
-  const [activeMetrics, setActiveMetrics] = useState<Set<number>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(20);
 
@@ -55,20 +54,34 @@ export default function UsageMetricsPage() {
   };
 
   const handleToggleActive = async (metric: UsageMetric) => {
-    setToggling(metric.id);
     try {
-      const isCurrentlyActive = activeMetrics.has(metric.id);
-      const newActiveSet = new Set(activeMetrics);
-      if (isCurrentlyActive) {
-        newActiveSet.delete(metric.id);
-        success("Success", `"${metric.name}" has been deactivated`);
-      } else {
-        newActiveSet.add(metric.id);
-        success("Success", `"${metric.name}" has been activated`);
-      }
-      setActiveMetrics(newActiveSet);
+      setToggling(metric.id);
+      const newStatus = !(metric.is_active ?? true);
+
+      // Optimistic update
+      setMetrics((prev) =>
+        prev.map((m) =>
+          m.id === metric.id ? { ...m, is_active: newStatus } : m
+        )
+      );
+
+      // Call API - TODO: Add toggleMetricStatus to usageMetricService
+      // await usageMetricService.toggleMetricStatus(metric.id, newStatus);
+
+      success(
+        "Success",
+        `"${metric.name}" has been ${newStatus ? "activated" : "deactivated"} successfully`
+      );
     } catch (err) {
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      console.error("Failed to toggle metric status:", err);
+      showError("Error", "Failed to update metric status. Please try again.");
+
+      // Revert optimistic update on error
+      setMetrics((prev) =>
+        prev.map((m) =>
+          m.id === metric.id ? { ...m, is_active: !(metric.is_active ?? true) } : m
+        )
+      );
     } finally {
       setToggling(null);
     }
@@ -259,6 +272,15 @@ export default function UsageMetricsPage() {
                   Description
                 </th>
                 <th
+                  className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                  style={{
+                    color: color.surface.tableHeaderText,
+                    backgroundColor: color.surface.tableHeader,
+                  }}
+                >
+                  Status
+                </th>
+                <th
                   className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider rounded-tr-md"
                   style={{
                     color: color.surface.tableHeaderText,
@@ -272,7 +294,7 @@ export default function UsageMetricsPage() {
             <tbody>
               {filteredMetrics.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-6 py-12 text-center">
+                <td colSpan={6} className="px-6 py-12 text-center">
                   <p className={`${tw.textSecondary} text-sm`}>
                     No metrics match your search
                   </p>
@@ -298,10 +320,13 @@ export default function UsageMetricsPage() {
                   <td className="px-6 py-4 text-sm text-black truncate max-w-xs">
                     {metric.description || "—"}
                   </td>
+                  <td className="px-6 py-4 text-sm text-black">
+                    {metric.is_active ? "Active" : "Inactive"}
+                  </td>
                   <td className="px-6 py-4 text-sm">
                     <div className="flex items-center justify-end space-x-2">
                       <ActivateDeactivateButton
-                        isActive={activeMetrics.has(metric.id)}
+                        isActive={metric.is_active ?? true}
                         onToggle={() => handleToggleActive(metric)}
                         disabled={toggling === metric.id || deleting === metric.id}
                         isLoading={toggling === metric.id}
@@ -331,7 +356,7 @@ export default function UsageMetricsPage() {
                       <button
                         onClick={() => handleDeleteClick(metric)}
                         disabled={deleting === metric.id}
-                        className={`p-2 text-black ${tw.rounded} disabled:opacity-60`}
+                        className={`p-2 text-red-600 ${tw.rounded} disabled:opacity-60`}
                         title="Delete metric"
                       >
                         <Trash2 className="w-4 h-4" />

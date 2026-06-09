@@ -1,24 +1,21 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Save } from "lucide-react";
+import CodeMirror from "@uiw/react-codemirror";
+import { sql as sqlLanguage } from "@codemirror/lang-sql";
 import BackButton from "../../../shared/components/ui/BackButton";
 import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { UsageMetric, UsageMetricOperator } from "../types/usageMetrics";
 import { usageMetricService } from "../services/usageMetricService";
+import { kpiCategoryService } from "../services/kpiCategoryService";
+import { notificationTypeService } from "../../../shared/services/notificationTypeService";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
 import Checkbox from "../../../shared/components/ui/Checkbox";
-
-const CATEGORY_OPTIONS = [
-  { label: "Data Usage", value: "data_usage" },
-  { label: "Voice Usage", value: "voice_usage" },
-  { label: "SMS Usage", value: "sms_usage" },
-  { label: "Bundle Usage", value: "bundle_usage" },
-  { label: "DOU Metrics", value: "dou_metrics" },
-];
+import MultiCategorySelector from "../../../shared/components/MultiCategorySelector";
+import { OPERATORS as OPERATORS_MAP, getOperatorsForFieldType } from "../../../shared/utils/operatorMapper";
 
 const FIELD_TYPE_OPTIONS = [
   { label: "Numeric", value: "numeric" },
@@ -36,14 +33,23 @@ const FREQUENCY_OPTIONS = [
   { label: "Monthly", value: "Monthly" },
 ];
 
-const OPERATORS: { value: UsageMetricOperator; label: string }[] = [
-  { value: "equals", label: "Equals" },
-  { value: "not_equals", label: "Not Equals" },
-  { value: "greater_than", label: "Greater Than" },
-  { value: "less_than", label: "Less Than" },
-  { value: "in", label: "In" },
-  { value: "not_in", label: "Not In" },
+const VALIDATION_STRATEGY_OPTIONS = [
+  { label: "None", value: "none" },
+  { label: "Range", value: "range" },
+  { label: "Discrete", value: "discrete" },
+  { label: "Pattern", value: "pattern" },
 ];
+
+const getOperatorData = (fieldType: string) => {
+  const filteredOperators = getOperatorsForFieldType(fieldType);
+  return filteredOperators.map((op) => ({
+    id: op.id,
+    name: op.label,
+    is_active: true,
+    created_at: "",
+    updated_at: "",
+  }));
+};
 
 interface UsageMetricFormPageProps {
   mode: "create" | "edit";
@@ -56,29 +62,113 @@ export default function UsageMetricFormPage({ mode }: UsageMetricFormPageProps) 
 
   const [loading, setLoading] = useState(mode === "edit");
   const [saving, setSaving] = useState(false);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [loadingTables, setLoadingTables] = useState(true);
   const [metric, setMetric] = useState<UsageMetric | null>(null);
+  const [categoryOptions, setCategoryOptions] = useState<any[]>([]);
+  const [tables, setTables] = useState<any[]>([]);
 
   const [formData, setFormData] = useState({
     name: "",
+    field_value: "",
     description: "",
     field_type: "numeric" as "numeric" | "decimal",
-    category: "data_usage" as const,
-    operators: [] as UsageMetricOperator[],
+    category: "" as string | number,
+    operators: [] as number[],
     source_table: "",
     data_source: "Live" as "Live" | "DB",
     frequency: "Per Min" as "Per Min" | "D-1" | "Monthly",
     unit: "",
     default_value: "" as string | number,
+    validation_strategy: "none" as "none" | "range" | "discrete" | "pattern",
+    range_min: "",
+    range_max: "",
+    discrete_values: "",
+    extractionLogic: "",
+    use_as_dynamic_variable: false,
+    tag: "usage_metric",
+    display_order: 0,
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  // Load metric if editing
   useEffect(() => {
+    loadCategories();
     if (mode === "edit" && id) {
-      loadMetric();
+      loadTablesAndMetric();
+    } else {
+      loadTables();
     }
   }, [mode, id]);
+
+  const loadCategories = async () => {
+    try {
+      setLoadingCategories(true);
+      const categories = await kpiCategoryService.getKpiCategories();
+      // Filter for Usage KPIs (parent_category_id = 55) and the parent itself
+      const usageCategories = categories.filter(
+        (cat: any) => cat.id === 55 || cat.parent_category_id === 55
+      );
+      setCategoryOptions(
+        usageCategories.map((cat: any) => ({ label: cat.name, value: cat.id?.toString() || "" }))
+      );
+    } catch (err) {
+      console.error("Failed to load categories:", err);
+      setCategoryOptions([]);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
+
+  const loadTables = async () => {
+    try {
+      setLoadingTables(true);
+      const data = await notificationTypeService.getTables();
+      const tableList = Array.isArray(data) ? data : [];
+      setTables(
+        tableList.map((table: any, index: number) => {
+          const tableName = typeof table === "string" ? table : table.table_name || table.name || `Table ${index}`;
+          return {
+            id: index,
+            label: tableName,
+            value: tableName,
+          };
+        })
+      );
+    } catch (err) {
+      console.error("Failed to load tables:", err);
+      setTables([]);
+    } finally {
+      setLoadingTables(false);
+    }
+  };
+
+  const loadTablesAndMetric = async () => {
+    try {
+      setLoadingTables(true);
+      const data = await notificationTypeService.getTables();
+      const tableList = Array.isArray(data) ? data : [];
+      setTables(
+        tableList.map((table: any, index: number) => {
+          const tableName = typeof table === "string" ? table : table.table_name || table.name || `Table ${index}`;
+          return {
+            id: index,
+            label: tableName,
+            value: tableName,
+          };
+        })
+      );
+      // Now load the metric after tables are ready
+      if (id) {
+        await loadMetric();
+      }
+    } catch (err) {
+      console.error("Failed to load tables:", err);
+      setTables([]);
+    } finally {
+      setLoadingTables(false);
+    }
+  };
 
   const loadMetric = async () => {
     if (!id) return;
@@ -89,6 +179,7 @@ export default function UsageMetricFormPage({ mode }: UsageMetricFormPageProps) 
         setMetric(data);
         setFormData({
           name: data.name,
+          field_value: data.field_value || "",
           description: data.description,
           field_type: data.field_type,
           category: data.category,
@@ -98,10 +189,16 @@ export default function UsageMetricFormPage({ mode }: UsageMetricFormPageProps) 
           frequency: data.frequency,
           unit: data.unit || "",
           default_value: data.default_value || "",
+          validation_strategy: "none",
+          range_min: "",
+          range_max: "",
+          discrete_values: "",
+          extractionLogic: "",
+          use_as_dynamic_variable: false,
         });
       }
     } catch (err) {
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err as any, "Error. Please try again."));
       navigate("/dashboard/kpis/usage-metrics");
     } finally {
       setLoading(false);
@@ -114,14 +211,8 @@ export default function UsageMetricFormPage({ mode }: UsageMetricFormPageProps) 
     if (!formData.name.trim()) {
       newErrors.name = "Metric name is required";
     }
-    if (!formData.description.trim()) {
-      newErrors.description = "Description is required";
-    }
     if (!formData.source_table.trim()) {
       newErrors.source_table = "Source table is required";
-    }
-    if (formData.operators.length === 0) {
-      newErrors.operators = "At least one operator must be selected";
     }
     if (formData.default_value === "" || formData.default_value === null) {
       newErrors.default_value = "Default value is required";
@@ -142,40 +233,36 @@ export default function UsageMetricFormPage({ mode }: UsageMetricFormPageProps) 
     try {
       setSaving(true);
 
+      const payload: any = {
+        name: formData.name,
+        description: formData.description,
+        field_type: formData.field_type,
+        category: formData.category,
+        default_operator_id: formData.operators.length > 0 ? formData.operators[0] : null,
+        source_table: formData.source_table,
+        data_source: formData.data_source,
+        frequency: formData.frequency,
+        unit: formData.unit || undefined,
+        default_value: formData.default_value || undefined,
+      };
+
+      // Only include field_value for creation
+      if (mode === "create") {
+        payload.field_value = formData.field_value;
+      }
+
       if (mode === "edit" && id) {
-        await usageMetricService.updateMetric(Number(id), {
-          name: formData.name,
-          description: formData.description,
-          field_type: formData.field_type,
-          category: formData.category,
-          operators: formData.operators,
-          source_table: formData.source_table,
-          data_source: formData.data_source,
-          frequency: formData.frequency,
-          unit: formData.unit || undefined,
-          default_value: formData.default_value || undefined,
-        });
+        await usageMetricService.updateMetric(Number(id), payload);
         success("Success", "Usage metric updated successfully");
       } else {
-        await usageMetricService.createMetric({
-          name: formData.name,
-          description: formData.description,
-          field_type: formData.field_type,
-          category: formData.category,
-          operators: formData.operators,
-          source_table: formData.source_table,
-          data_source: formData.data_source,
-          frequency: formData.frequency,
-          unit: formData.unit || undefined,
-          default_value: formData.default_value || undefined,
-        });
+        await usageMetricService.createMetric(payload);
         success("Success", "Usage metric created successfully");
       }
 
       navigate("/dashboard/kpis/usage-metrics");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to save metric";
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err as any, "Error. Please try again."));
     } finally {
       setSaving(false);
     }
@@ -256,22 +343,20 @@ export default function UsageMetricFormPage({ mode }: UsageMetricFormPageProps) 
 
   return (
     <div className="space-y-6">
-      {/* Header with Back Button */}
       <BackButton showBreadcrumb={true} currentLabel={mode === "create" ? "Create Usage Metric" : "Edit Usage Metric"} />
 
-      {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Basic Information Section */}
+        {/* Basic Information Section <span className="text-red-500">*</span>/}
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Basic Information</h2>
           <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Metric Name *
+                  Name <span className="text-red-500">*</span>
                 </label>
                 <Input
-                  placeholder="e.g., Data 2G Usage"
+                  placeholder="e.g., Data Usage"
                   value={formData.name}
                   onChange={handleInputChange('name')}
                   hasError={!!errors.name}
@@ -283,7 +368,38 @@ export default function UsageMetricFormPage({ mode }: UsageMetricFormPageProps) 
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Field Type *
+                  Field Value (Slug) <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  placeholder="e.g., p_data_usage"
+                  value={formData.field_value}
+                  onChange={handleInputChange('field_value')}
+                  variant="medium"
+                  disabled={saving}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Category <span className="text-red-500">*</span>
+              </label>
+              {loadingCategories ? (
+                <div className="p-2 text-sm text-gray-500">Loading categories...</div>
+              ) : (
+                <HeadlessSelect
+                  options={categoryOptions}
+                  value={formData.category ? formData.category.toString() : ""}
+                  onChange={(value) => handleSelectChange("category", value)}
+                  disabled={saving || loadingCategories}
+                />
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Field Type <span className="text-red-500">*</span>
                 </label>
                 <HeadlessSelect
                   options={FIELD_TYPE_OPTIONS}
@@ -295,11 +411,11 @@ export default function UsageMetricFormPage({ mode }: UsageMetricFormPageProps) 
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Default Value *
+                  Default Value <span className="text-red-500">*</span>
                 </label>
                 <Input
                   type={formData.field_type === "numeric" || formData.field_type === "decimal" ? "number" : "text"}
-                  placeholder={formData.field_type === "decimal" ? "e.g., 100.50" : formData.field_type === "numeric" ? "e.g., 100" : "e.g., Default value"}
+                  placeholder={formData.field_type === "decimal" ? "e.g., 100.50" : "e.g., 100"}
                   value={formData.default_value}
                   onChange={handleInputChange('default_value')}
                   hasError={!!errors.default_value}
@@ -313,7 +429,7 @@ export default function UsageMetricFormPage({ mode }: UsageMetricFormPageProps) 
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description *
+                Description
               </label>
               <textarea
                 name="description"
@@ -328,29 +444,127 @@ export default function UsageMetricFormPage({ mode }: UsageMetricFormPageProps) 
               />
               {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description}</p>}
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Display Order
+              </label>
+              <Input
+                type="number"
+                placeholder="e.g., 0"
+                value={formData.display_order}
+                onChange={handleInputChange('display_order')}
+                variant="medium"
+                disabled={saving}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Operators
+              </label>
+              <MultiCategorySelector
+                value={formData.operators}
+                onChange={(operatorIds) => setFormData((prev) => ({ ...prev, operators: operatorIds }))}
+                data={getOperatorData(formData.field_type)}
+                placeholder="Select operators..."
+                disabled={saving}
+              />
+              {errors.operators && <p className="text-red-500 text-xs mt-2">{errors.operators}</p>}
+            </div>
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox
+                checked={formData.use_as_dynamic_variable}
+                onChange={(e) => handleInputChange('use_as_dynamic_variable')(e.target.checked ? 1 : 0)}
+                disabled={saving}
+                style={{ accentColor: color.primary.accent }}
+              />
+              <span className="text-sm font-medium text-gray-700">
+                Use as dynamic variable
+              </span>
+            </label>
           </div>
         </div>
 
-        {/* Data Source Configuration Section */}
+        {/* Validation Configuration Section <span className="text-red-500">*</span>/}
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Validation Configuration</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Validation Strategy <span className="text-red-500">*</span>
+              </label>
+              <HeadlessSelect
+                options={VALIDATION_STRATEGY_OPTIONS}
+                value={formData.validation_strategy}
+                onChange={(value) => handleSelectChange("validation_strategy", value)}
+                disabled={saving}
+              />
+            </div>
+
+            {formData.validation_strategy === "range" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Min Value <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    type="number"
+                    placeholder="e.g., 0"
+                    value={formData.range_min}
+                    onChange={handleInputChange('range_min')}
+                    hasError={!!errors.range_min}
+                    variant="medium"
+                    disabled={saving}
+                  />
+                  {errors.range_min && <p className="text-red-500 text-xs mt-1">{errors.range_min}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Max Value <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    type="number"
+                    placeholder="e.g., 100"
+                    value={formData.range_max}
+                    onChange={handleInputChange('range_max')}
+                    hasError={!!errors.range_max}
+                    variant="medium"
+                    disabled={saving}
+                  />
+                  {errors.range_max && <p className="text-red-500 text-xs mt-1">{errors.range_max}</p>}
+                </div>
+              </div>
+            )}
+
+            {formData.validation_strategy === "discrete" && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Allowed Values <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  placeholder="e.g., active, inactive, pending (comma-separated)"
+                  value={formData.discrete_values}
+                  onChange={handleInputChange('discrete_values')}
+                  hasError={!!errors.discrete_values}
+                  variant="medium"
+                  disabled={saving}
+                />
+                {errors.discrete_values && <p className="text-red-500 text-xs mt-1">{errors.discrete_values}</p>}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Data Source Configuration Section <span className="text-red-500">*</span>/}
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Data Source Configuration</h2>
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Category *
-                </label>
-                <HeadlessSelect
-                  options={CATEGORY_OPTIONS}
-                  value={formData.category}
-                  onChange={(value) => handleSelectChange("category", value)}
-                  disabled={saving}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Data Source *
+                  Data Source <span className="text-red-500">*</span>
                 </label>
                 <HeadlessSelect
                   options={DATA_SOURCE_OPTIONS}
@@ -359,27 +573,10 @@ export default function UsageMetricFormPage({ mode }: UsageMetricFormPageProps) 
                   disabled={saving}
                 />
               </div>
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Source Table *
-              </label>
-              <Input
-                placeholder="e.g., OCS_DATA"
-                value={formData.source_table}
-                onChange={handleInputChange('source_table')}
-                hasError={!!errors.source_table}
-                variant="medium"
-                disabled={saving}
-              />
-              {errors.source_table && <p className="text-red-500 text-xs mt-1">{errors.source_table}</p>}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Frequency *
+                  Frequency <span className="text-red-500">*</span>
                 </label>
                 <HeadlessSelect
                   options={FREQUENCY_OPTIONS}
@@ -388,42 +585,80 @@ export default function UsageMetricFormPage({ mode }: UsageMetricFormPageProps) 
                   disabled={saving}
                 />
               </div>
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Unit (optional)
-                </label>
-                <Input
-                  type="text"
-                  value={formData.unit}
-                  onChange={handleInputChange('unit')}
-                  placeholder="e.g., MB, Minutes, Count"
-                  className="w-full px-4 py-3 text-sm border border-gray-300 rounded-md focus:outline-none"
-                  disabled={saving}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Source Table <span className="text-red-500">*</span>
+              </label>
+              {loadingTables ? (
+                <div className="p-2 text-sm text-gray-500">Loading tables...</div>
+              ) : (
+                <HeadlessSelect
+                  options={tables}
+                  value={formData.source_table}
+                  onChange={(value) => handleSelectChange("source_table", value)}
+                  placeholder="Select a table"
+                  disabled={saving || loadingTables}
+                  searchable={true}
                 />
-              </div>
+              )}
+              {errors.source_table && <p className="text-red-500 text-xs mt-1">{errors.source_table}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Unit (optional)
+              </label>
+              <Input
+                type="text"
+                placeholder="e.g., Million PKR, MB"
+                value={formData.unit}
+                onChange={handleInputChange('unit')}
+                variant="medium"
+                disabled={saving}
+              />
             </div>
           </div>
         </div>
 
-        {/* Operators Section */}
+        {/* Extraction Logic Section <span className="text-red-500">*</span>/}
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Operators</h2>
-          <p className="text-sm text-gray-600 mb-4">Select all operators that apply to this metric</p>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {OPERATORS.map((op) => (
-              <div key={op.value} className="flex items-center gap-2 cursor-pointer" onClick={() => handleOperatorChange(op.value, !formData.operators.includes(op.value))}>
-                <Checkbox
-                  id={`operator-${op.value}`}
-                  checked={formData.operators.includes(op.value)}
-                  onChange={() => handleOperatorChange(op.value, !formData.operators.includes(op.value))}
-                  disabled={saving}
-                  style={{ accentColor: color.primary.accent }} />
-                <span className="text-sm text-gray-700">{op.label}</span>
-              </div>
-            ))}
+          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Extraction Logic</h2>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Logic Definition <span className="text-red-500">*</span>
+            </label>
+            <div
+              className={`border ${tw.rounded} overflow-hidden`}
+              style={{
+                borderColor: errors.extractionLogic ? "#ef4444" : tw.borderDefault,
+                minHeight: "200px",
+              }}
+            >
+              <CodeMirror
+                value={formData.extractionLogic}
+                height="200px"
+                extensions={[sqlLanguage()]}
+                onChange={(value) => handleTextareaChange({ target: { name: "extractionLogic", value } } as any)}
+                theme="light"
+                basicSetup={{
+                  lineNumbers: true,
+                  highlightActiveLineGutter: true,
+                  foldGutter: true,
+                  dropCursor: true,
+                  indentOnInput: true,
+                  bracketMatching: true,
+                  closeBrackets: true,
+                  autocompletion: true,
+                  searchKeymap: true,
+                }}
+                className="codemirror-editor"
+                placeholder="e.g., usage_field (reference a field from your table)"
+              />
+            </div>
+            {errors.extractionLogic && <p className="text-red-500 text-xs mt-2">{errors.extractionLogic}</p>}
           </div>
-          {errors.operators && <p className="text-red-500 text-xs mt-3">{errors.operators}</p>}
         </div>
 
         {/* Submit Button */}
@@ -443,7 +678,7 @@ export default function UsageMetricFormPage({ mode }: UsageMetricFormPageProps) 
             className="px-6 py-2 text-sm font-medium text-white rounded-md disabled:opacity-60"
             style={{ backgroundColor: color.primary.action }}
           >
-            {saving ? "Creating..." : "Create"}
+            {saving ? (mode === "edit" ? "Updating..." : "Creating...") : (mode === "edit" ? "Update" : "Create")}
           </button>
         </div>
       </form>

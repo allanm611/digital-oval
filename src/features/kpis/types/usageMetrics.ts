@@ -25,6 +25,7 @@ export interface UsageMetric {
   frequency: "Per Min" | "D-1" | "Monthly";
   unit?: string;
   default_value?: string | number;
+  is_active?: boolean;
 }
 
 export const USAGE_METRICS: UsageMetric[] = [];

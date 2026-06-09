@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import CreateButton from "../../../shared/components/ui/CreateButton";
+import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { kpiService } from "../services/kpiService";
 import { systemEventService } from "../services/systemEventService";
 import { type KPI } from "../types/kpi";
@@ -27,6 +28,7 @@ export default function AllKPIsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [kpiToDelete, setKpiToDelete] = useState<{ id: string; name: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [togglingKpiId, setTogglingKpiId] = useState<string | null>(null);
 
   useEffect(() => {
     loadAllKPIs();
@@ -56,6 +58,8 @@ export default function AllKPIsPage() {
           description: kpi.description || "",
           source: `${kpi.field_source_table || "Unknown"}`,
           field_type: kpi.field_type || "",
+          is_active: kpi.is_active ?? true,
+          field_value: kpi.field_value || "",
         };
       });
 
@@ -68,6 +72,7 @@ export default function AllKPIsPage() {
         description: event.event_description || "",
         source: event.category,
         field_type: "event",
+        is_active: true,
       }));
 
       setAllKPIs([...kpis, ...systemEventKPIs]);
@@ -193,6 +198,41 @@ export default function AllKPIsPage() {
     setKpiToDelete(null);
   };
 
+  const handleToggleStatus = async (kpi: typeof allKPIs[0]) => {
+    try {
+      setTogglingKpiId(kpi.id);
+      const newStatus = !(kpi.is_active ?? true);
+
+      // Optimistic update
+      setAllKPIs((prev) =>
+        prev.map((k) =>
+          k.id === kpi.id ? { ...k, is_active: newStatus } : k
+        )
+      );
+
+      // Call API
+      const numericId = Number(kpi.id.split('-')[1] || kpi.id);
+      await kpiService.toggleKPIStatus(numericId, newStatus);
+
+      showToast(
+        "success",
+        `KPI "${kpi.name}" has been ${newStatus ? "activated" : "deactivated"} successfully`
+      );
+    } catch (error) {
+      console.error("Failed to toggle KPI status:", error);
+      showToast("error", "Failed to update KPI status. Please try again.");
+
+      // Revert optimistic update on error
+      setAllKPIs((prev) =>
+        prev.map((k) =>
+          k.id === kpi.id ? { ...k, is_active: !(kpi.is_active ?? true) } : k
+        )
+      );
+    } finally {
+      setTogglingKpiId(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -306,6 +346,12 @@ export default function AllKPIsPage() {
                       className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
                       style={{ color: color.surface.tableHeaderText }}
                     >
+                      Status
+                    </th>
+                    <th
+                      className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
+                      style={{ color: color.surface.tableHeaderText }}
+                    >
                       Actions
                     </th>
                   </tr>
@@ -343,30 +389,45 @@ export default function AllKPIsPage() {
                         </p>
                       </td>
                       <td
+                        className="px-6 py-4 text-sm text-center"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
+                        <span className="text-sm font-medium text-gray-900">
+                          {kpi.is_active ? "Active" : "Inactive"}
+                        </span>
+                      </td>
+                      <td
                         className="px-6 py-4 text-sm font-medium"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
                         <div className="flex items-center justify-center space-x-2">
                           <button
                             onClick={() => handleViewDetails(kpi)}
-                            className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
+                            className={`p-1 ${tw.rounded} ${tw.textMuted} hover:text-gray-900 transition-colors`}
                             title="View Details"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => navigate(`/dashboard/kpis/${extractNumericId(kpi.id)}/edit`, { state: { parentLabel: "All KPIs" } })}
-                            className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
+                            className={`p-1 ${tw.rounded} ${tw.textMuted} hover:text-gray-900 transition-colors`}
                             title="Edit"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
+                          <ActivateDeactivateButton
+                            isActive={kpi.is_active ?? true}
+                            onToggle={() => handleToggleStatus(kpi)}
+                            disabled={togglingKpiId === kpi.id}
+                            isLoading={togglingKpiId === kpi.id}
+                          />
                           <button
                             onClick={() => handleDeleteClick(kpi)}
-                            className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-red-100 transition-all duration-300`}
+                            className={`p-1 ${tw.rounded} hover:text-red-700 transition-colors`}
+                            style={{ color: "#DC2626" }}
                             title="Delete"
                           >
-                            <Trash2 className="w-4 h-4 text-red-600" />
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </td>
@@ -394,11 +455,11 @@ export default function AllKPIsPage() {
                           {kpi.name}
                         </h4>
                       </div>
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 text-gray-900">
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-sm font-medium flex-shrink-0 text-gray-900">
                         {kpi.category}
                       </span>
                     </div>
-                    <div className="flex items-center gap-4 text-xs">
+                    <div className="flex items-center gap-4 text-sm">
                       <div>
                         <span className="text-gray-600">Type:</span>
                         <span className="ml-1 font-medium text-gray-900">
@@ -406,27 +467,42 @@ export default function AllKPIsPage() {
                         </span>
                       </div>
                     </div>
+                    <div className="flex items-center gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-600">Status:</span>
+                        <span className="ml-1 font-medium text-gray-900">
+                          {kpi.is_active ? "Active" : "Inactive"}
+                        </span>
+                      </div>
+                    </div>
                     <div className="flex items-center gap-2 justify-end">
                       <button
                         onClick={() => handleViewDetails(kpi)}
-                        className={`p-2 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-colors`}
+                        className={`p-1 ${tw.rounded} ${tw.textMuted} hover:text-gray-900 transition-colors`}
                         title="View Details"
                       >
                         <Eye className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => navigate(`/dashboard/kpis/${extractNumericId(kpi.id)}/edit`, { state: { parentLabel: "All KPIs" } })}
-                        className={`p-2 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-colors`}
+                        className={`p-1 ${tw.rounded} ${tw.textMuted} hover:text-gray-900 transition-colors`}
                         title="Edit"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
+                      <ActivateDeactivateButton
+                        isActive={kpi.is_active ?? true}
+                        onToggle={() => handleToggleStatus(kpi)}
+                        disabled={togglingKpiId === kpi.id}
+                        isLoading={togglingKpiId === kpi.id}
+                      />
                       <button
                         onClick={() => handleDeleteClick(kpi)}
-                        className={`p-2 ${tw.rounded} hover:bg-red-100 transition-colors`}
+                        className={`p-1 ${tw.rounded} hover:text-red-700 transition-colors`}
+                        style={{ color: "#DC2626" }}
                         title="Delete"
                       >
-                        <Trash2 className="w-4 h-4 text-red-600" />
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </div>

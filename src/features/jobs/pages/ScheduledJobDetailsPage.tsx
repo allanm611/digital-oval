@@ -1457,7 +1457,7 @@ export default function ScheduledJobDetailsPage() {
                       Version {version.version}
                     </p>
                     <p className="text-xs text-gray-500">
-                      <DateFormatter date={version.created_at} />
+                      <DateFormatter date={version.created_at} useUserTimezone includeTime />
                       {version.created_by && (
                         <span className="ml-2">
                           • Created by{" "}
@@ -1506,13 +1506,13 @@ export default function ScheduledJobDetailsPage() {
             <div className="flex justify-between">
               <span className="text-gray-700">Created At</span>
               <span className={tw.textSecondary}>
-                <DateFormatter date={job.created_at} />
+                <DateFormatter date={job.created_at} useUserTimezone includeTime />
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-700">Updated At</span>
               <span className={tw.textSecondary}>
-                <DateFormatter date={job.updated_at} />
+                <DateFormatter date={job.updated_at} useUserTimezone includeTime />
               </span>
             </div>
             <div className="flex justify-between">

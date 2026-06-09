@@ -21,7 +21,6 @@ import type { Subscriber } from "../types/customer";
 import { NotificationChannel } from "../types/customer";
 import {
   convertSubscriptionToCustomerRow,
-  formatDateTime,
   formatMsisdn,
   getSubscriptionDisplayName,
   searchCustomers as searchCustomersUtil,
@@ -921,7 +920,7 @@ export default function CustomersPage() {
                         className="px-6 py-5 text-sm text-gray-900"
                         style={cellBackground}
                       >
-                        {formatDateTime(row.activationDate)}
+                        {formatDate(row.activationDate)}
                       </td>
                       <td
                         className="rounded-r-md px-6 py-5 text-sm text-right relative"

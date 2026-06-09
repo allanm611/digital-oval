@@ -3105,7 +3105,6 @@ export default function JobDependenciesPage() {
                               <DateFormatter
                                 date={item.created_at}
                                 useUserTimezone
-                                includeTime
                               />
                             ) : (
                               "-"
@@ -3360,7 +3359,6 @@ export default function JobDependenciesPage() {
                               <DateFormatter
                                 date={item.created_at}
                                 useUserTimezone
-                                includeTime
                               />
                             ) : (
                               "-"
@@ -3599,7 +3597,6 @@ export default function JobDependenciesPage() {
                               <DateFormatter
                                 date={item.created_at}
                                 useUserTimezone
-                                includeTime
                               />
                             ) : (
                               "-"
