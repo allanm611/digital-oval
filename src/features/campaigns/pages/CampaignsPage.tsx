@@ -8,7 +8,6 @@ import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import {
   Filter,
-  // Calendar,
   MoreHorizontal,
   Eye,
   Play,
@@ -25,19 +24,17 @@ import {
   AlertCircle,
   BarChart3,
   Copy,
-  Settings,
-  ChevronDown,
 } from "lucide-react";
 import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import CreateButton from "../../../shared/components/ui/CreateButton";
-import Pagination from "../../../shared/components/ui/Pagination";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { campaignService } from "../services/campaignService";
 import { campaignFlowService } from "../services/campaignFlowService";
 import { useClickOutside } from "../../../shared/hooks/useClickOutside";
-import { useDynamicColumns } from "../../../shared/hooks/useDynamicColumns";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
+import Pagination from "../../../shared/components/ui/Pagination";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { getUserDisplayName, getUserDisplayNames } from "../../../shared/utils/userNameCache";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -84,6 +81,7 @@ export default function CampaignsPage() {
   });
   const filterRef = useRef<HTMLDivElement>(null);
   const [showActionMenu, setShowActionMenu] = useState<number | null>(null);
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [campaignToDelete, setCampaignToDelete] = useState<{
     id: number;
@@ -121,8 +119,6 @@ export default function CampaignsPage() {
     CampaignDisplay[]
   >([]);
   const [totalCampaigns, setTotalCampaigns] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(15);
   const [categories, setCategories] = useState<CampaignCategory[]>([]);
   const categoryMap = useMemo(() => {
     const map: Record<number, string> = {};
@@ -148,37 +144,235 @@ export default function CampaignsPage() {
   const [userNamesCache, setUserNamesCache] = useState<Map<number, string>>(
     new Map(),
   );
-  const [expandedCampaignId, setExpandedCampaignId] = useState<number | null>(
-    null,
-  );
   const [isLoadingModalData, setIsLoadingModalData] = useState(false);
 
-  // Dynamic columns hook
-  const defaultColumns = [
-    { id: "name", label: "Campaign Name", visible: true },
-    { id: "category", label: "Category", visible: true },
-    { id: "status", label: "Status", visible: true },
-    { id: "offers", label: "Offers", visible: true },
-    { id: "segments", label: "Segments", visible: true },
-    { id: "performance", label: "Performance", visible: true },
-    { id: "created_by", label: "Created By", visible: false },
-    { id: "created_on", label: "Created On", visible: false },
-    { id: "updated_by", label: "Last Updated By", visible: false },
-    { id: "updated_on", label: "Last Updated On", visible: false },
-    { id: "actions", label: "Actions", visible: true },
+  // Table columns with custom rendering
+  const defaultColumns: TableColumn<CampaignDisplay>[] = [
+    {
+      id: "name",
+      label: "Campaign Name",
+      visible: true,
+      render: (value) => (
+        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value}>
+          {value}
+        </div>
+      ),
+    },
+    {
+      id: "category",
+      label: "Category",
+      visible: true,
+      render: (value, campaign) => (
+        <span className={`text-sm ${tw.textPrimary}`}>
+          {campaign.category_id
+            ? categoryMap[campaign.category_id] || "Uncategorized"
+            : "Uncategorized"}
+        </span>
+      ),
+    },
+    {
+      id: "status",
+      label: "Status",
+      visible: true,
+      render: (value) => (
+        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-black`}>
+          {value?.replace(/_/g, " ") || "Unknown"}
+        </span>
+      ),
+    },
+    {
+      id: "offers",
+      label: "Offers",
+      visible: true,
+      render: (value, campaign) => (
+        <button
+          onClick={async () => {
+            if (campaign.offer_count > 0) {
+              if (Array.isArray(campaign.offers) && campaign.offers.length > 0) {
+                setSelectedCampaignForModal(campaign);
+                setShowOffersModal(true);
+              } else {
+                setIsLoadingModalData(true);
+                try {
+                  const response = await campaignFlowService.getCampaignOffers(campaign.id, true);
+                  const updatedCampaign = { ...campaign, offers: response.data };
+                  setSelectedCampaignForModal(updatedCampaign);
+                  setShowOffersModal(true);
+                } catch (error) {
+                  console.error("Failed to fetch campaign offers:", error);
+                  showToast("error", "Failed to load offers");
+                } finally {
+                  setIsLoadingModalData(false);
+                }
+              }
+            }
+          }}
+          className={`text-sm ${tw.textPrimary} font-medium ${
+            campaign.offer_count > 0 ? "cursor-pointer hover:underline" : ""
+          }`}
+        >
+          {campaign.offer_count ?? 0}
+        </button>
+      ),
+    },
+    {
+      id: "segments",
+      label: "Segments",
+      visible: true,
+      render: (value, campaign) => (
+        <button
+          onClick={async () => {
+            if (campaign.segment_count > 0) {
+              if (Array.isArray(campaign.segments) && campaign.segments.length > 0) {
+                setSelectedCampaignForModal(campaign);
+                setShowSegmentsModal(true);
+              } else {
+                setIsLoadingModalData(true);
+                try {
+                  const response = await campaignFlowService.getCampaignSegments(campaign.id, true);
+                  const updatedCampaign = { ...campaign, segments: response.data };
+                  setSelectedCampaignForModal(updatedCampaign);
+                  setShowSegmentsModal(true);
+                } catch (error) {
+                  console.error("Failed to fetch campaign segments:", error);
+                  showToast("error", "Failed to load segments");
+                } finally {
+                  setIsLoadingModalData(false);
+                }
+              }
+            }
+          }}
+          className={`text-sm ${tw.textPrimary} font-medium ${
+            campaign.segment_count > 0 ? "cursor-pointer hover:underline" : ""
+          }`}
+        >
+          {campaign.segment_count ?? 0}
+        </button>
+      ),
+    },
+    {
+      id: "performance",
+      label: "Performance",
+      visible: true,
+      render: () => (
+        <div className="flex flex-col gap-1">
+          <span className={`text-sm ${tw.textPrimary}`}>
+            Conversion: <span className="font-medium">0%</span>
+          </span>
+          <span className={`text-sm ${tw.textPrimary}`}>
+            Revenue: <span className="font-medium">0</span>
+          </span>
+        </div>
+      ),
+    },
+    {
+      id: "created_by",
+      label: "Created By",
+      visible: false,
+      render: (value) => (
+        <span className={`text-sm ${tw.textPrimary}`}>
+          {value ? userNamesCache.get(value) || "—" : "—"}
+        </span>
+      ),
+    },
+    {
+      id: "created_on",
+      label: "Created On",
+      visible: false,
+      render: (value) =>
+        value ? (
+          <DateFormatter date={value} useUserTimezone className="text-sm" />
+        ) : (
+          <span className={`text-sm ${tw.textMuted}`}>—</span>
+        ),
+    },
+    {
+      id: "updated_by",
+      label: "Last Updated By",
+      visible: false,
+      render: (value) => (
+        <span className={`text-sm ${tw.textPrimary}`}>
+          {value ? userNamesCache.get(value) || "—" : "—"}
+        </span>
+      ),
+    },
+    {
+      id: "updated_on",
+      label: "Last Updated On",
+      visible: false,
+      render: (value) =>
+        value ? (
+          <DateFormatter date={value} useUserTimezone className="text-sm" />
+        ) : (
+          <span className={`text-sm ${tw.textMuted}`}>—</span>
+        ),
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      render: (value, campaign) => (
+        <div className="flex items-center justify-center space-x-2">
+          <button
+            onClick={() => navigate(`/dashboard/campaigns/${campaign.id}`)}
+            className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.action}]/10 transition-all duration-300`}
+            title="View Details"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+          <PermissionGate permission="campaigns.update">
+            <button
+              onClick={() => {
+                const isRejected = campaign.approval_status === "rejected" || campaign.status === "rejected";
+                navigate(`/dashboard/campaigns/${campaign.id}/edit`, {
+                  state: {
+                    campaign: campaign,
+                    isResubmit: isRejected,
+                  },
+                });
+              }}
+              className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-all duration-300`}
+              title={
+                campaign.approval_status === "rejected" || campaign.status === "rejected"
+                  ? "Edit & Resubmit"
+                  : "Edit"
+              }
+            >
+              <Edit className="w-4 h-4" />
+            </button>
+          </PermissionGate>
+          <div className="relative" ref={(el) => {
+            actionMenuRefs.current[campaign.id] = el;
+          }}>
+            <button
+              onClick={(e) => handleActionMenuToggle(campaign.id, e)}
+              className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.action}]/10 transition-all duration-300`}
+            >
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      ),
+    },
   ];
 
   const {
-    allColumns,
-    isModalOpen,
-    setIsModalOpen,
+    columns,
     toggleColumn,
     reorderColumns,
     resetToDefaults,
-    getVisibleColumns,
-  } = useDynamicColumns({
+    expandedRowId,
+    setExpandedRowId,
+    currentPage: tableCurrentPage,
+    pageSize: tablePageSize,
+    handlePageChange: tableHandlePageChange,
+    sortConfigs,
+    handleSort,
+  } = useTable({
     tableId: "campaigns-table",
     defaultColumns,
+    persistToLocalStorage: true,
   });
 
   // Helper function to update a single campaign in the list
@@ -195,104 +389,6 @@ export default function CampaignsPage() {
     );
   };
 
-  // Helper function to render column content
-  const renderColumnContent = (colId: string, campaign: CampaignDisplay) => {
-    switch (colId) {
-      case "name":
-        return (
-          <div className="flex flex-col gap-2">
-            <button
-              onClick={() =>
-                setExpandedCampaignId(
-                  expandedCampaignId === campaign.id ? null : campaign.id,
-                )
-              }
-              className="flex items-center gap-2 text-left"
-            >
-              <div
-                className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`}
-                title={campaign.name}
-              >
-                {campaign.name}
-              </div>
-              <ChevronDown
-                size={16}
-                className={`flex-shrink-0 transition-transform ${
-                  expandedCampaignId === campaign.id ? "rotate-180" : ""
-                }`}
-              />
-            </button>
-          </div>
-        );
-      case "category":
-        return (
-          <span className={`text-sm ${tw.textPrimary}`}>
-            {campaign.category_id
-              ? categoryMap[campaign.category_id] || "Uncategorized"
-              : "Uncategorized"}
-          </span>
-        );
-      case "status":
-        return (
-          <span
-            className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(
-              campaign.status,
-            )}`}
-          >
-            {campaign.status?.replace(/_/g, " ") || "Unknown"}
-          </span>
-        );
-      case "offers":
-        return (
-          <span className={`text-sm ${tw.textPrimary} font-medium`}>
-            {campaign.offer_count ?? 0}
-          </span>
-        );
-      case "segments":
-        return (
-          <span className={`text-sm ${tw.textPrimary} font-medium`}>
-            {campaign.segment_count ?? 0}
-          </span>
-        );
-      case "performance":
-        return (
-          <div className="flex flex-col gap-1">
-            <span className={`text-sm ${tw.textPrimary}`}>
-              Conversion: <span className="font-medium">0%</span>
-            </span>
-            <span className={`text-sm ${tw.textPrimary}`}>
-              Revenue: <span className="font-medium">0</span>
-            </span>
-          </div>
-        );
-      case "created_by":
-        return (
-          <span className={`text-sm ${tw.textPrimary}`}>
-            {campaign.created_by ? userNamesCache.get(campaign.created_by) || "—" : "—"}
-          </span>
-        );
-      case "created_on":
-        return campaign.created_at ? (
-          <DateFormatter date={campaign.created_at} useUserTimezone className="text-sm" />
-        ) : (
-          <span className={`text-sm ${tw.textMuted}`}>—</span>
-        );
-      case "updated_by":
-        return (
-          <span className={`text-sm ${tw.textPrimary}`}>
-            {campaign.updated_by ? userNamesCache.get(campaign.updated_by) || "—" : "—"}
-          </span>
-        );
-      case "updated_on":
-        return campaign.updated_at ? (
-          <DateFormatter date={campaign.updated_at} useUserTimezone className="text-sm" />
-        ) : (
-          <span className={`text-sm ${tw.textMuted}`}>—</span>
-        );
-      default:
-        return null;
-    }
-  };
 
   const handleAction = (params: CampaignActionParams) =>
     handleCampaignAction(params, {
@@ -560,13 +656,8 @@ export default function CampaignsPage() {
         );
       }
 
-      // Client-side pagination: slice the fetched campaigns to show only current page
-      const currentIndex = (currentPage - 1) * pageSize;
-      const clientEndIndex = currentIndex + pageSize;
-      const paginatedCampaigns = campaignsToDisplay.slice(currentIndex, clientEndIndex);
-
-      setCampaigns(paginatedCampaigns);
-      setAllCampaignsUnfiltered(campaignsData);
+      // Store all filtered data
+      setAllCampaignsUnfiltered(campaignsToDisplay);
       setTotalCampaigns(campaignsToDisplay.length);
     } catch (error) {
       console.error("Failed to load campaigns list:", error);
@@ -574,12 +665,20 @@ export default function CampaignsPage() {
         "error",
         "Failed to load campaigns. Please try again in a moment.",
       );
-      setCampaigns([]);
+      setAllCampaignsUnfiltered([]);
       setTotalCampaigns(0);
     } finally {
       setIsLoading(false);
     }
-  }, [selectedStatus, searchQuery, currentPage, pageSize, filters, showToast]);
+  }, [selectedStatus, searchQuery, filters, showToast]);
+
+  // Handle pagination slicing (separate from data fetching)
+  useEffect(() => {
+    const currentIndex = (tableCurrentPage - 1) * tablePageSize;
+    const clientEndIndex = currentIndex + tablePageSize;
+    const paginatedCampaigns = allCampaignsUnfiltered.slice(currentIndex, clientEndIndex);
+    setCampaigns(paginatedCampaigns);
+  }, [tableCurrentPage, tablePageSize, allCampaignsUnfiltered]);
 
   // Fetch campaign stats
   const fetchCampaignStats = useCallback(async () => {
@@ -646,8 +745,8 @@ export default function CampaignsPage() {
     selectedStatus,
     searchQuery,
     filters,
-    currentPage,
-    pageSize,
+    tableCurrentPage,
+    tablePageSize,
     location.key,
   ]);
 
@@ -1013,11 +1112,9 @@ export default function CampaignsPage() {
     setCampaignToDelete(null);
   };
 
-  const filteredCampaigns = campaigns;
-
   // Batch fetch user names for created_by and updated_by columns
   useEffect(() => {
-    const userIds = filteredCampaigns
+    const userIds = campaigns
       .flatMap((c) => [c.created_by, c.updated_by])
       .filter((id): id is number => Boolean(id));
 
@@ -1026,22 +1123,13 @@ export default function CampaignsPage() {
         setUserNamesCache(names);
       });
     }
-  }, [filteredCampaigns]);
+  }, [campaigns]);
 
-  // Calculate total pages
-  const totalPages = Math.ceil(totalCampaigns / pageSize);
-
-  // Handle page change
-  const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
 
   // Reset to page 1 when filters change
   useEffect(() => {
-    setCurrentPage(1);
-  }, [selectedStatus, searchQuery]);
+    tableHandlePageChange(1);
+  }, [selectedStatus, searchQuery, tableHandlePageChange]);
 
   // Campaign stats cards data
   const campaignStatsCards = [
@@ -1161,532 +1249,364 @@ export default function CampaignsPage() {
           <span>Filters</span>
         </button>
 
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className={`flex items-center gap-2 ${tw.rounded} transition-colors font-medium`}
-          style={{
-            backgroundColor: button.secondaryAction.background,
-            color: button.secondaryAction.color,
-            border: button.secondaryAction.border,
-            padding: `${button.secondaryAction.paddingY} ${button.secondaryAction.paddingX}`,
-            borderRadius: button.secondaryAction.borderRadius,
-            fontSize: button.secondaryAction.fontSize,
-          }}
-          title="Customize columns"
-        >
-          <Settings className="h-4 w-4" />
-          <span>Columns</span>
-        </button>
       </div>
 
-      <div
-        className={` ${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
-      >
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-16">
-            <LoadingSpinner
-              variant="modern"
-              size="xl"
-              color="primary"
-              className="mb-4"
-            />
-            <p className={`${tw.textMuted} font-medium text-sm`}>
-              Loading campaigns...
-            </p>
-          </div>
-        ) : filteredCampaigns.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table
-              className="w-full"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead style={{ background: color.surface.tableHeader }}>
-                <tr>
-                  {getVisibleColumns().map((col) => (
-                    <th
-                      key={col.id}
-                      className={`px-6 py-4 text-left text-sm font-medium uppercase tracking-wider whitespace-nowrap ${
-                        col.id === "actions" ? "text-center" : ""
-                      }`}
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      {col.label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filteredCampaigns.map((campaign) => (
-                  <React.Fragment key={campaign.id}>
-                    <tr className="transition-colors">
-                      {getVisibleColumns().map((col) => (
-                        <td
-                          key={col.id}
-                          className={`px-6 py-4 ${
-                            col.id === "offers" || col.id === "segments"
-                              ? "cursor-pointer"
-                              : ""
-                          }`}
-                          style={{ backgroundColor: color.surface.tablebodybg }}
-                          onClick={async () => {
-                            if (col.id === "offers" && campaign.offer_count > 0) {
-                              if (Array.isArray(campaign.offers) && campaign.offers.length > 0) {
-                                setSelectedCampaignForModal(campaign);
-                                setShowOffersModal(true);
-                              } else {
-                                setIsLoadingModalData(true);
-                                try {
-                                  const response = await campaignFlowService.getCampaignOffers(campaign.id, true);
-                                  const updatedCampaign = { ...campaign, offers: response.data };
-                                  setSelectedCampaignForModal(updatedCampaign);
-                                  setShowOffersModal(true);
-                                } catch (error) {
-                                  console.error("Failed to fetch campaign offers:", error);
-                                  showToast("error", "Failed to load offers");
-                                } finally {
-                                  setIsLoadingModalData(false);
-                                }
-                              }
-                            } else if (col.id === "segments" && campaign.segment_count > 0) {
-                              if (Array.isArray(campaign.segments) && campaign.segments.length > 0) {
-                                setSelectedCampaignForModal(campaign);
-                                setShowSegmentsModal(true);
-                              } else {
-                                setIsLoadingModalData(true);
-                                try {
-                                  const response = await campaignFlowService.getCampaignSegments(campaign.id, true);
-                                  const updatedCampaign = { ...campaign, segments: response.data };
-                                  setSelectedCampaignForModal(updatedCampaign);
-                                  setShowSegmentsModal(true);
-                                } catch (error) {
-                                  console.error("Failed to fetch campaign segments:", error);
-                                  showToast("error", "Failed to load segments");
-                                } finally {
-                                  setIsLoadingModalData(false);
-                                }
-                              }
-                            }
-                          }}
-                        >
-                          {col.id === "actions" ? (
-                            <div className="flex items-center justify-center space-x-2">
-                              <button
-                                onClick={() =>
-                                  navigate(`/dashboard/campaigns/${campaign.id}`)
-                                }
-                                className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.action}]/10 transition-all duration-300`}
-                                title="View Details"
-                              >
-                                <Eye className="w-4 h-4" />
-                              </button>
-                              <PermissionGate permission="campaigns.update">
-                                <button
-                                  onClick={() => {
-                                    const isRejected = campaign.approval_status === "rejected" || campaign.status === "rejected";
-                                    navigate(
-                                      `/dashboard/campaigns/${campaign.id}/edit`,
-                                      {
-                                        state: {
-                                          campaign: campaign,
-                                          isResubmit: isRejected,
-                                        },
-                                      },
-                                    );
-                                  }}
-                                  className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-all duration-300`}
-                                  title={campaign.approval_status === "rejected" || campaign.status === "rejected" ? "Edit & Resubmit" : "Edit"}
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </button>
-                              </PermissionGate>
-                              <div
-                                className="relative"
-                                ref={(el) => {
-                                  actionMenuRefs.current[campaign.id] = el;
-                                }}
-                              >
-                                <button
-                                  onClick={(e) =>
-                                    handleActionMenuToggle(campaign.id, e)
-                                  }
-                                  className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.action}]/10 transition-all duration-300`}
-                                >
-                                  <MoreHorizontal className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            renderColumnContent(col.id, campaign)
-                          )}
-                        </td>
-                      ))}
-                    </tr>
-                    {expandedCampaignId === campaign.id && (
-                      <CampaignDetailsExpandedRow
-                        campaign={campaign}
-                        colSpan={getVisibleColumns().length}
-                      />
-                    )}
-                  </React.Fragment>
-                ))}
-
-                {/* Render dropdown menus via portal outside the table */}
-                {filteredCampaigns.map((campaign) => {
-                  if (showActionMenu === campaign.id && dropdownPosition) {
-                    return createPortal(
-                      <div
-                        ref={(el) => {
-                          dropdownMenuRefs.current[campaign.id] = el;
-                        }}
-                        className={`fixed bg-white border border-gray-200 ${tw.rounded} shadow-xl py-3`}
-                        style={{
-                          zIndex: zIndex.popover,
-                          top: `${dropdownPosition.top}px`,
-                          left: `${dropdownPosition.left}px`,
-                          width: `${dropdownPosition.width || 256}px`,
-                          maxHeight: `${dropdownPosition.maxHeight}px`,
-                          overflowY: "auto",
-                          overflowX: "hidden",
-                          overscrollBehavior: "contain",
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        onMouseDown={(e) => e.stopPropagation()}
-                      >
-                        {!(campaign.approval_status === "rejected" || campaign.status === "rejected") && (
-                          <>
-                            <PermissionGate permission="campaigns.run">
-                              {campaign.approval_status === "approved" &&
-                              campaign.is_active === true ? (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setCampaignToRun({
-                                      id: campaign.id,
-                                      name: campaign.name,
-                                      status: campaign.status,
-                                      approval_status: campaign.approval_status,
-                                      is_active: campaign.is_active,
-                                    });
-                                    setShowRunModal(true);
-                                    setShowActionMenu(null);
-                                  }}
-                                  className="w-full flex items-center px-4 py-3 text-sm text-black"
-                                >
-                                  <Play className="w-4 h-4 mr-4 text-black" />
-                                  Run Campaign
-                                </button>
-                              ) : null}
-                            </PermissionGate>
-
-                            {canShowCampaignButton(campaign, "pause") && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleAction({
-                                  campaignId: campaign.id,
-                                  campaignName: campaign.name,
-                                  action: "pause",
-                                  successMessage: `Campaign "${campaign.name}" paused successfully!`,
-                                  errorMessage: "Failed to pause campaign",
-                                  updateFields: { status: "paused" },
-                                });
-                              }}
-                              className="w-full flex items-center px-4 py-3 text-sm text-black"
-                              disabled={loadingActionIds.has(campaign.id)}
-                            >
-                              {loadingActionIds.has(campaign.id) ? (
-                                <LoadingSpinner
-                                  variant="modern"
-                                  size="sm"
-                                  color="primary"
-                                  className="mr-4"
-                                />
-                              ) : (
-                                <Pause className="w-4 h-4 mr-4 text-black" />
-                              )}
-                              Pause Campaign
-                            </button>
-                          )}
-
-                        {canShowCampaignButton(campaign, "resume") && (
-                          <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleAction({
-                                  campaignId: campaign.id,
-                                  campaignName: campaign.name,
-                                  action: "resume",
-                                  successMessage: `Campaign "${campaign.name}" resumed successfully!`,
-                                  errorMessage: "Failed to resume campaign",
-                                  updateFields: { status: "active" },
-                                });
-                              }}
-                              className="w-full flex items-center px-4 py-3 text-sm text-black"
-                              disabled={loadingActionIds.has(campaign.id)}
-                            >
-                              {loadingActionIds.has(campaign.id) ? (
-                                <LoadingSpinner
-                                  variant="modern"
-                                  size="sm"
-                                  color="primary"
-                                  className="mr-4"
-                                />
-                              ) : (
-                                <Play className="w-4 h-4 mr-4 text-black" />
-                              )}
-                              Resume Campaign
-                            </button>
-                        )}
-
-                        {canShowCampaignButton(campaign, "activate") ? (
-                          <PermissionGate permission="campaigns.activate">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleAction({
-                                  campaignId: campaign.id,
-                                  campaignName: campaign.name,
-                                  action: "activate",
-                                  successMessage: `Campaign "${campaign.name}" activated successfully!`,
-                                  errorMessage: "Failed to activate campaign",
-                                  updateFields: { is_active: true },
-                                });
-                              }}
-                              className="w-full flex items-center px-4 py-3 text-sm text-black"
-                              disabled={loadingActionIds.has(campaign.id)}
-                            >
-                              {loadingActionIds.has(campaign.id) ? (
-                                <LoadingSpinner
-                                  variant="modern"
-                                  size="sm"
-                                  color="primary"
-                                  className="mr-4"
-                                />
-                              ) : (
-                                <CheckCircle className="w-4 h-4 mr-4 text-black" />
-                              )}
-                              Activate Campaign
-                            </button>
-                          </PermissionGate>
-                        ) : null}
-
-                        {canShowCampaignButton(campaign, "submit") && (
-                          <PermissionGate permission="campaigns.update">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleAction({
-                                  campaignId: campaign.id,
-                                  campaignName: campaign.name,
-                                  action: "submit",
-                                  successMessage: `Campaign "${campaign.name}" submitted for approval!`,
-                                  errorMessage:
-                                    "Failed to submit campaign for approval",
-                                  updateFields: {
-                                    status: "pending_approval",
-                                    approval_status: "pending",
-                                  },
-                                  errorProcessor: (error) => {
-                                    let errorTitle = "Submission Failed";
-                                    let errorMessage =
-                                      "Failed to submit campaign for approval";
-
-                                    if (error instanceof Error) {
-                                      // Check for budget-related errors
-                                      if (
-                                        error.message
-                                          .toLowerCase()
-                                          .includes("budget") ||
-                                        error.message
-                                          .toLowerCase()
-                                          .includes("positive")
-                                      ) {
-                                        errorTitle = "Budget Required";
-                                        errorMessage =
-                                          "This campaign must have a positive budget allocated before it can be submitted for approval. Please set a budget in the campaign details.";
-                                      } else {
-                                        // Try to extract error from response
-                                        const match =
-                                          error.message.match(
-                                            /details: ({.*})/,
-                                          );
-                                        if (match) {
-                                          try {
-                                            const errorData = JSON.parse(
-                                              match[1],
-                                            );
-                                            errorMessage =
-                                              errorData.error ||
-                                              errorData.message ||
-                                              errorMessage;
-                                          } catch {
-                                            errorMessage = error.message;
-                                          }
-                                        } else {
-                                          errorMessage = error.message;
-                                        }
-                                      }
-                                    }
-                                    return {
-                                      title: errorTitle,
-                                      message: errorMessage,
-                                    };
-                                  },
-                                });
-                              }}
-                              className="w-full flex items-center px-4 py-3 text-sm text-black"
-                              disabled={loadingActionIds.has(campaign.id)}
-                            >
-                              {loadingActionIds.has(campaign.id) ? (
-                                <LoadingSpinner
-                                  variant="modern"
-                                  size="sm"
-                                  color="primary"
-                                  className="mr-4"
-                                />
-                              ) : (
-                                <Send className="w-4 h-4 mr-4 text-black" />
-                              )}
-                              Request Approval
-                            </button>
-                          </PermissionGate>
-                        )}
-
-                        {canShowCampaignButton(campaign, "approve") && (
-                          <PermissionGate permission="campaigns.approve">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setCampaignToApprove({
-                                  id: campaign.id,
-                                  name: campaign.name,
-                                });
-                                setShowApproveModal(true);
-                                setShowActionMenu(null);
-                              }}
-                              className="w-full flex items-center px-4 py-3 text-sm text-black"
-                            >
-                              <CheckCircle className="w-4 h-4 mr-4 text-black" />
-                              Approve Campaign
-                            </button>
-                          </PermissionGate>
-                        )}
-
-                        {canShowCampaignButton(campaign, "reject") && (
-                          <PermissionGate permission="campaigns.reject">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setCampaignToReject({
-                                  id: campaign.id,
-                                  name: campaign.name,
-                                });
-                                setShowRejectModal(true);
-                                setShowActionMenu(null);
-                              }}
-                              className="w-full flex items-center px-4 py-3 text-sm text-black"
-                            >
-                              <XCircle className="w-4 h-4 mr-4 text-red-600" />
-                              Reject Campaign
-                            </button>
-                          </PermissionGate>
-                        )}
-                          </>
-                        )}
-
-                        {campaign.status === "archived" ? (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleUnarchiveCampaign(campaign.id);
-                            }}
-                            className="w-full flex items-center px-4 py-3 text-sm text-black"
-                          >
-                            <RotateCcw className="w-4 h-4 mr-4 text-black" />
-                            Unarchive Campaign
-                          </button>
-                        ) : (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleArchiveCampaign(campaign.id);
-                            }}
-                            className="w-full flex items-center px-4 py-3 text-sm text-black"
-                          >
-                            <Archive className="w-4 h-4 mr-4 text-black" />
-                            Archive Campaign
-                          </button>
-                        )}
-
-                      <PermissionGate permission="campaigns.create">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/dashboard/campaigns/create?duplicateId=${campaign.id}`);
-                            setShowActionMenu(null);
-                          }}
-                          className="w-full flex items-center px-4 py-3 text-sm text-black"
-                        >
-                          <Copy
-                            className="w-4 h-4 mr-4"
-                            style={{ color: color.primary.action }}
-                          />
-                          Duplicate Campaign
-                        </button>
-                      </PermissionGate>
-
-                      <PermissionGate permission="campaigns.delete">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteCampaign(campaign.id, campaign.name);
-                          }}
-                          className="w-full flex items-center px-4 py-3 text-sm text-red-600"
-                        >
-                          <Trash2 className="w-4 h-4 mr-4 text-red-600" />
-                          Delete Campaign
-                        </button>
-                      </PermissionGate>
-
-                      </div>,
-                      document.body,
-                    );
-                  }
-                  return null;
-                })}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-16 px-6">
-            <h3 className={`${tw.cardHeading} text-gray-900 mb-1`}>
-              No campaigns found
-            </h3>
-            <p className="text-sm text-gray-500 text-center max-w-sm">
-              {selectedStatus === "completed"
-                ? "No completed campaigns yet. Campaigns will appear here once they finish running."
-                : `No ${selectedStatus} campaigns found. Try creating a new campaign or check other status filters.`}
-            </p>
-            <PermissionGate permission="campaign.create">
-              {selectedStatus !== "completed" && (
-                <div className="mt-4">
-                  <CreateButton route="/dashboard/campaigns/create" />
-                </div>
-              )}
-            </PermissionGate>
-          </div>
+      {/* Table */}
+      <Table<CampaignDisplay>
+        columns={columns}
+        data={campaigns}
+        totalItems={totalCampaigns}
+        currentPage={tableCurrentPage}
+        pageSize={tablePageSize}
+        isLoading={isLoading}
+        onPageChange={tableHandlePageChange}
+        onSort={handleSort}
+        sortConfigs={sortConfigs}
+        onManageColumnsClick={() => setShowColumnPicker(true)}
+        expandedRowId={expandedRowId}
+        onExpandChange={setExpandedRowId}
+        style={{
+          headerBackground: color.surface.tableHeader,
+          headerTextColor: color.surface.tableHeaderText,
+          rowBackground: color.surface.tablebodybg,
+          rowSpacing: "0 8px",
+        }}
+        expandedContent={(campaign) => (
+          <CampaignDetailsExpandedRow campaign={campaign} colSpan={columns.filter((c) => c.visible).length} />
         )}
-      </div>
+      />
 
       {/* Pagination */}
-      {!isLoading && filteredCampaigns.length > 0 && totalCampaigns > 0 && (
+      {!isLoading && campaigns.length > 0 && totalCampaigns > 0 && (
         <Pagination
-          currentPage={currentPage}
-          pageSize={pageSize}
+          currentPage={tableCurrentPage}
+          pageSize={tablePageSize}
           totalItems={totalCampaigns}
-          onPageChange={handlePageChange}
+          onPageChange={tableHandlePageChange}
         />
       )}
+      {/* Action Menus */}
+      {campaigns.map((campaign) => {
+        if (showActionMenu === campaign.id && dropdownPosition) {
+          return createPortal(
+            <div
+              ref={(el) => {
+                dropdownMenuRefs.current[campaign.id] = el;
+              }}
+              className={`fixed bg-white border border-gray-200 ${tw.rounded} shadow-xl py-3`}
+              style={{
+                zIndex: zIndex.popover,
+                top: `${dropdownPosition.top}px`,
+                left: `${dropdownPosition.left}px`,
+                width: `${dropdownPosition.width || 256}px`,
+                maxHeight: `${dropdownPosition.maxHeight}px`,
+                overflowY: "auto",
+                overflowX: "hidden",
+                overscrollBehavior: "contain",
+              }}
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              {!(campaign.approval_status === "rejected" || campaign.status === "rejected") && (
+                <>
+                  <PermissionGate permission="campaigns.run">
+                    {campaign.approval_status === "approved" &&
+                    campaign.is_active === true ? (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCampaignToRun({
+                            id: campaign.id,
+                            name: campaign.name,
+                            status: campaign.status,
+                            approval_status: campaign.approval_status,
+                            is_active: campaign.is_active,
+                          });
+                          setShowRunModal(true);
+                          setShowActionMenu(null);
+                        }}
+                        className="w-full flex items-center px-4 py-3 text-sm text-black"
+                      >
+                        <Play className="w-4 h-4 mr-4 text-black" />
+                        Run Campaign
+                      </button>
+                    ) : null}
+                  </PermissionGate>
+
+                  {canShowCampaignButton(campaign, "pause") && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAction({
+                        campaignId: campaign.id,
+                        campaignName: campaign.name,
+                        action: "pause",
+                        successMessage: `Campaign "${campaign.name}" paused successfully!`,
+                        errorMessage: "Failed to pause campaign",
+                        updateFields: { status: "paused" },
+                      });
+                    }}
+                    className="w-full flex items-center px-4 py-3 text-sm text-black"
+                    disabled={loadingActionIds.has(campaign.id)}
+                  >
+                    {loadingActionIds.has(campaign.id) ? (
+                      <LoadingSpinner
+                        variant="modern"
+                        size="sm"
+                        color="primary"
+                        className="mr-4"
+                      />
+                    ) : (
+                      <Pause className="w-4 h-4 mr-4 text-black" />
+                    )}
+                    Pause Campaign
+                  </button>
+                )}
+
+              {canShowCampaignButton(campaign, "resume") && (
+                <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAction({
+                        campaignId: campaign.id,
+                        campaignName: campaign.name,
+                        action: "resume",
+                        successMessage: `Campaign "${campaign.name}" resumed successfully!`,
+                        errorMessage: "Failed to resume campaign",
+                        updateFields: { status: "active" },
+                      });
+                    }}
+                    className="w-full flex items-center px-4 py-3 text-sm text-black"
+                    disabled={loadingActionIds.has(campaign.id)}
+                  >
+                    {loadingActionIds.has(campaign.id) ? (
+                      <LoadingSpinner
+                        variant="modern"
+                        size="sm"
+                        color="primary"
+                        className="mr-4"
+                      />
+                    ) : (
+                      <Play className="w-4 h-4 mr-4 text-black" />
+                    )}
+                    Resume Campaign
+                  </button>
+              )}
+
+              {canShowCampaignButton(campaign, "activate") ? (
+                <PermissionGate permission="campaigns.activate">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAction({
+                        campaignId: campaign.id,
+                        campaignName: campaign.name,
+                        action: "activate",
+                        successMessage: `Campaign "${campaign.name}" activated successfully!`,
+                        errorMessage: "Failed to activate campaign",
+                        updateFields: { is_active: true },
+                      });
+                    }}
+                    className="w-full flex items-center px-4 py-3 text-sm text-black"
+                    disabled={loadingActionIds.has(campaign.id)}
+                  >
+                    {loadingActionIds.has(campaign.id) ? (
+                      <LoadingSpinner
+                        variant="modern"
+                        size="sm"
+                        color="primary"
+                        className="mr-4"
+                      />
+                    ) : (
+                      <CheckCircle className="w-4 h-4 mr-4 text-black" />
+                    )}
+                    Activate Campaign
+                  </button>
+                </PermissionGate>
+              ) : null}
+
+              {canShowCampaignButton(campaign, "submit") && (
+                <PermissionGate permission="campaigns.update">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAction({
+                        campaignId: campaign.id,
+                        campaignName: campaign.name,
+                        action: "submit",
+                        successMessage: `Campaign "${campaign.name}" submitted for approval!`,
+                        errorMessage:
+                          "Failed to submit campaign for approval",
+                        updateFields: {
+                          status: "pending_approval",
+                          approval_status: "pending",
+                        },
+                        errorProcessor: (error) => {
+                          let errorTitle = "Submission Failed";
+                          let errorMessage =
+                            "Failed to submit campaign for approval";
+
+                          if (error instanceof Error) {
+                            if (
+                              error.message
+                                .toLowerCase()
+                                .includes("budget") ||
+                              error.message
+                                .toLowerCase()
+                                .includes("positive")
+                            ) {
+                              errorTitle = "Budget Required";
+                              errorMessage =
+                                "This campaign must have a positive budget allocated before it can be submitted for approval. Please set a budget in the campaign details.";
+                            } else {
+                              const match =
+                                error.message.match(
+                                  /details: ({.*})/,
+                                );
+                              if (match) {
+                                try {
+                                  const errorData = JSON.parse(
+                                    match[1],
+                                  );
+                                  errorMessage =
+                                    errorData.error ||
+                                    errorData.message ||
+                                    errorMessage;
+                                } catch {
+                                  errorMessage = error.message;
+                                }
+                              } else {
+                                errorMessage = error.message;
+                              }
+                            }
+                          }
+                          return {
+                            title: errorTitle,
+                            message: errorMessage,
+                          };
+                        },
+                      });
+                    }}
+                    className="w-full flex items-center px-4 py-3 text-sm text-black"
+                    disabled={loadingActionIds.has(campaign.id)}
+                  >
+                    {loadingActionIds.has(campaign.id) ? (
+                      <LoadingSpinner
+                        variant="modern"
+                        size="sm"
+                        color="primary"
+                        className="mr-4"
+                      />
+                    ) : (
+                      <Send className="w-4 h-4 mr-4 text-black" />
+                    )}
+                    Request Approval
+                  </button>
+                </PermissionGate>
+              )}
+
+              {canShowCampaignButton(campaign, "approve") && (
+                <PermissionGate permission="campaigns.approve">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCampaignToApprove({
+                        id: campaign.id,
+                        name: campaign.name,
+                      });
+                      setShowApproveModal(true);
+                      setShowActionMenu(null);
+                    }}
+                    className="w-full flex items-center px-4 py-3 text-sm text-black"
+                  >
+                    <CheckCircle className="w-4 h-4 mr-4 text-black" />
+                    Approve Campaign
+                  </button>
+                </PermissionGate>
+              )}
+
+              {canShowCampaignButton(campaign, "reject") && (
+                <PermissionGate permission="campaigns.reject">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCampaignToReject({
+                        id: campaign.id,
+                        name: campaign.name,
+                      });
+                      setShowRejectModal(true);
+                      setShowActionMenu(null);
+                    }}
+                    className="w-full flex items-center px-4 py-3 text-sm text-black"
+                  >
+                    <XCircle className="w-4 h-4 mr-4 text-red-600" />
+                    Reject Campaign
+                  </button>
+                </PermissionGate>
+              )}
+                </>
+              )}
+
+              {campaign.status === "archived" ? (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleUnarchiveCampaign(campaign.id);
+                  }}
+                  className="w-full flex items-center px-4 py-3 text-sm text-black"
+                >
+                  <RotateCcw className="w-4 h-4 mr-4 text-black" />
+                  Unarchive Campaign
+                </button>
+              ) : (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleArchiveCampaign(campaign.id);
+                  }}
+                  className="w-full flex items-center px-4 py-3 text-sm text-black"
+                >
+                  <Archive className="w-4 h-4 mr-4 text-black" />
+                  Archive Campaign
+                </button>
+              )}
+
+            <PermissionGate permission="campaigns.create">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/dashboard/campaigns/create?duplicateId=${campaign.id}`);
+                  setShowActionMenu(null);
+                }}
+                className="w-full flex items-center px-4 py-3 text-sm text-black"
+              >
+                <Copy
+                  className="w-4 h-4 mr-4"
+                  style={{ color: color.primary.action }}
+                />
+                Duplicate Campaign
+              </button>
+            </PermissionGate>
+
+            <PermissionGate permission="campaigns.delete">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteCampaign(campaign.id, campaign.name);
+                }}
+                className="w-full flex items-center px-4 py-3 text-sm text-red-600"
+              >
+                <Trash2 className="w-4 h-4 mr-4 text-red-600" />
+                Delete Campaign
+              </button>
+            </PermissionGate>
+
+            </div>,
+            document.body,
+          );
+        }
+        return null;
+      })}
 
       {/* Filters Side Modal */}
       {showAdvancedFilters &&
@@ -2000,11 +1920,17 @@ export default function CampaignsPage() {
 
       {/* Column Picker Modal */}
       <ColumnPickerModal
-        isOpen={isModalOpen}
-        columns={allColumns}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={showColumnPicker}
+        columns={columns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+        onClose={() => setShowColumnPicker(false)}
         onToggleColumn={toggleColumn}
-        onReorderColumns={reorderColumns}
+        onReorderColumns={(reorderedCols) => {
+          const updatedColumns = columns.map((col) => {
+            const reordered = reorderedCols.find((c) => c.id === col.id);
+            return reordered ? { ...col, visible: reordered.visible } : col;
+          });
+          reorderColumns(updatedColumns);
+        }}
         onResetToDefaults={resetToDefaults}
       />
     </div>

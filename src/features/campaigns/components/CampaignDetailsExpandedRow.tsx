@@ -56,8 +56,7 @@ export default function CampaignDetailsExpandedRow({
   };
 
   return (
-    <tr style={{ backgroundColor: color.surface.tablebodybg }}>
-      <td colSpan={colSpan} className="px-6 py-6">
+    <div style={{ backgroundColor: color.surface.tablebodybg }} className="px-6 py-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {(campaign.approval_status === "rejected" || campaign.status === "rejected") && campaign.rejection_reason && (
             <div className="flex flex-col gap-1">
@@ -157,7 +156,6 @@ export default function CampaignDetailsExpandedRow({
             </div>
           )}
         </div>
-      </td>
-    </tr>
+    </div>
   );
 }

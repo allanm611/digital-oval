@@ -47,6 +47,7 @@ import Pagination from "../../../shared/components/ui/Pagination";
 import ErrorState from "../../../shared/components/ui/ErrorState";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import CreateCommunicationModal from "../../../shared/components/CreateCommunicationModal";
+import { Table, type TableColumn } from "../../../shared/components/Table";
 
 export default function SegmentManagementPage() {
   const navigate = useNavigate();
@@ -1022,6 +1023,157 @@ export default function SegmentManagementPage() {
     [filteredSegments],
   );
 
+  // Define table columns
+  const segmentColumns: TableColumn<Segment>[] = useMemo(
+    () => [
+      {
+        id: "name",
+        label: "Segment",
+        visible: true,
+        sortable: true,
+        render: (value, segment) => (
+          <div>
+            <div className={`font-semibold text-sm ${tw.textPrimary} truncate`} title={segment.name}>
+              {segment.name}
+            </div>
+          </div>
+        ),
+      },
+      {
+        id: "type",
+        label: "Type",
+        visible: true,
+        sortable: true,
+        render: (value) => (
+          <span className="text-sm text-black">
+            {value ? value.charAt(0).toUpperCase() + value.slice(1) : "-"}
+          </span>
+        ),
+      },
+      {
+        id: "tags",
+        label: "Tags",
+        visible: true,
+        render: (value, segment) => (
+          <div className="flex flex-wrap gap-1">
+            {segment.tags && segment.tags.length > 0 ? (
+              <>
+                {segment.tags.slice(0, 2).map((tag) => (
+                  <span
+                    key={tag}
+                    className={`inline-flex items-center px-2 py-1 bg-[${color.primary.accent}]/10 text-black text-xs font-medium rounded-full`}
+                  >
+                    <Tag className="w-3 h-3 mr-1" />
+                    {tag}
+                  </span>
+                ))}
+                {segment.tags.length > 2 && (
+                  <span className={`inline-flex items-center px-2 py-1 text-xs font-medium ${tw.textMuted}`}>
+                    +{segment.tags.length - 2} more
+                  </span>
+                )}
+              </>
+            ) : (
+              <span className={`text-xs ${tw.textMuted}`}>No tags</span>
+            )}
+          </div>
+        ),
+      },
+      {
+        id: "size_estimate",
+        label: "Target",
+        visible: true,
+        render: (value, segment) => (
+          <>
+            {computingSegmentId === segment.id ? (
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-4 h-4 border-2 border-gray-300 rounded-full animate-spin"
+                  style={{ borderTopColor: color.primary.accent }}
+                />
+                <span className="text-xs text-gray-500">Computing...</span>
+              </div>
+            ) : (
+              <span className={`text-sm ${tw.textPrimary}`}>
+                {getMockCustomerCount(segment).toLocaleString()}
+              </span>
+            )}
+          </>
+        ),
+      },
+      {
+        id: "visibility",
+        label: "Visibility",
+        visible: true,
+        render: (value) => (
+          <span
+            className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${
+              value === "public"
+                ? `bg-[${color.status.success}]/10 text-[${color.status.success}]`
+                : `bg-[${color.status.info}]/10 text-[${color.status.info}]`
+            }`}
+          >
+            {value === "public" ? "Public" : "Private"}
+          </span>
+        ),
+      },
+      {
+        id: "created_at",
+        label: "Created",
+        visible: true,
+        render: (value) => (
+          <DateFormatter
+            date={value}
+            useLocale
+            year="numeric"
+            month="short"
+            day="numeric"
+          />
+        ),
+      },
+      {
+        id: "actions",
+        label: "Actions",
+        visible: true,
+        sortable: false,
+        render: (value, segment) => (
+          <div className="flex items-center justify-center space-x-2">
+            <button
+              onClick={() => handleViewSegment(segment.id)}
+              className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
+              title="View Details"
+            >
+              <Eye className="w-4 h-4" />
+            </button>
+            <PermissionGate permission="segments.update">
+              <button
+                onClick={() => handleEditSegment(segment.id)}
+                className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
+                title="Edit"
+              >
+                <Edit className="w-4 h-4" />
+              </button>
+            </PermissionGate>
+            <div
+              className="relative"
+              ref={(el) => {
+                actionMenuRefs.current[String(segment.id)] = el;
+              }}
+            >
+              <button
+                onClick={(e) => handleActionMenuToggle(segment.id, e)}
+                className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
+              >
+                <MoreHorizontal className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        ),
+      },
+    ],
+    [computingSegmentId, color, tw],
+  );
+
   const allVisibleSelected =
     visibleIds.length > 0 &&
     visibleIds.every((id) => selectedSegmentIds.has(id));
@@ -1318,6 +1470,44 @@ export default function SegmentManagementPage() {
               <Filter className="h-4 w-4" />
               <span>Filters</span>
             </button>
+
+            <button
+              onClick={() => {
+                // Export filtered segments as CSV
+                const csvContent = [
+                  ['Name', 'Type', 'Target', 'Visibility', 'Created At'].join(','),
+                  ...filteredSegments.map((segment) =>
+                    [
+                      segment.name,
+                      segment.type,
+                      getMockCustomerCount(segment),
+                      segment.visibility,
+                      new Date(segment.created_at).toLocaleDateString(),
+                    ].join(',')
+                  ),
+                ].join('\n');
+
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `segments-${new Date().toISOString().split('T')[0]}.csv`;
+                a.click();
+                window.URL.revokeObjectURL(url);
+              }}
+              className={`flex items-center gap-2 ${tw.rounded} transition-colors font-medium`}
+              style={{
+                backgroundColor: button.secondaryAction.background,
+                color: button.secondaryAction.color,
+                border: button.secondaryAction.border,
+                padding: `${button.secondaryAction.paddingY} ${button.secondaryAction.paddingX}`,
+                borderRadius: button.secondaryAction.borderRadius,
+                fontSize: button.secondaryAction.fontSize,
+              }}
+            >
+              <Download className="h-4 w-4" />
+              <span>Export</span>
+            </button>
           </div>
         </div>
 
@@ -1454,260 +1644,27 @@ export default function SegmentManagementPage() {
           </div>
         ) : (
           <>
-            {/* Desktop Table */}
-            <div className="hidden lg:block overflow-x-auto">
-              <table
-                className="w-full"
-                style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-              >
-                <thead style={{ background: color.surface.tableHeader }}>
-                  <tr>
-                    {isSelectionMode && (
-                      <th
-                        className="px-3 py-4 text-sm font-medium"
-                        style={{ color: color.surface.tableHeaderText }}
-                      >
-                        <div className="flex items-center gap-2 cursor-pointer" onClick={toggleSelectAllVisible}>
-                          <Checkbox
-                            ref={headerCheckboxRef}
-                            id="select-all-segments"
-                            className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
-                            checked={allVisibleSelected}
-                            onChange={toggleSelectAllVisible}
-                            aria-label="Select all visible segments"
-                          />
-                        </div>
-                      </th>
-                    )}
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Segment
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Type
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider hidden xl:table-cell"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Tags
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Target
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider hidden lg:table-cell"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Visibility
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider hidden md:table-cell"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Created
-                    </th>
-                    <th
-                      className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredSegments.map((segment) => (
-                    <tr key={segment.id} className="transition-colors">
-                      {isSelectionMode && (
-                        <td
-                          className="px-3 py-4"
-                          style={{ backgroundColor: color.surface.tablebodybg }}
-                        >
-                          <div className="flex items-center gap-2 cursor-pointer" onClick={(e) => {
-                          e.stopPropagation();
-                          toggleSegmentSelection(segment.id);
-                        }}>
-                            <Checkbox
-                              id={`row-${segment.id}`}
-                              checked={selectedSegmentIds.has(segment.id)}
-                              onChange={(event) => {
-                                event.stopPropagation();
-                                toggleSegmentSelection(segment.id);
-                              }}
-                              aria-label={`Select ${segment.name}`}
-                              className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
-                            />
-                          </div>
-                        </td>
-                      )}
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <div>
-                          <div
-                            className={`font-semibold text-sm ${tw.textPrimary} truncate`}
-                            title={segment.name}
-                          >
-                            {segment.name}
-                          </div>
-                        </div>
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <span className="text-sm text-black">
-                          {segment.type
-                            ? segment.type.charAt(0).toUpperCase() +
-                              segment.type.slice(1)
-                            : "-"}
-                        </span>
-                      </td>
-                      <td
-                        className="px-6 py-4 hidden xl:table-cell"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <div className="flex flex-wrap gap-1">
-                          {segment.tags && segment.tags.length > 0 ? (
-                            <>
-                              {segment.tags.slice(0, 2).map((tag) => (
-                                <span
-                                  key={tag}
-                                  className={`inline-flex items-center px-2 py-1 bg-[${color.primary.accent}]/10 text-black text-xs font-medium rounded-full`}
-                                >
-                                  <Tag className="w-3 h-3 mr-1" />
-                                  {tag}
-                                </span>
-                              ))}
-                              {segment.tags.length > 2 && (
-                                <span
-                                  className={`inline-flex items-center px-2 py-1 text-xs font-medium ${tw.textMuted}`}
-                                >
-                                  +{segment.tags.length - 2} more
-                                </span>
-                              )}
-                            </>
-                          ) : (
-                            <span className={`text-xs ${tw.textMuted}`}>
-                              No tags
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        {computingSegmentId === segment.id ? (
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="w-4 h-4 border-2 border-gray-300 rounded-full animate-spin"
-                              style={{ borderTopColor: color.primary.accent }}
-                            />
-                            <span className="text-xs text-gray-500">
-                              Computing...
-                            </span>
-                          </div>
-                        ) : (
-                          <span className={`text-sm ${tw.textPrimary}`}>
-                            {getMockCustomerCount(segment).toLocaleString()}
-                          </span>
-                        )}
-                      </td>
-                      <td
-                        className="px-6 py-4 hidden lg:table-cell"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <span
-                          className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${
-                            segment.visibility === "public"
-                              ? `bg-[${color.status.success}]/10 text-[${color.status.success}]`
-                              : `bg-[${color.status.info}]/10 text-[${color.status.info}]`
-                          }`}
-                        >
-                          {segment.visibility === "public"
-                            ? "Public"
-                            : "Private"}
-                        </span>
-                      </td>
-                      <td
-                        className={`px-6 py-4 hidden md:table-cell text-sm ${tw.textPrimary}`}
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <DateFormatter
-                          date={segment.created_at}
-                          useLocale
-                          year="numeric"
-                          month="short"
-                          day="numeric"
-                        />
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm font-medium"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <div className="flex items-center justify-center space-x-2">
-                          <button
-                            onClick={() => handleViewSegment(segment.id)}
-                            className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
-                            title="View Details"
-                          >
-                            <Eye className="w-4 h-4 " />
-                          </button>
-                          {/* COMMENTED OUT: Activate/Deactivate button temporarily disabled */}
-                          {/* <button
-                            onClick={() => handleToggleStatus(segment)}
-                            className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
-                            title={
-                              segment.is_active ? "Deactivate" : "Activate"
-                            }
-                          >
-                            {segment.is_active ? (
-                              <Pause className="w-4 h-4" />
-                            ) : (
-                              <Play className="w-4 h-4" />
-                            )}
-                          </button> */}
-                          <PermissionGate permission="segments.update">
-                            <button
-                              onClick={() => handleEditSegment(segment.id)}
-                              className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
-                              title="Edit"
-                            >
-                              <Edit className="w-4 h-4 " />
-                            </button>
-                          </PermissionGate>
-                          <div
-                            className="relative"
-                            ref={(el) => {
-                              actionMenuRefs.current[String(segment.id)] = el;
-                            }}
-                          >
-                            <button
-                              onClick={(e) =>
-                                handleActionMenuToggle(segment.id, e)
-                              }
-                              className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
-                            >
-                              <MoreHorizontal className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            {/* Table Component */}
+            <Table<Segment>
+              columns={segmentColumns}
+              data={filteredSegments}
+              totalItems={filteredSegments.length}
+              currentPage={page}
+              pageSize={pageSize}
+              isLoading={isLoading}
+              enableRowSelection={isSelectionMode}
+              selectedRows={Array.from(selectedSegmentIds)}
+              onRowSelectChange={(selected) => {
+                setSelectedSegmentIds(new Set(selected as number[]));
+              }}
+              getRowId={(segment) => segment.id}
+              style={{
+                headerBackground: color.surface.tableHeader,
+                headerTextColor: color.surface.tableHeaderText,
+                rowBackground: color.surface.tablebodybg,
+                rowSpacing: "0 8px",
+              }}
+            />
 
             {/* Render dropdown menus via portal outside the table */}
             {filteredSegments.map((segment) => {

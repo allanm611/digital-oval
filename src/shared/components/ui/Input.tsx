@@ -74,7 +74,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
       <input
         ref={ref}
         type={type}
-        placeholder=""
+        placeholder={shouldFloatLabel ? placeholder : ""}
         value={value}
         onChange={(e) => {
           const newValue = type === 'number' ? (e.target.value === '' ? '' : Number(e.target.value)) : e.target.value;

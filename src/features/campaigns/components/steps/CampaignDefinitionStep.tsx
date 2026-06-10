@@ -489,8 +489,10 @@ export default function CampaignDefinitionStep({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 px-0">
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {tLanguage.campaigns.campaignDefinition.campaignName}
+            </label>
             <Input
-              label={tLanguage.campaigns.campaignDefinition.campaignName}
               type="text"
               value={formData.name}
               onChange={(value) => {
@@ -501,7 +503,6 @@ export default function CampaignDefinitionStep({
               }}
               hasError={!!validationErrors.name}
               placeholder={tLanguage.campaigns.campaignDefinition.enterCampaignName}
-              required
             />
             {validationErrors.name && (
               <p className="mt-1 text-sm text-red-600">
@@ -1440,10 +1441,11 @@ export default function CampaignDefinitionStep({
           <div>
             <Input
               label={tLanguage.campaigns.campaignDefinition.startDate}
-              type="datetime-local"
+              type="text"
+              placeholder="mm/dd/yyyy, hh:mm"
               value={
                 formData.start_date
-                  ? new Date(formData.start_date).toISOString().slice(0, 16)
+                  ? new Date(formData.start_date).toISOString().slice(0, 16).replace('T', ' ')
                   : ""
               }
               onChange={(value) => {
@@ -1451,10 +1453,6 @@ export default function CampaignDefinitionStep({
                   ? new Date(String(value)).toISOString()
                   : undefined;
                 setFormData({ ...formData, start_date: dateValue });
-              }}
-              onClick={(e) => {
-                // Trigger date picker on click
-                (e.target as HTMLInputElement).showPicker?.();
               }}
             />
             <p className="text-xs text-gray-500 mt-1">
@@ -1465,10 +1463,11 @@ export default function CampaignDefinitionStep({
           <div>
             <Input
               label={tLanguage.campaigns.campaignDefinition.endDate}
-              type="datetime-local"
+              type="text"
+              placeholder="mm/dd/yyyy, hh:mm"
               value={
                 formData.end_date
-                  ? new Date(formData.end_date).toISOString().slice(0, 16)
+                  ? new Date(formData.end_date).toISOString().slice(0, 16).replace('T', ' ')
                   : ""
               }
               onChange={(value) => {
@@ -1480,16 +1479,7 @@ export default function CampaignDefinitionStep({
                   clearValidationErrors();
                 }
               }}
-              onClick={(e) => {
-                // Trigger date picker on click
-                (e.target as HTMLInputElement).showPicker?.();
-              }}
               hasError={!!validationErrors.end_date}
-              min={
-                formData.start_date
-                  ? new Date(formData.start_date).toISOString().slice(0, 16)
-                  : undefined
-              }
             />
             {validationErrors.end_date ? (
               <p className="mt-1 text-sm text-red-600">
