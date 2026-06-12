@@ -106,7 +106,7 @@ export default function KPIsPage() {
           return (
             <div
               key={stat.name}
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              className={`${tw.rounded} bg-white p-6 shadow-sm`}
             >
               <div className="flex items-center gap-2">
                 <Icon
@@ -130,7 +130,7 @@ export default function KPIsPage() {
             setSearchTerm(value);
             setCurrentPage(1);
             }}
-            className={`w-full ${tw.rounded} border border-gray-200 bg-white py-2 pl-10 pr-4 text-sm focus:border-gray-300 focus:outline-none focus:ring-0`}
+            className={`w-full ${tw.rounded} bg-white py-2 pl-10 pr-4 text-sm focus:border-gray-300 focus:outline-none focus:ring-0`}
           />
 
         <HeadlessSelect

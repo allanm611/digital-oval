@@ -137,7 +137,7 @@ export default function ProductDetailsPage() {
 
   const handleDelete = () => {
     if (!product) return;
-    openDeleteConfirm(item?.id || 0, item?.name || "");
+    setShowDeleteModal(true);
   };
 
   const handleConfirmDelete = async () => {
@@ -150,7 +150,7 @@ export default function ProductDetailsPage() {
         "Product Deleted",
         `"${product.name}" has been deleted successfully.`,
       );
-      closeDeleteConfirm();
+      setShowDeleteModal(false);
       navigate("/dashboard/products");
     } catch (err) {
       console.error("Failed to delete product:", err);
@@ -169,7 +169,7 @@ export default function ProductDetailsPage() {
   };
 
   const handleCancelDelete = () => {
-    closeDeleteConfirm();
+    setShowDeleteModal(false);
   };
 
   if (loading) {
@@ -312,14 +312,15 @@ export default function ProductDetailsPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* Product Overview & Basic Information */}
           <div
-            className={`bg-white ${tw.rounded} border border-[${tw.borderDefault}] p-6`}
+            className={`${tw.rounded} p-6`}
+            style={{ backgroundColor: 'var(--c-surface-cards)' }}
           >
             <div className="flex items-start space-x-4 mb-3">
               <div
                 className={`h-14 w-14 ${tw.rounded} flex items-center justify-center flex-shrink-0`}
                 style={{ backgroundColor: color.primary.accent }}
               >
-                <Package className={`w-7 h-7 `} />
+                <Package className={`w-7 h-7 text-white`} />
               </div>
               <div className="flex-1">
                 <h2 className={`${tw.tableFirstColumn} ${tw.textPrimary} mb-2`}>
@@ -452,7 +453,8 @@ export default function ProductDetailsPage() {
 
           {/* Pricing & Validity Information */}
           <div
-            className={`bg-white ${tw.rounded} border border-[${tw.borderDefault}] p-6`}
+            className={`${tw.rounded} p-6`}
+            style={{ backgroundColor: 'var(--c-surface-cards)' }}
           >
             <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
               Pricing & Validity
@@ -586,7 +588,8 @@ export default function ProductDetailsPage() {
           {/* Resources for Combo Products */}
           {product.resources && product.resources.length > 0 && (
             <div
-              className={`bg-white ${tw.rounded} border border-[${tw.borderDefault}] p-6`}
+              className={`${tw.rounded} p-6`}
+            style={{ backgroundColor: 'var(--c-surface-cards)' }}
             >
               <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
                 Resources
@@ -617,7 +620,17 @@ export default function ProductDetailsPage() {
                   </thead>
                   <tbody>
                     {product.resources.map((resource: any, index: number) => (
-                      <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
+                      <tr
+                        key={index}
+                        className="border-b border-gray-100 transition-colors cursor-pointer"
+                        style={{ borderColor: 'var(--c-border-default)' }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
+                      >
                         <td className={`py-3 px-4 ${tw.textPrimary}`}>
                           {resource.resource_type || "-"}
                         </td>
@@ -650,14 +663,15 @@ export default function ProductDetailsPage() {
         <div className="space-y-6">
           {/* Timeline */}
           <div
-            className={`bg-white ${tw.rounded} border border-[${tw.borderDefault}] p-6`}
+            className={`${tw.rounded} p-6`}
+            style={{ backgroundColor: 'var(--c-surface-cards)' }}
           >
             <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
               Timeline
             </h3>
             <div className="space-y-5">
-              <div className="relative pl-6 border-l-2 border-gray-200">
-                <div className="absolute -left-2 top-0 w-4 h-4 rounded-full bg-gray-300"></div>
+              <div className="relative pl-6" style={{ borderLeft: '2px solid var(--c-border-default)' }}>
+                <div className="absolute -left-2 top-0 w-4 h-4 rounded-full" style={{ backgroundColor: 'var(--c-text-muted)' }}></div>
                 <div className="space-y-1">
                   <p
                     className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
@@ -679,7 +693,7 @@ export default function ProductDetailsPage() {
                 </div>
               </div>
               {product.updated_at && (
-                <div className="relative pl-6 border-l-2 border-gray-200">
+                <div className="relative pl-6" style={{ borderLeft: '2px solid var(--c-border-default)' }}>
                   <div
                     className="absolute -left-2 top-0 w-4 h-4 rounded-full"
                     style={{ backgroundColor: color.primary.accent }}
@@ -710,7 +724,8 @@ export default function ProductDetailsPage() {
 
           {/* Audit Trail */}
           <div
-            className={`bg-white ${tw.rounded} border border-[${tw.borderDefault}] p-6`}
+            className={`${tw.rounded} p-6`}
+            style={{ backgroundColor: 'var(--c-surface-cards)' }}
           >
             <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
               Audit Trail
@@ -744,9 +759,9 @@ export default function ProductDetailsPage() {
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={deleteConfirm.id !== null}
+        isOpen={showDeleteModal}
         onClose={handleCancelDelete}
-        onConfirm={confirmDeleteItem}
+        onConfirm={handleConfirmDelete}
         title="Delete Product"
         description="Are you sure you want to delete this product? This action cannot be undone."
         itemName={product?.name || ""}

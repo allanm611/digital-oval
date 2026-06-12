@@ -10,10 +10,9 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import CreateButton from "../../../shared/components/ui/CreateButton";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { subscriberProfileService } from "../services/subscriberProfileService";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
-
-const ITEMS_PER_PAGE = 10;
 
 interface Profile {
   id: number;
@@ -29,11 +28,99 @@ export default function SubscriberProfileListPage() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [profileToDelete, setProfileToDelete] = useState<{ id: number; name: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [toggling, setToggling] = useState<number | null>(null);
+
+  const tableColumns: TableColumn<Profile>[] = [
+
+    {
+      id: "name",
+      label: "Field Name",
+      visible: true,
+      render: (_, row) => (
+        <div className={`text-sm ${tw.tableFirstColumn} ${tw.textPrimary}`}>
+          {row.name}
+        </div>
+      ),
+    },
+    {
+      id: "dataSource",
+      label: "Category",
+      visible: true,
+      render: (_, row) => (
+        <span className={`text-sm ${tw.textSecondary}`}>
+          {row.dataSource}
+        </span>
+      ),
+    },
+    {
+      id: "is_active",
+      label: "Status",
+      visible: true,
+      render: (_, row) => (
+        <span className={`text-sm font-medium ${tw.textSecondary} text-center block`}>
+          {row.is_active ? "Active" : "Inactive"}
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      render: (_, row) => (
+        <div className="flex gap-1 justify-center">
+          <ActivateDeactivateButton
+            isActive={row.is_active ?? true}
+            onToggle={() => handleToggleActive(row)}
+            disabled={toggling === row.id || isDeleting}
+            isLoading={toggling === row.id}
+          />
+          <button
+            onClick={() => handleViewDetails(row)}
+            className="p-2 hover:bg-gray-100 rounded transition-colors"
+            title="View details"
+          >
+            <Eye className="w-4 h-4" style={{ color: color.primary.action }} />
+          </button>
+          <button
+            onClick={() => handleEdit(row)}
+            className="p-2 hover:bg-gray-100 rounded transition-colors"
+            title="Edit"
+          >
+            <Edit className="w-4 h-4" style={{ color: color.primary.action }} />
+          </button>
+          <button
+            onClick={() => handleDeleteClick(row)}
+            className="p-2 hover:bg-gray-100 rounded transition-colors"
+            title="Delete"
+          >
+            <Trash2 className="w-4 h-4 text-red-500" />
+          </button>
+        </div>
+      ),
+    },
+  ];
+
+  const {
+    columns,
+    currentPage: tableCurrentPage,
+    pageSize: tablePageSize,
+    handlePageChange: tableHandlePageChange,
+    sortConfigs,
+    handleSort,
+  } = useTable({
+    tableId: "subscriber-profiles-table",
+    defaultColumns: tableColumns,
+    persistToLocalStorage: true,
+  });
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    tableHandlePageChange(1);
+  }, [searchTerm, tableHandlePageChange]);
 
   useEffect(() => {
     loadProfiles();
@@ -69,10 +156,6 @@ export default function SubscriberProfileListPage() {
     });
   }, [searchTerm, profiles]);
 
-  const totalPages = Math.ceil(filteredProfiles.length / ITEMS_PER_PAGE);
-  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedProfiles = filteredProfiles.slice(startIdx, startIdx + ITEMS_PER_PAGE);
-
   const handleViewDetails = (profile: Profile) => {
     navigate(`/dashboard/kpis/subscriber-profiles/${profile.id}`, { state: { parentLabel: "Subscriber Profiles" } });
   };
@@ -83,7 +166,7 @@ export default function SubscriberProfileListPage() {
 
   const handleDeleteClick = (profile: Profile) => {
     setProfileToDelete({ id: profile.id, name: profile.name });
-    openDeleteConfirm(item?.id || 0, item?.name || "");
+    setShowDeleteModal(true);
   };
 
   const handleConfirmDelete = async () => {
@@ -91,7 +174,7 @@ export default function SubscriberProfileListPage() {
     try {
       setIsDeleting(true);
       showToast("info", `Delete functionality for "${profileToDelete.name}" will be implemented soon`);
-      closeDeleteConfirm();
+      setShowDeleteModal(false);
       setProfileToDelete(null);
     } catch (error) {
       console.error("Failed to delete profile:", error);
@@ -102,7 +185,7 @@ export default function SubscriberProfileListPage() {
   };
 
   const handleCancelDelete = () => {
-    closeDeleteConfirm();
+    setShowDeleteModal(false);
     setProfileToDelete(null);
   };
 
@@ -166,169 +249,64 @@ export default function SubscriberProfileListPage() {
       </div>
 
       {/* Table */}
-      <div
-        className={`${tw.rounded} border overflow-hidden`}
-        style={{ borderColor: color.border.default }}
-      >
+      <div className={`${tw.rounded} overflow-hidden`}>
         {isLoading ? (
-          <div className="p-8 md:p-16 text-center">
-            <div className="flex flex-col items-center justify-center gap-4">
-              <LoadingSpinner
-                size="xl"
-                color="primary"
-              />
-              <p className={`${tw.textMuted} font-medium text-sm`}>
-                Loading profile fields...
-              </p>
-            </div>
+          <div className="flex items-center justify-center py-12">
+            <LoadingSpinner
+              variant="modern"
+              size="lg"
+              color="primary"
+              className="mr-3"
+            />
+            <span className={`${tw.textSecondary}`}>Loading profile fields...</span>
           </div>
         ) : filteredProfiles.length === 0 ? (
-          <div className="p-8 md:p-16 text-center">
-            <div className={`bg-gradient-to-br from-[${color.primary.accent}]/5 to-[${color.primary.accent}]/10 ${tw.rounded} p-6 md:p-12`}>
-              <h3 className={`${tw.cardHeading} ${tw.textPrimary} mb-1`}>No profile fields found</h3>
-              <p className="text-sm text-gray-600 mb-4 max-w-md mx-auto">
-                No profile fields match your search criteria.
-              </p>
-            </div>
+          <div className="text-center py-12">
+            <Eye className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
+              No profile fields found
+            </h3>
+            <p className={`${tw.textMuted} mb-6`}>
+              Try adjusting your search criteria
+            </p>
           </div>
         ) : (
-          <>
-            {/* Desktop Table */}
-            <div className="hidden lg:block overflow-x-auto">
-              <table className="w-full" style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}>
-                <thead style={{ background: color.surface.tableHeader }}>
-                  <tr>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Field Name
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Category
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Status
-                    </th>
-                    <th
-                      className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedProfiles.map((profile) => (
-                    <tr
-                      key={profile.id}
-                      className="hover:bg-gray-50 transition-colors"
-                      style={{ background: color.surface.background }}
-                    >
-                      <td className="px-6 py-4 text-sm text-gray-900 font-medium">{profile.name}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{profile.dataSource}</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">{profile.is_active ? "Active" : "Inactive"}</td>
-                      <td className="px-3 py-4">
-                        <div className="flex gap-1 justify-center">
-                          <ActivateDeactivateButton
-                            isActive={profile.is_active ?? true}
-                            onToggle={() => handleToggleActive(profile)}
-                            disabled={toggling === profile.id || isDeleting}
-                            isLoading={toggling === profile.id}
-                          />
-                          <button
-                            onClick={() => handleViewDetails(profile)}
-                            className="p-2 hover:bg-gray-100 rounded transition-colors"
-                            title="View details"
-                          >
-                            <Eye className="w-4 h-4" style={{ color: color.primary.action }} />
-                          </button>
-                          <button
-                            onClick={() => handleEdit(profile)}
-                            className="p-2 hover:bg-gray-100 rounded transition-colors"
-                            title="Edit"
-                          >
-                            <Edit className="w-4 h-4" style={{ color: color.primary.action }} />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteClick(profile)}
-                            className="p-2 hover:bg-gray-100 rounded transition-colors"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4 text-red-500" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile Cards */}
-            <div className="lg:hidden">
-              {paginatedProfiles.map((profile) => (
-                <div
-                  key={profile.id}
-                  className="p-4 border-b border-gray-200 last:border-b-0"
-                  style={{ background: color.surface.background }}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h3 className="font-medium text-gray-900 text-sm">{profile.name}</h3>
-                      <p className="text-xs text-gray-500 mt-1">{profile.dataSource}</p>
-                    </div>
-                    <span className="text-sm text-gray-900">{profile.status}</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleViewDetails(profile)}
-                      className="flex-1 p-2 hover:bg-gray-100 rounded transition-colors text-xs"
-                    >
-                      <Eye className="w-4 h-4 mx-auto" style={{ color: color.primary.action }} />
-                    </button>
-                    <button
-                      onClick={() => handleEdit(profile)}
-                      className="flex-1 p-2 hover:bg-gray-100 rounded transition-colors text-xs"
-                    >
-                      <Edit className="w-4 h-4 mx-auto" style={{ color: color.primary.action }} />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteClick(profile)}
-                      className="flex-1 p-2 hover:bg-gray-100 rounded transition-colors text-xs"
-                    >
-                      <Trash2 className="w-4 h-4 mx-auto text-red-500" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
+          <Table<Profile>
+            columns={columns}
+            data={filteredProfiles}
+            totalItems={filteredProfiles.length}
+            currentPage={tableCurrentPage}
+            pageSize={tablePageSize}
+            isLoading={isLoading}
+            onPageChange={tableHandlePageChange}
+            onSort={handleSort}
+            sortConfigs={sortConfigs}
+            style={{
+              headerBackground: color.surface.tableHeader,
+              headerTextColor: color.surface.tableHeaderText,
+              rowBackground: color.surface.tablebodybg,
+              rowSpacing: "0 8px",
+            }}
+          />
         )}
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
+      {!isLoading && filteredProfiles.length > 0 && (
         <Pagination
-          currentPage={currentPage}
-          pageSize={ITEMS_PER_PAGE}
+          currentPage={tableCurrentPage}
+          pageSize={tablePageSize}
           totalItems={filteredProfiles.length}
-          onPageChange={setCurrentPage}
+          onPageChange={tableHandlePageChange}
         />
       )}
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={deleteConfirm.id !== null}
+        isOpen={showDeleteModal}
         title="Delete Profile Field"
         message={`Are you sure you want to delete "${profileToDelete?.name}"? This action cannot be undone.`}
-        onConfirm={confirmDeleteItem}
+        onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
         isLoading={isDeleting}
       />

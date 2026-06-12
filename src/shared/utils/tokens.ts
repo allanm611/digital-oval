@@ -8,13 +8,11 @@ export const colors = {
 
   // Surface defines background colors for containers and cards
   surface: {
-    cards: "#F5F5F5", // Cards and table headers (neutral-100)
-    background: "#FFFFFF",
-    tableHeader: "#e5e7eb",
-    // "linear-gradient(to bottom, #394247 0%, #1F2223 70%, #2A2F31 100%)",
-    tableHeaderText: "#000000",
-    // "#FFFFFF",
-    tablebodybg: "#FFFFFF",
+    cards: "var(--c-surface-cards)",
+    background: "var(--c-surface-background)",
+    tableHeader: "var(--c-surface-table-header)",
+    tableHeaderText: "var(--c-surface-table-header-text)",
+    tablebodybg: "var(--c-surface-table-body)",
   },
 
   // Gradient colors for sidebar and header

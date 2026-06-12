@@ -73,11 +73,25 @@ import { Offer } from "../../offers/types/offer";
 import { SegmentType } from "../../segments/types/segment";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import { Table } from "../../../shared/components/Table/Table";
+import { TableColumn } from "../../../shared/components/Table/types";
 
 interface ChannelStat {
   channel: CreativeChannel;
   creativeCount: number;
   description?: string;
+}
+
+interface FlowTableRow {
+  id: number;
+  step: number;
+  segmentName: string;
+  segmentId: number;
+  offerName: string;
+  offerId: string | number;
+  campaignType: string;
+  waitHours: number;
+  allocation: string;
 }
 
 export default function CampaignDetailsPage() {
@@ -737,7 +751,7 @@ export default function CampaignDetailsPage() {
     );
 
     if (action === "delete") {
-      setShowDeleteModal(false);
+      closeDeleteConfirm();
     }
   };
 
@@ -2505,178 +2519,87 @@ export default function CampaignDetailsPage() {
             </p>
           </div>
         ) : (
-          <div
-            className={`overflow-x-auto ${tw.rounded} border`}
-            style={{ borderColor: color.border.default }}
-          >
-            <table
-              className="w-full"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead style={{ background: color.surface.tableHeader }}>
-                <tr>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Step
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Segment
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Offer
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Campaign Type
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Wait (hours)
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider hidden md:table-cell"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Allocation
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {flows.map((flow) => {
-                  // Match on segment_id (not id which is the association ID)
-                  // Name is in segment_name (not name)
-                  const segment = segments.find(
-                    (s) => s.segment_id === flow.segment_id,
-                  );
-                  const offer = offers.find(
-                    (o) => parseInt(o.id) === flow.offer_id,
-                  );
-                  return (
-                    <tr
-                      key={`${flow.segment_id}-${flow.offer_id}-${flow.step_order}`}
-                      className="transition-colors"
+          <>
+            <div className={`overflow-x-auto ${tw.rounded}`}>
+              <Table<FlowTableRow>
+                columns={[
+                  { id: "step", label: "Step", width: "80px", visible: true, filterConfig: { type: "number" } },
+                  { id: "segmentName", label: "Segment", width: "200px", visible: true, filterConfig: { type: "text" }, render: (_, row) => (
+                    <button
+                      onClick={() => navigate(`/dashboard/segments/${row.segmentId}`)}
+                      className="text-sm font-medium hover:underline"
+                      style={{ color: color.primary.accent }}
                     >
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <span
-                          className="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold"
-                          style={{ color: "var(--c-text-primary)" }}
-                        >
-                          {flow.step_order}
-                        </span>
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <button
-                          onClick={() =>
-                            navigate(
-                              `/dashboard/segments/${segment?.segment_id || flow.segment_id}`,
-                            )
-                          }
-                          className="text-sm font-medium hover:underline"
-                          style={{ color: color.primary.accent }}
-                        >
-                          {segment?.segment_name || `Segment${flow.segment_id}`}
-                        </button>
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <button
-                          onClick={() =>
-                            navigate(
-                              `/dashboard/offers/${offer?.id || flow.offer_id}`,
-                            )
-                          }
-                          className="text-sm font-medium hover:underline"
-                          style={{ color: color.primary.accent }}
-                        >
-                          {offer?.name || `Offer${flow.offer_id}`}
-                        </button>
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <span
-                          className={`text-sm font-medium ${tw.textPrimary}`}
-                        >
-                          {getFlowTypeLabel(flow.flow_type)}
-                        </span>
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <div className={`text-sm ${tw.textPrimary}`}>
-                          {flow.wait_interval_hours}h
-                        </div>
-                      </td>
-                      <td
-                        className="px-6 py-4 hidden md:table-cell"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <div className={`text-sm ${tw.textMuted}`}>
-                          {flow.bucket_allocation || "—"}
-                        </div>
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
+                      {row.segmentName}
+                    </button>
+                  ) },
+                  { id: "offerName", label: "Offer", width: "200px", visible: true, filterConfig: { type: "text" }, render: (_, row) => (
+                    <button
+                      onClick={() => navigate(`/dashboard/offers/${row.offerId}`)}
+                      className="text-sm font-medium hover:underline"
+                      style={{ color: color.primary.accent }}
+                    >
+                      {row.offerName}
+                    </button>
+                  ) },
+                  { id: "campaignType", label: "Campaign Type", width: "150px", visible: true, filterConfig: { type: "text" } },
+                  { id: "waitHours", label: "Wait (hours)", width: "120px", visible: true, filterConfig: { type: "number" }, render: (value) => `${value}h` },
+                  { id: "allocation", label: "Allocation", width: "150px", visible: true, filterConfig: { type: "text" } },
+                  {
+                    id: "actions",
+                    label: "Actions",
+                    width: "120px",
+                    visible: true,
+                    sortable: false,
+                    render: (_, row) => {
+                      const flow = flows.find((f) => f.id === row.id);
+                      return (
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={() => handleFlowView(flow)}
+                            onClick={() => flow && handleFlowView(flow)}
                             title="View flow details"
                             className="p-2 hover:bg-gray-50 rounded transition-colors"
                           >
                             <Eye className="w-4 h-4 text-gray-600" />
                           </button>
                           <button
-                            onClick={() => handleFlowEdit(flow)}
+                            onClick={() => flow && handleFlowEdit(flow)}
                             title="Edit flow"
                             className="p-2 hover:bg-gray-50 rounded transition-colors"
                           >
                             <Edit className="w-4 h-4 text-gray-600" />
                           </button>
                           <button
-                            onClick={() => handleFlowDelete(flow)}
+                            onClick={() => flow && handleFlowDelete(flow)}
                             title="Delete flow"
                             className="p-2 hover:bg-red-50 rounded transition-colors"
                           >
                             <Trash2 className="w-4 h-4 text-red-600" />
                           </button>
                         </div>
-                      </td>
-                    </tr>
-                  );
+                      );
+                    },
+                  },
+                ]}
+                data={flows.map((flow) => {
+                  const segment = segments.find((s) => s.segment_id === flow.segment_id);
+                  const offer = offers.find((o) => parseInt(o.id) === flow.offer_id);
+                  return {
+                    id: flow.id,
+                    step: flow.step_order,
+                    segmentName: segment?.segment_name || `Segment${flow.segment_id}`,
+                    segmentId: segment?.segment_id || flow.segment_id,
+                    offerName: offer?.name || `Offer${flow.offer_id}`,
+                    offerId: offer?.id || flow.offer_id,
+                    campaignType: getFlowTypeLabel(flow.flow_type),
+                    waitHours: flow.wait_interval_hours,
+                    allocation: flow.bucket_allocation || "—",
+                  };
                 })}
-              </tbody>
-            </table>
-          </div>
+                rowSpacing="0 8px"
+              />
+            </div>
+          </>
         )}
       </div>
 
@@ -3057,8 +2980,8 @@ export default function CampaignDetailsPage() {
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
+        isOpen={deleteConfirm.id !== null}
+        onClose={closeDeleteConfirm}
         onConfirm={() =>
           handleCampaignDetailAction({
             action: "delete",

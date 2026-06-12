@@ -307,7 +307,7 @@ export function Table<T extends { id?: number | string } = any>({
     <div className="space-y-4">
       <div
         ref={tableRef}
-        className={`${tw.rounded} border ${borderColor} ${tableWrapperClassName}`}
+        className={`${tw.rounded} ${tableWrapperClassName}`}
         style={{
           maxHeight: 'min(calc(100vh - 350px), 800px)',
           minHeight: '300px',
@@ -423,7 +423,7 @@ export function Table<T extends { id?: number | string } = any>({
                             className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-white/20"
                             title="Column options"
                           >
-                            <MoreVertical size={16} className="text-gray-900" />
+                            <MoreVertical size={16} style={{ color: 'var(--c-text-primary)' }} />
                           </button>
                         </div>
                       </div>
@@ -451,11 +451,12 @@ export function Table<T extends { id?: number | string } = any>({
                       {openColumnMenu === col.id && createPortal(
                         <div
                           ref={menuRef}
-                          className="fixed bg-white border border-gray-200 rounded shadow-lg py-2 z-50"
+                          className="fixed border border-gray-200 rounded shadow-lg py-2 z-50"
                           style={{
                             top: `${menuPosition.top}px`,
                             left: `${menuPosition.left}px`,
                             width: '200px',
+                            backgroundColor: 'var(--c-surface-cards)',
                           }}
                         >
                           {col.id !== 'actions' && (
@@ -467,9 +468,12 @@ export function Table<T extends { id?: number | string } = any>({
                                       onSort?.(col.id, false, 'asc');
                                       setOpenColumnMenu(null);
                                     }}
-                                    className="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 flex items-center gap-3"
+                                    className="w-full text-left px-4 py-3 text-sm flex items-center gap-3"
+                                    style={{ color: 'var(--c-text-primary)' }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)'; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
                                   >
-                                    <ArrowUp size={16} style={{ color: '#92A6B0' }} />
+                                    <ArrowUp size={16} style={{ color: 'var(--c-text-secondary)' }} />
                                     Sort Ascending
                                   </button>
                                   <button
@@ -477,9 +481,12 @@ export function Table<T extends { id?: number | string } = any>({
                                       onSort?.(col.id, false, 'desc');
                                       setOpenColumnMenu(null);
                                     }}
-                                    className="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 flex items-center gap-3"
+                                    className="w-full text-left px-4 py-3 text-sm flex items-center gap-3"
+                                    style={{ color: 'var(--c-text-primary)' }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)'; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
                                   >
-                                    <ArrowDown size={16} style={{ color: '#92A6B0' }} />
+                                    <ArrowDown size={16} style={{ color: 'var(--c-text-secondary)' }} />
                                     Sort Descending
                                   </button>
                                   <button
@@ -487,9 +494,12 @@ export function Table<T extends { id?: number | string } = any>({
                                       onSort?.(col.id, false, undefined);
                                       setOpenColumnMenu(null);
                                     }}
-                                    className="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 flex items-center gap-3"
+                                    className="w-full text-left px-4 py-3 text-sm flex items-center gap-3"
+                                    style={{ color: 'var(--c-text-primary)' }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)'; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
                                   >
-                                    <X size={16} style={{ color: '#92A6B0' }} />
+                                    <X size={16} style={{ color: 'var(--c-text-secondary)' }} />
                                     Unsort
                                   </button>
                                 </>
@@ -500,9 +510,12 @@ export function Table<T extends { id?: number | string } = any>({
                                     setFilteringColumn(col.id);
                                     setOpenColumnMenu(null);
                                   }}
-                                  className="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 flex items-center gap-3"
+                                  className="w-full text-left px-4 py-3 text-sm flex items-center gap-3"
+                                  style={{ color: 'var(--c-text-primary)' }}
+                                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)'; }}
+                                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
                                 >
-                                  <Filter size={16} style={{ color: '#92A6B0' }} />
+                                  <Filter size={16} style={{ color: 'var(--c-text-secondary)' }} />
                                   Filter
                                 </button>
                               )}
@@ -511,9 +524,12 @@ export function Table<T extends { id?: number | string } = any>({
                                   setSearchingColumn(col.id);
                                   setOpenColumnMenu(null);
                                 }}
-                                className="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 flex items-center gap-3"
+                                className="w-full text-left px-4 py-3 text-sm flex items-center gap-3"
+                                style={{ color: 'var(--c-text-primary)' }}
+                                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
                               >
-                                <Search size={16} style={{ color: '#92A6B0' }} />
+                                <Search size={16} style={{ color: 'var(--c-text-secondary)' }} />
                                 Search
                               </button>
                             </>
@@ -523,9 +539,12 @@ export function Table<T extends { id?: number | string } = any>({
                               onHideColumn?.(col.id);
                               setOpenColumnMenu(null);
                             }}
-                            className="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 flex items-center gap-3"
+                            className="w-full text-left px-4 py-3 text-sm flex items-center gap-3"
+                            style={{ color: 'var(--c-text-primary)' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
                           >
-                            <EyeOff size={16} style={{ color: '#92A6B0' }} />
+                            <EyeOff size={16} style={{ color: 'var(--c-text-secondary)' }} />
                             Hide Column
                           </button>
                           <button
@@ -533,9 +552,12 @@ export function Table<T extends { id?: number | string } = any>({
                               onManageColumnsClick?.();
                               setOpenColumnMenu(null);
                             }}
-                            className="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 flex items-center gap-3"
+                            className="w-full text-left px-4 py-3 text-sm flex items-center gap-3"
+                            style={{ color: 'var(--c-text-primary)' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
                           >
-                            <Settings size={16} style={{ color: '#92A6B0' }} />
+                            <Settings size={16} style={{ color: 'var(--c-text-secondary)' }} />
                             Manage Columns
                           </button>
                         </div>,
@@ -697,10 +719,10 @@ export function Table<T extends { id?: number | string } = any>({
 
       {filteringColumn && createPortal(
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md mx-4">
+          <div className="rounded-lg shadow-lg p-6 w-full max-w-md mx-4" style={{ backgroundColor: 'var(--c-surface-cards)' }}>
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold">Filter {columns.find(c => c.id === filteringColumn)?.label}</h3>
-              <button onClick={() => setFilteringColumn(null)} className="text-gray-400 hover:text-gray-600">
+              <h3 className="text-lg font-semibold" style={{ color: 'var(--c-text-primary)' }}>Filter {columns.find(c => c.id === filteringColumn)?.label}</h3>
+              <button onClick={() => setFilteringColumn(null)} style={{ color: 'var(--c-text-muted)' }} className="hover:opacity-70 transition-opacity">
                 <X size={20} />
               </button>
             </div>
@@ -789,7 +811,7 @@ export function Table<T extends { id?: number | string } = any>({
                                     }}
                                     className="h-4 w-4"
                                   />
-                                  <span className="text-sm font-medium text-gray-700">{labelText}</span>
+                                  <span className="text-sm font-medium" style={{ color: 'var(--c-text-primary)' }}>{labelText}</span>
                                 </>
                               ) : (
                                 <>
@@ -799,7 +821,7 @@ export function Table<T extends { id?: number | string } = any>({
                                       setColumnFilters(prev => ({ ...prev, [filteringColumn]: e.target.checked ? option : null }));
                                     }}
                                   />
-                                  <span className="text-sm font-medium text-gray-700">{labelText}</span>
+                                  <span className="text-sm font-medium" style={{ color: 'var(--c-text-primary)' }}>{labelText}</span>
                                 </>
                               )}
                             </div>
@@ -842,14 +864,20 @@ export function Table<T extends { id?: number | string } = any>({
                         setFilteringColumn(null);
                       }}
                       style={{
-                        background: buttons.bordered.background,
-                        color: buttons.bordered.color,
-                        border: buttons.bordered.border,
+                        backgroundColor: 'transparent',
+                        color: 'var(--c-text-primary)',
+                        border: '1px solid var(--c-text-primary)',
                         padding: `${buttons.bordered.paddingY} ${buttons.bordered.paddingX}`,
                         borderRadius: buttons.bordered.borderRadius,
                         fontSize: buttons.bordered.fontSize,
                       }}
-                      className="hover:bg-gray-50 transition-colors"
+                      className="transition-colors font-medium"
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
                     >
                       Clear
                     </button>

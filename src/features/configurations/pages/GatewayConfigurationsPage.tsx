@@ -8,6 +8,7 @@ import SearchInput from "../../../shared/components/ui/SearchInput";
 import BackButton from "../../../shared/components/ui/BackButton";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
+import Pagination from "../../../shared/components/ui/Pagination";
 import { color, tw } from "../../../shared/utils/utils";
 import { emailGatewayConfigService, EMAIL_GATEWAY_DUMMY_DATA } from "../services/emailGatewayConfigService";
 import { smsGatewayConfigService, SMS_GATEWAY_DUMMY_DATA } from "../services/smsGatewayConfigService";
@@ -21,6 +22,7 @@ import { PushGatewayConfig } from "../types/pushGatewayConfig";
 import { USSDGatewayConfig } from "../types/ussdGatewayConfig";
 import { useNavigate } from "react-router-dom";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 
 type ChannelType = "EMAIL" | "SMS" | "WHATSAPP" | "PUSH" | "USSD";
 
@@ -288,6 +290,120 @@ export default function GatewayConfigurationsPage() {
       (config.description && config.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  // Table columns definition
+  const defaultColumns: TableColumn<UnifiedGatewayConfig>[] = [
+    {
+      id: "name",
+      label: "Name",
+      visible: true,
+      render: (value) => (
+        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value as string}>
+          {value}
+        </div>
+      ),
+    },
+    {
+      id: "description",
+      label: "Description",
+      visible: true,
+      render: (value) => (
+        <div className={`text-sm ${tw.textSecondary} max-w-md truncate`} title={value ? String(value) : "-"}>
+          {value || "-"}
+        </div>
+      ),
+    },
+    {
+      id: "channel_type",
+      label: "Channel",
+      visible: true,
+      render: (value, config) => (
+        <div className={`text-sm ${tw.textSecondary} truncate`} title={CHANNEL_LABEL[config.channel_type]}>
+          {CHANNEL_LABEL[config.channel_type]}
+        </div>
+      ),
+    },
+    {
+      id: "provider_type",
+      label: "Provider",
+      visible: true,
+      render: (value) => (
+        <div className={`text-sm ${tw.textSecondary} truncate`} title={value as string}>
+          {value}
+        </div>
+      ),
+    },
+    {
+      id: "is_active",
+      label: "Status",
+      visible: true,
+      render: (value) => (
+        <span className={`text-sm ${value ? tw.success : tw.textMuted}`}>
+          {value ? "Active" : "Inactive"}
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      render: (value, config) => (
+        <div className="flex items-center justify-center gap-2">
+          <ActivateDeactivateButton
+            isActive={config.is_active}
+            isLoading={togglingId === config.id}
+            onToggle={() => handleToggleActive(config)}
+          />
+          <button
+            onClick={() => navigate(`/dashboard/gateway-configurations/${config.id}/${config.channel_type}/details`)}
+            className={`p-2 rounded hover:bg-green-50 transition ${tw.link}`}
+            title="View details"
+          >
+            <Eye size={18} />
+          </button>
+          <button
+            onClick={() => navigate(`/dashboard/gateway-configurations/${config.id}/edit`)}
+            className={`p-2 rounded hover:bg-blue-50 transition ${tw.link}`}
+            title="Edit configuration"
+          >
+            <Edit size={18} />
+          </button>
+          <button
+            onClick={() => handleDeleteClick(config)}
+            className="p-2 rounded hover:bg-red-50 transition text-red-600"
+            title="Delete configuration"
+          >
+            <Trash2 size={18} />
+          </button>
+        </div>
+      ),
+    },
+  ];
+
+  const {
+    columns,
+    currentPage: tableCurrentPage,
+    pageSize: tablePageSize,
+    handlePageChange: tableHandlePageChange,
+    sortConfigs,
+    handleSort,
+  } = useTable({
+    tableId: "gateway-configurations-table",
+    defaultColumns,
+    persistToLocalStorage: true,
+  });
+
+  // Handle pagination slicing
+  const paginatedConfigs = filteredConfigs.slice(
+    (tableCurrentPage - 1) * tablePageSize,
+    tableCurrentPage * tablePageSize
+  );
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    tableHandlePageChange(1);
+  }, [searchTerm, tableHandlePageChange]);
+
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
@@ -318,173 +434,71 @@ export default function GatewayConfigurationsPage() {
       </div>
 
       {/* Table */}
-      <div
-          className={`${tw.rounded} border overflow-hidden`}
-          style={{ borderColor: color.border.default }}
-        >
-          {filteredConfigs.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-12 h-12 text-gray-400 mx-auto mb-4">⚙️</div>
-              <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
-                {searchTerm ? "No configurations found" : "No gateway configurations yet"}
-              </h3>
-              <p className={`${tw.textMuted} mb-6`}>
-                {searchTerm
-                  ? "Try adjusting your search"
-                  : "Create your first gateway configuration to get started"}
-              </p>
-              {!searchTerm && (
-                <CreateButton
-                  onClick={() => navigate("/dashboard/gateway-configurations/create")}
-                  className="mx-auto"
-                />
-              )}
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table
-                className="w-full min-w-[900px]"
-                style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-              >
-                <thead>
-                  <tr>
-                    <th
-                      className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                      style={{
-                        color: color.surface.tableHeaderText,
-                        backgroundColor: color.surface.tableHeader,
-                        borderTopLeftRadius: "0.375rem",
-                      }}
-                    >
-                      Name
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                      style={{
-                        color: color.surface.tableHeaderText,
-                        backgroundColor: color.surface.tableHeader,
-                      }}
-                    >
-                      Description
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                      style={{
-                        color: color.surface.tableHeaderText,
-                        backgroundColor: color.surface.tableHeader,
-                      }}
-                    >
-                      Channel
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                      style={{
-                        color: color.surface.tableHeaderText,
-                        backgroundColor: color.surface.tableHeader,
-                      }}
-                    >
-                      Provider
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                      style={{
-                        color: color.surface.tableHeaderText,
-                        backgroundColor: color.surface.tableHeader,
-                      }}
-                    >
-                      Status
-                    </th>
-                    <th
-                      className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider"
-                      style={{
-                        color: color.surface.tableHeaderText,
-                        backgroundColor: color.surface.tableHeader,
-                        borderTopRightRadius: "0.375rem",
-                      }}
-                    >
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredConfigs.map((config) => (
-                    <tr
-                      key={`${config.channel_type}-${config.id}`}
-                      style={{
-                        backgroundColor: color.surface.cards,
-                        borderRadius: "0.375rem",
-                      }}
-                    >
-                      <td className="px-6 py-4">
-                        <p className={`text-sm font-medium ${tw.textPrimary}`}>{config.name}</p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`text-sm ${tw.textMuted}`}>
-                          {config.description || "-"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`text-sm ${tw.textSecondary}`}>
-                          {CHANNEL_LABEL[config.channel_type]}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`text-sm ${tw.textSecondary}`}>{config.provider_type}</span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`text-sm ${config.is_active ? tw.success : tw.textMuted}`}>
-                          {config.is_active ? "Active" : "Inactive"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center justify-end gap-2">
-                          <ActivateDeactivateButton
-                            isActive={config.is_active}
-                            isLoading={togglingId === config.id}
-                            onToggle={() => handleToggleActive(config)}
-                          />
-                          <button
-                            onClick={() => navigate(`/dashboard/gateway-configurations/${config.id}/${config.channel_type}/details`)}
-                            className={`p-2 rounded hover:bg-green-50 transition ${tw.link}`}
-                            title="View details"
-                          >
-                            <Eye size={18} />
-                          </button>
-                          <button
-                            onClick={() => navigate(`/dashboard/gateway-configurations/${config.id}/edit`)}
-                            className={`p-2 rounded hover:bg-blue-50 transition ${tw.link}`}
-                            title="Edit configuration"
-                          >
-                            <Edit size={18} />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteClick(config)}
-                            className="p-2 rounded hover:bg-red-50 transition text-red-600"
-                            title="Delete configuration"
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+      <div className={`${tw.rounded} overflow-hidden`}>
+        {filteredConfigs.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-12 h-12 text-gray-400 mx-auto mb-4">⚙️</div>
+            <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
+              {searchTerm ? "No configurations found" : "No gateway configurations yet"}
+            </h3>
+            <p className={`${tw.textMuted} mb-6`}>
+              {searchTerm
+                ? "Try adjusting your search"
+                : "Create your first gateway configuration to get started"}
+            </p>
+            {!searchTerm && (
+              <CreateButton
+                onClick={() => navigate("/dashboard/gateway-configurations/create")}
+                className="mx-auto"
+              />
+            )}
+          </div>
+        ) : (
+          <>
+            {/* Table */}
+            <Table<UnifiedGatewayConfig>
+              columns={columns}
+              data={paginatedConfigs}
+              totalItems={filteredConfigs.length}
+              currentPage={tableCurrentPage}
+              pageSize={tablePageSize}
+              isLoading={false}
+              onPageChange={tableHandlePageChange}
+              onSort={handleSort}
+              sortConfigs={sortConfigs}
+              style={{
+                headerBackground: color.surface.tableHeader,
+                headerTextColor: color.surface.tableHeaderText,
+                rowBackground: color.surface.tablebodybg,
+                rowSpacing: "0 8px",
+              }}
+            />
 
-      <DeleteConfirmModal
-        isOpen={deleteConfirm.id !== null}
-        onClose={() => {
-          closeDeleteConfirm();
-          setConfigToDelete(null);
-        }}
-        onConfirm={confirmDeleteConfig}
-        title="Delete Gateway Configuration"
-        description="This may affect message delivery."
-        itemName={configToDelete?.name || ""}
-        isLoading={deleting}
-      />
+            {/* Pagination */}
+            {paginatedConfigs.length > 0 && filteredConfigs.length > 0 && (
+              <Pagination
+                currentPage={tableCurrentPage}
+                pageSize={tablePageSize}
+                totalItems={filteredConfigs.length}
+                onPageChange={tableHandlePageChange}
+              />
+            )}
+          </>
+        )}
+      </div>
+
+        <DeleteConfirmModal
+          isOpen={deleteConfirm.id !== null}
+          onClose={() => {
+            closeDeleteConfirm();
+            setConfigToDelete(null);
+          }}
+          onConfirm={confirmDeleteConfig}
+          title="Delete Gateway Configuration"
+          description="This may affect message delivery."
+          itemName={configToDelete?.name || ""}
+          isLoading={deleting}
+        />
       </div>
     </div>
   );

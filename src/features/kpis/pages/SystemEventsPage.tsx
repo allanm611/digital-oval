@@ -8,12 +8,11 @@ import Pagination from "../../../shared/components/ui/Pagination";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { systemEventService } from "../services/systemEventService";
-
-const ITEMS_PER_PAGE = 10;
 
 export default function SystemEventsPage() {
   const navigate = useNavigate();
@@ -24,7 +23,106 @@ export default function SystemEventsPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [toggling, setToggling] = useState<number | null>(null);
   const [activeEvents, setActiveEvents] = useState<Set<number>>(new Set());
-  const [currentPage, setCurrentPage] = useState(1);
+
+  const tableColumns: TableColumn<SystemEvent>[] = [
+    {
+      id: "event_name",
+      label: "Event Name",
+      visible: true,
+      render: (_, row) => (
+        <div className={`text-sm ${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={row.event_name}>
+          {row.event_name}
+        </div>
+      ),
+    },
+    {
+      id: "event_code",
+      label: "Event Code",
+      visible: true,
+      render: (_, row) => (
+        <span className="font-mono text-sm text-gray-900">
+          {row.event_code}
+        </span>
+      ),
+    },
+    {
+      id: "category",
+      label: "Category",
+      visible: true,
+      render: (_, row) => (
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-gray-900">
+          {SYSTEM_EVENT_CATEGORIES.find(
+            (cat) => cat.value === row.category,
+          )?.label || row.category}
+        </span>
+      ),
+    },
+    {
+      id: "event_description",
+      label: "Description",
+      visible: true,
+      render: (_, row) => (
+        <p className="text-sm text-gray-900 truncate max-w-xs" title={row.event_description}>
+          {row.event_description}
+        </p>
+      ),
+    },
+    {
+      id: "source_table",
+      label: "Source",
+      visible: false,
+      render: (_, row) => (
+        <p className="text-sm text-gray-900">
+          {row.source_table}
+        </p>
+      ),
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      render: (_, row) => (
+        <div className="flex items-center justify-center space-x-2">
+          <ActivateDeactivateButton
+            isActive={activeEvents.has(row.id)}
+            onToggle={() => handleToggleActive(row)}
+            disabled={toggling === row.id}
+            isLoading={toggling === row.id}
+          />
+          <button
+            onClick={() =>
+              navigate(
+                `/dashboard/kpis/system-events/${row.id}`,
+              )
+            }
+            className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
+            title="View Details"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+        </div>
+      ),
+    },
+  ];
+
+  const {
+    columns,
+    currentPage: tableCurrentPage,
+    pageSize: tablePageSize,
+    handlePageChange: tableHandlePageChange,
+    sortConfigs,
+    handleSort,
+  } = useTable({
+    tableId: "system-events-table",
+    defaultColumns: tableColumns,
+    persistToLocalStorage: true,
+  });
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    tableHandlePageChange(1);
+  }, [searchTerm, categoryFilter, tableHandlePageChange]);
 
   useEffect(() => {
     loadEvents();
@@ -58,16 +156,8 @@ export default function SystemEventsPage() {
     });
   }, [searchTerm, categoryFilter, events]);
 
-  const totalPages = Math.ceil(filteredEvents.length / ITEMS_PER_PAGE);
-  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedEvents = filteredEvents.slice(
-    startIdx,
-    startIdx + ITEMS_PER_PAGE,
-  );
-
   const handleCategoryChange = (value: string) => {
     setCategoryFilter(value || "all");
-    setCurrentPage(1);
   };
 
   const handleToggleActive = async (event: SystemEvent) => {
@@ -178,226 +268,59 @@ export default function SystemEventsPage() {
       </div>
 
       {/* Table */}
-      <div
-        className={`${tw.rounded} border overflow-hidden`}
-        style={{ borderColor: color.border.default }}
-      >
+      <div className={`${tw.rounded} overflow-hidden`}>
         {isLoading ? (
-          <div className="p-8 md:p-16 text-center">
-            <div className="flex flex-col items-center justify-center gap-4">
-              <LoadingSpinner size="xl" color="primary" />
-              <p className={`${tw.textMuted} font-medium text-sm`}>
-                Loading events...
-              </p>
-            </div>
+          <div className="flex items-center justify-center py-12">
+            <LoadingSpinner
+              variant="modern"
+              size="lg"
+              color="primary"
+              className="mr-3"
+            />
+            <span className={`${tw.textSecondary}`}>Loading events...</span>
           </div>
         ) : filteredEvents.length === 0 ? (
-          <div className="p-8 md:p-16 text-center">
-            <div
-              className={`bg-gradient-to-br from-[${color.primary.accent}]/5 to-[${color.primary.accent}]/10 ${tw.rounded} p-6 md:p-12`}
-            >
-              <h3 className={`${tw.cardHeading} ${tw.textPrimary} mb-1`}>
-                No events found
-              </h3>
-              <p className="text-sm text-gray-600 mb-4 max-w-md mx-auto">
-                {searchTerm || categoryFilter !== "all"
-                  ? "No events match your search criteria."
-                  : "No events available."}
-              </p>
-            </div>
+          <div className="text-center py-12">
+            <Zap className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
+              {searchTerm || categoryFilter !== "all" ? "No events found" : "No events yet"}
+            </h3>
+            <p className={`${tw.textMuted} mb-6`}>
+              {searchTerm || categoryFilter !== "all"
+                ? "Try adjusting your search or filters"
+                : "No events available"}
+            </p>
           </div>
         ) : (
-          <>
-            {/* Desktop Table */}
-            <div className="hidden lg:block overflow-x-auto">
-              <table
-                className="w-full"
-                style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-              >
-                <thead style={{ background: color.surface.tableHeader }}>
-                  <tr>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Event Name
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Event Code
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Category
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Description
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider hidden lg:table-cell"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Source
-                    </th>
-                    <th
-                      className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedEvents.map((event) => (
-                    <tr key={event.id} className="transition-colors">
-                      <td
-                        className="px-6 py-4 text-sm"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <div
-                          className="font-semibold text-sm text-gray-900 truncate"
-                          title={event.event_name}
-                        >
-                          {event.event_name}
-                        </div>
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <span className="font-mono text-gray-900">
-                          {event.event_code}
-                        </span>
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-gray-900">
-                          {SYSTEM_EVENT_CATEGORIES.find(
-                            (cat) => cat.value === event.category,
-                          )?.label || event.category}
-                        </span>
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm max-w-xs"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <p
-                          className="text-sm text-gray-900 truncate"
-                          title={event.event_description}
-                        >
-                          {event.event_description}
-                        </p>
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm hidden lg:table-cell"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <p className="text-sm text-gray-900">
-                          {event.source_table}
-                        </p>
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm font-medium"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <div className="flex items-center justify-center space-x-2">
-                          <ActivateDeactivateButton
-                            isActive={activeEvents.has(event.id)}
-                            onToggle={() => handleToggleActive(event)}
-                            disabled={toggling === event.id}
-                            isLoading={toggling === event.id}
-                          />
-                          <button
-                            onClick={() =>
-                              navigate(
-                                `/dashboard/kpis/system-events/${event.id}`,
-                              )
-                            }
-                            className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
-                            title="View Details"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile Cards View */}
-            <div className="lg:hidden space-y-3 p-4">
-              {paginatedEvents.map((event) => (
-                <div
-                  key={event.id}
-                  className={`${tw.rounded} border p-4`}
-                  style={{
-                    backgroundColor: color.surface.tablebodybg,
-                    borderColor: color.border.default,
-                  }}
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-sm text-gray-900">
-                          {event.event_name}
-                        </h4>
-                        <p className="text-xs text-gray-600 mt-1 font-mono">
-                          {event.event_code}
-                        </p>
-                        <p className="text-xs text-gray-600 mt-1">
-                          {event.event_description}
-                        </p>
-                      </div>
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 text-gray-900">
-                        {SYSTEM_EVENT_CATEGORIES.find(
-                          (cat) => cat.value === event.category,
-                        )?.label || event.category}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-4 text-xs">
-                      <div>
-                        <span className="text-gray-600">Source:</span>
-                        <span className="ml-1 font-medium text-gray-900">
-                          {event.source_table}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 justify-end">
-                      <button
-                        className={`p-2 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-colors`}
-                        title="View"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {filteredEvents.length > 0 && paginatedEvents.length > 0 && (
-              <Pagination
-                currentPage={currentPage}
-                pageSize={ITEMS_PER_PAGE}
-                totalItems={filteredEvents.length}
-                onPageChange={setCurrentPage}
-                maxPages={totalPages}
-              />
-            )}
-          </>
+          <Table<SystemEvent>
+            columns={columns}
+            data={filteredEvents}
+            totalItems={filteredEvents.length}
+            currentPage={tableCurrentPage}
+            pageSize={tablePageSize}
+            isLoading={isLoading}
+            onPageChange={tableHandlePageChange}
+            onSort={handleSort}
+            sortConfigs={sortConfigs}
+            style={{
+              headerBackground: color.surface.tableHeader,
+              headerTextColor: color.surface.tableHeaderText,
+              rowBackground: color.surface.tablebodybg,
+              rowSpacing: "0 8px",
+            }}
+          />
         )}
       </div>
+
+      {/* Pagination */}
+      {!isLoading && filteredEvents.length > 0 && (
+        <Pagination
+          currentPage={tableCurrentPage}
+          pageSize={tablePageSize}
+          totalItems={filteredEvents.length}
+          onPageChange={tableHandlePageChange}
+        />
+      )}
     </div>
   );
 }

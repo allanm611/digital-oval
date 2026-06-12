@@ -7,6 +7,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Pagination from "../../../shared/components/ui/Pagination";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { RevenueMetric } from "../types/revenueMetrics";
 import { revenueMetricService } from "../services/revenueMetricService";
 import { useToast } from "../../../contexts/ToastContext";
@@ -25,16 +26,132 @@ export default function RevenueMetricsPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(20);
+
+  const tableColumns: TableColumn<RevenueMetric>[] = [
+    {
+      id: "name",
+      label: "Metric Name",
+      visible: true,
+      render: (_, row) => (
+        <div className={`text-sm ${tw.tableFirstColumn} font-medium text-black`}>
+          {row.name}
+        </div>
+      ),
+    },
+    {
+      id: "category",
+      label: "Category",
+      visible: true,
+      render: (_, row) => (
+        <span className="text-sm text-black">
+          {row.category
+            .replace(/_/g, " ")
+            .replace(/\b\w/g, (l) => l.toUpperCase())}
+        </span>
+      ),
+    },
+    {
+      id: "field_type",
+      label: "Type",
+      visible: true,
+      render: (_, row) => (
+        <span className="text-sm text-black">
+          {row.field_type === "decimal" ? "Decimal" : "Numeric"}
+        </span>
+      ),
+    },
+    {
+      id: "description",
+      label: "Description",
+      visible: true,
+      render: (_, row) => (
+        <span className="text-sm text-black truncate max-w-xs" title={row.description}>
+          {row.description || "—"}
+        </span>
+      ),
+    },
+    {
+      id: "is_active",
+      label: "Status",
+      visible: true,
+      render: (_, row) => (
+        <span className="text-sm text-black">
+          {row.is_active ? "Active" : "Inactive"}
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      render: (_, row) => (
+        <div className="flex items-center justify-end space-x-2">
+          <ActivateDeactivateButton
+            isActive={row.is_active ?? true}
+            onToggle={() => handleToggleActive(row)}
+            disabled={toggling === row.id || deleting === row.id}
+            isLoading={toggling === row.id}
+          />
+          <button
+            onClick={() =>
+              navigate(
+                `/dashboard/kpis/revenue-metrics/${row.id}`,
+                { state: { parentLabel: "Revenue Metrics" } }
+              )
+            }
+            disabled={deleting === row.id}
+            className={`p-2 ${tw.rounded} text-black disabled:opacity-60`}
+            title="View details"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() =>
+              navigate(
+                `/dashboard/kpis/revenue-metrics/${row.id}/edit`,
+              )
+            }
+            disabled={deleting === row.id}
+            className={`p-2 ${tw.rounded} text-black disabled:opacity-60`}
+            title="Edit metric"
+          >
+            <Edit className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleDeleteClick(row)}
+            disabled={deleting === row.id}
+            className={`p-2 text-red-600 ${tw.rounded} disabled:opacity-60`}
+            title="Delete metric"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      ),
+    },
+  ];
+
+  const {
+    columns,
+    currentPage: tableCurrentPage,
+    pageSize: tablePageSize,
+    handlePageChange: tableHandlePageChange,
+    sortConfigs,
+    handleSort,
+  } = useTable({
+    tableId: "revenue-metrics-table",
+    defaultColumns: tableColumns,
+    persistToLocalStorage: true,
+  });
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    tableHandlePageChange(1);
+  }, [searchTerm, categoryFilter, tableHandlePageChange]);
 
   useEffect(() => {
     loadMetrics();
   }, []);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, categoryFilter]);
 
   const loadMetrics = async () => {
     setIsLoading(true);
@@ -118,12 +235,6 @@ export default function RevenueMetricsPage() {
     });
   }, [metrics, searchTerm, categoryFilter]);
 
-  const paginatedMetrics = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    return filteredMetrics.slice(startIndex, endIndex);
-  }, [filteredMetrics, currentPage, pageSize]);
-
   // Calculate statistics
   const stats = {
     totalMetrics: metrics.length,
@@ -179,7 +290,7 @@ export default function RevenueMetricsPage() {
           return (
             <div
               key={stat.name}
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              className={`${tw.rounded} bg-white p-6 shadow-sm`}
             >
               <div className="flex items-center gap-2">
                 <Icon
@@ -215,171 +326,54 @@ export default function RevenueMetricsPage() {
       </div>
 
       {/* Table Container */}
-      {isLoading ? (
-        <div className="p-8 md:p-16 text-center">
-          <div className="flex flex-col items-center justify-center gap-4">
+      <div className={`${tw.rounded} overflow-hidden`}>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
             <LoadingSpinner
-              size="xl"
+              variant="modern"
+              size="lg"
               color="primary"
+              className="mr-3"
             />
-            <p className={`${tw.textMuted} font-medium text-sm`}>
-              Loading metrics...
+            <span className={`${tw.textSecondary}`}>Loading metrics...</span>
+          </div>
+        ) : filteredMetrics.length === 0 ? (
+          <div className="text-center py-12">
+            <DollarSign className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
+              No metrics found
+            </h3>
+            <p className={`${tw.textMuted} mb-6`}>
+              Try adjusting your search or filters
             </p>
           </div>
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table
-            className="w-full min-w-[720px]"
-            style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-          >
-            <thead>
-              <tr>
-                <th
-                  className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider rounded-tl-md"
-                  style={{
-                    color: color.surface.tableHeaderText,
-                    backgroundColor: color.surface.tableHeader,
-                  }}
-                >
-                  Metric Name
-                </th>
-                <th
-                  className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                  style={{
-                    color: color.surface.tableHeaderText,
-                    backgroundColor: color.surface.tableHeader,
-                  }}
-                >
-                  Category
-                </th>
-                <th
-                  className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                  style={{
-                    color: color.surface.tableHeaderText,
-                    backgroundColor: color.surface.tableHeader,
-                  }}
-                >
-                  Type
-                </th>
-                <th
-                  className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                  style={{
-                    color: color.surface.tableHeaderText,
-                    backgroundColor: color.surface.tableHeader,
-                  }}
-                >
-                  Description
-                </th>
-                <th
-                  className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                  style={{
-                    color: color.surface.tableHeaderText,
-                    backgroundColor: color.surface.tableHeader,
-                  }}
-                >
-                  Status
-                </th>
-                <th
-                  className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider rounded-tr-md"
-                  style={{
-                    color: color.surface.tableHeaderText,
-                    backgroundColor: color.surface.tableHeader,
-                  }}
-                >
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredMetrics.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="px-6 py-12 text-center">
-                  <p className={`${tw.textSecondary} text-sm`}>
-                    No metrics match your search
-                  </p>
-                </td>
-              </tr>
-            ) : (
-              paginatedMetrics.map((metric) => (
-                <tr
-                  key={metric.id}
-                  style={{ backgroundColor: color.surface.tablebodybg }}
-                >
-                  <td className="px-6 py-4 text-sm font-medium text-black">
-                    {metric.name}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-black">
-                    {metric.category
-                      .replace(/_/g, " ")
-                      .replace(/\b\w/g, (l) => l.toUpperCase())}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-black">
-                    {metric.field_type === "decimal" ? "Decimal" : "Numeric"}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-black truncate max-w-xs">
-                    {metric.description || "—"}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-black">
-                    {metric.is_active ? "Active" : "Inactive"}
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    <div className="flex items-center justify-end space-x-2">
-                      <ActivateDeactivateButton
-                        isActive={metric.is_active ?? true}
-                        onToggle={() => handleToggleActive(metric)}
-                        disabled={toggling === metric.id || deleting === metric.id}
-                        isLoading={toggling === metric.id}
-                      />
-                      <button
-                        onClick={() =>
-                          navigate(
-                            `/dashboard/kpis/revenue-metrics/${metric.id}`,
-                            { state: { parentLabel: "Revenue Metrics" } }
-                          )
-                        }
-                        disabled={deleting === metric.id}
-                        className={`p-2 ${tw.rounded} text-black disabled:opacity-60`}
-                        title="View details"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() =>
-                          navigate(
-                            `/dashboard/kpis/revenue-metrics/${metric.id}/edit`,
-                          )
-                        }
-                        disabled={deleting === metric.id}
-                        className={`p-2 ${tw.rounded} text-black disabled:opacity-60`}
-                        title="Edit metric"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClick(metric)}
-                        disabled={deleting === metric.id}
-                        className={`p-2 text-red-600 ${tw.rounded} disabled:opacity-60`}
-                        title="Delete metric"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-        </div>
-      )}
+        ) : (
+          <Table<RevenueMetric>
+            columns={columns}
+            data={filteredMetrics}
+            totalItems={filteredMetrics.length}
+            currentPage={tableCurrentPage}
+            pageSize={tablePageSize}
+            isLoading={isLoading}
+            onPageChange={tableHandlePageChange}
+            onSort={handleSort}
+            sortConfigs={sortConfigs}
+            style={{
+              headerBackground: color.surface.tableHeader,
+              headerTextColor: color.surface.tableHeaderText,
+              rowBackground: color.surface.tablebodybg,
+              rowSpacing: "0 8px",
+            }}
+          />
+        )}
+      </div>
 
-      {!isLoading && paginatedMetrics.length > 0 && filteredMetrics.length > 0 && (
+      {!isLoading && filteredMetrics.length > 0 && (
         <Pagination
-          currentPage={currentPage}
-          pageSize={pageSize}
+          currentPage={tableCurrentPage}
+          pageSize={tablePageSize}
           totalItems={filteredMetrics.length}
-          onPageChange={setCurrentPage}
+          onPageChange={tableHandlePageChange}
         />
       )}
 

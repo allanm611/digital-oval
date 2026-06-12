@@ -38,6 +38,7 @@ import CreateCommunicationModal from "../../../shared/components/CreateCommunica
 import ManageQuickListCustomersModal from "../components/ManageQuickListCustomersModal";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 
 export default function QuickListsPage() {
   const navigate = useNavigate();
@@ -89,6 +90,33 @@ export default function QuickListsPage() {
     loadInitialData();
     loadStats();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      let isOutside = true;
+
+      Object.values(actionMenuRefs.current).forEach((ref) => {
+        if (ref && ref.contains(event.target as Node)) {
+          isOutside = false;
+        }
+      });
+
+      Object.values(dropdownMenuRefs.current).forEach((ref) => {
+        if (ref && ref.contains(event.target as Node)) {
+          isOutside = false;
+        }
+      });
+
+      if (isOutside) {
+        setShowActionMenu(null);
+        setDropdownPosition(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   useEffect(() => {
@@ -389,6 +417,120 @@ export default function QuickListsPage() {
     },
   ];
 
+  const defaultColumns: TableColumn<QuickList>[] = [
+    {
+      id: "name",
+      label: t.quickList.name,
+      visible: true,
+      render: (value, quicklist) => (
+        <div>
+          <button
+            type="button"
+            onClick={() => handleViewDetails(quicklist)}
+            className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`}
+            title={quicklist.name}
+          >
+            {quicklist.name}
+          </button>
+          {quicklist.description && (
+            <div
+              className={`text-xs sm:text-sm ${tw.textMuted} truncate mt-1`}
+              title={quicklist.description}
+            >
+              {quicklist.description}
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      id: "rows_imported",
+      label: t.quickList.rowsImported,
+      visible: true,
+      render: (value) =>
+        value != null ? (value as number).toLocaleString() : "N/A",
+    },
+    {
+      id: "rows_failed",
+      label: t.quickList.rowsFailed,
+      visible: true,
+      render: (value) =>
+        value != null ? (value as number).toLocaleString() : "N/A",
+    },
+    {
+      id: "processing_status",
+      label: t.quickList.status,
+      visible: true,
+      render: (value) => (value as string || "N/A").replace(/_/g, " "),
+    },
+    {
+      id: "created_at",
+      label: t.quickList.createdAt,
+      visible: true,
+      render: (value) => (
+        <DateFormatter
+          date={value as string}
+          useUserTimezone
+          useLocale
+          year="numeric"
+          month="short"
+          day="numeric"
+        />
+      ),
+    },
+    {
+      id: "actions",
+      label: t.quickList.actions,
+      visible: true,
+      sortable: false,
+      render: (value, quicklist) => (
+        <div className="flex items-center justify-center space-x-2">
+          <button
+            onClick={() => navigate(`/dashboard/quick-lists/${quicklist.id}`)}
+            className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.action}]/10 transition-all duration-300`}
+            title={t.quickList.viewDetails}
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+          <PermissionGate permission="quicklists.update">
+            <button
+              onClick={() => handleEdit(quicklist)}
+              className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-all duration-300`}
+              title={t.quickList.edit}
+            >
+              <Edit className="w-4 h-4" />
+            </button>
+          </PermissionGate>
+          <div className="relative" ref={(el) => {
+            actionMenuRefs.current[quicklist.id] = el;
+          }}>
+            <button
+              onClick={(e) => handleActionMenuToggle(quicklist.id, e)}
+              className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.action}]/10 transition-all duration-300`}
+            >
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      ),
+    },
+  ];
+
+  const {
+    columns,
+    currentPage: tableCurrentPage,
+    pageSize: tablePageSize,
+    handlePageChange: tableHandlePageChange,
+    sortConfigs,
+    handleSort,
+    expandedRowId,
+    setExpandedRowId,
+  } = useTable({
+    tableId: "quicklists-table",
+    defaultColumns,
+    persistToLocalStorage: true,
+  });
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -442,193 +584,52 @@ export default function QuickListsPage() {
       </div>
 
       {/* QuickLists Table */}
-      <div
-        className={` ${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
-      >
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-16">
-            <LoadingSpinner
-              variant="modern"
-              size="xl"
-              color="primary"
-              className="mb-4"
-            />
-            <p className={`${tw.textMuted} font-medium text-sm`}>
-              Loading QuickLists...
-            </p>
-          </div>
-        ) : filteredAndPaginatedQuicklists.paginated.length === 0 ? (
-          <div className="text-center py-12">
-            <FileText className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-            <p className={`${tw.textMuted} mb-6`}>
-              {searchTerm
-                ? "No QuickLists match your search."
-                : "No QuickLists yet. Create your first QuickList to get started."}
-            </p>
-            {!searchTerm && (
-              <CreateButton
-                onClick={() => setIsCreateModalOpen(true)}
-                className="mx-auto"
-              />
+      <Table<QuickList>
+        columns={columns}
+        data={filteredAndPaginatedQuicklists.filtered}
+        totalItems={filteredAndPaginatedQuicklists.total}
+        currentPage={tableCurrentPage}
+        pageSize={tablePageSize}
+        isLoading={loading}
+        onPageChange={tableHandlePageChange}
+        onSort={handleSort}
+        sortConfigs={sortConfigs}
+        expandedRowId={expandedRowId}
+        onExpandChange={setExpandedRowId}
+        style={{
+          headerBackground: color.surface.tableHeader,
+          headerTextColor: color.surface.tableHeaderText,
+          rowBackground: color.surface.tablebodybg,
+          rowSpacing: "0 8px",
+        }}
+        expandedContent={(quicklist) => (
+          <div className={`px-6 py-4 ${tw.textPrimary}`}>
+            {quicklist.description && (
+              <div className="mb-2">
+                <span className="text-sm font-medium">Description: </span>
+                <span className="text-sm">{quicklist.description}</span>
+              </div>
             )}
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table
-              className="w-full min-w-[900px]"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead style={{ background: color.surface.tableHeader }}>
-                <tr>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    {t.quickList.name}
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    {t.quickList.rowsImported}
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    {t.quickList.rowsFailed}
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    {t.quickList.status}
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider hidden md:table-cell"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    {t.quickList.createdAt}
-                  </th>
-                  <th
-                    className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    {t.quickList.actions}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredAndPaginatedQuicklists.paginated.map((quicklist) => (
-                  <tr key={quicklist.id} className="transition-colors">
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div>
-                        <button
-                          type="button"
-                          onClick={() => handleViewDetails(quicklist)}
-                          className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`}
-                          title={quicklist.name}
-                        >
-                          {quicklist.name}
-                        </button>
-                        {quicklist.description && (
-                          <div
-                            className={`text-xs sm:text-sm ${tw.textMuted} truncate mt-1`}
-                            title={quicklist.description}
-                          >
-                            {quicklist.description}
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td
-                      className={`px-6 py-4 text-sm ${tw.textPrimary}`}
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {quicklist.rows_imported != null
-                        ? quicklist.rows_imported.toLocaleString()
-                        : "N/A"}
-                    </td>
-                    <td
-                      className={`px-6 py-4 text-sm ${tw.textPrimary}`}
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {quicklist.rows_failed != null
-                        ? quicklist.rows_failed.toLocaleString()
-                        : "N/A"}
-                    </td>
-                    <td
-                      className="px-6 py-4 text-sm text-black"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {(quicklist.processing_status || "N/A").replace(
-                        /_/g,
-                        " ",
-                      )}
-                    </td>
-                    <td
-                      className={`px-6 py-4 hidden md:table-cell text-sm ${tw.textMuted}`}
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <DateFormatter
-                        date={quicklist.created_at}
-                        useUserTimezone
-                        useLocale
-                        year="numeric"
-                        month="short"
-                        day="numeric"
-                      />
-                    </td>
-                    <td
-                      className="px-6 py-4 text-sm font-medium"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className="flex items-center justify-center gap-2">
-                        <PermissionGate permission="quicklists.update">
-                          <button
-                            onClick={() => handleEdit(quicklist)}
-                            className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200 cursor-pointer`}
-                            title={t.quickList.edit}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                        </PermissionGate>
-                        <button
-                          onClick={() => handleViewDetails(quicklist)}
-                          className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200 cursor-pointer`}
-                          title={t.quickList.viewDetails}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <div
-                          ref={(el) => {
-                            actionMenuRefs.current[quicklist.id] = el;
-                          }}
-                        >
-                          <button
-                            onClick={(e) =>
-                              handleActionMenuToggle(quicklist.id, e)
-                            }
-                            className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
-                          >
-                            <MoreHorizontal className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div>
+              <span className="text-sm font-medium">Upload Type: </span>
+              <span className="text-sm">{quicklist.upload_type}</span>
+            </div>
           </div>
         )}
-      </div>
+      />
+
+      {/* Pagination */}
+      {!loading && filteredAndPaginatedQuicklists.total > 0 && (
+        <Pagination
+          currentPage={tableCurrentPage}
+          pageSize={tablePageSize}
+          totalItems={filteredAndPaginatedQuicklists.total}
+          onPageChange={tableHandlePageChange}
+        />
+      )}
 
       {/* Render dropdown menus via portal outside the table */}
-      {filteredAndPaginatedQuicklists.paginated.map((quicklist) => {
+      {filteredAndPaginatedQuicklists.filtered.map((quicklist) => {
         if (showActionMenu === quicklist.id && dropdownPosition) {
           return createPortal(
             <div
@@ -710,15 +711,6 @@ export default function QuickListsPage() {
         return null;
       })}
 
-      {/* Pagination */}
-      {!loading && filteredAndPaginatedQuicklists.total > 0 && (
-        <Pagination
-          currentPage={currentPage}
-          pageSize={PAGE_SIZE}
-          totalItems={filteredAndPaginatedQuicklists.total}
-          onPageChange={setCurrentPage}
-        />
-      )}
 
       {/* Modals */}
       <CreateQuickListModal

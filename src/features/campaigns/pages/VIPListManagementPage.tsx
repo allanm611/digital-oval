@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
-import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -15,6 +14,7 @@ import AddVIPMembersModal from "../components/AddVIPMembersModal";
 import { vipListService } from "../../../shared/services/vipListService";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 
 // Types
 export interface VIPCustomer {
@@ -44,6 +44,25 @@ export interface VIPList {
   processing_status?: "pending" | "processing" | "completed" | "failed";
   status?: string;
   created_at: string;
+}
+
+interface VIPCustomerTableRow {
+  id: number;
+  name: string;
+  email: string;
+  vipList: string;
+  status: string;
+  addedDate: string;
+}
+
+interface VIPListTableRow {
+  id: number;
+  name: string;
+  description: string;
+  members: number;
+  rowsImported: number;
+  rowsFailed: number;
+  status: string;
 }
 
 export default function VIPListManagementPage() {
@@ -79,6 +98,183 @@ export default function VIPListManagementPage() {
     useState<VIPList | null>(null);
   const [listMembers, setListMembers] = useState<VIPCustomer[]>([]);
   const [isLoadingListMembers, setIsLoadingListMembers] = useState(false);
+
+  const vipCustomerTableColumns: TableColumn<VIPCustomerTableRow>[] = [
+    {
+      id: "name",
+      label: "Name",
+      visible: true,
+      render: (_, row) => (
+        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} text-sm`}>
+          {row.name}
+        </div>
+      ),
+    },
+    {
+      id: "email",
+      label: "Email",
+      visible: true,
+      render: (_, row) => (
+        <span className="text-sm text-black">{row.email || "-"}</span>
+      ),
+    },
+    {
+      id: "vipList",
+      label: "VIP List",
+      visible: true,
+      render: (_, row) => (
+        <span className="text-sm text-black">{row.vipList || "Default"}</span>
+      ),
+    },
+    {
+      id: "status",
+      label: "Status",
+      visible: true,
+      render: (_, row) => (
+        <span className="text-sm text-black capitalize">{row.status}</span>
+      ),
+    },
+    {
+      id: "addedDate",
+      label: "Added Date",
+      visible: true,
+      render: (_, row) => (
+        <DateFormatter date={row.addedDate} useUserTimezone />
+      ),
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      render: (_, row) => {
+        const customer = vipCustomers.find((c) => c.id === row.id);
+        if (!customer) return null;
+        return (
+          <div className="flex items-center justify-center">
+            <button
+              onClick={() => setMemberToRemove(customer)}
+              className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
+              title="Remove from VIP List"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        );
+      },
+    },
+  ];
+
+  const vipListTableColumns: TableColumn<VIPListTableRow>[] = [
+    {
+      id: "name",
+      label: "List Name",
+      visible: true,
+      render: (_, row) => (
+        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} text-sm`}>
+          {row.name}
+        </div>
+      ),
+    },
+    {
+      id: "description",
+      label: "Description",
+      visible: true,
+      render: (_, row) => (
+        <div className={`text-sm ${tw.textSecondary} max-w-md`}>
+          {row.description || "No description"}
+        </div>
+      ),
+    },
+    {
+      id: "members",
+      label: "Customers",
+      visible: true,
+      render: (_, row) => {
+        const list = vipLists.find((l) => l.id === row.id);
+        return (
+          <button
+            onClick={() => setSelectedListForMembers(list || null)}
+            className="text-sm font-medium transition-colors hover:underline"
+            style={{ color: color.primary.accent, background: "none", border: "none", padding: "0", cursor: "pointer" }}
+          >
+            {row.members}
+          </button>
+        );
+      },
+    },
+    {
+      id: "rowsImported",
+      label: "Rows Imported",
+      visible: true,
+      render: (_, row) => (
+        <span className="text-sm text-black">{row.rowsImported}</span>
+      ),
+    },
+    {
+      id: "rowsFailed",
+      label: "Rows Failed",
+      visible: true,
+      render: (_, row) => (
+        <span className="text-sm text-black">{row.rowsFailed}</span>
+      ),
+    },
+    {
+      id: "status",
+      label: "Status",
+      visible: true,
+      render: (_, row) => (
+        <span className="text-sm text-black">{row.status}</span>
+      ),
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      render: (_, row) => {
+        const list = vipLists.find((l) => l.id === row.id);
+        if (!list) return null;
+        return (
+          <div className="flex items-center justify-center">
+            <button
+              onClick={() => handleDeleteVIPList(list)}
+              className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
+              title="Delete VIP List"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        );
+      },
+    },
+  ];
+
+  const {
+    columns: customerColumns,
+    currentPage: customerCurrentPage,
+    pageSize: customerPageSize,
+    handlePageChange: customerHandlePageChange,
+    sortConfigs: customerSortConfigs,
+    handleSort: customerHandleSort,
+  } = useTable({
+    tableId: "vip-customers-table",
+    defaultColumns: vipCustomerTableColumns,
+    persistToLocalStorage: true,
+  });
+
+  const {
+    columns: vipListColumns,
+    currentPage: vipListCurrentPage,
+    pageSize: vipListPageSize,
+    handlePageChange: vipListHandlePageChange,
+    sortConfigs: vipListSortConfigs,
+    handleSort: vipListHandleSort,
+  } = useTable({
+    tableId: "vip-lists-table",
+    defaultColumns: vipListTableColumns,
+    persistToLocalStorage: true,
+  });
 
   // Fetch VIP lists on mount
   useEffect(() => {
@@ -340,12 +536,7 @@ export default function VIPListManagementPage() {
       {/* Header with Title and Buttons */}
       <div className="flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <BackButton
-           
-            showBreadcrumb={true}
-           
-            currentLabel="VIP List Management"
-          />
+          <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>VIP List Management</h1>
           {/* Tab-specific buttons */}
           <div className="flex items-center gap-3 w-auto flex-shrink-0">
             {activeTab === "customers" && (
@@ -531,7 +722,7 @@ export default function VIPListManagementPage() {
       )}
 
       {/* Content */}
-      <div className={`${tw.rounded} border border-gray-200 overflow-hidden`}>
+      <div className={`${tw.rounded} overflow-hidden`}>
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <LoadingSpinner />
@@ -551,141 +742,30 @@ export default function VIPListManagementPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table
-                className="w-full min-w-[1000px]"
-                style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-              >
-                <thead>
-                  <tr>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{
-                        color: color.surface.tableHeaderText,
-                        backgroundColor: color.surface.tableHeader,
-                        borderTopLeftRadius: "0.375rem",
-                      }}
-                    >
-                      Name
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{
-                        color: color.surface.tableHeaderText,
-                        backgroundColor: color.surface.tableHeader,
-                      }}
-                    >
-                      Email
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{
-                        color: color.surface.tableHeaderText,
-                        backgroundColor: color.surface.tableHeader,
-                      }}
-                    >
-                      VIP List
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{
-                        color: color.surface.tableHeaderText,
-                        backgroundColor: color.surface.tableHeader,
-                      }}
-                    >
-                      Status
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
-                      style={{
-                        color: color.surface.tableHeaderText,
-                        backgroundColor: color.surface.tableHeader,
-                      }}
-                    >
-                      Added Date
-                    </th>
-                    <th
-                      className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                      style={{
-                        color: color.surface.tableHeaderText,
-                        backgroundColor: color.surface.tableHeader,
-                        borderTopRightRadius: "0.375rem",
-                      }}
-                    >
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredCustomers.map((customer) => (
-                    <tr key={customer.id} className="transition-colors">
-                      <td
-                        className="px-6 py-4"
-                        style={{
-                          backgroundColor: color.surface.tablebodybg,
-                          borderTopLeftRadius: "0.375rem",
-                          borderBottomLeftRadius: "0.375rem",
-                        }}
-                      >
-                        <div
-                          className={`${tw.tableFirstColumn} ${tw.textPrimary} text-sm`}
-                        >
-                          {customer.customer_name || "Unknown"}
-                        </div>
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <span className="text-sm text-black">
-                          {customer.customer_email || "-"}
-                        </span>
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <span className="text-sm text-black">
-                          {customer.vip_list_name || "Default"}
-                        </span>
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <span className="text-sm text-black">
-                          {customer.status}
-                        </span>
-                      </td>
-                      <td
-                        className="px-6 py-4 whitespace-nowrap"
-                        style={{
-                          backgroundColor: color.surface.tablebodybg,
-                        }}
-                      >
-                        <div className={`text-sm ${tw.textSecondary}`}>
-                          <DateFormatter date={customer.added_at} />
-                        </div>
-                      </td>
-                      <td
-                        className="px-6 py-4 text-center"
-                        style={{
-                          backgroundColor: color.surface.tablebodybg,
-                          borderTopRightRadius: "0.375rem",
-                          borderBottomRightRadius: "0.375rem",
-                        }}
-                      >
-                        <button
-                          onClick={() => handleRemoveCustomer(customer)}
-                          className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
-                          title="Remove from VIP list"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <Table<VIPCustomerTableRow>
+                columns={customerColumns}
+                data={filteredCustomers.map((customer) => ({
+                  id: customer.id,
+                  name: customer.customer_name || "Unknown",
+                  email: customer.customer_email || "-",
+                  vipList: customer.vip_list_name || "Default",
+                  status: customer.status,
+                  addedDate: customer.added_at,
+                }))}
+                totalItems={filteredCustomers.length}
+                currentPage={customerCurrentPage}
+                pageSize={customerPageSize}
+                isLoading={loading}
+                onPageChange={customerHandlePageChange}
+                onSort={customerHandleSort}
+                sortConfigs={customerSortConfigs}
+                style={{
+                  headerBackground: color.surface.tableHeader,
+                  headerTextColor: color.surface.tableHeaderText,
+                  rowBackground: color.surface.tablebodybg,
+                  rowSpacing: "0 8px",
+                }}
+              />
             </div>
           )
         ) : /* VIP Lists Table */
@@ -700,177 +780,31 @@ export default function VIPListManagementPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table
-              className="w-full min-w-[800px]"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead>
-                <tr>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      borderTopLeftRadius: "0.375rem",
-                    }}
-                  >
-                    List Name
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Description
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Customers
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Rows Imported
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Rows Failed
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Status
-                  </th>
-                  <th
-                    className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      borderTopRightRadius: "0.375rem",
-                    }}
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredLists.map((list) => (
-                  <tr key={list.id} className="transition-colors">
-                    <td
-                      className="px-6 py-4"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopLeftRadius: "0.375rem",
-                        borderBottomLeftRadius: "0.375rem",
-                      }}
-                    >
-                      <div
-                        className={`${tw.tableFirstColumn} ${tw.textPrimary} text-sm`}
-                      >
-                        {list.name}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary} max-w-md`}>
-                        {list.description || "No description"}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <button
-                        onClick={() => handleViewListMembers(list)}
-                        className="text-sm font-medium transition-colors"
-                        style={{
-                          color: color.primary.accent,
-                          background: "none",
-                          border: "none",
-                          borderBottom: "1px solid transparent",
-                          padding: "0",
-                          cursor: "pointer",
-                        }}
-                        onMouseEnter={(e) => {
-                          (e.currentTarget as HTMLButtonElement).style.borderBottomColor =
-                            color.primary.accent;
-                        }}
-                        onMouseLeave={(e) => {
-                          (e.currentTarget as HTMLButtonElement).style.borderBottomColor =
-                            "transparent";
-                        }}
-                        disabled={isLoadingListMembers}
-                      >
-                        {list.member_count ?? 0}
-                      </button>
-                    </td>
-                    <td
-                      className="px-6 py-4 whitespace-nowrap"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span className="text-sm text-black">
-                        {list.rows_imported ?? 0}
-                      </span>
-                    </td>
-                    <td
-                      className="px-6 py-4 whitespace-nowrap"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span className="text-sm text-black">
-                        {list.rows_failed ?? 0}
-                      </span>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span className="text-sm text-black">
-                        {list.processing_status || list.status || "-"}
-                      </span>
-                    </td>
-                    <td
-                      className="px-6 py-4 text-center"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopRightRadius: "0.375rem",
-                        borderBottomRightRadius: "0.375rem",
-                      }}
-                    >
-                      {/* TODO: Add eye icon for detail page view and edit icon when backend provides GET /vip-lists/:id and PUT endpoints */}
-                      <button
-                        onClick={() => handleDeleteVIPList(list)}
-                        className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
-                        title="Delete VIP List"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <Table<VIPListTableRow>
+              columns={vipListColumns}
+              data={filteredLists.map((list) => ({
+                id: list.id,
+                name: list.name,
+                description: list.description || "No description",
+                members: list.member_count ?? 0,
+                rowsImported: list.rows_imported ?? 0,
+                rowsFailed: list.rows_failed ?? 0,
+                status: list.processing_status || list.status || "-",
+              }))}
+              totalItems={filteredLists.length}
+              currentPage={vipListCurrentPage}
+              pageSize={vipListPageSize}
+              isLoading={loading}
+              onPageChange={vipListHandlePageChange}
+              onSort={vipListHandleSort}
+              sortConfigs={vipListSortConfigs}
+              style={{
+                headerBackground: color.surface.tableHeader,
+                headerTextColor: color.surface.tableHeaderText,
+                rowBackground: color.surface.tablebodybg,
+                rowSpacing: "0 8px",
+              }}
+            />
           </div>
         )}
       </div>

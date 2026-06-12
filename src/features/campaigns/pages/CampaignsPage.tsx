@@ -1136,8 +1136,8 @@ export default function CampaignsPage() {
             className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
             style={{
               backgroundColor: "transparent",
-              color: color.primary.action,
-              border: `1px solid ${color.primary.action}`,
+              color: "var(--c-text-primary)",
+              border: `1px solid var(--c-text-primary)`,
             }}
           >
             <BarChart3 className="h-4 w-4" />

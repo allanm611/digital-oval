@@ -33,6 +33,7 @@ import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import { Table } from "../../../shared/components/Table/Table";
 
 const CreateProductModalWrapper = lazy(
   () => import("../../products/components/CreateProductModalWrapper"),
@@ -82,6 +83,32 @@ import {
   SMSSmartphonePreview,
   EmailLaptopPreview,
 } from "../components/CreativePreviewComponents";
+
+interface LinkedProductTableRow {
+  id: number;
+  name: string;
+  description: string;
+  primary: string;
+}
+
+interface CreativeTableRow {
+  id: string;
+  name: string;
+  channel: string;
+  locale: string;
+  status: string;
+  updated: string;
+}
+
+interface CampaignFlowTableRow {
+  id: string;
+  step: number;
+  campaign: string;
+  segment: string;
+  campaignType: string;
+  waitHours: number;
+  allocation: string;
+}
 import PreviewPanel from "../../communications/components/PreviewPanel";
 import RichTextEditor from "../../communications/components/RichTextEditor";
 import CascadingVariableSelector from "../../manual-broadcast/components/CascadingVariableSelector";
@@ -1268,30 +1295,7 @@ export default function OfferDetailsPage() {
 
   const handleDelete = () => {
     if (!offer) return;
-    setShowDeleteModal(true);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!offer) return;
-
-    setIsDeleting(true);
-    try {
-      await offerService.deleteOffer(Number(id));
-      success(
-        "Offer Deleted",
-        `"${offer.name}" has been deleted successfully.`,
-      );
-      setShowDeleteModal(false);
-      navigate("/dashboard/offers");
-    } catch {
-      showError("Failed to delete offer");
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleCancelDelete = () => {
-    setShowDeleteModal(false);
+    openDeleteConfirm(offer.id, offer.name);
   };
 
   const handleApprove = async () => {
@@ -2078,10 +2082,7 @@ export default function OfferDetailsPage() {
           </div>
         </div>
 
-        <div
-          className={` ${tw.rounded} border overflow-hidden`}
-          style={{ borderColor: color.border.default }}
-        >
+        <div className={`${tw.rounded} overflow-hidden`}>
           {productsLoading ? (
             <div className="flex flex-col items-center justify-center py-16">
               <LoadingSpinner
@@ -2095,153 +2096,90 @@ export default function OfferDetailsPage() {
               </p>
             </div>
           ) : linkedProducts.length > 0 ? (
-            <div className="hidden lg:block overflow-x-auto">
-              <table
-                className="w-full"
-                style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-              >
-                <thead style={{ background: color.surface.tableHeader }}>
-                  <tr>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Product
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Description
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Primary
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                  {linkedProducts.map((product: any, index: number) => {
-                    const rawProductId = product.product_id ?? product.id;
-                    const productId =
-                      rawProductId !== undefined && rawProductId !== null
-                        ? Number(rawProductId)
-                        : null;
-                    const hasValidProductId =
-                      productId !== null && !Number.isNaN(productId);
-                    const productName =
-                      product.name ||
-                      product.product_code ||
-                      `Product ${hasValidProductId ? productId : index + 1}`;
-                    // Prioritize primaryProductId from state (fetched with skipCache) over product.is_primary
-                    // This ensures we show the correct primary product even if backend returns stale is_primary flags
-                    const productIdForComparison =
-                      product.product_id ?? product.id;
-                    const normalizedProductId =
-                      productIdForComparison != null
-                        ? Number(productIdForComparison)
-                        : null;
-                    const normalizedPrimaryId =
-                      primaryProductId != null
-                        ? Number(primaryProductId)
-                        : null;
-                    const isPrimary =
-                      (normalizedProductId !== null &&
-                        normalizedPrimaryId !== null &&
-                        normalizedProductId === normalizedPrimaryId) ||
-                      (product.is_primary && normalizedPrimaryId === null);
-                    const isUnlinking =
-                      product.link_id && unlinkingProductId === product.link_id;
-                    const isSettingPrimary = settingPrimaryId === productId;
-
-                    return (
-                      <tr
-                        key={
-                          product.link_id ||
-                          `product-${hasValidProductId ? productId : index}`
-                        }
-                        className="transition-colors"
-                      >
-                        <td
-                          className="px-6 py-4"
-                          style={{ backgroundColor: color.surface.tablebodybg }}
-                        >
-                          {hasValidProductId ? (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                navigateToProductDetails(productId as number)
-                              }
-                              className={`font-semibold text-sm ${tw.textPrimary} truncate`}
-                              title={productName}
-                              style={{ color: color.primary.accent }}
-                            >
-                              {productName}
-                            </button>
-                          ) : (
-                            <span
-                              className={`font-semibold text-sm ${tw.textPrimary} truncate`}
-                            >
-                              {productName}
-                            </span>
-                          )}
-                        </td>
-                        <td
-                          className="px-6 py-4"
-                          style={{ backgroundColor: color.surface.tablebodybg }}
-                        >
-                          {product.description ? (
-                            <div
-                              className={`text-sm ${tw.textMuted} truncate`}
-                              title={product.description}
-                            >
-                              {product.description}
-                            </div>
-                          ) : (
-                            <span
-                              className={`text-sm ${tw.textMuted}`}
-                            >
-                              No description provided
-                            </span>
-                          )}
-                        </td>
-                        <td
-                          className="px-6 py-4"
-                          style={{ backgroundColor: color.surface.tablebodybg }}
-                        >
-                          {isPrimary ? (
-                            <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                              Primary
-                            </span>
-                          ) : (
-                            <span
-                              className={`text-sm ${tw.textMuted}`}
-                            >
-                              —
-                            </span>
-                          )}
-                        </td>
-                        <td
-                          className="px-6 py-4 text-sm font-medium"
-                          style={{ backgroundColor: color.surface.tablebodybg }}
-                        >
+            <>
+              <div className="overflow-x-auto">
+                <Table<LinkedProductTableRow>
+                  columns={[
+                    {
+                      id: "name",
+                      label: "Product",
+                      width: "200px",
+                      visible: true,
+                      filterConfig: { type: "text" },
+                      render: (_, row) => {
+                        const product = linkedProducts.find((p: any) => String(p.product_id ?? p.id) === row.id);
+                        const productId = product ? Number(product.product_id ?? product.id) : null;
+                        const hasValidProductId = productId !== null && !Number.isNaN(productId);
+                        return hasValidProductId ? (
+                          <button
+                            type="button"
+                            onClick={() => navigateToProductDetails(productId)}
+                            className={`font-semibold text-sm ${tw.textPrimary} truncate`}
+                            title={row.name}
+                            style={{ color: color.primary.accent }}
+                          >
+                            {row.name}
+                          </button>
+                        ) : (
+                          <span className={`font-semibold text-sm ${tw.textPrimary} truncate`}>
+                            {row.name}
+                          </span>
+                        );
+                      },
+                    },
+                    {
+                      id: "description",
+                      label: "Description",
+                      width: "250px",
+                      visible: true,
+                      filterConfig: { type: "text" },
+                      render: (value: string) => (
+                        value ? (
+                          <div className={`text-sm ${tw.textMuted} truncate`} title={value}>
+                            {value}
+                          </div>
+                        ) : (
+                          <span className={`text-sm ${tw.textMuted}`}>No description provided</span>
+                        )
+                      ),
+                    },
+                    {
+                      id: "primary",
+                      label: "Primary",
+                      width: "120px",
+                      visible: true,
+                      filterConfig: { type: "multiselect", options: ["Primary", "—"] },
+                      render: (value: string) => (
+                        value === "Primary" ? (
+                          <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                            Primary
+                          </span>
+                        ) : (
+                          <span className={`text-sm ${tw.textMuted}`}>—</span>
+                        )
+                      ),
+                    },
+                    {
+                      id: "actions",
+                      label: "Actions",
+                      width: "200px",
+                      visible: true,
+                      sortable: false,
+                      render: (_, row) => {
+                        const product = linkedProducts.find((p: any) => String(p.product_id ?? p.id) === row.id);
+                        if (!product) return null;
+                        const productId = Number(product.product_id ?? product.id);
+                        const hasValidProductId = !Number.isNaN(productId);
+                        const isPrimary = row.primary === "Primary";
+                        const isUnlinking = product.link_id && unlinkingProductId === product.link_id;
+                        const isSettingPrimary = settingPrimaryId === productId;
+                        return (
                           <div className="flex items-center gap-3 flex-wrap">
                             {hasValidProductId && (
                               <>
                                 <button
                                   type="button"
-                                  onClick={() =>
-                                    handleEditProduct(productId as number)
-                                  }
+                                  onClick={() => handleEditProduct(productId)}
                                   className="text-sm font-medium text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                                   title="Edit product"
                                 >
@@ -2251,10 +2189,7 @@ export default function OfferDetailsPage() {
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    setProductToDelete({
-                                      id: productId as number,
-                                      name: productName,
-                                    });
+                                    setProductToDelete({ id: productId, name: row.name });
                                     setShowDeleteProductModal(true);
                                   }}
                                   disabled={isDeletingProduct}
@@ -2266,61 +2201,60 @@ export default function OfferDetailsPage() {
                                 </button>
                               </>
                             )}
-                            {!isPrimary &&
-                              (product.link_id || hasValidProductId) && (
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleSetPrimaryProduct(
-                                      productId as number,
-                                      productName,
-                                    )
-                                  }
-                                  disabled={isSettingPrimary || isUnlinking}
-                                  className="text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:underline"
-                                  style={{ color: color.primary.accent }}
-                                  title="Set this product as the primary product"
-                                >
-                                  {isSettingPrimary
-                                    ? "Setting..."
-                                    : "Set Primary"}
-                                </button>
-                              )}
+                            {!isPrimary && (product.link_id || hasValidProductId) && (
+                              <button
+                                type="button"
+                                onClick={() => handleSetPrimaryProduct(productId, row.name)}
+                                disabled={isSettingPrimary || isUnlinking}
+                                className="text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:underline"
+                                style={{ color: color.primary.accent }}
+                                title="Set as primary"
+                              >
+                                {isSettingPrimary || isUnlinking ? "Setting..." : "Set Primary"}
+                              </button>
+                            )}
                             {(product.link_id || hasValidProductId) && (
                               <button
                                 type="button"
                                 onClick={() => {
                                   if (!product.link_id) {
-                                    showError(
-                                      "Cannot unlink: Link ID not available. Product may need to be re-linked.",
-                                    );
+                                    showError("Cannot unlink: Link ID not available. Product may need to be re-linked.");
                                     return;
                                   }
-                                  setProductToUnlink({
-                                    linkId: product.link_id,
-                                    productId: productId as number,
-                                    name: productName,
-                                  });
+                                  setProductToUnlink({ linkId: product.link_id, productId, name: row.name });
                                   setShowUnlinkModal(true);
                                 }}
-                                disabled={
-                                  isUnlinking ||
-                                  isSettingPrimary ||
-                                  !product.link_id
-                                }
+                                disabled={isUnlinking || isSettingPrimary || !product.link_id}
                                 className="text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 {isUnlinking ? "Unlinking..." : "Unlink"}
                               </button>
                             )}
                           </div>
-                        </td>
-                      </tr>
-                    );
+                        );
+                      },
+                    },
+                  ]}
+                  data={linkedProducts.map((product: any, index: number) => {
+                    const productId = product.product_id ?? product.id;
+                    const productName = product.name || product.product_code || `Product ${index + 1}`;
+                    const normalizedProductId = productId != null ? Number(productId) : null;
+                    const normalizedPrimaryId = primaryProductId != null ? Number(primaryProductId) : null;
+                    const isPrimary = (normalizedProductId !== null && normalizedPrimaryId !== null && normalizedProductId === normalizedPrimaryId) || (product.is_primary && normalizedPrimaryId === null);
+                    return {
+                      id: String(productId || index),
+                      name: productName,
+                      description: product.description || "",
+                      primary: isPrimary ? "Primary" : "—",
+                    };
                   })}
-                </tbody>
-              </table>
-            </div>
+                  rowSpacing="0 8px"
+                  totalItems={linkedProducts.length}
+                  currentPage={1}
+                  pageSize={20}
+                />
+              </div>
+            </>
           ) : (
             <div className="text-center py-8">
               <p className={`text-sm ${tw.textMuted} mb-1`}>
@@ -2353,10 +2287,7 @@ export default function OfferDetailsPage() {
           </div>
         </div>
 
-        <div
-          className={` ${tw.rounded} border overflow-hidden`}
-          style={{ borderColor: color.border.default }}
-        >
+        <div className={`${tw.rounded} overflow-hidden`}>
           {creativesLoading ? (
             <div className="flex flex-col items-center justify-center py-16">
               <LoadingSpinner
@@ -2370,197 +2301,143 @@ export default function OfferDetailsPage() {
               </p>
             </div>
           ) : offerCreatives.length > 0 ? (
-            <div className="hidden lg:block overflow-x-auto">
-              <table
-                className="w-full"
-                style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-              >
-                <thead style={{ background: color.surface.tableHeader }}>
-                  <tr>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Name
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Channel
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider hidden md:table-cell"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Locale
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Status
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider hidden md:table-cell"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Updated
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {offerCreatives.map(
-                    (creative: OfferCreative, index: number) => {
-                      const creativeId =
-                        creative.id !== undefined && creative.id !== null
-                          ? Number(creative.id)
-                          : null;
-                      const hasCreativeId =
-                        creativeId !== null && !Number.isNaN(creativeId);
-                      const creativeLabel =
-                        creative.title ||
-                        `Creative ${creative.channel}${
-                          creative.locale ? ` (${creative.locale})` : ""
-                        }`;
-
-                      return (
-                        <tr
-                          key={`creative-${creative.id || creative.channel}-${
-                            creative.locale
-                          }-${index}`}
-                          className="transition-colors"
-                        >
-                          <td
-                            className="px-6 py-4"
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
+            <>
+              <div className="overflow-x-auto">
+                <Table<CreativeTableRow>
+                  columns={[
+                    {
+                      id: "name",
+                      label: "Name",
+                      width: "200px",
+                      visible: true,
+                      filterConfig: { type: "text" },
+                      render: (_, row) => {
+                        const creative = offerCreatives.find((c) => String(c.id) === row.id);
+                        const creativeId = creative?.id ? Number(creative.id) : null;
+                        const hasCreativeId = creativeId !== null && !Number.isNaN(creativeId);
+                        return hasCreativeId ? (
+                          <button
+                            type="button"
+                            onClick={() => navigateToCreativeDetails(creativeId)}
+                            className={`font-semibold text-sm ${tw.textPrimary} truncate`}
+                            title={row.name}
+                            style={{ color: color.primary.accent }}
                           >
-                            {hasCreativeId ? (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  navigateToCreativeDetails(
-                                    creativeId as number,
-                                  )
-                                }
-                                className={`font-semibold text-sm ${tw.textPrimary} truncate`}
-                                title={creativeLabel}
-                                style={{ color: color.primary.accent }}
-                              >
-                                {creativeLabel}
-                              </button>
-                            ) : (
-                              <span
-                                className={`font-semibold text-sm ${tw.textPrimary} truncate`}
-                              >
-                                {creativeLabel}
-                              </span>
-                            )}
-                          </td>
-                          <td
-                            className={`px-6 py-4 text-sm ${tw.textPrimary}`}
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            {creative.channel}
-                          </td>
-                          <td
-                            className={`px-6 py-4 hidden md:table-cell text-sm ${tw.textMuted}`}
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            {creative.locale || "—"}
-                          </td>
-                          <td
-                            className="px-6 py-4"
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            {creative.is_active ? (
-                              <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                                Active
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600">
-                                Inactive
-                              </span>
-                            )}
-                          </td>
-                          <td
-                            className={`px-6 py-4 hidden md:table-cell text-sm ${tw.textMuted}`}
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            {creative.updated_at ? (
-                              <DateFormatter
-                                date={creative.updated_at}
-                                includeTime
-                              />
-                            ) : creative.created_at ? (
-                              <DateFormatter
-                                date={creative.created_at}
-                                includeTime
-                              />
-                            ) : (
-                              "—"
-                            )}
-                          </td>
-                          <td
-                            className="px-6 py-4 text-sm font-medium"
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            <div className="flex items-center gap-3">
-                              {hasCreativeId && (
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    navigateToCreativeDetails(
-                                      creativeId as number,
-                                    )
-                                  }
-                                  className="p-1 hover:bg-gray-100 rounded transition-colors"
-                                  title="View details"
-                                >
-                                  <Eye className="w-4 h-4 text-gray-600" />
-                                </button>
-                              )}
-                              <button
-                                type="button"
-                                onClick={() => handleEditCreative(creative)}
-                                className="text-sm font-medium hover:underline text-gray-600"
-                              >
-                                Edit
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteCreative(creative)}
-                                className="text-sm font-medium text-red-600 hover:text-red-700"
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
+                            {row.name}
+                          </button>
+                        ) : (
+                          <span className={`font-semibold text-sm ${tw.textPrimary} truncate`}>
+                            {row.name}
+                          </span>
+                        );
+                      },
                     },
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    {
+                      id: "channel",
+                      label: "Channel",
+                      width: "120px",
+                      visible: true,
+                      filterConfig: { type: "multiselect", options: ["SMS", "Email", "Push", "Web"] },
+                    },
+                    {
+                      id: "locale",
+                      label: "Locale",
+                      width: "120px",
+                      visible: true,
+                      filterConfig: { type: "text" },
+                    },
+                    {
+                      id: "status",
+                      label: "Status",
+                      width: "120px",
+                      visible: true,
+                      filterConfig: { type: "multiselect", options: ["Active", "Inactive"] },
+                      render: (value: string) => (
+                        value === "Active" ? (
+                          <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                            Active
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600">
+                            Inactive
+                          </span>
+                        )
+                      ),
+                    },
+                    {
+                      id: "updated",
+                      label: "Updated",
+                      width: "180px",
+                      visible: true,
+                      filterConfig: { type: "date" },
+                      render: (value: string) => (
+                        value ? (
+                          <DateFormatter date={value} includeTime />
+                        ) : (
+                          "—"
+                        )
+                      ),
+                    },
+                    {
+                      id: "actions",
+                      label: "Actions",
+                      width: "150px",
+                      visible: true,
+                      sortable: false,
+                      render: (_, row) => {
+                        const creative = offerCreatives.find((c) => String(c.id) === row.id);
+                        if (!creative) return null;
+                        const creativeId = creative.id ? Number(creative.id) : null;
+                        const hasCreativeId = creativeId !== null && !Number.isNaN(creativeId);
+                        return (
+                          <div className="flex items-center gap-3">
+                            {hasCreativeId && (
+                              <button
+                                type="button"
+                                onClick={() => navigateToCreativeDetails(creativeId)}
+                                className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                title="View details"
+                              >
+                                <Eye className="w-4 h-4 text-gray-600" />
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleEditCreative(creative)}
+                              className="text-sm font-medium hover:underline text-gray-600"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteCreative(creative)}
+                              className="text-sm font-medium text-red-600 hover:text-red-700"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        );
+                      },
+                    },
+                  ]}
+                  data={offerCreatives.map((creative) => {
+                    const creativeLabel = creative.title || `Creative ${creative.channel}${creative.locale ? ` (${creative.locale})` : ""}`;
+                    return {
+                      id: String(creative.id || ""),
+                      name: creativeLabel,
+                      channel: creative.channel,
+                      locale: creative.locale || "—",
+                      status: creative.is_active ? "Active" : "Inactive",
+                      updated: creative.updated_at || creative.created_at || "",
+                    };
+                  })}
+                  rowSpacing="0 8px"
+                  totalItems={offerCreatives.length}
+                  currentPage={1}
+                  pageSize={20}
+                />
+              </div>
+            </>
           ) : (
             <div className="text-center py-8">
               <p className={`text-sm ${tw.textMuted}`}>
@@ -2595,125 +2472,99 @@ export default function OfferDetailsPage() {
             </p>
           </div>
         ) : (
-          <div
-            className={`overflow-x-auto ${tw.rounded} border`}
-            style={{ borderColor: color.border.default }}
-          >
-            <table
-              className="w-full"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead style={{ background: color.surface.tableHeader }}>
-                <tr>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Step
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Campaign
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Segment
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Campaign Type
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Wait (hours)
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider hidden md:table-cell"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Allocation
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {campaignFlows.map((flow, idx) => (
-                  <tr key={idx} className="transition-colors">
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span
-                        className="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold"
-                        style={{ color: "var(--c-text-primary)" }}
-                      >
-                        {flow.step_order || idx + 1}
+          <>
+            <div className={`overflow-x-auto ${tw.rounded}`}>
+              <Table<CampaignFlowTableRow>
+                columns={[
+                  {
+                    id: "step",
+                    label: "Step",
+                    width: "80px",
+                    visible: true,
+                    filterConfig: { type: "number" },
+                    render: (value: number) => (
+                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold" style={{ color: "var(--c-text-primary)" }}>
+                        {value}
                       </span>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <button
-                        onClick={() =>
-                          navigate(`/dashboard/campaigns/${flow.campaign_id}`)
-                        }
-                        className="text-sm font-medium hover:underline"
-                        style={{ color: color.primary.accent }}
-                      >
-                        {flow.campaign_name}
-                      </button>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <button
-                        onClick={() =>
-                          navigate(`/dashboard/segments/${flow.segment_id}`)
-                        }
-                        className="text-sm font-medium hover:underline"
-                        style={{ color: color.primary.accent }}
-                      >
-                        {flow.segment_name}
-                      </button>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span className={`text-sm font-medium ${tw.textPrimary}`}>
-                        {getFlowTypeLabel(flow.flow_type)}
-                      </span>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textPrimary}`}>
-                        {flow.wait_interval_hours}h
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4 hidden md:table-cell"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textMuted}`}>
-                        {flow.bucket_allocation || "—"}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    ),
+                  },
+                  {
+                    id: "campaign",
+                    label: "Campaign",
+                    width: "200px",
+                    visible: true,
+                    filterConfig: { type: "text" },
+                    render: (_, row) => {
+                      const flow = campaignFlows.find((f) => f.campaign_name === row.campaign);
+                      return (
+                        <button
+                          onClick={() => navigate(`/dashboard/campaigns/${flow?.campaign_id}`)}
+                          className="text-sm font-medium hover:underline"
+                          style={{ color: color.primary.accent }}
+                        >
+                          {row.campaign}
+                        </button>
+                      );
+                    },
+                  },
+                  {
+                    id: "segment",
+                    label: "Segment",
+                    width: "200px",
+                    visible: true,
+                    filterConfig: { type: "text" },
+                    render: (_, row) => {
+                      const flow = campaignFlows.find((f) => f.segment_name === row.segment);
+                      return (
+                        <button
+                          onClick={() => navigate(`/dashboard/segments/${flow?.segment_id}`)}
+                          className="text-sm font-medium hover:underline"
+                          style={{ color: color.primary.accent }}
+                        >
+                          {row.segment}
+                        </button>
+                      );
+                    },
+                  },
+                  {
+                    id: "campaignType",
+                    label: "Campaign Type",
+                    width: "150px",
+                    visible: true,
+                    filterConfig: { type: "text" },
+                  },
+                  {
+                    id: "waitHours",
+                    label: "Wait (hours)",
+                    width: "140px",
+                    visible: true,
+                    filterConfig: { type: "number" },
+                    render: (value: number) => `${value}h`,
+                  },
+                  {
+                    id: "allocation",
+                    label: "Allocation",
+                    width: "140px",
+                    visible: true,
+                    filterConfig: { type: "text" },
+                  },
+                ]}
+                data={campaignFlows.map((flow, idx) => ({
+                  id: `flow-${idx}`,
+                  step: flow.step_order || idx + 1,
+                  campaign: flow.campaign_name,
+                  segment: flow.segment_name,
+                  campaignType: getFlowTypeLabel(flow.flow_type),
+                  waitHours: flow.wait_interval_hours,
+                  allocation: flow.bucket_allocation || "—",
+                }))}
+                rowSpacing="0 8px"
+                totalItems={campaignFlows.length}
+                currentPage={1}
+                pageSize={20}
+              />
+            </div>
+          </>
         )}
       </section>
 
@@ -3598,9 +3449,12 @@ export default function OfferDetailsPage() {
 
       {/* Delete Offer Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
-        onClose={handleCancelDelete}
-        onConfirm={handleConfirmDelete}
+        isOpen={deleteConfirm.id !== null}
+        onClose={closeDeleteConfirm}
+        onConfirm={async () => {
+          await confirmDeleteOffer();
+          navigate("/dashboard/offers");
+        }}
         title="Delete Offer"
         description="Are you sure you want to delete this offer? This action cannot be undone."
         itemName={offer?.name || ""}

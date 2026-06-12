@@ -1230,8 +1230,14 @@ export default function SegmentManagementPage() {
               className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
               style={{
                 backgroundColor: "transparent",
-                color: color.primary.action,
-                border: `1px solid ${color.primary.action}`,
+                color: "var(--c-text-primary)",
+                border: "1px solid var(--c-text-primary)",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.05)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "transparent";
               }}
             >
               <BarChart3 size={16} />
@@ -1253,10 +1259,24 @@ export default function SegmentManagementPage() {
                 className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
                 style={{
                   backgroundColor: isSelectionMode
-                    ? color.primary.action
+                    ? "var(--c-primary-action)"
                     : "transparent",
-                  color: isSelectionMode ? "white" : color.primary.action,
-                  border: `1px solid ${color.primary.action}`,
+                  color: isSelectionMode ? "white" : "var(--c-text-primary)",
+                  border: `1px solid ${isSelectionMode ? "var(--c-primary-action)" : "var(--c-text-primary)"}`,
+                }}
+                onMouseEnter={(e) => {
+                  if (!isSelectionMode) {
+                    e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.05)";
+                  } else {
+                    e.currentTarget.style.opacity = "0.9";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isSelectionMode) {
+                    e.currentTarget.style.backgroundColor = "transparent";
+                  } else {
+                    e.currentTarget.style.opacity = "1";
+                  }
                 }}
               >
                 {isSelectionMode ? (
@@ -1558,8 +1578,7 @@ export default function SegmentManagementPage() {
 
       {/* Content */}
       <div
-        className={` ${tw.rounded} border overflow-hidden`}
-        style={{ borderColor: color.border.default }}
+        className={`${tw.rounded}`}
       >
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-16">

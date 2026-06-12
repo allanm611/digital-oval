@@ -48,6 +48,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import ViewMembersModal from "../components/ViewMembersModal";
 import AddMembersModal from "../components/AddMembersModal";
 import { PermissionGate } from "../../auth/components/PermissionGate";
+import { Table, type TableColumn } from "../../../shared/components/Table";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import CreateCommunicationModal from "../../../shared/components/CreateCommunicationModal";
 import type { Customer } from "../../customers360/types/customer";
@@ -269,6 +270,157 @@ export default function SegmentDetailsPage() {
     return flowTypeMap[flowType] || flowType;
   };
 
+  type CampaignFlow = {
+    campaign_id: number;
+    campaign_name: string;
+    segment_id: number;
+    offer_id: number;
+    offer_name: string;
+    flow_type: string;
+    wait_interval_hours: number;
+    step_order?: number;
+    bucket_allocation?: string | null;
+  };
+
+  const campaignFlowColumns = useMemo<TableColumn<CampaignFlow>[]>(() => [
+    {
+      id: "step",
+      header: "Step",
+      accessorFn: (flow, idx) => flow.step_order || idx + 1,
+      cell: (flow, idx) => (
+        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold" style={{ color: "var(--c-text-primary)" }}>
+          {flow.step_order || idx + 1}
+        </span>
+      ),
+      visible: true,
+      sortable: true,
+    },
+    {
+      id: "campaign",
+      header: "Campaign",
+      accessorKey: "campaign_name",
+      cell: (flow) => (
+        <button
+          onClick={() => navigate(`/dashboard/campaigns/${flow.campaign_id}`)}
+          className="text-sm font-medium hover:underline"
+          style={{ color: color.primary.accent }}
+        >
+          {flow.campaign_name}
+        </button>
+      ),
+      visible: true,
+      sortable: true,
+    },
+    {
+      id: "offer",
+      header: "Offer",
+      accessorKey: "offer_name",
+      cell: (flow) => (
+        <button
+          onClick={() => navigate(`/dashboard/offers/${flow.offer_id}`)}
+          className="text-sm font-medium hover:underline"
+          style={{ color: color.primary.accent }}
+        >
+          {flow.offer_name}
+        </button>
+      ),
+      visible: true,
+      sortable: true,
+    },
+    {
+      id: "type",
+      header: "Campaign Type",
+      accessorKey: "flow_type",
+      cell: (flow) => (
+        <span className={`text-sm font-medium ${tw.textPrimary}`}>
+          {getFlowTypeLabel(flow.flow_type)}
+        </span>
+      ),
+      visible: true,
+      sortable: true,
+    },
+    {
+      id: "wait",
+      header: "Wait (hours)",
+      accessorKey: "wait_interval_hours",
+      cell: (flow) => (
+        <div className={`text-sm ${tw.textPrimary}`}>
+          {flow.wait_interval_hours}h
+        </div>
+      ),
+      visible: true,
+      sortable: true,
+    },
+    {
+      id: "allocation",
+      header: "Allocation",
+      accessorKey: "bucket_allocation",
+      cell: (flow) => (
+        <div className={`text-sm ${tw.textMuted}`}>
+          {flow.bucket_allocation || "—"}
+        </div>
+      ),
+      visible: true,
+      sortable: true,
+    },
+  ], [navigate]);
+
+  const customerColumns = useMemo<TableColumn<Customer>[]>(() => [
+    {
+      id: "msisdn",
+      header: "MSISDN",
+      accessorKey: "msisdn",
+      cell: (customer) => (
+        <div className="text-sm text-gray-900">
+          {customer.msisdn || "—"}
+        </div>
+      ),
+      visible: true,
+      sortable: true,
+    },
+    {
+      id: "name",
+      header: "Name",
+      accessorFn: (customer) =>
+        customer.first_name && customer.last_name
+          ? `${customer.first_name} ${customer.last_name}`
+          : customer.first_name || "—",
+      cell: (customer) => (
+        <div className="text-sm font-medium text-gray-900">
+          {customer.first_name && customer.last_name
+            ? `${customer.first_name} ${customer.last_name}`
+            : customer.first_name || "—"}
+        </div>
+      ),
+      visible: true,
+      sortable: true,
+    },
+    {
+      id: "email",
+      header: "Email",
+      accessorKey: "email",
+      cell: (customer) => (
+        <div className="text-sm text-gray-900">
+          {customer.email || "—"}
+        </div>
+      ),
+      visible: true,
+      sortable: true,
+    },
+    {
+      id: "status",
+      header: "Status",
+      accessorKey: "subscriber_status",
+      cell: (customer) => (
+        <div className="text-sm text-gray-900">
+          {customer.subscriber_status || "—"}
+        </div>
+      ),
+      visible: true,
+      sortable: true,
+    },
+  ], []);
+
   const loadCategoryName = useCallback(
     async (categoryId: number | string) => {
       try {
@@ -318,7 +470,7 @@ export default function SegmentDetailsPage() {
       }
     } catch (err) {
       console.error("Failed to load segment details:", err);
-      showError("Unable to Load Segment", extractBackendError(error, "Failed to load segment details. Please try again later."));
+      showError("Unable to Load Segment", extractBackendError(err, "Failed to load segment details. Please try again later."));
     } finally {
       setIsLoading(false);
     }
@@ -547,7 +699,7 @@ export default function SegmentDetailsPage() {
 
   const handleDelete = () => {
     if (!segment) return;
-    openDeleteConfirm(item?.id || 0, item?.name || "");
+    setShowDeleteModal(true);
   };
 
   const handleConfirmDelete = async () => {
@@ -560,7 +712,7 @@ export default function SegmentDetailsPage() {
         "Segment deleted",
         `Segment "${segment.name}" has been deleted successfully`,
       );
-      closeDeleteConfirm();
+      setShowDeleteModal(false);
       navigate("/dashboard/segments");
     } catch (err) {
       console.error("Failed to delete segment:", err);
@@ -571,7 +723,7 @@ export default function SegmentDetailsPage() {
   };
 
   const handleCancelDelete = () => {
-    closeDeleteConfirm();
+    setShowDeleteModal(false);
   };
 
   const handleAddMembers = async () => {
@@ -1556,7 +1708,11 @@ export default function SegmentDetailsPage() {
       {/* Criteria/Definition Section */}
       {(segment.definition || segment.segment_query_payload) && (
         <div
-          className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}
+          className={`${tw.rounded} p-6 shadow-sm`}
+          style={{
+            backgroundColor: 'var(--c-surface-cards)',
+            border: '1px solid var(--c-border-default)',
+          }}
         >
           <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
             Segment Criteria
@@ -1566,20 +1722,38 @@ export default function SegmentDetailsPage() {
           {segment.definition?.layer_filters?.groups &&
           Array.isArray(segment.definition.layer_filters.groups) ? (
             <div className="space-y-4">
-              <div className="bg-gray-50 p-4 rounded border border-gray-200">
-                <p className="text-sm font-semibold text-gray-700 mb-2">
+              <div
+                className="p-4 rounded"
+                style={{
+                  backgroundColor: 'var(--c-surface-background)',
+                  border: '1px solid var(--c-border-default)',
+                }}
+              >
+                <p className="text-sm font-semibold mb-2" style={{ color: 'var(--c-text-primary)' }}>
                   Query Filters:
                 </p>
-                <pre className="text-xs text-gray-600 overflow-auto max-h-48 bg-white p-2 rounded">
+                <pre className="text-xs overflow-auto max-h-48 p-2 rounded" style={{
+                  backgroundColor: 'var(--c-surface-cards)',
+                  color: 'var(--c-text-primary)',
+                }}>
                   {JSON.stringify(segment.definition.layer_filters, null, 2)}
                 </pre>
               </div>
               {segment.query && (
-                <div className="bg-gray-50 p-4 rounded border border-gray-200">
-                  <p className="text-sm font-semibold text-gray-700 mb-2">
+                <div
+                  className="p-4 rounded"
+                  style={{
+                    backgroundColor: 'var(--c-surface-background)',
+                    border: '1px solid var(--c-border-default)',
+                  }}
+                >
+                  <p className="text-sm font-semibold mb-2" style={{ color: 'var(--c-text-primary)' }}>
                     Generated SQL:
                   </p>
-                  <pre className="text-xs text-gray-600 overflow-auto max-h-48 bg-white p-2 rounded font-mono">
+                  <pre className="text-xs overflow-auto max-h-48 p-2 rounded font-mono" style={{
+                    backgroundColor: 'var(--c-surface-cards)',
+                    color: 'var(--c-text-primary)',
+                  }}>
                     {segment.query}
                   </pre>
                 </div>
@@ -1618,7 +1792,11 @@ export default function SegmentDetailsPage() {
                 return (
                   <div key={index} className="relative">
                     <div
-                      className={`flex items-start space-x-3 p-4 bg-gray-50 ${tw.rounded} border border-gray-200`}
+                      className={`flex items-start space-x-3 p-4 ${tw.rounded}`}
+                      style={{
+                        backgroundColor: 'var(--c-surface-background)',
+                        border: '1px solid var(--c-border-default)',
+                      }}
                     >
                       <div
                         className={`mt-1 w-6 h-6 ${tw.rounded} flex items-center justify-center flex-shrink-0`}
@@ -1671,7 +1849,12 @@ export default function SegmentDetailsPage() {
               })}
             </div>
           ) : (
-            <div className={`bg-gray-50 ${tw.rounded} p-4`}>
+            <div
+              className={`${tw.rounded} p-4`}
+              style={{
+                backgroundColor: 'transparent',
+              }}
+            >
               <p className={`text-sm ${tw.textMuted}`}>
                 No conditions defined or criteria format not supported for
                 display
@@ -2058,124 +2241,18 @@ export default function SegmentDetailsPage() {
               </p>
             </div>
           ) : (
-            <div className={`overflow-x-auto ${tw.rounded}`}>
-              <table
-                className="w-full"
-                style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-              >
-                <thead style={{ background: color.surface.tableHeader }}>
-                  <tr>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Step
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Campaign
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Offer
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Campaign Type
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Wait (hours)
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider hidden md:table-cell"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Allocation
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {campaignFlows.map((flow, idx) => (
-                    <tr key={idx} className="transition-colors">
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <span
-                          className="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold"
-                          style={{ color: "var(--c-text-primary)" }}
-                        >
-                          {flow.step_order || idx + 1}
-                        </span>
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <button
-                          onClick={() =>
-                            navigate(`/dashboard/campaigns/${flow.campaign_id}`)
-                          }
-                          className="text-sm font-medium hover:underline"
-                          style={{ color: color.primary.accent }}
-                        >
-                          {flow.campaign_name}
-                        </button>
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <button
-                          onClick={() =>
-                            navigate(`/dashboard/offers/${flow.offer_id}`)
-                          }
-                          className="text-sm font-medium hover:underline"
-                          style={{ color: color.primary.accent }}
-                        >
-                          {flow.offer_name}
-                        </button>
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <span
-                          className={`text-sm font-medium ${tw.textPrimary}`}
-                        >
-                          {getFlowTypeLabel(flow.flow_type)}
-                        </span>
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <div className={`text-sm ${tw.textPrimary}`}>
-                          {flow.wait_interval_hours}h
-                        </div>
-                      </td>
-                      <td
-                        className="px-6 py-4 hidden md:table-cell"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <div className={`text-sm ${tw.textMuted}`}>
-                          {flow.bucket_allocation || "—"}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table<CampaignFlow>
+              columns={campaignFlowColumns}
+              data={campaignFlows}
+              totalItems={campaignFlows.length}
+              isLoading={isLoadingCampaignFlows}
+              style={{
+                headerBackground: color.surface.tableHeader,
+                headerTextColor: color.surface.tableHeaderText,
+                rowBackground: color.surface.tablebodybg,
+                rowSpacing: "0 8px",
+              }}
+            />
           )}
         </div>
       ) : null}
@@ -2296,125 +2373,24 @@ export default function SegmentDetailsPage() {
                     </p>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="bg-gray-50 sticky top-0 z-10">
-                        <tr>
-                          <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-12">
-                            <div className="flex items-center gap-2 cursor-pointer" onClick={() => {
-                              // Select/deselect all logic would go here
-                            }}>
-                              <Checkbox
-                                id="select-all-customers"
-                              />
-                            </div>
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            MSISDN
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Name
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Email
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Status
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {filteredCustomersForSelection.map((customer) => {
-                          const customerId = Number(
-                            customer.subscriber_id || customer.id,
-                          );
-                          const isSelected =
-                            selectedCustomers.includes(customerId);
-                          return (
-                            <tr
-                              key={`${customerId}-${customer.email}`}
-                              onClick={() => {
-                                setSelectedCustomers((prev) =>
-                                  prev.includes(customerId)
-                                    ? prev.filter((cid) => cid !== customerId)
-                                    : [...prev, customerId],
-                                );
-                              }}
-                              className="cursor-pointer transition-colors"
-                              style={{
-                                backgroundColor: isSelected
-                                  ? `${color.primary.accent}15`
-                                  : "white",
-                                borderColor: "#e5e7eb",
-                              }}
-                              onMouseEnter={(e) => {
-                                if (!isSelected)
-                                  (
-                                    e.currentTarget as HTMLTableRowElement
-                                  ).style.backgroundColor = "#f9fafb";
-                              }}
-                              onMouseLeave={(e) => {
-                                if (!isSelected)
-                                  (
-                                    e.currentTarget as HTMLTableRowElement
-                                  ).style.backgroundColor = "white";
-                              }}
-                            >
-                              <td className="px-4 py-3">
-                                <div className="flex items-center gap-2 cursor-pointer" onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedCustomers((prev) =>
-                                    prev.includes(customerId)
-                                      ? prev.filter(
-                                          (cid) => cid !== customerId,
-                                        )
-                                      : [...prev, customerId],
-                                  );
-                                }}>
-                                  <Checkbox
-                                    id={`row-${customerId}`}
-                                    checked={isSelected}
-                                    onChange={() => {
-                                      setSelectedCustomers((prev) =>
-                                        prev.includes(customerId)
-                                          ? prev.filter(
-                                              (cid) => cid !== customerId,
-                                            )
-                                          : [...prev, customerId],
-                                      );
-                                    }}
-                                    className="w-4 h-4 cursor-pointer"
-                                  />
-                                </div>
-                              </td>
-                              <td className="px-4 py-3">
-                                <div className="text-sm text-gray-900">
-                                  {customer.msisdn || "—"}
-                                </div>
-                              </td>
-                              <td className="px-4 py-3">
-                                <div className="text-sm font-medium text-gray-900">
-                                  {customer.first_name && customer.last_name
-                                    ? `${customer.first_name} ${customer.last_name}`
-                                    : customer.first_name || "—"}
-                                </div>
-                              </td>
-                              <td className="px-4 py-3">
-                                <div className="text-sm text-gray-900">
-                                  {customer.email || "—"}
-                                </div>
-                              </td>
-                              <td className="px-4 py-3">
-                                <div className="text-sm text-gray-900">
-                                  {customer.subscriber_status || "—"}
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                  <Table<Customer>
+                    columns={customerColumns}
+                    data={filteredCustomersForSelection}
+                    totalItems={filteredCustomersForSelection.length}
+                    enableRowSelection={true}
+                    selectedRows={selectedCustomers}
+                    onRowSelectChange={(selected) => {
+                      setSelectedCustomers(selected as number[]);
+                    }}
+                    getRowId={(customer) => Number(customer.subscriber_id || customer.id)}
+                    isLoading={isLoadingCustomersForSelection}
+                    style={{
+                      headerBackground: "#f3f4f6",
+                      headerTextColor: "#374151",
+                      rowBackground: "white",
+                      rowSpacing: "0",
+                    }}
+                  />
                 )}
               </div>
 
@@ -2666,9 +2642,9 @@ export default function SegmentDetailsPage() {
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={deleteConfirm.id !== null}
+        isOpen={showDeleteModal}
         onClose={handleCancelDelete}
-        onConfirm={confirmDeleteItem}
+        onConfirm={handleConfirmDelete}
         title="Delete Segment"
         description="Are you sure you want to delete this segment? This action cannot be undone."
         itemName={segment?.name || ""}

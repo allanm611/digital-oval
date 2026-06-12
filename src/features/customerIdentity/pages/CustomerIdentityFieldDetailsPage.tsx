@@ -199,7 +199,7 @@ export default function CustomerIdentityFieldDetailsPage() {
               const operators = getOperatorsForFieldType(field?.field_type || "text");
               return operators.length === 0 ? (
                 <div
-                  className={`bg-white border border-gray-200 ${tw.rounded} p-6`}
+                  className={`bg-white  ${tw.rounded} p-6`}
                 >
                   <p className={`${tw.textSecondary} text-sm`}>
                     {t.customerIdentity.noOperatorsConfigured}
@@ -207,8 +207,7 @@ export default function CustomerIdentityFieldDetailsPage() {
                 </div>
               ) : (
                 <div
-                  className={`${tw.rounded} border overflow-hidden`}
-                  style={{ borderColor: color.border.default }}
+                  className={`${tw.rounded} overflow-hidden`}
                 >
                   <div className="hidden lg:block overflow-x-auto">
                     <table

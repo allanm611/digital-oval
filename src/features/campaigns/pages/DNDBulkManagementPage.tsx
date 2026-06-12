@@ -11,6 +11,7 @@ import { color, tw } from "../../../shared/utils/utils";
 import BackButton from "../../../shared/components/ui/BackButton";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import Pagination from "../../../shared/components/ui/Pagination";
 import {
   communicationChannelService,
   CommunicationChannel,
@@ -18,6 +19,7 @@ import {
 import { dndService, DNDSubscription, DNDType } from "../services/dndService";
 import AddDNDBulkModal from "../components/AddDNDBulkModal";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 
 export default function DNDBulkManagementPage() {
   const navigate = useNavigate();
@@ -81,6 +83,113 @@ export default function DNDBulkManagementPage() {
       return matchesSearch;
     });
   }, [dndSubscriptions, searchTerm]);
+
+  // Table columns definition
+  const defaultColumns: TableColumn<DNDSubscription>[] = [
+    {
+      id: "customer_name",
+      label: "Customer",
+      visible: true,
+      render: (value) => (
+        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value as string || "Unknown"}>
+          {value || "Unknown"}
+        </div>
+      ),
+    },
+    {
+      id: "customer_phone",
+      label: "Phone",
+      visible: true,
+      render: (value) => (
+        <div className="text-sm text-black truncate" title={value ? String(value) : "—"}>
+          {value || "—"}
+        </div>
+      ),
+    },
+    {
+      id: "customer_email",
+      label: "Email",
+      visible: true,
+      render: (value) => (
+        <div className="text-sm text-black truncate" title={value ? String(value) : "—"}>
+          {value || "—"}
+        </div>
+      ),
+    },
+    {
+      id: "channel",
+      label: "Channel",
+      visible: true,
+      render: (value) => (
+        <span className="text-sm text-black capitalize">
+          {value}
+        </span>
+      ),
+    },
+    {
+      id: "dnd_type_name",
+      label: "DND Type",
+      visible: true,
+      render: (value) => (
+        <span className="text-sm text-black capitalize">
+          {value || "Unknown"}
+        </span>
+      ),
+    },
+    {
+      id: "status",
+      label: "Status",
+      visible: true,
+      render: (value) => (
+        <span className="text-sm text-black">
+          {value}
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      render: (value, subscription) => (
+        <div className="flex items-center justify-center">
+          {subscription.status === "active" && (
+            <button
+              onClick={() => handleRemoveCustomer(subscription)}
+              className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
+              title="Remove from DND"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      ),
+    },
+  ];
+
+  const {
+    columns,
+    currentPage: tableCurrentPage,
+    pageSize: tablePageSize,
+    handlePageChange: tableHandlePageChange,
+    sortConfigs,
+    handleSort,
+  } = useTable({
+    tableId: "dnd-bulk-management-table",
+    defaultColumns,
+    persistToLocalStorage: true,
+  });
+
+  // Handle pagination slicing
+  const paginatedSubscriptions = filteredSubscriptions.slice(
+    (tableCurrentPage - 1) * tablePageSize,
+    tableCurrentPage * tablePageSize
+  );
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    tableHandlePageChange(1);
+  }, [searchTerm, filterType, filterChannel, tableHandlePageChange]);
 
   const handleSelectAll = () => {
     if (selectedRows.size === filteredSubscriptions.length) {
@@ -332,7 +441,7 @@ export default function DNDBulkManagementPage() {
       )}
 
       {/* Table */}
-      <div className={`${tw.rounded} border border-gray-200 overflow-hidden`}>
+      <div className={`${tw.rounded} overflow-hidden`}>
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <LoadingSpinner />
@@ -345,200 +454,36 @@ export default function DNDBulkManagementPage() {
             </h3>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table
-              className="w-full min-w-[1400px]"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead>
-                <tr>
-                  {isSelectionMode && (
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{
-                        color: color.surface.tableHeaderText,
-                        backgroundColor: color.surface.tableHeader,
-                        borderTopLeftRadius: "0.375rem",
-                        width: "40px",
-                      }}
-                    >
-                      <Checkbox
-                        id="select-all"
-                        checked={
-                          filteredSubscriptions.length > 0 &&
-                          selectedRows.size === filteredSubscriptions.length
-                        }
-                        onChange={handleSelectAll}
-                      />
-                    </th>
-                  )}
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      ...(!isSelectionMode && {
-                        borderTopLeftRadius: "0.375rem",
-                      }),
-                    }}
-                  >
-                    Customer
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Phone
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Email
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Channel
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    DND Type
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Status
-                  </th>
-                  <th
-                    className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      borderTopRightRadius: "0.375rem",
-                    }}
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredSubscriptions.map((subscription) => (
-                  <tr key={subscription.id} className="transition-colors">
-                    {isSelectionMode && (
-                      <td
-                        className="px-6 py-4"
-                        style={{
-                          backgroundColor: color.surface.tablebodybg,
-                          borderTopLeftRadius: "0.375rem",
-                          borderBottomLeftRadius: "0.375rem",
-                        }}
-                      >
-                        <Checkbox
-                          id={`row-${subscription.id}`}
-                          checked={selectedRows.has(subscription.id)}
-                          onChange={() => handleSelectRow(subscription.id)}
-                        />
-                      </td>
-                    )}
-                    <td
-                      className="px-6 py-4"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        ...(!isSelectionMode && {
-                          borderTopLeftRadius: "0.375rem",
-                          borderBottomLeftRadius: "0.375rem",
-                        }),
-                      }}
-                    >
-                      <div className={`text-sm ${tw.tableFirstColumn} ${tw.textPrimary}`}>
-                        {subscription.customer_name || "Unknown"}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className="text-sm text-black">
-                        {subscription.customer_phone || "—"}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className="text-sm text-black">
-                        {subscription.customer_email || "—"}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span className="text-sm text-black capitalize">
-                        {subscription.channel}
-                      </span>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span className="text-sm text-black capitalize">
-                        {subscription.dnd_type_name || "Unknown"}
-                      </span>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span className="text-sm text-black">
-                        {subscription.status}
-                      </span>
-                    </td>
-                    <td
-                      className="px-6 py-4 text-center"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopRightRadius: "0.375rem",
-                        borderBottomRightRadius: "0.375rem",
-                      }}
-                    >
-                      <div className="flex items-center justify-center">
-                        {subscription.status === "active" && (
-                          <button
-                            onClick={() => handleRemoveCustomer(subscription)}
-                            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
-                            title="Remove from DND"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <>
+            {/* Table */}
+            <Table<DNDSubscription>
+              columns={columns}
+              data={paginatedSubscriptions}
+              totalItems={filteredSubscriptions.length}
+              currentPage={tableCurrentPage}
+              pageSize={tablePageSize}
+              isLoading={loading}
+              onPageChange={tableHandlePageChange}
+              onSort={handleSort}
+              sortConfigs={sortConfigs}
+              style={{
+                headerBackground: color.surface.tableHeader,
+                headerTextColor: color.surface.tableHeaderText,
+                rowBackground: color.surface.tablebodybg,
+                rowSpacing: "0 8px",
+              }}
+            />
+
+            {/* Pagination */}
+            {!loading && paginatedSubscriptions.length > 0 && filteredSubscriptions.length > 0 && (
+              <Pagination
+                currentPage={tableCurrentPage}
+                pageSize={tablePageSize}
+                totalItems={filteredSubscriptions.length}
+                onPageChange={tableHandlePageChange}
+              />
+            )}
+          </>
         )}
       </div>
 

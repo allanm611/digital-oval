@@ -5,10 +5,15 @@ import SearchInput from "../../../shared/components/ui/SearchInput";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
+import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import Pagination from "../../../shared/components/ui/Pagination";
 import { WhatsAppRoute } from "../types/whatsappRoute";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw } from "../../../shared/utils/utils";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import { whatsappRouteService } from "../services/whatsappRouteService";
 
 const DUMMY_WHATSAPP_ROUTES: WhatsAppRoute[] = [
   {
@@ -46,11 +51,17 @@ export default function WhatsAppRoutesList() {
 
   const [routes, setRoutes] = useState<WhatsAppRoute[]>([]);
   const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState<number | null>(null);
   const [togglingStatus, setTogglingStatus] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
-  const [deleteConfirmName, setDeleteConfirmName] = useState("");
+
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteRoute } = useDeleteConfirm({
+    onDelete: async (id) => {
+      const numId = typeof id === "string" ? parseInt(id) : id;
+      setRoutes((prev) => prev.filter((r) => r.id !== numId));
+      await whatsappRouteService.deleteRoute(numId);
+    },
+    itemLabel: "WhatsApp Route",
+  });
 
   useEffect(() => {
     loadRoutes();
@@ -66,25 +77,7 @@ export default function WhatsAppRoutesList() {
   };
 
   const handleDeleteClick = (route: WhatsAppRoute) => {
-    setDeleteConfirmId(route.id);
-    setDeleteConfirmName(route.name);
-  };
-
-  const handleConfirmDelete = () => {
-    if (!deleteConfirmId) return;
-
-    setDeleting(deleteConfirmId);
-    // Mock API call
-    setTimeout(() => {
-      success(
-        "Success",
-        `"${deleteConfirmName}" has been deleted successfully`,
-      );
-      setRoutes((prev) => prev.filter((route) => route.id !== deleteConfirmId));
-      setDeleteConfirmId(null);
-      setDeleteConfirmName("");
-      setDeleting(null);
-    }, 600);
+    openDeleteConfirm(route.id, route.name);
   };
 
   const handleToggleStatus = (route: WhatsAppRoute) => {
@@ -112,6 +105,106 @@ export default function WhatsAppRoutesList() {
       (route.description &&
         route.description.toLowerCase().includes(searchTerm.toLowerCase())),
   );
+
+  // Table columns definition
+  const defaultColumns: TableColumn<WhatsAppRoute>[] = [
+    {
+      id: "name",
+      label: "Route Name",
+      visible: true,
+      render: (value) => (
+        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value as string}>
+          {value}
+        </div>
+      ),
+    },
+    {
+      id: "description",
+      label: "Description",
+      visible: true,
+      render: (value) => (
+        <div className={`text-sm ${tw.textSecondary} truncate`} title={value ? String(value) : "—"}>
+          {value || "—"}
+        </div>
+      ),
+    },
+    {
+      id: "is_active",
+      label: "Status",
+      visible: true,
+      render: (value) => (
+        <span className={`text-sm ${tw.textSecondary}`}>
+          {value ? "Active" : "Inactive"}
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      render: (value, route) => (
+        <div className="flex items-center justify-center gap-2">
+          <ActivateDeactivateButton
+            isActive={route.is_active}
+            onToggle={() => handleToggleStatus(route)}
+            disabled={togglingStatus === route.id}
+            isLoading={togglingStatus === route.id}
+            title={route.is_active ? "Deactivate" : "Activate"}
+          />
+          <button
+            onClick={() => navigate(`/dashboard/whatsapp-routes/edit/${route.id}`)}
+            className={`p-2 ${tw.rounded} transition-colors`}
+            style={{
+              color: color.primary.action,
+              backgroundColor: "transparent",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = `${color.primary.action}10`;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "transparent";
+            }}
+            title="Edit"
+          >
+            <Edit className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleDeleteClick(route)}
+            disabled={isDeleting && deleteConfirm.id === route.id}
+            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+            title="Delete"
+          >
+            <Trash2 className="w-4 h-4 text-red-600" />
+          </button>
+        </div>
+      ),
+    },
+  ];
+
+  const {
+    columns,
+    currentPage: tableCurrentPage,
+    pageSize: tablePageSize,
+    handlePageChange: tableHandlePageChange,
+    sortConfigs,
+    handleSort,
+  } = useTable({
+    tableId: "whatsapp-routes-table",
+    defaultColumns,
+    persistToLocalStorage: true,
+  });
+
+  // Handle pagination slicing
+  const paginatedRoutes = filteredRoutes.slice(
+    (tableCurrentPage - 1) * tablePageSize,
+    tableCurrentPage * tablePageSize
+  );
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    tableHandlePageChange(1);
+  }, [searchTerm, tableHandlePageChange]);
 
   return (
     <div className="space-y-6">
@@ -158,94 +251,55 @@ export default function WhatsAppRoutesList() {
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table
-            className="w-full min-w-[720px]"
-            style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-          >
-            <thead>
-              <tr>
-                <th
-                  className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider rounded-tl-md"
-                  style={{
-                    color: color.surface.tableHeaderText,
-                    backgroundColor: color.surface.tableHeader,
-                  }}
-                >
-                  Route Name
-                </th>
-                <th
-                  className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                  style={{
-                    color: color.surface.tableHeaderText,
-                    backgroundColor: color.surface.tableHeader,
-                  }}
-                >
-                  Description
-                </th>
-                <th
-                  className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider rounded-tr-md"
-                  style={{
-                    color: color.surface.tableHeaderText,
-                    backgroundColor: color.surface.tableHeader,
-                  }}
-                >
-                  Status
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredRoutes.map((route) => (
-                <tr
-                  key={route.id}
-                  style={{ backgroundColor: color.surface.tablebodybg }}
-                >
-                  <td className="px-6 py-4 text-sm font-medium text-black">
-                    {route.name}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-black">
-                    {route.description || "—"}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-black">
-                    {route.is_active ? "Active" : "Inactive"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <>
+          {/* Table */}
+          <Table<WhatsAppRoute>
+            columns={columns}
+            data={paginatedRoutes}
+            totalItems={filteredRoutes.length}
+            currentPage={tableCurrentPage}
+            pageSize={tablePageSize}
+            isLoading={loading}
+            onPageChange={tableHandlePageChange}
+            onSort={handleSort}
+            sortConfigs={sortConfigs}
+            style={{
+              headerBackground: color.surface.tableHeader,
+              headerTextColor: color.surface.tableHeaderText,
+              rowBackground: color.surface.tablebodybg,
+              rowSpacing: "0 8px",
+            }}
+          />
+
+          {/* Pagination */}
+          {!loading && paginatedRoutes.length > 0 && filteredRoutes.length > 0 && (
+            <Pagination
+              currentPage={tableCurrentPage}
+              pageSize={tablePageSize}
+              totalItems={filteredRoutes.length}
+              onPageChange={tableHandlePageChange}
+            />
+          )}
+        </>
       )}
 
       {/* Delete Confirmation Modal */}
-      {deleteConfirmId !== null && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-md p-6 max-w-md w-full mx-4">
-            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-2`}>
-              Delete WhatsApp Route
-            </h3>
-            <p className={`${tw.textSecondary} text-sm mb-6`}>
-              Are you sure you want to delete "{deleteConfirmName}"? This action
-              cannot be undone.
-            </p>
-            <div className="flex items-center justify-end gap-3">
-              <button
-                onClick={() => setDeleteConfirmId(null)}
-                disabled={deleting !== null}
-                className="px-4 py-2 text-sm font-medium border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-60"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmDelete}
-                disabled={deleting !== null}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors disabled:opacity-60"
-              >
-                {deleting === deleteConfirmId ? "Deleting..." : "Delete"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteConfirmModal
+        isOpen={deleteConfirm.id !== null}
+        onClose={closeDeleteConfirm}
+        onConfirm={async () => {
+          try {
+            await confirmDeleteRoute(deleteConfirm.id);
+            success("Success", `Route deleted successfully`);
+          } catch (err) {
+            showError("Error", extractBackendError(err, "Error. Please try again."));
+          }
+        }}
+        title="Delete WhatsApp Route"
+        description="Are you sure you want to delete this route? This action cannot be undone."
+        itemName={deleteConfirm.itemName || ""}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

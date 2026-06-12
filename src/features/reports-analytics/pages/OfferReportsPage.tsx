@@ -1372,7 +1372,7 @@ export default function OfferReportsPage() {
         )}
 
         {!isLoadingOffers && !offerFetchError && offers.length > 0 && (
-          <div>
+          <>
             <Table<OfferTableRow>
               columns={tableColumnsMemo}
               data={filteredRows}
@@ -1384,9 +1384,18 @@ export default function OfferReportsPage() {
                 headerBackground: colors.surface.tableHeader,
                 headerTextColor: colors.surface.tableHeaderText,
                 rowBackground: colors.surface.tablebodybg,
+                rowSpacing: "0 8px",
               }}
             />
-          </div>
+            {filteredRows.length > 0 && (
+              <Pagination
+                currentPage={tablePage}
+                pageSize={tablePageSize}
+                totalItems={filteredRows.length}
+                onPageChange={setTablePage}
+              />
+            )}
+          </>
         )}
       </section>
     </div>

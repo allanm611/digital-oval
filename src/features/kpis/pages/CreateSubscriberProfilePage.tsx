@@ -262,7 +262,7 @@ export default function CreateSubscriberProfilePage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information Section <span className="text-red-500">*</span>/}
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div className={`${tw.rounded} bg-white p-6 shadow-sm`}>
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Basic Information</h2>
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -398,7 +398,7 @@ export default function CreateSubscriberProfilePage() {
         </div>
 
         {/* Validation Configuration Section */}
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div className={`${tw.rounded} bg-white p-6 shadow-sm`}>
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Validation Configuration</h2>
           <div className="space-y-4">
             <div>
@@ -468,7 +468,7 @@ export default function CreateSubscriberProfilePage() {
         </div>
 
         {/* Data Source Configuration Section <span className="text-red-500">*</span>/}
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div className={`${tw.rounded} bg-white p-6 shadow-sm`}>
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Data Source Configuration</h2>
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -519,7 +519,7 @@ export default function CreateSubscriberProfilePage() {
         </div>
 
         {/* Extraction Logic Section <span className="text-red-500">*</span>/}
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div className={`${tw.rounded} bg-white p-6 shadow-sm`}>
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Extraction Logic</h2>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">

@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, Edit, Trash2, Plus, Loader2 } from "lucide-react";
+import { Eye, Edit, Trash2, Plus, Loader2, MoreHorizontal } from "lucide-react";
+import { createPortal } from "react-dom";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import BackButton from "../../../shared/components/ui/BackButton";
-import { color, tw, button } from "../../../shared/utils/utils";
+import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Pagination from "../../../shared/components/ui/Pagination";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -12,6 +13,7 @@ import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { creativeTemplateService } from "../../configurations/services/creativeTemplateService";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 
 interface CreativeTemplate {
   id: number;
@@ -34,9 +36,25 @@ export default function CreativeTemplatesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [templateToDelete, setTemplateToDelete] = useState<CreativeTemplate | null>(null);
-  const [deleting, setDeleting] = useState<number | null>(null);
+
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteTemplate } = useDeleteConfirm({
+    onDelete: async (id) => {
+      const numId = typeof id === "string" ? parseInt(id) : id;
+      setTemplates((prev) => prev.filter((t) => t.id !== numId));
+      await creativeTemplateService.deleteCreativeTemplate(numId);
+    },
+    itemLabel: "Creative Template",
+  });
+
+  const [showActionMenu, setShowActionMenu] = useState<number | null>(null);
+  const [dropdownPosition, setDropdownPosition] = useState<{
+    top: number;
+    left: number;
+    maxHeight: number;
+  } | null>(null);
+  const actionMenuRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const dropdownMenuRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
   const loadTemplates = useCallback(async () => {
     setIsLoading(true);
@@ -55,26 +73,75 @@ export default function CreativeTemplatesPage() {
     loadTemplates();
   }, [loadTemplates]);
 
-  const handleDeleteClick = (template: CreativeTemplate) => {
-    setTemplateToDelete(template);
-    openDeleteConfirm(item?.id || 0, item?.name || "");
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      let isOutside = true;
+
+      Object.values(actionMenuRefs.current).forEach((ref) => {
+        if (ref && ref.contains(event.target as Node)) {
+          isOutside = false;
+        }
+      });
+
+      Object.values(dropdownMenuRefs.current).forEach((ref) => {
+        if (ref && ref.contains(event.target as Node)) {
+          isOutside = false;
+        }
+      });
+
+      if (isOutside) {
+        setShowActionMenu(null);
+        setDropdownPosition(null);
+      }
+    };
+
+    if (showActionMenu !== null) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showActionMenu]);
+
+  const handleActionMenuToggle = (
+    templateId: number,
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) => {
+    if (showActionMenu === templateId) {
+      setShowActionMenu(null);
+      setDropdownPosition(null);
+    } else {
+      setShowActionMenu(templateId);
+
+      if (event && event.currentTarget) {
+        const button = event.currentTarget;
+        const buttonRect = button.getBoundingClientRect();
+        const dropdownWidth = 256;
+        const spacing = 4;
+        const padding = 8;
+
+        const top = buttonRect.bottom + spacing;
+        let left = buttonRect.right - dropdownWidth;
+
+        if (left + dropdownWidth > window.innerWidth - padding) {
+          left = window.innerWidth - dropdownWidth - padding;
+        }
+        if (left < padding) {
+          left = padding;
+        }
+
+        setDropdownPosition({
+          top,
+          left,
+          maxHeight: window.innerHeight - buttonRect.bottom - 16,
+        });
+      }
+    }
   };
 
-  const confirmDeleteTemplate = async () => {
-    if (!templateToDelete) return;
-
-    setDeleting(templateToDelete.id);
-    try {
-      await creativeTemplateService.deleteCreativeTemplate(templateToDelete.id);
-      setTemplates((prev) => prev.filter((t) => t.id !== templateToDelete.id));
-      showSuccess("Creative Template deleted successfully");
-      closeDeleteConfirm();
-      setTemplateToDelete(null);
-    } catch (error) {
-      showError("Failed to delete creative template", extractBackendError(error, "Failed to delete creative template. Please try again."));;
-    } finally {
-      setDeleting(false);
-    }
+  const handleDeleteClick = (template: CreativeTemplate) => {
+    setTemplateToDelete(template);
+    openDeleteConfirm(template.id, template.name);
+    setShowActionMenu(null);
   };
 
   const filteredTemplates = templates.filter(
@@ -84,8 +151,134 @@ export default function CreativeTemplatesPage() {
       (template.code && template.code.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const startIndex = (currentPage - 1) * pageSize;
-  const paginatedTemplates = filteredTemplates.slice(startIndex, startIndex + pageSize);
+  // Table columns definition
+  const defaultColumns: TableColumn<CreativeTemplate>[] = [
+    {
+      id: "name",
+      label: "Name",
+      visible: true,
+      render: (value) => (
+        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value as string}>
+          {value}
+        </div>
+      ),
+    },
+    {
+      id: "code",
+      label: "Code",
+      visible: true,
+      render: (value) => (
+        <div className={`text-sm ${tw.textSecondary} font-mono truncate`} title={value ? String(value) : "-"}>
+          {value || "-"}
+        </div>
+      ),
+    },
+    {
+      id: "primaryChannel",
+      label: "Channel",
+      visible: true,
+      render: (value) => (
+        <div className={`text-sm ${tw.textSecondary} truncate`} title={value ? String(value) : "-"}>
+          {value || "-"}
+        </div>
+      ),
+    },
+    {
+      id: "description",
+      label: "Description",
+      visible: true,
+      render: (value) => (
+        <div className={`text-sm ${tw.textSecondary} max-w-md truncate`} title={value ? String(value) : "-"}>
+          {value || "-"}
+        </div>
+      ),
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      render: (value, template) => (
+        <div className="flex items-center justify-center space-x-2">
+          <button
+            onClick={() => navigate(`/dashboard/creative-templates/${template.id}`)}
+            className={`p-2 ${tw.rounded} transition-colors`}
+            style={{
+              color: color.primary.action,
+              backgroundColor: "transparent",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = `${color.primary.action}10`;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "transparent";
+            }}
+            title="View details"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => navigate(`/dashboard/creative-templates/${template.id}/edit`)}
+            className={`p-2 ${tw.rounded} transition-colors`}
+            style={{
+              color: color.primary.action,
+              backgroundColor: "transparent",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = `${color.primary.action}10`;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "transparent";
+            }}
+            title="Edit"
+          >
+            <Edit className="w-4 h-4" />
+          </button>
+          <div className="relative" ref={(el) => {
+            actionMenuRefs.current[template.id] = el;
+          }}>
+            <button
+              onClick={(e) => handleActionMenuToggle(template.id, e)}
+              className={`p-2 ${tw.rounded} transition-colors`}
+              style={{
+                color: color.primary.action,
+                backgroundColor: "transparent",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = `${color.primary.action}10`;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "transparent";
+              }}
+              title="More options"
+            >
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      ),
+    },
+  ];
+
+  const {
+    columns,
+    currentPage: tableCurrentPage,
+    pageSize: tablePageSize,
+    handlePageChange: tableHandlePageChange,
+    sortConfigs,
+    handleSort,
+  } = useTable({
+    tableId: "creative-templates-table",
+    defaultColumns,
+    persistToLocalStorage: true,
+  });
+
+  );
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    tableHandlePageChange(1);
+  }, [searchTerm, tableHandlePageChange]);
 
   return (
     <div className="space-y-6">
@@ -125,10 +318,7 @@ export default function CreativeTemplatesPage() {
         />
       </div>
 
-      <div
-        className={`${tw.rounded} border overflow-hidden`}
-        style={{ borderColor: color.border.default }}
-      >
+      <div className={`${tw.rounded} overflow-hidden`}>
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <LoadingSpinner variant="modern" size="lg" color="primary" className="mr-3" />
@@ -154,174 +344,74 @@ export default function CreativeTemplatesPage() {
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table
-              className="w-full min-w-[720px]"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead>
-                <tr>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      borderTopLeftRadius: "0.375rem",
+          <>
+            {/* Table */}
+            <Table<CreativeTemplate>
+              columns={columns}
+              data={filteredTemplates}
+              totalItems={filteredTemplates.length}
+              currentPage={tableCurrentPage}
+              pageSize={tablePageSize}
+              isLoading={isLoading}
+              onPageChange={tableHandlePageChange}
+              onSort={handleSort}
+              sortConfigs={sortConfigs}
+              style={{
+                headerBackground: color.surface.tableHeader,
+                headerTextColor: color.surface.tableHeaderText,
+                rowBackground: color.surface.tablebodybg,
+                rowSpacing: "0 8px",
+              }}
+            />
+
+            {/* Pagination */}
+            {!isLoading && filteredTemplates.length > 0 && filteredTemplates.length > 0 && (
+              <Pagination
+                currentPage={tableCurrentPage}
+                pageSize={tablePageSize}
+                totalItems={filteredTemplates.length}
+                onPageChange={tableHandlePageChange}
+              />
+            )}
+
+            {/* Action Menus via Portal */}
+            {filteredTemplates.map((template) => {
+              if (showActionMenu === template.id && dropdownPosition) {
+                return createPortal(
+                  <div
+                    ref={(el) => {
+                      dropdownMenuRefs.current[template.id] = el;
                     }}
-                  >
-                    Name
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    className={`fixed bg-white border border-gray-200 ${tw.rounded} shadow-xl py-3 w-64`}
                     style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
+                      zIndex: zIndex.popover,
+                      top: `${dropdownPosition.top}px`,
+                      left: `${dropdownPosition.left}px`,
+                      maxHeight: `${dropdownPosition.maxHeight}px`,
+                      overflowY: "auto",
                     }}
+                    onClick={(e) => e.stopPropagation()}
+                    onMouseDown={(e) => e.stopPropagation()}
                   >
-                    Code
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Channel
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Description
-                  </th>
-                  <th
-                    className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      borderTopRightRadius: "0.375rem",
-                    }}
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedTemplates.map((template) => (
-                  <tr key={template.id} className="transition-colors">
-                    <td
-                      className="px-6 py-4"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopLeftRadius: "0.375rem",
-                        borderBottomLeftRadius: "0.375rem",
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteClick(template);
                       }}
+                      className="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
                     >
-                      <div className={`text-sm ${tw.textPrimary}`}>
-                        {template.name}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary} font-mono`}>
-                        {template.code || "-"}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary}`}>
-                        {template.primaryChannel || "-"}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary} max-w-md`}>
-                        {template.description || "-"}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4 text-center"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopRightRadius: "0.375rem",
-                        borderBottomRightRadius: "0.375rem",
-                      }}
-                    >
-                      <div className="flex items-center justify-center space-x-2">
-                        <button
-                          onClick={() => navigate(`/dashboard/creative-templates/${template.id}`)}
-                          className={`p-2 ${tw.rounded} transition-colors`}
-                          style={{
-                            color: color.primary.action,
-                            backgroundColor: "transparent",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = `${color.primary.action}10`;
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = "transparent";
-                          }}
-                          title="View details"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => navigate(`/dashboard/creative-templates/${template.id}/edit`)}
-                          className={`p-2 ${tw.rounded} transition-colors`}
-                          style={{
-                            color: color.primary.action,
-                            backgroundColor: "transparent",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = `${color.primary.action}10`;
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = "transparent";
-                          }}
-                          title="Edit"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(template)}
-                          disabled={deleting === template.id}
-                          className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-                          title="Delete"
-                        >
-                          {deleting === template.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="w-4 h-4 text-red-600" />
-                          )}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      <Trash2 className="w-4 h-4 mr-4" />
+                      Delete
+                    </button>
+                  </div>,
+                  document.body,
+                );
+              }
+              return null;
+            })}
+          </>
         )}
       </div>
-
-      {!isLoading && filteredTemplates.length > 0 && (
-        <Pagination
-          currentPage={currentPage}
-          pageSize={pageSize}
-          totalItems={filteredTemplates.length}
-          onPageChange={setCurrentPage}
-        />
-      )}
 
       <DeleteConfirmModal
         isOpen={deleteConfirm.id !== null}
@@ -329,11 +419,18 @@ export default function CreativeTemplatesPage() {
           closeDeleteConfirm();
           setTemplateToDelete(null);
         }}
-        onConfirm={confirmDeleteTemplate}
+        onConfirm={async () => {
+          try {
+            await confirmDeleteTemplate(deleteConfirm.id);
+            showSuccess("Creative Template deleted successfully");
+          } catch (error) {
+            showError("Failed to delete creative template", extractBackendError(error, "Failed to delete creative template. Please try again."));
+          }
+        }}
         title="Delete Creative Template"
         description="This does not remove existing creatives."
-        itemName={templateToDelete?.name || ""}
-        isLoading={deleting === templateToDelete?.id}
+        itemName={deleteConfirm.itemName || ""}
+        isLoading={isDeleting}
       />
     </div>
   );

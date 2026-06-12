@@ -2461,6 +2461,7 @@ Satoshi
 
   --c-surface-cards: #f5f5f5;
   --c-surface-background: #ffffff;
+  --c-surface-card-bg: #ffffff;
   --c-surface-table-header: #e5e7eb;
   --c-surface-table-header-text: #000000;
   --c-surface-table-body: #ffffff;
@@ -2510,9 +2511,10 @@ Satoshi
 
   --c-surface-cards: #394247;
   --c-surface-background: #2a2f31;
-  --c-surface-table-header: #394247;
+  --c-surface-card-bg: #394247;
+  --c-surface-table-header: #2a2f31;
   --c-surface-table-header-text: #f9fafb;
-  --c-surface-table-body: #2a2f31;
+  --c-surface-table-body: #394247;
   --c-bg-tab-active: #252829;
   --c-bg-tab-inactive: #4b5563;
   --c-tab-text: #ffffff;

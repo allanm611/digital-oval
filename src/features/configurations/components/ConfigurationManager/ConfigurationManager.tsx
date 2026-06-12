@@ -13,7 +13,8 @@ import Checkbox from "../../../../shared/components/ui/Checkbox";
 import ActivateDeactivateButton from "../../../../shared/components/ui/ActivateDeactivateButton";
 import DeleteConfirmModal from "../../../../shared/components/ui/DeleteConfirmModal";
 import ConfigurationModal from "./ConfigurationModal";
-import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import { useDeleteConfirm } from "../../../../shared/hooks/useDeleteConfirm";
+import { Table, useTable, type TableColumn } from "../../../../shared/components/Table";
 
 export interface ConfigurationItem {
   id: number | string;
@@ -80,15 +81,23 @@ export default function ConfigurationManager({
   const [items, setItems] = useState<ConfigurationItem[]>(config.initialData);
   const [loading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(20);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ConfigurationItem | undefined>();
   const [isSaving, setIsSaving] = useState(false);
   const [togglingItemId, setTogglingItemId] = useState<number | string | null>(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<ConfigurationItem | null>(null);
-  const [deleting, setDeleting] = useState(false);
+
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteItem } = useDeleteConfirm({
+    onDelete: async (id) => {
+      const numId = typeof id === "string" ? parseInt(id) : id;
+      setItems((prev) => prev.filter((i) => i.id !== numId));
+      showToast(
+        config.deleteConfirmTitle,
+        config.deleteSuccessMessage(itemToDelete?.name || "")
+      );
+    },
+    itemLabel: config.entityName,
+  });
 
   const handleCreateItem = () => {
     setEditingItem(undefined);
@@ -102,30 +111,7 @@ export default function ConfigurationManager({
 
   const handleDeleteClick = (item: ConfigurationItem) => {
     setItemToDelete(item);
-    openDeleteConfirm(item?.id || 0, item?.name || "");
-  };
-
-  const confirmDeleteItem = async () => {
-    if (!itemToDelete) return;
-
-    try {
-      setDeleting(true);
-      setItems((prev) => prev.filter((i) => i.id !== itemToDelete.id));
-      showToast(
-        config.deleteConfirmTitle,
-        config.deleteSuccessMessage(itemToDelete.name)
-      );
-      closeDeleteConfirm();
-      setItemToDelete(null);
-    } catch (err) {
-      console.error(`Error deleting ${config.entityName}:`, err);
-      showError(
-        t.genericConfig.error,
-        err instanceof Error ? err.message : config.deleteErrorMessage
-      );
-    } finally {
-      setDeleting(false);
-    }
+    openDeleteConfirm(item.id, item.name);
   };
 
   const handleToggleActive = (item: ConfigurationItem) => {
@@ -197,12 +183,106 @@ export default function ConfigurationManager({
     [items, searchTerm]
   );
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm]);
+  // Table columns definition
+  const defaultColumns: TableColumn<ConfigurationItem>[] = [
+    {
+      id: "name",
+      label: config.entityName,
+      visible: true,
+      render: (value) => (
+        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value as string}>
+          {value}
+        </div>
+      ),
+    },
+    {
+      id: "description",
+      label: t.genericConfig.description,
+      visible: true,
+      render: (value) => (
+        <div className={`text-sm ${tw.textSecondary} max-w-md truncate`} title={value ? String(value) : "-"}>
+          {value || t.genericConfig.noDescription}
+        </div>
+      ),
+    },
+    {
+      id: "isActive",
+      label: t.genericConfig.status,
+      visible: true,
+      render: (value) => (
+        <span className={`text-sm font-medium ${tw.textSecondary}`}>
+          {value !== false ? t.genericConfig.active || 'Active' : t.genericConfig.inactive || 'Inactive'}
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      label: t.genericConfig.actions,
+      visible: true,
+      sortable: false,
+      render: (value, item) => (
+        <div className="flex items-center justify-center space-x-2">
+          <ActivateDeactivateButton
+            isActive={item.isActive ?? true}
+            onToggle={() => handleToggleActive(item)}
+            disabled={togglingItemId === item.id}
+            isLoading={togglingItemId === item.id}
+            title={
+              item.isActive
+                ? `Deactivate ${item.name}`
+                : `Activate ${item.name}`
+            }
+          />
+          <button
+            onClick={() => handleEditItem(item)}
+            className={`p-2 ${tw.rounded} transition-colors`}
+            style={{
+              color: color.primary.action,
+              backgroundColor: "transparent",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = `${color.primary.action}10`;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "transparent";
+            }}
+          >
+            <Edit className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleDeleteClick(item)}
+            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
+          >
+            <Trash2 className="w-4 h-4 text-red-600" />
+          </button>
+        </div>
+      ),
+    },
+  ];
 
-  const startIndex = (currentPage - 1) * pageSize;
-  const paginatedItems = filteredItems.slice(startIndex, startIndex + pageSize);
+  const {
+    columns,
+    currentPage: tableCurrentPage,
+    pageSize: tablePageSize,
+    handlePageChange: tableHandlePageChange,
+    sortConfigs,
+    handleSort,
+  } = useTable({
+    tableId: "configuration-table",
+    defaultColumns,
+    persistToLocalStorage: true,
+  });
+
+  // Handle pagination slicing
+  const paginatedItems = filteredItems.slice(
+    (tableCurrentPage - 1) * tablePageSize,
+    tableCurrentPage * tablePageSize
+  );
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    tableHandlePageChange(1);
+  }, [searchTerm, tableHandlePageChange]);
 
   const IconComponent = config.icon;
 
@@ -255,10 +335,7 @@ export default function ConfigurationManager({
       </div>
 
       {/* Table */}
-      <div
-        className={`${tw.rounded} border overflow-hidden`}
-        style={{ borderColor: color.border.default }}
-      >
+      <div className={`${tw.rounded} overflow-hidden`}>
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <LoadingSpinner
@@ -289,152 +366,38 @@ export default function ConfigurationManager({
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table
-              className="w-full min-w-[720px]"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead>
-                <tr>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      borderTopLeftRadius: "0.375rem",
-                    }}
-                  >
-                    {config.entityName}
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    {t.genericConfig.description}
-                  </th>
-                  <th
-                    className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    {t.genericConfig.status}
-                  </th>
-                  <th
-                    className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      borderTopRightRadius: "0.375rem",
-                    }}
-                  >
-                    {t.genericConfig.actions}
-                  </th>
-                </tr>
-              </thead>
+          <>
+            {/* Table */}
+            <Table<ConfigurationItem>
+              columns={columns}
+              data={paginatedItems}
+              totalItems={filteredItems.length}
+              currentPage={tableCurrentPage}
+              pageSize={tablePageSize}
+              isLoading={loading}
+              onPageChange={tableHandlePageChange}
+              onSort={handleSort}
+              sortConfigs={sortConfigs}
+              style={{
+                headerBackground: color.surface.tableHeader,
+                headerTextColor: color.surface.tableHeaderText,
+                rowBackground: color.surface.tablebodybg,
+                rowSpacing: "0 8px",
+              }}
+            />
 
-              <tbody>
-                {paginatedItems.map((item) => (
-                  <tr key={item.id} className="transition-colors">
-                    <td
-                      className="px-6 py-4"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopLeftRadius: "0.375rem",
-                        borderBottomLeftRadius: "0.375rem",
-                      }}
-                    >
-                      <div className={`text-sm ${tw.tableFirstColumn} ${tw.textPrimary}`}>
-                        {item.name}
-                      </div>
-                    </td>
-
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary} max-w-md`}>
-                        {item.description || t.genericConfig.noDescription}
-                      </div>
-                    </td>
-
-                    <td
-                      className="px-6 py-4 text-center"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span className={`text-sm font-medium ${tw.textSecondary}`}>
-                        {item.isActive ?? true ? t.genericConfig.active || 'Active' : t.genericConfig.inactive || 'Inactive'}
-                      </span>
-                    </td>
-
-                    <td
-                      className="px-6 py-4 text-center"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopRightRadius: "0.375rem",
-                        borderBottomRightRadius: "0.375rem",
-                      }}
-                    >
-                      <div className="flex items-center justify-center space-x-2">
-                        <ActivateDeactivateButton
-                          isActive={item.isActive ?? true}
-                          onToggle={() => handleToggleActive(item)}
-                          disabled={togglingItemId === item.id}
-                          isLoading={togglingItemId === item.id}
-                          title={
-                            item.isActive
-                              ? `Deactivate ${item.name}`
-                              : `Activate ${item.name}`
-                          }
-                        />
-
-                        <button
-                          onClick={() => handleEditItem(item)}
-                          className={`p-2 ${tw.rounded} transition-colors`}
-                          style={{
-                            color: color.primary.action,
-                            backgroundColor: "transparent",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = `${color.primary.action}10`;
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor =
-                              "transparent";
-                          }}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-
-                        <button
-                          onClick={() => handleDeleteClick(item)}
-                          className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
-                        >
-                          <Trash2 className="w-4 h-4 text-red-600" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+            {/* Pagination */}
+            {!loading && paginatedItems.length > 0 && filteredItems.length > 0 && (
+              <Pagination
+                currentPage={tableCurrentPage}
+                pageSize={tablePageSize}
+                totalItems={filteredItems.length}
+                onPageChange={tableHandlePageChange}
+              />
+            )}
+          </>
         )}
       </div>
-
-      {/* Pagination */}
-      {!loading && filteredItems.length > 0 && (
-        <Pagination
-          currentPage={currentPage}
-          pageSize={pageSize}
-          totalItems={filteredItems.length}
-          onPageChange={setCurrentPage}
-        />
-      )}
 
       <ConfigurationModal
         isOpen={isModalOpen}
@@ -454,11 +417,21 @@ export default function ConfigurationManager({
           closeDeleteConfirm();
           setItemToDelete(null);
         }}
-        onConfirm={confirmDeleteItem}
+        onConfirm={async () => {
+          try {
+            await confirmDeleteItem(deleteConfirm.id);
+          } catch (err) {
+            console.error(`Error deleting ${config.entityName}:`, err);
+            showError(
+              t.genericConfig.error,
+              err instanceof Error ? err.message : config.deleteErrorMessage
+            );
+          }
+        }}
         title={config.deleteConfirmTitle}
         description={itemToDelete ? config.deleteConfirmMessage(itemToDelete.name) : ""}
-        itemName={itemToDelete?.name || ""}
-        isLoading={deleting}
+        itemName={deleteConfirm.itemName || ""}
+        isLoading={isDeleting}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowLeft,
@@ -31,6 +31,7 @@ import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import BackButton from "../../../shared/components/ui/BackButton";
 import CreateCommunicationModal from "../../../shared/components/CreateCommunicationModal";
 import EditQuickListModal from "../components/EditQuickListModal";
+import { Table, type TableColumn } from "../../../shared/components/Table";
 import ManageQuickListCustomersModal from "../components/ManageQuickListCustomersModal";
 import { formatDateWithTimezone } from "../../../shared/services/dateService";
 import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
@@ -283,7 +284,7 @@ export default function QuickListDetailsPage() {
 
   const handleDelete = () => {
     if (!quicklist) return;
-    openDeleteConfirm(item?.id || 0, item?.name || "");
+    setShowDeleteModal(true);
   };
 
   const handleConfirmDelete = async () => {
@@ -293,7 +294,7 @@ export default function QuickListDetailsPage() {
     try {
       await quicklistService.deleteQuickList(quicklist.id);
       showToast(`QuickList "${quicklist.name}" deleted successfully`);
-      closeDeleteConfirm();
+      setShowDeleteModal(false);
       navigate("/dashboard/quick-lists");
     } catch (err) {
       showError("Error deleting quicklist", extractBackendError(error, "Error deleting quicklist. Please try again."));
@@ -303,7 +304,7 @@ export default function QuickListDetailsPage() {
   };
 
   const handleCancelDelete = () => {
-    closeDeleteConfirm();
+    setShowDeleteModal(false);
   };
 
   const loadTableMapping = async () => {
@@ -407,6 +408,92 @@ export default function QuickListDetailsPage() {
     return stringValue;
   };
 
+  const dataTableColumns = useMemo((): TableColumn<QuickListData>[] => {
+    const columns: TableColumn<QuickListData>[] = [
+      {
+        id: "row_number",
+        header: "Row",
+        accessorKey: "id",
+        cell: (info) => {
+          const index = data.findIndex((d) => d.id === info.getValue());
+          return index + 1;
+        },
+        visible: true,
+        sortable: false,
+      },
+    ];
+
+    dataColumns.forEach((column) => {
+      columns.push({
+        id: column,
+        header: column.replace(/_/g, " "),
+        accessorFn: (row) => {
+          const rowDataObj = (row as Record<string, unknown>)
+            .row_data as Record<string, unknown> | undefined;
+          if (rowDataObj && rowDataObj[column] !== undefined) {
+            return rowDataObj[column];
+          }
+          return (row as Record<string, unknown>)[column];
+        },
+        cell: (info) => formatCellValue(info.getValue()),
+        visible: true,
+        sortable: false,
+      });
+    });
+
+    return columns;
+  }, [data, dataColumns]);
+
+  const importLogsColumns = useMemo((): TableColumn<ImportLog>[] => [
+    {
+      id: "row_number",
+      header: "Row Number",
+      accessorKey: "row_number",
+      cell: (info) => info.getValue(),
+      visible: true,
+      sortable: false,
+    },
+    {
+      id: "import_status",
+      header: "Status",
+      accessorKey: "import_status",
+      cell: (info) => {
+        const status = info.getValue() as string;
+        return (
+          <span
+            className={`inline-flex items-center px-2.5 py-1 rounded-full text-sm font-medium ${
+              status === "success"
+                ? "bg-green-100 text-green-800"
+                : status === "failed"
+                  ? "bg-red-100 text-red-800"
+                  : "bg-yellow-100 text-yellow-800"
+            }`}
+          >
+            {status}
+          </span>
+        );
+      },
+      visible: true,
+      sortable: false,
+    },
+    {
+      id: "error_message",
+      header: "Error Message",
+      accessorKey: "error_message",
+      cell: (info) => info.getValue() || "-",
+      visible: true,
+      sortable: false,
+    },
+    {
+      id: "created_at",
+      header: "Created",
+      accessorKey: "created_at",
+      cell: (info) => formatDate(info.getValue() as string),
+      visible: true,
+      sortable: false,
+    },
+  ], []);
+
   const infoRowClass =
     "flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-2 py-2";
   const infoValueClass =
@@ -460,7 +547,18 @@ export default function QuickListDetailsPage() {
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={handleEdit}
-            className={`px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 whitespace-nowrap`}
+            className={`px-4 py-2 text-sm font-medium ${tw.rounded} transition-colors flex items-center justify-center gap-2 whitespace-nowrap`}
+            style={{
+              backgroundColor: 'transparent',
+              color: 'var(--c-text-primary)',
+              border: '1px solid var(--c-text-primary)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
           >
             <Edit className="w-4 h-4" />
             Edit
@@ -477,21 +575,43 @@ export default function QuickListDetailsPage() {
           <div className="relative flex-shrink-0" ref={moreMenuRef}>
             <button
               onClick={() => setShowMoreMenu(!showMoreMenu)}
-              className={`px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 whitespace-nowrap`}
+              className={`px-4 py-2 text-sm font-medium ${tw.rounded} transition-colors flex items-center justify-center gap-2 whitespace-nowrap`}
+              style={{
+                backgroundColor: 'transparent',
+                color: 'var(--c-text-primary)',
+                border: '1px solid var(--c-text-primary)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
             >
               <MoreVertical className="w-4 h-4" />
               More
             </button>
             {showMoreMenu && (
               <div
-                className={`absolute right-0 top-full mt-1 w-48 bg-white ${tw.rounded} shadow-lg border border-gray-200 py-1 z-10`}
+                className={`absolute right-0 top-full mt-1 w-48 ${tw.rounded} shadow-lg py-1 z-10`}
+                style={{
+                  backgroundColor: 'var(--c-surface-cards)',
+                  border: '1px solid var(--c-border-default)',
+                }}
               >
                 <button
                   onClick={() => {
                     handleAddCustomer();
                     setShowMoreMenu(false);
                   }}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                  className="w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition-colors"
+                  style={{ color: 'var(--c-text-primary)' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
                 >
                   <UserPlus className="w-4 h-4" />
                   Add Customer
@@ -501,7 +621,14 @@ export default function QuickListDetailsPage() {
                     handleRemoveCustomer();
                     setShowMoreMenu(false);
                   }}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                  className="w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition-colors"
+                  style={{ color: 'var(--c-text-primary)' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
                 >
                   <UserMinus className="w-4 h-4" />
                   Remove Customer
@@ -521,7 +648,14 @@ export default function QuickListDetailsPage() {
                     handleExport("csv");
                     setShowMoreMenu(false);
                   }}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                  className="w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition-colors"
+                  style={{ color: 'var(--c-text-primary)' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
                 >
                   <Download className="w-4 h-4" />
                   Export CSV
@@ -531,7 +665,14 @@ export default function QuickListDetailsPage() {
                     handleExport("json");
                     setShowMoreMenu(false);
                   }}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                  className="w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition-colors"
+                  style={{ color: 'var(--c-text-primary)' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
                 >
                   <Download className="w-4 h-4" />
                   Export JSON
@@ -586,7 +727,11 @@ export default function QuickListDetailsPage() {
       {/* Content */}
       {activeSection === "overview" && (
         <div
-          className={`bg-white border border-gray-200 ${tw.rounded} overflow-hidden`}
+          className={`${tw.rounded} overflow-hidden`}
+          style={{
+            backgroundColor: 'var(--c-surface-cards)',
+            border: '1px solid var(--c-border-default)',
+          }}
         >
           <div className="p-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -594,18 +739,21 @@ export default function QuickListDetailsPage() {
               <div className="space-y-6">
                 {/* QuickList Information */}
                 <div
-                  className={`bg-gray-50 ${tw.rounded} p-4 border border-gray-100`}
+                  className={`${tw.rounded} p-4`}
+                  style={{
+                    backgroundColor: 'transparent',
+                  }}
                 >
-                  <h3 className="text-base font-semibold text-gray-900 mb-3">
+                  <h3 className="text-base font-semibold mb-3" style={{ color: 'var(--c-text-primary)' }}>
                     QuickList Information
                   </h3>
                   <div className="space-y-3">
                     {quicklist.description && (
                       <div className={infoRowClass}>
-                        <span className="text-sm text-gray-600">
+                        <span className="text-sm" style={{ color: 'var(--c-text-secondary)' }}>
                           Description
                         </span>
-                        <span className={`${infoValueClass} text-gray-900`}>
+                        <span className={infoValueClass} style={{ color: 'var(--c-text-primary)' }}>
                           {quicklist.description}
                         </span>
                       </div>
@@ -618,18 +766,18 @@ export default function QuickListDetailsPage() {
                     </div>
                     {quicklist.original_filename && (
                       <div className={infoRowClass}>
-                        <span className="text-sm text-gray-600">File Name</span>
-                        <span className={`${infoValueClass} text-gray-900`}>
+                        <span className="text-sm" style={{ color: 'var(--c-text-secondary)' }}>File Name</span>
+                        <span className={infoValueClass} style={{ color: 'var(--c-text-primary)' }}>
                           {quicklist.original_filename}
                         </span>
                       </div>
                     )}
                     {quicklist.created_by && (
                       <div className={infoRowClass}>
-                        <span className="text-sm text-gray-600">
+                        <span className="text-sm" style={{ color: 'var(--c-text-secondary)' }}>
                           Created By
                         </span>
-                        <span className={`${infoValueClass} text-gray-900`}>
+                        <span className={infoValueClass} style={{ color: 'var(--c-text-primary)' }}>
                           {quicklist.created_by}
                         </span>
                       </div>
@@ -639,9 +787,12 @@ export default function QuickListDetailsPage() {
 
                 {/* File Information */}
                 <div
-                  className={`bg-gray-50 ${tw.rounded} p-4 border border-gray-100`}
+                  className={`${tw.rounded} p-4`}
+                  style={{
+                    backgroundColor: 'transparent',
+                  }}
                 >
-                  <h3 className="text-base font-semibold text-gray-900 mb-3">
+                  <h3 className="text-base font-semibold mb-3" style={{ color: 'var(--c-text-primary)' }}>
                     File Information
                   </h3>
                   <div className="space-y-3">
@@ -689,7 +840,7 @@ export default function QuickListDetailsPage() {
                     </div>
                     {quicklist.processing_error && (
                       <div className={infoRowClass}>
-                        <span className="text-sm text-gray-600">
+                        <span className="text-sm" style={{ color: 'var(--c-text-secondary)' }}>
                           Processing Error
                         </span>
                         <span className={`${infoValueClass} text-red-600`}>
@@ -699,10 +850,10 @@ export default function QuickListDetailsPage() {
                     )}
                     {quicklist.processing_time_ms != null && (
                       <div className={infoRowClass}>
-                        <span className="text-sm text-gray-600">
+                        <span className="text-sm" style={{ color: 'var(--c-text-secondary)' }}>
                           Processing Time
                         </span>
-                        <span className={`${infoValueClass} text-gray-900`}>
+                        <span className={infoValueClass} style={{ color: 'var(--c-text-primary)' }}>
                           {quicklist.processing_time_ms}ms
                         </span>
                       </div>
@@ -717,7 +868,7 @@ export default function QuickListDetailsPage() {
                     {/* {tableMapping && (
                       <>
                         <div className="flex justify-between items-start py-2">
-                          <span className="text-sm text-gray-600">
+                          <span className="text-sm" style={{ color: 'var(--c-text-secondary)' }}>
                             Schema Name
                           </span>
                           <span className="text-sm font-medium text-gray-900 font-mono">
@@ -725,7 +876,7 @@ export default function QuickListDetailsPage() {
                           </span>
                         </div>
                         <div className="flex justify-between items-start py-2">
-                          <span className="text-sm text-gray-600">
+                          <span className="text-sm" style={{ color: 'var(--c-text-secondary)' }}>
                             Total Rows in Table
                           </span>
                           <span className="text-sm font-medium text-gray-900">
@@ -740,12 +891,12 @@ export default function QuickListDetailsPage() {
                 {/* Commented out - Table Mapping Information */}
                 {/* {tableMapping && (
                   <div className={`bg-gray-50 ${tw.rounded} p-4 border border-gray-100`}>
-                    <h3 className="text-base font-semibold text-gray-900 mb-3">
+                    <h3 className="text-base font-semibold mb-3" style={{ color: 'var(--c-text-primary)' }}>
                       Table Mapping
                     </h3>
                     <div className="space-y-3">
                       <div className="flex justify-between items-start py-2">
-                        <span className="text-sm text-gray-600">
+                        <span className="text-sm" style={{ color: 'var(--c-text-secondary)' }}>
                           Full Table Name
                         </span>
                         <span className="text-sm font-medium text-gray-900 font-mono text-right">
@@ -785,13 +936,13 @@ export default function QuickListDetailsPage() {
                 {/* Commented out - Upload Type Schema */}
                 {/* {uploadTypeSchema && (
                   <div className={`bg-gray-50 ${tw.rounded} p-4 border border-gray-100`}>
-                    <h3 className="text-base font-semibold text-gray-900 mb-3">
+                    <h3 className="text-base font-semibold mb-3" style={{ color: 'var(--c-text-primary)' }}>
                       Upload Type Schema
                     </h3>
                     <div className="space-y-3">
                       {uploadTypeSchema.description && (
                         <div className="py-2">
-                          <span className="text-sm text-gray-600">
+                          <span className="text-sm" style={{ color: 'var(--c-text-secondary)' }}>
                             Description
                           </span>
                           <p className="text-sm font-medium text-gray-900 mt-1">
@@ -835,7 +986,7 @@ export default function QuickListDetailsPage() {
                         </div>
                       )}
                       <div className="flex justify-between items-start py-2">
-                        <span className="text-sm text-gray-600">
+                        <span className="text-sm" style={{ color: 'var(--c-text-secondary)' }}>
                           Allow Extra Columns
                         </span>
                         <span className="text-sm font-medium text-gray-900">
@@ -846,7 +997,7 @@ export default function QuickListDetailsPage() {
                         </span>
                       </div>
                       <div className="flex justify-between items-start py-2">
-                        <span className="text-sm text-gray-600">
+                        <span className="text-sm" style={{ color: 'var(--c-text-secondary)' }}>
                           Require All Columns
                         </span>
                         <span className="text-sm font-medium text-gray-900">
@@ -857,7 +1008,7 @@ export default function QuickListDetailsPage() {
                         </span>
                       </div>
                       <div className="flex justify-between items-start py-2">
-                        <span className="text-sm text-gray-600">
+                        <span className="text-sm" style={{ color: 'var(--c-text-secondary)' }}>
                           Max File Size
                         </span>
                         <span className="text-sm font-medium text-gray-900">
@@ -876,19 +1027,27 @@ export default function QuickListDetailsPage() {
                 {/* Statistics Cards */}
                 <div className="grid grid-cols-2 gap-4">
                   <div
-                    className={`bg-gray-50 ${tw.rounded} p-4 border border-gray-100`}
+                    className={`${tw.rounded} p-4`}
+                    style={{
+                      backgroundColor: 'var(--c-surface-background)',
+                      border: '1px solid var(--c-border-default)',
+                    }}
                   >
-                    <p className="text-xs text-gray-500">Upload Type</p>
-                    <p className="text-sm font-semibold text-gray-900">
+                    <p className="text-xs" style={{ color: 'var(--c-text-secondary)' }}>Upload Type</p>
+                    <p className="text-sm font-semibold" style={{ color: 'var(--c-text-primary)' }}>
                       {quicklist.upload_type}
                     </p>
                   </div>
 
                   <div
-                    className={`bg-gray-50 ${tw.rounded} p-4 border border-gray-100`}
+                    className={`${tw.rounded} p-4`}
+                    style={{
+                      backgroundColor: 'var(--c-surface-background)',
+                      border: '1px solid var(--c-border-default)',
+                    }}
                   >
-                    <p className="text-xs text-gray-500">Rows Imported</p>
-                    <p className="text-sm font-semibold text-gray-900">
+                    <p className="text-xs" style={{ color: 'var(--c-text-secondary)' }}>Rows Imported</p>
+                    <p className="text-sm font-semibold" style={{ color: 'var(--c-text-primary)' }}>
                       {quicklist.rows_imported != null
                         ? quicklist.rows_imported.toLocaleString()
                         : "N/A"}
@@ -896,10 +1055,14 @@ export default function QuickListDetailsPage() {
                   </div>
 
                   <div
-                    className={`bg-gray-50 ${tw.rounded} p-4 border border-gray-100`}
+                    className={`${tw.rounded} p-4`}
+                    style={{
+                      backgroundColor: 'var(--c-surface-background)',
+                      border: '1px solid var(--c-border-default)',
+                    }}
                   >
-                    <p className="text-xs text-gray-500">Created</p>
-                    <p className="text-sm font-semibold text-gray-900">
+                    <p className="text-xs" style={{ color: 'var(--c-text-secondary)' }}>Created</p>
+                    <p className="text-sm font-semibold" style={{ color: 'var(--c-text-primary)' }}>
                       {formatDate(quicklist.created_at)}
                     </p>
                   </div>
@@ -907,22 +1070,25 @@ export default function QuickListDetailsPage() {
 
                 {/* Activity Timeline */}
                 <div
-                  className={`bg-gray-50 ${tw.rounded} p-4 border border-gray-100`}
+                  className={`${tw.rounded} p-4`}
+                  style={{
+                    backgroundColor: 'transparent',
+                  }}
                 >
-                  <h3 className="text-base font-semibold text-gray-900 mb-3">
+                  <h3 className="text-base font-semibold mb-3" style={{ color: 'var(--c-text-primary)' }}>
                     Activity Timeline
                   </h3>
                   <div className="space-y-3">
                     <div className={timelineRowClass}>
-                      <span className="text-sm text-gray-600">Created</span>
-                      <span className={`${infoValueClass} text-gray-900`}>
+                      <span className="text-sm" style={{ color: 'var(--c-text-secondary)' }}>Created</span>
+                      <span className={infoValueClass} style={{ color: 'var(--c-text-primary)' }}>
                         {formatDate(quicklist.created_at)}
                       </span>
                     </div>
                     {quicklist.updated_at && (
                       <div className={timelineRowClass}>
-                        <span className="text-sm text-gray-600">Updated</span>
-                        <span className={`${infoValueClass} text-gray-900`}>
+                        <span className="text-sm" style={{ color: 'var(--c-text-secondary)' }}>Updated</span>
+                        <span className={infoValueClass} style={{ color: 'var(--c-text-primary)' }}>
                           {formatDate(quicklist.updated_at)}
                         </span>
                       </div>
@@ -966,90 +1132,18 @@ export default function QuickListDetailsPage() {
                   </p>
                 </div>
               )}
-              <div
-                className={`border border-gray-200 ${tw.rounded} overflow-hidden`}
-              >
-                <div className="overflow-x-auto">
-                  <table
-                    className="w-full text-sm"
-                    style={{
-                      borderCollapse: "separate",
-                      borderSpacing: "0 6px",
-                    }}
-                  >
-                    <thead
-                      className={`border-b ${tw.borderDefault}`}
-                      style={{ background: color.surface.tableHeader }}
-                    >
-                      <tr>
-                        <th
-                          className={`px-6 py-4 text-left text-sm font-medium uppercase tracking-wider whitespace-nowrap min-w-[80px]`}
-                          style={{ color: color.surface.tableHeaderText }}
-                        >
-                          Row
-                        </th>
-                        {dataColumns.map((column) => (
-                          <th
-                            key={column}
-                            className={`px-6 py-4 text-left text-sm font-medium uppercase tracking-wider whitespace-nowrap min-w-[120px]`}
-                            style={{ color: color.surface.tableHeaderText }}
-                          >
-                            {column.replace(/_/g, " ")}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {data.map((row, index) => (
-                        <tr
-                          key={row.id}
-                          className="hover:bg-gray-50/40 transition-colors rounded"
-                        >
-                          <td
-                            className="px-6 py-4 text-gray-900 font-medium rounded-l-md"
-                            style={{ backgroundColor: tableBodyBackground }}
-                          >
-                            {index + 1}
-                          </td>
-                          {dataColumns.map((column, columnIndex) => {
-                            const rowDataObj = (row as Record<string, unknown>)
-                              .row_data as Record<string, unknown> | undefined;
-
-                            // Try to get value from row_data first, then fall back to direct row field
-                            let cellValue: unknown;
-                            if (
-                              rowDataObj &&
-                              rowDataObj[column] !== undefined
-                            ) {
-                              cellValue = rowDataObj[column];
-                            } else {
-                              cellValue = (row as Record<string, unknown>)[
-                                column
-                              ];
-                            }
-
-                            const displayValue = formatCellValue(cellValue);
-
-                            return (
-                              <td
-                                key={column}
-                                className={`px-6 py-4 text-gray-600 text-sm break-all ${
-                                  columnIndex === dataColumns.length - 1
-                                    ? "rounded-r-md"
-                                    : ""
-                                }`}
-                                style={{ backgroundColor: tableBodyBackground }}
-                              >
-                                {displayValue}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <Table<QuickListData>
+                columns={dataTableColumns}
+                data={data}
+                totalItems={dataPagination?.total || data.length}
+                isLoading={loadingData}
+                style={{
+                  headerBackground: color.surface.tableHeader,
+                  headerTextColor: color.surface.tableHeaderText,
+                  rowBackground: tableBodyBackground,
+                  rowSpacing: "6px",
+                }}
+              />
             </div>
           )}
         </div>
@@ -1088,94 +1182,18 @@ export default function QuickListDetailsPage() {
                   </p>
                 </div>
               )}
-              <div
-                className={`border border-gray-200 ${tw.rounded} overflow-hidden`}
-              >
-                <div className="overflow-x-auto">
-                  <table
-                    className="w-full text-sm min-w-[720px]"
-                    style={{
-                      borderCollapse: "separate",
-                      borderSpacing: "0 6px",
-                    }}
-                  >
-                    <thead
-                      className={`border-b ${tw.borderDefault}`}
-                      style={{ background: color.surface.tableHeader }}
-                    >
-                      <tr>
-                        <th
-                          className={`px-6 py-4 text-left text-sm font-medium uppercase tracking-wider whitespace-nowrap`}
-                          style={{ color: color.surface.tableHeaderText }}
-                        >
-                          Row Number
-                        </th>
-                        <th
-                          className={`px-6 py-4 text-left text-sm font-medium uppercase tracking-wider whitespace-nowrap`}
-                          style={{ color: color.surface.tableHeaderText }}
-                        >
-                          Status
-                        </th>
-                        <th
-                          className={`px-6 py-4 text-left text-sm font-medium uppercase tracking-wider whitespace-nowrap`}
-                          style={{ color: color.surface.tableHeaderText }}
-                        >
-                          Error Message
-                        </th>
-                        <th
-                          className={`px-6 py-4 text-left text-sm font-medium uppercase tracking-wider whitespace-nowrap`}
-                          style={{ color: color.surface.tableHeaderText }}
-                        >
-                          Created
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {importLogs.map((log) => (
-                        <tr
-                          key={log.id}
-                          className="hover:bg-gray-50/30 transition-colors rounded"
-                        >
-                          <td
-                            className="px-6 py-4 text-gray-900 font-medium rounded-l-md whitespace-nowrap"
-                            style={{ backgroundColor: tableBodyBackground }}
-                          >
-                            {log.row_number}
-                          </td>
-                          <td
-                            className="px-6 py-4 whitespace-nowrap"
-                            style={{ backgroundColor: tableBodyBackground }}
-                          >
-                            <span
-                              className={`inline-flex items-center px-2.5 py-1 rounded-full text-sm font-medium ${
-                                log.import_status === "success"
-                                  ? "bg-green-100 text-green-800"
-                                  : log.import_status === "failed"
-                                    ? "bg-red-100 text-red-800"
-                                    : "bg-yellow-100 text-yellow-800"
-                              }`}
-                            >
-                              {log.import_status}
-                            </span>
-                          </td>
-                          <td
-                            className="px-6 py-4 text-gray-600"
-                            style={{ backgroundColor: tableBodyBackground }}
-                          >
-                            {log.error_message || "-"}
-                          </td>
-                          <td
-                            className="px-6 py-4 text-gray-600 rounded-r-md whitespace-nowrap"
-                            style={{ backgroundColor: tableBodyBackground }}
-                          >
-                            {formatDate(log.created_at)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <Table<ImportLog>
+                columns={importLogsColumns}
+                data={importLogs}
+                totalItems={logsPagination?.total || importLogs.length}
+                isLoading={loadingLogs}
+                style={{
+                  headerBackground: color.surface.tableHeader,
+                  headerTextColor: color.surface.tableHeaderText,
+                  rowBackground: tableBodyBackground,
+                  rowSpacing: "6px",
+                }}
+              />
             </div>
           )}
         </div>
@@ -1225,7 +1243,7 @@ export default function QuickListDetailsPage() {
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={deleteConfirm.id !== null}
+        isOpen={showDeleteModal}
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
         title="Delete QuickList"

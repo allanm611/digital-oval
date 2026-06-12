@@ -272,11 +272,6 @@ export default function CampaignFlowDetailsPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <BackButton showBreadcrumb={true} currentLabel="Campaign Flow Details" />
-          <div>
-            <h1 className={`text-3xl font-bold ${tw.textPrimary}`}>
-              Campaign Flow {flow.id || flow.campaign_id}
-            </h1>
-          </div>
         </div>
         <div className="flex items-center gap-3">
           <button
@@ -305,10 +300,10 @@ export default function CampaignFlowDetailsPage() {
 
       {/* Basic Information - Horizontal Table */}
       <div
-        className={`bg-white ${tw.rounded} border overflow-hidden`}
-        style={{ borderColor: color.border.default }}
+        className={`${tw.rounded} border overflow-hidden`}
+        style={{ backgroundColor: 'var(--c-surface-card-bg)', borderColor: color.border.default }}
       >
-        <div className="px-6 py-4 bg-gray-50">
+        <div className="px-6 py-4" style={{ backgroundColor: 'var(--c-surface-card-bg)' }}>
           <h3 className={`text-sm font-semibold ${tw.textPrimary} uppercase tracking-wide`}>
             Basic Information
           </h3>
@@ -316,7 +311,7 @@ export default function CampaignFlowDetailsPage() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <tbody>
-              <tr style={{ borderBottom: `1px solid ${color.border.default}` }}>
+              <tr style={{ borderBottom: `1px solid ${color.border.default}`, backgroundColor: 'var(--c-surface-card-bg)' }}>
                 <td className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap w-1/6">
                   Flow ID
                 </td>
@@ -336,7 +331,7 @@ export default function CampaignFlowDetailsPage() {
                   {getFlowTypeLabel(flow.flow_type)}
                 </td>
               </tr>
-              <tr style={{ borderBottom: `1px solid ${color.border.default}` }}>
+              <tr style={{ borderBottom: `1px solid ${color.border.default}`, backgroundColor: 'var(--c-surface-card-bg)' }}>
                 <td className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap w-1/6">
                   Step Order
                 </td>
@@ -371,8 +366,8 @@ export default function CampaignFlowDetailsPage() {
 
       {/* Targeting Section */}
       <div
-        className={`bg-white ${tw.rounded} border p-6`}
-        style={{ borderColor: color.border.default }}
+        className={`${tw.rounded} border p-6`}
+        style={{ backgroundColor: 'var(--c-surface-card-bg)', borderColor: color.border.default }}
       >
         <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
           Targeting
@@ -398,7 +393,7 @@ export default function CampaignFlowDetailsPage() {
               <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide block mb-2`}>
                 Condition Rule
               </label>
-              <pre className={`text-sm ${tw.textSecondary} bg-gray-50 p-3 ${tw.rounded} overflow-auto max-h-40`}>
+              <pre className={`text-sm ${tw.textSecondary} p-3 ${tw.rounded} overflow-auto max-h-40`} style={{ backgroundColor: 'var(--c-surface-card-bg)' }}>
                 {JSON.stringify(flow.condition_rule, null, 2)}
               </pre>
             </div>
@@ -408,8 +403,8 @@ export default function CampaignFlowDetailsPage() {
 
       {/* Offer Configuration Section */}
       <div
-        className={`bg-white ${tw.rounded} border p-6`}
-        style={{ borderColor: color.border.default }}
+        className={`${tw.rounded} border p-6`}
+        style={{ backgroundColor: 'var(--c-surface-card-bg)', borderColor: color.border.default }}
       >
         <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
           Offer Configuration
@@ -458,8 +453,8 @@ export default function CampaignFlowDetailsPage() {
       {/* Advanced Settings Section */}
       {flow.bucket_allocation && (
         <div
-          className={`bg-white ${tw.rounded} border p-6`}
-          style={{ borderColor: color.border.default }}
+          className={`${tw.rounded} border p-6`}
+          style={{ backgroundColor: 'var(--c-surface-card-bg)', borderColor: color.border.default }}
         >
           <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
             Advanced Settings
@@ -477,10 +472,10 @@ export default function CampaignFlowDetailsPage() {
 
       {/* Metadata Section */}
       <div
-        className={`bg-white ${tw.rounded} border overflow-hidden`}
-        style={{ borderColor: color.border.default }}
+        className={`${tw.rounded} border overflow-hidden`}
+        style={{ backgroundColor: 'var(--c-surface-card-bg)', borderColor: color.border.default }}
       >
-        <div className="px-6 py-4 bg-gray-50">
+        <div className="px-6 py-4" style={{ backgroundColor: 'var(--c-surface-card-bg)' }}>
           <h3 className={`text-sm font-semibold ${tw.textPrimary} uppercase tracking-wide`}>
             Metadata
           </h3>
@@ -489,7 +484,7 @@ export default function CampaignFlowDetailsPage() {
           <table className="w-full">
             <tbody>
               {flow?.created_at && (
-                <tr style={{ borderBottom: `1px solid ${color.border.default}` }}>
+                <tr style={{ borderBottom: `1px solid ${color.border.default}`, backgroundColor: 'var(--c-surface-card-bg)' }}>
                   <td className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap w-1/4">
                     Created At
                   </td>
@@ -509,7 +504,7 @@ export default function CampaignFlowDetailsPage() {
                 </tr>
               )}
               {flow?.created_by && (
-                <tr>
+                <tr style={{ backgroundColor: 'var(--c-surface-card-bg)' }}>
                   <td className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap w-1/4">
                     Created By
                   </td>

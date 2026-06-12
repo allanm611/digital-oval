@@ -1888,7 +1888,7 @@ export default function CustomerProfileReportsPage() {
             </div>
           </div>
         ) : (
-          <div>
+          <>
             <Table<CustomerRow>
               columns={tableColumnsMemo}
               data={apiCustomerRows}
@@ -1900,14 +1900,23 @@ export default function CustomerProfileReportsPage() {
                 headerBackground: colors.surface.tableHeader,
                 headerTextColor: colors.surface.tableHeaderText,
                 rowBackground: colors.surface.tablebodybg,
+                rowSpacing: "0 8px",
               }}
             />
+            {apiCustomerRows.length > 0 && (
+              <Pagination
+                currentPage={tablePage}
+                pageSize={CUSTOMER_TABLE_PAGE_SIZE}
+                totalItems={apiCustomerRows.length}
+                onPageChange={setTablePage}
+              />
+            )}
             {!tableCustomers.length && (
               <div className="px-6 py-10 text-center text-sm text-gray-500">
                 {t.customerProfileReports.noCustomersMatchFilters}
               </div>
             )}
-          </div>
+          </>
         )}
       </section>
     </div>

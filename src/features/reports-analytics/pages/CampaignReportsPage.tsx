@@ -471,6 +471,7 @@ export default function CampaignReportsPage() {
       label: "Campaign Name",
       visible: true,
       sortable: true,
+      filterConfig: { type: "text" },
     },
     {
       id: "targetGroup",
@@ -549,11 +550,13 @@ export default function CampaignReportsPage() {
       label: "Last Run",
       visible: true,
       sortable: true,
+      filterConfig: { type: "date" },
     },
     {
       id: "actions",
       label: "Actions",
       visible: true,
+      sortable: false,
       render: (_, row: CampaignTableRow) => (
         <div className="space-x-2 flex items-center">
           <button
@@ -1400,7 +1403,7 @@ export default function CampaignReportsPage() {
         )}
 
         {!isLoadingCampaigns && !campaignFetchError && campaigns.length > 0 && (
-          <div>
+          <>
             <Table<CampaignTableRow>
               columns={tableColumnsMemo}
               data={filteredRows}
@@ -1412,13 +1415,22 @@ export default function CampaignReportsPage() {
                 headerBackground: colors.surface.tableHeader,
                 headerTextColor: colors.surface.tableHeaderText,
                 rowBackground: colors.surface.tablebodybg,
+                rowSpacing: "0 8px",
               }}
             />
-            {!filteredRows.length && (
-              <div className="py-10 text-center text-sm text-gray-500">
-                No campaigns match your filters yet.
-              </div>
+            {filteredRows.length > 0 && (
+              <Pagination
+                currentPage={tablePage}
+                pageSize={tablePageSize}
+                totalItems={filteredRows.length}
+                onPageChange={setTablePage}
+              />
             )}
+          </>
+        )}
+        {!isLoadingCampaigns && !campaignFetchError && campaigns.length > 0 && !filteredRows.length && (
+          <div className="py-10 text-center text-sm text-gray-500">
+            No campaigns match your filters yet.
           </div>
         )}
       </section>

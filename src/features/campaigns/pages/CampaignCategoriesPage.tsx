@@ -34,7 +34,6 @@ import {
   Archive,
   Star,
 } from "lucide-react";
-import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 const CATALOG_TAG_PREFIX = "catalog:";
 
@@ -492,7 +491,7 @@ export default function CampaignCategoriesPage() {
 
   const handleDeleteCategory = useCallback((category: CampaignCategory) => {
     setCategoryToDelete(category);
-    openDeleteConfirm(item?.id || 0, item?.name || "");
+    setShowDeleteModal(true);
   }, []);
 
   const handleConfirmDelete = useCallback(async () => {
@@ -510,7 +509,7 @@ export default function CampaignCategoriesPage() {
         "Category Deleted",
         `"${categoryToDelete.name}" has been deleted successfully.`,
       );
-      closeDeleteConfirm();
+      setShowDeleteModal(false);
       setCategoryToDelete(null);
     } catch (err) {
       console.error("Failed to delete category:", err);
@@ -524,7 +523,7 @@ export default function CampaignCategoriesPage() {
   }, [categoryToDelete, campaignCategories, showToast, showError]);
 
   const handleCancelDelete = useCallback(() => {
-    closeDeleteConfirm();
+    setShowDeleteModal(false);
     setCategoryToDelete(null);
   }, []);
 
@@ -1183,7 +1182,7 @@ export default function CampaignCategoriesPage() {
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={deleteConfirm.id !== null}
+        isOpen={showDeleteModal}
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
         title="Delete Category"

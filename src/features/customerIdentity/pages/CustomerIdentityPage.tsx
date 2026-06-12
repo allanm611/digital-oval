@@ -9,6 +9,8 @@ import { useNavigate } from "react-router-dom";
 import { Eye, AlertTriangle } from "lucide-react";
 import { tw, color } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import Pagination from "../../../shared/components/ui/Pagination";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { customerIdentityService } from "../services/customerIdentityService";
 import { CustomerIdentityField } from "../types/customerIdentity";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -89,6 +91,112 @@ export default function CustomerIdentityPage() {
     if (isLoading || hasNoFields) return false;
     return filteredFields.length === 0;
   }, [filteredFields.length, hasNoFields, isLoading]);
+
+  const tableColumns: TableColumn<CustomerIdentityField>[] = [
+    {
+      id: "id",
+      label: t.customerIdentity.id,
+      visible: true,
+      render: (_, row) => (
+        <button
+          type="button"
+          onClick={() =>
+            navigate(
+              `/dashboard/customer-identity/fields/${row.id}`,
+              {
+                state: { field: row },
+              },
+            )
+          }
+          className="font-semibold hover:underline text-sm"
+          style={{ color: color.primary.accent }}
+        >
+          {row.id}
+        </button>
+      ),
+    },
+    {
+      id: "field_name",
+      label: t.customerIdentity.fieldName,
+      visible: true,
+      render: (_, row) => (
+        <span className="text-sm text-gray-900 font-medium">
+          {row.field_name}
+        </span>
+      ),
+    },
+    {
+      id: "field_type",
+      label: t.customerIdentity.fieldType,
+      visible: true,
+      render: (_, row) => (
+        <span className="text-sm text-gray-700">
+          {row.field_type || "—"}
+        </span>
+      ),
+    },
+    {
+      id: "source_table",
+      label: t.customerIdentity.sourceTable,
+      visible: true,
+      render: (_, row) => (
+        <span className="text-sm text-gray-700">
+          {row.source_table || "—"}
+        </span>
+      ),
+    },
+    {
+      id: "description",
+      label: t.customerIdentity.descriptionLabel,
+      visible: true,
+      render: (_, row) => (
+        <span className="text-sm text-gray-600">
+          {row.description || "—"}
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      label: t.customerIdentity.actions,
+      visible: true,
+      sortable: false,
+      render: (_, row) => (
+        <button
+          type="button"
+          onClick={() =>
+            navigate(
+              `/dashboard/customer-identity/fields/${row.id}`,
+              {
+                state: { field: row },
+              },
+            )
+          }
+          className={`p-2 ${tw.rounded} text-black transition-colors hover:bg-gray-100`}
+          title={t.customerIdentity.viewDetails}
+        >
+          <Eye className="h-4 w-4" />
+        </button>
+      ),
+    },
+  ];
+
+  const {
+    columns,
+    currentPage: tableCurrentPage,
+    pageSize: tablePageSize,
+    handlePageChange: tableHandlePageChange,
+    sortConfigs,
+    handleSort,
+  } = useTable({
+    tableId: "customer-identity-table",
+    defaultColumns: tableColumns,
+    persistToLocalStorage: true,
+  });
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    tableHandlePageChange(1);
+  }, [searchTerm, selectedFieldType, tableHandlePageChange]);
 
   return (
     <PermissionGate permission="customer-identity.read">
@@ -182,107 +290,33 @@ export default function CustomerIdentityPage() {
         )}
 
         {!isLoading && !error && !hasNoFields && !hasNoFilteredResults && (
-          <div
-            className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
-          >
-            <div className="hidden lg:block overflow-x-auto">
-              <table
-                className="min-w-full"
-                style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-              >
-                <thead style={{ background: color.surface.tableHeader }}>
-                  <tr>
-                    {[
-                      t.customerIdentity.id,
-                      t.customerIdentity.fieldName,
-                      t.customerIdentity.fieldType,
-                      t.customerIdentity.sourceTable,
-                      t.customerIdentity.descriptionLabel,
-                      t.customerIdentity.actions,
-                    ].map((header) => (
-                      <th
-                        key={header}
-                        className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                        style={{ color: color.surface.tableHeaderText }}
-                      >
-                        {header}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredFields.map((field) => (
-                    <tr key={field.id}>
-                      <td
-                        className="px-6 py-4 text-sm"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <button
-                          type="button"
-                          onClick={() =>
-                            navigate(
-                              `/dashboard/customer-identity/fields/${field.id}`,
-                              {
-                                state: { field },
-                              },
-                            )
-                          }
-                          className="font-semibold hover:underline"
-                          style={{ color: color.primary.accent }}
-                        >
-                          {field.id}
-                        </button>
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm text-gray-900 font-medium"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        {field.field_name}
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm text-gray-700"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        {field.field_type || "—"}
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm text-gray-700"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        {field.source_table || "—"}
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm text-gray-600"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        {field.description || "—"}
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <button
-                          type="button"
-                          onClick={() =>
-                            navigate(
-                              `/dashboard/customer-identity/fields/${field.id}`,
-                              {
-                                state: { field },
-                              },
-                            )
-                          }
-                          className={`p-2 ${tw.rounded} text-black transition-colors hover:bg-gray-100`}
-                          title={t.customerIdentity.viewDetails}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <>
+            <div className={`${tw.rounded} overflow-hidden`}>
+              <Table<CustomerIdentityField>
+                columns={columns}
+                data={filteredFields}
+                totalItems={filteredFields.length}
+                currentPage={tableCurrentPage}
+                pageSize={tablePageSize}
+                isLoading={isLoading}
+                onPageChange={tableHandlePageChange}
+                onSort={handleSort}
+                sortConfigs={sortConfigs}
+                style={{
+                  headerBackground: color.surface.tableHeader,
+                  headerTextColor: color.surface.tableHeaderText,
+                  rowBackground: color.surface.tablebodybg,
+                  rowSpacing: "0 8px",
+                }}
+              />
             </div>
-          </div>
+            <Pagination
+              currentPage={tableCurrentPage}
+              pageSize={tablePageSize}
+              totalItems={filteredFields.length}
+              onPageChange={tableHandlePageChange}
+            />
+          </>
         )}
       </div>
       </div>

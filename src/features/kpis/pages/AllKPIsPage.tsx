@@ -1,22 +1,22 @@
 import { useState, useMemo, useEffect } from "react";
-import { Eye, Edit, Trash2, ListChecks, Activity, DollarSign, ChevronLeft, ChevronRight, Users } from "lucide-react";
+import { Eye, Edit, Trash2, ListChecks, Activity, DollarSign, Users } from "lucide-react";
 import Input from "../../../shared/components/ui/Input";
 import { color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import BackButton from "../../../shared/components/ui/BackButton";
+import Pagination from "../../../shared/components/ui/Pagination";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { kpiService } from "../services/kpiService";
 import { systemEventService } from "../services/systemEventService";
 import { type KPI } from "../types/kpi";
 import { type SystemEvent } from "../types/systemEvent";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
-
-const ITEMS_PER_PAGE = 10;
 
 export default function AllKPIsPage() {
   const navigate = useNavigate();
@@ -25,7 +25,6 @@ export default function AllKPIsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [currentPage, setCurrentPage] = useState(1);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [kpiToDelete, setKpiToDelete] = useState<{ id: string; name: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -100,13 +99,8 @@ export default function AllKPIsPage() {
     });
   }, [searchTerm, categoryFilter, allKPIs]);
 
-  const totalPages = Math.ceil(filteredKPIs.length / ITEMS_PER_PAGE);
-  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedKPIs = filteredKPIs.slice(startIdx, startIdx + ITEMS_PER_PAGE);
-
   const handleCategoryChange = (value: string) => {
     setCategoryFilter(value || "all");
-    setCurrentPage(1);
   };
 
   // Calculate statistics
@@ -151,6 +145,105 @@ export default function AllKPIsPage() {
     ...categories.map((cat) => ({ value: cat, label: cat })),
   ];
 
+  const tableColumns: TableColumn<typeof allKPIs[0]>[] = [
+    {
+      id: "name",
+      label: "KPI Name",
+      visible: true,
+      render: (_, row) => (
+        <div className={`text-sm ${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={row.name}>
+          {row.name}
+        </div>
+      ),
+    },
+    {
+      id: "category",
+      label: "Category",
+      visible: true,
+      render: (_, row) => (
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-gray-900">
+          {row.category}
+        </span>
+      ),
+    },
+    {
+      id: "field_type",
+      label: "Type",
+      visible: true,
+      render: (_, row) => (
+        <p className="text-sm text-gray-700">
+          {row.field_type ? row.field_type.charAt(0).toUpperCase() + row.field_type.slice(1) : "-"}
+        </p>
+      ),
+    },
+    {
+      id: "is_active",
+      label: "Status",
+      visible: true,
+      render: (_, row) => (
+        <span className="text-sm font-medium text-gray-900 text-center block">
+          {row.is_active ? "Active" : "Inactive"}
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      render: (_, row) => (
+        <div className="flex items-center justify-center space-x-2">
+          <button
+            onClick={() => handleViewDetails(row)}
+            className={`p-1 ${tw.rounded} ${tw.textMuted} hover:text-gray-900 transition-colors`}
+            title="View Details"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => navigate(`/dashboard/kpis/${extractNumericId(row.id)}/edit`, { state: { parentLabel: "All KPIs" } })}
+            className={`p-1 ${tw.rounded} ${tw.textMuted} hover:text-gray-900 transition-colors`}
+            title="Edit"
+          >
+            <Edit className="w-4 h-4" />
+          </button>
+          <ActivateDeactivateButton
+            isActive={row.is_active ?? true}
+            onToggle={() => handleToggleStatus(row)}
+            disabled={togglingKpiId === row.id}
+            isLoading={togglingKpiId === row.id}
+          />
+          <button
+            onClick={() => handleDeleteClick(row)}
+            className={`p-1 ${tw.rounded} hover:text-red-700 transition-colors`}
+            style={{ color: "#DC2626" }}
+            title="Delete"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      ),
+    },
+  ];
+
+  const {
+    columns,
+    currentPage: tableCurrentPage,
+    pageSize: tablePageSize,
+    handlePageChange: tableHandlePageChange,
+    sortConfigs,
+    handleSort,
+  } = useTable({
+    tableId: "all-kpis-table",
+    defaultColumns: tableColumns,
+    persistToLocalStorage: true,
+  });
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    tableHandlePageChange(1);
+  }, [searchTerm, categoryFilter, tableHandlePageChange]);
+
   const extractNumericId = (kpiId: string): string => {
     return kpiId.split("-")[1] || kpiId;
   };
@@ -173,7 +266,7 @@ export default function AllKPIsPage() {
 
   const handleDeleteClick = (kpi: typeof allKPIs[0]) => {
     setKpiToDelete({ id: kpi.id, name: kpi.name });
-    openDeleteConfirm(item?.id || 0, item?.name || "");
+    setShowDeleteModal(true);
   };
 
   const handleConfirmDelete = async () => {
@@ -184,7 +277,7 @@ export default function AllKPIsPage() {
       await kpiService.deleteKPI(Number(kpiToDelete.id));
       showToast("success", `"${kpiToDelete.name}" has been deleted successfully`);
       setAllKPIs((prev) => prev.filter((k) => k.id !== kpiToDelete.id));
-      closeDeleteConfirm();
+      setShowDeleteModal(false);
       setKpiToDelete(null);
     } catch (error) {
       console.error("Failed to delete KPI:", error);
@@ -195,7 +288,7 @@ export default function AllKPIsPage() {
   };
 
   const handleCancelDelete = () => {
-    closeDeleteConfirm();
+    setShowDeleteModal(false);
     setKpiToDelete(null);
   };
 
@@ -288,273 +381,65 @@ export default function AllKPIsPage() {
       </div>
 
       {/* Table */}
-      <div
-        className={`${tw.rounded} border overflow-hidden`}
-        style={{ borderColor: color.border.default }}
-      >
+      <div className={`${tw.rounded} overflow-hidden`}>
         {isLoading ? (
-          <div className="p-8 md:p-16 text-center">
-            <div className="flex flex-col items-center justify-center gap-4">
-              <LoadingSpinner
-                size="xl"
-                color="primary"
-              />
-              <p className={`${tw.textMuted} font-medium text-sm`}>
-                Loading KPIs...
-              </p>
-            </div>
+          <div className="flex items-center justify-center py-12">
+            <LoadingSpinner
+              variant="modern"
+              size="lg"
+              color="primary"
+              className="mr-3"
+            />
+            <span className={`${tw.textSecondary}`}>Loading KPIs...</span>
           </div>
         ) : filteredKPIs.length === 0 ? (
-          <div className="p-8 md:p-16 text-center">
-            <div className={`bg-gradient-to-br from-[${color.primary.accent}]/5 to-[${color.primary.accent}]/10 ${tw.rounded} p-6 md:p-12`}>
-              <h3 className={`${tw.cardHeading} ${tw.textPrimary} mb-1`}>No KPIs found</h3>
-              <p className="text-sm text-gray-600 mb-4 max-w-md mx-auto">
-                {searchTerm || categoryFilter !== "all"
-                  ? "No KPIs match your search criteria."
-                  : "No KPIs available."}
-              </p>
-            </div>
+          <div className="text-center py-12">
+            <ListChecks className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
+              {searchTerm || categoryFilter !== "all" ? "No KPIs found" : "No KPIs yet"}
+            </h3>
+            <p className={`${tw.textMuted} mb-6`}>
+              {searchTerm || categoryFilter !== "all"
+                ? "Try adjusting your search or filters"
+                : "Create your first KPI"}
+            </p>
           </div>
         ) : (
-          <>
-            {/* Desktop Table */}
-            <div className="hidden lg:block overflow-x-auto">
-              <table
-                className="w-full"
-                style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-              >
-                <thead style={{ background: color.surface.tableHeader }}>
-                  <tr>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      KPI Name
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Category
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Type
-                    </th>
-                    <th
-                      className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Status
-                    </th>
-                    <th
-                      className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedKPIs.map((kpi) => (
-                    <tr key={kpi.id} className="transition-colors">
-                      <td
-                        className="px-6 py-4 text-sm"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <div>
-                          <div
-                            className="font-semibold text-sm text-gray-900 truncate"
-                            title={kpi.name}
-                          >
-                            {kpi.name}
-                          </div>
-                        </div>
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-gray-900">
-                          {kpi.category}
-                        </span>
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <p className="text-sm text-gray-700">
-                          {kpi.field_type ? kpi.field_type.charAt(0).toUpperCase() + kpi.field_type.slice(1) : "-"}
-                        </p>
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm text-center"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <span className="text-sm font-medium text-gray-900">
-                          {kpi.is_active ? "Active" : "Inactive"}
-                        </span>
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm font-medium"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <div className="flex items-center justify-center space-x-2">
-                          <button
-                            onClick={() => handleViewDetails(kpi)}
-                            className={`p-1 ${tw.rounded} ${tw.textMuted} hover:text-gray-900 transition-colors`}
-                            title="View Details"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => navigate(`/dashboard/kpis/${extractNumericId(kpi.id)}/edit`, { state: { parentLabel: "All KPIs" } })}
-                            className={`p-1 ${tw.rounded} ${tw.textMuted} hover:text-gray-900 transition-colors`}
-                            title="Edit"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <ActivateDeactivateButton
-                            isActive={kpi.is_active ?? true}
-                            onToggle={() => handleToggleStatus(kpi)}
-                            disabled={togglingKpiId === kpi.id}
-                            isLoading={togglingKpiId === kpi.id}
-                          />
-                          <button
-                            onClick={() => handleDeleteClick(kpi)}
-                            className={`p-1 ${tw.rounded} hover:text-red-700 transition-colors`}
-                            style={{ color: "#DC2626" }}
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile Cards View */}
-            <div className="lg:hidden space-y-3 p-4">
-              {paginatedKPIs.map((kpi) => (
-                <div
-                  key={kpi.id}
-                  className={`${tw.rounded} border p-4`}
-                  style={{
-                    backgroundColor: color.surface.tablebodybg,
-                    borderColor: color.border.default,
-                  }}
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-sm text-gray-900">
-                          {kpi.name}
-                        </h4>
-                      </div>
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-sm font-medium flex-shrink-0 text-gray-900">
-                        {kpi.category}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-4 text-sm">
-                      <div>
-                        <span className="text-gray-600">Type:</span>
-                        <span className="ml-1 font-medium text-gray-900">
-                          {kpi.field_type ? kpi.field_type.charAt(0).toUpperCase() + kpi.field_type.slice(1) : "-"}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4 text-sm">
-                      <div>
-                        <span className="text-gray-600">Status:</span>
-                        <span className="ml-1 font-medium text-gray-900">
-                          {kpi.is_active ? "Active" : "Inactive"}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 justify-end">
-                      <button
-                        onClick={() => handleViewDetails(kpi)}
-                        className={`p-1 ${tw.rounded} ${tw.textMuted} hover:text-gray-900 transition-colors`}
-                        title="View Details"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => navigate(`/dashboard/kpis/${extractNumericId(kpi.id)}/edit`, { state: { parentLabel: "All KPIs" } })}
-                        className={`p-1 ${tw.rounded} ${tw.textMuted} hover:text-gray-900 transition-colors`}
-                        title="Edit"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <ActivateDeactivateButton
-                        isActive={kpi.is_active ?? true}
-                        onToggle={() => handleToggleStatus(kpi)}
-                        disabled={togglingKpiId === kpi.id}
-                        isLoading={togglingKpiId === kpi.id}
-                      />
-                      <button
-                        onClick={() => handleDeleteClick(kpi)}
-                        className={`p-1 ${tw.rounded} hover:text-red-700 transition-colors`}
-                        style={{ color: "#DC2626" }}
-                        title="Delete"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Pagination */}
-            <div className="flex items-center justify-between px-6 py-4 border-t" style={{ borderColor: color.border.default, backgroundColor: color.surface.tablebodybg }}>
-              <div className="text-sm text-gray-600">
-                Showing <span className="font-medium">{startIdx + 1}</span> to <span className="font-medium">{Math.min(startIdx + ITEMS_PER_PAGE, filteredKPIs.length)}</span> of <span className="font-medium">{filteredKPIs.length}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  className={`p-2 ${tw.rounded} transition-colors ${
-                    currentPage === 1
-                      ? "text-gray-300 cursor-not-allowed"
-                      : "text-gray-600 hover:bg-gray-100"
-                  }`}
-                  title="Previous page"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <div className="text-sm text-gray-600">
-                  Page <span className="font-medium">{currentPage}</span> of <span className="font-medium">{totalPages}</span>
-                </div>
-                <button
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                  className={`p-2 ${tw.rounded} transition-colors ${
-                    currentPage === totalPages
-                      ? "text-gray-300 cursor-not-allowed"
-                      : "text-gray-600 hover:bg-gray-100"
-                  }`}
-                  title="Next page"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-          </>
+          <Table<typeof allKPIs[0]>
+            columns={columns}
+            data={filteredKPIs}
+            totalItems={filteredKPIs.length}
+            currentPage={tableCurrentPage}
+            pageSize={tablePageSize}
+            isLoading={isLoading}
+            onPageChange={tableHandlePageChange}
+            onSort={handleSort}
+            sortConfigs={sortConfigs}
+            style={{
+              headerBackground: color.surface.tableHeader,
+              headerTextColor: color.surface.tableHeaderText,
+              rowBackground: color.surface.tablebodybg,
+              rowSpacing: "0 8px",
+            }}
+          />
         )}
       </div>
 
+      {/* Pagination */}
+      {!isLoading && filteredKPIs.length > 0 && (
+        <Pagination
+          currentPage={tableCurrentPage}
+          pageSize={tablePageSize}
+          totalItems={filteredKPIs.length}
+          onPageChange={tableHandlePageChange}
+        />
+      )}
+
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={deleteConfirm.id !== null}
+        isOpen={showDeleteModal}
         onClose={handleCancelDelete}
-        onConfirm={confirmDeleteItem}
+        onConfirm={handleConfirmDelete}
         title="Delete KPI"
         description="Are you sure you want to delete this KPI? This action cannot be undone."
         itemName={kpiToDelete?.name || ""}

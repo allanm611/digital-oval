@@ -10,6 +10,8 @@ import { useToast } from "../../../contexts/ToastContext";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { broadcastService } from "../services/broadcastService";
 import DateFormatter from "../../../shared/components/DateFormatter";
+import { Table } from "../../../shared/components/Table/Table";
+import Pagination from "../../../shared/components/ui/Pagination";
 
 interface CampaignBroadcast {
   id: number;
@@ -26,6 +28,17 @@ interface CampaignBroadcast {
   failed: number;
   unsubscribed: number;
   created_by: string;
+}
+
+interface BroadcastTableRow {
+  id: number;
+  campaignName: string;
+  status: string;
+  sentDate: string;
+  channels: string;
+  recipients: string;
+  opened: number;
+  conversions: number;
 }
 
 const statusOptions = [
@@ -145,6 +158,8 @@ export default function CampaignBroadcastsPage() {
   const [statistics, setStatistics] = useState<any>(null);
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 20;
 
   useEffect(() => {
     loadBroadcastStatistics();
@@ -155,7 +170,6 @@ export default function CampaignBroadcastsPage() {
       setIsLoading(true);
       setError(null);
       const response = await broadcastService.getBroadcastStatistics();
-      console.log("Broadcast Statistics Response:", response);
       setStatistics(response.data || response);
     } catch (err) {
       console.error("Failed to load broadcast statistics:", err);
@@ -190,6 +204,16 @@ export default function CampaignBroadcastsPage() {
       broadcast.created_by.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStatus && matchesSearch;
   });
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedStatus, searchQuery]);
+
+  const paginatedBroadcasts = filteredBroadcasts.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   // Stats Cards Data from API
   const broadcastStats = [
@@ -275,8 +299,7 @@ export default function CampaignBroadcastsPage() {
 
       {/* Table Container */}
       <div
-        className={` ${tw.rounded} border overflow-hidden`}
-        style={{ borderColor: color.border.default }}
+        className={` ${tw.rounded} overflow-hidden`}
       >
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-16">
@@ -303,143 +326,79 @@ export default function CampaignBroadcastsPage() {
             </button>
           </div>
         ) : broadcasts.length > 0 && filteredBroadcasts.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table
-              className="w-full"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead style={{ background: color.surface.tableHeader }}>
-                <tr>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Campaign
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Status
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Sent Date
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Channels
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Recipients
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Opened
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Conversions
-                  </th>
-                  <th
-                    className="px-6 py-4 text-center text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredBroadcasts.map((broadcast) => (
-                  <tr key={broadcast.id} className="transition-colors">
-                    <td
-                      className="px-6 py-4 text-sm text-black font-bold"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className="truncate">
-                        {broadcast.campaign_name}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4 text-sm text-black"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {broadcast.status.replace(/_/g, " ")}
-                    </td>
-                    <td
-                      className="px-6 py-4 text-sm text-black"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <DateFormatter date={broadcast.sent_at} useUserTimezone />
-                    </td>
-                    <td
-                      className="px-6 py-4 text-sm text-black"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className="flex gap-2 flex-wrap">
-                        {broadcast.channels.map((channel) => (
-                          <span key={channel} className="text-sm">
-                            {channel}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4 text-sm text-black"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {broadcast.delivered}/{broadcast.total_recipients}
-                    </td>
-                    <td
-                      className="px-6 py-4 text-sm text-black"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {broadcast.opened}
-                    </td>
-                    <td
-                      className="px-6 py-4 text-sm text-black"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {broadcast.conversions}
-                    </td>
-                    <td
-                      className="px-6 py-4 text-sm text-center"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className="flex items-center justify-center gap-3">
-                        <button
-                          onClick={() => navigate(`/dashboard/campaign-broadcasts/${broadcast.id}`)}
-                          className="text-black hover:text-gray-700 transition-colors"
-                          title="View Details"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        {broadcast.status === "failed" && (
-                          <button className="hover:opacity-80 transition-colors" title="Retry" style={{ color: "#EF4444" }}>
-                            <RotateCcw className="w-4 h-4" />
+          <>
+            <div className="overflow-x-auto">
+              <Table<BroadcastTableRow>
+                columns={[
+                  { id: "campaignName", label: "Campaign", width: "200px", visible: true, filterConfig: { type: "text" }, render: (_, row) => (
+                    <div className="text-sm font-bold truncate">{row.campaignName}</div>
+                  ) },
+                  { id: "status", label: "Status", width: "140px", visible: true, filterConfig: { type: "multiselect", options: ["sent", "in_progress", "scheduled", "failed", "paused", "completed"] } },
+                  { id: "sentDate", label: "Sent Date", width: "180px", visible: true, filterConfig: { type: "date" }, render: (_, row) => (
+                    <DateFormatter date={row.sentDate} useUserTimezone />
+                  ) },
+                  { id: "channels", label: "Channels", width: "150px", visible: true, filterConfig: { type: "text" }, render: (_, row) => (
+                    <div className="flex gap-2 flex-wrap">
+                      {row.channels.split(",").map((channel) => (
+                        <span key={channel} className="text-sm">{channel}</span>
+                      ))}
+                    </div>
+                  ) },
+                  { id: "recipients", label: "Recipients", width: "140px", visible: true, filterConfig: { type: "number" } },
+                  { id: "opened", label: "Opened", width: "100px", visible: true, filterConfig: { type: "number" } },
+                  { id: "conversions", label: "Conversions", width: "130px", visible: true, filterConfig: { type: "number" } },
+                  {
+                    id: "actions",
+                    label: "Actions",
+                    width: "150px",
+                    visible: true,
+                    sortable: false,
+                    render: (_, row) => {
+                      const broadcast = filteredBroadcasts.find((b) => b.id === row.id);
+                      return (
+                        <div className="flex items-center justify-center gap-3">
+                          <button
+                            onClick={() => navigate(`/dashboard/campaign-broadcasts/${broadcast?.id}`)}
+                            className="text-black hover:text-gray-700 transition-colors"
+                            title="View Details"
+                          >
+                            <Eye className="w-4 h-4" />
                           </button>
-                        )}
-                        <button className="text-black hover:text-gray-700 transition-colors" title="Archive">
-                          <Archive className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                          {broadcast?.status === "failed" && (
+                            <button className="hover:opacity-80 transition-colors" title="Retry" style={{ color: "#EF4444" }}>
+                              <RotateCcw className="w-4 h-4" />
+                            </button>
+                          )}
+                          <button className="text-black hover:text-gray-700 transition-colors" title="Archive">
+                            <Archive className="w-4 h-4" />
+                          </button>
+                        </div>
+                      );
+                    },
+                  },
+                ]}
+                data={paginatedBroadcasts.map((broadcast) => ({
+                  id: broadcast.id,
+                  campaignName: broadcast.campaign_name,
+                  status: broadcast.status.replace(/_/g, " "),
+                  sentDate: broadcast.sent_at,
+                  channels: broadcast.channels.join(","),
+                  recipients: `${broadcast.delivered}/${broadcast.total_recipients}`,
+                  opened: broadcast.opened,
+                  conversions: broadcast.conversions,
+                }))}
+                rowSpacing="0 8px"
+              />
+            </div>
+            {filteredBroadcasts.length > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                pageSize={pageSize}
+                total={filteredBroadcasts.length}
+                onPageChange={setCurrentPage}
+              />
+            )}
+          </>
         ) : (
           <div className="flex flex-col items-center justify-center py-16">
             <p className={`${tw.textMuted} font-medium text-sm`}>

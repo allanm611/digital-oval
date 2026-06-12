@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Edit, Trash2, Eye, ShieldCheck } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, ShieldCheck, MoreHorizontal } from "lucide-react";
+import { createPortal } from "react-dom";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -8,7 +9,7 @@ import BackButton from "../../../shared/components/ui/BackButton";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
-import { color, tw, components, helpers } from "../../../shared/utils/utils";
+import { color, tw, components, helpers, zIndex } from "../../../shared/utils/utils";
 import {
   CommunicationPolicyConfiguration,
   CreateCommunicationPolicyRequest,
@@ -21,19 +22,26 @@ import CommunicationPolicyModal from "../components/CommunicationPolicyModal";
 import { communicationPolicyService } from "../services/communicationPolicyService";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import Pagination from "../../../shared/components/ui/Pagination";
 
 export default function CommunicationPolicyPage() {
   const navigate = useNavigate();
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [policyToDelete, setPolicyToDelete] =
-    useState<CommunicationPolicyConfiguration | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-
   const [policies, setPolicies] = useState<CommunicationPolicyConfiguration[]>(
     []
   );
+
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteItem } = useDeleteConfirm({
+    onDelete: async (id) => {
+      const numericId = typeof id === "string" ? parseInt(id) : id;
+      await communicationPolicyService.deletePolicy(numericId);
+      setPolicies((prev) => prev.filter((p) => p.id !== numericId));
+      showToast(t.communicationPolicy.deleteSuccess);
+    },
+    itemLabel: "Communication Policy",
+  });
   const [loading, setLoading] = useState(true);
   const [togglingId, setTogglingId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -42,6 +50,14 @@ export default function CommunicationPolicyPage() {
     CommunicationPolicyConfiguration | undefined
   >();
   const [isSaving, setIsSaving] = useState(false);
+  const [showActionMenu, setShowActionMenu] = useState<number | null>(null);
+  const [dropdownPosition, setDropdownPosition] = useState<{
+    top: number;
+    left: number;
+    maxHeight: number;
+  } | null>(null);
+  const actionMenuRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const dropdownMenuRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
   // Load policies from service and subscribe to changes
   useEffect(() => {
@@ -68,6 +84,35 @@ export default function CommunicationPolicyPage() {
 
     return unsubscribe;
   }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      let isOutside = true;
+
+      Object.values(actionMenuRefs.current).forEach((ref) => {
+        if (ref && ref.contains(event.target as Node)) {
+          isOutside = false;
+        }
+      });
+
+      Object.values(dropdownMenuRefs.current).forEach((ref) => {
+        if (ref && ref.contains(event.target as Node)) {
+          isOutside = false;
+        }
+      });
+
+      if (isOutside) {
+        setShowActionMenu(null);
+        setDropdownPosition(null);
+      }
+    };
+
+    if (showActionMenu !== null) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showActionMenu]);
 
   const handleToggleActive = async (policy: CommunicationPolicyConfiguration) => {
     const newActive = !policy.is_active;
@@ -99,30 +144,44 @@ export default function CommunicationPolicyPage() {
   };
 
   const handleDeletePolicy = (policy: CommunicationPolicyConfiguration) => {
-    setPolicyToDelete(policy);
-    openDeleteConfirm(item?.id || 0, item?.name || "");
+    openDeleteConfirm(policy.id, policy.name);
+    setShowActionMenu(null);
   };
 
-  const handleConfirmDelete = async () => {
-    if (!policyToDelete) return;
+  const handleActionMenuToggle = (
+    policyId: number,
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) => {
+    if (showActionMenu === policyId) {
+      setShowActionMenu(null);
+      setDropdownPosition(null);
+    } else {
+      setShowActionMenu(policyId);
 
-    setIsDeleting(true);
-    try {
-      await communicationPolicyService.deletePolicy(policyToDelete.id);
-      showToast(t.communicationPolicy.deleteSuccess);
-      closeDeleteConfirm();
-      setPolicyToDelete(null);
-    } catch (err) {
-      console.error("Failed to delete policy:", err);
-      showError("Unable to Delete Policy", extractBackendError(err, "Failed to delete policy. Please try again later."));
-    } finally {
-      setIsDeleting(false);
+      if (event && event.currentTarget) {
+        const button = event.currentTarget;
+        const buttonRect = button.getBoundingClientRect();
+        const dropdownWidth = 256;
+        const spacing = 4;
+        const padding = 8;
+
+        const top = buttonRect.bottom + spacing;
+        let left = buttonRect.right - dropdownWidth;
+
+        if (left + dropdownWidth > window.innerWidth - padding) {
+          left = window.innerWidth - dropdownWidth - padding;
+        }
+        if (left < padding) {
+          left = padding;
+        }
+
+        setDropdownPosition({
+          top,
+          left,
+          maxHeight: window.innerHeight - buttonRect.bottom - 16,
+        });
+      }
     }
-  };
-
-  const handleCancelDelete = () => {
-    closeDeleteConfirm();
-    setPolicyToDelete(null);
   };
 
   const handlePolicySaved = async (
@@ -170,41 +229,123 @@ export default function CommunicationPolicyPage() {
     );
   };
 
-  const getComprehensiveConfigSummary = (
-    policy: CommunicationPolicyConfiguration
-  ) => {
-    // For now, we show the current single config, but this should be updated
-    // when backend supports multiple configs per policy
-    const summaryParts = [];
 
-    switch (policy.type_code) {
-      case "timeWindow": {
-        const timeConfig = policy.config as TimeWindowConfig;
-        summaryParts.push(`${timeConfig.startTime}-${timeConfig.endTime}`);
-        break;
-      }
-      case "maximumCommunication": {
-        const maxConfig = policy.config as MaximumCommunicationConfig;
-        summaryParts.push(`Max ${maxConfig.maxCount}/${maxConfig.type}`);
-        break;
-      }
-      case "dnd": {
-        const dndConfig = policy.config as DNDConfig;
-        summaryParts.push(`${dndConfig.categories.length} categories`);
-        break;
-      }
-      case "vipList": {
-        const vipConfig = policy.config as VIPListConfig;
-        summaryParts.push(`${vipConfig.action} (P:${vipConfig.priority})`);
-        break;
-      }
-    }
+  // Table columns definition
+  const defaultColumns: TableColumn<CommunicationPolicyConfiguration>[] = [
+    {
+      id: "name",
+      label: t.communicationPolicy.policy,
+      visible: true,
+      render: (value) => (
+        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value as string}>
+          {value}
+        </div>
+      ),
+    },
+    {
+      id: "description",
+      label: "Description",
+      visible: true,
+      render: (value) => (
+        <span
+          className={`text-sm ${tw.textMuted} truncate`}
+          title={value ? String(value) : t.communicationPolicy.noDescription}
+        >
+          {value || t.communicationPolicy.noDescription}
+        </span>
+      ),
+    },
+    {
+      id: "channels",
+      label: t.communicationPolicy.channels,
+      visible: true,
+      sortable: false,
+      render: (value) => getChannelsDisplay((value as string[]) || []),
+    },
+    {
+      id: "type_code",
+      label: t.communicationPolicy.type,
+      visible: true,
+      render: (value, policy) => (
+        <span className={`text-sm ${tw.textSecondary}`}>
+          {(policy as any).type_name || value}
+        </span>
+      ),
+    },
+    {
+      id: "is_active",
+      label: t.communicationPolicy.status,
+      visible: true,
+      render: (value) => (
+        <span
+          className={
+            value
+              ? helpers.badge("success")
+              : helpers.badge("info")
+          }
+        >
+          {value
+            ? t.communicationPolicy.active
+            : t.communicationPolicy.inactive}
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      label: t.communicationPolicy.actions,
+      visible: true,
+      sortable: false,
+      render: (value, policy) => (
+        <div className="flex items-center justify-end gap-2">
+          <ActivateDeactivateButton
+            isActive={policy.is_active}
+            onToggle={() => handleToggleActive(policy)}
+            isLoading={togglingId === policy.id}
+            disabled={togglingId === policy.id}
+            title={policy.is_active ? `Deactivate ${policy.name}` : `Activate ${policy.name}`}
+          />
+          <button
+            onClick={() => navigate(`/dashboard/campaign-communication-policy/${policy.id}`)}
+            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
+            title="View details"
+          >
+            <Eye className="w-4 h-4 text-gray-500" />
+          </button>
+          <button
+            onClick={() => handleEditPolicy(policy)}
+            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
+            title={t.communicationPolicy.edit}
+          >
+            <Edit className="w-4 h-4" style={{ color: color.primary.action }} />
+          </button>
+          <div className="relative" ref={(el) => {
+            actionMenuRefs.current[policy.id] = el;
+          }}>
+            <button
+              onClick={(e) => handleActionMenuToggle(policy.id, e)}
+              className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
+              title="More options"
+            >
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      ),
+    },
+  ];
 
-    // Add placeholder for other types to show this is a comprehensive policy
-    summaryParts.push("+ 3 more types configured");
-
-    return summaryParts.join(" • ");
-  };
+  const {
+    columns,
+    currentPage: tableCurrentPage,
+    pageSize: tablePageSize,
+    handlePageChange: tableHandlePageChange,
+    sortConfigs,
+    handleSort,
+  } = useTable({
+    tableId: "communication-policies-table",
+    defaultColumns,
+    persistToLocalStorage: true,
+  });
 
   const filteredPolicies = Array.isArray(policies) ? policies.filter(
     (policy) => {
@@ -216,6 +357,17 @@ export default function CommunicationPolicyPage() {
       );
     }
   ) : [];
+
+  // Handle pagination slicing
+  const paginatedPolicies = filteredPolicies.slice(
+    (tableCurrentPage - 1) * tablePageSize,
+    tableCurrentPage * tablePageSize
+  );
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    tableHandlePageChange(1);
+  }, [searchTerm, tableHandlePageChange]);
 
   return (
     <div className="space-y-6">
@@ -246,7 +398,7 @@ export default function CommunicationPolicyPage() {
       </div>
 
       <div
-        className={` ${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
+        className={`${tw.rounded} overflow-hidden`}
       >
         {loading ? (
           <div className="flex flex-col items-center justify-center py-16">
@@ -283,203 +435,70 @@ export default function CommunicationPolicyPage() {
           </div>
         ) : (
           <>
-            {/* Desktop Table View */}
-            <div className="overflow-x-auto">
-              <table
-                className="w-full min-w-[720px]"
-                style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-              >
-                <thead style={{ background: color.surface.tableHeader }}>
-                  <tr>
-                    <th
-                      className={`px-6 py-4 text-left text-xs font-medium uppercase tracking-wider`}
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      {t.communicationPolicy.policy}
-                    </th>
-                    <th
-                      className={`px-6 py-4 text-left text-xs font-medium uppercase tracking-wider`}
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Description
-                    </th>
-                    <th
-                      className={`px-6 py-4 text-left text-xs font-medium uppercase tracking-wider`}
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      {t.communicationPolicy.channels}
-                    </th>
-                    <th
-                      className={`px-6 py-4 text-left text-xs font-medium uppercase tracking-wider hidden md:table-cell`}
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      {t.communicationPolicy.type}
-                    </th>
-                    <th
-                      className={`px-6 py-4 text-left text-xs font-medium uppercase tracking-wider`}
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      {t.communicationPolicy.status}
-                    </th>
-                    <th
-                      className={`px-6 py-4 text-right text-xs font-medium uppercase tracking-wider`}
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      {t.communicationPolicy.actions}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredPolicies.map((policy) => (
-                    <tr
-                      key={policy.id}
-                      className="transition-colors"
-                    >
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <span
-                          className={`font-semibold text-sm ${tw.textPrimary} truncate`}
-                          title={policy.name}
-                        >
-                          {policy.name}
-                        </span>
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <span
-                          className={`text-sm ${tw.textMuted} truncate`}
-                          title={policy.description || t.communicationPolicy.noDescription}
-                        >
-                          {policy.description || t.communicationPolicy.noDescription}
-                        </span>
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        {getChannelsDisplay(policy.channels)}
-                      </td>
-                      <td
-                        className={`px-6 py-4 hidden md:table-cell`}
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <span className={`text-sm ${tw.textSecondary}`}>
-                          {(policy as any).type_name || policy.type_code}
-                        </span>
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <span
-                          className={
-                            policy.is_active
-                              ? helpers.badge("success")
-                              : helpers.badge("info")
-                          }
-                        >
-                          {policy.is_active
-                            ? t.communicationPolicy.active
-                            : t.communicationPolicy.inactive}
-                        </span>
-                      </td>
-                      <td
-                        className="px-6 py-4 text-right text-sm font-medium"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <div className="flex items-center justify-end gap-2">
-                          <ActivateDeactivateButton
-                            isActive={policy.is_active}
-                            onToggle={() => handleToggleActive(policy)}
-                            isLoading={togglingId === policy.id}
-                            disabled={togglingId === policy.id}
-                            title={policy.is_active ? `Deactivate ${policy.name}` : `Activate ${policy.name}`}
-                          />
-                          <button
-                            onClick={() => navigate(`/dashboard/campaign-communication-policy/${policy.id}`)}
-                            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
-                            title="View details"
-                          >
-                            <Eye className="w-4 h-4 text-gray-500" />
-                          </button>
-                          <button
-                            onClick={() => handleEditPolicy(policy)}
-                            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
-                            title={t.communicationPolicy.edit}
-                          >
-                            <Edit className="w-4 h-4" style={{ color: color.primary.action }} />
-                          </button>
-                          <button
-                            onClick={() => handleDeletePolicy(policy)}
-                            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-all duration-200`}
-                            title={t.communicationPolicy.delete}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            {/* Table */}
+            <Table<CommunicationPolicyConfiguration>
+              columns={columns}
+              data={paginatedPolicies}
+              totalItems={filteredPolicies.length}
+              currentPage={tableCurrentPage}
+              pageSize={tablePageSize}
+              isLoading={loading}
+              onPageChange={tableHandlePageChange}
+              onSort={handleSort}
+              sortConfigs={sortConfigs}
+              style={{
+                headerBackground: color.surface.tableHeader,
+                headerTextColor: color.surface.tableHeaderText,
+                rowBackground: color.surface.tablebodybg,
+                rowSpacing: "0 8px",
+              }}
+            />
 
-            {/* Mobile Card View - Keep for very small screens if needed */}
-            <div className="hidden">
-              {filteredPolicies.map((policy) => (
-                <div
-                  key={policy.id}
-                  className="p-4 border-b border-gray-200 last:border-b-0"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <div className={`${tw.tableFirstColumn} text-gray-900`}>
-                          {policy.name}
-                        </div>
-                        <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                            policy.is_active
-                              ? "bg-green-100 text-green-800"
-                              : "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {policy.is_active ? "Active" : "Inactive"}
-                        </span>
-                      </div>
-                      <div className="mb-2">
-                        {getChannelsDisplay(policy.channels)}
-                      </div>
-                      <div className="text-sm text-gray-600 mb-2">
-                        {policy.description || "No description"}
-                      </div>
-                      <div className="text-xs text-gray-500 mb-3">
-                        <span className="font-medium">All Policy Types:</span>{" "}
-                        {getComprehensiveConfigSummary(policy)}
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2 ml-4">
-                      <button
-                        onClick={() => handleEditPolicy(policy)}
-                        className={`p-2 text-[#588157] hover:text-[#3A5A40] hover:bg-[#588157]/10 ${tw.rounded} transition-colors`}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDeletePolicy(policy)}
-                        className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
-                      >
-                        <Trash2 className="w-4 h-4 text-red-600" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            {/* Pagination */}
+            {!loading && paginatedPolicies.length > 0 && filteredPolicies.length > 0 && (
+              <Pagination
+                currentPage={tableCurrentPage}
+                pageSize={tablePageSize}
+                totalItems={filteredPolicies.length}
+                onPageChange={tableHandlePageChange}
+              />
+            )}
+
+            {/* Action Menus via Portal */}
+            {paginatedPolicies.map((policy) => {
+              if (showActionMenu === policy.id && dropdownPosition) {
+                return createPortal(
+                  <div
+                    ref={(el) => {
+                      dropdownMenuRefs.current[policy.id] = el;
+                    }}
+                    className={`fixed bg-white border border-gray-200 ${tw.rounded} shadow-xl py-3 w-64`}
+                    style={{
+                      zIndex: zIndex.popover,
+                      top: `${dropdownPosition.top}px`,
+                      left: `${dropdownPosition.left}px`,
+                      maxHeight: `${dropdownPosition.maxHeight}px`,
+                      overflowY: "auto",
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    onMouseDown={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeletePolicy(policy);
+                      }}
+                      className="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4 mr-4" />
+                      Delete
+                    </button>
+                  </div>,
+                  document.body,
+                );
+              }
+              return null;
+            })}
           </>
         )}
       </div>
@@ -498,11 +517,11 @@ export default function CommunicationPolicyPage() {
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
         isOpen={deleteConfirm.id !== null}
-        onClose={handleCancelDelete}
-        onConfirm={handleConfirmDelete}
+        onClose={closeDeleteConfirm}
+        onConfirm={confirmDeleteItem}
         title={t.communicationPolicy.deleteConfirmTitle}
         description={t.communicationPolicy.deleteConfirmMessage}
-        itemName={policyToDelete?.name || ""}
+        itemName={deleteConfirm.itemName || ""}
         isLoading={isDeleting}
         confirmText={t.communicationPolicy.deletePolicy}
         cancelText={t.common.cancel}

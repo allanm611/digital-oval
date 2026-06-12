@@ -27,6 +27,9 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
 import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import { color, tw } from "../../../shared/utils/utils";
+import { Table } from "../../../shared/components/Table/Table";
+import { useTable } from "../../../shared/components/Table/useTable";
+import type { TableColumn } from "../../../shared/components/Table/types";
 import type {
   RangeOption,
   DeliveryEmailReportsResponse,
@@ -42,6 +45,17 @@ type EmailStatus = EmailLogEntry["status"];
 type EmailRangeData = {
   summary: EmailSummary;
   deliverySeries: DeliveryPoint[];
+};
+
+// Table row type
+type EmailTableRow = {
+  id: string;
+  campaignName: string;
+  status: EmailStatus;
+  sent: number;
+  delivered: number;
+  conversions: number;
+  conversionRate: number;
 };
 
 const rangeOptions: RangeOption[] = ["7d", "30d", "90d"];
@@ -158,10 +172,12 @@ const generateEmailMessageLogs = (): EmailLogEntry[] => {
 
   const rows: EmailLogEntry[] = [];
   const today = new Date();
+  let globalCounter = 0;
 
   // Generate emails across the last 90 days with various statuses
-  campaigns.forEach((campaign) => {
+  campaigns.forEach((campaign, campIdx) => {
     for (let i = 0; i < 6; i++) {
+      globalCounter++;
       const daysAgo = Math.floor(Math.random() * 90); // Spread across last 90 days
       const sentDate = new Date(today);
       sentDate.setDate(today.getDate() - daysAgo);
@@ -186,10 +202,7 @@ const generateEmailMessageLogs = (): EmailLogEntry[] => {
       const conversions = Math.floor(delivered * (conversionRate / 100));
 
       rows.push({
-        id: `EMAIL-${sentDate
-          .toISOString()
-          .split("T")[0]
-          .replace(/-/g, "")}-${String(i + 1).padStart(3, "0")}`,
+        id: `EMAIL-${globalCounter}`,
         campaignId: campaign.id,
         campaignName: campaign.name,
         status,
@@ -322,7 +335,7 @@ const getDateConstraints = () => {
 
 export default function DeliveryEmailReportsPage() {
   const { t } = useLanguage();
-  const [deliveryRange, setDeliveryRange] = useState<RangeOption>("7d");
+  const [deliveryRange, setDeliveryRange] = useState<RangeOption>("90d");
   const [customRange, setCustomRange] = useState({ start: "", end: "" });
   const [appliedCustomRange, setAppliedCustomRange] = useState({
     start: "",
@@ -553,6 +566,51 @@ export default function DeliveryEmailReportsPage() {
     Deferred: "border-amber-200 bg-amber-50 text-amber-700",
     Spam: "border-slate-200 bg-slate-50 text-slate-700",
   };
+
+  const tableColumnsMemo = useMemo<TableColumn<EmailTableRow>[]>(() => [
+    {
+      id: "campaignName",
+      label: "Campaign Name",
+      visible: true,
+      width: "200px",
+    },
+    {
+      id: "status",
+      label: "Status",
+      visible: true,
+      width: "150px",
+      render: (_, row) => (
+        <span className="text-sm">
+          {row.status}
+        </span>
+      ),
+    },
+    {
+      id: "sent",
+      label: "Sent",
+      visible: true,
+      width: "100px",
+    },
+    {
+      id: "delivered",
+      label: "Delivered",
+      visible: true,
+      width: "100px",
+    },
+    {
+      id: "conversions",
+      label: "Conversions",
+      visible: true,
+      width: "120px",
+    },
+    {
+      id: "conversionRate",
+      label: "Conversion Rate",
+      visible: true,
+      width: "150px",
+      render: (value) => `${value}%`,
+    },
+  ], []);
 
   return (
     <div className="space-y-6">
@@ -819,103 +877,43 @@ export default function DeliveryEmailReportsPage() {
             />
           </div>
         </div>
-        <div
-          className={` ${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
-        >
-          <div className="hidden lg:block overflow-x-auto">
-            <table
-              className="w-full"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead style={{ background: color.surface.tableHeader }}>
-                <tr className="text-left text-sm font-medium uppercase tracking-wider">
-                  {[
-                    "Campaign ID",
-                    "Campaign Name",
-                    "Status",
-                    "Sent",
-                    "Delivered",
-                    "Conversions",
-                    "Conversion Rate",
-                  ].map((header) => (
-                    <th
-                      key={header}
-                      className="px-6 py-3"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      {header}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedLogs.map((entry, index) => (
-                  <tr key={entry.id} className="transition-colors">
-                    <td
-                      className="px-6 py-4 font-semibold"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className="text-lg text-gray-900">{index + 1}</div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className="text-gray-900">{entry.campaignName}</div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span
-                        className={`inline-flex items-center rounded-full px-2 py-1 text-sm font-medium ${
-                          statusStyles[entry.status]
-                        }`}
-                      >
-                        {entry.status}
-                      </span>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {formatNumber(entry.sent)}
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {formatNumber(entry.delivered)}
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {formatNumber(entry.conversions)}
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {entry.conversionRate}%
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {!filteredLogs.length && (
-              <div className="py-10 text-center text-sm text-gray-500">
-                No campaigns match your filters yet.
-              </div>
-            )}
-          </div>{" "}
-          <Pagination
+        <>
+          <Table<EmailTableRow>
+            columns={tableColumnsMemo}
+            data={filteredLogs.map((entry) => ({
+              id: entry.id,
+              campaignName: entry.campaignName,
+              status: entry.status,
+              sent: entry.sent,
+              delivered: entry.delivered,
+              conversions: entry.conversions,
+              conversionRate: entry.conversionRate,
+            }))}
+            totalItems={filteredLogs.length}
             currentPage={tablePage}
             pageSize={tablePageSize}
-            totalItems={filteredLogs.length}
             onPageChange={setTablePage}
-          />{" "}
-        </div>
+            style={{
+              headerBackground: colors.surface.tableHeader,
+              headerTextColor: colors.surface.tableHeaderText,
+              rowBackground: colors.surface.tablebodybg,
+              rowSpacing: "0 8px",
+            }}
+          />
+          {filteredLogs.length > 0 && (
+            <Pagination
+              currentPage={tablePage}
+              pageSize={tablePageSize}
+              totalItems={filteredLogs.length}
+              onPageChange={setTablePage}
+            />
+          )}
+        </>
+        {filteredLogs.length === 0 && (
+          <div className="py-10 text-center text-sm text-gray-500">
+            No campaigns match your filters yet.
+          </div>
+        )}
       </section>
     </div>
   );

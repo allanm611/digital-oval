@@ -137,7 +137,7 @@ export default function KpiDetailsPage() {
       {/* KPI Information */}
       <div className="space-y-6">
         {/* KPI Overview & Data Source Information */}
-        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
+        <div className={`bg-white ${tw.rounded} p-6`}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-1">
               <label
@@ -226,7 +226,7 @@ export default function KpiDetailsPage() {
 
         {/* Extraction Logic */}
         {kpi.extraction_logic && (
-          <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
+          <div className={`bg-white ${tw.rounded} p-6`}>
             <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>
               Extraction Logic
             </h3>
@@ -237,7 +237,7 @@ export default function KpiDetailsPage() {
         )}
 
         {/* Field Configuration */}
-        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
+        <div className={`bg-white ${tw.rounded} p-6`}>
           <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>
             Field Configuration
           </h3>
@@ -314,7 +314,7 @@ export default function KpiDetailsPage() {
         </div>
 
         {/* Validation & Status */}
-        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
+        <div className={`bg-white ${tw.rounded} p-6`}>
           <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>
             Validation & Status
           </h3>
@@ -359,7 +359,7 @@ export default function KpiDetailsPage() {
         </div>
 
         {/* Metadata */}
-        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
+        <div className={`bg-white ${tw.rounded} p-6`}>
           <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>
             Metadata
           </h3>

@@ -151,7 +151,18 @@ export default function DeleteConfirmModal({
                   </button>
                   <button
                     type="button"
-                    className={`mt-3 inline-flex w-full justify-center ${tw.rounded} ${tw.surfaceBackground} px-3 py-2 text-sm font-semibold ${tw.textPrimary} shadow-sm ring-1 ring-inset ${tw.borderDefault} hover:bg-[var(--c-interactive-hover)] sm:mt-0 sm:w-auto`}
+                    className={`mt-3 inline-flex w-full justify-center ${tw.rounded} px-3 py-2 text-sm font-semibold shadow-sm sm:mt-0 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed`}
+                    style={{
+                      backgroundColor: 'transparent',
+                      color: 'var(--c-text-primary)',
+                      border: '1px solid var(--c-text-primary)',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }}
                     onClick={onClose}
                     disabled={isLoading}
                   >

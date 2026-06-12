@@ -30,6 +30,17 @@ import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import { Table } from "../../../shared/components/Table/Table";
+
+interface ProductTableRow {
+  id: string;
+  name: string;
+  productId: string;
+  daId: string;
+  category: string;
+  status: string;
+  created: string;
+}
 
 interface ProductFilters {
   search?: string;
@@ -476,9 +487,7 @@ export default function ProductsPage() {
       )}
 
       {/* Products Table */}
-      <div
-        className={` ${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
-      >
+      <div className={`${tw.rounded} overflow-hidden`}>
         {loading ? (
           <div className="flex flex-col items-center justify-center py-16">
             <LoadingSpinner
@@ -493,7 +502,6 @@ export default function ProductsPage() {
           </div>
         ) : products.length === 0 ? (
           <div className="text-center py-12">
-            {/* Icon removed */}
             <h3 className={`${tw.cardHeading} ${tw.textPrimary} mb-1`}>
               No products found
             </h3>
@@ -507,128 +515,87 @@ export default function ProductsPage() {
             </div>
           </div>
         ) : (
-          <div className="hidden lg:block overflow-x-auto">
-            <table
-              className="w-full"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead style={{ background: color.surface.tableHeader }}>
-                <tr>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Product
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider hidden lg:table-cell"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Product ID
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider hidden xl:table-cell"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    DA ID
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Category
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Status
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider hidden md:table-cell"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Created
-                  </th>
-                  <th
-                    className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.map((product) => {
-                  const categoryName =
-                    categories.find(
-                      (cat) => cat.id === parseInt(product.category_id),
-                    )?.name || "Uncategorized";
-                  const status = product.is_active ? "Active" : "Inactive";
-                  const statusBadge = product.is_active
-                    ? `bg-[${color.status.success}] text-[${color.status.success}]`
-                    : `bg-[${color.surface.cards}] text-[${color.text.primary}]`;
-
-                  return (
-                    <tr key={product.id} className="transition-colors">
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <div
-                          className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`}
-                          title={product.name}
-                        >
-                          {product.name}
-                        </div>
-                      </td>
-                      <td
-                        className={`px-6 py-4 hidden lg:table-cell text-sm ${tw.textPrimary}`}
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        {product.product_id || product.id || "N/A"}
-                      </td>
-                      <td
-                        className={`px-6 py-4 hidden xl:table-cell text-sm ${tw.textPrimary}`}
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        {product.da_id || "N/A"}
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <span
-                          className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-[${color.primary.accent}]/10 text-black`}
-                        >
-                          {categoryName}
+          <>
+            <div className="overflow-x-auto">
+              <Table<ProductTableRow>
+                columns={[
+                  {
+                    id: "name",
+                    label: "Product",
+                    width: "200px",
+                    visible: true,
+                    filterConfig: { type: "text" },
+                    render: (_, row) => (
+                      <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={row.name}>
+                        {row.name}
+                      </div>
+                    ),
+                  },
+                  {
+                    id: "productId",
+                    label: "Product ID",
+                    width: "150px",
+                    visible: true,
+                    filterConfig: { type: "text" },
+                  },
+                  {
+                    id: "daId",
+                    label: "DA ID",
+                    width: "140px",
+                    visible: true,
+                    filterConfig: { type: "text" },
+                  },
+                  {
+                    id: "category",
+                    label: "Category",
+                    width: "150px",
+                    visible: true,
+                    filterConfig: { type: "text" },
+                    render: (value: string) => (
+                      <span className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-[${color.primary.accent}]/10 text-black`}>
+                        {value}
+                      </span>
+                    ),
+                  },
+                  {
+                    id: "status",
+                    label: "Status",
+                    width: "120px",
+                    visible: true,
+                    filterConfig: { type: "multiselect", options: ["Active", "Inactive"] },
+                    render: (value: string) => {
+                      const isActive = value === "Active";
+                      const statusBadge = isActive
+                        ? `bg-[${color.status.success}] text-[${color.status.success}]`
+                        : `bg-[${color.surface.cards}] text-[${color.text.primary}]`;
+                      return (
+                        <span className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${statusBadge}`}>
+                          {value}
                         </span>
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <span
-                          className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${statusBadge}`}
-                        >
-                          {status}
-                        </span>
-                      </td>
-                      <td
-                        className={`px-6 py-4 hidden md:table-cell text-sm ${tw.textMuted}`}
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <DateFormatter date={product.created_at} />
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm font-medium"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
+                      );
+                    },
+                  },
+                  {
+                    id: "created",
+                    label: "Created",
+                    width: "150px",
+                    visible: true,
+                    filterConfig: { type: "date" },
+                    render: (value: string) => <DateFormatter date={value} />,
+                  },
+                  {
+                    id: "actions",
+                    label: "Actions",
+                    width: "180px",
+                    visible: true,
+                    sortable: false,
+                    render: (_, row) => {
+                      const product = products.find((p) => p.id === row.id);
+                      if (!product) return null;
+                      return (
                         <div className="flex items-center justify-center gap-2">
                           <button
-                            onClick={() =>
-                              navigate(`/dashboard/products/${product.id}`)
-                            }
+                            onClick={() => navigate(`/dashboard/products/${product.id}`)}
                             className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
                             title="View Details"
                           >
@@ -637,16 +604,9 @@ export default function ProductsPage() {
                           <PermissionGate permission="products.update">
                             <button
                               onClick={() =>
-                                navigate(
-                                  `/dashboard/products/${product.id}/edit`,
-                                  {
-                                    state: {
-                                      returnTo: {
-                                        pathname: "/dashboard/products",
-                                      },
-                                    },
-                                  },
-                                )
+                                navigate(`/dashboard/products/${product.id}/edit`, {
+                                  state: { returnTo: { pathname: "/dashboard/products" } },
+                                })
                               }
                               className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
                               title="Edit Product"
@@ -658,9 +618,7 @@ export default function ProductsPage() {
                             onClick={() => handleToggleStatus(product)}
                             disabled={loadingProductId === product.id}
                             className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
-                            title={
-                              product.is_active ? "Deactivate" : "Activate"
-                            }
+                            title={product.is_active ? "Deactivate" : "Activate"}
                           >
                             {loadingProductId === product.id ? (
                               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
@@ -680,13 +638,32 @@ export default function ProductsPage() {
                             </button>
                           </PermissionGate>
                         </div>
-                      </td>
-                    </tr>
-                  );
+                      );
+                    },
+                  },
+                ]}
+                data={products.map((product) => {
+                  const categoryName =
+                    categories.find((cat) => cat.id === parseInt(product.category_id))?.name ||
+                    "Uncategorized";
+                  const status = product.is_active ? "Active" : "Inactive";
+                  return {
+                    id: product.id,
+                    name: product.name,
+                    productId: product.product_id || product.id || "N/A",
+                    daId: product.da_id || "N/A",
+                    category: categoryName,
+                    status: status,
+                    created: product.created_at,
+                  };
                 })}
-              </tbody>
-            </table>
-          </div>
+                rowSpacing="0 8px"
+                totalItems={total}
+                currentPage={filters.page || 1}
+                pageSize={filters.pageSize || 10}
+              />
+            </div>
+          </>
         )}
       </div>
 

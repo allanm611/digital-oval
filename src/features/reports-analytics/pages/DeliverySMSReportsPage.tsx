@@ -26,6 +26,9 @@ import { color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
 import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
+import { Table } from "../../../shared/components/Table/Table";
+import { useTable } from "../../../shared/components/Table/useTable";
+import type { TableColumn } from "../../../shared/components/Table/types";
 import type {
   RangeOption,
   DeliverySMSReportsResponse,
@@ -41,6 +44,17 @@ type MessageStatus = SMSLogEntry["status"];
 type SMSRangeData = {
   summary: SMSSummary;
   deliverySeries: DeliveryPoint[];
+};
+
+// Table row type
+type SMSTableRow = {
+  id: string;
+  campaignName: string;
+  status: MessageStatus;
+  sent: number;
+  delivered: number;
+  conversions: number;
+  conversionRate: number;
 };
 
 const rangeOptions: RangeOption[] = ["7d", "30d", "90d"];
@@ -230,10 +244,12 @@ const generateSMSMessageLogs = (): MessageLogEntry[] => {
 
   const rows: MessageLogEntry[] = [];
   const today = new Date();
+  let globalCounter = 0;
 
   // Generate messages across the last 90 days with various statuses
   campaigns.forEach((campaign, campIdx) => {
     for (let i = 0; i < 8; i++) {
+      globalCounter++;
       const daysAgo = Math.floor(Math.random() * 90); // Spread across last 90 days
       const messageDate = new Date(today);
       messageDate.setDate(today.getDate() - daysAgo);
@@ -256,10 +272,7 @@ const generateSMSMessageLogs = (): MessageLogEntry[] => {
       } ${String(100000 + Math.floor(Math.random() * 900000))}`;
 
       rows.push({
-        id: `MSG-${messageDate
-          .toISOString()
-          .split("T")[0]
-          .replace(/-/g, "")}-${String(i + 1).padStart(3, "0")}`,
+        id: `MSG-${globalCounter}`,
         campaignId: campaign.id,
         campaignName: campaign.name,
         recipient: phoneNum,
@@ -333,7 +346,7 @@ const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
 
 export default function DeliverySMSReportsPage() {
   const { t } = useLanguage();
-  const [deliveryRange, setDeliveryRange] = useState<RangeOption>("7d");
+  const [deliveryRange, setDeliveryRange] = useState<RangeOption>("90d");
   const [customRange, setCustomRange] = useState({ start: "", end: "" });
   const [appliedCustomRange, setAppliedCustomRange] = useState({
     start: "",
@@ -570,6 +583,51 @@ export default function DeliverySMSReportsPage() {
     Pending: "border-amber-200 bg-amber-50 text-amber-700",
     Rejected: "border-slate-200 bg-slate-50 text-slate-700",
   };
+
+  const tableColumnsMemo = useMemo<TableColumn<SMSTableRow>[]>(() => [
+    {
+      id: "campaignName",
+      label: "Campaign Name",
+      width: "200px",
+      visible: true,
+    },
+    {
+      id: "status",
+      label: "Status",
+      width: "150px",
+      visible: true,
+      render: (_, row) => (
+        <span className="text-sm">
+          {row.status}
+        </span>
+      ),
+    },
+    {
+      id: "sent",
+      label: "Sent",
+      width: "100px",
+      visible: true,
+    },
+    {
+      id: "delivered",
+      label: "Delivered",
+      width: "100px",
+      visible: true,
+    },
+    {
+      id: "conversions",
+      label: "Conversions",
+      width: "120px",
+      visible: true,
+    },
+    {
+      id: "conversionRate",
+      label: "Conversion Rate",
+      width: "150px",
+      visible: true,
+      render: (value) => `${value}%`,
+    },
+  ], []);
 
   return (
     <div className="space-y-6">
@@ -838,103 +896,43 @@ export default function DeliverySMSReportsPage() {
             />
           </div>
         </div>
-        <div
-          className={` ${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
-        >
-          <div className="hidden lg:block overflow-x-auto">
-            <table
-              className="w-full"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead style={{ background: color.surface.tableHeader }}>
-                <tr className="text-left text-sm font-medium uppercase tracking-wider">
-                  {[
-                    "Campaign ID",
-                    "Campaign Name",
-                    "Status",
-                    "Sent",
-                    "Delivered",
-                    "Conversions",
-                    "Conversion Rate",
-                  ].map((header) => (
-                    <th
-                      key={header}
-                      className="px-6 py-3"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      {header}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedLogs.map((entry, index) => (
-                  <tr key={entry.id} className="transition-colors">
-                    <td
-                      className="px-6 py-4 font-semibold"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className="text-lg text-gray-900">{index + 1}</div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className="text-gray-900">{entry.campaignName}</div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span
-                        className={`inline-flex items-center rounded-full px-2 py-1 text-sm font-medium ${
-                          statusStyles[entry.status]
-                        }`}
-                      >
-                        {entry.status}
-                      </span>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {entry.sent}
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {entry.delivered}
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {entry.conversions}
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {entry.conversionRate}%
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {!filteredLogs.length && (
-              <div className="py-10 text-center text-sm text-gray-500">
-                No messages match your filters yet.
-              </div>
-            )}
-          </div>
-          <Pagination
+        <>
+          <Table<SMSTableRow>
+            columns={tableColumnsMemo}
+            data={filteredLogs.map((entry) => ({
+              id: entry.id,
+              campaignName: entry.campaignName,
+              status: entry.status,
+              sent: entry.sent,
+              delivered: entry.delivered,
+              conversions: entry.conversions,
+              conversionRate: entry.conversionRate,
+            }))}
+            totalItems={filteredLogs.length}
             currentPage={tablePage}
             pageSize={tablePageSize}
-            totalItems={filteredLogs.length}
             onPageChange={setTablePage}
+            style={{
+              headerBackground: colors.surface.tableHeader,
+              headerTextColor: colors.surface.tableHeaderText,
+              rowBackground: colors.surface.tablebodybg,
+              rowSpacing: "0 8px",
+            }}
           />
-        </div>
+          {filteredLogs.length > 0 && (
+            <Pagination
+              currentPage={tablePage}
+              pageSize={tablePageSize}
+              totalItems={filteredLogs.length}
+              onPageChange={setTablePage}
+            />
+          )}
+        </>
+        {filteredLogs.length === 0 && (
+          <div className="py-10 text-center text-sm text-gray-500">
+            No messages match your filters yet.
+          </div>
+        )}
       </section>
     </div>
   );

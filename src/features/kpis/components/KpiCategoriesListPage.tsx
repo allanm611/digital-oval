@@ -14,6 +14,7 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import { kpiCategoryService } from "../services/kpiCategoryService";
 import KpiCategoryModal, { KpiCategory } from "./KpiCategoryModal";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 
 export default function KpiCategoriesListPage() {
   const { success: showToast, error: showError } = useToast();
@@ -23,8 +24,6 @@ export default function KpiCategoriesListPage() {
   const [categories, setCategories] = useState<KpiCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(20);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<KpiCategory | undefined>();
   const [isSaving, setIsSaving] = useState(false);
@@ -32,6 +31,108 @@ export default function KpiCategoriesListPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<KpiCategory | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const tableColumns: TableColumn<KpiCategory>[] = [
+    {
+      id: "name",
+      label: "Name",
+      visible: true,
+      render: (_, row) => (
+        <div className={`text-sm ${tw.tableFirstColumn} ${tw.textPrimary}`}>
+          {row.name}
+        </div>
+      ),
+    },
+    {
+      id: "description",
+      label: "Description",
+      visible: true,
+      render: (_, row) => (
+        <div className={`text-sm ${tw.textSecondary} max-w-md`}>
+          {row.description || "-"}
+        </div>
+      ),
+    },
+    {
+      id: "display_order",
+      label: "Order",
+      visible: true,
+      render: (_, row) => (
+        <div className={`text-sm ${tw.textSecondary} text-center`}>
+          {row.display_order || "0"}
+        </div>
+      ),
+    },
+    {
+      id: "is_active",
+      label: "Status",
+      visible: true,
+      render: (_, row) => (
+        <span className={`text-sm font-medium ${tw.textSecondary} text-center`}>
+          {row.is_active ?? true ? "Active" : "Inactive"}
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      render: (_, row) => (
+        <div className="flex items-center justify-center gap-2">
+          <ActivateDeactivateButton
+            isActive={row.is_active ?? true}
+            onToggle={() => handleToggleActive(row)}
+            disabled={
+              togglingItemId === row.id ||
+              (categoryToDelete?.id === row.id && isDeleting)
+            }
+            isLoading={togglingItemId === row.id}
+            title={
+              row.is_active
+                ? `Deactivate ${row.name}`
+                : `Activate ${row.name}`
+            }
+          />
+          <button
+            onClick={() => handleEditCategory(row)}
+            disabled={
+              togglingItemId === row.id ||
+              (categoryToDelete?.id === row.id && isDeleting)
+            }
+            className={`p-2 ${tw.rounded} transition-colors hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed`}
+            title="Edit"
+          >
+            <Edit className="w-4 h-4" style={{ color: color.primary.action }} />
+          </button>
+          <button
+            onClick={() => handleDeleteCategory(row)}
+            disabled={
+              togglingItemId === row.id ||
+              (categoryToDelete?.id === row.id && isDeleting)
+            }
+            className={`p-2 ${tw.rounded} transition-colors hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed`}
+            title="Delete"
+          >
+            <Trash2 className="w-4 h-4" style={{ color: "#DC2626" }} />
+          </button>
+        </div>
+      ),
+    },
+  ];
+
+  const {
+    columns,
+    currentPage: tableCurrentPage,
+    pageSize: tablePageSize,
+    handlePageChange: tableHandlePageChange,
+    sortConfigs,
+    handleSort,
+  } = useTable({
+    tableId: "kpi-categories-table",
+    defaultColumns: tableColumns,
+    persistToLocalStorage: true,
+  });
 
   // Fetch categories
   useEffect(() => {
@@ -66,7 +167,7 @@ export default function KpiCategoriesListPage() {
 
   const handleDeleteCategory = (category: KpiCategory) => {
     setCategoryToDelete(category);
-    openDeleteConfirm(item?.id || 0, item?.name || "");
+    setShowDeleteModal(true);
   };
 
   const confirmDeleteCategory = async () => {
@@ -86,7 +187,7 @@ export default function KpiCategoriesListPage() {
         "Category Deleted",
         `"${categoryToDelete.name}" has been deleted successfully.`
       );
-      closeDeleteConfirm();
+      setShowDeleteModal(false);
       setCategoryToDelete(null);
     } catch (err) {
       console.error("Failed to delete category:", err);
@@ -178,15 +279,6 @@ export default function KpiCategoriesListPage() {
     [categories, searchTerm]
   );
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm]);
-
-  const startIndex = (currentPage - 1) * pageSize;
-  const paginatedCategories = filteredCategories.slice(
-    startIndex,
-    startIndex + pageSize
-  );
 
   // Get parent categories (those without a parent_category_id)
   const parentCategories = categories.filter(
@@ -196,7 +288,7 @@ export default function KpiCategoriesListPage() {
   const showBackButton = !window.location.pathname.includes("dashboard");
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-6">
       {/* Breadcrumb */}
       {showBackButton && (
         <div className="flex items-center justify-between">
@@ -234,10 +326,7 @@ export default function KpiCategoriesListPage() {
       </div>
 
       {/* Table */}
-      <div
-        className={`${tw.rounded} border overflow-hidden`}
-        style={{ borderColor: color.border.default }}
-      >
+      <div className={`${tw.rounded} overflow-hidden`}>
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <LoadingSpinner
@@ -264,171 +353,36 @@ export default function KpiCategoriesListPage() {
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table
-              className="w-full min-w-[720px]"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead>
-                <tr>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      borderTopLeftRadius: "0.375rem",
-                    }}
-                  >
-                    Name
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Description
-                  </th>
-                  <th
-                    className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Order
-                  </th>
-                  <th
-                    className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Status
-                  </th>
-                  <th
-                    className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      borderTopRightRadius: "0.375rem",
-                    }}
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {paginatedCategories.map((category) => (
-                  <tr key={category.id} className="transition-colors">
-                    <td
-                      className="px-6 py-4"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopLeftRadius: "0.375rem",
-                        borderBottomLeftRadius: "0.375rem",
-                      }}
-                    >
-                      <div className={`text-sm ${tw.tableFirstColumn} ${tw.textPrimary}`}>
-                        {category.name}
-                      </div>
-                    </td>
-
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary} max-w-md`}>
-                        {category.description || "-"}
-                      </div>
-                    </td>
-
-                    <td
-                      className="px-6 py-4 text-center"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary}`}>
-                        {category.display_order || "0"}
-                      </div>
-                    </td>
-
-                    <td
-                      className="px-6 py-4 text-center"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span className={`text-sm font-medium ${tw.textSecondary}`}>
-                        {category.is_active ?? true ? "Active" : "Inactive"}
-                      </span>
-                    </td>
-
-                    <td
-                      className="px-6 py-4 text-center"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopRightRadius: "0.375rem",
-                        borderBottomRightRadius: "0.375rem",
-                      }}
-                    >
-                      <div className="flex items-center justify-center space-x-2">
-                        <ActivateDeactivateButton
-                          isActive={category.is_active ?? true}
-                          onToggle={() => handleToggleActive(category)}
-                          disabled={
-                            togglingItemId === category.id ||
-                            (categoryToDelete?.id === category.id && isDeleting)
-                          }
-                          isLoading={togglingItemId === category.id}
-                          title={
-                            category.is_active
-                              ? `Deactivate ${category.name}`
-                              : `Activate ${category.name}`
-                          }
-                        />
-
-                        <button
-                          onClick={() => handleEditCategory(category)}
-                          disabled={
-                            togglingItemId === category.id ||
-                            (categoryToDelete?.id === category.id && isDeleting)
-                          }
-                          className={`p-2 ${tw.rounded} transition-colors hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed`}
-                          title="Edit"
-                        >
-                          <Edit className="w-4 h-4 text-gray-600" />
-                        </button>
-
-                        <button
-                          onClick={() => handleDeleteCategory(category)}
-                          disabled={
-                            togglingItemId === category.id ||
-                            (categoryToDelete?.id === category.id && isDeleting)
-                          }
-                          className={`p-2 ${tw.rounded} transition-colors hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed`}
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4 text-red-600" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table<KpiCategory>
+            columns={columns}
+            data={filteredCategories}
+            totalItems={filteredCategories.length}
+            currentPage={tableCurrentPage}
+            pageSize={tablePageSize}
+            isLoading={loading}
+            onPageChange={tableHandlePageChange}
+            onSort={handleSort}
+            sortConfigs={sortConfigs}
+            style={{
+              headerBackground: color.surface.tableHeader,
+              headerTextColor: color.surface.tableHeaderText,
+              rowBackground: color.surface.tablebodybg,
+              rowSpacing: "0 8px",
+            }}
+          />
         )}
       </div>
 
       {/* Pagination */}
-      {filteredCategories.length > pageSize && (
+      {!loading && filteredCategories.length > 0 && (
         <Pagination
-          currentPage={currentPage}
-          totalPages={Math.ceil(filteredCategories.length / pageSize)}
-          onPageChange={setCurrentPage}
+          currentPage={tableCurrentPage}
+          pageSize={tablePageSize}
+          totalItems={filteredCategories.length}
+          onPageChange={tableHandlePageChange}
         />
       )}
+
 
       {/* Modal */}
       <KpiCategoryModal
@@ -445,13 +399,13 @@ export default function KpiCategoriesListPage() {
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={deleteConfirm.id !== null}
+        isOpen={showDeleteModal}
         title="Delete KPI Category"
         description="This will fail if KPIs are using it."
         itemName={categoryToDelete?.name || ""}
         onConfirm={confirmDeleteCategory}
         onClose={() => {
-          closeDeleteConfirm();
+          setShowDeleteModal(false);
           setCategoryToDelete(null);
         }}
         isLoading={isDeleting}

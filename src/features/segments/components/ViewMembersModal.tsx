@@ -107,32 +107,52 @@ export default function ViewMembersModal({
   return createPortal(
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
       <div
-        className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col`}
+        className={`${tw.rounded} shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col`}
+        style={{ backgroundColor: 'var(--c-surface-cards)' }}
       >
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div
+          className="flex items-center justify-between p-6"
+          style={{ borderBottom: '1px solid var(--c-border-default)' }}
+        >
           <div>
-            <h2 className="text-sm font-bold text-black">
+            <h2 className="text-sm font-bold" style={{ color: 'var(--c-text-primary)' }}>
               Segment Members
             </h2>
-            <p className="text-sm text-black mt-1">
+            <p className="text-sm mt-1" style={{ color: 'var(--c-text-secondary)' }}>
               {(membersCount || 0).toLocaleString()} total member
               {membersCount !== 1 ? "s" : ""}
             </p>
           </div>
           <button
             onClick={onClose}
-            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
+            className={`p-2 ${tw.rounded} transition-colors`}
+            style={{
+              backgroundColor: 'transparent',
+              color: 'var(--c-text-muted)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Add Members Form */}
         {segmentType === "static" && (
-          <div className="p-6 border-b border-gray-200 bg-gray-50">
+          <div
+            className="p-6"
+            style={{
+              borderBottom: '1px solid var(--c-border-default)',
+              backgroundColor: 'var(--c-surface-background)',
+            }}
+          >
             <div className="flex items-end gap-3">
               <div className="flex-1">
-                <label className="block text-sm font-medium text-black mb-2">
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--c-text-primary)' }}>
                   Add Customer IDs (comma-separated)
                 </label>
                 <Input
@@ -145,7 +165,7 @@ export default function ViewMembersModal({
                 onClick={handleAddMembers}
                 className={`text-sm font-medium text-white ${tw.rounded} px-4 py-2`}
                 style={{
-                  backgroundColor: "#3B82F6",
+                  backgroundColor: 'var(--c-primary-action)',
                 }}
               >
                 Add
@@ -155,7 +175,13 @@ export default function ViewMembersModal({
         )}
 
         {/* Members Search */}
-        <div className="p-6 border-b border-gray-200 bg-gray-50">
+        <div
+          className="p-6"
+          style={{
+            borderBottom: '1px solid var(--c-border-default)',
+            backgroundColor: 'var(--c-surface-background)',
+          }}
+        >
           <SearchInput
             placeholder="Search members by name, email, or ID..."
             value={membersSearchTerm}
@@ -176,56 +202,89 @@ export default function ViewMembersModal({
                 size="lg"
                 color="primary"
               />
-              <p className="text-sm text-black mt-4">Loading members...</p>
+              <p className="text-sm mt-4" style={{ color: 'var(--c-text-primary)' }}>Loading members...</p>
             </div>
           ) : members.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-sm text-black">No members in this segment</p>
+              <p className="text-sm" style={{ color: 'var(--c-text-primary)' }}>No members in this segment</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 sticky top-0 z-10">
+                <thead
+                  className="sticky top-0 z-10"
+                  style={{ backgroundColor: 'var(--c-surface-background)' }}
+                >
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th
+                      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider"
+                      style={{ color: 'var(--c-text-secondary)' }}
+                    >
                       Msisdn
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th
+                      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider"
+                      style={{ color: 'var(--c-text-secondary)' }}
+                    >
                       Email
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">
+                    <th
+                      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider w-32"
+                      style={{ color: 'var(--c-text-secondary)' }}
+                    >
                       Score
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">
+                    <th
+                      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider w-32"
+                      style={{ color: 'var(--c-text-secondary)' }}
+                    >
                       Joined Date
                     </th>
                     {segmentType === "static" && (
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-24">
+                      <th
+                        className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider w-24"
+                        style={{ color: 'var(--c-text-secondary)' }}
+                      >
                         Action
                       </th>
                     )}
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody
+                  className="divide-y"
+                  style={{
+                    backgroundColor: 'var(--c-surface-cards)',
+                    borderColor: 'var(--c-border-default)',
+                  }}
+                >
                   {members.map((member, index) => (
-                    <tr key={index} className="cursor-pointer transition-colors hover:bg-gray-50">
+                    <tr
+                      key={index}
+                      className="cursor-pointer transition-colors"
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
+                    >
                       <td className="px-4 py-4 whitespace-nowrap">
-                        <span className="text-sm text-black">
+                        <span className="text-sm" style={{ color: 'var(--c-text-primary)' }}>
                           {String(member.subscriber_msisdn || "-")}
                         </span>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
-                        <span className="text-sm text-black">
+                        <span className="text-sm" style={{ color: 'var(--c-text-primary)' }}>
                           {String(member.subscriber_email || "-")}
                         </span>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
-                        <span className="text-sm text-black">
+                        <span className="text-sm" style={{ color: 'var(--c-text-primary)' }}>
                           {member.membership_score ? String(member.membership_score) : "-"}
                         </span>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
-                        <span className="text-sm text-black">
+                        <span className="text-sm" style={{ color: 'var(--c-text-primary)' }}>
                           {member.created_at ? (
                             <DateFormatter date={member.created_at} />
                           ) : (
@@ -259,7 +318,10 @@ export default function ViewMembersModal({
 
         {/* Pagination */}
         {members.length > 0 && membersCount > 10 && (
-          <div className="p-6 border-t border-gray-200">
+          <div
+            className="p-6"
+            style={{ borderTop: '1px solid var(--c-border-default)' }}
+          >
             <Pagination
               currentPage={membersPage}
               pageSize={10}

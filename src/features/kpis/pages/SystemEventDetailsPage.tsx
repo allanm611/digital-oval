@@ -72,7 +72,7 @@ export default function SystemEventDetailsPage() {
       {/* Event Information */}
       <div className="space-y-6">
         {/* Event Overview & Details */}
-        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
+        <div className={`bg-white ${tw.rounded} p-6`}>
           <div className="flex items-start space-x-4 mb-6">
             <div
               className={`h-14 w-14 ${tw.rounded} flex items-center justify-center flex-shrink-0`}
@@ -123,7 +123,7 @@ export default function SystemEventDetailsPage() {
 
         {/* Operators */}
         {event.time_operators && event.time_operators.length > 0 && (
-          <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
+          <div className={`bg-white ${tw.rounded} p-6`}>
             <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>
               Operators
             </h3>

@@ -379,7 +379,7 @@ export default function CreateKPIPage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information Section */}
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div className={`${tw.rounded} bg-white p-6 shadow-sm`}>
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Basic Information</h2>
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -534,7 +534,7 @@ export default function CreateKPIPage() {
         </div>
 
         {/* Validation Configuration Section */}
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div className={`${tw.rounded} bg-white p-6 shadow-sm`}>
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Validation Configuration</h2>
           <div className="space-y-4">
             <div>
@@ -604,7 +604,7 @@ export default function CreateKPIPage() {
         </div>
 
         {/* Data Source Configuration Section */}
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div className={`${tw.rounded} bg-white p-6 shadow-sm`}>
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Data Source Configuration</h2>
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -669,7 +669,7 @@ export default function CreateKPIPage() {
         </div>
 
         {/* Extraction Logic Section */}
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div className={`${tw.rounded} bg-white p-6 shadow-sm`}>
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Extraction Logic</h2>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">

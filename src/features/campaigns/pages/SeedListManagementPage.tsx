@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Mail, Trash2, Eye, X } from "lucide-react";
-import BackButton from "../../../shared/components/ui/BackButton";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -17,8 +16,9 @@ import CreateTestListModal from "../components/CreateTestListModal";
 import { validateMSISDN } from "../../../shared/utils/validation";
 import { buttons } from "../../../shared/utils/tokens";
 import { getButtonStyles } from "../../../shared/utils/utils";
-import { extractBackendError } from "../../../shared/utils/errorHandler";;;
+import { extractBackendError } from "../../../shared/utils/errorHandler";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 
 // Types
 export interface SeedListRecipient {
@@ -77,6 +77,21 @@ interface SystemUser {
   display_name?: string;
 }
 
+interface RecipientTableRow {
+  id: number;
+  name: string;
+  email: string;
+  seedList: string;
+  status: string;
+}
+
+interface SeedListTableRow {
+  id: number | string;
+  name: string;
+  description: string;
+  recipients: number;
+}
+
 export default function SeedListManagementPage() {
   const navigate = useNavigate();
   const { success: showToast, error: showError } = useToast();
@@ -132,6 +147,149 @@ export default function SeedListManagementPage() {
   const [isLoadingListMembers, setIsLoadingListMembers] = useState(false);
   const [memberToRemoveFromList, setMemberToRemoveFromList] = useState<SeedListRecipient | null>(null);
   const [isRemovingMember, setIsRemovingMember] = useState(false);
+
+  const recipientTableColumns: TableColumn<RecipientTableRow>[] = [
+    {
+      id: "name",
+      label: "Name",
+      visible: true,
+      render: (_, row) => (
+        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} text-sm`}>
+          {row.name}
+        </div>
+      ),
+    },
+    {
+      id: "email",
+      label: "Email",
+      visible: true,
+      render: (_, row) => (
+        <span className="text-sm text-black">{row.email || "-"}</span>
+      ),
+    },
+    {
+      id: "seedList",
+      label: "Seed List",
+      visible: true,
+      render: (_, row) => (
+        <span className="text-sm text-black">{row.seedList || "-"}</span>
+      ),
+    },
+    {
+      id: "status",
+      label: "Status",
+      visible: true,
+      render: (_, row) => (
+        <span className="text-sm text-black">{row.status}</span>
+      ),
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      render: (_, row) => {
+        const recipient = recipients.find((r) => r.id === row.id);
+        if (!recipient) return null;
+        return (
+          <div className="flex items-center justify-center">
+            <button
+              onClick={() => handleRemoveRecipient(recipient)}
+              className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
+              title={recipient.status === "active" ? "Remove from Seed List" : "Delete from Seed List"}
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        );
+      },
+    },
+  ];
+
+  const seedListTableColumns: TableColumn<SeedListTableRow>[] = [
+    {
+      id: "name",
+      label: "List Name",
+      visible: true,
+      render: (_, row) => (
+        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} text-sm`}>
+          {row.name}
+        </div>
+      ),
+    },
+    {
+      id: "description",
+      label: "Description",
+      visible: true,
+      render: (_, row) => (
+        <div className={`text-sm ${tw.textSecondary} max-w-md`}>
+          {row.description || "No description"}
+        </div>
+      ),
+    },
+    {
+      id: "recipients",
+      label: "Recipients",
+      visible: true,
+      render: (_, row) => (
+        <button
+          onClick={() => handleOpenListMembersModal({ id: row.id, name: row.name })}
+          className="text-sm font-medium hover:underline"
+          style={{ color: color.primary.accent }}
+        >
+          {row.recipients}
+        </button>
+      ),
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      render: (_, row) => (
+        <div className="flex items-center justify-center">
+          <button
+            onClick={() =>
+              handleDeleteList({
+                id: row.id,
+                name: row.name,
+              })
+            }
+            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
+            title="Delete test list"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      ),
+    },
+  ];
+
+  const {
+    columns: recipientColumns,
+    currentPage: recipientCurrentPage,
+    pageSize: recipientPageSize,
+    handlePageChange: recipientHandlePageChange,
+    sortConfigs: recipientSortConfigs,
+    handleSort: recipientHandleSort,
+  } = useTable({
+    tableId: "seed-list-recipients-table",
+    defaultColumns: recipientTableColumns,
+    persistToLocalStorage: true,
+  });
+
+  const {
+    columns: seedListColumns,
+    currentPage: seedListCurrentPage,
+    pageSize: seedListPageSize,
+    handlePageChange: seedListHandlePageChange,
+    sortConfigs: seedListSortConfigs,
+    handleSort: seedListHandleSort,
+  } = useTable({
+    tableId: "seed-lists-table",
+    defaultColumns: seedListTableColumns,
+    persistToLocalStorage: true,
+  });
 
   // Load system users on mount
   useEffect(() => {
@@ -677,12 +835,7 @@ export default function SeedListManagementPage() {
       {/* Header with Title and Buttons */}
       <div className="flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <BackButton
-           
-            showBreadcrumb={true}
-           
-            currentLabel="Seed List Management"
-          />
+          <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>Seed List Management</h1>
           <button
             onClick={() => {
               if (activeTab === "recipients") {
@@ -691,7 +844,7 @@ export default function SeedListManagementPage() {
                 setIsCreateListModalOpen(true);
               }
             }}
-            className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white w-auto`}
+            className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white w-auto flex-shrink-0`}
             style={{ backgroundColor: color.primary.action }}
           >
             <Plus className="w-4 h-4" />
@@ -858,7 +1011,7 @@ export default function SeedListManagementPage() {
       </div>
 
       {/* Table */}
-      <div className={`${tw.rounded} border border-gray-200 overflow-hidden`}>
+      <div className={`${tw.rounded}  overflow-hidden`}>
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <LoadingSpinner />
@@ -877,134 +1030,33 @@ export default function SeedListManagementPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table
-              className="w-full min-w-[1400px]"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead>
-                <tr>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      borderTopLeftRadius: "0.375rem",
-                    }}
-                  >
-                    Name
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Email
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Seed List
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Status
-                  </th>
-                  <th
-                    className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      borderTopRightRadius: "0.375rem",
-                    }}
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRecipients && Array.isArray(filteredRecipients) ? (
-                  filteredRecipients.map((recipient) => {
-                    if (!recipient || !recipient.id) return null;
-
-                    return (
-                  <tr key={recipient.id} className="transition-colors">
-                    <td
-                      className="px-6 py-4"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopLeftRadius: "0.375rem",
-                        borderBottomLeftRadius: "0.375rem",
-                      }}
-                    >
-                      <div className={`${tw.tableFirstColumn} ${tw.textPrimary} text-sm`}>
-                        {recipient.customer_name || "Unknown"}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span className="text-sm text-black">
-                        {recipient.customer_email || "-"}
-                      </span>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span className="text-sm text-black">
-                        {recipient.list_name || (
-                          seedLists && Array.isArray(seedLists)
-                            ? seedLists.find((l) => l && l.id && l.id === recipient.seed_list_id)?.name
-                            : undefined
-                        ) || "-"}
-                      </span>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span className="text-sm text-black">
-                        {recipient.status}
-                      </span>
-                    </td>
-                    <td
-                      className="px-6 py-4 text-center"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopRightRadius: "0.375rem",
-                        borderBottomRightRadius: "0.375rem",
-                      }}
-                    >
-                      <button
-                        onClick={() => handleRemoveRecipient(recipient)}
-                        className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
-                        title={
-                          recipient.status === "active"
-                            ? "Remove from Seed List"
-                            : "Delete from Seed List"
-                        }
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                    );
-                  })
-                ) : null}
-              </tbody>
-            </table>
+            <Table<RecipientTableRow>
+              columns={recipientColumns}
+              data={filteredRecipients.map((recipient) => ({
+                id: recipient.id || 0,
+                name: recipient.customer_name || "Unknown",
+                email: recipient.customer_email || "-",
+                seedList: recipient.list_name || (
+                  seedLists && Array.isArray(seedLists)
+                    ? seedLists.find((l) => l && l.id && l.id === recipient.seed_list_id)?.name
+                    : undefined
+                ) || "-",
+                status: recipient.status,
+              }))}
+              totalItems={filteredRecipients.length}
+              currentPage={recipientCurrentPage}
+              pageSize={recipientPageSize}
+              isLoading={loading}
+              onPageChange={recipientHandlePageChange}
+              onSort={recipientHandleSort}
+              sortConfigs={recipientSortConfigs}
+              style={{
+                headerBackground: color.surface.tableHeader,
+                headerTextColor: color.surface.tableHeaderText,
+                rowBackground: color.surface.tablebodybg,
+                rowSpacing: "0 8px",
+              }}
+            />
           </div>
         )}
       </div>
@@ -1013,7 +1065,7 @@ export default function SeedListManagementPage() {
 
       {/* Test Lists Tab Content */}
       {activeTab === "lists" && (
-        <div className={`${tw.rounded} border border-gray-200 overflow-hidden`}>
+        <div className={`${tw.rounded}  overflow-hidden`}>
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <LoadingSpinner />
@@ -1030,124 +1082,33 @@ export default function SeedListManagementPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table
-                className="w-full min-w-[800px]"
-                style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-              >
-                <thead>
-                  <tr>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{
-                        color: color.surface.tableHeaderText,
-                        backgroundColor: color.surface.tableHeader,
-                        borderTopLeftRadius: "0.375rem",
-                      }}
-                    >
-                      List Name
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{
-                        color: color.surface.tableHeaderText,
-                        backgroundColor: color.surface.tableHeader,
-                      }}
-                    >
-                      Description
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{
-                        color: color.surface.tableHeaderText,
-                        backgroundColor: color.surface.tableHeader,
-                      }}
-                    >
-                      Recipients
-                    </th>
-                    <th
-                      className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                      style={{
-                        color: color.surface.tableHeaderText,
-                        backgroundColor: color.surface.tableHeader,
-                        borderTopRightRadius: "0.375rem",
-                      }}
-                    >
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredLists && Array.isArray(filteredLists) ? (
-                    filteredLists.map((list) => {
-                      if (!list || !list.id) return null;
-
-                      const recipientCount = recipients && Array.isArray(recipients)
-                        ? recipients.filter((r) => r && r.seed_list_id === list.id).length
-                        : 0;
-                    return (
-                      <tr key={list.id} className="transition-colors">
-                        <td
-                          className="px-6 py-4"
-                          style={{
-                            backgroundColor: color.surface.tablebodybg,
-                            borderTopLeftRadius: "0.375rem",
-                            borderBottomLeftRadius: "0.375rem",
-                          }}
-                        >
-                          <div
-                            className={`${tw.tableFirstColumn} ${tw.textPrimary} text-sm`}
-                          >
-                            {list.name}
-                          </div>
-                        </td>
-                        <td
-                          className="px-6 py-4"
-                          style={{ backgroundColor: color.surface.tablebodybg }}
-                        >
-                          <div className={`text-sm ${tw.textSecondary} max-w-md`}>
-                            {list.description || "No description"}
-                          </div>
-                        </td>
-                        <td
-                          className="px-6 py-4 cursor-pointer"
-                          style={{ backgroundColor: color.surface.tablebodybg }}
-                          onClick={() => handleOpenListMembersModal({ id: list.id, name: list.name })}
-                        >
-                          <button
-                            className="text-sm font-medium hover:underline"
-                            style={{ color: color.primary.accent }}
-                          >
-                            {list.member_count ?? recipientCount}
-                          </button>
-                        </td>
-                        <td
-                          className="px-6 py-4 text-center"
-                          style={{
-                            backgroundColor: color.surface.tablebodybg,
-                            borderTopRightRadius: "0.375rem",
-                            borderBottomRightRadius: "0.375rem",
-                          }}
-                        >
-                          {/* TODO: Add eye icon for detail page view and edit icon when backend provides GET /seed-lists/:id and PUT endpoints */}
-                          <button
-                            onClick={() =>
-                              handleDeleteList({
-                                id: list.id,
-                                name: list.name,
-                              })
-                            }
-                            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
-                            title="Delete test list"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                    })
-                  ) : null}
-                </tbody>
-              </table>
+              <Table<SeedListTableRow>
+                columns={seedListColumns}
+                data={filteredLists.map((list) => {
+                  const recipientCount = recipients && Array.isArray(recipients)
+                    ? recipients.filter((r) => r && r.seed_list_id === list.id).length
+                    : 0;
+                  return {
+                    id: list.id,
+                    name: list.name,
+                    description: list.description || "No description",
+                    recipients: list.member_count ?? recipientCount,
+                  };
+                })}
+                totalItems={filteredLists.length}
+                currentPage={seedListCurrentPage}
+                pageSize={seedListPageSize}
+                isLoading={loading}
+                onPageChange={seedListHandlePageChange}
+                onSort={seedListHandleSort}
+                sortConfigs={seedListSortConfigs}
+                style={{
+                  headerBackground: color.surface.tableHeader,
+                  headerTextColor: color.surface.tableHeaderText,
+                  rowBackground: color.surface.tablebodybg,
+                  rowSpacing: "0 8px",
+                }}
+              />
             </div>
           )}
         </div>

@@ -16,6 +16,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { hardcodedEmailRoutes } from "../../configurations/configs/configurationPageConfigs";
 import EmailRoutesFormPage from "./EmailRoutesFormPage";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 
 interface EmailRoute {
   id: number | string;
@@ -33,12 +34,15 @@ function EmailRoutesListView() {
 
   const [routes, setRoutes] = useState<EmailRoute[]>(hardcodedEmailRoutes as EmailRoute[]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(20);
   const [togglingItemId, setTogglingItemId] = useState<number | string | null>(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [routeToDelete, setRouteToDelete] = useState<EmailRoute | null>(null);
-  const [deleting, setDeleting] = useState(false);
+
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteRoute } = useDeleteConfirm({
+    onDelete: async (id) => {
+      const numId = typeof id === "string" ? parseInt(id) : id;
+      setRoutes((prev) => prev.filter((r) => r.id !== numId));
+    },
+    itemLabel: "Email Route",
+  });
 
   const filteredRoutes = routes.filter(
     (route) =>
@@ -46,8 +50,71 @@ function EmailRoutesListView() {
       (route.description && route.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const startIndex = (currentPage - 1) * pageSize;
-  const paginatedRoutes = filteredRoutes.slice(startIndex, startIndex + pageSize);
+  // Table columns definition
+  const defaultColumns: TableColumn<EmailRoute>[] = [
+    {
+      id: "name",
+      label: "Name",
+      visible: true,
+      render: (value) => (
+        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value as string}>
+          {value}
+        </div>
+      ),
+    },
+    {
+      id: "gateway_provider",
+      label: "Provider",
+      visible: true,
+      render: (value) => (
+        <div className={`text-sm ${tw.textSecondary} truncate`} title={value as string}>
+          {value}
+        </div>
+      ),
+    },
+    {
+      id: "from_address",
+      label: "From Address",
+      visible: true,
+      render: (value) => (
+        <div className={`text-sm ${tw.textSecondary} truncate`} title={value as string}>
+          {value}
+        </div>
+      ),
+    },
+    {
+      id: "isActive",
+      label: "Status",
+      visible: true,
+      render: (value) => (
+        <span className={`text-sm ${tw.textSecondary}`}>
+          {value ? "Active" : "Inactive"}
+        </span>
+      ),
+    },
+  ];
+
+  const {
+    columns,
+    currentPage: tableCurrentPage,
+    pageSize: tablePageSize,
+    handlePageChange: tableHandlePageChange,
+    sortConfigs,
+    handleSort,
+  } = useTable({
+    tableId: "email-routes-table",
+    defaultColumns,
+    persistToLocalStorage: true,
+  });
+
+  const paginatedRoutes = filteredRoutes.slice(
+    (tableCurrentPage - 1) * tablePageSize,
+    tableCurrentPage * tablePageSize
+  );
+
+  useEffect(() => {
+    tableHandlePageChange(1);
+  }, [searchTerm, tableHandlePageChange]);
 
   const handleCreateRoute = () => {
     navigate("create");
@@ -58,24 +125,7 @@ function EmailRoutesListView() {
   };
 
   const handleDeleteClick = (route: EmailRoute) => {
-    setRouteToDelete(route);
-    openDeleteConfirm(item?.id || 0, item?.name || "");
-  };
-
-  const confirmDeleteRoute = async () => {
-    if (!routeToDelete) return;
-
-    setDeleting(true);
-    try {
-      setRoutes((prev) => prev.filter((r) => r.id !== routeToDelete.id));
-      showToast("Delete Email Route", `"${routeToDelete.name}" has been deleted successfully.`);
-      closeDeleteConfirm();
-      setRouteToDelete(null);
-    } catch (err) {
-      showError(t.genericConfig.error, "Failed to delete email route");
-    } finally {
-      setDeleting(false);
-    }
+    openDeleteConfirm(route.id, route.name);
   };
 
   const handleToggleActive = (route: EmailRoute) => {
@@ -141,126 +191,54 @@ function EmailRoutesListView() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table
-              className="w-full min-w-[720px]"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead>
-                <tr>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      borderTopLeftRadius: "0.375rem",
-                    }}
-                  >
-                    Name
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Provider
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    From Address
-                  </th>
-                  <th
-                    className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      borderTopRightRadius: "0.375rem",
-                    }}
-                  >
-                    Status
-                  </th>
-                </tr>
-              </thead>
+          <>
+            {/* Table */}
+            <Table<EmailRoute>
+              columns={columns}
+              data={paginatedRoutes}
+              totalItems={filteredRoutes.length}
+              currentPage={tableCurrentPage}
+              pageSize={tablePageSize}
+              isLoading={false}
+              onPageChange={tableHandlePageChange}
+              onSort={handleSort}
+              sortConfigs={sortConfigs}
+              style={{
+                headerBackground: color.surface.tableHeader,
+                headerTextColor: color.surface.tableHeaderText,
+                rowBackground: color.surface.tablebodybg,
+                rowSpacing: "0 8px",
+              }}
+            />
 
-              <tbody>
-                {paginatedRoutes.map((route) => (
-                  <tr key={route.id} className="transition-colors">
-                    <td
-                      className="px-6 py-4"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopLeftRadius: "0.375rem",
-                        borderBottomLeftRadius: "0.375rem",
-                      }}
-                    >
-                      <div className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
-                        {route.name}
-                      </div>
-                    </td>
-
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary}`}>
-                        {route.gateway_provider}
-                      </div>
-                    </td>
-
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary}`}>
-                        {route.from_address}
-                      </div>
-                    </td>
-
-                    <td
-                      className="px-6 py-4 text-center"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span className={`text-sm font-medium ${tw.textSecondary}`}>
-                        {route.isActive ? "Active" : "Inactive"}
-                      </span>
-                    </td>
-
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+            {/* Pagination */}
+            {paginatedRoutes.length > 0 && filteredRoutes.length > 0 && (
+              <Pagination
+                currentPage={tableCurrentPage}
+                pageSize={tablePageSize}
+                totalItems={filteredRoutes.length}
+                onPageChange={tableHandlePageChange}
+              />
+            )}
+          </>
         )}
       </div>
 
-      {/* Pagination */}
-      {filteredRoutes.length > 0 && (
-        <Pagination
-          currentPage={currentPage}
-          pageSize={pageSize}
-          totalItems={filteredRoutes.length}
-          onPageChange={setCurrentPage}
-        />
-      )}
-
       <DeleteConfirmModal
         isOpen={deleteConfirm.id !== null}
-        onClose={() => {
-          closeDeleteConfirm();
-          setRouteToDelete(null);
+        onClose={closeDeleteConfirm}
+        onConfirm={async () => {
+          try {
+            await confirmDeleteRoute(deleteConfirm.id);
+            showToast("Delete Email Route", `Route deleted successfully`);
+          } catch (err) {
+            showError(t.genericConfig.error, "Failed to delete email route");
+          }
         }}
-        onConfirm={confirmDeleteRoute}
         title="Delete Email Route"
         description="This may affect email delivery."
-        itemName={routeToDelete?.name || ""}
-        isLoading={deleting}
+        itemName={deleteConfirm.itemName || ""}
+        isLoading={isDeleting}
       />
     </div>
   );

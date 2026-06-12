@@ -671,7 +671,7 @@ export default function ProductCatalogsPage() {
 
   const handleDeleteCatalog = (category: ProductCategory) => {
     setCategoryToDelete(category);
-    openDeleteConfirm(item?.id || 0, item?.name || "");
+    setShowDeleteModal(true);
   };
 
   const handleToggleActive = async (category: ProductCategory) => {
@@ -726,7 +726,7 @@ export default function ProductCatalogsPage() {
 
       await productCategoryService.deleteCategory(categoryToDelete.id);
       success(t.productCatalogs.deleteSuccess, t.productCatalogs.deleteSuccess);
-      closeDeleteConfirm();
+      setShowDeleteModal(false);
       setCategoryToDelete(null);
 
       // Update stats optimistically
@@ -769,7 +769,7 @@ export default function ProductCatalogsPage() {
   };
 
   const handleCancelDelete = () => {
-    closeDeleteConfirm();
+    setShowDeleteModal(false);
     setCategoryToDelete(null);
   };
 
@@ -1783,9 +1783,9 @@ export default function ProductCatalogsPage() {
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={deleteConfirm.id !== null}
+        isOpen={showDeleteModal}
         onClose={handleCancelDelete}
-        onConfirm={confirmDeleteItem}
+        onConfirm={handleConfirmDelete}
         title={t.productCatalogs.deleteConfirmTitle}
         description={t.productCatalogs.deleteConfirmMessage}
         itemName={categoryToDelete?.name || ""}

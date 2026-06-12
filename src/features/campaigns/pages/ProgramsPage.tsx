@@ -56,6 +56,7 @@ export default function ProgramsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProgram, setEditingProgram] = useState<Program | undefined>();
   const [isSaving, setIsSaving] = useState(false);
+  const [programToDelete, setProgramToDelete] = useState<Program | null>(null);
   const [stats, setStats] = useState<{
     total: number;
     active: number;
@@ -206,31 +207,7 @@ export default function ProgramsPage() {
 
   const handleDeleteProgram = (program: Program) => {
     setProgramToDelete(program);
-    openDeleteConfirm(item?.id || 0, item?.name || "");
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!programToDelete) return;
-
-    setIsDeleting(true);
-    try {
-      await programService.deleteProgram(Number(programToDelete.id));
-      showToast(`Program "${programToDelete.name}" deleted successfully!`);
-      closeDeleteConfirm();
-      setProgramToDelete(null);
-      await loadPrograms(true);
-      await loadStats();
-    } catch (err) {
-      console.error("Failed to delete program:", err);
-      showError("Failed to delete program", extractBackendError(error, "Failed to delete program. Please try again."));
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleCancelDelete = () => {
-    closeDeleteConfirm();
-    setProgramToDelete(null);
+    openDeleteConfirm(program.id, program.name);
   };
 
   const handleProgramSaved = async (programData: {
@@ -750,11 +727,23 @@ export default function ProgramsPage() {
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
         isOpen={deleteConfirm.id !== null}
-        onClose={handleCancelDelete}
-        onConfirm={handleConfirmDelete}
+        onClose={() => {
+          closeDeleteConfirm();
+          setProgramToDelete(null);
+        }}
+        onConfirm={async () => {
+          try {
+            await confirmDeleteProgram(deleteConfirm.id);
+            showToast(`Program "${programToDelete?.name}" deleted successfully!`);
+            await loadPrograms(true);
+            await loadStats();
+          } catch (error) {
+            showError("Failed to delete program", extractBackendError(error, "Failed to delete program. Please try again."));
+          }
+        }}
         title="Delete Program"
         description="Are you sure you want to delete this program? This action cannot be undone."
-        itemName={programToDelete?.name || ""}
+        itemName={deleteConfirm.itemName || ""}
         isLoading={isDeleting}
         confirmText="Delete Program"
         cancelText="Cancel"

@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
-import { Edit, Trash2, Plus, Loader2, Power, PowerOff } from "lucide-react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Edit, Trash2, Plus, Loader2, Power, PowerOff, MoreHorizontal } from "lucide-react";
+import { createPortal } from "react-dom";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import BackButton from "../../../shared/components/ui/BackButton";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, zIndex } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Pagination from "../../../shared/components/ui/Pagination";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -12,6 +13,7 @@ import { languageService, Language } from "../../configurations/services/languag
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LanguageModal from "../../configurations/components/LanguageModal";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 
 export default function LanguagesPage() {
   const { success: showSuccess, error: showError } = useToast();
@@ -22,12 +24,28 @@ export default function LanguagesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
-  const [deleting, setDeleting] = useState<number | null>(null);
   const [toggling, setToggling] = useState<number | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [editingLanguage, setEditingLanguage] = useState<Language | null>(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [languageToDelete, setLanguageToDelete] = useState<Language | null>(null);
+
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteLanguage } = useDeleteConfirm({
+    onDelete: async (id) => {
+      const numId = typeof id === "string" ? parseInt(id) : id;
+      setLanguages((prev) => prev.filter((l) => l.id !== numId));
+      await languageService.deleteLanguage(numId);
+    },
+    itemLabel: "Language",
+  });
+
+  const [showActionMenu, setShowActionMenu] = useState<number | null>(null);
+  const [dropdownPosition, setDropdownPosition] = useState<{
+    top: number;
+    left: number;
+    maxHeight: number;
+  } | null>(null);
+  const actionMenuRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const dropdownMenuRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
   const loadLanguages = useCallback(async () => {
     setIsLoading(true);
@@ -45,6 +63,71 @@ export default function LanguagesPage() {
   useEffect(() => {
     loadLanguages();
   }, [loadLanguages]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      let isOutside = true;
+
+      Object.values(actionMenuRefs.current).forEach((ref) => {
+        if (ref && ref.contains(event.target as Node)) {
+          isOutside = false;
+        }
+      });
+
+      Object.values(dropdownMenuRefs.current).forEach((ref) => {
+        if (ref && ref.contains(event.target as Node)) {
+          isOutside = false;
+        }
+      });
+
+      if (isOutside) {
+        setShowActionMenu(null);
+        setDropdownPosition(null);
+      }
+    };
+
+    if (showActionMenu !== null) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showActionMenu]);
+
+  const handleActionMenuToggle = (
+    languageId: number,
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) => {
+    if (showActionMenu === languageId) {
+      setShowActionMenu(null);
+      setDropdownPosition(null);
+    } else {
+      setShowActionMenu(languageId);
+
+      if (event && event.currentTarget) {
+        const button = event.currentTarget;
+        const buttonRect = button.getBoundingClientRect();
+        const dropdownWidth = 256;
+        const spacing = 4;
+        const padding = 8;
+
+        const top = buttonRect.bottom + spacing;
+        let left = buttonRect.right - dropdownWidth;
+
+        if (left + dropdownWidth > window.innerWidth - padding) {
+          left = window.innerWidth - dropdownWidth - padding;
+        }
+        if (left < padding) {
+          left = padding;
+        }
+
+        setDropdownPosition({
+          top,
+          left,
+          maxHeight: window.innerHeight - buttonRect.bottom - 16,
+        });
+      }
+    }
+  };
 
   const handleToggleActive = async (language: Language) => {
     setToggling(language.id);
@@ -69,25 +152,9 @@ export default function LanguagesPage() {
 
   const handleDeleteClick = (language: Language) => {
     setLanguageToDelete(language);
-    openDeleteConfirm(item?.id || 0, item?.name || "");
+    openDeleteConfirm(language.id, language.name);
   };
 
-  const confirmDeleteLanguage = async () => {
-    if (!languageToDelete) return;
-
-    setDeleting(languageToDelete.id);
-    try {
-      await languageService.deleteLanguage(languageToDelete.id);
-      setLanguages((prev) => prev.filter((l) => l.id !== languageToDelete.id));
-      showSuccess("Language deleted successfully");
-      closeDeleteConfirm();
-      setLanguageToDelete(null);
-    } catch (error) {
-      showError("Failed to delete language", extractBackendError(error, "Failed to delete language. Please try again."));;
-    } finally {
-      setDeleting(null);
-    }
-  };
 
   const handleOpenCreateModal = () => {
     setEditingLanguage(null);
@@ -109,6 +176,145 @@ export default function LanguagesPage() {
     handleModalClose();
   };
 
+  // Table columns definition
+  const defaultColumns: TableColumn<Language>[] = [
+    {
+      id: "name",
+      label: "Name",
+      visible: true,
+      render: (value) => (
+        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value as string}>
+          {value}
+        </div>
+      ),
+    },
+    {
+      id: "language_code",
+      label: "Code",
+      visible: true,
+      render: (value) => (
+        <div className={`text-sm ${tw.textSecondary} font-mono truncate`} title={value ? String(value) : "-"}>
+          {value || "-"}
+        </div>
+      ),
+    },
+    {
+      id: "country",
+      label: "Country",
+      visible: true,
+      render: (value) => (
+        <div className={`text-sm ${tw.textSecondary} truncate`} title={value ? String(value) : "-"}>
+          {value || "-"}
+        </div>
+      ),
+    },
+    {
+      id: "is_active",
+      label: "Status",
+      visible: true,
+      render: (value) => (
+        <span className={`text-sm ${value ? "text-green-600" : "text-gray-500"}`}>
+          {value ? "Active" : "Inactive"}
+        </span>
+      ),
+    },
+    {
+      id: "description",
+      label: "Description",
+      visible: true,
+      render: (value) => (
+        <div className={`text-sm ${tw.textSecondary} max-w-md truncate`} title={value ? String(value) : "-"}>
+          {value || "-"}
+        </div>
+      ),
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      render: (value, language) => (
+        <div className="flex items-center justify-center space-x-2">
+          <button
+            onClick={() => handleOpenEditModal(language)}
+            className={`p-2 ${tw.rounded} transition-colors`}
+            style={{
+              color: color.primary.action,
+              backgroundColor: "transparent",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = `${color.primary.action}10`;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "transparent";
+            }}
+            title="Edit"
+          >
+            <Edit className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleToggleActive(language)}
+            disabled={toggling === language.id}
+            className={`p-2 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+            style={{
+              color: language.is_active ? "#dc2626" : "#16a34a",
+              backgroundColor: "transparent",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = (language.is_active ? "#dc2626" : "#16a34a") + "10";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "transparent";
+            }}
+            title={language.is_active ? "Deactivate" : "Activate"}
+          >
+            {toggling === language.id ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : language.is_active ? (
+              <Power className="w-4 h-4" />
+            ) : (
+              <PowerOff className="w-4 h-4" />
+            )}
+          </button>
+          <div className="relative" ref={(el) => {
+            actionMenuRefs.current[language.id] = el;
+          }}>
+            <button
+              onClick={(e) => handleActionMenuToggle(language.id, e)}
+              className={`p-2 ${tw.rounded} transition-colors`}
+              style={{
+                color: color.primary.action,
+                backgroundColor: "transparent",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = `${color.primary.action}10`;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "transparent";
+              }}
+              title="More options"
+            >
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      ),
+    },
+  ];
+
+  const {
+    columns,
+    currentPage: tableCurrentPage,
+    pageSize: tablePageSize,
+    handlePageChange: tableHandlePageChange,
+    sortConfigs,
+    handleSort,
+  } = useTable({
+    tableId: "languages-table",
+    defaultColumns,
+    persistToLocalStorage: true,
+  });
+
   const filteredLanguages = languages.filter(
     (language) =>
       language.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -116,8 +322,16 @@ export default function LanguagesPage() {
       (language.language_code && language.language_code.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const startIndex = (currentPage - 1) * pageSize;
-  const paginatedLanguages = filteredLanguages.slice(startIndex, startIndex + pageSize);
+  // Handle pagination slicing
+  const paginatedLanguages = filteredLanguages.slice(
+    (tableCurrentPage - 1) * tablePageSize,
+    tableCurrentPage * tablePageSize
+  );
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    tableHandlePageChange(1);
+  }, [searchTerm, tableHandlePageChange]);
 
   return (
     <div className="space-y-6">
@@ -152,15 +366,11 @@ export default function LanguagesPage() {
           value={searchTerm}
           onChange={(value) => {
             setSearchTerm(value);
-            setCurrentPage(1);
           }}
         />
       </div>
 
-      <div
-        className={`${tw.rounded} border overflow-hidden`}
-        style={{ borderColor: color.border.default }}
-      >
+      <div className={`${tw.rounded} overflow-hidden`}>
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <LoadingSpinner variant="modern" size="lg" color="primary" className="mr-3" />
@@ -186,198 +396,74 @@ export default function LanguagesPage() {
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table
-              className="w-full min-w-[720px]"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead>
-                <tr>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      borderTopLeftRadius: "0.375rem",
+          <>
+            {/* Table */}
+            <Table<Language>
+              columns={columns}
+              data={paginatedLanguages}
+              totalItems={filteredLanguages.length}
+              currentPage={tableCurrentPage}
+              pageSize={tablePageSize}
+              isLoading={isLoading}
+              onPageChange={tableHandlePageChange}
+              onSort={handleSort}
+              sortConfigs={sortConfigs}
+              style={{
+                headerBackground: color.surface.tableHeader,
+                headerTextColor: color.surface.tableHeaderText,
+                rowBackground: color.surface.tablebodybg,
+                rowSpacing: "0 8px",
+              }}
+            />
+
+            {/* Pagination */}
+            {!isLoading && paginatedLanguages.length > 0 && filteredLanguages.length > 0 && (
+              <Pagination
+                currentPage={tableCurrentPage}
+                pageSize={tablePageSize}
+                totalItems={filteredLanguages.length}
+                onPageChange={tableHandlePageChange}
+              />
+            )}
+
+            {/* Action Menus via Portal */}
+            {paginatedLanguages.map((language) => {
+              if (showActionMenu === language.id && dropdownPosition) {
+                return createPortal(
+                  <div
+                    ref={(el) => {
+                      dropdownMenuRefs.current[language.id] = el;
                     }}
-                  >
-                    Name
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    className={`fixed bg-white border border-gray-200 ${tw.rounded} shadow-xl py-3 w-64`}
                     style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
+                      zIndex: zIndex.popover,
+                      top: `${dropdownPosition.top}px`,
+                      left: `${dropdownPosition.left}px`,
+                      maxHeight: `${dropdownPosition.maxHeight}px`,
+                      overflowY: "auto",
                     }}
+                    onClick={(e) => e.stopPropagation()}
+                    onMouseDown={(e) => e.stopPropagation()}
                   >
-                    Code
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Country
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Status
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Description
-                  </th>
-                  <th
-                    className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      borderTopRightRadius: "0.375rem",
-                    }}
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedLanguages.map((language) => (
-                  <tr key={language.id} className="transition-colors">
-                    <td
-                      className="px-6 py-4"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopLeftRadius: "0.375rem",
-                        borderBottomLeftRadius: "0.375rem",
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteClick(language);
                       }}
+                      className="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
                     >
-                      <div className={`text-sm ${tw.textPrimary}`}>
-                        {language.name}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary} font-mono`}>
-                        {language.language_code || "-"}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary}`}>
-                        {language.country || "-"}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary}`}>
-                        {language.is_active ? "Active" : "Inactive"}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary} max-w-md`}>
-                        {language.description || "-"}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4 text-center"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopRightRadius: "0.375rem",
-                        borderBottomRightRadius: "0.375rem",
-                      }}
-                    >
-                      <div className="flex items-center justify-center space-x-2">
-                        <button
-                          onClick={() => handleOpenEditModal(language)}
-                          className={`p-2 ${tw.rounded} transition-colors`}
-                          style={{
-                            color: color.primary.action,
-                            backgroundColor: "transparent",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = `${color.primary.action}10`;
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = "transparent";
-                          }}
-                          title="Edit"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleToggleActive(language)}
-                          disabled={toggling === language.id}
-                          className={`p-2 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-                          style={{
-                            color: language.is_active ? color.primary.action : "inherit",
-                            backgroundColor: "transparent",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = `${color.primary.action}10`;
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = "transparent";
-                          }}
-                          title={language.is_active ? "Deactivate" : "Activate"}
-                        >
-                          {toggling === language.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : language.is_active ? (
-                            <Power className="w-4 h-4" />
-                          ) : (
-                            <PowerOff className="w-4 h-4 text-red-600" />
-                          )}
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(language)}
-                          disabled={deleting === language.id}
-                          className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-                          title="Delete"
-                        >
-                          {deleting === language.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="w-4 h-4 text-red-600" />
-                          )}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      <Trash2 className="w-4 h-4 mr-4" />
+                      Delete
+                    </button>
+                  </div>,
+                  document.body,
+                );
+              }
+              return null;
+            })}
+          </>
         )}
       </div>
-
-      {!isLoading && filteredLanguages.length > 0 && (
-        <Pagination
-          currentPage={currentPage}
-          pageSize={pageSize}
-          totalItems={filteredLanguages.length}
-          onPageChange={setCurrentPage}
-        />
-      )}
 
       <DeleteConfirmModal
         isOpen={deleteConfirm.id !== null}
@@ -385,11 +471,18 @@ export default function LanguagesPage() {
           closeDeleteConfirm();
           setLanguageToDelete(null);
         }}
-        onConfirm={confirmDeleteLanguage}
+        onConfirm={async () => {
+          try {
+            await confirmDeleteLanguage(deleteConfirm.id);
+            showSuccess("Language deleted successfully");
+          } catch (error) {
+            showError("Failed to delete language", extractBackendError(error, "Failed to delete language. Please try again."));
+          }
+        }}
         title="Delete Language"
         description="This may affect existing creatives using this language."
-        itemName={languageToDelete?.name || ""}
-        isLoading={deleting === languageToDelete?.id}
+        itemName={deleteConfirm.itemName || ""}
+        isLoading={isDeleting}
       />
 
       <LanguageModal

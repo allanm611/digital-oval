@@ -13,6 +13,7 @@ import { notificationCategoryService } from "../../notifications/services/notifi
 import { useLanguage } from "../../../contexts/LanguageContext";
 import NotificationTypeModal from "../components/NotificationTypeModal";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 
 export default function NotificationTypesPage() {
   const { success: showSuccess, error: showError } = useToast();
@@ -22,13 +23,16 @@ export default function NotificationTypesPage() {
   const [categoryMap, setCategoryMap] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(10);
-  const [deleting, setDeleting] = useState<number | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [ruleToDelete, setRuleToDelete] = useState<NotificationRule | null>(null);
   const [editingRule, setEditingRule] = useState<NotificationRule | null>(null);
+
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteRule } = useDeleteConfirm({
+    onDelete: async (id) => {
+      const numId = typeof id === "string" ? parseInt(id) : id;
+      setNotificationRules((prev) => prev.filter((r) => r.id !== numId));
+    },
+    itemLabel: "Notification Type",
+  });
 
   const loadNotificationRules = useCallback(async () => {
     setIsLoading(true);
@@ -59,25 +63,7 @@ export default function NotificationTypesPage() {
   }, [loadNotificationRules]);
 
   const handleDeleteClick = (rule: NotificationRule) => {
-    setRuleToDelete(rule);
-    openDeleteConfirm(item?.id || 0, item?.name || "");
-  };
-
-  const confirmDeleteRule = async () => {
-    if (!ruleToDelete) return;
-
-    setDeleting(ruleToDelete.id);
-    try {
-      await notificationTypeService.delete(ruleToDelete.id);
-      setNotificationRules((prev) => prev.filter((r) => r.id !== ruleToDelete.id));
-      showSuccess("Notification type deleted successfully");
-      closeDeleteConfirm();
-      setRuleToDelete(null);
-    } catch (error) {
-      showError("Failed to delete notification type", extractBackendError(error, "Failed to delete notification type. Please try again."));;
-    } finally {
-      setDeleting(null);
-    }
+    openDeleteConfirm(rule.id, rule.name);
   };
 
   const handleOpenCreateModal = () => {
@@ -108,8 +94,122 @@ export default function NotificationTypesPage() {
       rule.action_type.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const startIndex = (currentPage - 1) * pageSize;
-  const paginatedRules = filteredRules.slice(startIndex, startIndex + pageSize);
+  // Table columns definition
+  const defaultColumns: TableColumn<NotificationRule>[] = [
+    {
+      id: "name",
+      label: "Name",
+      visible: true,
+      render: (value) => (
+        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value as string}>
+          {value}
+        </div>
+      ),
+    },
+    {
+      id: "table_name",
+      label: "Table",
+      visible: true,
+      render: (value) => (
+        <div className={`text-sm ${tw.textSecondary} truncate`} title={value as string}>
+          {value}
+        </div>
+      ),
+    },
+    {
+      id: "action_type",
+      label: "Action Type",
+      visible: true,
+      render: (value) => (
+        <div className={`text-sm ${tw.textSecondary} truncate`} title={value as string}>
+          {value}
+        </div>
+      ),
+    },
+    {
+      id: "category_id",
+      label: "Category",
+      visible: true,
+      render: (value, rule) => (
+        <div className={`text-sm ${tw.textSecondary} truncate`} title={rule.category_id ? categoryMap[String(rule.category_id)] || "-" : "-"}>
+          {rule.category_id ? categoryMap[String(rule.category_id)] || "-" : "-"}
+        </div>
+      ),
+    },
+    {
+      id: "description",
+      label: "Description",
+      visible: true,
+      render: (value) => (
+        <div className={`text-sm ${tw.textSecondary} max-w-md truncate`} title={value ? String(value) : "-"}>
+          {value || "-"}
+        </div>
+      ),
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      render: (value, rule) => (
+        <div className="flex items-center justify-center space-x-2">
+          <button
+            onClick={() => handleOpenEditModal(rule)}
+            className={`p-2 ${tw.rounded} transition-colors`}
+            style={{
+              color: color.primary.action,
+              backgroundColor: "transparent",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = `${color.primary.action}10`;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "transparent";
+            }}
+            title="Edit"
+          >
+            <Edit className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleDeleteClick(rule)}
+            disabled={isDeleting && deleteConfirm.id === rule.id}
+            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+            title="Delete"
+          >
+            {isDeleting && deleteConfirm.id === rule.id ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Trash2 className="w-4 h-4 text-red-600" />
+            )}
+          </button>
+        </div>
+      ),
+    },
+  ];
+
+  const {
+    columns,
+    currentPage: tableCurrentPage,
+    pageSize: tablePageSize,
+    handlePageChange: tableHandlePageChange,
+    sortConfigs,
+    handleSort,
+  } = useTable({
+    tableId: "notification-types-table",
+    defaultColumns,
+    persistToLocalStorage: true,
+  });
+
+  // Handle pagination slicing
+  const paginatedRules = filteredRules.slice(
+    (tableCurrentPage - 1) * tablePageSize,
+    tableCurrentPage * tablePageSize
+  );
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    tableHandlePageChange(1);
+  }, [searchTerm, tableHandlePageChange]);
 
   return (
     <div className="space-y-6">
@@ -139,17 +239,11 @@ export default function NotificationTypesPage() {
         <SearchInput
           placeholder="Search notification types by name, table, action, or description..."
           value={searchTerm}
-          onChange={(value) => {
-            setSearchTerm(value);
-            setCurrentPage(1);
-          }}
+          onChange={(value) => setSearchTerm(value)}
         />
       </div>
 
-      <div
-        className={`${tw.rounded} border overflow-hidden`}
-        style={{ borderColor: color.border.default }}
-      >
+      <div className={`${tw.rounded} overflow-hidden`}>
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <LoadingSpinner variant="modern" size="lg" color="primary" className="mr-3" />
@@ -175,186 +269,55 @@ export default function NotificationTypesPage() {
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table
-              className="w-full min-w-[720px]"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead>
-                <tr>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      borderTopLeftRadius: "0.375rem",
-                    }}
-                  >
-                    Name
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Table
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Action Type
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Category
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Description
-                  </th>
-                  <th
-                    className="px-6 py-4 text-center text-sm font-medium"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      borderTopRightRadius: "0.375rem",
-                    }}
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedRules.map((rule) => (
-                  <tr key={rule.id} className="transition-colors">
-                    <td
-                      className="px-6 py-4"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopLeftRadius: "0.375rem",
-                        borderBottomLeftRadius: "0.375rem",
-                      }}
-                    >
-                      <div className={`text-sm ${tw.textPrimary}`}>
-                        {rule.name}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary}`}>
-                        {rule.table_name}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary}`}>
-                        {rule.action_type}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary}`}>
-                        {rule.category_id ? categoryMap[String(rule.category_id)] || "-" : "-"}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary} max-w-md`}>
-                        {rule.description || "-"}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4 text-center"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopRightRadius: "0.375rem",
-                        borderBottomRightRadius: "0.375rem",
-                      }}
-                    >
-                      <div className="flex items-center justify-center space-x-2">
-                        <button
-                          onClick={() => handleOpenEditModal(rule)}
-                          className={`p-2 ${tw.rounded} transition-colors`}
-                          style={{
-                            color: color.primary.action,
-                            backgroundColor: "transparent",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = `${color.primary.action}10`;
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = "transparent";
-                          }}
-                          title="Edit"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(rule)}
-                          disabled={deleting === rule.id}
-                          className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-                          title="Delete"
-                        >
-                          {deleting === rule.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="w-4 h-4 text-red-600" />
-                          )}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <>
+            {/* Table */}
+            <Table<NotificationRule>
+              columns={columns}
+              data={paginatedRules}
+              totalItems={filteredRules.length}
+              currentPage={tableCurrentPage}
+              pageSize={tablePageSize}
+              isLoading={isLoading}
+              onPageChange={tableHandlePageChange}
+              onSort={handleSort}
+              sortConfigs={sortConfigs}
+              style={{
+                headerBackground: color.surface.tableHeader,
+                headerTextColor: color.surface.tableHeaderText,
+                rowBackground: color.surface.tablebodybg,
+                rowSpacing: "0 8px",
+              }}
+            />
+
+            {/* Pagination */}
+            {!isLoading && paginatedRules.length > 0 && filteredRules.length > 0 && (
+              <Pagination
+                currentPage={tableCurrentPage}
+                pageSize={tablePageSize}
+                totalItems={filteredRules.length}
+                onPageChange={tableHandlePageChange}
+              />
+            )}
+          </>
         )}
       </div>
 
-      {!isLoading && filteredRules.length > 0 && (
-        <Pagination
-          currentPage={currentPage}
-          pageSize={pageSize}
-          totalItems={filteredRules.length}
-          onPageChange={setCurrentPage}
-        />
-      )}
-
       <DeleteConfirmModal
         isOpen={deleteConfirm.id !== null}
-        onClose={() => {
-          closeDeleteConfirm();
-          setRuleToDelete(null);
+        onClose={closeDeleteConfirm}
+        onConfirm={async () => {
+          try {
+            await notificationTypeService.delete(deleteConfirm.id as number);
+            await confirmDeleteRule(deleteConfirm.id);
+            showSuccess("Notification type deleted successfully");
+          } catch (error) {
+            showError("Failed to delete notification type", extractBackendError(error, "Failed to delete notification type. Please try again."));
+          }
         }}
-        onConfirm={confirmDeleteRule}
         title="Delete Notification Type"
         description="This may affect active notifications."
-        itemName={ruleToDelete?.name || ""}
-        isLoading={deleting === ruleToDelete?.id}
+        itemName={deleteConfirm.itemName || ""}
+        isLoading={isDeleting}
       />
 
       <NotificationTypeModal

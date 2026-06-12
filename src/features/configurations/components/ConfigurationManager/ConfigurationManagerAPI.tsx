@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Edit, Trash2, Eye, LucideIcon } from "lucide-react";
+import { Table } from "../../../../shared/components/Table/Table";
 import SearchInput from "../../../../shared/components/ui/SearchInput";
 import Pagination from "../../../../shared/components/ui/Pagination";
 import ActivateDeactivateButton from "../../../../shared/components/ui/ActivateDeactivateButton";
@@ -15,7 +16,6 @@ import CreateButton from "../../../../shared/components/ui/CreateButton";
 import { useBackendConfigurationData } from "../../../../shared/hooks/useBackendConfigurationData";
 import ConfigurationModal from "./ConfigurationModal";
 import { ConfigurationPageConfig, ConfigurationItem, MetadataField } from "./ConfigurationManager";
-import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 type BackendConfigType =
   | "campaignTypes"
@@ -50,6 +50,14 @@ export interface APIConfigurationPageConfig
   enableActivateDeactivate?: boolean;
   createEditPath?: string;
   detailsPath?: string;
+}
+
+interface ConfigurationTableRow {
+  id: number | string;
+  name: string;
+  description: string;
+  status: string;
+  isActive: boolean;
 }
 
 interface ConfigurationManagerAPIProps {
@@ -127,7 +135,7 @@ export default function ConfigurationManagerAPI({
 
   const handleDeleteItem = (item: ConfigurationItem) => {
     setItemToDelete(item);
-    openDeleteConfirm(item?.id || 0, item?.name || "");
+    setShowDeleteModal(true);
   };
 
   const confirmDeleteItem = async () => {
@@ -145,7 +153,7 @@ export default function ConfigurationManagerAPI({
         config.deleteConfirmTitle,
         config.deleteSuccessMessage(itemToDelete.name)
       );
-      closeDeleteConfirm();
+      setShowDeleteModal(false);
       setItemToDelete(null);
     } catch (err) {
       console.error(`Error deleting ${config.entityName}:`, err);
@@ -305,8 +313,7 @@ export default function ConfigurationManagerAPI({
 
       {/* Table */}
       <div
-        className={`${tw.rounded} border overflow-hidden`}
-        style={{ borderColor: color.border.default }}
+        className={`${tw.rounded} overflow-hidden`}
       >
         {loading ? (
           <div className="flex items-center justify-center py-12">
@@ -338,148 +345,97 @@ export default function ConfigurationManagerAPI({
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table
-              className="w-full min-w-[720px]"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead>
-                <tr>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      borderTopLeftRadius: "0.375rem",
-                    }}
-                  >
-                    {config.entityName}
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    {t.genericConfig.description}
-                  </th>
-                  <th
-                    className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    {config.statusLabel || t.genericConfig.status}
-                  </th>
-                  <th
-                    className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      borderTopRightRadius: "0.375rem",
-                    }}
-                  >
-                    {t.genericConfig.actions}
-                  </th>
-                </tr>
-              </thead>
+          <>
+            <div className="overflow-x-auto">
+              <Table<ConfigurationTableRow>
+                columns={[
+                  { id: "name", label: config.entityName, width: "200px", visible: true, filterConfig: { type: "text" }, render: (_, row) => (
+                    <div className={`text-sm ${tw.tableFirstColumn} ${tw.textPrimary} cursor-pointer`} onClick={() => onRowClick?.(row.name)}>
+                      {row.name}
+                    </div>
+                  ) },
+                  { id: "description", label: t.genericConfig.description, width: "300px", visible: true, filterConfig: { type: "text" }, render: (_, row) => (
+                    <div className={`text-sm ${tw.textSecondary} max-w-md`}>
+                      {row.description || t.genericConfig.noDescription}
+                    </div>
+                  ) },
+                  { id: "status", label: config.statusLabel || t.genericConfig.status, width: "120px", visible: true, filterConfig: { type: "multiselect", options: ["Active", "Inactive"] }, render: (_, row) => (
+                    <span className={`text-sm font-medium ${tw.textSecondary}`}>
+                      {row.status}
+                    </span>
+                  ) },
+                  {
+                    id: "actions",
+                    label: t.genericConfig.actions,
+                    width: "150px",
+                    visible: true,
+                    sortable: false,
+                    render: (_, row) => {
+                      const item = paginatedItems.find((i) => i.id === row.id);
+                      return (
+                        <div className="flex items-center justify-center space-x-2">
+                          {config.enableActivateDeactivate && item && (
+                            <ActivateDeactivateButton
+                              isActive={item.isActive ?? true}
+                              onToggle={() => handleToggleActive(item)}
+                              disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
+                              isLoading={togglingItemId === item.id}
+                              title={
+                                item.isActive
+                                  ? `Deactivate ${item.name}`
+                                  : `Activate ${item.name}`
+                              }
+                            />
+                          )}
 
-              <tbody>
-                {paginatedItems.map((item) => (
-                  <tr key={item.id} className="transition-colors" onClick={() => onRowClick?.(item.name)} style={{ cursor: onRowClick ? "pointer" : "default" }}>
-                    <td
-                      className="px-6 py-4"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopLeftRadius: "0.375rem",
-                        borderBottomLeftRadius: "0.375rem",
-                      }}
-                    >
-                      <div className={`text-sm ${tw.tableFirstColumn} ${tw.textPrimary}`}>
-                        {item.name}
-                      </div>
-                    </td>
+                          {config.detailsPath && item && (
+                            <button
+                              onClick={() => navigate(`${config.detailsPath}/${item.id}`)}
+                              disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
+                              className={`p-2 ${tw.rounded} transition-colors hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed`}
+                              title={`View details for ${item.name}`}
+                            >
+                              <Eye className="w-4 h-4 text-gray-600" />
+                            </button>
+                          )}
 
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary} max-w-md`}>
-                        {item.description || t.genericConfig.noDescription}
-                      </div>
-                    </td>
+                          {item && (
+                            <button
+                              onClick={() => handleEditItem(item)}
+                              disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
+                              className={`p-2 ${tw.rounded} transition-colors hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed`}
+                              title={`Edit ${item.name}`}
+                            >
+                              <Edit className="w-4 h-4 text-gray-600" />
+                            </button>
+                          )}
 
-                    <td
-                      className="px-6 py-4 text-center"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span className={`text-sm font-medium ${tw.textSecondary}`}>
-                        {item.isActive ?? true ? t.genericConfig.active || 'Active' : t.genericConfig.inactive || 'Inactive'}
-                      </span>
-                    </td>
-
-                    <td
-                      className="px-6 py-4 text-center"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopRightRadius: "0.375rem",
-                        borderBottomRightRadius: "0.375rem",
-                      }}
-                    >
-                      <div className="flex items-center justify-center space-x-2">
-                        {config.enableActivateDeactivate && (
-                          <ActivateDeactivateButton
-                            isActive={item.isActive ?? true}
-                            onToggle={() => handleToggleActive(item)}
-                            disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
-                            isLoading={togglingItemId === item.id}
-                            title={
-                              item.isActive
-                                ? `Deactivate ${item.name}`
-                                : `Activate ${item.name}`
-                            }
-                          />
-                        )}
-
-                        {config.detailsPath && (
-                          <button
-                            onClick={() => navigate(`${config.detailsPath}/${item.id}`)}
-                            disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
-                            className={`p-2 ${tw.rounded} transition-colors hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed`}
-                            title={`View details for ${item.name}`}
-                          >
-                            <Eye className="w-4 h-4 text-gray-600" />
-                          </button>
-                        )}
-
-                        <button
-                          onClick={() => handleEditItem(item)}
-                          disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
-                          className={`p-2 ${tw.rounded} transition-colors hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed`}
-                          title={`Edit ${item.name}`}
-                        >
-                          <Edit className="w-4 h-4 text-gray-600" />
-                        </button>
-
-                        {!config.disableDelete && (
-                          <button
-                            onClick={() => handleDeleteItem(item)}
-                            disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
-                            className={`p-2 ${tw.rounded} transition-colors hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed`}
-                            title={`Delete ${item.name}`}
-                          >
-                            <Trash2 className="w-4 h-4 text-red-600" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                          {!config.disableDelete && item && (
+                            <button
+                              onClick={() => handleDeleteItem(item)}
+                              disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
+                              className={`p-2 ${tw.rounded} transition-colors hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed`}
+                              title={`Delete ${item.name}`}
+                            >
+                              <Trash2 className="w-4 h-4 text-red-600" />
+                            </button>
+                          )}
+                        </div>
+                      );
+                    },
+                  },
+                ]}
+                data={paginatedItems.map((item) => ({
+                  id: item.id,
+                  name: item.name,
+                  description: item.description || "",
+                  status: item.isActive ?? true ? t.genericConfig.active || 'Active' : t.genericConfig.inactive || 'Inactive',
+                  isActive: item.isActive ?? true,
+                }))}
+                rowSpacing="0 8px"
+              />
+            </div>
+          </>
         )}
       </div>
 
@@ -506,9 +462,9 @@ export default function ConfigurationManagerAPI({
       />
 
       <DeleteConfirmModal
-        isOpen={deleteConfirm.id !== null}
+        isOpen={showDeleteModal}
         onClose={() => {
-          closeDeleteConfirm();
+          setShowDeleteModal(false);
           setItemToDelete(null);
         }}
         onConfirm={confirmDeleteItem}

@@ -149,7 +149,7 @@ export default function SubscriberProfileDetailPage() {
       {/* Profile Information */}
       <div className="space-y-6">
         {/* Profile Overview & Basic Information */}
-        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
+        <div className={`bg-white ${tw.rounded} p-6`}>
           <div className="flex items-start space-x-4 mb-6">
             <div
               className={`h-14 w-14 ${tw.rounded} flex items-center justify-center flex-shrink-0`}
@@ -247,7 +247,7 @@ export default function SubscriberProfileDetailPage() {
             {getOperatorsForFieldType(profile.field_type || "text").map((operator) => (
               <div
                 key={operator.id}
-                className="border border-gray-200 rounded p-4 space-y-2"
+                className=" rounded p-4 space-y-2"
               >
                 <div>
                   <p className="text-xs font-medium text-gray-600 uppercase">Label</p>

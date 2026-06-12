@@ -140,18 +140,34 @@ export default function AddMembersModal({
 
   return createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 9999 }}>
-      <div className={`bg-white ${tw.rounded} w-full max-w-4xl max-h-[90vh] flex flex-col`}>
+      <div
+        className={`${tw.rounded} w-full max-w-4xl max-h-[90vh] flex flex-col`}
+        style={{ backgroundColor: 'var(--c-surface-cards)' }}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
+        <div
+          className="flex items-center justify-between p-6 flex-shrink-0"
+          style={{ borderBottom: '1px solid var(--c-border-default)' }}
+        >
           <div>
-            <h2 className="text-sm font-semibold text-black">Add Members to Segment</h2>
-            <p className="text-sm text-black mt-1">
+            <h2 className="text-sm font-semibold" style={{ color: 'var(--c-text-primary)' }}>Add Members to Segment</h2>
+            <p className="text-sm mt-1" style={{ color: 'var(--c-text-secondary)' }}>
               Select customers to add to "{segmentName}"
             </p>
           </div>
           <button
             onClick={handleClose}
-            className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+            className={`p-2 transition-colors`}
+            style={{
+              backgroundColor: 'transparent',
+              color: 'var(--c-text-muted)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
           >
             <X className="w-5 h-5" />
           </button>
@@ -166,21 +182,60 @@ export default function AddMembersModal({
               onChange={setCustomerSearchTerm}
             />
             <Popover className="relative w-48">
-              <Popover.Button className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded} text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors text-left flex items-center justify-between`}>
+              <Popover.Button
+                className={`w-full px-4 py-2 ${tw.rounded} text-sm font-medium transition-colors text-left flex items-center justify-between`}
+                style={{
+                  border: '1px solid var(--c-border-default)',
+                  color: 'var(--c-text-primary)',
+                  backgroundColor: 'var(--c-surface-cards)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--c-surface-cards)';
+                }}
+              >
                 {customerStatusFilter === "all" ? "All Statuses" : customerStatusFilter}
-                <ChevronUpDownIcon className="w-4 h-4 text-gray-400" />
+                <ChevronUpDownIcon className="w-4 h-4" style={{ color: 'var(--c-text-secondary)' }} />
               </Popover.Button>
-              <Popover.Panel className={`absolute right-0 mt-2 w-48 ${tw.rounded} border border-gray-200 bg-white shadow-lg`} style={{ zIndex: zIndex.modal }}>
+              <Popover.Panel
+                className={`absolute right-0 mt-2 w-48 ${tw.rounded} shadow-lg`}
+                style={{
+                  zIndex: zIndex.modal,
+                  border: '1px solid var(--c-border-default)',
+                  backgroundColor: 'var(--c-surface-cards)',
+                }}
+              >
                 <div className="py-1">
                   {["all", "active", "inactive", "suspended"].map((status) => (
                     <button
                       key={status}
                       onClick={() => setCustomerStatusFilter(status)}
-                      className={`block w-full text-left px-4 py-2 text-sm transition-colors ${
-                        customerStatusFilter === status
-                          ? "bg-blue-50 text-blue-700 font-medium"
-                          : "text-gray-700 hover:bg-gray-50"
-                      }`}
+                      className={`block w-full text-left px-4 py-2 text-sm transition-colors`}
+                      style={{
+                        backgroundColor:
+                          customerStatusFilter === status
+                            ? 'rgba(59, 130, 246, 0.1)'
+                            : 'transparent',
+                        color:
+                          customerStatusFilter === status
+                            ? 'var(--c-primary-action)'
+                            : 'var(--c-text-primary)',
+                        fontWeight: customerStatusFilter === status ? '500' : '400',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (customerStatusFilter !== status) {
+                          e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (customerStatusFilter === status) {
+                          e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+                        } else {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }
+                      }}
                     >
                       {status === "all" ? "All Statuses" : status}
                     </button>
@@ -229,23 +284,29 @@ export default function AddMembersModal({
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-12">
               <LoadingSpinner variant="modern" size="lg" color="primary" />
-              <p className="text-sm text-black mt-4">Loading customers...</p>
+              <p className="text-sm mt-4" style={{ color: 'var(--c-text-primary)' }}>Loading customers...</p>
             </div>
           ) : filteredCustomers.length === 0 ? (
             <div className="text-center py-12">
-              <h3 className="text-lg font-medium text-black mb-2">
+              <h3 className="text-lg font-medium mb-2" style={{ color: 'var(--c-text-primary)' }}>
                 No customers found
               </h3>
-              <p className="text-sm text-black">
+              <p className="text-sm" style={{ color: 'var(--c-text-secondary)' }}>
                 Try adjusting your search or filters
               </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 sticky top-0 z-10">
+                <thead
+                  className="sticky top-0 z-10"
+                  style={{ backgroundColor: 'var(--c-surface-background)' }}
+                >
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-12">
+                    <th
+                      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider w-12"
+                      style={{ color: 'var(--c-text-secondary)' }}
+                    >
                       <div className="flex items-center gap-2 cursor-pointer" onClick={handleSelectAll}>
                         <Checkbox
                           id="select-all-customers"
@@ -257,21 +318,39 @@ export default function AddMembersModal({
                         />
                       </div>
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th
+                      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider"
+                      style={{ color: 'var(--c-text-secondary)' }}
+                    >
                       Name
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th
+                      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider"
+                      style={{ color: 'var(--c-text-secondary)' }}
+                    >
                       Msisdn
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th
+                      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider"
+                      style={{ color: 'var(--c-text-secondary)' }}
+                    >
                       Email
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-24">
+                    <th
+                      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider w-24"
+                      style={{ color: 'var(--c-text-secondary)' }}
+                    >
                       Status
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody
+                  className="divide-y"
+                  style={{
+                    backgroundColor: 'var(--c-surface-cards)',
+                    borderColor: 'var(--c-border-default)',
+                  }}
+                >
                   {filteredCustomers.map((customer) => {
                     const customerId = getCustomerId(customer);
                     const isSelected = selectedCustomers.some(
@@ -282,7 +361,13 @@ export default function AddMembersModal({
                       <tr
                         key={customerId}
                         onClick={() => handleToggleCustomer(customer)}
-                        className="cursor-pointer transition-colors hover:bg-gray-50"
+                        className="cursor-pointer transition-colors"
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
                       >
                         <td className="px-4 py-4 whitespace-nowrap">
                           <div
@@ -300,22 +385,22 @@ export default function AddMembersModal({
                           </div>
                         </td>
                         <td className="px-4 py-4">
-                          <div className="text-sm font-medium text-black">
+                          <div className="text-sm font-medium" style={{ color: 'var(--c-text-primary)' }}>
                             {`${customer.first_name || ""} ${customer.last_name || ""}`.trim() || "—"}
                           </div>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <span className="text-sm text-black">
+                          <span className="text-sm" style={{ color: 'var(--c-text-primary)' }}>
                             {customer.msisdn || "—"}
                           </span>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <span className="text-sm text-black">
+                          <span className="text-sm" style={{ color: 'var(--c-text-primary)' }}>
                             {customer.email || "—"}
                           </span>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <span className="text-sm text-black">
+                          <span className="text-sm" style={{ color: 'var(--c-text-primary)' }}>
                             {customer.subscriber_status || customer.status || "—"}
                           </span>
                         </td>
@@ -330,7 +415,10 @@ export default function AddMembersModal({
 
         {/* Pagination */}
         {totalCustomers > pageSize && (
-          <div className="px-6 py-4 border-t border-gray-200 flex-shrink-0">
+          <div
+            className="px-6 py-4 flex-shrink-0"
+            style={{ borderTop: '1px solid var(--c-border-default)' }}
+          >
             <Pagination
               currentPage={page}
               pageSize={pageSize}
@@ -344,8 +432,11 @@ export default function AddMembersModal({
         )}
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-6 border-t border-gray-200 flex-shrink-0">
-          <div className="text-sm text-black">
+        <div
+          className="flex items-center justify-between p-6 flex-shrink-0"
+          style={{ borderTop: '1px solid var(--c-border-default)' }}
+        >
+          <div className="text-sm" style={{ color: 'var(--c-text-primary)' }}>
             {selectedCustomers.length} of {filteredCustomers.length} customers
             selected
           </div>
@@ -354,9 +445,15 @@ export default function AddMembersModal({
               onClick={handleClose}
               className={`px-4 py-2 text-sm font-medium ${tw.rounded} transition-colors`}
               style={{
-                background: "transparent",
-                color: color.primary.action,
-                border: `1px solid ${color.primary.action}`,
+                backgroundColor: 'transparent',
+                color: 'var(--c-text-primary)',
+                border: '1px solid var(--c-text-primary)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
               }}
             >
               Cancel
@@ -370,8 +467,8 @@ export default function AddMembersModal({
               style={{
                 backgroundColor:
                   selectedCustomers.length > 0
-                    ? color.primary.action
-                    : color.text.muted,
+                    ? 'var(--c-primary-action)'
+                    : 'var(--c-text-muted)',
                 color: "white",
               }}
             >

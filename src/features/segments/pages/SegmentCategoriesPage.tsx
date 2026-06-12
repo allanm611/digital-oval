@@ -595,7 +595,7 @@ export default function SegmentCategoriesPage() {
 
   const handleDeleteCategory = (category: SegmentCategory) => {
     setCategoryToDelete(category);
-    openDeleteConfirm(item?.id || 0, item?.name || "");
+    setShowDeleteModal(true);
   };
 
   const handleToggleActive = async (category: SegmentCategory) => {
@@ -652,7 +652,7 @@ export default function SegmentCategoriesPage() {
         "Catalog deleted",
         `Segment catalog "${categoryToDelete.name}" has been deleted successfully`,
       );
-      closeDeleteConfirm();
+      setShowDeleteModal(false);
       setCategoryToDelete(null);
     } catch (err) {
       const errorMsg2 = extractBackendError(err, "Failed to delete segment catalog");
@@ -665,7 +665,7 @@ export default function SegmentCategoriesPage() {
   };
 
   const handleCancelDelete = () => {
-    closeDeleteConfirm();
+    setShowDeleteModal(false);
     setCategoryToDelete(null);
   };
 
@@ -1087,9 +1087,9 @@ export default function SegmentCategoriesPage() {
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={deleteConfirm.id !== null}
+        isOpen={showDeleteModal}
         onClose={handleCancelDelete}
-        onConfirm={confirmDeleteItem}
+        onConfirm={handleConfirmDelete}
         title="Delete Segment Catalog"
         description={
           categoryToDelete && (segmentCounts[categoryToDelete.id] || 0) > 0
