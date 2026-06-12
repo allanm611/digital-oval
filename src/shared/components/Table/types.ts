@@ -1,3 +1,12 @@
+export type FilterType = 'text' | 'number' | 'select' | 'multiselect' | 'date';
+
+export interface FilterConfig {
+  type: FilterType;
+  operators?: string[]; // e.g., ['contains', 'equals', 'startsWith']
+  options?: string[] | number[]; // For select/multiselect filters
+  placeholder?: string;
+}
+
 export interface TableColumn<T = any> {
   id: string;
   label: string;
@@ -5,6 +14,7 @@ export interface TableColumn<T = any> {
   render?: (value: any, row: T) => React.ReactNode;
   width?: string;
   sortable?: boolean;
+  filterConfig?: FilterConfig;
 }
 
 export interface SortConfig {
@@ -67,6 +77,7 @@ export interface TableProps<T = any> {
   onSort?: (columnId: string, multiSelect: boolean) => void;
   sortConfigs?: SortConfig[];
   onManageColumnsClick?: () => void;
+  onFilteredCountChange?: (count: number) => void;
   enableRowSelection?: boolean;
   selectedRows?: (number | string)[];
   onRowSelectChange?: (selectedRows: (number | string)[]) => void;
@@ -75,4 +86,5 @@ export interface TableProps<T = any> {
   rowClassName?: string;
   headerClassName?: string;
   tableClassName?: string;
+  clearFiltersKey?: number;
 }

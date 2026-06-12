@@ -21,7 +21,7 @@ export const colors = {
   gradients: {
     sidebar: {
       top: "#2A2F31", // Custom blend - Dark with subtle light hint (top)
-      middle: "#1F2223", // NEUTRAL 900 - Deep charcoal (middle)
+      middle: "#2a2f31", // Dashboard background color (middle)
       bottom: "#2A2F31", // Custom blend - Dark with subtle light hint (bottom)
     },
     landing: {
@@ -36,7 +36,8 @@ export const colors = {
   // Status defines colors for different message types and states
   status: {
     success: "#94DF5A", // Success messages (Green 500)
-    danger: "#FC9C9C", // Error messages (Coral 500)
+    // danger: "#FC9C9C", // Error messages (Coral 500)
+    danger: "#821637", // Error messages (Deep Maroon)
     warning: "#F7B430", // Warning messages (Yellow 500)
     info: "#C38BFB", // Info messages (Purple 500)
   },

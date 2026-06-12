@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import Input from "../../../shared/components/ui/Input";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { Users, Gift, Eye, Calendar } from "lucide-react";
-import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -12,14 +11,13 @@ import {
   clearPersistedFormData,
 } from "../../../shared/hooks/useFormDataPersistence";
 import { useFormCleanupOnExit } from "../../../shared/hooks/useFormCleanupOnExit";
-import ProgressStepper, {
-  Step,
-} from "../../../shared/components/ui/ProgressStepper";
+import { Step } from "../../../shared/components/ui/ProgressStepper";
 import SelectCustomersStep from "../components/SelectCustomersStep";
 import DefineRewardStep from "../components/DefineRewardStep";
 import PreviewRewardStep from "../components/PreviewRewardStep";
 import ApplyRewardStep from "../components/ApplyRewardStep";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import MultiStepFormWrapper from "../../../shared/components/MultiStepFormWrapper";
 import { dummyManualRewards } from "../data/dummyManualRewards";
 import type { ManualReward } from "../types/manualReward";
 
@@ -285,73 +283,41 @@ export default function CreateManualRewardPage() {
     );
   }
 
+  const handleCancel = () => {
+    navigate(returnTo?.pathname || "/dashboard/manual-rewards");
+  };
+
+  const handleSaveDraft = async () => {
+    // Manual rewards don't have draft save, just clear form
+    clearPersistedFormData("reward_form_data");
+    showToast("Form cleared");
+  };
+
+  const canNavigateToStepCheck = (stepId: number) => {
+    if (stepId <= currentStep) return true;
+    if (stepId === currentStep + 1) return isCurrentStepValid();
+    return false;
+  };
+
   return (
-    <div className="min-h-screen">
-      <div
-        className={`bg-white ${tw.rounded} border p-4`}
-        style={{ borderColor: color.border.default }}
-      >
-        <div className="px-4 sm:px-6 lg:px-8">
-          {/* Header */}
-          <div className="flex items-center justify-between pb-3">
-            <BackButton
-             
-              showBreadcrumb={true}
-              currentLabel={isEditMode ? "Edit Manual Reward" : "Create Manual Reward"}
-            />
-          </div>
-
-          {/* Sticky Progress Navigation */}
-          <ProgressStepper
-            steps={STEPS}
-            currentStep={currentStep}
-            onStepClick={handleStepClick}
-            canNavigateToStep={canNavigateToStep}
-            primaryColor={color.primary.action}
-            textPrimary={tw.textPrimary}
-            textMuted={tw.textMuted}
-          />
-
-          {/* Step Content */}
-          <div className="py-4">{renderStep()}</div>
-
-          {/* Bottom Navigation */}
-          <div className="sticky bottom-12 bg-white py-4 shadow-sm mt-8">
-            <div className="flex justify-between items-center">
-              {currentStep > 1 && (
-                <button
-                  onClick={handlePrevious}
-                  className={`inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-all duration-200`}
-                >
-                  Previous
-                </button>
-              )}
-              <div className="flex-1" />
-              <button
-                onClick={
-                  currentStep === STEPS.length ? handleSubmit : handleNext
-                }
-                disabled={!isCurrentStepValid() || isSaving}
-                className={`inline-flex items-center px-5 py-2 text-sm font-medium ${tw.rounded} text-white disabled:opacity-50 disabled:cursor-not-allowed`}
-                style={{ backgroundColor: color.primary.action }}
-              >
-                {currentStep === STEPS.length ? (
-                  isSaving ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      {isEditMode ? "Updating..." : "Creating..."}
-                    </>
-                  ) : (
-                    isEditMode ? "Update" : "Create"
-                  )
-                ) : (
-                  "Next"
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <MultiStepFormWrapper
+      steps={STEPS}
+      currentStep={currentStep}
+      onStepClick={handleStepClick}
+      canNavigateToStep={canNavigateToStepCheck}
+      onNext={handleNext}
+      onPrev={handlePrevious}
+      onSubmit={handleSubmit}
+      onCancel={handleCancel}
+      onSaveDraft={handleSaveDraft}
+      isLoading={isSaving}
+      isSavingDraft={false}
+      currentLabel={isEditMode ? "Edit Manual Reward" : "Create Manual Reward"}
+      submitButtonText={isEditMode ? "Update Reward" : "Create Reward"}
+      saveDraftText="Clear Form"
+      showSaveDraft={false}
+    >
+      {renderStep()}
+    </MultiStepFormWrapper>
   );
 }

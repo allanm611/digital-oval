@@ -1,9 +1,13 @@
 import React, { useMemo, useState, useRef, useEffect, MouseEvent } from "react";
-import { ChevronDown, ArrowUp, ArrowDown, MoreVertical } from "lucide-react";
+import { ChevronDown, ArrowUp, ArrowDown, MoreVertical, Filter, Search, Settings, Eye, EyeOff, X } from "lucide-react";
 import { TableProps, TableColumn, SortConfig } from "./types";
 import { tw, color } from "../../utils/utils";
+import { buttons } from "../../utils/tokens";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import Checkbox from "../ui/Checkbox";
+import Radio from "../ui/Radio";
+import Input from "../ui/Input";
+import HeadlessSelect from "../ui/HeadlessSelect";
 import { createPortal } from "react-dom";
 
 export function Table<T extends { id?: number | string } = any>({
@@ -20,6 +24,8 @@ export function Table<T extends { id?: number | string } = any>({
   onSort,
   sortConfigs = [],
   onManageColumnsClick,
+  onHideColumn,
+  onFilteredCountChange,
   enableRowSelection = false,
   selectedRows = [],
   onRowSelectChange,
@@ -28,6 +34,7 @@ export function Table<T extends { id?: number | string } = any>({
   rowClassName = "",
   headerClassName = "",
   tableClassName = "",
+  clearFiltersKey = 0,
 }: TableProps<T>) {
   const {
     headerBackground,
@@ -47,6 +54,10 @@ export function Table<T extends { id?: number | string } = any>({
   const [resizingColumn, setResizingColumn] = useState<string | null>(null);
   const [startX, setStartX] = useState(0);
   const [startWidth, setStartWidth] = useState(0);
+  const [columnSearches, setColumnSearches] = useState<{ [columnId: string]: string }>({});
+  const [searchingColumn, setSearchingColumn] = useState<string | null>(null);
+  const [columnFilters, setColumnFilters] = useState<{ [columnId: string]: any }>({});
+  const [filteringColumn, setFilteringColumn] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const buttonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
   const tableRef = useRef<HTMLDivElement | null>(null);
@@ -96,6 +107,17 @@ export function Table<T extends { id?: number | string } = any>({
     }
   }, [resizingColumn, startX, startWidth]);
 
+  // Clear filters when clearFiltersKey changes
+  useEffect(() => {
+    setColumnFilters({});
+    setColumnSearches({});
+  }, [clearFiltersKey]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    onPageChange?.(1);
+  }, [columnFilters, columnSearches, onPageChange]);
+
   const handleResizeStart = (e: React.MouseEvent, columnId: string) => {
     e.preventDefault();
     const thElement = (e.currentTarget as HTMLElement).closest('th');
@@ -132,11 +154,73 @@ export function Table<T extends { id?: number | string } = any>({
   const totalPages = Math.ceil(totalItems / pageSize);
   const currentIndex = (currentPage - 1) * pageSize;
 
-  // Apply sorting to data
+  // Apply column searches, filters, and sorting to data
   const sortedData = useMemo(() => {
-    if (sortConfigs.length === 0) return data;
+    let filtered = [...data];
 
-    const sorted = [...data].sort((a, b) => {
+    // Apply column searches
+    Object.entries(columnSearches).forEach(([columnId, searchText]) => {
+      if (searchText.trim()) {
+        filtered = filtered.filter((row) => {
+          const value = row[columnId as keyof T];
+          const stringValue = String(value || '').toLowerCase();
+          return stringValue.includes(searchText.toLowerCase());
+        });
+      }
+    });
+
+    // Apply column filters
+    Object.entries(columnFilters).forEach(([columnId, filterValue]) => {
+      if (filterValue === null || filterValue === undefined) return;
+
+      const column = columns.find(c => c.id === columnId);
+      if (!column?.filterConfig) return;
+
+      filtered = filtered.filter((row) => {
+        const value = row[columnId as keyof T];
+        const filterType = column.filterConfig!.type;
+
+        if (filterType === 'text') {
+          const stringValue = String(value || '').toLowerCase();
+          return stringValue.includes(String(filterValue).toLowerCase());
+        } else if (filterType === 'number') {
+          const numValue = Number(value) || 0;
+          if (filterValue && typeof filterValue === 'object' && filterValue.operator && filterValue.value !== undefined) {
+            const filterNum = Number(filterValue.value);
+            switch (filterValue.operator) {
+              case '>': return numValue > filterNum;
+              case '<': return numValue < filterNum;
+              case '>=': return numValue >= filterNum;
+              case '<=': return numValue <= filterNum;
+              case '==': return numValue === filterNum;
+              default: return true;
+            }
+          }
+          return true;
+        } else if (filterType === 'select' || filterType === 'multiselect') {
+          if (Array.isArray(filterValue)) {
+            if (Array.isArray(value)) {
+              return filterValue.some(f => value.includes(f));
+            }
+            return filterValue.includes(value);
+          }
+          return value === filterValue;
+        } else if (filterType === 'date') {
+          if (Array.isArray(filterValue)) {
+            const rowDate = new Date(value).getTime();
+            const [startDate, endDate] = filterValue.map(d => new Date(d).getTime());
+            return rowDate >= startDate && rowDate <= endDate;
+          }
+          return new Date(value).toDateString() === new Date(filterValue).toDateString();
+        }
+        return true;
+      });
+    });
+
+    // Apply sorting
+    if (sortConfigs.length === 0) return filtered;
+
+    const sorted = filtered.sort((a, b) => {
       for (const sort of sortConfigs) {
         const aVal = a[sort.columnId as keyof T];
         const bVal = b[sort.columnId as keyof T];
@@ -160,7 +244,12 @@ export function Table<T extends { id?: number | string } = any>({
     });
 
     return sorted;
-  }, [data, sortConfigs]);
+  }, [data, sortConfigs, columnSearches, columnFilters, columns]);
+
+  // Notify parent of actual filtered count
+  useEffect(() => {
+    onFilteredCountChange?.(sortedData.length);
+  }, [sortedData.length, onFilteredCountChange]);
 
   // Get current page data (in case data passed is already paginated, we don't need to slice)
   const pageData = useMemo(() => {
@@ -258,9 +347,10 @@ export function Table<T extends { id?: number | string } = any>({
                     />
                   </th>
                 )}
-                {visibleColumns.map((col) => {
+                {visibleColumns.map((col, colIndex) => {
                   const sortConfig = sortConfigs.find((s) => s.columnId === col.id);
                   const isSortable = col.sortable !== false && col.id !== 'actions';
+                  const isLastColumn = colIndex === visibleColumns.length - 1;
 
                   return (
                     <th
@@ -321,9 +411,11 @@ export function Table<T extends { id?: number | string } = any>({
                               const button = buttonRefs.current[col.id];
                               if (button) {
                                 const rect = button.getBoundingClientRect();
+                                const dropdownWidth = 200;
+                                const spacing = 4;
                                 setMenuPosition({
-                                  top: rect.bottom + 4,
-                                  left: rect.left,
+                                  top: rect.bottom + spacing,
+                                  left: Math.max(spacing, rect.left - dropdownWidth - spacing),
                                 });
                               }
                               setOpenColumnMenu(openColumnMenu === col.id ? null : col.id);
@@ -336,22 +428,24 @@ export function Table<T extends { id?: number | string } = any>({
                         </div>
                       </div>
 
-                      {/* Resize Handle */}
-                      <div
-                        onMouseDown={(e) => handleResizeStart(e, col.id)}
-                        className="absolute right-0 top-1/2 -translate-y-1/2 cursor-col-resize transition-colors opacity-0 group-hover:opacity-100"
-                        style={{
-                          position: 'absolute',
-                          right: 0,
-                          top: '50%',
-                          transform: 'translateY(-50%)',
-                          height: '20px',
-                          width: '2px',
-                          cursor: 'col-resize',
-                          userSelect: 'none',
-                          backgroundColor: '#B1C5CE',
-                        }}
-                      />
+                      {/* Resize Handle - not for last column */}
+                      {!isLastColumn && (
+                        <div
+                          onMouseDown={(e) => handleResizeStart(e, col.id)}
+                          className="absolute right-0 top-1/2 -translate-y-1/2 cursor-col-resize transition-colors opacity-0 group-hover:opacity-100"
+                          style={{
+                            position: 'absolute',
+                            right: 0,
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            height: '20px',
+                            width: '2px',
+                            cursor: 'col-resize',
+                            userSelect: 'none',
+                            backgroundColor: '#B1C5CE',
+                          }}
+                        />
+                      )}
 
                       {/* Dropdown Menu */}
                       {openColumnMenu === col.id && createPortal(
@@ -361,54 +455,87 @@ export function Table<T extends { id?: number | string } = any>({
                           style={{
                             top: `${menuPosition.top}px`,
                             left: `${menuPosition.left}px`,
-                            minWidth: '150px',
+                            width: '200px',
                           }}
                         >
-                          {isSortable && (
+                          {col.id !== 'actions' && (
                             <>
+                              {isSortable && (
+                                <>
+                                  <button
+                                    onClick={() => {
+                                      onSort?.(col.id, false, 'asc');
+                                      setOpenColumnMenu(null);
+                                    }}
+                                    className="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 flex items-center gap-3"
+                                  >
+                                    <ArrowUp size={16} style={{ color: '#92A6B0' }} />
+                                    Sort Ascending
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      onSort?.(col.id, false, 'desc');
+                                      setOpenColumnMenu(null);
+                                    }}
+                                    className="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 flex items-center gap-3"
+                                  >
+                                    <ArrowDown size={16} style={{ color: '#92A6B0' }} />
+                                    Sort Descending
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      onSort?.(col.id, false, undefined);
+                                      setOpenColumnMenu(null);
+                                    }}
+                                    className="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 flex items-center gap-3"
+                                  >
+                                    <X size={16} style={{ color: '#92A6B0' }} />
+                                    Unsort
+                                  </button>
+                                </>
+                              )}
+                              {col.filterConfig && (
+                                <button
+                                  onClick={() => {
+                                    setFilteringColumn(col.id);
+                                    setOpenColumnMenu(null);
+                                  }}
+                                  className="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 flex items-center gap-3"
+                                >
+                                  <Filter size={16} style={{ color: '#92A6B0' }} />
+                                  Filter
+                                </button>
+                              )}
                               <button
                                 onClick={() => {
-                                  onSort?.(col.id, false);
+                                  setSearchingColumn(col.id);
                                   setOpenColumnMenu(null);
                                 }}
-                                className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                                className="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 flex items-center gap-3"
                               >
-                                Sort Ascending
-                              </button>
-                              <button
-                                onClick={() => {
-                                  onSort?.(col.id, false);
-                                  setOpenColumnMenu(null);
-                                }}
-                                className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                              >
-                                Sort Descending
+                                <Search size={16} style={{ color: '#92A6B0' }} />
+                                Search
                               </button>
                             </>
                           )}
                           <button
                             onClick={() => {
+                              onHideColumn?.(col.id);
                               setOpenColumnMenu(null);
                             }}
-                            className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                            className="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 flex items-center gap-3"
                           >
-                            Filter
-                          </button>
-                          <button
-                            onClick={() => {
-                              setOpenColumnMenu(null);
-                            }}
-                            className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                          >
-                            Search
+                            <EyeOff size={16} style={{ color: '#92A6B0' }} />
+                            Hide Column
                           </button>
                           <button
                             onClick={() => {
                               onManageColumnsClick?.();
                               setOpenColumnMenu(null);
                             }}
-                            className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                            className="w-full text-left px-4 py-3 text-sm hover:bg-gray-100 flex items-center gap-3"
                           >
+                            <Settings size={16} style={{ color: '#92A6B0' }} />
                             Manage Columns
                           </button>
                         </div>,
@@ -499,6 +626,255 @@ export function Table<T extends { id?: number | string } = any>({
             </tbody>
           </table>
       </div>
+
+      {searchingColumn && createPortal(
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold">Search {columns.find(c => c.id === searchingColumn)?.label}</h3>
+              <button
+                onClick={() => setSearchingColumn(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="mb-6">
+              <Input
+                type="text"
+                value={columnSearches[searchingColumn] || ''}
+                onChange={(value) => {
+                  setColumnSearches(prev => ({
+                    ...prev,
+                    [searchingColumn]: String(value)
+                  }));
+                }}
+                variant="medium"
+                label="Search text"
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => {
+                  setColumnSearches(prev => {
+                    const next = { ...prev };
+                    delete next[searchingColumn];
+                    return next;
+                  });
+                  setSearchingColumn(null);
+                }}
+                style={{
+                  background: buttons.bordered.background,
+                  color: buttons.bordered.color,
+                  border: buttons.bordered.border,
+                  padding: `${buttons.bordered.paddingY} ${buttons.bordered.paddingX}`,
+                  borderRadius: buttons.bordered.borderRadius,
+                  fontSize: buttons.bordered.fontSize,
+                }}
+                className="hover:bg-gray-50 transition-colors"
+              >
+                Clear
+              </button>
+              <button
+                onClick={() => setSearchingColumn(null)}
+                style={{
+                  background: buttons.action.background,
+                  color: buttons.action.color,
+                  border: buttons.action.border,
+                  padding: `${buttons.action.paddingY} ${buttons.action.paddingX}`,
+                  borderRadius: buttons.action.borderRadius,
+                  fontSize: buttons.action.fontSize,
+                }}
+                className="hover:opacity-90 transition-opacity font-medium"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {filteringColumn && createPortal(
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold">Filter {columns.find(c => c.id === filteringColumn)?.label}</h3>
+              <button onClick={() => setFilteringColumn(null)} className="text-gray-400 hover:text-gray-600">
+                <X size={20} />
+              </button>
+            </div>
+
+            {filteringColumn && (() => {
+              const column = columns.find(c => c.id === filteringColumn);
+              const filterType = column?.filterConfig?.type;
+              const currentFilter = columnFilters[filteringColumn];
+
+              return (
+                <>
+                  {filterType === 'text' && (
+                    <div className="mb-6">
+                      <Input
+                        type="text"
+                        value={currentFilter || ''}
+                        onChange={(value) => setColumnFilters(prev => ({ ...prev, [filteringColumn]: String(value) }))}
+                        variant="medium"
+                        label="Contains"
+                      />
+                    </div>
+                  )}
+
+                  {filterType === 'number' && (
+                    <div className="space-y-4 mb-6">
+                      <div>
+                        <HeadlessSelect
+                          options={[
+                            { value: '>', label: 'Greater than' },
+                            { value: '<', label: 'Less than' },
+                            { value: '>=', label: 'Greater than or equal' },
+                            { value: '<=', label: 'Less than or equal' },
+                            { value: '==', label: 'Equals' }
+                          ]}
+                          value={currentFilter?.operator || '>'}
+                          onChange={(value) => {
+                            setColumnFilters(prev => ({
+                              ...prev,
+                              [filteringColumn]: {
+                                operator: value,
+                                value: currentFilter?.value || 0
+                              }
+                            }));
+                          }}
+                          placeholder="Select operator"
+                        />
+                      </div>
+                      <div>
+                        <Input
+                          type="number"
+                          value={currentFilter?.value || ''}
+                          onChange={(value) => {
+                            setColumnFilters(prev => ({
+                              ...prev,
+                              [filteringColumn]: {
+                                operator: currentFilter?.operator || '>',
+                                value: Number(value)
+                              }
+                            }));
+                          }}
+                          variant="medium"
+                          label="Value"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {(filterType === 'select' || filterType === 'multiselect') && (
+                    <div className="space-y-3 mb-6 max-h-48 overflow-y-auto">
+                      {column?.filterConfig?.options?.map((option) => {
+                        const labelText = String(option).charAt(0).toUpperCase() + String(option).slice(1);
+                        return (
+                            <div key={option} className="flex items-center gap-2 cursor-pointer">
+                              {filterType === 'multiselect' ? (
+                                <>
+                                  <Checkbox
+                                    checked={Array.isArray(currentFilter) ? currentFilter.includes(option) : false}
+                                    onChange={(e) => {
+                                      const arr = Array.isArray(currentFilter) ? [...currentFilter] : [];
+                                      if (e.target.checked) {
+                                        arr.push(option);
+                                      } else {
+                                        arr.splice(arr.indexOf(option), 1);
+                                      }
+                                      setColumnFilters(prev => ({ ...prev, [filteringColumn]: arr.length > 0 ? arr : null }));
+                                    }}
+                                    className="h-4 w-4"
+                                  />
+                                  <span className="text-sm font-medium text-gray-700">{labelText}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Radio
+                                    checked={currentFilter === option}
+                                    onChange={(e) => {
+                                      setColumnFilters(prev => ({ ...prev, [filteringColumn]: e.target.checked ? option : null }));
+                                    }}
+                                  />
+                                  <span className="text-sm font-medium text-gray-700">{labelText}</span>
+                                </>
+                              )}
+                            </div>
+                          );
+                        })}
+                    </div>
+                  )}
+
+                  {filterType === 'date' && (
+                    <div className="space-y-4 mb-6">
+                      <div>
+                        <Input
+                          type="date"
+                          value={Array.isArray(currentFilter) ? currentFilter[0] : currentFilter || ''}
+                          onChange={(value) => setColumnFilters(prev => ({ ...prev, [filteringColumn]: [String(value), Array.isArray(prev[filteringColumn]) ? prev[filteringColumn][1] : String(value)] }))}
+                          variant="medium"
+                          label="From"
+                        />
+                      </div>
+                      <div>
+                        <Input
+                          type="date"
+                          value={Array.isArray(currentFilter) ? currentFilter[1] : currentFilter || ''}
+                          onChange={(value) => setColumnFilters(prev => ({ ...prev, [filteringColumn]: [Array.isArray(prev[filteringColumn]) ? prev[filteringColumn][0] : '', String(value)] }))}
+                          variant="medium"
+                          label="To"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex gap-2 justify-end">
+                    <button
+                      onClick={() => {
+                        setColumnFilters(prev => {
+                          const next = { ...prev };
+                          delete next[filteringColumn];
+                          return next;
+                        });
+                        setFilteringColumn(null);
+                      }}
+                      style={{
+                        background: buttons.bordered.background,
+                        color: buttons.bordered.color,
+                        border: buttons.bordered.border,
+                        padding: `${buttons.bordered.paddingY} ${buttons.bordered.paddingX}`,
+                        borderRadius: buttons.bordered.borderRadius,
+                        fontSize: buttons.bordered.fontSize,
+                      }}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
+                      Clear
+                    </button>
+                    <button
+                      onClick={() => setFilteringColumn(null)}
+                      style={{
+                        background: buttons.action.background,
+                        color: buttons.action.color,
+                        border: buttons.action.border,
+                        padding: `${buttons.action.paddingY} ${buttons.action.paddingX}`,
+                        borderRadius: buttons.action.borderRadius,
+                        fontSize: buttons.action.fontSize,
+                      }}
+                      className="hover:opacity-90 transition-opacity font-medium"
+                    >
+                      Done
+                    </button>
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

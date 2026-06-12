@@ -2464,15 +2464,20 @@ Satoshi
   --c-surface-table-header: #e5e7eb;
   --c-surface-table-header-text: #000000;
   --c-surface-table-body: #ffffff;
-  --c-bg-tab-active: #111827;
-  --c-bg-tab-inactive: #f3f4f6;
+  --c-bg-tab-active: #252829;
+  --c-bg-tab-inactive: #E4EDF1;
+  --c-tab-text: #000000;
+  --c-sidebar-top: #2A2F31;
+  --c-sidebar-middle: #1F2223;
+  --c-sidebar-bottom: #2A2F31;
+  --c-sidebar-border: none;
 
   --c-text-primary: #111827;
   --c-text-secondary: #374151;
   --c-text-muted: #6b7280;
   --c-text-inverse: #ffffff;
   --c-text-success: #059669;
-  --c-text-danger: #FC9C9C;
+  --c-text-danger: #821637;
 
   --c-interactive-hover: #f3f4f6;
   --c-interactive-active: #e5e7eb;
@@ -2502,15 +2507,20 @@ Satoshi
   --c-surface-table-header: #394247;
   --c-surface-table-header-text: #f9fafb;
   --c-surface-table-body: #2a2f31;
-  --c-bg-tab-active: #d1d5db;
+  --c-bg-tab-active: #252829;
   --c-bg-tab-inactive: #4b5563;
+  --c-tab-text: #ffffff;
+  --c-sidebar-top: #2A2F31;
+  --c-sidebar-middle: #2a2f31;
+  --c-sidebar-bottom: #2A2F31;
+  --c-sidebar-border: 1px solid #394247;
 
   --c-text-primary: #f9fafb;
   --c-text-secondary: #d1d5db;
   --c-text-muted: #9ca3af;
   --c-text-inverse: #000000;
   --c-text-success: #10b981;
-  --c-text-danger: #FF9FA7;
+  --c-text-danger: #FC9C9C;
 
   --c-interactive-hover: #2a2f31;
   --c-interactive-active: #394247;
@@ -2589,9 +2599,19 @@ Satoshi
   background-color: var(--c-surface-cards) !important;
 }
 
+.dark .bg-\[var\(--c-surface-background\)\],
+[color-mode="dark"] .bg-\[var\(--c-surface-background\)\] {
+  background-color: var(--c-surface-cards) !important;
+}
+
 .dark .text-white,
 [color-mode="dark"] .text-white {
   color: var(--c-text-primary) !important;
+}
+
+.dark .border-gray-200,
+[color-mode="dark"] .border-gray-200 {
+  border-color: #4b5563 !important;
 }
 
 .dark .text-white\/90,

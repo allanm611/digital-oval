@@ -21,7 +21,6 @@ import {
   CheckCircle2,
   XCircle,
 } from "lucide-react";
-import BackButton from "../../../shared/components/ui/BackButton";
 import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
 import {
@@ -29,6 +28,7 @@ import {
   clearPersistedFormData,
 } from "../../../shared/hooks/useFormDataPersistence";
 import { useFormCleanupOnExit } from "../../../shared/hooks/useFormCleanupOnExit";
+import MultiStepFormWrapper from "../../../shared/components/MultiStepFormWrapper";
 import {
   CreateOfferRequest,
   UpdateOfferRequest,
@@ -68,9 +68,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { getSettingsCommunicationChannel } from "../../../shared/utils/settingsHelper";
 import { useBackendOfferTypeData } from "../../../shared/hooks/useBackendOfferTypeData";
-import ProgressStepper, {
-  Step,
-} from "../../../shared/components/ui/ProgressStepper";
+import { Step } from "../../../shared/components/ui/ProgressStepper";
 import {
   SMSButtonPhonePreview,
   SMSSmartphonePreview,
@@ -2888,156 +2886,79 @@ export default function CreateOfferPage({
     );
   }
 
-  return (
-    <div className="min-h-screen">
-      <div
-        className={`bg-white ${tw.rounded} border border-[${color.border.default}] p-4`}
-      >
-        <div className="px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-4 pb-4 md:flex-row md:items-start md:justify-between">
-            <div className="flex items-center space-x-3">
-              <BackButton
-               
-                showBreadcrumb={true}
-                currentLabel={isEditMode ? "Edit Offer" : isDuplicateMode ? "Duplicate Offer" : "Create Offer"}
-              />
-            </div>
-            {currentStep !== 6 && (
-              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center md:justify-end">
-                <button
-                  onClick={handleCancel}
-                  className={`inline-flex w-full items-center justify-center px-4 py-2 ${tw.rounded} text-sm font-medium transition-all duration-200 sm:w-auto`}
-                  style={{
-                    background: "transparent",
-                    color: color.primary.action,
-                    border: `1px solid ${color.primary.action}`,
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveDraft}
-                  disabled={isSavingDraft}
-                  className={`inline-flex w-full items-center justify-center px-4 py-2 text-sm font-medium ${tw.rounded} text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto`}
-                  style={{ backgroundColor: color.primary.action }}
-                >
-                  {isSavingDraft ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Saving...
-                    </>
-                  ) : (
-                    "Save Draft"
-                  )}
-                </button>
-              </div>
-            )}
+  const handleCancelOffer = () => {
+    clearPersistedFormData("offer_form_data");
+    clearPersistedFormData("offer_creatives");
+    clearPersistedFormData("offer_products");
+    navigate("/dashboard/offers");
+  };
+
+  const getSubmitButtonText = () => {
+    if (isEditMode) return "Update";
+    if (isDuplicateMode) return "Create";
+    return "Create";
+  };
+
+  const renderStep = () => {
+    return (
+      <>
+        {error && (
+          <div
+            className={`bg-red-50 border border-red-200 ${tw.rounded} p-4 mb-6`}
+          >
+            <p className="text-sm text-red-700">{error}</p>
           </div>
+        )}
 
-          {/* Sticky Progress Navigation */}
-          <ProgressStepper
-            steps={steps}
-            currentStep={currentStep}
-            onStepClick={handleStepClick}
-            canNavigateToStep={canNavigateToStep}
-            primaryColor={color.primary.action}
-            textPrimary={tw.textPrimary}
-            textMuted={tw.textMuted}
-          />
-
-          {error && (
-            <div
-              className={`bg-red-50 border border-red-200 ${tw.rounded} p-4 mb-6`}
-            >
-              <p className="text-sm text-red-700">{error}</p>
-            </div>
+        <div className="pb-10">
+          {currentStep === 1 && <BasicInfoStep {...stepProps} />}
+          {currentStep === 2 && (
+            <ProductStepWrapper
+              {...stepProps}
+              selectedProducts={selectedProducts}
+              onProductsChange={setSelectedProducts}
+              formData={formData}
+              setFormData={setFormData}
+              creatives={creatives}
+              trackingSources={trackingSources}
+              rewards={rewards}
+            />
           )}
-
-          <div className="pb-10">
-            {currentStep === 1 && <BasicInfoStep {...stepProps} />}
-            {currentStep === 2 && (
-              <ProductStepWrapper
-                {...stepProps}
-                selectedProducts={selectedProducts}
-                onProductsChange={setSelectedProducts}
-                formData={formData}
-                setFormData={setFormData}
-                creatives={creatives}
-                trackingSources={trackingSources}
-                rewards={rewards}
-              />
-            )}
-            {currentStep === 3 && (
-              <OfferCreativeStepWrapper
-                {...stepProps}
-                communicationChannelId={formData.communication_channel_id}
-                communicationChannels={communicationChannels}
-              />
-            )}
-            {currentStep === 4 && <OfferTrackingStepWrapper {...stepProps} />}
-            {currentStep === 5 && <OfferRewardStepWrapper {...stepProps} />}
-            {currentStep === 6 && <ReviewStep {...stepProps} />}
-          </div>
-
-          {/* Bottom Navigation */}
-          <div className="sticky bottom-12 bg-white py-4 shadow-sm">
-            <div className="flex justify-between items-center">
-              <button
-                onClick={handlePrev}
-                disabled={currentStep === 1}
-                className={`inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
-              >
-                Previous
-              </button>
-              <button
-                onClick={currentStep === 6 ? handleSubmit : handleNext}
-                disabled={
-                  currentStep === 6
-                    ? isLoading || !validateCurrentStep()
-                    : !validateCurrentStep()
-                }
-                className={`inline-flex items-center px-5 py-2 text-sm font-medium ${tw.rounded} text-white disabled:opacity-50 disabled:cursor-not-allowed`}
-                style={{ backgroundColor: color.primary.action }}
-                onMouseEnter={(e) => {
-                  const btn = e.currentTarget;
-                  btn.style.setProperty(
-                    "background-color",
-                    color.primary.action,
-                    "important",
-                  );
-                  btn.style.setProperty("color", "white", "important");
-                }}
-                onMouseLeave={(e) => {
-                  const btn = e.currentTarget;
-                  btn.style.setProperty(
-                    "background-color",
-                    color.primary.action,
-                    "important",
-                  );
-                  btn.style.setProperty("color", "white", "important");
-                }}
-              >
-                {currentStep === 6 ? (
-                  isLoading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      {isEditMode ? "Updating..." : isDuplicateMode ? "Creating..." : "Creating..."}
-                    </>
-                  ) : isEditMode ? (
-                    "Update"
-                  ) : isDuplicateMode ? (
-                    "Create"
-                  ) : (
-                    "Create"
-                  )
-                ) : (
-                  "Next Step"
-                )}
-              </button>
-            </div>
-          </div>
+          {currentStep === 3 && (
+            <OfferCreativeStepWrapper
+              {...stepProps}
+              communicationChannelId={formData.communication_channel_id}
+              communicationChannels={communicationChannels}
+            />
+          )}
+          {currentStep === 4 && <OfferTrackingStepWrapper {...stepProps} />}
+          {currentStep === 5 && <OfferRewardStepWrapper {...stepProps} />}
+          {currentStep === 6 && <ReviewStep {...stepProps} />}
         </div>
-      </div>
-    </div>
+      </>
+    );
+  };
+
+  return (
+    <MultiStepFormWrapper
+      steps={steps}
+      currentStep={currentStep}
+      onStepClick={handleStepClick}
+      canNavigateToStep={canNavigateToStep}
+      onNext={handleNext}
+      onPrev={handlePrev}
+      onSubmit={handleSubmit}
+      onCancel={handleCancelOffer}
+      onSaveDraft={handleSaveDraft}
+      isLoading={isLoading}
+      isSavingDraft={isSavingDraft}
+      currentLabel={isEditMode ? "Edit Offer" : isDuplicateMode ? "Duplicate Offer" : "Create Offer"}
+      submitButtonText={getSubmitButtonText()}
+      saveDraftText="Save Draft"
+      showSaveDraft={true}
+      showCancel={true}
+    >
+      {renderStep()}
+    </MultiStepFormWrapper>
   );
 }

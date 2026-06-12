@@ -31,7 +31,6 @@ export default defineConfig({
           // Heavy dependencies
           'vendor-charts': ['recharts'],
           'vendor-excel': ['xlsx'],
-          'vendor-geo': ['world-countries', 'i18n-iso-countries'],
         }
       }
     },

@@ -90,8 +90,22 @@ export function useTable<T = any>({
   }, []);
 
   // Handle column sort
-  const handleSort = useCallback((columnId: string, multiSelect: boolean = false) => {
+  const handleSort = useCallback((columnId: string, multiSelect: boolean = false, direction?: 'asc' | 'desc') => {
     setSortConfigs((prev) => {
+      if (direction === undefined) {
+        // If direction is explicitly undefined, clear the sort for this column
+        return prev.filter((s) => s.columnId !== columnId);
+      }
+
+      if (direction) {
+        // If direction is specified, set that direction directly
+        const existing = prev.find((s) => s.columnId === columnId);
+        if (existing && existing.direction === direction) {
+          return prev;
+        }
+        return [{ columnId, direction, priority: 0 }];
+      }
+
       // If multi-select (ctrl/cmd+click), add to sort
       if (multiSelect) {
         const existing = prev.find((s) => s.columnId === columnId);

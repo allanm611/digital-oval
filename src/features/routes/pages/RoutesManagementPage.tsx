@@ -12,6 +12,7 @@ import { color, tw } from "../../../shared/utils/utils";
 import BackButton from "../../../shared/components/ui/BackButton";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import DateFormatter from "../../../shared/components/DateFormatter";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import { smsRouteService } from "../services/smsRouteService";
 import { emailRouteService } from "../services/emailRouteService";
 import { pushNotificationRouteService } from "../services/pushNotificationRouteService";
@@ -44,16 +45,33 @@ export default function RoutesManagementPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterChannel, setFilterChannel] = useState<string>("all");
-  const [deleteConfirmId, setDeleteConfirmId] = useState<{
-    id: number;
-    channel: CommunicationChannel;
-  } | null>(null);
-  const [deleteConfirmName, setDeleteConfirmName] = useState("");
-  const [isRemoving, setIsRemoving] = useState(false);
   const [togglingStatus, setTogglingStatus] = useState<{
     id: number;
     channel: CommunicationChannel;
   } | null>(null);
+  const [deleteRouteData, setDeleteRouteData] = useState<{ id: number; channel: CommunicationChannel } | null>(null);
+
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({
+    onDelete: async (id) => {
+      if (!deleteRouteData) return;
+      const numId = typeof id === "string" ? parseInt(id) : id;
+
+      setRoutes(routes.filter((r) => !(r.id === numId && r.channel === deleteRouteData.channel)));
+
+      if (deleteRouteData.channel === "SMS") {
+        await smsRouteService.deleteRoute(numId);
+      } else if (deleteRouteData.channel === "EMAIL") {
+        await emailRouteService.deleteRoute(numId);
+      } else if (deleteRouteData.channel === "PUSH") {
+        await pushNotificationRouteService.deleteRoute(numId);
+      } else if (deleteRouteData.channel === "WHATSAPP") {
+        await whatsappRouteService.deleteRoute(numId);
+      } else if (deleteRouteData.channel === "USSD") {
+        await ussdRouteService.deleteRoute(numId);
+      }
+    },
+    itemLabel: "Route",
+  });
 
   useEffect(() => {
     loadAllRoutes();
@@ -184,43 +202,8 @@ export default function RoutesManagementPage() {
   });
 
   const handleDeleteRoute = (route: UnifiedRoute) => {
-    setDeleteConfirmId({ id: route.id, channel: route.channel });
-    setDeleteConfirmName(route.name);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!deleteConfirmId) return;
-
-    const oldRoutes = routes;
-    try {
-      setIsRemoving(true);
-      setRoutes(
-        routes.filter(
-          (r) => !(r.id === deleteConfirmId.id && r.channel === deleteConfirmId.channel)
-        )
-      );
-
-      if (deleteConfirmId.channel === "SMS") {
-        await smsRouteService.deleteRoute(deleteConfirmId.id);
-      } else if (deleteConfirmId.channel === "EMAIL") {
-        await emailRouteService.deleteRoute(deleteConfirmId.id);
-      } else if (deleteConfirmId.channel === "PUSH") {
-        await pushNotificationRouteService.deleteRoute(deleteConfirmId.id);
-      } else if (deleteConfirmId.channel === "WHATSAPP") {
-        await whatsappRouteService.deleteRoute(deleteConfirmId.id);
-      } else if (deleteConfirmId.channel === "USSD") {
-        await ussdRouteService.deleteRoute(deleteConfirmId.id);
-      }
-
-      showSuccess("Success", `${deleteConfirmName} route deleted`);
-      setDeleteConfirmId(null);
-      setDeleteConfirmName("");
-    } catch (err) {
-      setRoutes(oldRoutes);
-      showError("Error", extractBackendError(err, "Error. Please try again."));
-    } finally {
-      setIsRemoving(false);
-    }
+    setDeleteRouteData({ id: route.id, channel: route.channel });
+    openDeleteConfirm(route.id, route.name);
   };
 
   const handleToggleStatus = async (route: UnifiedRoute) => {
@@ -505,13 +488,13 @@ export default function RoutesManagementPage() {
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={deleteConfirmId !== null}
-        onClose={() => setDeleteConfirmId(null)}
-        onConfirm={handleConfirmDelete}
+        isOpen={deleteConfirm.id !== null}
+        onClose={closeDeleteConfirm}
+        onConfirm={handleDelete}
         title="Delete Route"
         description="Are you sure you want to delete this route? This action cannot be undone."
-        itemName={deleteConfirmName}
-        isLoading={isRemoving}
+        itemName={deleteConfirm.itemName}
+        isLoading={isDeleting}
         confirmText="Delete"
       />
     </div>

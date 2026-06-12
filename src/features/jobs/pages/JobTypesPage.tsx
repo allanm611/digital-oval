@@ -20,6 +20,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { PermissionGate } from "../../auth/components/PermissionGate";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import { jobTypeService } from "../services/jobTypeService";
 import { CreateJobTypePayload, JobType } from "../types/job";
 
@@ -407,9 +408,7 @@ export default function JobTypesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingJobType, setEditingJobType] = useState<JobType | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingJobType, setDeletingJobType] = useState<JobType | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [stats, setStats] = useState({
     totalJobTypes: 0,
     totalJobs: 0,
@@ -421,6 +420,15 @@ export default function JobTypesPage() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewingJobType, setViewingJobType] = useState<JobType | null>(null);
   const [isLoadingView, setIsLoadingView] = useState(false);
+
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({
+    onDelete: async (id) => {
+      const numId = typeof id === "string" ? parseInt(id) : id;
+      setJobTypes((prev) => prev.filter((jt) => jt.id !== numId));
+      await jobTypeService.deleteJobType(numId);
+    },
+    itemLabel: "Job Type",
+  });
 
   const fetchJobTypes = useCallback(async () => {
     setIsLoading(true);
@@ -595,33 +603,7 @@ export default function JobTypesPage() {
 
   const handleDeleteClick = (jobType: JobType) => {
     setDeletingJobType(jobType);
-    setShowDeleteModal(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!deletingJobType) return;
-
-    try {
-      setIsDeleting(true);
-      const deletedName =
-        deletingJobType.name?.trim() || `Job Type #${deletingJobType.id}`;
-
-      setJobTypes((prev) =>
-        prev.filter((jt) => jt.id !== deletingJobType.id),
-      );
-
-      await jobTypeService.deleteJobType(deletingJobType.id);
-      showToast("Job type deleted", `${deletedName} has been deleted`);
-      setShowDeleteModal(false);
-      setDeletingJobType(null);
-    } catch (err) {
-      await fetchJobTypes();
-      const message =
-        err instanceof Error ? err.message : "Failed to delete job type";
-      showError("Unable to delete job type", extractBackendError(error, "Unable to delete job type. Please try again."));
-    } finally {
-      setIsDeleting(false);
-    }
+    openDeleteConfirm(jobType.id, jobType.name?.trim() || `Job Type #${jobType.id}`);
   };
 
   const handleModalSubmit = async (values: CreateJobTypePayload) => {
@@ -961,15 +943,15 @@ export default function JobTypesPage() {
       />
 
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
+        isOpen={deleteConfirm.id !== null}
         onClose={() => {
-          setShowDeleteModal(false);
+          closeDeleteConfirm();
           setDeletingJobType(null);
         }}
-        onConfirm={handleDeleteConfirm}
+        onConfirm={handleDelete}
         title="Delete Job Type"
         description="Are you sure you want to delete this job type? This will fail if any scheduled jobs still reference this job type."
-        itemName={deletingJobType?.name || ""}
+        itemName={deleteConfirm.itemName}
         isLoading={isDeleting}
         confirmText="Delete"
         cancelText="Cancel"

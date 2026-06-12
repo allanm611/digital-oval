@@ -40,6 +40,7 @@ import DateFormatter from "../../../shared/components/DateFormatter";
 import Pagination from "../../../shared/components/ui/Pagination";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import Radio from "../../../shared/components/ui/Radio";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 
 export default function OffersPage() {
@@ -92,13 +93,15 @@ export default function OffersPage() {
     action: string;
   } | null>(null);
 
-  // Delete modal state
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [offerToDelete, setOfferToDelete] = useState<{
-    id: number;
-    name: string;
-  } | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({
+    onDelete: async (id) => {
+      const numId = typeof id === "string" ? parseInt(id) : id;
+      await offerService.deleteOffer(numId);
+      setOffers((prev) => prev.filter((o) => o.id !== numId));
+      fetchOfferStats();
+    },
+    itemLabel: "Offer",
+  });
 
   // Debounce search term
   useEffect(() => {
@@ -622,31 +625,8 @@ export default function OffersPage() {
   }, [showActionMenu]);
 
   const handleDeleteOffer = (id: number, name: string) => {
-    setOfferToDelete({ id, name });
-    setShowDeleteModal(true);
+    openDeleteConfirm(id, name);
     setShowActionMenu(null);
-  };
-
-  const confirmDeleteOffer = async () => {
-    if (!offerToDelete) return;
-
-    try {
-      setIsDeleting(true);
-      await offerService.deleteOffer(offerToDelete.id);
-      success(
-        "Offer Deleted",
-        `"${offerToDelete.name}" has been deleted successfully.`,
-      );
-      // Optimistic UI: Remove deleted offer from list
-      setOffers((prev) => prev.filter((o) => o.id !== offerToDelete.id));
-      fetchOfferStats(); // Refresh stats cards
-      setShowDeleteModal(false);
-      setOfferToDelete(null);
-    } catch (err) {
-      showError("Unable to Delete Offer", extractBackendError(err, "Failed to delete offer. Please try again later."));
-    } finally {
-      setIsDeleting(false);
-    }
   };
 
   // Consolidated offer action handler
@@ -1871,15 +1851,12 @@ export default function OffersPage() {
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
-        onClose={() => {
-          setShowDeleteModal(false);
-          setOfferToDelete(null);
-        }}
-        onConfirm={confirmDeleteOffer}
+        isOpen={deleteConfirm.id !== null}
+        onClose={closeDeleteConfirm}
+        onConfirm={handleDelete}
         title="Delete Offer"
         description="Are you sure you want to delete this offer? This action cannot be undone."
-        itemName={offerToDelete?.name || ""}
+        itemName={deleteConfirm.itemName}
         isLoading={isDeleting}
         confirmText="Delete"
         cancelText="Cancel"

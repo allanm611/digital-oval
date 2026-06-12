@@ -2,11 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Users, BarChart3, Calendar, Eye, Loader2 } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
-import BackButton from "../../../shared/components/ui/BackButton";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
-import ProgressStepper, {
-  Step,
-} from "../../../shared/components/ui/ProgressStepper";
+import { Step } from "../../../shared/components/ui/ProgressStepper";
+import MultiStepFormWrapper from "../../../shared/components/MultiStepFormWrapper";
 import SegmentConditionsBuilder from "../../segments/components/SegmentConditionsBuilder";
 import type { SegmentConditionGroup, SegmentPayload, SourceLayer, LayerCondition, LayerColumnRef } from "../../segments/types/segment";
 import { convertConditionsToPayload } from "../../segments/utils/conditionPayloadBuilder";
@@ -420,32 +418,24 @@ export default function CreateControlGroupPage() {
     );
   }
 
-  return (
-    <div className="min-h-screen">
-      <div
-        className="bg-white rounded-md border p-4"
-        style={{ borderColor: color.border.default }}
-      >
-        <div className="px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between pb-3">
-            <BackButton
-              onBack={handleBack}
-              showBreadcrumb={true}
-              currentLabel={isEditMode ? `Edit ${controlGroupName || "Control Group"}` : "Create Control Group"}
-            />
-          </div>
+  const handleCancel = () => {
+    handleBack();
+  };
 
-          <ProgressStepper
-            steps={STEPS}
-            currentStep={currentStep}
-            onStepClick={handleStepClick}
-            canNavigateToStep={canNavigateToStep}
-            primaryColor={color.primary.action}
-            textPrimary={tw.textPrimary}
-            textMuted={tw.textMuted}
-          />
+  const handleSaveDraft = async () => {
+    // Control groups don't support draft save, just navigate back
+    handleBack();
+  };
 
-          <div className="py-4 space-y-6">
+  const canNavigateToStepCheck = (stepId: number) => {
+    if (stepId <= currentStep) return true;
+    if (stepId === currentStep + 1) return !isNextButtonDisabled();
+    return false;
+  };
+
+  const renderStep = () => {
+    return (
+      <div className="space-y-6">
             {currentStep === 1 && (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -813,47 +803,29 @@ export default function CreateControlGroupPage() {
               </div>
             )}
 
-            <div className="sticky bottom-12 bg-white py-4 shadow-sm mt-8">
-              <div className="flex justify-between items-center">
-                {currentStep > 1 ? (
-                  <button
-                    onClick={handlePrev}
-                    disabled={isCreating}
-                    className={`inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
-                  >
-                    Previous
-                  </button>
-                ) : (
-                  <div />
-                )}
-
-                <div className="flex-1" />
-
-                {currentStep === STEPS.length ? (
-                  <button
-                    onClick={handleCreate}
-                    disabled={isCreating}
-                    className={`inline-flex items-center gap-2 px-5 py-2 text-sm font-medium ${tw.rounded} text-white disabled:opacity-50 disabled:cursor-not-allowed`}
-                    style={{ backgroundColor: color.primary.action }}
-                  >
-                    {isCreating && <Loader2 className="w-4 h-4 animate-spin" />}
-                    {isCreating ? (isEditMode ? "Updating..." : "Creating...") : (isEditMode ? "Update Control Group" : "Create Control Group")}
-                  </button>
-                ) : (
-                  <button
-                    onClick={handleNext}
-                    disabled={isCreating || isNextButtonDisabled()}
-                    className={`inline-flex items-center px-5 py-2 text-sm font-medium ${tw.rounded} text-white disabled:opacity-50 disabled:cursor-not-allowed`}
-                    style={{ backgroundColor: color.primary.action }}
-                  >
-                    Next
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
-    </div>
+    );
+  };
+
+  return (
+    <MultiStepFormWrapper
+      steps={STEPS}
+      currentStep={currentStep}
+      onStepClick={handleStepClick}
+      canNavigateToStep={canNavigateToStepCheck}
+      onNext={handleNext}
+      onPrev={handlePrev}
+      onSubmit={handleCreate}
+      onCancel={handleCancel}
+      onSaveDraft={handleSaveDraft}
+      isLoading={isCreating}
+      isSavingDraft={false}
+      currentLabel={isEditMode ? `Edit ${controlGroupName || "Control Group"}` : "Create Control Group"}
+      submitButtonText={isEditMode ? "Update Control Group" : "Create Control Group"}
+      showSaveDraft={false}
+      showCancel={true}
+    >
+      {renderStep()}
+    </MultiStepFormWrapper>
   );
 }

@@ -477,9 +477,6 @@ export default function SchedulingComponent({
 
           {/* Time Zone */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Time Zone
-            </label>
             {timezonesLoading ? (
               <div className="p-3 bg-gray-50 border border-gray-200 rounded text-sm text-gray-600">
                 Loading timezones...
@@ -487,6 +484,7 @@ export default function SchedulingComponent({
             ) : (
               <>
                 <HeadlessSelect
+                  label="Time Zone"
                   value={scheduling?.time_zone || getSettingsTimezone()}
                   onChange={(value) => {
                     if (value) {
@@ -562,10 +560,8 @@ export default function SchedulingComponent({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             {/* Recurrence Pattern */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Recurrence Pattern
-              </label>
               <HeadlessSelect
+                label="Recurrence Pattern"
                 value={recurrencePattern}
                 onChange={(value) => setRecurrencePattern(value as string)}
                 options={[
@@ -620,10 +616,8 @@ export default function SchedulingComponent({
           {recurrencePattern === "Months" && setSpecificStartTime && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Monthly Rule
-                </label>
                 <HeadlessSelect
+                  label="Monthly Rule"
                   value={monthlyRule}
                   onChange={(value) =>
                     setMonthlyRule(
@@ -851,10 +845,8 @@ export default function SchedulingComponent({
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Start broadcasts
-                  </label>
                   <HeadlessSelect
+                    label="Start broadcasts"
                     value={startBroadcastBefore}
                     onChange={(value) =>
                       setStartBroadcastBefore(value as string)

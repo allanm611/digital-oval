@@ -15,12 +15,10 @@ import {
   getPersistedFormData,
 } from "../../../shared/hooks/useFormDataPersistence";
 import { useFormCleanupOnExit } from "../../../shared/hooks/useFormCleanupOnExit";
-import { color, tw, getButtonStyles, button } from "../../../shared/utils/utils";
+import { color, tw } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import BackButton from "../../../shared/components/ui/BackButton";
-import ProgressStepper, {
-  Step,
-} from "../../../shared/components/ui/ProgressStepper";
+import { Step } from "../../../shared/components/ui/ProgressStepper";
+import MultiStepFormWrapper from "../../../shared/components/MultiStepFormWrapper";
 import {
   CampaignSegment,
   CampaignOffer,
@@ -1533,111 +1531,46 @@ export default function CreateCampaignPage() {
     );
   }
 
+  const handleCancelCampaign = () => {
+    sessionStorage.removeItem("campaignFlowCreatedOffers");
+    sessionStorage.removeItem("campaignFormData");
+    sessionStorage.removeItem("offerModalAutoOpened");
+    sessionStorage.removeItem("campaignDataRestored");
+    navigate("/dashboard/campaigns");
+  };
+
+  const getSubmitButtonText = () => {
+    if (isEditMode) {
+      return isResubmit ? "Edit & Resubmit" : "Update Campaign";
+    }
+    if (isDuplicateMode) {
+      return "Create a Copy";
+    }
+    return "Create Campaign";
+  };
+
   return (
-    <div className="min-h-screen">
-      <div
-        className={`bg-white ${tw.rounded} border p-4`}
-        style={{ borderColor: color.border.default }}
+    <>
+      <MultiStepFormWrapper
+        steps={steps}
+        currentStep={currentStep}
+        onStepClick={handleStepClick}
+        canNavigateToStep={canNavigateToStep}
+        onNext={handleNext}
+        onPrev={handlePrev}
+        onSubmit={handleSubmit}
+        onCancel={handleCancelCampaign}
+        onSaveDraft={handleSaveDraft}
+        isLoading={isLoading}
+        isSavingDraft={isSavingDraft}
+        currentLabel={isEditMode ? "Edit Campaign" : "Create Campaign"}
+        submitButtonText={getSubmitButtonText()}
+        saveDraftText="Save Draft"
+        showSaveDraft={true}
+        showCancel={true}
       >
-        <div className="px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-4 pb-4 md:flex-row md:items-start md:justify-between">
-            <BackButton
-             
-              showBreadcrumb={true}
-              currentLabel={isEditMode ? "Edit Campaign" : "Create Campaign"}
-            />
-            {currentStep !== 5 && (
-              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center md:justify-end">
-                <button
-                  onClick={handleCancel}
-                  className={`inline-flex w-full items-center justify-center px-4 py-2 text-sm font-medium ${tw.rounded} transition-all duration-200 sm:w-auto`}
-                  style={{
-                    background: "transparent",
-                    color: color.primary.action,
-                    border: `1px solid ${color.primary.action}`,
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveDraft}
-                  disabled={isSavingDraft}
-                  className={`inline-flex w-full items-center justify-center text-sm font-medium ${tw.rounded} transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto`}
-                  style={{
-                    ...getButtonStyles(button.action),
-                  }}
-                >
-                  {isSavingDraft ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Saving...
-                    </>
-                  ) : (
-                    "Save Draft"
-                  )}
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Sticky Progress Navigation */}
-          <ProgressStepper
-            steps={steps}
-            currentStep={currentStep}
-            onStepClick={handleStepClick}
-            canNavigateToStep={canNavigateToStep}
-            primaryColor={color.primary.action}
-            textPrimary={tw.textPrimary}
-            textMuted={tw.textMuted}
-          />
-
-          <div className="py-4">{renderStep()}</div>
-
-          {/* Bottom Navigation */}
-          <div className="sticky bottom-12 bg-white py-4 shadow-sm">
-            <div className="flex justify-between items-center">
-              <button
-                onClick={handlePrev}
-                disabled={currentStep === 1}
-                className={`inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
-              >
-                Previous
-              </button>
-              <button
-                onClick={currentStep === 5 ? handleSubmit : handleNext}
-                disabled={isLoading || !validateCurrentStep().isValid}
-                className={`inline-flex items-center px-5 py-2 text-sm font-medium ${tw.rounded} text-white disabled:opacity-50 disabled:cursor-not-allowed`}
-                style={{ backgroundColor: color.primary.action }}
-              >
-                {isLoading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    {currentStep === 5
-                      ? isEditMode
-                        ? isResubmit
-                          ? "Resubmitting..."
-                          : "Updating..."
-                        : isDuplicateMode
-                        ? "Creating Copy..."
-                        : "Creating..."
-                      : "Loading..."}
-                  </>
-                ) : currentStep === 5 ? (
-                  isEditMode ? (
-                    isResubmit ? "Edit & Resubmit" : "Update Campaign"
-                  ) : isDuplicateMode ? (
-                    "Create a Copy"
-                  ) : (
-                    "Create Campaign"
-                  )
-                ) : (
-                  "Next Step"
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+        {renderStep()}
+      </MultiStepFormWrapper>
 
       {/* Execute Campaign Modal */}
       {createdCampaignId && createdCampaignName && (
@@ -1654,6 +1587,6 @@ export default function CreateCampaignPage() {
           }}
         />
       )}
-    </div>
+    </>
   );
 }

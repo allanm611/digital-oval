@@ -6,7 +6,6 @@ import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
-import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { formatDateWithTimezone } from "../../../shared/services/dateService";
 import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
@@ -14,9 +13,8 @@ import {
   useFormDataPersistence,
   clearPersistedFormData,
 } from "../../../shared/hooks/useFormDataPersistence";
-import ProgressStepper, {
-  Step,
-} from "../../../shared/components/ui/ProgressStepper";
+import { Step } from "../../../shared/components/ui/ProgressStepper";
+import MultiStepFormWrapper from "../../../shared/components/MultiStepFormWrapper";
 import TargetAudienceStep from "../components/TargetAudienceStep";
 import DefineCommunicationStep from "../components/DefineCommunicationStep";
 import ScheduleStep from "../components/ScheduleStep";
@@ -659,69 +657,41 @@ export default function CreateManualBroadcastPage() {
     );
   }
 
+  const handleCancelBroadcast = () => {
+    clearPersistedFormData("broadcast_form_data");
+    navigateBack();
+  };
+
+  const getSubmitButtonText = () => {
+    if (isEditMode) return "Update Broadcast";
+    return "Send Broadcast";
+  };
+
+  const canNavigateToStepCheck = (stepId: number) => {
+    if (stepId <= currentStep) return true;
+    if (stepId === currentStep + 1) return isStepValid(currentStep);
+    return false;
+  };
+
   return (
-    <div className="min-h-screen">
-      <div
-        className={` rounded-md border p-4`}
-        style={{ borderColor: color.border.default }}
-      >
-        <div className="px-4 sm:px-6 lg:px-8">
-          {/* Header */}
-          <div className="flex items-center justify-between pb-3">
-            <BackButton
-             
-              showBreadcrumb={true}
-              currentLabel={isEditMode ? "Edit Broadcast" : "Create Broadcast"}
-            />
-          </div>
-
-          {/* Sticky Progress Navigation */}
-          <ProgressStepper
-            steps={STEPS}
-            currentStep={currentStep}
-            onStepClick={handleStepClick}
-            canNavigateToStep={canNavigateToStep}
-            primaryColor={color.primary.action}
-            textPrimary={tw.textPrimary}
-            textMuted={tw.textMuted}
-          />
-
-          {/* Step Content */}
-          <div className="py-4">{renderStep()}</div>
-
-          {/* Bottom Navigation */}
-          <div className={`sticky bottom-12  py-4 shadow-sm mt-8`}>
-            <div className="flex justify-between items-center">
-              {currentStep > 1 && (
-                <button
-                  onClick={handlePrevious}
-                  className={`inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-all duration-200`}
-                >
-                  Previous
-                </button>
-              )}
-              <div className="flex-1" />
-              <button
-                onClick={
-                  currentStep === STEPS.length ? handleSubmit : handleNext
-                }
-                disabled={!isStepValid(currentStep) || isSubmitting}
-                className={`inline-flex items-center gap-2 px-5 py-2 text-sm font-medium ${tw.rounded} text-white disabled:opacity-50 disabled:cursor-not-allowed`}
-                style={{ backgroundColor: color.primary.action }}
-              >
-                {isSubmitting && (
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                )}
-                {currentStep === STEPS.length
-                  ? isEditMode
-                    ? "Update Broadcast"
-                    : "Send Broadcast"
-                  : "Next"}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <MultiStepFormWrapper
+      steps={STEPS}
+      currentStep={currentStep}
+      onStepClick={handleStepClick}
+      canNavigateToStep={canNavigateToStepCheck}
+      onNext={handleNext}
+      onPrev={handlePrevious}
+      onSubmit={handleSubmit}
+      onCancel={handleCancelBroadcast}
+      onSaveDraft={() => navigateBack()}
+      isLoading={isSubmitting}
+      isSavingDraft={false}
+      currentLabel={isEditMode ? "Edit Broadcast" : "Create Broadcast"}
+      submitButtonText={getSubmitButtonText()}
+      showSaveDraft={false}
+      showCancel={true}
+    >
+      {renderStep()}
+    </MultiStepFormWrapper>
   );
 }

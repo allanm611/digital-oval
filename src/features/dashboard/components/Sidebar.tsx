@@ -816,7 +816,7 @@ export default function Sidebar({
             onMouseOver={handleSidebarIntentPrefetch}
             onFocusCapture={handleSidebarIntentPrefetch}
             style={{
-              background: `linear-gradient(to bottom, ${color.gradients.sidebar.top} 0%, ${color.gradients.sidebar.middle} 70%, ${color.gradients.sidebar.bottom} 100%)`,
+              background: `linear-gradient(to bottom, var(--c-sidebar-top) 0%, var(--c-sidebar-middle) 70%, var(--c-sidebar-bottom) 100%)`,
             }}
           >
             <div className="flex h-16 shrink-0 items-center justify-between px-6">
@@ -1989,7 +1989,8 @@ export default function Sidebar({
         <div
           className="flex flex-col h-screen md:px-3 xl:px-6 md:pt-2 xl:pt-0 pb-6"
           style={{
-            background: `linear-gradient(to bottom, ${color.gradients.sidebar.top} 0%, ${color.gradients.sidebar.middle} 70%, ${color.gradients.sidebar.bottom} 100%)`,
+            background: `linear-gradient(to bottom, var(--c-sidebar-top) 0%, var(--c-sidebar-middle) 70%, var(--c-sidebar-bottom) 100%)`,
+            borderRight: 'var(--c-sidebar-border, none)',
           }}
         >
           <div className="md:h-0 xl:h-16 md:hidden xl:flex items-center flex-shrink-0 xl:justify-between xl:px-5">

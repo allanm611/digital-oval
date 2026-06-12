@@ -1,5 +1,6 @@
 import React from "react";
 import { color, tw } from "../../utils/utils";
+import { colors } from "../../utils/tokens";
 
 interface RadioProps extends Omit<
   React.InputHTMLAttributes<HTMLInputElement>,
@@ -29,7 +30,7 @@ export default function Radio({
       style={{
         backgroundImage:
           checked !== undefined && checked
-            ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='3' fill='${color.primary.accent.replace("#", "%23")}'/%3E%3C/svg%3E")`
+            ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='3' fill='${colors.primary.accent.replace("#", "%23")}'/%3E%3C/svg%3E")`
             : "none",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",

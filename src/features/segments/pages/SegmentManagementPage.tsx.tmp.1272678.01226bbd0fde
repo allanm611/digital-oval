@@ -84,12 +84,10 @@ export default function SegmentManagementPage() {
   const [visibilityFilter, setVisibilityFilter] = useState<
     "all" | "public" | "private"
   >("all");
-  const [clearFiltersKey, setClearFiltersKey] = useState(0);
-  const [totalCount, setTotalCount] = useState(0);
-  const [displayedCount, setDisplayedCount] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [sortBy] = useState<
     "id" | "name" | "type" | "category" | "created_at" | "updated_at"
   >("created_at");
@@ -175,6 +173,8 @@ export default function SegmentManagementPage() {
   const [segmentToDelete, setSegmentToDelete] = useState<Segment | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCommunicateModalOpen, setIsCommunicateModalOpen] = useState(false);
+
+  // Note: Delete modal state consolidated for refactoring - lines 172-174 are candidates for itemActionHandler consolidation
   const [segmentToCommunicate, setSegmentToCommunicate] =
     useState<Segment | null>(null);
 
@@ -297,7 +297,6 @@ export default function SegmentManagementPage() {
       setIsClosingModal(false);
     }, 300); // Match the transition duration
   };
-
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -583,7 +582,8 @@ export default function SegmentManagementPage() {
   };
 
   const handleFilteredCountChange = (count: number) => {
-    setDisplayedCount(count);
+    setTotalCount(count);
+    setTotalPages(Math.ceil(count / pageSize));
   };
 
   const handleCreateSegment = () => {
@@ -1622,13 +1622,12 @@ export default function SegmentManagementPage() {
                 {totalCount === 0 && filteredSegments.length > 0 && (
                   <button
                     onClick={() => {
-                      setSearchTerm("");
-                      setSelectedTags([]);
-                      setClearFiltersKey(clearFiltersKey + 1);
+                      setColumnFilters({});
+                      setColumnSearches({});
                     }}
                     className={`${tw.button} inline-flex items-center px-6 py-3`}
                   >
-                    Clear Filters
+                    Show Table
                   </button>
                 )}
                 {!searchTerm && selectedTags.length === 0 && filteredSegments.length === 0 && (
@@ -1662,7 +1661,6 @@ export default function SegmentManagementPage() {
               onSort={handleSort}
               sortConfigs={sortConfigs}
               onFilteredCountChange={handleFilteredCountChange}
-              clearFiltersKey={clearFiltersKey}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,
@@ -1918,7 +1916,7 @@ export default function SegmentManagementPage() {
       </div>
 
       {/* Pagination */}
-      {!isLoading && !error && displayedCount > 0 && (
+      {!isLoading && !error && filteredSegments.length > 0 && totalCount > 0 && (
         <Pagination
           currentPage={page}
           pageSize={pageSize}
